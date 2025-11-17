@@ -1,0 +1,352 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  user_id               Int                @id @default(autoincrement())
+  clerk_user_id         String             @unique
+  username              String
+  email                 String
+  first_name            String?
+  last_name             String?
+  profile_image         String?
+  clerk_metadata        Json?
+  created_at            DateTime           @default(now())
+  updated_at            DateTime           @updatedAt
+  is_active             Boolean            @default(true)
+  role                  UserRole           @default(user)
+  created_levels        Level[]            @relation("LevelCreator")
+  created_notifications Notification[]     @relation("NotificationCreator")
+  user_notifications    UserNotification[]
+  user_progress         UserProgress[]
+  user_rewards          UserReward[]
+
+  @@map("users")
+}
+
+model LevelCategory {
+  category_id      Int     @id @default(autoincrement())
+  category_name    String
+  description      String
+  item_enable      Boolean
+  item             Json?
+  difficulty_order Int
+  color_code       String
+  levels           Level[]
+
+  @@map("level_categories")
+}
+
+model VictoryCondition {
+  victory_condition_id     Int                      @id @default(autoincrement())
+  type                     String                   @unique
+  description              String                   
+  check                    String                   
+  is_available             Boolean                  @default(true)
+  created_at               DateTime                 @default(now())
+  updated_at               DateTime                 @updatedAt
+  level_victory_conditions LevelVictoryCondition[]
+
+  @@map("victory_conditions")
+}
+
+model LevelVictoryCondition {
+  level_victory_condition_id Int              @id @default(autoincrement())
+  level_id                   Int
+  victory_condition_id       Int
+  level                      Level            @relation(fields: [level_id], references: [level_id])
+  victory_condition          VictoryCondition @relation(fields: [victory_condition_id], references: [victory_condition_id])
+
+  @@unique([level_id, victory_condition_id])
+  @@map("level_victory_conditions")
+}
+
+model Level {
+  level_id               Int                      @id @default(autoincrement())
+  category_id            Int
+  level_name             String
+  description            String?
+  difficulty_level       Int
+  difficulty             String
+  is_unlocked            Boolean                  @default(false)
+  required_level_id      Int?
+  textcode               Boolean
+  background_image       String
+  start_node_id          Int?
+  goal_node_id           Int?
+  goal_type              String?
+  nodes                  Json?
+  edges                  Json?
+  monsters               Json?
+  obstacles              Json?
+  coin_positions         Json?
+  people                 Json?
+  treasures              Json?
+  created_at             DateTime                 @default(now())
+  updated_at             DateTime                 @updatedAt
+  created_by             Int
+  guides                 Guide[]                  // เปลี่ยนจาก hints
+  level_blocks           LevelBlock[]
+  level_victory_conditions LevelVictoryCondition[]
+  category               LevelCategory            @relation(fields: [category_id], references: [category_id])
+  creator                User                     @relation("LevelCreator", fields: [created_by], references: [user_id])
+  patterns               Pattern[]
+  rewards                Reward[]
+  user_progress          UserProgress[]
+  user_rewards           UserReward[]
+  required_level         Level?                   @relation("LevelPrerequisite", fields: [required_level_id], references: [level_id])
+  unlocked_levels        Level[]                  @relation("LevelPrerequisite")
+
+  @@map("levels")
+}
+
+model PatternType {
+  pattern_type_id  Int       @id @default(autoincrement())
+  type_name        String
+  description      String?
+  quality_level    String
+  patterns         Pattern[]
+
+  @@map("pattern_types")
+}
+
+model Pattern {
+  pattern_id       Int         @id @default(autoincrement())
+  pattern_type_id  Int
+  level_id         Int
+  weapon_id        Int?
+  pattern_name     String
+  description      String?
+  xmlpattern       String?
+  hints            Json?
+  is_available     Boolean     @default(true)
+  created_at       DateTime    @default(now())
+  updated_at       DateTime    @updatedAt
+  level            Level       @relation(fields: [level_id], references: [level_id])
+  pattern_type     PatternType @relation(fields: [pattern_type_id], references: [pattern_type_id])
+  weapon           Weapon?     @relation(fields: [weapon_id], references: [weapon_id])
+
+  @@map("patterns")
+}
+
+model UserProgress {
+  progress_id         Int       @id @default(autoincrement())
+  user_id             Int
+  level_id            Int
+  status              String
+  attempts_count      Int       @default(0)
+  blockly_code        String?
+  text_code           String?
+  execution_time      Int?
+  best_score          Int       @default(0)
+  pattern_bonus_score Int       @default(0)
+  is_correct          Boolean   @default(false)
+  stars_earned        Int       @default(0)
+  first_attempt       DateTime?
+  last_attempt        DateTime?
+  completed_at        DateTime?
+  hp_remaining        Int?
+  level               Level     @relation(fields: [level_id], references: [level_id])
+  user                User      @relation(fields: [user_id], references: [user_id])
+
+  @@unique([user_id, level_id])
+  @@map("user_progress")
+}
+
+model Reward {
+  reward_id      Int          @id @default(autoincrement())
+  level_id       Int
+  reward_type    RewardType
+  reward_name    String
+  description    String?
+  reward_data    Json?
+  required_score Int
+  is_automatic   Boolean      @default(false)
+  frame1         String?
+  frame2         String?
+  frame3         String?
+  frame4         String?
+  frame5         String?
+  level          Level        @relation(fields: [level_id], references: [level_id])
+  user_rewards   UserReward[]
+
+  @@map("rewards")
+}
+
+model UserReward {
+  user_reward_id Int      @id @default(autoincrement())
+  user_id        Int
+  reward_id      Int
+  level_id       Int
+  earned_at      DateTime @default(now())
+  level          Level    @relation(fields: [level_id], references: [level_id])
+  reward         Reward   @relation(fields: [reward_id], references: [reward_id])
+  user           User     @relation(fields: [user_id], references: [user_id])
+
+  @@map("user_rewards")
+}
+
+model Notification {
+  notification_id    Int                @id @default(autoincrement())
+  title              String
+  message            String?
+  created_by         Int
+  created_at         DateTime           @default(now())
+  expires_at         DateTime?
+  is_active          Boolean            @default(true)
+  creator            User               @relation("NotificationCreator", fields: [created_by], references: [user_id])
+  user_notifications UserNotification[]
+
+  @@map("notifications")
+}
+
+model UserNotification {
+  user_notification_id Int          @id @default(autoincrement())
+  notification_id      Int
+  user_id              Int
+  is_read              Boolean      @default(false)
+  read_at              DateTime?
+  created_at           DateTime     @default(now())
+  notification         Notification @relation(fields: [notification_id], references: [notification_id])
+  user                 User         @relation(fields: [user_id], references: [user_id])
+
+  @@unique([notification_id, user_id])
+  @@map("user_notifications")
+}
+
+model Weapon {
+  weapon_id             Int        @id @default(autoincrement())
+  weapon_key            String     @unique
+  weapon_name           String
+  description           String?
+  combat_power          Int        @default(0)
+  emoji                 String?
+  weapon_type           WeaponType
+  created_at            DateTime   @default(now())
+  updated_at            DateTime   @updatedAt
+  patterns              Pattern[]
+  weapon_images         Weapon_Image[]
+
+  @@map("weapons")
+}
+
+model Block {
+  block_id         Int           @id @default(autoincrement())
+  block_key        String        @unique
+  block_name       String
+  description      String?
+  category         BlockCategory
+  blockly_type     String?
+  is_available     Boolean       @default(true)
+  syntax_example   String?
+  created_at       DateTime      @default(now())
+  updated_at       DateTime      @updatedAt
+  level_blocks     LevelBlock[]
+
+  @@map("blocks")
+}
+
+model LevelBlock {
+  level_block_id Int     @id @default(autoincrement())
+  level_id       Int
+  block_id       Int
+  order_sequence Int?
+  block          Block   @relation(fields: [block_id], references: [block_id])
+  level          Level   @relation(fields: [level_id], references: [level_id])
+
+  @@unique([level_id, block_id])
+  @@map("level_blocks")
+}
+
+model Guide {  // เปลี่ยนจาก Hint
+  guide_id          Int      @id @default(autoincrement())
+  level_id          Int
+  title             String
+  description       String?
+  display_order     Int      @default(0)
+  is_active         Boolean  @default(true)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+  level             Level    @relation(fields: [level_id], references: [level_id])
+  guide_images      Guide_Image[]
+
+  @@map("guides")
+}
+
+model Guide_Image {
+  guide_file_id   Int      @id @default(autoincrement())
+  guide_id        Int
+  path_file       String
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  guide           Guide    @relation(fields: [guide_id], references: [guide_id])
+
+  @@map("guide_image")
+}
+
+model Weapon_Image {
+  file_id          Int         @id @default(autoincrement())
+  weapon_id        Int
+  path_file        String
+  type_file        TypeFile
+  type_animation   TypeAnimation
+  frame            Int
+  created_at       DateTime    @default(now())
+  updated_at       DateTime    @updatedAt
+  weapon           Weapon      @relation(fields: [weapon_id], references: [weapon_id])
+
+  @@map("weapon_image")
+}
+
+enum TypeFile {
+  idle
+  walking
+  attack
+}
+
+enum TypeAnimation {
+  weapon
+  effect
+}
+
+enum UserRole {
+  user
+  admin
+}
+
+enum NotificationType {
+  info
+  warning
+  success
+  error
+}
+
+enum RewardType {
+  weapon
+  block
+  badge
+  experience
+  coin
+}
+
+enum WeaponType {
+  melee
+  ranged
+  magic
+  special
+}
+
+enum BlockCategory {
+  movement
+  logic
+  conditions
+  loops
+  functions
+  variables
+  operators
+}
