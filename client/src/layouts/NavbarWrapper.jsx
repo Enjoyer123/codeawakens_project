@@ -1,0 +1,103 @@
+import Navbar from '../components/shared/Navbar';
+import useUserStore from '../store/useUserStore';
+import { useAuth } from '@clerk/clerk-react';
+import { useEffect, useState } from 'react';
+import { fetchUserProfile } from '../services/profileService';
+
+const NavbarWrapper = () => {
+  const { role, setRole } = useUserStore();
+  const { isSignedIn, isLoaded, getToken } = useAuth();
+  const [roleLoading, setRoleLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRole = async () => {
+      if (!isLoaded) {
+        setRoleLoading(true);
+        return;
+      }
+
+      if (isSignedIn && role === null) {
+        try {
+          const profile = await fetchUserProfile(getToken);
+          setRole(profile.role);
+        } catch (error) {
+          console.error('Failed to fetch user role:', error);
+        } finally {
+          setRoleLoading(false);
+        }
+      } else if (!isSignedIn) {
+        setRole(null);
+        setRoleLoading(false);
+      } else if (isSignedIn && role !== null) {
+        setRoleLoading(false);
+      }
+    };
+
+    fetchRole();
+  }, [isSignedIn, isLoaded, role, getToken, setRole]);
+
+  // รอให้ Clerk และ role โหลดเสร็จก่อน
+  const isLoading = !isLoaded || roleLoading;
+
+  // ถ้ายังโหลดอยู่ ให้ส่ง navItems ว่าง
+  if (isLoading) {
+    return <Navbar navItems={[]} isLoading={isLoading} />;
+  }
+
+  let navItems = [];
+
+  if (!isSignedIn) {
+    navItems = [
+      {
+        label: 'Contact',
+        path: '/Contact'
+      },
+    ];
+  } else if (role === 'admin') {
+    navItems = [
+      {
+        label: 'Home',
+        path: '/'
+      },
+      {
+        label: 'Contact',
+        path: '/Contact'
+      },
+      {
+        label: 'Play',
+        path: '/user/mapselect'
+      },
+      {
+        label: 'Profile',
+        path: '/user/profile'
+      },
+      {
+        label: 'Dashboard',
+        path: '/admin'
+      }
+    ];
+  } else if (role === 'user') {
+    navItems = [
+      {
+        label: 'Home',
+        path: '/'
+      },
+      {
+        label: 'Contact',
+        path: '/Contact'
+      },
+      {
+        label: 'Play',
+        path: '/user/mapselect'
+      },
+      {
+        label: 'Profile',
+        path: '/user/profile'
+      }
+    ];
+  }
+
+  return <Navbar navItems={navItems} isLoading={isLoading} />;
+};
+
+export default NavbarWrapper;
