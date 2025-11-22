@@ -65,6 +65,7 @@ const UserProfile = () => {
           <UserDetailsContent
             userId={profile.user.user_id}
             allowEdit={true}
+            useProfileService={true}
             onUpdateSuccess={handleUpdateSuccess}
           />
         </div>

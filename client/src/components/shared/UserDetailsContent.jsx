@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { getUserDetails } from '../../services/adminService';
-import { updateUsername, uploadProfileImage, deleteProfileImage } from '../../services/profileService';
+import { getUserByClerkId, updateUsername, uploadProfileImage, deleteProfileImage } from '../../services/profileService';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 
-const UserDetailsContent = ({ userId, allowEdit = false, onUpdateSuccess, initialTabValue = 'profile' }) => {
+const UserDetailsContent = ({ userId, allowEdit = false, onUpdateSuccess, initialTabValue = 'profile', useProfileService = false }) => {
   const { getToken } = useAuth();
   const [userDetails, setUserDetails] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -27,15 +27,23 @@ const UserDetailsContent = ({ userId, allowEdit = false, onUpdateSuccess, initia
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    if (userId) {
+    if (userId || useProfileService) {
       loadUserDetails();
     }
-  }, [userId]);
+  }, [userId, useProfileService]);
 
   const loadUserDetails = async () => {
     try {
       setLoading(true);
-      const details = await getUserDetails(getToken, userId);
+      let details;
+      
+      // Use profileService for own profile, adminService for viewing other users
+      if (useProfileService) {
+        details = await getUserByClerkId(getToken);
+      } else {
+        details = await getUserDetails(getToken, userId);
+      }
+      
       setUserDetails(details);
       setUsernameInput(details.user.username || '');
       // Set first reward as default selected

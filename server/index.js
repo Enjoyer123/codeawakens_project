@@ -5,6 +5,13 @@ const app = express();
 const port = process.env.PORT || 4000;
 const profileRouter = require("./routes/ProfileRoute");
 const adminUsersRouter = require("./routes/AdminUserRoute");
+const weaponRouter = require("./routes/WeaponRoute");
+const levelRouter = require("./routes/LevelRoute");
+const rewardRouter = require("./routes/RewardRoute");
+const guideRouter = require("./routes/GuideRoute");
+const blockRouter = require("./routes/BlockRoute");
+const victoryConditionRouter = require("./routes/VictoryConditionRoute");
+const levelCategoryRouter = require("./routes/LevelCategoryRoute");
 const path = require("path");
 const { clerkMiddleware } = require("@clerk/express");
 
@@ -15,11 +22,19 @@ app.use(
 );
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(clerkMiddleware());
 
 app.use("/api/profile", profileRouter);
 app.use("/api", adminUsersRouter);
+app.use("/api", weaponRouter);
+app.use("/api", levelRouter);
+app.use("/api", rewardRouter);
+app.use("/api", guideRouter);
+app.use("/api", blockRouter);
+app.use("/api", victoryConditionRouter);
+app.use("/api", levelCategoryRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello World - Server is running!");

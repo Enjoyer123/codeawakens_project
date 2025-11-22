@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Users, Map, Award, Sword, Bell, LayoutDashboard, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Users, Map, Award, Sword, Bell, LayoutDashboard, ChevronLeft, ChevronRight, Book, Blocks, Trophy, FolderTree } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const AdminSidebar = () => {
@@ -26,6 +26,11 @@ const AdminSidebar = () => {
       icon: Map,
     },
     {
+      label: 'Level Category Management',
+      path: '/admin/level-categories',
+      icon: FolderTree,
+    },
+    {
       label: 'Weapons Management',
       path: '/admin/weapons',
       icon: Sword,
@@ -34,6 +39,21 @@ const AdminSidebar = () => {
       label: 'Reward Management',
       path: '/admin/rewards',
       icon: Award,
+    },
+    {
+      label: 'Guide Management',
+      path: '/admin/guides',
+      icon: Book,
+    },
+    {
+      label: 'Block Management',
+      path: '/admin/blocks',
+      icon: Blocks,
+    },
+    {
+      label: 'Victory Condition Management',
+      path: '/admin/victory-conditions',
+      icon: Trophy,
     },
     {
       label: 'Notification Management',

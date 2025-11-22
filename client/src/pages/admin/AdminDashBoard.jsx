@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Map, Award, Sword, Bell, BarChart3, PieChart } from 'lucide-react';
+import { Users, Map, Award, Sword, Bell, BarChart3, PieChart, Book, Blocks } from 'lucide-react';
 
 const AdminDashBoard = () => {
   const navigate = useNavigate();
@@ -76,6 +76,16 @@ const AdminDashBoard = () => {
       label: 'REWARD MANAGEMENT',
       path: '/admin/rewards',
       icon: Award,
+    },
+    {
+      label: 'GUIDE MANAGEMENT',
+      path: '/admin/guides',
+      icon: Book,
+    },
+    {
+      label: 'BLOCK MANAGEMENT',
+      path: '/admin/blocks',
+      icon: Blocks,
     },
     {
       label: 'NOTIFICATION MANAGEMENT',
