@@ -8,20 +8,20 @@ import {
   fetchAllCategories,
   fetchLevelsForPrerequisite,
   uploadLevelBackgroundImage,
-} from '../../services/levelService';
-import { fetchAllBlocks } from '../../services/blockService';
-import { fetchAllVictoryConditions } from '../../services/victoryConditionService';
+} from '../../../services/levelService';
+import { fetchAllBlocks } from '../../../services/blockService';
+import { fetchAllVictoryConditions } from '../../../services/victoryConditionService';
 import { Button } from '@/components/ui/button';
 import { Loader } from '@/components/ui/loader';
 import { ArrowLeft, Trash2 } from 'lucide-react';
-import PhaserMapEditor from './level/PhaserMapEditor';
-import LevelInfoForm from './level/LevelInfoForm';
-import BlockSelector from './level/BlockSelector';
-import VictoryConditionSelector from './level/VictoryConditionSelector';
-import JSONDataEditor from './level/JSONDataEditor';
-import BackgroundImageUpload from './level/BackgroundImageUpload';
-import LevelElementsToolbar from './level/LevelElementsToolbar';
-import ErrorAlert from '@/components/shared/ErrorAlert';
+import PhaserMapEditor from '../../../components/admin/level/PhaserMapEditor';
+import LevelInfoForm from '../../../components/admin/level/LevelInfoForm';
+import BlockSelector from '../../../components/admin/level/BlockSelector';
+import VictoryConditionSelector from '../../../components/admin/level/VictoryConditionSelector';
+import JSONDataEditor from '../../../components/admin/level/JSONDataEditor';
+import BackgroundImageUpload from '../../../components/admin/level/BackgroundImageUpload';
+import LevelElementsToolbar from '../../../components/admin/level/LevelElementsToolbar';
+import ErrorAlert from '@/components/shared/alert/ErrorAlert';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 

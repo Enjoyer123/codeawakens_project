@@ -3,7 +3,7 @@ import { useAuth } from '@clerk/clerk-react';
 import { UserButton } from '@clerk/clerk-react';
 import { getUserByClerkId } from '../../services/profileService';
 import { Loader } from '@/components/ui/loader';
-import UserDetailsContent from '../../components/shared/UserDetailsContent';
+import UserDetailsContent from '../../components/shared/userDetailProfile/UserDetailsContent';
 
 const UserProfile = () => {
   const { user, isLoaded, getToken } = useAuth();

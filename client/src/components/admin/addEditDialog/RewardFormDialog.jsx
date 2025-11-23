@@ -8,10 +8,10 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import FormInput from '@/components/shared/FormInput';
-import FormSelect from '@/components/shared/FormSelect';
-import FormCheckbox from '@/components/shared/FormCheckbox';
-import FormTextarea from '@/components/shared/FormTextarea';
+import FormInput from '@/components/admin/formFields/FormInput';
+import FormSelect from '@/components/admin/formFields/FormSelect';
+import FormCheckbox from '@/components/admin/formFields/FormCheckbox';
+import FormTextarea from '@/components/admin/formFields/FormTextarea';
 
 const rewardTypes = [
   { value: 'weapon', label: 'Weapon' },

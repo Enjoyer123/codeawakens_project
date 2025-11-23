@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@clerk/clerk-react';
-import { getUserDetails } from '../../services/adminService';
-import { getUserByClerkId, updateUsername, uploadProfileImage, deleteProfileImage } from '../../services/profileService';
+import { getUserDetails } from '../../../services/adminService';
+import { getUserByClerkId, updateUsername, uploadProfileImage, deleteProfileImage } from '../../../services/profileService';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

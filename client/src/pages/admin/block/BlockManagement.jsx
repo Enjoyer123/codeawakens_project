@@ -6,17 +6,17 @@ import {
   createBlock,
   updateBlock,
   deleteBlock,
-} from '../../services/blockService';
+} from '../../../services/blockService';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Edit, Trash2 } from 'lucide-react';
-import DeleteConfirmDialog from '@/components/shared/DeleteConfirmDialog';
-import AdminPageHeader from '@/components/shared/AdminPageHeader';
-import SearchInput from '@/components/shared/SearchInput';
-import ErrorAlert from '@/components/shared/ErrorAlert';
-import PaginationControls from '@/components/shared/PaginationControls';
-import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
-import BlockFormDialog from '@/components/admin/BlockFormDialog';
+import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
+import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
+import SearchInput from '@/components/admin/formFields/SearchInput';
+import ErrorAlert from '@/components/shared/alert/ErrorAlert';
+import PaginationControls from '@/components/shared/pagination/PaginationControls';
+import { LoadingState, EmptyState } from '@/components/admin/tableStates/DataTableStates';
+import BlockFormDialog from '@/components/admin/addEditDialog/BlockFormDialog';
 import { usePagination } from '@/hooks/usePagination';
 import { createDeleteErrorMessage } from '@/utils/errorHandler';
 

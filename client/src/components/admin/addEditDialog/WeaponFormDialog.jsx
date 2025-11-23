@@ -7,8 +7,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import FormInput from '@/components/shared/FormInput';
-import FormSelect from '@/components/shared/FormSelect';
+import FormInput from '@/components/admin/formFields/FormInput';
+import FormSelect from '@/components/admin/formFields/FormSelect';
 
 const weaponTypes = [
   { value: 'melee', label: 'Melee' },

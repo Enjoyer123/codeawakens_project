@@ -8,8 +8,8 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import FormInput from '@/components/shared/FormInput';
-import FormCheckbox from '@/components/shared/FormCheckbox';
+import FormInput from '@/components/admin/formFields/FormInput';
+import FormCheckbox from '@/components/admin/formFields/FormCheckbox';
 
 const LevelCategoryFormDialog = ({
   open,

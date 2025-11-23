@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import ErrorAlert from '@/components/shared/ErrorAlert';
+import ErrorAlert from '@/components/shared/alert/ErrorAlert';
 
 const JSONDataEditor = ({ formData, onJsonFieldChange }) => {
   const [error, setError] = useState(null);

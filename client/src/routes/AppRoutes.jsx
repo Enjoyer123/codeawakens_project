@@ -4,16 +4,16 @@ import AuthCallback from "../pages/auth/AuthCallback";
 import LandingPage from "../pages/Landing";
 import UserProfile from "../pages/user/UserProfile";
 import MapSelect from "../pages/user/MapSelect";
-import AdminDashboard from "../pages/admin/AdminDashBoard";
-import UserManagement from "../pages/admin/UserManagement";
+import AdminDashboard from "../pages/admin/dashboard/AdminDashBoard";
+import UserManagement from "../pages/admin/user/UserManagement";
 import WeaponManagement from "../pages/admin/weapon/WeaponManagement";
-import LevelManagement from "../pages/admin/LevelManagement";
-import LevelCreateEdit from "../pages/admin/LevelCreateEdit";
+import LevelManagement from "../pages/admin/level/LevelManagement";
+import LevelCreateEdit from "../pages/admin/level/LevelCreateEdit";
 import RewardManagement from "../pages/admin/reward/RewardManagement";
-import GuideManagement from "../pages/admin/GuideManagement";
-import BlockManagement from "../pages/admin/BlockManagement";
-import VictoryConditionManagement from "../pages/admin/VictoryConditionManagement";
-import LevelCategoryManagement from "../pages/admin/LevelCategoryManagement";
+import GuideManagement from "../pages/admin/guide/GuideManagement";
+import BlockManagement from "../pages/admin/block/BlockManagement";
+import VictoryConditionManagement from "../pages/admin/victoryCondition/VictoryConditionManagement";
+import LevelCategoryManagement from "../pages/admin/levelCategory/LevelCategoryManagement";
 import NavLayout from "../layouts/NavLayout";
 
 const AppRoutes = () => {

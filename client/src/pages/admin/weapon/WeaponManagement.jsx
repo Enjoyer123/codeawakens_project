@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -10,34 +10,28 @@ import {
   deleteWeaponImage,
 } from '../../../services/weaponService';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Edit, Trash2, Image as ImageIcon } from 'lucide-react';
-import DeleteConfirmDialog from '@/components/shared/DeleteConfirmDialog';
-import AdminPageHeader from '@/components/shared/AdminPageHeader';
-import SearchInput from '@/components/shared/SearchInput';
-import ErrorAlert from '@/components/shared/ErrorAlert';
-import PaginationControls from '@/components/shared/PaginationControls';
-import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
-import WeaponImageDialog from './WeaponImageDialog';
+import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
+import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
+import SearchInput from '@/components/admin/formFields/SearchInput';
+import ErrorAlert from '@/components/shared/alert/ErrorAlert';
+import PaginationControls from '@/components/shared/pagination/PaginationControls';
+import { LoadingState, EmptyState } from '@/components/admin/tableStates/DataTableStates';
+import WeaponImageDialog from '../../../components/admin/weapon/WeaponImageDialog';
+import WeaponFormDialog from '@/components/admin/addEditDialog/WeaponFormDialog';
+import { usePagination } from '@/hooks/usePagination';
+import { getImageUrl } from '@/utils/imageUtils';
+import { createDeleteErrorMessage } from '@/utils/errorHandler';
 
 const WeaponManagement = () => {
   const navigate = useNavigate();
   const { getToken } = useAuth();
+  const { page, rowsPerPage, handlePageChange } = usePagination(1, 10);
   const [weapons, setWeapons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [page, setPage] = useState(1);
-  const [rowsPerPage] = useState(10);
   const [pagination, setPagination] = useState({
     total: 0,
     totalPages: 0,
@@ -56,6 +50,7 @@ const WeaponManagement = () => {
     emoji: '',
     weapon_type: 'melee',
   });
+  const [saveError, setSaveError] = useState(null);
 
   // Image management states
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
@@ -68,17 +63,15 @@ const WeaponManagement = () => {
     frame: 1,
     imageFile: null,
   });
+  const [imageError, setImageError] = useState(null);
 
   // Delete states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [weaponToDelete, setWeaponToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
 
-  useEffect(() => {
-    loadWeapons();
-  }, [page, searchQuery]);
-
-  const loadWeapons = async () => {
+  const loadWeapons = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -102,19 +95,18 @@ const WeaponManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getToken, page, rowsPerPage, searchQuery]);
 
-  const handlePageChange = (newPage) => {
-    setPage(newPage);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  useEffect(() => {
+    loadWeapons();
+  }, [loadWeapons]);
 
-  const handleSearchChange = (value) => {
+  const handleSearchChange = useCallback((value) => {
     setSearchQuery(value);
-    setPage(1);
-  };
+    handlePageChange(1);
+  }, [handlePageChange]);
 
-  const handleOpenWeaponDialog = (weapon = null) => {
+  const handleOpenWeaponDialog = useCallback((weapon = null) => {
     if (weapon) {
       setEditingWeapon(weapon);
       setWeaponForm({
@@ -136,12 +128,14 @@ const WeaponManagement = () => {
         weapon_type: 'melee',
       });
     }
+    setSaveError(null);
     setWeaponDialogOpen(true);
-  };
+  }, []);
 
-  const handleCloseWeaponDialog = () => {
+  const handleCloseWeaponDialog = useCallback(() => {
     setWeaponDialogOpen(false);
     setEditingWeapon(null);
+    setSaveError(null);
     setWeaponForm({
       weapon_key: '',
       weapon_name: '',
@@ -150,9 +144,11 @@ const WeaponManagement = () => {
       emoji: '',
       weapon_type: 'melee',
     });
-  };
+  }, []);
 
-  const handleSaveWeapon = async () => {
+  const handleSaveWeapon = useCallback(async () => {
+    setSaveError(null);
+
     try {
       if (editingWeapon) {
         await updateWeapon(getToken, editingWeapon.weapon_id, weaponForm);
@@ -161,13 +157,17 @@ const WeaponManagement = () => {
       }
       handleCloseWeaponDialog();
       await loadWeapons();
+      return { success: true };
     } catch (err) {
-      alert('Failed to save weapon: ' + (err.message || 'Unknown error'));
+      const errorMessage = 'Failed to save weapon: ' + (err.message || 'Unknown error');
+      setSaveError(errorMessage);
+      return { success: false, error: errorMessage };
     }
-  };
+  }, [weaponForm, editingWeapon, getToken, handleCloseWeaponDialog, loadWeapons]);
 
-  const handleOpenImageDialog = (weapon) => {
+  const handleOpenImageDialog = useCallback((weapon) => {
     setSelectedWeapon(weapon);
+    setImageError(null);
     setImageForm({
       type_file: 'idle',
       type_animation: 'weapon',
@@ -175,12 +175,13 @@ const WeaponManagement = () => {
       imageFile: null,
     });
     setImageDialogOpen(true);
-  };
+  }, []);
 
-  const handleImageDialogChange = (open) => {
+  const handleImageDialogChange = useCallback((open) => {
     setImageDialogOpen(open);
     if (!open) {
       setSelectedWeapon(null);
+      setImageError(null);
       setImageForm({
         type_file: 'idle',
         type_animation: 'weapon',
@@ -188,26 +189,27 @@ const WeaponManagement = () => {
         imageFile: null,
       });
     }
-  };
+  }, []);
 
-  const handleAddImage = async () => {
+  const handleAddImage = useCallback(async () => {
     if (!selectedWeapon || !imageForm.imageFile) {
-      alert('กรุณาเลือกอาวุธและไฟล์รูปภาพ');
+      setImageError('กรุณาเลือกอาวุธและไฟล์รูปภาพ');
       return;
     }
 
     if (!imageForm.type_file || !imageForm.type_animation || !imageForm.frame) {
-      alert('กรุณากรอกข้อมูลให้ครบถ้วน: Type File, Type Animation, และ Frame');
+      setImageError('กรุณากรอกข้อมูลให้ครบถ้วน: Type File, Type Animation, และ Frame');
       return;
     }
 
     if (imageForm.frame < 1) {
-      alert('Frame ต้องมากกว่าหรือเท่ากับ 1');
+      setImageError('Frame ต้องมากกว่าหรือเท่ากับ 1');
       return;
     }
 
     try {
       setUploadingImage(true);
+      setImageError(null);
       await addWeaponImage(getToken, selectedWeapon.weapon_id, imageForm.imageFile, {
         type_file: imageForm.type_file,
         type_animation: imageForm.type_animation,
@@ -215,105 +217,98 @@ const WeaponManagement = () => {
         weapon_key: selectedWeapon.weapon_key,
       });
       
-      // Reset form
+      await loadWeapons();
+
+      const data = await fetchAllWeapons(getToken, page, rowsPerPage, searchQuery);
+      const updatedWeapon = data.weapons?.find(w => w.weapon_id === selectedWeapon.weapon_id);
+      if (updatedWeapon) {
+        setSelectedWeapon(updatedWeapon);
+      }
+
       setImageForm({
         type_file: 'idle',
         type_animation: 'weapon',
         frame: 1,
         imageFile: null,
       });
-      
-      // Reload weapons list
-      await loadWeapons();
-      
-      // Update selectedWeapon with fresh data to show new image in modal
-      const data = await fetchAllWeapons(getToken, page, rowsPerPage, searchQuery);
-      const updatedWeapon = data.weapons?.find(w => w.weapon_id === selectedWeapon.weapon_id);
-      if (updatedWeapon) {
-        setSelectedWeapon(updatedWeapon);
-      }
     } catch (err) {
       const errorMessage = err.message || 'Unknown error';
-      alert('ไม่สามารถเพิ่มรูปภาพได้: ' + errorMessage);
+      setImageError('ไม่สามารถเพิ่มรูปภาพได้: ' + errorMessage);
     } finally {
       setUploadingImage(false);
     }
-  };
+  }, [selectedWeapon, imageForm, getToken, loadWeapons, page, rowsPerPage, searchQuery]);
 
-  const handleDeleteImage = async (imageId) => {
-    if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรูปภาพนี้?')) {
-      return;
-    }
-
+  const handleDeleteImage = useCallback(async (imageId) => {
     try {
       setDeletingImageId(imageId);
-      
+      setImageError(null);
       await deleteWeaponImage(getToken, imageId);
-      
-      // Update selectedWeapon by removing the deleted image from the array
+
+      await loadWeapons();
+
       if (selectedWeapon) {
-        const updatedImages = selectedWeapon.weapon_images?.filter(
-          img => img.file_id !== parseInt(imageId)
-        ) || [];
-        
-        setSelectedWeapon({
-          ...selectedWeapon,
-          weapon_images: updatedImages
-        });
+        const data = await fetchAllWeapons(getToken, page, rowsPerPage, searchQuery);
+        const updatedWeapon = data.weapons?.find(w => w.weapon_id === selectedWeapon.weapon_id);
+        if (updatedWeapon) {
+          setSelectedWeapon(updatedWeapon);
+        }
       }
-      
-      // Reload weapons list to get updated data (without showing loading)
-      const data = await fetchAllWeapons(getToken, page, rowsPerPage, searchQuery);
-      setWeapons(data.weapons || []);
-      setPagination(data.pagination || {
-        total: 0,
-        totalPages: 0,
-        page: 1,
-        limit: rowsPerPage,
-      });
     } catch (err) {
-      alert('ไม่สามารถลบรูปภาพได้: ' + (err.message || 'Unknown error'));
+      setImageError('ไม่สามารถลบรูปภาพได้: ' + (err.message || 'Unknown error'));
     } finally {
       setDeletingImageId(null);
     }
-  };
+  }, [selectedWeapon, getToken, loadWeapons, page, rowsPerPage, searchQuery]);
 
-  const handleDeleteClick = (weapon) => {
+  const handleDeleteClick = useCallback((weapon) => {
     setWeaponToDelete(weapon);
+    setDeleteError(null);
     setDeleteDialogOpen(true);
-  };
+  }, []);
 
-  const handleDeleteConfirm = async () => {
+  const handleDeleteConfirm = useCallback(async () => {
     if (!weaponToDelete) return;
 
     try {
       setDeleting(true);
+      setDeleteError(null);
       await deleteWeapon(getToken, weaponToDelete.weapon_id);
       setDeleteDialogOpen(false);
       setWeaponToDelete(null);
       await loadWeapons();
     } catch (err) {
-      alert('Failed to delete weapon: ' + (err.message || 'Unknown error'));
+      const errorMessage = createDeleteErrorMessage('weapon', err);
+      setDeleteError(errorMessage);
     } finally {
       setDeleting(false);
     }
-  };
+  }, [weaponToDelete, getToken, loadWeapons]);
 
-  const handleDeleteDialogChange = (open) => {
+  const handleDeleteDialogChange = useCallback((open) => {
     if (!deleting) {
       setDeleteDialogOpen(open);
       if (!open) {
         setWeaponToDelete(null);
+        setDeleteError(null);
       }
     }
-  };
+  }, [deleting]);
 
-  const getImageUrl = (pathFile) => {
-    if (!pathFile) return null;
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
-    return `${baseUrl}${pathFile}`;
-  };
+  const getDeleteDescription = (weaponName) => (
+    <>
+      คุณแน่ใจหรือไม่ว่าต้องการลบอาวุธ <strong>{weaponName}</strong>?
+      <br />
+      <br />
+      การกระทำนี้ไม่สามารถยกเลิกได้ และจะลบข้อมูลอาวุธทั้งหมดรวมถึงรูปภาพที่เกี่ยวข้อง
+    </>
+  );
 
+  const tableHeaderClassName =
+    'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+  const tableCellClassName = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900';
+  const actionsCellClassName = 'px-6 py-4 whitespace-nowrap text-sm font-medium';
+  const searchPlaceholder = 'ค้นหาอาวุธ (ชื่อ, key, คำอธิบาย)...';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -326,18 +321,21 @@ const WeaponManagement = () => {
         />
 
         <ErrorAlert message={error} />
+        <ErrorAlert message={saveError} />
+        <ErrorAlert message={imageError} />
+        <ErrorAlert message={deleteError} />
 
         <SearchInput
           value={searchQuery}
           onChange={handleSearchChange}
-          placeholder="ค้นหาอาวุธ (ชื่อ, key, คำอธิบาย)..."
+          placeholder={searchPlaceholder}
         />
 
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {loading ? (
             <LoadingState message="Loading weapons..." />
           ) : weapons.length === 0 ? (
-            <EmptyState 
+            <EmptyState
               message="ไม่พบอาวุธที่ค้นหา"
               searchQuery={searchQuery}
             />
@@ -347,24 +345,12 @@ const WeaponManagement = () => {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Weapon
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Key
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Type
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Power
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Images
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
+                      <th className={tableHeaderClassName}>Weapon</th>
+                      <th className={tableHeaderClassName}>Key</th>
+                      <th className={tableHeaderClassName}>Type</th>
+                      <th className={tableHeaderClassName}>Power</th>
+                      <th className={tableHeaderClassName}>Images</th>
+                      <th className={tableHeaderClassName}>Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -378,21 +364,23 @@ const WeaponManagement = () => {
                                 {weapon.weapon_name}
                               </div>
                               {weapon.description && (
-                                <div className="text-sm text-gray-500">{weapon.description}</div>
+                                <div className="text-sm text-gray-500">
+                                  {weapon.description}
+                                </div>
                               )}
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className={tableCellClassName}>
                           <code className="text-sm bg-gray-100 px-2 py-1 rounded">
                             {weapon.weapon_key}
                           </code>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className={tableCellClassName}>
                           <Badge variant="outline">{weapon.weapon_type}</Badge>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{weapon.combat_power}</div>
+                        <td className={tableCellClassName}>
+                          {weapon.combat_power}
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2 flex-wrap">
@@ -422,7 +410,7 @@ const WeaponManagement = () => {
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <td className={actionsCellClassName}>
                           <div className="flex items-center gap-2 flex-wrap">
                             <Button
                               variant="outline"
@@ -467,122 +455,41 @@ const WeaponManagement = () => {
             </>
           )}
         </div>
+
+        <WeaponFormDialog
+          open={weaponDialogOpen}
+          onOpenChange={handleCloseWeaponDialog}
+          editingWeapon={editingWeapon}
+          formData={weaponForm}
+          onFormChange={setWeaponForm}
+          onSave={handleSaveWeapon}
+        />
+
+        <WeaponImageDialog
+          open={imageDialogOpen}
+          onOpenChange={handleImageDialogChange}
+          selectedWeapon={selectedWeapon}
+          imageForm={imageForm}
+          onImageFormChange={setImageForm}
+          uploadingImage={uploadingImage}
+          deletingImageId={deletingImageId}
+          onAddImage={handleAddImage}
+          onDeleteImage={handleDeleteImage}
+          getImageUrl={getImageUrl}
+        />
+
+        <DeleteConfirmDialog
+          open={deleteDialogOpen}
+          onOpenChange={handleDeleteDialogChange}
+          onConfirm={handleDeleteConfirm}
+          itemName={weaponToDelete?.weapon_name}
+          title="ยืนยันการลบอาวุธ"
+          description={getDeleteDescription(weaponToDelete?.weapon_name)}
+          deleting={deleting}
+        />
       </div>
-
-      {/* Weapon Add/Edit Dialog */}
-      <Dialog open={weaponDialogOpen} onOpenChange={setWeaponDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {editingWeapon ? 'แก้ไขอาวุธ' : 'เพิ่มอาวุธใหม่'}
-            </DialogTitle>
-            <DialogDescription>
-              {editingWeapon ? 'แก้ไขข้อมูลอาวุธ' : 'กรอกข้อมูลอาวุธใหม่'}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div>
-              <label className="text-sm font-medium">Weapon Key *</label>
-              <Input
-                value={weaponForm.weapon_key}
-                onChange={(e) => setWeaponForm({ ...weaponForm, weapon_key: e.target.value })}
-                placeholder="stick, sword, magic_sword"
-                disabled={!!editingWeapon}
-              />
-              <p className="text-xs text-gray-500 mt-1">ไม่สามารถแก้ไขได้หลังจากสร้างแล้ว</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Weapon Name *</label>
-              <Input
-                value={weaponForm.weapon_name}
-                onChange={(e) => setWeaponForm({ ...weaponForm, weapon_name: e.target.value })}
-                placeholder="🏭 ไม้เท้าเก่า"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Description</label>
-              <Input
-                value={weaponForm.description}
-                onChange={(e) => setWeaponForm({ ...weaponForm, description: e.target.value })}
-                placeholder="อาวุธพื้นฐานสำหรับผู้เริ่มต้น"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium">Combat Power</label>
-                <Input
-                  type="number"
-                  value={weaponForm.combat_power}
-                  onChange={(e) => setWeaponForm({ ...weaponForm, combat_power: parseInt(e.target.value) || 0 })}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Emoji</label>
-                <Input
-                  value={weaponForm.emoji}
-                  onChange={(e) => setWeaponForm({ ...weaponForm, emoji: e.target.value })}
-                  placeholder="🏭"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Weapon Type *</label>
-              <select
-                value={weaponForm.weapon_type}
-                onChange={(e) => setWeaponForm({ ...weaponForm, weapon_type: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="melee">Melee</option>
-                <option value="ranged">Ranged</option>
-                <option value="magic">Magic</option>
-                <option value="special">Special</option>
-              </select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={handleCloseWeaponDialog}>
-              ยกเลิก
-            </Button>
-            <Button onClick={handleSaveWeapon}>
-              {editingWeapon ? 'บันทึก' : 'เพิ่ม'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <WeaponImageDialog
-        open={imageDialogOpen}
-        onOpenChange={handleImageDialogChange}
-        selectedWeapon={selectedWeapon}
-        imageForm={imageForm}
-        onImageFormChange={setImageForm}
-        uploadingImage={uploadingImage}
-        deletingImageId={deletingImageId}
-        onAddImage={handleAddImage}
-        onDeleteImage={handleDeleteImage}
-        getImageUrl={getImageUrl}
-      />
-
-      <DeleteConfirmDialog
-        open={deleteDialogOpen}
-        onOpenChange={handleDeleteDialogChange}
-        onConfirm={handleDeleteConfirm}
-        itemName={weaponToDelete?.weapon_name}
-        title="ยืนยันการลบอาวุธ"
-        description={
-          <>
-            คุณแน่ใจหรือไม่ว่าต้องการลบอาวุธ{' '}
-            <strong>{weaponToDelete?.weapon_name}</strong>?
-            <br />
-            <br />
-            การกระทำนี้ไม่สามารถยกเลิกได้ และจะลบข้อมูลอาวุธทั้งหมดรวมถึงรูปภาพที่เกี่ยวข้อง
-          </>
-        }
-        deleting={deleting}
-      />
     </div>
   );
 };
 
 export default WeaponManagement;
-

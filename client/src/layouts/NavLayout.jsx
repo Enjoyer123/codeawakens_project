@@ -1,6 +1,6 @@
 import { Outlet } from "react-router";
 import NavbarWrapper from "./NavbarWrapper";
-import AdminSidebar from "../components/admin/AdminSidebar";
+import AdminSidebar from "../components/admin/sidebar/AdminSidebar";
 import useUserStore from "../store/useUserStore";
 
 const NavLayout = () => {

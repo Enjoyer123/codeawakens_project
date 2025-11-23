@@ -1,4 +1,4 @@
-import Navbar from '../components/shared/Navbar';
+import Navbar from '../components/shared/navbar/Navbar';
 import useUserStore from '../store/useUserStore';
 import { useAuth } from '@clerk/clerk-react';
 import { useEffect, useState } from 'react';
