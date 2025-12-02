@@ -13,16 +13,18 @@ const {
   deleteLevel,
   getAllCategories,
   getLevelsForPrerequisite,
+  unlockLevel,
 } = require("../controllers/levelController");
 
 // Level CRUD routes
-router.get("/levels", authCheck, requireAdmin, getAllLevels);
-router.get("/levels/categories", authCheck, requireAdmin, getAllCategories);
+router.get("/levels", authCheck, getAllLevels);
+router.get("/levels/categories", authCheck, getAllCategories);
 router.get("/levels/prerequisites", authCheck, requireAdmin, getLevelsForPrerequisite);
-router.get("/levels/:levelId", authCheck, requireAdmin, getLevelById);
+router.get("/levels/:levelId", authCheck, getLevelById);
 router.post("/levels", authCheck, requireAdmin, createLevel);
 router.post("/levels/upload-background", authCheck, requireAdmin, uploadMiddleware.single('backgroundImage'), uploadLevelBackgroundImage);
 router.put("/levels/:levelId", authCheck, requireAdmin, updateLevel);
+router.put("/levels/:levelId/unlock", authCheck, requireAdmin, unlockLevel);
 router.delete("/levels/:levelId", authCheck, requireAdmin, deleteLevel);
 
 module.exports = router;

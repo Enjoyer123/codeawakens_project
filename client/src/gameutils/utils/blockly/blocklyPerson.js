@@ -1,0 +1,70 @@
+// Blockly Person Rescue Block Definitions
+import * as Blockly from "blockly/core";
+
+export function definePersonBlocks() {
+  Blockly.Blocks["rescue_person_at_node"] = {
+    init: function () {
+      this.appendValueInput("NODE_ID")
+        .setCheck("Number")
+        .appendField("🆘 ช่วยคนที่ node");
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setColour(160);
+      this.setTooltip("ช่วยคนที่ node ที่กำหนด");
+    },
+  };
+
+  Blockly.Blocks["has_person"] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("👤 มีคนที่ node นี้");
+      this.setOutput(true, "Boolean");
+      this.setColour(210);
+      this.setTooltip("ตรวจสอบว่ามีคนที่ node นี้หรือไม่");
+    },
+  };
+
+  Blockly.Blocks["person_rescued"] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("✅ คนถูกช่วยแล้ว");
+      this.setOutput(true, "Boolean");
+      this.setColour(210);
+      this.setTooltip("ตรวจสอบว่าคนที่ node นี้ถูกช่วยแล้วหรือไม่");
+    },
+  };
+
+  Blockly.Blocks["person_count"] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("📊 จำนวนคนที่ช่วยแล้ว");
+      this.setOutput(true, "Number");
+      this.setColour(230);
+      this.setTooltip("นับจำนวนคนที่ช่วยแล้ว");
+    },
+  };
+
+  Blockly.Blocks["all_people_rescued"] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("🎉 ช่วยคนทั้งหมดแล้ว");
+      this.setOutput(true, "Boolean");
+      this.setColour(210);
+      this.setTooltip("ตรวจสอบว่าช่วยคนทั้งหมดแล้วหรือไม่");
+    },
+  };
+
+  Blockly.Blocks["for_each_person"] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("🔄 สำหรับแต่ละคน");
+      this.appendStatementInput("DO")
+        .appendField("ทำ");
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setColour(120);
+      this.setTooltip("วนลูปสำหรับแต่ละคนที่ต้องช่วย");
+    },
+  };
+}
+

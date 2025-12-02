@@ -45,6 +45,7 @@ const LevelCategoryManagement = () => {
     item: null,
     difficulty_order: 1,
     color_code: '#4CAF50',
+    block_key: null,
   });
   const [saveError, setSaveError] = useState(null);
 
@@ -97,6 +98,19 @@ const LevelCategoryManagement = () => {
   const handleOpenLevelCategoryDialog = useCallback((levelCategory = null) => {
     if (levelCategory) {
       setEditingLevelCategory(levelCategory);
+      // Convert block_key to comma-separated format for easier editing
+      let blockKeyDisplay = '';
+      if (levelCategory.block_key) {
+        if (Array.isArray(levelCategory.block_key)) {
+          blockKeyDisplay = levelCategory.block_key.join(', ');
+        } else if (typeof levelCategory.block_key === 'object') {
+          // If it's an object, convert to JSON string
+          blockKeyDisplay = JSON.stringify(levelCategory.block_key, null, 2);
+        } else {
+          blockKeyDisplay = String(levelCategory.block_key);
+        }
+      }
+
       setLevelCategoryForm({
         category_name: levelCategory.category_name,
         description: levelCategory.description || '',
@@ -104,6 +118,7 @@ const LevelCategoryManagement = () => {
         item: levelCategory.item,
         difficulty_order: levelCategory.difficulty_order,
         color_code: levelCategory.color_code || '#4CAF50',
+        block_key: blockKeyDisplay,
       });
     } else {
       setEditingLevelCategory(null);
@@ -118,6 +133,7 @@ const LevelCategoryManagement = () => {
         item: null,
         difficulty_order: maxOrder + 1,
         color_code: '#4CAF50',
+        block_key: '',
       });
     }
     setSaveError(null);
@@ -135,11 +151,36 @@ const LevelCategoryManagement = () => {
       item: null,
       difficulty_order: 1,
       color_code: '#4CAF50',
+      block_key: null,
     });
   }, []);
 
   const handleSaveLevelCategory = useCallback(async () => {
     setSaveError(null);
+
+    // Handle block_key - support both comma-separated and JSON format
+    let blockKeyValue = null;
+    if (levelCategoryForm.block_key && levelCategoryForm.block_key.trim()) {
+      const trimmedValue = levelCategoryForm.block_key.trim();
+      
+      // Try to parse as JSON first
+      try {
+        blockKeyValue = JSON.parse(trimmedValue);
+      } catch (jsonError) {
+        // If not valid JSON, treat as comma-separated string
+        // Split by comma and trim each item
+        const items = trimmedValue
+          .split(',')
+          .map(item => item.trim())
+          .filter(item => item.length > 0);
+        
+        if (items.length > 0) {
+          blockKeyValue = items;
+        } else {
+          blockKeyValue = null;
+        }
+      }
+    }
 
     const formData = {
       ...levelCategoryForm,
@@ -148,6 +189,7 @@ const LevelCategoryManagement = () => {
       color_code: levelCategoryForm.color_code.trim(),
       item: levelCategoryForm.item || null,
       difficulty_order: parseInt(levelCategoryForm.difficulty_order),
+      block_key: blockKeyValue,
     };
 
     try {
@@ -264,6 +306,7 @@ const LevelCategoryManagement = () => {
                       <th className={tableHeaderClassName}>Item Enable</th>
                       <th className={tableHeaderClassName}>Difficulty Order</th>
                       <th className={tableHeaderClassName}>Color Code</th>
+                      <th className={tableHeaderClassName}>Block Key</th>
                       <th className={tableHeaderClassName}>Actions</th>
                     </tr>
                   </thead>
@@ -299,6 +342,27 @@ const LevelCategoryManagement = () => {
                               {category.color_code}
                             </span>
                           </div>
+                        </td>
+                        <td className={tableCellClassName}>
+                          {category.block_key ? (
+                            <div className="max-w-xs">
+                              <Badge variant="secondary" className="text-xs">
+                                {Array.isArray(category.block_key)
+                                  ? `${category.block_key.length} items`
+                                  : typeof category.block_key === 'object'
+                                  ? Object.keys(category.block_key).length > 0
+                                    ? `${Object.keys(category.block_key).length} keys`
+                                    : 'Empty'
+                                  : 'Set'}
+                              </Badge>
+                              <p className="text-xs text-gray-500 mt-1 truncate">
+                                {JSON.stringify(category.block_key).substring(0, 50)}
+                                {JSON.stringify(category.block_key).length > 50 ? '...' : ''}
+                              </p>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-gray-400">-</span>
+                          )}
                         </td>
                         <td className={actionsCellClassName}>
                           <div className="flex items-center gap-2">

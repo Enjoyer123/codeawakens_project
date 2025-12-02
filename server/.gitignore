@@ -30,3 +30,8 @@ uploads/
 *.njsproj
 *.sln
 *.sw?
+
+Dockerfile*
+.dockerignore
+
+../docker-compose.yml

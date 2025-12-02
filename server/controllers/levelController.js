@@ -152,6 +152,20 @@ exports.getLevelById = async (req, res) => {
             victory_condition: true,
           },
         },
+        patterns: {
+          include: {
+            weapon: true,
+            pattern_type: true,
+          },
+        },
+        guides: {
+          include: {
+            guide_images: true,
+          },
+          orderBy: {
+            display_order: 'asc',
+          },
+        },
       },
     });
 
@@ -314,8 +328,8 @@ exports.createLevel = async (req, res) => {
         required_level_id: required_level_id ? parseInt(required_level_id) : null,
         textcode: textcode === true || textcode === 'true',
         background_image,
-        start_node_id: start_node_id ? parseInt(start_node_id) : null,
-        goal_node_id: goal_node_id ? parseInt(goal_node_id) : null,
+        start_node_id: start_node_id !== null && start_node_id !== undefined ? parseInt(start_node_id) : null,
+        goal_node_id: goal_node_id !== null && goal_node_id !== undefined ? parseInt(goal_node_id) : null,
         goal_type: goal_type || null,
         nodes: parseJsonField(nodes),
         edges: parseJsonField(edges),
@@ -463,8 +477,8 @@ exports.updateLevel = async (req, res) => {
     }
     if (textcode !== undefined) updateData.textcode = textcode === true || textcode === 'true';
     if (background_image !== undefined) updateData.background_image = background_image;
-    if (start_node_id !== undefined) updateData.start_node_id = start_node_id ? parseInt(start_node_id) : null;
-    if (goal_node_id !== undefined) updateData.goal_node_id = goal_node_id ? parseInt(goal_node_id) : null;
+    if (start_node_id !== undefined) updateData.start_node_id = start_node_id !== null ? parseInt(start_node_id) : null;
+    if (goal_node_id !== undefined) updateData.goal_node_id = goal_node_id !== null ? parseInt(goal_node_id) : null;
     if (goal_type !== undefined) updateData.goal_type = goal_type || null;
     if (nodes !== undefined) updateData.nodes = parseJsonField(nodes);
     if (edges !== undefined) updateData.edges = parseJsonField(edges);
@@ -594,6 +608,39 @@ exports.deleteLevel = async (req, res) => {
 };
 
 // Upload level background image
+// Unlock level (set is_unlocked to true)
+exports.unlockLevel = async (req, res) => {
+  try {
+    const { levelId } = req.params;
+
+    const level = await prisma.level.findUnique({
+      where: { level_id: parseInt(levelId) },
+    });
+
+    if (!level) {
+      return res.status(404).json({ message: "Level not found" });
+    }
+
+    const updatedLevel = await prisma.level.update({
+      where: { level_id: parseInt(levelId) },
+      data: {
+        is_unlocked: true,
+      },
+    });
+
+    res.json({
+      message: "Level unlocked successfully",
+      level: updatedLevel,
+    });
+  } catch (error) {
+    console.error("Error unlocking level:", error);
+    res.status(500).json({ 
+      message: "Error unlocking level", 
+      error: error.message 
+    });
+  }
+};
+
 exports.uploadLevelBackgroundImage = async (req, res) => {
   try {
     if (!req.file) {

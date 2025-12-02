@@ -13,7 +13,7 @@ import { fetchAllBlocks } from '../../../services/blockService';
 import { fetchAllVictoryConditions } from '../../../services/victoryConditionService';
 import { Button } from '@/components/ui/button';
 import { Loader } from '@/components/ui/loader';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, Trash2, Eye } from 'lucide-react';
 import PhaserMapEditor from '../../../components/admin/level/PhaserMapEditor';
 import LevelInfoForm from '../../../components/admin/level/LevelInfoForm';
 import BlockSelector from '../../../components/admin/level/BlockSelector';
@@ -21,6 +21,7 @@ import VictoryConditionSelector from '../../../components/admin/level/VictoryCon
 import JSONDataEditor from '../../../components/admin/level/JSONDataEditor';
 import BackgroundImageUpload from '../../../components/admin/level/BackgroundImageUpload';
 import LevelElementsToolbar from '../../../components/admin/level/LevelElementsToolbar';
+import PatternListDialog from '../../../components/admin/pattern/PatternListDialog';
 import ErrorAlert from '@/components/shared/alert/ErrorAlert';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
@@ -33,7 +34,7 @@ const LevelCreateEdit = () => {
   
   const [backgroundImage, setBackgroundImage] = useState(null);
   const [backgroundImageUrl, setBackgroundImageUrl] = useState(null);
-  const [canvasSize] = useState({ width: 1200, height: 600 });
+  const [canvasSize] = useState({ width: 1200, height: 900 });
   const [currentMode, setCurrentMode] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
   
@@ -44,6 +45,7 @@ const LevelCreateEdit = () => {
   const [prerequisiteLevels, setPrerequisiteLevels] = useState([]);
   const [allBlocks, setAllBlocks] = useState([]);
   const [allVictoryConditions, setAllVictoryConditions] = useState([]);
+  const [patternListDialogOpen, setPatternListDialogOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     category_id: '',
@@ -253,8 +255,8 @@ const LevelCreateEdit = () => {
         required_level_id: formData.required_level_id ? parseInt(formData.required_level_id) : null,
         textcode: formData.textcode,
         background_image: backgroundImagePath,
-        start_node_id: formData.start_node_id,
-        goal_node_id: formData.goal_node_id,
+        start_node_id: formData.start_node_id !== null && formData.start_node_id !== undefined ? formData.start_node_id : null,
+        goal_node_id: formData.goal_node_id !== null && formData.goal_node_id !== undefined ? formData.goal_node_id : null,
         goal_type: formData.goal_type || null,
         nodes: formData.nodes.length > 0 ? JSON.stringify(formData.nodes) : null,
         edges: formData.edges.length > 0 ? JSON.stringify(formData.edges) : null,
@@ -302,9 +304,20 @@ const LevelCreateEdit = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Levels
           </Button>
-          <h1 className="text-3xl font-bold text-gray-800">
-            {isEditing ? 'Edit Level' : 'Create Level'}
-          </h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-gray-800">
+              {isEditing ? 'Edit Level' : 'Create Level'}
+            </h1>
+            {isEditing && levelId && (
+              <Button
+                variant="outline"
+                onClick={() => setPatternListDialogOpen(true)}
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                ดูรูปแบบคำตอบ
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Top Panel - Map Preview */}
@@ -405,6 +418,16 @@ const LevelCreateEdit = () => {
           </Button>
         </div>
       </div>
+
+      {/* Pattern List Dialog */}
+      {isEditing && levelId && (
+        <PatternListDialog
+          open={patternListDialogOpen}
+          onOpenChange={setPatternListDialogOpen}
+          levelId={parseInt(levelId)}
+          levelName={formData.level_name}
+        />
+      )}
     </div>
   );
 };
