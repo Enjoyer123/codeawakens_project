@@ -12,6 +12,7 @@ const guideRouter = require("./routes/GuideRoute");
 const blockRouter = require("./routes/BlockRoute");
 const victoryConditionRouter = require("./routes/VictoryConditionRoute");
 const levelCategoryRouter = require("./routes/LevelCategoryRoute");
+const patternRouter = require("./routes/PatternRoute");
 const path = require("path");
 const { clerkMiddleware } = require("@clerk/express");
 
@@ -35,6 +36,7 @@ app.use("/api", guideRouter);
 app.use("/api", blockRouter);
 app.use("/api", victoryConditionRouter);
 app.use("/api", levelCategoryRouter);
+app.use("/api", patternRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello World - Server is running!");

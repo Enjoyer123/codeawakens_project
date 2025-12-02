@@ -11,6 +11,7 @@ const {
   updateWeapon,
   deleteWeapon,
   addWeaponImage,
+  updateWeaponImage,
   deleteWeaponImage,
 } = require("../controllers/weaponController");
 
@@ -28,6 +29,13 @@ router.post(
   requireAdmin,
   uploadMiddleware.single("image"),
   addWeaponImage
+);
+router.put(
+  "/weapons/images/:imageId",
+  authCheck,
+  requireAdmin,
+  uploadMiddleware.single("image"),
+  updateWeaponImage
 );
 router.delete("/weapons/images/:imageId", authCheck, requireAdmin, deleteWeaponImage);
 

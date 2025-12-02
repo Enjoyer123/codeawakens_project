@@ -136,3 +136,62 @@ export const getUserByClerkId = async (getToken) => {
     throw error;
   }
 };
+
+export const saveUserProgress = async (getToken, progressData) => {
+  try {
+    const token = await getToken();
+    if (!token) {
+      throw new Error('No authentication token available');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/profile/progress`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(progressData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Failed to save user progress' }));
+      throw new Error(errorData.message || 'Failed to save user progress');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const checkAndAwardRewards = async (getToken, levelId, totalScore) => {
+  try {
+    const token = await getToken();
+    if (!token) {
+      throw new Error('No authentication token available');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/profile/rewards/check`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        level_id: levelId,
+        total_score: totalScore,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Failed to check and award rewards' }));
+      throw new Error(errorData.message || 'Failed to check and award rewards');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};

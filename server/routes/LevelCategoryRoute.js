@@ -12,8 +12,8 @@ const {
 } = require("../controllers/levelCategoryController");
 
 // Level Category CRUD routes
-router.get("/level-categories", authCheck, requireAdmin, getAllLevelCategories);
-router.get("/level-categories/:categoryId", authCheck, requireAdmin, getLevelCategoryById);
+router.get("/level-categories", authCheck, getAllLevelCategories);
+router.get("/level-categories/:categoryId", authCheck, getLevelCategoryById);
 router.post("/level-categories", authCheck, requireAdmin, createLevelCategory);
 router.put("/level-categories/:categoryId", authCheck, requireAdmin, updateLevelCategory);
 router.delete("/level-categories/:categoryId", authCheck, requireAdmin, deleteLevelCategory);

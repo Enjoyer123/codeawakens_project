@@ -22,6 +22,12 @@ const PhaserMapEditor = ({
   const currentModeRef = useRef(currentMode);
   const formDataRef = useRef(formData);
   const selectedNodeRef = useRef(selectedNode);
+  
+  // Refs for obstacle dragging
+  const obstacleDragStartRef = useRef(null);
+  const obstacleDragEndRef = useRef(null);
+  const isDraggingObstacleRef = useRef(false);
+  const editingObstacleIndexRef = useRef(null);
 
   useEffect(() => {
     backgroundImageUrlRef.current = backgroundImageUrl;
@@ -47,6 +53,32 @@ const PhaserMapEditor = ({
       Math.abs(node.x - x) < threshold && 
       Math.abs(node.y - y) < threshold
     );
+  };
+
+  // Find obstacle at position (for editing)
+  const findObstacleAt = (x, y) => {
+    const obstacles = formDataRef.current.obstacles || [];
+    for (let i = 0; i < obstacles.length; i++) {
+      const obstacle = obstacles[i];
+      if (obstacle.points && obstacle.points.length >= 3) {
+        // Check if point is inside polygon
+        const minX = Math.min(...obstacle.points.map(p => p.x));
+        const maxX = Math.max(...obstacle.points.map(p => p.x));
+        const minY = Math.min(...obstacle.points.map(p => p.y));
+        const maxY = Math.max(...obstacle.points.map(p => p.y));
+        
+        if (x >= minX && x <= maxX && y >= minY && y <= maxY) {
+          return { obstacle, index: i };
+        }
+      } else if (obstacle.x && obstacle.y) {
+        // Legacy format - check if within square
+        const threshold = 20;
+        if (Math.abs(obstacle.x - x) < threshold && Math.abs(obstacle.y - y) < threshold) {
+          return { obstacle, index: i };
+        }
+      }
+    }
+    return null;
   };
 
   const handlePhaserClick = (x, y) => {
@@ -110,49 +142,85 @@ const PhaserMapEditor = ({
       const newMonsterId = currentFormData.monsters.length > 0 
         ? Math.max(...currentFormData.monsters.map(m => m.id)) + 1 
         : 1;
+      
+      // คำนวณ patrol path เป็นสี่เหลี่ยมรอบตำแหน่งที่วาง
+      // ใช้ขนาด patrol area: width 40px, height 45px (จากตัวอย่าง)
+      const patrolWidth = 40;
+      const patrolHeight = 45;
+      const centerX = Math.round(x);
+      const centerY = Math.round(y);
+      
+      // คำนวณ 4 มุมของสี่เหลี่ยม (เริ่มจาก top-left, วนตามเข็มนาฬิกา)
+      const patrol = [
+        { x: centerX - patrolWidth / 2, y: centerY - patrolHeight / 2 }, // top-left
+        { x: centerX + patrolWidth / 2, y: centerY - patrolHeight / 2 }, // top-right
+        { x: centerX + patrolWidth / 2, y: centerY + patrolHeight / 2 }, // bottom-right
+        { x: centerX - patrolWidth / 2, y: centerY + patrolHeight / 2 }  // bottom-left
+      ];
+      
       const newMonster = {
         id: newMonsterId,
         name: '👹 Goblin',
-        hp: 2,
+        hp: 3,
         damage: 100,
-        x: Math.round(x),
-        y: Math.round(y),
+        x: centerX,
+        y: centerY,
         startNode: clickedNode ? clickedNode.id : null,
-        patrol: [],
+        patrol: patrol,
         defeated: false,
-        detectionRange: 50,
+        detectionRange: 60,
       };
       onFormDataChange({
         ...currentFormData,
         monsters: [...currentFormData.monsters, newMonster],
       });
     } else if (mode === 'obstacle') {
-      // Add obstacle at clicked position
-      const newObstacleId = currentFormData.obstacles.length > 0 
-        ? Math.max(...currentFormData.obstacles.map(o => o.id)) + 1 
-        : 1;
-      const newObstacle = {
-        id: newObstacleId,
-        x: Math.round(x),
-        y: Math.round(y),
-        type: 'wall',
-      };
-      onFormDataChange({
-        ...currentFormData,
-        obstacles: [...currentFormData.obstacles, newObstacle],
-      });
-    } else if (mode === 'delete' && clickedNode) {
-      // Delete node
-      if (confirm(`ลบ Node ${clickedNode.id}?`)) {
-        onFormDataChange({
-          ...currentFormData,
-          nodes: currentFormData.nodes.filter(n => n.id !== clickedNode.id),
-          edges: currentFormData.edges.filter(e => 
-            e.from !== clickedNode.id && e.to !== clickedNode.id
-          ),
-          start_node_id: currentFormData.start_node_id === clickedNode.id ? null : currentFormData.start_node_id,
-          goal_node_id: currentFormData.goal_node_id === clickedNode.id ? null : currentFormData.goal_node_id,
-        });
+      // Check if clicking on existing obstacle to edit
+      const obstacleAt = findObstacleAt(x, y);
+      if (obstacleAt && obstacleAt.obstacle.points && obstacleAt.obstacle.points.length >= 3) {
+        // Start editing existing obstacle
+        editingObstacleIndexRef.current = obstacleAt.index;
+        const points = obstacleAt.obstacle.points;
+        const minX = Math.min(...points.map(p => p.x));
+        const maxX = Math.max(...points.map(p => p.x));
+        const minY = Math.min(...points.map(p => p.y));
+        const maxY = Math.max(...points.map(p => p.y));
+        obstacleDragStartRef.current = { x: minX, y: minY };
+        obstacleDragEndRef.current = { x: maxX, y: maxY };
+        isDraggingObstacleRef.current = true;
+      } else {
+        // Start dragging to create new rectangle obstacle
+        obstacleDragStartRef.current = { x: Math.round(x), y: Math.round(y) };
+        obstacleDragEndRef.current = { x: Math.round(x), y: Math.round(y) };
+        isDraggingObstacleRef.current = true;
+        editingObstacleIndexRef.current = null;
+      }
+    } else if (mode === 'delete') {
+      // Check if clicking on obstacle
+      const obstacleAt = findObstacleAt(x, y);
+      if (obstacleAt) {
+        if (confirm(`ลบ Obstacle ${obstacleAt.index + 1}?`)) {
+          onFormDataChange({
+            ...currentFormData,
+            obstacles: currentFormData.obstacles.filter((_, i) => i !== obstacleAt.index),
+          });
+        }
+        return;
+      }
+      
+      // Delete node if clicked
+      if (clickedNode) {
+        if (confirm(`ลบ Node ${clickedNode.id}?`)) {
+          onFormDataChange({
+            ...currentFormData,
+            nodes: currentFormData.nodes.filter(n => n.id !== clickedNode.id),
+            edges: currentFormData.edges.filter(e => 
+              e.from !== clickedNode.id && e.to !== clickedNode.id
+            ),
+            start_node_id: currentFormData.start_node_id === clickedNode.id ? null : currentFormData.start_node_id,
+            goal_node_id: currentFormData.goal_node_id === clickedNode.id ? null : currentFormData.goal_node_id,
+          });
+        }
       }
     }
   };
@@ -245,8 +313,42 @@ const PhaserMapEditor = ({
     
     // Draw obstacles
     if (currentFormData.obstacles && currentFormData.obstacles.length > 0) {
-      currentFormData.obstacles.forEach(obstacle => {
-        if (obstacle.x && obstacle.y) {
+      currentFormData.obstacles.forEach((obstacle, index) => {
+        if (obstacle.points && obstacle.points.length >= 3) {
+          // Draw polygon obstacle (pit)
+          // Shadow
+          currentGraphics.fillStyle(0x000000, 0.3);
+          currentGraphics.beginPath();
+          currentGraphics.moveTo(obstacle.points[0].x + 2, obstacle.points[0].y + 2);
+          for (let i = 1; i < obstacle.points.length; i++) {
+            currentGraphics.lineTo(obstacle.points[i].x + 2, obstacle.points[i].y + 2);
+          }
+          currentGraphics.closePath();
+          currentGraphics.fillPath();
+          
+          // Obstacle fill
+          currentGraphics.fillStyle(0x000000, 0.8); // Black with transparency
+          currentGraphics.beginPath();
+          currentGraphics.moveTo(obstacle.points[0].x, obstacle.points[0].y);
+          for (let i = 1; i < obstacle.points.length; i++) {
+            currentGraphics.lineTo(obstacle.points[i].x, obstacle.points[i].y);
+          }
+          currentGraphics.closePath();
+          currentGraphics.fillPath();
+          
+          // Border
+          currentGraphics.lineStyle(3, 0x8b4513, 1); // Brown border
+          currentGraphics.strokePath();
+          
+          // Draw corner handles for editing (small squares)
+          currentGraphics.fillStyle(0xffff00, 1); // Yellow handles
+          obstacle.points.forEach(point => {
+            currentGraphics.fillRect(point.x - 4, point.y - 4, 8, 8);
+            currentGraphics.lineStyle(2, 0x000000, 1);
+            currentGraphics.strokeRect(point.x - 4, point.y - 4, 8, 8);
+          });
+        } else if (obstacle.x && obstacle.y) {
+          // Legacy format - draw as square
           // Shadow
           currentGraphics.fillStyle(0x000000, 0.3);
           currentGraphics.fillRect(obstacle.x - 12 + 2, obstacle.y - 12 + 2, 24, 24);
@@ -260,6 +362,24 @@ const PhaserMapEditor = ({
           currentGraphics.strokeRect(obstacle.x - 12, obstacle.y - 12, 24, 24);
         }
       });
+    }
+    
+    // Draw preview rectangle while dragging
+    if (isDraggingObstacleRef.current && obstacleDragStartRef.current && obstacleDragEndRef.current) {
+      const start = obstacleDragStartRef.current;
+      const end = obstacleDragEndRef.current;
+      const minX = Math.min(start.x, end.x);
+      const maxX = Math.max(start.x, end.x);
+      const minY = Math.min(start.y, end.y);
+      const maxY = Math.max(start.y, end.y);
+      
+      // Draw preview rectangle with dashed line effect
+      currentGraphics.lineStyle(2, 0x00ff00, 0.8); // Green dashed preview
+      currentGraphics.strokeRect(minX, minY, maxX - minX, maxY - minY);
+      
+      // Fill preview
+      currentGraphics.fillStyle(0x00ff00, 0.2); // Light green fill
+      currentGraphics.fillRect(minX, minY, maxX - minX, maxY - minY);
     }
   };
 
@@ -310,9 +430,13 @@ const PhaserMapEditor = ({
                   }
                   // Add image to texture manager
                   scene.textures.addImage('background', img);
-                  const newSprite = scene.add.image(0, 0, 'background');
+                  const newSprite = scene.add.image(
+                    scene.scale.width / 2, 
+                    scene.scale.height / 2, 
+                    'background'
+                  );
                   backgroundSpriteRef.current = newSprite;
-                  newSprite.setOrigin(0, 0);
+                  newSprite.setDisplaySize(scene.scale.width, scene.scale.height);
                   newSprite.setDepth(0);
                   newSprite.setVisible(true);
                   if (phaserGraphicsRef.current) {
@@ -332,9 +456,13 @@ const PhaserMapEditor = ({
               // For regular URLs
               scene.load.image('background', imageUrl);
               scene.load.once('filecomplete-image-background', () => {
-                const newSprite = scene.add.image(0, 0, 'background');
+                const newSprite = scene.add.image(
+                  scene.scale.width / 2, 
+                  scene.scale.height / 2, 
+                  'background'
+                );
                 backgroundSpriteRef.current = newSprite;
-                newSprite.setOrigin(0, 0);
+                newSprite.setDisplaySize(scene.scale.width, scene.scale.height);
                 newSprite.setDepth(0);
                 newSprite.setVisible(true);
                 if (phaserGraphicsRef.current) {
@@ -371,15 +499,97 @@ const PhaserMapEditor = ({
       });
       
       scene.input.on('pointermove', (pointer) => {
-        if (currentModeRef.current === 'delete') {
+        const mode = currentModeRef.current;
+        
+        // Handle obstacle dragging
+        if (mode === 'obstacle' && isDraggingObstacleRef.current && obstacleDragStartRef.current) {
+          obstacleDragEndRef.current = { x: Math.round(pointer.x), y: Math.round(pointer.y) };
+          redrawPhaser(); // Redraw to show preview
+        }
+        
+        // Handle cursor changes
+        if (mode === 'delete') {
           const node = findNodeAt(pointer.x, pointer.y);
-          if (node) {
+          const obstacleAt = findObstacleAt(pointer.x, pointer.y);
+          if (node || obstacleAt) {
             scene.input.setDefaultCursor('pointer');
           } else {
             scene.input.setDefaultCursor('default');
           }
+        } else if (mode === 'obstacle') {
+          scene.input.setDefaultCursor('crosshair');
         } else {
           scene.input.setDefaultCursor('default');
+        }
+      });
+      
+      scene.input.on('pointerup', (pointer) => {
+        const mode = currentModeRef.current;
+        
+        // Finish obstacle dragging
+        if (mode === 'obstacle' && isDraggingObstacleRef.current && obstacleDragStartRef.current && obstacleDragEndRef.current) {
+          const start = obstacleDragStartRef.current;
+          const end = obstacleDragEndRef.current;
+          
+          // Calculate rectangle bounds
+          const minX = Math.min(start.x, end.x);
+          const maxX = Math.max(start.x, end.x);
+          const minY = Math.min(start.y, end.y);
+          const maxY = Math.max(start.y, end.y);
+          
+          // Only create/update if rectangle is large enough
+          if (Math.abs(maxX - minX) > 10 && Math.abs(maxY - minY) > 10) {
+            const currentFormData = formDataRef.current;
+            
+            if (editingObstacleIndexRef.current !== null) {
+              // Update existing obstacle
+              const updatedObstacles = [...currentFormData.obstacles];
+              const existingObstacle = updatedObstacles[editingObstacleIndexRef.current];
+              updatedObstacles[editingObstacleIndexRef.current] = {
+                ...existingObstacle,
+                type: 'pit',
+                points: [
+                  { x: minX, y: minY }, // top-left
+                  { x: maxX, y: minY }, // top-right
+                  { x: maxX, y: maxY }, // bottom-right
+                  { x: minX, y: maxY }  // bottom-left
+                ]
+              };
+              
+              onFormDataChange({
+                ...currentFormData,
+                obstacles: updatedObstacles,
+              });
+            } else {
+              // Create new obstacle
+              const newObstacleId = currentFormData.obstacles.length > 0 
+                ? Math.max(...currentFormData.obstacles.map(o => o.id || 0)) + 1 
+                : 1;
+              
+              // Create rectangle with 4 points (clockwise from top-left)
+              const newObstacle = {
+                id: newObstacleId,
+                type: 'pit',
+                points: [
+                  { x: minX, y: minY }, // top-left
+                  { x: maxX, y: minY }, // top-right
+                  { x: maxX, y: maxY }, // bottom-right
+                  { x: minX, y: maxY }  // bottom-left
+                ]
+              };
+              
+              onFormDataChange({
+                ...currentFormData,
+                obstacles: [...currentFormData.obstacles, newObstacle],
+              });
+            }
+          }
+          
+          // Reset drag state
+          isDraggingObstacleRef.current = false;
+          obstacleDragStartRef.current = null;
+          obstacleDragEndRef.current = null;
+          redrawPhaser();
         }
       });
       
@@ -401,7 +611,7 @@ const PhaserMapEditor = ({
     if (phaserLoaded && phaserGraphicsRef.current) {
       redrawPhaser();
     }
-  }, [formData.nodes, formData.edges, formData.start_node_id, formData.goal_node_id, selectedNode, phaserLoaded]);
+  }, [formData.nodes, formData.edges, formData.start_node_id, formData.goal_node_id, formData.obstacles, selectedNode, phaserLoaded]);
 
   // Reload background image when it changes
   useEffect(() => {
@@ -445,9 +655,13 @@ const PhaserMapEditor = ({
                 scene.textures.remove('background');
               }
               scene.textures.addImage('background', img);
-              const newSprite = scene.add.image(0, 0, 'background');
+              const newSprite = scene.add.image(
+                scene.scale.width / 2, 
+                scene.scale.height / 2, 
+                'background'
+              );
               backgroundSpriteRef.current = newSprite;
-              newSprite.setOrigin(0, 0);
+              newSprite.setDisplaySize(scene.scale.width, scene.scale.height);
               newSprite.setDepth(0);
               newSprite.setVisible(true);
               if (currentGraphics) {
@@ -467,9 +681,13 @@ const PhaserMapEditor = ({
           // For regular URLs
           scene.load.image('background', imageUrl);
           scene.load.once('filecomplete-image-background', () => {
-            const newSprite = scene.add.image(0, 0, 'background');
+            const newSprite = scene.add.image(
+              scene.scale.width / 2, 
+              scene.scale.height / 2, 
+              'background'
+            );
             backgroundSpriteRef.current = newSprite;
-            newSprite.setOrigin(0, 0);
+            newSprite.setDisplaySize(scene.scale.width, scene.scale.height);
             newSprite.setDepth(0);
             newSprite.setVisible(true);
             if (currentGraphics) {
@@ -589,14 +807,14 @@ const PhaserMapEditor = ({
   return (
     <div className="relative border-2 border-gray-300 rounded-lg bg-black overflow-hidden">
       {!phaserLoaded && typeof window !== 'undefined' && !window.Phaser ? (
-        <div className="w-full h-[600px] flex items-center justify-center text-white">
+        <div className="w-full h-[900px] flex items-center justify-center text-white">
           <div className="text-center">
             <div className="text-lg mb-2">⏳ กำลังโหลด Level Editor...</div>
             <div className="text-sm text-gray-400">กรุณารอสักครู่</div>
           </div>
         </div>
       ) : (
-        <div ref={gameRef} id="phaser-game-container" style={{ width: '100%', height: '600px', display: 'flex', justifyContent: 'center' }}></div>
+        <div ref={gameRef} id="phaser-game-container" style={{ width: '100%', height: '900px', display: 'flex', justifyContent: 'center' }}></div>
       )}
     </div>
   );

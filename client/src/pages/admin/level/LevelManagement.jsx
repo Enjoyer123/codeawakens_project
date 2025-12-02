@@ -11,7 +11,7 @@ import {
 } from '../../../services/levelService';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, Eye, Play } from 'lucide-react';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import SearchInput from '@/components/admin/formFields/SearchInput';
@@ -20,6 +20,7 @@ import PaginationControls from '@/components/shared/pagination/PaginationControl
 import { LoadingState, EmptyState } from '@/components/admin/tableStates/DataTableStates';
 import { usePagination } from '@/hooks/usePagination';
 import { createDeleteErrorMessage } from '@/utils/errorHandler';
+import PatternListDialog from '../../../components/admin/pattern/PatternListDialog';
 
 const LevelManagement = () => {
   const navigate = useNavigate();
@@ -37,6 +38,8 @@ const LevelManagement = () => {
     page: 1,
     limit: 10,
   });
+  const [patternListDialogOpen, setPatternListDialogOpen] = useState(false);
+  const [selectedLevelForPatterns, setSelectedLevelForPatterns] = useState(null);
 
   // Level form states
   const [levelDialogOpen, setLevelDialogOpen] = useState(false);
@@ -349,6 +352,27 @@ const LevelManagement = () => {
                             <Button
                               variant="outline"
                               size="sm"
+                              onClick={() => {
+                                setSelectedLevelForPatterns({ id: level.level_id, name: level.level_name });
+                                setPatternListDialogOpen(true);
+                              }}
+                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              ดูรูปแบบคำตอบ
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => navigate(`/admin/levels/${level.level_id}/preview`)}
+                              className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                            >
+                              <Play className="h-4 w-4 mr-2" />
+                              ดูตัวอย่าง
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
                               onClick={() => handleDeleteClick(level)}
                               className="text-red-600 hover:text-red-700 hover:bg-red-50"
                             >
@@ -384,6 +408,15 @@ const LevelManagement = () => {
         description={getDeleteDescription(levelToDelete?.level_name)}
         deleting={deleting}
       />
+
+      {selectedLevelForPatterns && (
+        <PatternListDialog
+          open={patternListDialogOpen}
+          onOpenChange={setPatternListDialogOpen}
+          levelId={selectedLevelForPatterns.id}
+          levelName={selectedLevelForPatterns.name}
+        />
+      )}
     </div>
   );
 };

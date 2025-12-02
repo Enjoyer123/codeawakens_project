@@ -37,6 +37,7 @@ model LevelCategory {
   item             Json?
   difficulty_order Int
   color_code       String
+  block_key        Json?
   levels           Level[]
 
   @@map("level_categories")

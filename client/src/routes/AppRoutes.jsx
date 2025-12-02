@@ -4,11 +4,15 @@ import AuthCallback from "../pages/auth/AuthCallback";
 import LandingPage from "../pages/Landing";
 import UserProfile from "../pages/user/UserProfile";
 import MapSelect from "../pages/user/MapSelect";
+import CategoryLevels from "../pages/user/CategoryLevels";
+import LevelGame from "../pages/user/LevelGame";
 import AdminDashboard from "../pages/admin/dashboard/AdminDashBoard";
 import UserManagement from "../pages/admin/user/UserManagement";
 import WeaponManagement from "../pages/admin/weapon/WeaponManagement";
 import LevelManagement from "../pages/admin/level/LevelManagement";
 import LevelCreateEdit from "../pages/admin/level/LevelCreateEdit";
+import PatternCreateEdit from "../pages/admin/pattern/PatternCreateEdit";
+import PreviewLevel from "../pages/admin/level/PreviewLevel";
 import RewardManagement from "../pages/admin/reward/RewardManagement";
 import GuideManagement from "../pages/admin/guide/GuideManagement";
 import BlockManagement from "../pages/admin/block/BlockManagement";
@@ -34,6 +38,8 @@ const AppRoutes = () => {
         <Route path="user/profile" element={<UserProfile />} />
         
         <Route path="user/mapselect" element={<MapSelect />} />
+        <Route path="mapselect/:categoryId" element={<CategoryLevels />} />
+        <Route path="mapselection/:levelId" element={<LevelGame />} />
       </Route>
 
       <Route
@@ -49,6 +55,10 @@ const AppRoutes = () => {
         <Route path="admin/levels" element={<LevelManagement />} />
         <Route path="admin/levels/create" element={<LevelCreateEdit />} />
         <Route path="admin/levels/:levelId/edit" element={<LevelCreateEdit />} />
+        <Route path="admin/levels/:levelId/patterns/create" element={<PatternCreateEdit />} />
+        <Route path="admin/levels/:levelId/patterns/:patternId/edit" element={<PatternCreateEdit />} />
+        <Route path="admin/levels/:levelId/preview" element={<PreviewLevel />} />
+        <Route path="admin/levels/:levelId/preview/:patternId" element={<PreviewLevel />} />
         <Route path="admin/level-categories" element={<LevelCategoryManagement />} />
         <Route path="admin/rewards" element={<RewardManagement />} />
         <Route path="admin/guides" element={<GuideManagement />} />

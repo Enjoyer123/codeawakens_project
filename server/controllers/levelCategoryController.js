@@ -24,6 +24,14 @@ exports.getAllLevelCategories = async (req, res) => {
 
     const levelCategories = await prisma.levelCategory.findMany({
       where,
+      include: {
+        levels: {
+          select: {
+            level_id: true,
+            is_unlocked: true,
+          },
+        },
+      },
       orderBy: {
         difficulty_order: "asc",
       },
@@ -31,8 +39,14 @@ exports.getAllLevelCategories = async (req, res) => {
       take: limit,
     });
 
+    // Add level_count to each category (count only unlocked levels)
+    const categoriesWithCount = levelCategories.map(category => ({
+      ...category,
+      level_count: category.levels ? category.levels.filter(level => level.is_unlocked === true).length : 0,
+    }));
+
     res.json({
-      levelCategories,
+      levelCategories: categoriesWithCount,
       pagination: {
         total,
         totalPages: Math.ceil(total / limit),
@@ -53,6 +67,25 @@ exports.getLevelCategoryById = async (req, res) => {
 
     const levelCategory = await prisma.levelCategory.findUnique({
       where: { category_id: parseInt(categoryId) },
+      include: {
+        levels: {
+          select: {
+            level_id: true,
+            level_name: true,
+            description: true,
+            difficulty: true,
+            goal_node_id: true,
+            monsters: true,
+            category_id: true,
+            start_node_id: true,
+            goal_type: true,
+            is_unlocked: true,
+          },
+          orderBy: {
+            level_id: 'asc',
+          },
+        },
+      },
     });
 
     if (!levelCategory) {
@@ -76,6 +109,7 @@ exports.createLevelCategory = async (req, res) => {
       item,
       difficulty_order,
       color_code,
+      block_key,
     } = req.body;
 
     if (!category_name || !description || !difficulty_order || !color_code) {
@@ -109,6 +143,7 @@ exports.createLevelCategory = async (req, res) => {
         item: item || null,
         difficulty_order: parseInt(difficulty_order),
         color_code: trimmedColorCode,
+        block_key: block_key || null,
       },
     });
     console.log("Level category created:", levelCategory);
@@ -141,6 +176,7 @@ exports.updateLevelCategory = async (req, res) => {
       item,
       difficulty_order,
       color_code,
+      block_key,
     } = req.body;
 
     if (!category_name || !description || !difficulty_order || !color_code) {
@@ -166,6 +202,7 @@ exports.updateLevelCategory = async (req, res) => {
         item: item || null,
         difficulty_order: parseInt(difficulty_order),
         color_code: color_code.trim(),
+        block_key: block_key || null,
       },
     });
 

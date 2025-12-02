@@ -109,6 +109,18 @@ const LevelCategoryFormDialog = ({
             checked={formData.item_enable}
             onChange={(e) => handleChange('item_enable', e.target.checked)}
           />
+          <div>
+            <FormInput
+              label="Block Key"
+              name="block_key"
+              value={formData.block_key || ''}
+              onChange={(e) => handleChange('block_key', e.target.value)}
+              placeholder='เช่น move_forward,hit'
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              สามารถกรอกแบบ comma-separated (เช่น: move_forward,hit) หรือ JSON format (เช่น: ["move_forward", "turn_left"])
+            </p>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>

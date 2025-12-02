@@ -92,16 +92,22 @@ const LevelInfoForm = ({ formData, categories, prerequisiteLevels, isEditing, le
             <label className="text-sm font-medium">Start Node ID</label>
             <Input
               type="number"
-              value={formData.start_node_id || ''}
-              onChange={(e) => handleChange('start_node_id', e.target.value ? parseInt(e.target.value) : null)}
+              value={formData.start_node_id ?? ''}
+              onChange={(e) => {
+                const value = e.target.value;
+                handleChange('start_node_id', value !== '' ? parseInt(value) || 0 : null);
+              }}
             />
           </div>
           <div>
             <label className="text-sm font-medium">Goal Node ID</label>
             <Input
               type="number"
-              value={formData.goal_node_id || ''}
-              onChange={(e) => handleChange('goal_node_id', e.target.value ? parseInt(e.target.value) : null)}
+              value={formData.goal_node_id ?? ''}
+              onChange={(e) => {
+                const value = e.target.value;
+                handleChange('goal_node_id', value !== '' ? parseInt(value) || 0 : null);
+              }}
             />
           </div>
         </div>

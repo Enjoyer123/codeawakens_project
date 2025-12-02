@@ -199,6 +199,67 @@ export const addWeaponImage = async (getToken, weaponId, imageFile, imageData) =
   }
 };
 
+// Update weapon image
+export const updateWeaponImage = async (getToken, imageId, imageFile, imageData) => {
+  try {
+    const token = await getToken();
+    if (!token) {
+      throw new Error('No authentication token available');
+    }
+
+    const formData = new FormData();
+    if (imageFile) {
+      formData.append('image', imageFile);
+    }
+    if (imageData.type_file) {
+      formData.append('type_file', imageData.type_file);
+    }
+    if (imageData.type_animation) {
+      formData.append('type_animation', imageData.type_animation);
+    }
+    if (imageData.frame !== undefined) {
+      formData.append('frame', imageData.frame.toString());
+    }
+
+    console.log('Updating image:', {
+      imageId,
+      type_file: imageData.type_file,
+      type_animation: imageData.type_animation,
+      frame: imageData.frame,
+      hasFile: !!imageFile,
+      fileName: imageFile?.name,
+      fileSize: imageFile?.size
+    });
+
+    const response = await fetch(`${API_BASE_URL}/api/weapons/images/${imageId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch (e) {
+        errorData = { message: `HTTP ${response.status}: ${response.statusText}` };
+      }
+      
+      console.error('Error response:', errorData);
+      throw new Error(errorData.message || `Failed to update weapon image (${response.status})`);
+    }
+
+    const data = await response.json();
+    console.log('Image updated successfully:', data);
+    return data;
+  } catch (error) {
+    console.error('Error in updateWeaponImage:', error);
+    throw error;
+  }
+};
+
 // Delete weapon image
 export const deleteWeaponImage = async (getToken, imageId) => {
   try {
