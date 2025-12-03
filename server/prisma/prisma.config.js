@@ -2,8 +2,9 @@
 const config = {
     schema: "./schema.prisma",
     datasource: {
-        url: process.env.DATABASE_URL,
+      url: process.env.DATABASE_URL,
     },
-};
-
-export default config;
+  };
+  
+  export default config;
+  

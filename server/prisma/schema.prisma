@@ -6,6 +6,7 @@ datasource db {
   provider = "postgresql"
 }
 
+
 model User {
   user_id               Int                @id @default(autoincrement())
   clerk_user_id         String             @unique
