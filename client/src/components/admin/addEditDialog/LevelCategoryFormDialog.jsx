@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -10,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import FormInput from '@/components/admin/formFields/FormInput';
 import FormCheckbox from '@/components/admin/formFields/FormCheckbox';
+import { AVAILABLE_ITEMS } from '@/constants/itemTypes';
 
 const LevelCategoryFormDialog = ({
   open,
@@ -20,8 +22,49 @@ const LevelCategoryFormDialog = ({
   onSave,
   saving = false,
 }) => {
+  // Parse item from formData
+  const getSelectedItems = () => {
+    if (!formData.item) return [];
+    
+    // ถ้าเป็น array อยู่แล้ว return เลย
+    if (Array.isArray(formData.item)) {
+      return formData.item;
+    }
+    
+    // ถ้าเป็น string ให้ parse JSON
+    if (typeof formData.item === 'string') {
+      try {
+        const parsed = JSON.parse(formData.item);
+        return Array.isArray(parsed) ? parsed : [parsed];
+      } catch (e) {
+        return [];
+      }
+    }
+    
+    // ถ้าเป็น object เดียว
+    return [formData.item];
+  };
+
+  const [selectedItems, setSelectedItems] = useState(getSelectedItems());
+
+  // Update selectedItems when formData.item changes
+  useEffect(() => {
+    setSelectedItems(getSelectedItems());
+  }, [formData.item]);
+
   const handleChange = (field, value) => {
     onFormChange({ ...formData, [field]: value });
+  };
+
+  const handleItemToggle = (itemValue) => {
+    const newSelectedItems = selectedItems.includes(itemValue)
+      ? selectedItems.filter(item => item !== itemValue)
+      : [...selectedItems, itemValue];
+    
+    setSelectedItems(newSelectedItems);
+    
+    // Update formData.item
+    handleChange('item', newSelectedItems.length > 0 ? newSelectedItems : null);
   };
 
   const handleSaveClick = async () => {
@@ -37,6 +80,11 @@ const LevelCategoryFormDialog = ({
     }
     if (!formData.color_code?.trim()) {
       return { success: false, error: 'กรุณากรอก Color Code' };
+    }
+    
+    // Validate item if item_enable is true
+    if (formData.item_enable && (!selectedItems || selectedItems.length === 0)) {
+      return { success: false, error: 'กรุณาเลือก item อย่างน้อย 1 รายการเมื่อเปิดใช้งาน Item Enable' };
     }
 
     const result = await onSave();
@@ -109,6 +157,39 @@ const LevelCategoryFormDialog = ({
             checked={formData.item_enable}
             onChange={(e) => handleChange('item_enable', e.target.checked)}
           />
+          
+          {formData.item_enable && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Items (เลือก item ที่ต้องการ enable)
+              </label>
+              <div className="space-y-2 border border-gray-300 rounded-md p-3 bg-gray-50">
+                {AVAILABLE_ITEMS.map((item) => (
+                  <label
+                    key={item.value}
+                    className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 p-2 rounded"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedItems.includes(item.value)}
+                      onChange={() => handleItemToggle(item.value)}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">{item.label}</span>
+                  </label>
+                ))}
+                {selectedItems.length === 0 && (
+                  <p className="text-xs text-gray-500 italic">
+                    กรุณาเลือก item อย่างน้อย 1 รายการ
+                  </p>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                เลือก item ที่ต้องการให้สามารถวางได้ใน level ของ category นี้
+              </p>
+            </div>
+          )}
+          
           <div>
             <FormInput
               label="Block Key"

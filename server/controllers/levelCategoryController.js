@@ -31,6 +31,11 @@ exports.getAllLevelCategories = async (req, res) => {
             is_unlocked: true,
           },
         },
+        category_items: {
+          orderBy: {
+            display_order: 'asc',
+          },
+        },
       },
       orderBy: {
         difficulty_order: "asc",
@@ -85,6 +90,11 @@ exports.getLevelCategoryById = async (req, res) => {
             level_id: 'asc',
           },
         },
+        category_items: {
+          orderBy: {
+            display_order: 'asc',
+          },
+        },
       },
     });
 
@@ -135,15 +145,40 @@ exports.createLevelCategory = async (req, res) => {
       console.warn("Warning: Could not reset sequence:", seqError);
     }
 
+    // Prepare category_items data
+    const categoryItemsData = [];
+    if (item_enable === true || item_enable === 'true') {
+      if (Array.isArray(item) && item.length > 0) {
+        categoryItemsData.push(...item.map((itemType, index) => ({
+          item_type: itemType,
+          display_order: index,
+        })));
+      }
+    }
+
+    console.log('Creating category with items:', {
+      item_enable,
+      item,
+      categoryItemsData,
+    });
+
+    // Create category with items
     const levelCategory = await prisma.levelCategory.create({
       data: {
         category_name: trimmedCategoryName,
         description: description.trim(),
         item_enable: item_enable === true || item_enable === 'true' || item_enable === false,
-        item: item || null,
         difficulty_order: parseInt(difficulty_order),
         color_code: trimmedColorCode,
         block_key: block_key || null,
+        category_items: categoryItemsData.length > 0
+          ? {
+              create: categoryItemsData,
+            }
+          : undefined,
+      },
+      include: {
+        category_items: true,
       },
     });
     console.log("Level category created:", levelCategory);
@@ -193,16 +228,47 @@ exports.updateLevelCategory = async (req, res) => {
       return res.status(404).json({ message: "Level category not found" });
     }
 
+    // Delete existing items first
+    await prisma.levelCategoryItem.deleteMany({
+      where: { category_id: parseInt(categoryId) },
+    });
+
+    // Prepare category_items data
+    const categoryItemsData = [];
+    if (item_enable === true || item_enable === 'true') {
+      if (Array.isArray(item) && item.length > 0) {
+        categoryItemsData.push(...item.map((itemType, index) => ({
+          item_type: itemType,
+          display_order: index,
+        })));
+      }
+    }
+
+    console.log('Updating category with items:', {
+      categoryId,
+      item_enable,
+      item,
+      categoryItemsData,
+    });
+
+    // Update category and create new items
     const levelCategory = await prisma.levelCategory.update({
       where: { category_id: parseInt(categoryId) },
       data: {
         category_name: category_name.trim(),
         description: description.trim(),
         item_enable: item_enable === true || item_enable === 'true',
-        item: item || null,
         difficulty_order: parseInt(difficulty_order),
         color_code: color_code.trim(),
         block_key: block_key || null,
+        category_items: categoryItemsData.length > 0
+          ? {
+              create: categoryItemsData,
+            }
+          : undefined,
+      },
+      include: {
+        category_items: true,
       },
     });
 

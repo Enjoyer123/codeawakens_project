@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -30,18 +29,32 @@ model User {
 }
 
 model LevelCategory {
-  category_id      Int     @id @default(autoincrement())
+  category_id      Int                  @id @default(autoincrement())
   category_name    String
   description      String
   item_enable      Boolean
-  item             Json?
   difficulty_order Int
   color_code       String
   block_key        Json?
   levels           Level[]
+  category_items   LevelCategoryItem[]
 
   @@map("level_categories")
 }
+
+model LevelCategoryItem {
+  id            Int           @id @default(autoincrement())
+  category_id   Int
+  item_type     ItemType
+  display_order Int           @default(0)
+  created_at    DateTime      @default(now())
+  category      LevelCategory @relation(fields: [category_id], references: [category_id], onDelete: Cascade)
+
+  @@unique([category_id, item_type])
+  @@map("level_category_items")
+}
+
+
 
 model VictoryCondition {
   victory_condition_id     Int                      @id @default(autoincrement())
@@ -350,4 +363,10 @@ enum BlockCategory {
   functions
   variables
   operators
+}
+
+enum ItemType {
+  coin_positions
+  people
+  treasures
 }

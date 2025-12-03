@@ -19,6 +19,7 @@ import { LoadingState, EmptyState } from '@/components/admin/tableStates/DataTab
 import LevelCategoryFormDialog from '@/components/admin/addEditDialog/LevelCategoryFormDialog';
 import { usePagination } from '@/hooks/usePagination';
 import { createDeleteErrorMessage } from '@/utils/errorHandler';
+import { ITEM_TYPE_SHORT_LABELS } from '@/constants/itemTypes';
 
 const LevelCategoryManagement = () => {
   const navigate = useNavigate();
@@ -111,11 +112,14 @@ const LevelCategoryManagement = () => {
         }
       }
 
+      // Get items from category_items relation
+      const items = levelCategory.category_items?.map(ci => ci.item_type) || [];
+
       setLevelCategoryForm({
         category_name: levelCategory.category_name,
         description: levelCategory.description || '',
         item_enable: levelCategory.item_enable || false,
-        item: levelCategory.item,
+        item: items,
         difficulty_order: levelCategory.difficulty_order,
         color_code: levelCategory.color_code || '#4CAF50',
         block_key: blockKeyDisplay,
@@ -182,12 +186,22 @@ const LevelCategoryManagement = () => {
       }
     }
 
+    // Handle item - ensure it's an array or null
+    let itemValue = null;
+    if (levelCategoryForm.item_enable && levelCategoryForm.item) {
+      if (Array.isArray(levelCategoryForm.item)) {
+        itemValue = levelCategoryForm.item.length > 0 ? levelCategoryForm.item : null;
+      } else {
+        itemValue = [levelCategoryForm.item];
+      }
+    }
+
     const formData = {
       ...levelCategoryForm,
       category_name: levelCategoryForm.category_name.trim(),
       description: levelCategoryForm.description.trim(),
       color_code: levelCategoryForm.color_code.trim(),
-      item: levelCategoryForm.item || null,
+      item: itemValue,
       difficulty_order: parseInt(levelCategoryForm.difficulty_order),
       block_key: blockKeyValue,
     };
@@ -304,6 +318,7 @@ const LevelCategoryManagement = () => {
                       <th className={tableHeaderClassName}>Category Name</th>
                       <th className={tableHeaderClassName}>Description</th>
                       <th className={tableHeaderClassName}>Item Enable</th>
+                      <th className={tableHeaderClassName}>Items</th>
                       <th className={tableHeaderClassName}>Difficulty Order</th>
                       <th className={tableHeaderClassName}>Color Code</th>
                       <th className={tableHeaderClassName}>Block Key</th>
@@ -328,6 +343,19 @@ const LevelCategoryManagement = () => {
                           >
                             {category.item_enable ? 'Enabled' : 'Disabled'}
                           </Badge>
+                        </td>
+                        <td className={tableCellClassName}>
+                          {category.item_enable && category.category_items && category.category_items.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {category.category_items.map((categoryItem, idx) => (
+                                <Badge key={idx} variant="outline" className="text-xs">
+                                  {ITEM_TYPE_SHORT_LABELS[categoryItem.item_type] || categoryItem.item_type}
+                                </Badge>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-sm text-gray-400">-</span>
+                          )}
                         </td>
                         <td className={tableCellClassName}>
                           {category.difficulty_order}

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { ITEM_TYPES } from '@/constants/itemTypes';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 
@@ -10,18 +11,22 @@ const PhaserMapEditor = ({
   selectedNode,
   onFormDataChange,
   onSelectedNodeChange,
+  selectedCategory,
+  coinValue = 10,
 }) => {
   const gameRef = useRef(null);
   const phaserGameRef = useRef(null);
   const phaserGraphicsRef = useRef(null);
   const backgroundSpriteRef = useRef(null);
   const [phaserLoaded, setPhaserLoaded] = useState(false);
+  const coinTextsRef = useRef([]); // เก็บ text objects สำหรับลบก่อนวาดใหม่
   
   // Refs for callbacks
   const backgroundImageUrlRef = useRef(backgroundImageUrl);
   const currentModeRef = useRef(currentMode);
   const formDataRef = useRef(formData);
   const selectedNodeRef = useRef(selectedNode);
+  const coinValueRef = useRef(coinValue);
   
   // Refs for obstacle dragging
   const obstacleDragStartRef = useRef(null);
@@ -44,6 +49,10 @@ const PhaserMapEditor = ({
   useEffect(() => {
     selectedNodeRef.current = selectedNode;
   }, [selectedNode]);
+
+  useEffect(() => {
+    coinValueRef.current = coinValue;
+  }, [coinValue]);
 
   // Phaser helper functions
   const findNodeAt = (x, y) => {
@@ -81,11 +90,39 @@ const PhaserMapEditor = ({
     return null;
   };
 
+  // ตรวจสอบว่า item enable หรือไม่
+  const isItemEnabled = (itemName) => {
+    if (!selectedCategory?.item_enable) return false;
+    
+    // ใช้ category_items ถ้ามี (ตารางใหม่)
+    if (selectedCategory?.category_items && Array.isArray(selectedCategory.category_items)) {
+      return selectedCategory.category_items.some(ci => ci.item_type === itemName);
+    }
+    
+    // Fallback ไปใช้ item (backward compatibility)
+    let itemData = selectedCategory?.item;
+    if (!itemData) return false;
+    
+    // ถ้าเป็น string ให้ parse JSON
+    if (typeof itemData === 'string') {
+      try {
+        itemData = JSON.parse(itemData);
+      } catch (e) {
+        return false;
+      }
+    }
+    
+    // แปลงเป็น array
+    const enabledItems = Array.isArray(itemData) ? itemData : [itemData];
+    return enabledItems.includes(itemName);
+  };
+
   const handlePhaserClick = (x, y) => {
     const clickedNode = findNodeAt(x, y);
     const mode = currentModeRef.current;
     const currentFormData = formDataRef.current;
     const currentSelectedNode = selectedNodeRef.current;
+    
     
     if (mode === 'node') {
       // Add new node
@@ -125,6 +162,83 @@ const PhaserMapEditor = ({
         }
         onSelectedNodeChange(null);
       }
+    } else if (mode === 'coin') {
+      // เพิ่ม coin ที่ตำแหน่งที่คลิก (ต้อง enable ก่อน)
+      if (!isItemEnabled(ITEM_TYPES.COIN_POSITIONS)) {
+        alert('Coin ไม่ได้ถูก enable ใน category นี้');
+        return;
+      }
+      const newCoinId = (currentFormData.coin_positions?.length || 0) > 0 
+        ? Math.max(...currentFormData.coin_positions.map(c => c.id || 0)) + 1 
+        : 1;
+      // ใช้ coinValueRef.current แทน coinValue เพื่อให้ได้ค่าล่าสุด (เพราะ handlePhaserClick ถูกเรียกจาก closure)
+      const currentCoinValueFromRef = coinValueRef.current;
+      // แปลง coinValue เป็น number และตรวจสอบว่าเป็น valid number
+      const coinValueNum = typeof currentCoinValueFromRef === 'number' 
+        ? currentCoinValueFromRef 
+        : parseInt(currentCoinValueFromRef, 10);
+      const currentCoinValue = (!isNaN(coinValueNum) && coinValueNum > 0) ? coinValueNum : 10;
+      const newCoin = {
+        x: Math.round(x),
+        y: Math.round(y),
+        collected: false,
+        id: newCoinId,
+        value: currentCoinValue, // ใช้ค่าจาก input
+      };
+      onFormDataChange({
+        ...currentFormData,
+        coin_positions: [...(currentFormData.coin_positions || []), newCoin],
+      });
+    } else if (mode === 'people') {
+      // เพิ่ม people ที่ตำแหน่งที่คลิก (ต้อง enable ก่อน)
+      if (!isItemEnabled(ITEM_TYPES.PEOPLE)) {
+        alert('People ไม่ได้ถูก enable ใน category นี้');
+        return;
+      }
+      if (!clickedNode) {
+        alert('กรุณาคลิกที่ Node เพื่อเพิ่ม People');
+        return;
+      }
+      const newPeopleId = (currentFormData.people?.length || 0) > 0 
+        ? Math.max(...currentFormData.people.map(p => p.id || 0)) + 1 
+        : 1;
+      const newPeople = {
+        x: Math.round(clickedNode.x),
+        y: Math.round(clickedNode.y),
+        id: newPeopleId,
+        nodeId: clickedNode.id,
+        rescued: false,
+        personName: `คนที่ ${newPeopleId}`,
+      };
+      onFormDataChange({
+        ...currentFormData,
+        people: [...(currentFormData.people || []), newPeople],
+      });
+    } else if (mode === 'treasure') {
+      // เพิ่ม treasure ที่ตำแหน่งที่คลิก (ต้อง enable ก่อน)
+      if (!isItemEnabled(ITEM_TYPES.TREASURES)) {
+        alert('Treasure ไม่ได้ถูก enable ใน category นี้');
+        return;
+      }
+      if (!clickedNode) {
+        alert('กรุณาคลิกที่ Node เพื่อเพิ่ม Treasure');
+        return;
+      }
+      const newTreasureId = (currentFormData.treasures?.length || 0) > 0 
+        ? Math.max(...currentFormData.treasures.map(t => t.id || 0)) + 1 
+        : 1;
+      const newTreasure = {
+        id: newTreasureId,
+        x: Math.round(clickedNode.x),
+        y: Math.round(clickedNode.y),
+        nodeId: clickedNode.id,
+        collected: false,
+        name: `💎 สมบัติล้ำค่า`,
+      };
+      onFormDataChange({
+        ...currentFormData,
+        treasures: [...(currentFormData.treasures || []), newTreasure],
+      });
     } else if (mode === 'start' && clickedNode) {
       // Set start node
       onFormDataChange({
@@ -208,6 +322,51 @@ const PhaserMapEditor = ({
         return;
       }
       
+      // Delete coin, people, treasure if clicked
+      if (mode === 'delete') {
+        // ลบ coin
+        const coinAt = (currentFormData.coin_positions || []).findIndex(c => 
+          Math.abs(c.x - x) < 20 && Math.abs(c.y - y) < 20
+        );
+        if (coinAt !== -1) {
+          if (confirm(`ลบ Coin ${coinAt + 1}?`)) {
+            onFormDataChange({
+              ...currentFormData,
+              coin_positions: currentFormData.coin_positions.filter((_, i) => i !== coinAt),
+            });
+          }
+          return;
+        }
+
+        // ลบ people (คลิกที่ตำแหน่ง)
+        const peopleAt = (currentFormData.people || []).findIndex(p => 
+          Math.abs(p.x - x) < 20 && Math.abs(p.y - y) < 20
+        );
+        if (peopleAt !== -1) {
+          if (confirm(`ลบ People ${peopleAt + 1}?`)) {
+            onFormDataChange({
+              ...currentFormData,
+              people: currentFormData.people.filter((_, i) => i !== peopleAt),
+            });
+          }
+          return;
+        }
+
+        // ลบ treasure (คลิกที่ตำแหน่ง)
+        const treasureAt = (currentFormData.treasures || []).findIndex(t => 
+          Math.abs(t.x - x) < 20 && Math.abs(t.y - y) < 20
+        );
+        if (treasureAt !== -1) {
+          if (confirm(`ลบ Treasure ${treasureAt + 1}?`)) {
+            onFormDataChange({
+              ...currentFormData,
+              treasures: currentFormData.treasures.filter((_, i) => i !== treasureAt),
+            });
+          }
+          return;
+        }
+      }
+      
       // Delete node if clicked
       if (clickedNode) {
         if (confirm(`ลบ Node ${clickedNode.id}?`)) {
@@ -219,6 +378,10 @@ const PhaserMapEditor = ({
             ),
             start_node_id: currentFormData.start_node_id === clickedNode.id ? null : currentFormData.start_node_id,
             goal_node_id: currentFormData.goal_node_id === clickedNode.id ? null : currentFormData.goal_node_id,
+            // ลบ coin, people, treasure ที่เกี่ยวข้องกับ node นี้
+            coin_positions: (currentFormData.coin_positions || []).filter(c => c.nodeId !== clickedNode.id),
+            people: (currentFormData.people || []).filter(p => p.nodeId !== clickedNode.id),
+            treasures: (currentFormData.treasures || []).filter(t => t.nodeId !== clickedNode.id),
           });
         }
       }
@@ -227,12 +390,20 @@ const PhaserMapEditor = ({
 
   const redrawPhaser = () => {
     const currentGraphics = phaserGraphicsRef.current;
-    if (!currentGraphics) {
+    if (!currentGraphics || !currentGraphics.scene) {
       return;
     }
     
     const currentFormData = formDataRef.current;
     const currentSelectedNode = selectedNodeRef.current;
+    
+    // ลบ text objects เก่าก่อน
+    coinTextsRef.current.forEach(text => {
+      if (text && text.destroy) {
+        text.destroy();
+      }
+    });
+    coinTextsRef.current = [];
     
     currentGraphics.clear();
     
@@ -311,6 +482,103 @@ const PhaserMapEditor = ({
       });
     }
     
+    // Draw coins
+    if (currentFormData.coin_positions && currentFormData.coin_positions.length > 0) {
+      currentFormData.coin_positions.forEach(coin => {
+        const coinX = coin.x;
+        const coinY = coin.y;
+        
+        if (coinX !== undefined && coinY !== undefined) {
+          // Shadow
+          currentGraphics.fillStyle(0x000000, 0.3);
+          currentGraphics.fillCircle(coinX + 2, coinY + 2, 12);
+          
+          // Coin circle (gold)
+          currentGraphics.fillStyle(0xffd700, 1);
+          currentGraphics.fillCircle(coinX, coinY, 12);
+          
+          // Border
+          currentGraphics.lineStyle(2, 0xffffff, 1);
+          currentGraphics.strokeCircle(coinX, coinY, 12);
+          
+          // Value text - แสดงมูลค่าเหรียญ (แสดงด้านล่างเหรียญ)
+          const coinValueToDisplay = coin.value !== undefined && coin.value !== null ? coin.value : 10;
+          if (currentGraphics.scene) {
+            const text = currentGraphics.scene.add.text(coinX, coinY + 20, coinValueToDisplay.toString(), {
+              fontSize: '14px',
+              color: '#000000',
+              fontStyle: 'bold',
+              backgroundColor: '#FFD700',
+              padding: { x: 6, y: 3 },
+            });
+            text.setOrigin(0.5);
+            text.setDepth(100); // ให้อยู่บนสุด
+            coinTextsRef.current.push(text); // เก็บไว้เพื่อลบทีหลัง
+          }
+        }
+      });
+    }
+
+    // Draw people
+    if (currentFormData.people && currentFormData.people.length > 0) {
+      currentFormData.people.forEach(person => {
+        const personX = person.x;
+        const personY = person.y;
+        
+        if (personX !== undefined && personY !== undefined) {
+          // Shadow
+          currentGraphics.fillStyle(0x000000, 0.3);
+          currentGraphics.fillCircle(personX + 2, personY + 2, 10);
+          
+          // Person circle (green)
+          currentGraphics.fillStyle(0x10b981, 1);
+          currentGraphics.fillCircle(personX, personY, 10);
+          
+          // Border
+          currentGraphics.lineStyle(2, 0xffffff, 1);
+          currentGraphics.strokeCircle(personX, personY, 10);
+          
+          // Person emoji
+          if (currentGraphics.scene) {
+            const text = currentGraphics.scene.add.text(personX, personY, '👤', {
+              fontSize: '12px',
+            });
+            text.setOrigin(0.5);
+          }
+        }
+      });
+    }
+
+    // Draw treasures
+    if (currentFormData.treasures && currentFormData.treasures.length > 0) {
+      currentFormData.treasures.forEach(treasure => {
+        const treasureX = treasure.x;
+        const treasureY = treasure.y;
+        
+        if (treasureX !== undefined && treasureY !== undefined) {
+          // Shadow
+          currentGraphics.fillStyle(0x000000, 0.3);
+          currentGraphics.fillCircle(treasureX + 2, treasureY + 2, 10);
+          
+          // Treasure circle (purple)
+          currentGraphics.fillStyle(0x9333ea, 1);
+          currentGraphics.fillCircle(treasureX, treasureY, 10);
+          
+          // Border
+          currentGraphics.lineStyle(2, 0xffffff, 1);
+          currentGraphics.strokeCircle(treasureX, treasureY, 10);
+          
+          // Treasure emoji
+          if (currentGraphics.scene) {
+            const text = currentGraphics.scene.add.text(treasureX, treasureY, '💎', {
+              fontSize: '12px',
+            });
+            text.setOrigin(0.5);
+          }
+        }
+      });
+    }
+
     // Draw obstacles
     if (currentFormData.obstacles && currentFormData.obstacles.length > 0) {
       currentFormData.obstacles.forEach((obstacle, index) => {
@@ -611,7 +879,7 @@ const PhaserMapEditor = ({
     if (phaserLoaded && phaserGraphicsRef.current) {
       redrawPhaser();
     }
-  }, [formData.nodes, formData.edges, formData.start_node_id, formData.goal_node_id, formData.obstacles, selectedNode, phaserLoaded]);
+  }, [formData.nodes, formData.edges, formData.start_node_id, formData.goal_node_id, formData.obstacles, formData.coin_positions, formData.people, formData.treasures, selectedNode, phaserLoaded]);
 
   // Reload background image when it changes
   useEffect(() => {

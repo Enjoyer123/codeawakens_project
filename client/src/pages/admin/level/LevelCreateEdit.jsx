@@ -37,6 +37,7 @@ const LevelCreateEdit = () => {
   const [canvasSize] = useState({ width: 1200, height: 900 });
   const [currentMode, setCurrentMode] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
+  const [coinValue, setCoinValue] = useState(10); // ค่าเริ่มต้นสำหรับเหรียญ
   
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -46,6 +47,7 @@ const LevelCreateEdit = () => {
   const [allBlocks, setAllBlocks] = useState([]);
   const [allVictoryConditions, setAllVictoryConditions] = useState([]);
   const [patternListDialogOpen, setPatternListDialogOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null); // เก็บข้อมูล category ที่เลือก
 
   const [formData, setFormData] = useState({
     category_id: '',
@@ -92,6 +94,17 @@ const LevelCreateEdit = () => {
       setPrerequisiteLevels(prerequisiteData || []);
       setAllBlocks(blocksData?.blocks || []);
       setAllVictoryConditions(victoryData?.victoryConditions || []);
+      
+      // Debug: ตรวจสอบว่า categories มี category_items หรือไม่
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Categories loaded:', categoriesData?.map(cat => ({
+          category_id: cat.category_id,
+          category_name: cat.category_name,
+          item_enable: cat.item_enable,
+          category_items: cat.category_items,
+          item: cat.item, // backward compatibility
+        })));
+      }
     } catch (err) {
       setError('Failed to load data: ' + (err.message || ''));
     } finally {
@@ -109,7 +122,12 @@ const LevelCreateEdit = () => {
       const edges = level.edges ? (typeof level.edges === 'string' ? JSON.parse(level.edges) : level.edges) : [];
       const monsters = level.monsters ? (typeof level.monsters === 'string' ? JSON.parse(level.monsters) : level.monsters) : [];
       const obstacles = level.obstacles ? (typeof level.obstacles === 'string' ? JSON.parse(level.obstacles) : level.obstacles) : [];
-      const coin_positions = level.coin_positions ? (typeof level.coin_positions === 'string' ? JSON.parse(level.coin_positions) : level.coin_positions) : [];
+      let coin_positions = level.coin_positions ? (typeof level.coin_positions === 'string' ? JSON.parse(level.coin_positions) : level.coin_positions) : [];
+      // ตรวจสอบและเพิ่ม value field ถ้าไม่มี (backward compatibility)
+      coin_positions = coin_positions.map(coin => ({
+        ...coin,
+        value: coin.value !== undefined && coin.value !== null ? coin.value : 10,
+      }));
       const people = level.people ? (typeof level.people === 'string' ? JSON.parse(level.people) : level.people) : [];
       const treasures = level.treasures ? (typeof level.treasures === 'string' ? JSON.parse(level.treasures) : level.treasures) : [];
 
@@ -136,6 +154,34 @@ const LevelCreateEdit = () => {
         selectedBlocks: level.level_blocks?.map(lb => lb.block_id) || [],
         selectedVictoryConditions: level.level_victory_conditions?.map(lvc => lvc.victory_condition_id) || [],
       });
+
+      // อัปเดต selectedCategory เมื่อโหลด level
+      if (level.category) {
+        setSelectedCategory(level.category);
+        // Debug: ตรวจสอบว่า category มี category_items หรือไม่
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Selected category from level:', {
+            category_id: level.category.category_id,
+            category_name: level.category.category_name,
+            item_enable: level.category.item_enable,
+            category_items: level.category.category_items,
+            item: level.category.item, // backward compatibility
+          });
+        }
+      } else if (level.category_id) {
+        const category = categories.find(cat => cat.category_id === level.category_id);
+        setSelectedCategory(category || null);
+        // Debug: ตรวจสอบว่า category มี category_items หรือไม่
+        if (process.env.NODE_ENV === 'development' && category) {
+          console.log('Selected category from categories:', {
+            category_id: category.category_id,
+            category_name: category.category_name,
+            item_enable: category.item_enable,
+            category_items: category.category_items,
+            item: category.item, // backward compatibility
+          });
+        }
+      }
 
       // Load background image if exists
       if (level.background_image) {
@@ -356,6 +402,8 @@ const LevelCreateEdit = () => {
             selectedNode={selectedNode}
             onFormDataChange={setFormData}
             onSelectedNodeChange={setSelectedNode}
+            selectedCategory={selectedCategory}
+            coinValue={coinValue}
           />
         </div>
 
@@ -374,7 +422,26 @@ const LevelCreateEdit = () => {
               prerequisiteLevels={prerequisiteLevels}
               isEditing={isEditing}
               levelId={levelId}
-              onFormDataChange={setFormData}
+              onFormDataChange={(newFormData) => {
+                setFormData(newFormData);
+                // อัปเดต selectedCategory เมื่อเลือก category
+                if (newFormData.category_id) {
+                  const category = categories.find(cat => cat.category_id.toString() === newFormData.category_id);
+                  setSelectedCategory(category || null);
+                  // Debug: ตรวจสอบว่า category มี category_items หรือไม่
+                  if (process.env.NODE_ENV === 'development' && category) {
+                    console.log('Selected category changed:', {
+                      category_id: category.category_id,
+                      category_name: category.category_name,
+                      item_enable: category.item_enable,
+                      category_items: category.category_items,
+                      item: category.item, // backward compatibility
+                    });
+                  }
+                } else {
+                  setSelectedCategory(null);
+                }
+              }}
             />
 
             <LevelElementsToolbar
@@ -384,6 +451,9 @@ const LevelCreateEdit = () => {
               onSetMode={handleSetMode}
               onAddMonster={handleAddMonster}
               onAddObstacle={handleAddObstacle}
+              selectedCategory={selectedCategory}
+              coinValue={coinValue}
+              onCoinValueChange={setCoinValue}
             />
 
             <BlockSelector

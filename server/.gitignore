@@ -34,4 +34,4 @@ uploads/
 Dockerfile*
 .dockerignore
 
-../docker-compose.yml
+prisma/migrations/*
