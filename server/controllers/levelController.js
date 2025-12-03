@@ -85,10 +85,25 @@ exports.getAllCategories = async (req, res) => {
         description: true,
         color_code: true,
         difficulty_order: true,
+        item_enable: true,
+        category_items: {
+          select: {
+            item_type: true,
+          },
+          orderBy: {
+            display_order: 'asc',
+          },
+        },
       },
     });
 
-    res.json(categories);
+    // Transform category_items to item array for backward compatibility
+    const categoriesWithItem = categories.map(category => ({
+      ...category,
+      item: category.category_items?.map(ci => ci.item_type) || null,
+    }));
+
+    res.json(categoriesWithItem);
   } catch (error) {
     console.error("Error fetching categories:", error);
     res.status(500).json({ message: "Error fetching categories", error: error.message });
@@ -128,7 +143,15 @@ exports.getLevelById = async (req, res) => {
     const level = await prisma.level.findUnique({
       where: { level_id: parseInt(levelId) },
       include: {
-        category: true,
+        category: {
+          include: {
+            category_items: {
+              orderBy: {
+                display_order: 'asc',
+              },
+            },
+          },
+        },
         creator: {
           select: {
             user_id: true,
