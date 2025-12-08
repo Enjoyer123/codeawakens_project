@@ -8,7 +8,8 @@ export function defineListBlocks() {
       this.itemCount_ = 3;
       this.updateShape_();
       this.setOutput(true, 'Array');
-      this.setMutator(new Blockly.Mutator(['lists_create_with_item']));
+      // Note: Mutator is not available in Blockly v12+ in the same way
+      // We'll use a simpler approach without mutator
       this.setTooltip('สร้างลิสต์ด้วยไอเท็มจำนวนหนึ่ง');
     },
     mutationToDom: function() {
@@ -19,49 +20,6 @@ export function defineListBlocks() {
     domToMutation: function(xmlElement) {
       this.itemCount_ = parseInt(xmlElement.getAttribute('items'), 10);
       this.updateShape_();
-    },
-    decompose: function(workspace) {
-      var containerBlock = workspace.newBlock('lists_create_with_container');
-      containerBlock.initSvg();
-      var connection = containerBlock.getInput('STACK').connection;
-      for (var i = 0; i < this.itemCount_; i++) {
-        var itemBlock = workspace.newBlock('lists_create_with_item');
-        itemBlock.initSvg();
-        connection.connect(itemBlock.previousConnection);
-        connection = itemBlock.nextConnection;
-      }
-      return containerBlock;
-    },
-    compose: function(containerBlock) {
-      var itemBlock = containerBlock.getInputTargetBlock('STACK');
-      var connections = [];
-      while (itemBlock) {
-        connections.push(itemBlock.valueConnection_);
-        itemBlock = itemBlock.nextConnection &&
-            itemBlock.nextConnection.targetBlock();
-      }
-      for (var i = 0; i < this.itemCount_; i++) {
-        var connection = this.getInput('ADD' + i).connection.targetConnection;
-        if (connection && connections.indexOf(connection) == -1) {
-          connection.disconnect();
-        }
-      }
-      this.itemCount_ = connections.length;
-      this.updateShape_();
-      for (var i = 0; i < this.itemCount_; i++) {
-        Blockly.Mutator.reconnect(connections[i], this, 'ADD' + i);
-      }
-    },
-    saveConnections: function(containerBlock) {
-      var itemBlock = containerBlock.getInputTargetBlock('STACK');
-      var i = 0;
-      while (itemBlock) {
-        var input = this.getInput('ADD' + i);
-        itemBlock.valueConnection_ = input && input.connection.targetConnection;
-        i++;
-        itemBlock = itemBlock.nextConnection &&
-            itemBlock.nextConnection.targetBlock();
-      }
     },
     updateShape_: function() {
       if (this.itemCount_ && this.getInput('EMPTY')) {
@@ -103,6 +61,22 @@ export function defineListBlocks() {
       this.setNextStatement(true);
       this.setTooltip('เพิ่มไอเท็ม');
       this.contextMenu = false;
+    }
+  };
+
+  // List isEmpty block - override to fix message format issues
+  // Blockly's standard lists_isEmpty may have JSON format problems
+  Blockly.Blocks['lists_isEmpty'] = {
+    init: function() {
+      this.appendDummyInput()
+        .appendField('ลิสต์');
+      this.appendValueInput('VALUE')
+        .setCheck('Array');
+      this.appendDummyInput()
+        .appendField('ว่างหรือไม่');
+      this.setOutput(true, 'Boolean');
+      this.setColour(260);
+      this.setTooltip('เช็คว่า list ว่างหรือไม่');
     }
   };
 }

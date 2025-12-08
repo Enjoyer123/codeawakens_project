@@ -5,7 +5,7 @@ import { Users, Map, Award, Sword, Bell, LayoutDashboard, ChevronLeft, ChevronRi
 import { cn } from '@/lib/utils';
 
 const AdminSidebar = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -72,7 +72,7 @@ const AdminSidebar = () => {
   return (
     <aside className={cn(
       "bg-white border-r border-gray-200 min-h-[calc(100vh-4rem)] sticky top-16 transition-all duration-300",
-      isCollapsed ? "w-16" : "w-64"
+      isCollapsed ? "w-16" : "w-72"
     )}>
       <div className="p-4">
         <div className="flex items-center justify-between mb-4">
@@ -120,4 +120,3 @@ const AdminSidebar = () => {
 };
 
 export default AdminSidebar;
-

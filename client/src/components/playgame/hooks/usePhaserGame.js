@@ -333,12 +333,16 @@ export function usePhaserGame({
     const config = {
       type: Phaser.AUTO,
       width: 1200,
-      height: 900,
+      height: 700,
       backgroundColor: "#222222",
       parent: gameRef.current,
       scene: GameScene,
       audio: {
         disableWebAudio: true
+      },
+      scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH
       }
     };
 
@@ -353,4 +357,3 @@ export function usePhaserGame({
 
   return { initPhaserGame };
 }
-

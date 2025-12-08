@@ -80,331 +80,175 @@ const GameArea = ({
   return (
     <div className="flex flex-col h-full overflow-auto relative">
       {/* Game Header - Compact */}
-      <div className="mb-2 text-center">
-        <h1 className="text-xl font-bold mb-1 gradient-text">
-          Code Awakens
-        </h1>
-      </div>
+     
 
       {/* Phaser Game - Main container with relative positioning */}
-      <div className="flex-1 flex justify-center items-center relative">
+      <div className="flex-1 w-full h-full bg-black relative flex items-center justify-center overflow-hidden">
         <div
           ref={gameRef}
-          className="phaser-canvas pulse-glow"
+          className="w-full h-full"
         />
-
+</div>
 
         {/* Compact Bottom UI Bar */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gray-950 border-t border-gray-800">
-          {/* Top Row - Compact Info */}
-          <div className="flex items-center justify-between text-sm p-2">
-            {/* Left Side - Health (Shorter) */}
-            <div className="flex items-center gap-3">
-              {/* Health Bar - Shorter */}
-              <div className="flex items-center gap-2">
-                <div className="w-16 h-2 bg-gray-900 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gray-300 transition-all duration-300"
+      <div className="bg-stone-900 border-t border-gray-700 shadow-2xl relative z-20">
+        <div className="grid grid-cols-12 gap-4 p-4 text-gray-200">
+          
+          {/* LEFT COLUMN: Player Stats (HP, Weapon, Coins) */}
+          <div className="col-span-3 space-y-3">
+            {/* HP & Weapon Card */}
+            <div className="bg-black/30 rounded-lg p-3 border border-gray-700/50 flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Status</span>
+                {currentWeaponData && (
+                  <span className="text-[10px] bg-blue-900/40 text-blue-300 px-2 py-0.5 rounded border border-blue-800/50">
+                     ⚔️ {currentWeaponData.name}
+                  </span>
+                )}
+              </div>
+              
+              {/* HP Bar */}
+              <div className="relative h-4 bg-gray-800 rounded-full overflow-hidden border border-gray-700">
+                 <div
+                    className={`h-full transition-all duration-500 ease-out ${
+                      playerHpState > 50 ? 'bg-gradient-to-r from-green-600 to-green-500' : 
+                      playerHpState > 20 ? 'bg-gradient-to-r from-yellow-600 to-yellow-500' : 'bg-gradient-to-r from-red-600 to-red-500'
+                    }`}
                     style={{ width: `${playerHpState}%` }}
                   ></div>
-                </div>
-                <span className="text-gray-300 font-bold text-xs">❤️ {playerHpState}/100</span>
-              </div>
-
-              {/* Weapon Info - Compact */}
-              {currentWeaponData && (
-                <div className="bg-gray-800 px-2 py-1 rounded border border-gray-700">
-                  <span className="text-white font-semibold text-xs">
-                    {currentWeaponData.name}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Center - Game Status */}
-            <div className="flex items-center gap-3">
-              {isGameOver ? (
-                <span className="text-white font-bold">Game Over!</span>
-              ) : isCompleted ? (
-                <span className="text-white font-bold">Victory</span>
-              ) : inCombatMode ? (
-                <span className="text-white font-bold animate-pulse">COMBAT</span>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <span className="text-white font-bold text-xs">
-                    GOAL: {levelData?.goalType === "ถึงเป้าหมาย"
-                      ? `Node ${levelData?.goalNodeId}`
-                      : levelData?.goalType === "เรียงเหรียญ"
-                        ? "เรียงเหรียญ"
-                        : levelData?.goalType === "ช่วยคน"
-                          ? "ช่วยคน"
-                          : levelData?.goalType === "หาของ"
-                            ? "หาของ"
-                            : `Node ${levelData?.goalNodeId}`}
-                  </span>
-                  <div className="bg-gray-700/50 px-2 py-1 rounded text-xs">
-                    {playerNodeId} {directions && directions[playerDirection] ? directions[playerDirection].symbol : '?'}
+                  <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white drop-shadow-md">
+                    {playerHpState} / 100 HP
                   </div>
-                </div>
-              )}
-            </div>
-
-            {/* Right Side - Pattern Progress Bar and Weapon */}
-            <div className="flex items-center gap-2">
-              {/* Progress Bar Section */}
-              <div className="flex items-center gap-2">
-                {hintData && hintData.showPatternProgress ? (
-                  <>
-                    <div className="text-xs text-gray-300">
-                      {hintData.matchedBlocks || 0}/{hintData.totalBlocks || 0}
-                    </div>
-                    <div className="w-20 bg-gray-700 rounded-full h-2">
-                      <div
-                        className={`h-2 rounded-full transition-all duration-300 ${(hintData.patternPercentage || 0) === 100
-                            ? 'bg-green-500'
-                            : (hintData.patternPercentage || 0) >= 50
-                              ? 'bg-yellow-500'
-                              : 'bg-red-500'
-                          }`}
-                        style={{ width: `${hintData.patternPercentage || 0}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-xs text-gray-300 max-w-20 truncate">
-                      {hintData.patternName || "ไม่มี pattern"}
-                    </span>
-                    <span className="point-xs text-gray-400">
-                      {hintData.patternPercentage || 0}%
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-xs text-gray-400">วาง blocks เพื่อดู progress</span>
-                )}
               </div>
-
-              {/* Best Pattern Weapon Display */}
-              {(() => {
-                const bestWeaponPattern = levelData?.goodPatterns?.find(pattern => pattern.pattern_type_id === 1);
-                const bestPattern = hintData?.bestPattern;
-
-                if (bestWeaponPattern) {
-                  let progressPercentage = 0;
-                  const isMatchingBestPattern = bestPattern?.pattern_id === bestWeaponPattern?.pattern_id ||
-                    bestPattern?.name === bestWeaponPattern?.name;
-
-                  if (isMatchingBestPattern) {
-                    progressPercentage = hintData.patternPercentage || hintData.progress || 0;
-                  } else if (bestPattern?.pattern_type_id === 2) {
-                    progressPercentage = 66;
-                  }
-
-                  return (
-                    <div className="flex items-center gap-1 bg-green-900/20 rounded-lg px-2 py-1 border border-green-600/30">
-                      <div className="relative w-6 h-6 bg-gray-800 rounded overflow-hidden flex items-center justify-center">
-                        <img
-                          src={`${API_BASE_URL}/uploads/weapons/${bestWeaponPattern.weaponKey || bestWeaponPattern.weapon?.weapon_key || 'stick'}_idle_1.png`}
-                          alt={bestWeaponPattern.weaponKey || bestWeaponPattern.weapon?.weapon_key || 'stick'}
-                          className="absolute w-5 h-5 object-contain filter brightness-50 grayscale"
-                          onError={(e) => { e.target.style.display = 'none'; }}
-                        />
-                        <div
-                          className="absolute inset-0 overflow-hidden flex items-center justify-center"
-                          style={{
-                            clipPath: `polygon(0 ${100 - progressPercentage}%, 100% ${100 - progressPercentage}%, 100% 100%, 0% 100%)`
-                          }}
-                        >
-                          <img
-                            src={`${API_BASE_URL}/uploads/weapons/${bestWeaponPattern.weaponKey || bestWeaponPattern.weapon?.weapon_key || 'stick'}_idle_1.png`}
-                            alt={bestWeaponPattern.weaponKey || bestWeaponPattern.weapon?.weapon_key || 'stick'}
-                            className="w-5 h-5 object-contain"
-                            onError={(e) => { e.target.style.display = 'none'; }}
-                          />
-                        </div>
-                      </div>
-                      <span className="text-green-400 text-xs">⭐</span>
-                      <span className="text-xs text-gray-300">{progressPercentage}%</span>
-                    </div>
-                  );
-                } else {
-                  const bestPattern = levelData?.goodPatterns?.find(pattern => pattern.pattern_type_id === 1);
-                  if (bestPattern) {
-                    return (
-                      <div className="flex items-center gap-1 bg-green-900/20 rounded-lg px-2 py-1 border border-green-600/30">
-                        <div className="relative w-6 h-6 bg-gray-800 rounded overflow-hidden flex items-center justify-center">
-                          <img
-                            src={`${API_BASE_URL}/uploads/weapons/${bestPattern.weaponKey || bestPattern.weapon?.weapon_key || 'stick'}_idle_1.png`}
-                            alt={bestPattern.weaponKey || bestPattern.weapon?.weapon_key || 'stick'}
-                            className="absolute w-5 h-5 object-contain filter brightness-50 grayscale"
-                            onError={(e) => { e.target.style.display = 'none'; }}
-                          />
-                          <div
-                            className="absolute inset-0 overflow-hidden flex items-center justify-center"
-                            style={{ clipPath: `polygon(0 100%, 100% 100%, 100% 100%, 0% 100%)` }}
-                          >
-                            <img
-                              src={`${API_BASE_URL}/uploads/weapons/${bestPattern.weaponKey || bestPattern.weapon?.weapon_key || 'stick'}_idle_1.png`}
-                              alt={bestPattern.weaponKey || bestPattern.weapon?.weapon_key || 'stick'}
-                              className="w-5 h-5 object-contain"
-                              onError={(e) => { e.target.style.display = 'none'; }}
-                            />
-                          </div>
-                        </div>
-                        <span className="text-green-400 text-xs">⭐</span>
-                        <span className="text-xs text-gray-300">0%</span>
-                      </div>
-                    );
-                  }
-                }
-                return null;
-              })()}
             </div>
-          </div>
 
-
-          {/* Bottom Row - Hints and Additional Info */}
-          <div className="px-3 pb-2">
-            {/* Current Hint */}
-              <div className="bg-gray-900 p-2 rounded-lg border border-gray-800 mb-2">
-              <strong className="text-gray-300 text-sm">คำใบ้:</strong>
-              <span className="text-gray-300 ml-1 text-sm">{currentHint}</span>
-
-              {/* Hint Content - Detailed Hints */}
-              {hintData && hintData.showHint && hintData.hintData && hintData.hintData.content && (
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    {hintOpen && (
-                      <div className="mt-2 space-y-1">
-                        {/* คำถามหลัก */}
-                        {hintData.hintData.content.question && (
-                          <div className="text-xs text-gray-300 font-medium">
-                            {hintData.hintData.content.question}
-                          </div>
-                        )}
-
-                        {/* คำแนะนำ */}
-                        {hintData.hintData.content.suggestion && (
-                          <div className="text-xs text-white bg-white/5 p-1 rounded border-l-2 border-white/20">
-                            {hintData.hintData.content.suggestion}
-                          </div>
-                        )}
-
-                        {/* Visual Guide */}
-                        {hintData.hintData.visualGuide && hintData.hintData.visualGuide.highlightBlocks && (
-                          <div className="text-xs text-white/70">
-                            Blocks: {hintData.hintData.visualGuide.highlightBlocks.join(", ")}
-                          </div>
-                        )}
-                      </div>
+            {/* Coins & Collectibles */}
+            {(playerCoins.length > 0 || levelData?.goalType === "ช่วยคน") && (
+               <div className="bg-black/30 rounded-lg p-3 border border-gray-700/50 flex flex-col gap-2">
+                 <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Collection</span>
+                 <div className="flex flex-wrap gap-2">
+                    {playerCoins.length > 0 && (
+                       <div className="flex items-center gap-1.5 text-xs text-yellow-500 bg-yellow-900/10 px-2 py-1 rounded border border-yellow-700/30">
+                          <span>🪙</span>
+                          <span className="font-mono font-bold">{playerCoins.reduce((s, c) => s + c.value, 0)}</span>
+                       </div>
                     )}
-                  </div>
-
-                  <div className="ml-2">
-                    <button
-                      onClick={onToggleHint}
-                      className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-xs font-medium shadow-sm"
-                    >
-                      {hintOpen ? 'ปิดคำใบ้' : 'เปิดคำใบ้'}
-                    </button>
-                    <div className="text-xs text-gray-400 mt-1 text-right">
-                      เปิดคำใบ้: {hintOpenCount} ครั้ง (-5 คะแนน/ครั้ง)
-                    </div>
-                  </div>
-                </div>
-              )}
-
-            </div>
-
-            {/* Additional Info Row */}
-            <div className="flex gap-2">
-              {/* ดูข้อมูล ปุ่ม */}
-              <div>
-                <button
-                  onClick={openDetail}
-                      className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg text-xs font-medium shadow-sm"
-                    >
-                      ดูข้อมูล
-                    </button>
-                  </div>
-                  {/* Solution */}
-                  {levelData?.solution && (
-                    <div className="flex-1 p-2 bg-gray-900 rounded border border-gray-800">
-                      <strong className="text-gray-300 text-xs">วิธีผ่านด่าน:</strong>
-                      <div className="text-gray-400 text-xs mt-1">{levelData.solution}</div>
-                    </div>
-                  )}              {/* Coin Display - Compact */}
-              {playerCoins.length > 0 && (
-                <div className="flex-1 p-2 bg-gray-900 rounded border border-gray-800">
-                  <div className="text-gray-300 font-bold text-xs mb-1">
-                    🪙 เหรียญ ({playerCoins.length})
-                  </div>
-                  <div className="flex flex-wrap gap-1">
-                    {playerCoins.slice(0, 5).map((coin, index) => (
-                      <div
-                        key={`coin-${coin.id}-${index}`}
-                        className="bg-gray-800 px-1 py-0.5 rounded text-xs text-gray-300 border border-gray-700"
-                        title={`เหรียญที่ตำแหน่ง ${index + 1}: ${coin.value} points`}
-                      >
-                        {coin.value}
-                      </div>
-                    ))}
-                    {playerCoins.length > 5 && <span className="text-xs text-white/60">+{playerCoins.length - 5}</span>}
-                  </div>
-                  <div className="text-xs text-white/60 mt-1">
-                    รวม: {playerCoins.reduce((sum, coin) => sum + coin.value, 0)} points
-                  </div>
-                </div>
-              )}
-
-              {/* People Rescue Display - Compact */}
-              {levelData?.goalType === "ช่วยคน" && (
-                <div className="flex-1 p-2 bg-gray-900 rounded border border-gray-800">
-                  <div className="text-gray-300 font-bold text-xs mb-1">
-                    🆘 คน ({rescuedPeople.length}/{levelData?.people?.length || 0})
-                  </div>
-                  <div className="grid grid-cols-3 gap-1 text-xs">
-                    {levelData.people?.slice(0, 3).map((person, index) => {
-                      const isRescued = rescuedPeople.some(rescued => rescued.nodeId === person.nodeId);
-                      return (
-                        <div
-                          key={`person-${person.id}`}
-                          className={`px-1 py-0.5 rounded border text-center ${isRescued
-                            ? 'bg-gray-800 text-gray-300 border-gray-700'
-                            : 'bg-gray-950 text-gray-500 border-gray-800'
-                            }`}
-                          title={`${person.personName} ที่ Node ${person.nodeId}`}
-                        >
-                          {isRescued ? '✅' : '❌'}
-                        </div>
-                      );
-                    })}
-                    {levelData.people && levelData.people.length > 3 && (
-                      <div className="text-xs text-white/60 text-center">
-                        +{levelData.people.length - 3}
-                      </div>
+                    {levelData?.goalType === "ช่วยคน" && (
+                       <div className="flex items-center gap-1.5 text-xs text-green-400 bg-green-900/10 px-2 py-1 rounded border border-green-700/30">
+                          <span>🆘</span>
+                          <span className="font-mono font-bold">{rescuedPeople.length}/{levelData?.people?.length || 0}</span>
+                       </div>
                     )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Final Score Display */}
-            {(finalScore && (isGameOver || isCompleted)) && (
-              <div className="mt-2 p-2 bg-gray-900 rounded border border-gray-800">
-                <div className="text-gray-300 font-bold text-sm">
-                  🏆 คะแนน: {finalScore.totalScore} ⭐{finalScore.stars}
-                </div>
-                {(finalScore.hpScore !== undefined || finalScore.patternBonus !== undefined) && (
-                  <div className="text-xs text-gray-500">
-                    HP: {finalScore.hpScore ?? '-'} + Pattern: {finalScore.patternBonus ?? '-'}
-                  </div>
-                )}
-                {finalScore.message && (
-                  <div className="text-xs text-gray-400">
-                    {finalScore.message}
-                  </div>
-                )}
-              </div>
+                 </div>
+               </div>
             )}
           </div>
+
+          {/* CENTER COLUMN: Game Objective & Status */}
+          <div className="col-span-12 md:col-span-6 flex flex-col gap-3">
+             {/* Main Status Display */}
+             <div className="flex-1 bg-gradient-to-b from-gray-800/50 to-gray-900/50 rounded-xl border border-gray-700 p-4 flex flex-col items-center justify-center text-center relative overflow-hidden group">
+                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-gray-500/30 to-transparent"></div>
+                
+                {isGameOver ? (
+                  <div className="space-y-1 animate-in zoom-in duration-300">
+                    <h2 className="text-2xl font-black text-red-500 tracking-tight drop-shadow-sm">GAME OVER</h2>
+                    <p className="text-sm text-red-300/80 font-medium">Try again!</p>
+                  </div>
+                ) : isCompleted ? (
+                  <div className="space-y-1 animate-in zoom-in duration-300">
+                    <h2 className="text-2xl font-black text-green-400 tracking-tight drop-shadow-sm">VICTORY!</h2>
+                     {finalScore && (
+                        <div className="text-sm text-green-300/80 bg-green-900/20 px-3 py-1 rounded-full border border-green-800/30">
+                           Score: {finalScore.totalScore} • ⭐ {finalScore.stars}
+                        </div>
+                     )}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                     <div className="flex items-center justify-center gap-2 mb-1">
+                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Current Goal</span>
+                     </div>
+                     <div className="text-lg font-bold text-white flex items-center justify-center gap-2">
+                        {levelData?.goalType === "ถึงเป้าหมาย" ? "🏁 Reach Node " + levelData?.goalNodeId :
+                         levelData?.goalType === "เรียงเหรียญ" ? "🪙 Collect Coins" :
+                         levelData?.goalType === "ช่วยคน" ? "🆘 Rescue People" :
+                         levelData?.goalType === "หาของ" ? "📦 Find Item" : "Objective Unknown"}
+                     </div>
+                     <div className="flex items-center justify-center gap-3 text-xs text-gray-400">
+                        <div className="bg-black/40 px-3 py-1 rounded-full border border-gray-700 flex items-center gap-2">
+                          <span>Position:</span>
+                          <span className="text-white font-mono">{playerNodeId}</span>
+                        </div>
+                        <div className="bg-black/40 px-3 py-1 rounded-full border border-gray-700 flex items-center gap-2">
+                          <span>Facing:</span>
+                          <span className="text-white font-mono">{directions && directions[playerDirection] ? directions[playerDirection].symbol : '?'}</span>
+                        </div>
+                     </div>
+                  </div>
+                )}
+             </div>
+          </div>
+
+          {/* RIGHT COLUMN: Pattern & Hints */}
+          <div className="col-span-3 space-y-3 flex flex-col">
+             {/* Pattern Progress */}
+             <div className="bg-black/30 rounded-lg p-3 border border-gray-700/50">
+               <div className="flex items-center justify-between mb-2">
+                 <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Pattern Match</span>
+                 <span className="text-[10px] text-gray-500">{hintData?.matchedBlocks || 0}/{hintData?.totalBlocks || 0}</span>
+               </div>
+               
+               {hintData && hintData.showPatternProgress ? (
+                 <div className="space-y-1">
+                   <div className="w-full h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full transition-all duration-300 ${
+                          (hintData.patternPercentage || 0) === 100 ? 'bg-green-500' : 'bg-blue-500'
+                        }`}
+                        style={{ width: `${hintData.patternPercentage || 0}%` }}
+                      ></div>
+                   </div>
+                   <div className="flex justify-between items-center">
+                      <span className="text-[10px] text-gray-300 truncate max-w-[100px]">{hintData.patternName}</span>
+                      <span className="text-[10px] text-blue-400 font-mono">{hintData.patternPercentage}%</span>
+                   </div>
+                 </div>
+               ) : (
+                 <p className="text-[10px] text-gray-600 italic text-center py-1">Place blocks to see pattern match</p>
+               )}
+             </div>
+
+             {/* Hint & Actions */}
+             <div className="bg-black/30 rounded-lg p-3 border border-gray-700/50 flex flex-col gap-2 flex-1">
+                <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Assist</span>
+                    <button onClick={openDetail} className="text-[10px] text-stone-400 hover:text-white underline underline-offset-2 decoration-stone-600 transition-colors">
+                      View Details
+                    </button>
+                </div>
+                
+                <div className="flex gap-2 mt-auto">
+                   <button 
+                     onClick={onToggleHint}
+                     className={`flex-1 py-1.5 rounded text-xs font-medium transition-colors border ${
+                       hintOpen 
+                       ? 'bg-yellow-900/30 border-yellow-600/50 text-yellow-500 hover:bg-yellow-900/50' 
+                       : 'bg-stone-800 border-stone-600 text-stone-300 hover:bg-stone-700'
+                     }`}
+                   >
+                     {hintOpen ? '💡 Close Hint' : '💡 Need Hint?'}
+                   </button>
+                </div>
+                {/* Hint Text Fade In */}
+                {hintOpen && currentHint && (
+                   <div className="mt-2 p-2 bg-yellow-900/10 border border-yellow-900/30 rounded text-xs text-yellow-200/90 leading-relaxed animate-in fade-in slide-in-from-top-1">
+                      {currentHint}
+                   </div>
+                )}
+             </div>
+          </div>
+
         </div>
       </div>
     </div>

@@ -201,11 +201,436 @@ export function ensureStandardBlocks() {
     }
   }
   
-  // Note: variables_set is provided by Blockly's standard blocks
-  // We don't need to create a fallback, but we can ensure it exists
-  if (!Blockly.Blocks['variables_set']) {
-    console.warn('variables_set block not found - Blockly should provide this by default');
-    // Don't create a custom one - let Blockly handle it
+  // Override variables_set to fix message format issues
+  // Blockly's standard variables_set may have message format problems with JSON format
+  // We'll override it to use proper init function instead of JSON
+  try {
+    // Always override to ensure proper format
+    Blockly.Blocks['variables_set'] = {
+      init: function() {
+        // Use FieldVariable which handles variable selection properly
+        this.appendDummyInput()
+          .appendField('ตั้งค่า')
+          .appendField(new Blockly.FieldVariable('item'), 'VAR')
+          .appendField('เป็น');
+        this.appendValueInput('VALUE')
+          .setCheck(null);
+        this.setPreviousStatement(true, null);
+        this.setNextStatement(true, null);
+        this.setColour(330);
+        this.setTooltip('ตั้งค่าตัวแปร');
+        this.setHelpUrl('');
+      }
+    };
+    
+    // Ensure generator exists
+    if (!javascriptGenerator.forBlock['variables_set']) {
+      javascriptGenerator.forBlock['variables_set'] = function(block) {
+        const variable = javascriptGenerator.nameDB_.getName(
+          block.getFieldValue('VAR'),
+          Blockly.Names.NameType.VARIABLE
+        );
+        const value = javascriptGenerator.valueToCode(block, 'VALUE', javascriptGenerator.ORDER_ASSIGNMENT) || 'null';
+        return `${variable} = ${value};\n`;
+      };
+    }
+    console.log('Overridden variables_set block to fix message format');
+  } catch (e) {
+    console.error('Failed to override variables_set block:', e);
+  }
+
+  // Override math_change to fix message format issues
+  // Blockly's standard math_change may have JSON format problems
+  try {
+    Blockly.Blocks['math_change'] = {
+      init: function() {
+        this.appendDummyInput()
+          .appendField('เปลี่ยน')
+          .appendField(new Blockly.FieldVariable('item'), 'VAR')
+          .appendField('โดย');
+        this.appendValueInput('DELTA')
+          .setCheck('Number');
+        this.setPreviousStatement(true, null);
+        this.setNextStatement(true, null);
+        this.setColour(230);
+        this.setTooltip('เปลี่ยนค่าตัวแปร');
+        this.setHelpUrl('');
+      }
+    };
+    
+    // Ensure generator exists
+    if (!javascriptGenerator.forBlock['math_change']) {
+      javascriptGenerator.forBlock['math_change'] = function(block) {
+        const variable = javascriptGenerator.nameDB_.getName(
+          block.getFieldValue('VAR'),
+          Blockly.Names.NameType.VARIABLE
+        );
+        const delta = javascriptGenerator.valueToCode(block, 'DELTA', javascriptGenerator.ORDER_ADDITION) || '0';
+        return `${variable} = (${variable} || 0) + ${delta};\n`;
+      };
+    }
+    console.log('Overridden math_change block to fix message format');
+  } catch (e) {
+    console.error('Failed to override math_change block:', e);
+  }
+
+  // Override lists_isEmpty to fix message format issues
+  // Blockly's standard lists_isEmpty may have JSON format problems
+  try {
+    Blockly.Blocks['lists_isEmpty'] = {
+      init: function() {
+        this.appendDummyInput()
+          .appendField('ลิสต์');
+        this.appendValueInput('VALUE')
+          .setCheck('Array');
+        this.appendDummyInput()
+          .appendField('ว่างหรือไม่');
+        this.setOutput(true, 'Boolean');
+        this.setColour(260);
+        this.setTooltip('เช็คว่า list ว่างหรือไม่');
+      }
+    };
+    
+    // Ensure generator exists
+    if (!javascriptGenerator.forBlock['lists_isEmpty']) {
+      javascriptGenerator.forBlock['lists_isEmpty'] = function(block) {
+        const list = javascriptGenerator.valueToCode(block, 'VALUE', javascriptGenerator.ORDER_MEMBER) || '[]';
+        return [`${list}.length === 0`, javascriptGenerator.ORDER_EQUALITY];
+      };
+    }
+    console.log('Overridden lists_isEmpty block to fix message format');
+  } catch (e) {
+    console.error('Failed to override lists_isEmpty block:', e);
+  }
+
+  // Override procedures_defreturn to fix undefined replace error
+  // Blockly's standard procedures_defreturn may have issues with procedure name handling
+  try {
+    if (Blockly.Blocks['procedures_defreturn']) {
+      // Store original functions before overriding
+      const originalLoadExtraState = Blockly.Blocks['procedures_defreturn'].loadExtraState;
+      const originalRenameProcedure = Blockly.Blocks['procedures_defreturn'].renameProcedure;
+      const originalCustomContextMenu = Blockly.Blocks['procedures_defreturn'].customContextMenu;
+      
+      // Override renameProcedure FIRST to prevent errors
+      Blockly.Blocks['procedures_defreturn'].renameProcedure = function(oldName, newName) {
+        try {
+          // If either name is undefined/null, just return without doing anything
+          if (!oldName || !newName) {
+            return;
+          }
+          
+          // Ensure both names are strings
+          const safeOldName = String(oldName);
+          const safeNewName = String(newName);
+          
+          // Only proceed if both names are valid non-empty strings
+          if (!safeOldName || !safeNewName) {
+            return;
+          }
+          
+          if (originalRenameProcedure) {
+            return originalRenameProcedure.call(this, safeOldName, safeNewName);
+          }
+        } catch (e) {
+          console.warn('Error in procedures_defreturn.renameProcedure:', e);
+          // Silently fail to prevent errors
+        }
+      };
+      
+      // CRITICAL: Completely override loadExtraState to NEVER call renameProcedure
+      // This is the root cause - loadExtraState calls renameProcedure internally
+      // Store the override function BEFORE assigning to ensure it's captured
+      const loadExtraStateOverride = function(state) {
+        console.log('[procedures_defreturn] loadExtraState (blocklyStandardBlocks) called:', { state, stateName: state?.name, thisBlock: this.id || 'new block' });
+        try {
+          // Ensure state exists and has required properties
+          if (!state || typeof state !== 'object') {
+            state = {};
+          }
+          
+          // Ensure state.name is a string - this is critical for renameProcedure
+          // Don't use "unnamed" as it can cause issues
+          let safeName = 'function';
+          if (state.name && typeof state.name === 'string' && state.name.trim()) {
+            const trimmedName = state.name.trim();
+            if (trimmedName && trimmedName !== 'unnamed' && trimmedName !== 'undefined') {
+              safeName = trimmedName;
+            }
+          }
+          
+          // Ensure state.params is an array
+          const safeParams = Array.isArray(state.params) ? state.params : [];
+          
+          // CRITICAL: Set name field directly WITHOUT calling renameProcedure
+          // This is the key fix - we must NOT call originalLoadExtraState
+          // because it internally calls renameProcedure with potentially undefined values
+          try {
+            const nameField = this.getField('NAME');
+            if (nameField) {
+              nameField.setValue(safeName);
+              console.log('[procedures_defreturn] loadExtraState: set name field to:', safeName);
+            } else {
+              console.warn('[procedures_defreturn] loadExtraState: nameField not found');
+            }
+          } catch (e) {
+            console.error('[procedures_defreturn] loadExtraState: error setting name field:', e);
+          }
+          
+          // Handle parameters if needed
+          if (safeParams.length > 0) {
+            try {
+              if (this.mutationToDom && this.domToMutation) {
+                const mutation = this.mutationToDom();
+                if (mutation) {
+                  mutation.setAttribute('name', safeName);
+                  mutation.setAttribute('params', JSON.stringify(safeParams));
+                  this.domToMutation(mutation);
+                }
+              }
+            } catch (e) {
+              console.error('[procedures_defreturn] loadExtraState: error updating mutation:', e);
+            }
+          }
+          
+          return { name: safeName, params: safeParams };
+        } catch (e) {
+          console.error('[procedures_defreturn] loadExtraState error:', e);
+          // Return safe default state on error
+          return { name: 'function', params: [] };
+        }
+      };
+      
+      // CRITICAL: Assign the override function to the block definition
+      // This must be done AFTER defining the function to ensure it's properly bound
+      Blockly.Blocks['procedures_defreturn'].loadExtraState = loadExtraStateOverride;
+      
+      // Verify the override was applied
+      console.log('[procedures_defreturn] loadExtraState override applied:', typeof Blockly.Blocks['procedures_defreturn'].loadExtraState);
+      console.log('[procedures_defreturn] loadExtraState is our override:', Blockly.Blocks['procedures_defreturn'].loadExtraState === loadExtraStateOverride);
+      
+      Blockly.Blocks['procedures_defreturn'].customContextMenu = function(options) {
+        try {
+          // Ensure options exists and is an array
+          if (originalCustomContextMenu && options && Array.isArray(options)) {
+            // Get procedure name safely
+            const procName = this.getFieldValue('NAME');
+            if (procName && typeof procName === 'string') {
+              return originalCustomContextMenu.call(this, options);
+            }
+          }
+        } catch (e) {
+          console.warn('Error in procedures_defreturn.customContextMenu:', e);
+        }
+      };
+      
+      console.log('Patched procedures_defreturn to fix undefined errors');
+    }
+  } catch (e) {
+    console.error('Failed to patch procedures_defreturn:', e);
+  }
+  
+  // CRITICAL: Also override procedure call blocks
+  // These are created automatically when using custom: "PROCEDURE"
+  try {
+    // Override procedures_callreturn
+    if (Blockly.Blocks['procedures_callreturn']) {
+      const originalRenameProcedure = Blockly.Blocks['procedures_callreturn'].renameProcedure;
+      
+      if (originalRenameProcedure) {
+        Blockly.Blocks['procedures_callreturn'].renameProcedure = function(oldName, newName) {
+          // Early return if parameters are invalid
+          if (!oldName || !newName || oldName === undefined || newName === undefined) {
+            return;
+          }
+          
+          try {
+            const safeOldName = String(oldName).trim();
+            const safeNewName = String(newName).trim();
+            
+            if (!safeOldName || !safeNewName || safeOldName === 'undefined' || safeNewName === 'undefined') {
+              return;
+            }
+            
+            // Only call original if it exists and is a function
+            if (originalRenameProcedure && typeof originalRenameProcedure === 'function') {
+              // Check if original function might fail - if so, don't call it
+              try {
+                return originalRenameProcedure.call(this, safeOldName, safeNewName);
+              } catch (innerError) {
+                // If original fails, just return without error
+                console.debug('Original renameProcedure failed, skipping:', innerError);
+                return;
+              }
+            }
+            // If no original function, just return (no-op)
+            return;
+          } catch (e) {
+            console.warn('Error in procedures_callreturn.renameProcedure:', e);
+            // Don't rethrow - just return
+            return;
+          }
+        };
+      }
+      
+      console.log('Patched procedures_callreturn to fix undefined errors');
+    }
+    
+    // Override procedures_callnoreturn
+    if (Blockly.Blocks['procedures_callnoreturn']) {
+      const originalRenameProcedure = Blockly.Blocks['procedures_callnoreturn'].renameProcedure;
+      
+      if (originalRenameProcedure) {
+        Blockly.Blocks['procedures_callnoreturn'].renameProcedure = function(oldName, newName) {
+          if (!oldName || !newName || oldName === undefined || newName === undefined) {
+            return;
+          }
+          
+          try {
+            const safeOldName = String(oldName);
+            const safeNewName = String(newName);
+            
+            if (!safeOldName || !safeNewName) {
+              return;
+            }
+            
+            return originalRenameProcedure.call(this, safeOldName, safeNewName);
+          } catch (e) {
+            console.warn('Error in procedures_callnoreturn.renameProcedure:', e);
+          }
+        };
+      }
+      
+      console.log('Patched procedures_callnoreturn to fix undefined errors');
+    }
+  } catch (e) {
+    console.error('Failed to patch procedure call blocks:', e);
+  }
+
+  // Override procedures_defnoreturn to fix undefined replace error
+  try {
+    if (Blockly.Blocks['procedures_defnoreturn']) {
+      // Store original functions before overriding
+      const originalLoadExtraState = Blockly.Blocks['procedures_defnoreturn'].loadExtraState;
+      const originalRenameProcedure = Blockly.Blocks['procedures_defnoreturn'].renameProcedure;
+      const originalCustomContextMenu = Blockly.Blocks['procedures_defnoreturn'].customContextMenu;
+      
+      // Override renameProcedure FIRST to prevent errors
+      Blockly.Blocks['procedures_defnoreturn'].renameProcedure = function(oldName, newName) {
+        try {
+          // If either name is undefined/null, just return without doing anything
+          if (!oldName || !newName) {
+            return;
+          }
+          
+          // Ensure both names are strings
+          const safeOldName = String(oldName);
+          const safeNewName = String(newName);
+          
+          // Only proceed if both names are valid non-empty strings
+          if (!safeOldName || !safeNewName) {
+            return;
+          }
+          
+          if (originalRenameProcedure) {
+            return originalRenameProcedure.call(this, safeOldName, safeNewName);
+          }
+        } catch (e) {
+          console.warn('Error in procedures_defnoreturn.renameProcedure:', e);
+          // Silently fail to prevent errors
+        }
+      };
+      
+      // CRITICAL: Completely override loadExtraState to NEVER call renameProcedure
+      // This is the root cause - loadExtraState calls renameProcedure internally
+      // Store the override function BEFORE assigning to ensure it's captured
+      const loadExtraStateOverrideNoreturn = function(state) {
+        console.log('[procedures_defnoreturn] loadExtraState (blocklyStandardBlocks) called:', { state, stateName: state?.name, thisBlock: this.id || 'new block' });
+        try {
+          // Ensure state exists and has required properties
+          if (!state || typeof state !== 'object') {
+            state = {};
+          }
+          
+          // Ensure state.name is a string - this is critical for renameProcedure
+          // Don't use "unnamed" as it can cause issues
+          let safeName = 'function';
+          if (state.name && typeof state.name === 'string' && state.name.trim()) {
+            const trimmedName = state.name.trim();
+            if (trimmedName && trimmedName !== 'unnamed' && trimmedName !== 'undefined') {
+              safeName = trimmedName;
+            }
+          }
+          
+          // Ensure state.params is an array
+          const safeParams = Array.isArray(state.params) ? state.params : [];
+          
+          // CRITICAL: Set name field directly WITHOUT calling renameProcedure
+          // This is the key fix - we must NOT call originalLoadExtraState
+          // because it internally calls renameProcedure with potentially undefined values
+          try {
+            const nameField = this.getField('NAME');
+            if (nameField) {
+              nameField.setValue(safeName);
+              console.log('[procedures_defnoreturn] loadExtraState: set name field to:', safeName);
+            } else {
+              console.warn('[procedures_defnoreturn] loadExtraState: nameField not found');
+            }
+          } catch (e) {
+            console.error('[procedures_defnoreturn] loadExtraState: error setting name field:', e);
+          }
+          
+          // Handle parameters if needed
+          if (safeParams.length > 0) {
+            try {
+              if (this.mutationToDom && this.domToMutation) {
+                const mutation = this.mutationToDom();
+                if (mutation) {
+                  mutation.setAttribute('name', safeName);
+                  mutation.setAttribute('params', JSON.stringify(safeParams));
+                  this.domToMutation(mutation);
+                }
+              }
+            } catch (e) {
+              console.error('[procedures_defnoreturn] loadExtraState: error updating mutation:', e);
+            }
+          }
+          
+          return { name: safeName, params: safeParams };
+        } catch (e) {
+          console.error('[procedures_defnoreturn] loadExtraState error:', e);
+          // Return safe default state on error
+          return { name: 'function', params: [] };
+        }
+      };
+      
+      // CRITICAL: Assign the override function to the block definition
+      // This must be done AFTER defining the function to ensure it's properly bound
+      Blockly.Blocks['procedures_defnoreturn'].loadExtraState = loadExtraStateOverrideNoreturn;
+      
+      // Verify the override was applied
+      console.log('[procedures_defnoreturn] loadExtraState override applied:', typeof Blockly.Blocks['procedures_defnoreturn'].loadExtraState);
+      console.log('[procedures_defnoreturn] loadExtraState is our override:', Blockly.Blocks['procedures_defnoreturn'].loadExtraState === loadExtraStateOverrideNoreturn);
+      
+      Blockly.Blocks['procedures_defnoreturn'].customContextMenu = function(options) {
+        try {
+          // Ensure options exists and is an array
+          if (originalCustomContextMenu && options && Array.isArray(options)) {
+            // Get procedure name safely
+            const procName = this.getFieldValue('NAME');
+            if (procName && typeof procName === 'string') {
+              return originalCustomContextMenu.call(this, options);
+            }
+          }
+        } catch (e) {
+          console.warn('Error in procedures_defnoreturn.customContextMenu:', e);
+        }
+      };
+      
+      console.log('Patched procedures_defnoreturn to fix undefined errors');
+    }
+  } catch (e) {
+    console.error('Failed to patch procedures_defnoreturn:', e);
   }
   
   // Create fallback for math_arithmetic if missing

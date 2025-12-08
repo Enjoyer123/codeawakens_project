@@ -87,40 +87,6 @@ const LevelInfoForm = ({ formData, categories, prerequisiteLevels, isEditing, le
           </select>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="text-sm font-medium">Start Node ID</label>
-            <Input
-              type="number"
-              value={formData.start_node_id ?? ''}
-              onChange={(e) => {
-                const value = e.target.value;
-                handleChange('start_node_id', value !== '' ? parseInt(value) || 0 : null);
-              }}
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium">Goal Node ID</label>
-            <Input
-              type="number"
-              value={formData.goal_node_id ?? ''}
-              onChange={(e) => {
-                const value = e.target.value;
-                handleChange('goal_node_id', value !== '' ? parseInt(value) || 0 : null);
-              }}
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="text-sm font-medium">Goal Type</label>
-          <Input
-            value={formData.goal_type}
-            onChange={(e) => handleChange('goal_type', e.target.value)}
-            placeholder="Goal type"
-          />
-        </div>
-
         <div className="flex items-center gap-4">
           <label className="flex items-center gap-2">
             <input
@@ -145,4 +111,3 @@ const LevelInfoForm = ({ formData, categories, prerequisiteLevels, isEditing, le
 };
 
 export default LevelInfoForm;
-

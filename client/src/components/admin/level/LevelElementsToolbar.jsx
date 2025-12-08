@@ -54,160 +54,158 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
     onSetMode('treasure');
   };
   return (
-    <div className="bg-white rounded-lg shadow-md p-4">
-      <h2 className="text-xl font-bold mb-4">Level Elements</h2>
-      <div className="space-y-3">
-        <div className="grid grid-cols-3 gap-2">
+    <div className="bg-white rounded-lg shadow-md p-4 space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold">Level Elements</h2>
+        <Button
+            variant={currentMode === 'delete' ? 'destructive' : 'outline'}
+            size="sm"
+            onClick={() => onSetMode('delete')}
+            className={`text-xs ${currentMode === 'delete' ? 'bg-red-600 hover:bg-red-700' : 'text-red-500 hover:text-red-600 border-red-200 hover:bg-red-50'}`}
+          >
+            <Trash2 className="h-3 w-3 mr-2" />
+            Delete Mode
+        </Button>
+      </div>
+
+      {/* Group 1: Map Structure */}
+      <div className="space-y-2">
+        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Map Structure</h3>
+        <div className="grid grid-cols-2 gap-2">
           <Button
             variant={currentMode === 'node' ? 'default' : 'outline'}
             onClick={() => onSetMode('node')}
-            className="w-full"
+            className="w-full justify-start"
           >
             <Plus className="h-4 w-4 mr-2" />
-            + node
+            Node
           </Button>
           <Button
             variant={currentMode === 'edge' ? 'default' : 'outline'}
             onClick={() => onSetMode('edge')}
-            className="w-full"
+            className="w-full justify-start"
           >
             <Plus className="h-4 w-4 mr-2" />
-            + edge
+            Edge
           </Button>
+        </div>
+      </div>
+
+      {/* Group 2: Objectives */}
+      <div className="space-y-2">
+        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Objectives</h3>
+        <div className="grid grid-cols-2 gap-2">
           <Button
             variant={currentMode === 'start' ? 'default' : 'outline'}
             onClick={() => onSetMode('start')}
-            className="w-full bg-green-100 hover:bg-green-200"
+            className={`w-full justify-start ${currentMode === 'start' ? 'bg-green-600' : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:text-green-800'}`}
           >
-            🏁 Start
+            <span className="mr-2">🏁</span>
+            Start
           </Button>
           <Button
             variant={currentMode === 'goal' ? 'default' : 'outline'}
             onClick={() => onSetMode('goal')}
-            className="w-full bg-yellow-100 hover:bg-yellow-200"
+            className={`w-full justify-start ${currentMode === 'goal' ? 'bg-amber-500 hover:bg-amber-600' : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 hover:text-amber-800'}`}
           >
-            🎯 Goal
+             <span className="mr-2">🎯</span>
+            Goal
           </Button>
-          <Button
-            variant={currentMode === 'delete' ? 'default' : 'outline'}
-            onClick={() => onSetMode('delete')}
-            className="w-full bg-red-100 hover:bg-red-200"
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Delete
-          </Button>
-          <Button
+        </div>
+      </div>
+
+      {/* Group 3: Enemies & Obstacles */}
+      <div className="space-y-2">
+        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Enemies & Obstacles</h3>
+        <div className="grid grid-cols-2 gap-2">
+           <Button
             variant={currentMode === 'monster' ? 'default' : 'outline'}
             onClick={onAddMonster}
-            className="w-full"
+            className="w-full justify-start"
           >
             <Plus className="h-4 w-4 mr-2" />
-            + Monster
+            Monster
           </Button>
           <Button
             variant={currentMode === 'obstacle' ? 'default' : 'outline'}
             onClick={onAddObstacle}
-            className="w-full"
+            className="w-full justify-start"
           >
             <Plus className="h-4 w-4 mr-2" />
-            + obstacle
+            Obstacle
           </Button>
-          {isItemTypeEnabled(ITEM_TYPES.COIN_POSITIONS) && (
-            <Button
-              variant={currentMode === 'coin' ? 'default' : 'outline'}
-              onClick={handleAddCoin}
-              className="w-full"
-            >
-              <Coins className="h-4 w-4 mr-2" />
-              + Coin
-            </Button>
-          )}
-          {isItemTypeEnabled(ITEM_TYPES.PEOPLE) && (
-            <Button
-              variant={currentMode === 'people' ? 'default' : 'outline'}
-              onClick={handleAddPeople}
-              className="w-full"
-            >
-              <Users className="h-4 w-4 mr-2" />
-              + People
-            </Button>
-          )}
-          {isItemTypeEnabled(ITEM_TYPES.TREASURES) && (
-            <Button
-              variant={currentMode === 'treasure' ? 'default' : 'outline'}
-              onClick={handleAddTreasure}
-              className="w-full"
-            >
-              <Gem className="h-4 w-4 mr-2" />
-              + Treasure
-            </Button>
-          )}
-        </div>
-        
-        {isItemTypeEnabled(ITEM_TYPES.COIN_POSITIONS) && (
-          <div className="border-t pt-3">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              มูลค่าเหรียญ
-            </label>
-            <Input
-              type="number"
-              min="1"
-              value={coinValue || 10}
-              onChange={(e) => {
-                const newValue = e.target.value === '' ? 10 : parseInt(e.target.value, 10);
-                const finalValue = isNaN(newValue) ? 10 : newValue;
-                onCoinValueChange(finalValue);
-              }}
-              placeholder="10"
-              className="w-full"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              ค่าที่จะใช้เมื่อวางเหรียญใหม่ (ค่าเริ่มต้น: 10)
-            </p>
-          </div>
-        )}
-      </div>
-      <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-        <div className="grid grid-cols-4 gap-4 text-sm">
-          <div>
-            <span className="text-gray-600">Nodes:</span>
-            <span className="ml-2 font-bold text-blue-600">{formData.nodes.length}</span>
-          </div>
-          <div>
-            <span className="text-gray-600">Edges:</span>
-            <span className="ml-2 font-bold text-blue-600">{formData.edges.length}</span>
-          </div>
-          <div>
-            <span className="text-gray-600">Monsters:</span>
-            <span className="ml-2 font-bold text-blue-600">{formData.monsters.length}</span>
-          </div>
-          <div>
-            <span className="text-gray-600">Obstacles:</span>
-            <span className="ml-2 font-bold text-blue-600">{formData.obstacles.length}</span>
-          </div>
-          {isItemTypeEnabled(ITEM_TYPES.COIN_POSITIONS) && (
-            <div>
-              <span className="text-gray-600">Coins:</span>
-              <span className="ml-2 font-bold text-blue-600">{formData.coin_positions?.length || 0}</span>
-            </div>
-          )}
-          {isItemTypeEnabled(ITEM_TYPES.PEOPLE) && (
-            <div>
-              <span className="text-gray-600">People:</span>
-              <span className="ml-2 font-bold text-blue-600">{formData.people?.length || 0}</span>
-            </div>
-          )}
-          {isItemTypeEnabled(ITEM_TYPES.TREASURES) && (
-            <div>
-              <span className="text-gray-600">Treasures:</span>
-              <span className="ml-2 font-bold text-blue-600">{formData.treasures?.length || 0}</span>
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Group 4: Items (Conditional) */}
+      {(isItemTypeEnabled(ITEM_TYPES.COIN_POSITIONS) || isItemTypeEnabled(ITEM_TYPES.PEOPLE) || isItemTypeEnabled(ITEM_TYPES.TREASURES)) && (
+        <div className="space-y-2">
+          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Items</h3>
+          <div className="space-y-3">
+             <div className="grid grid-cols-2 gap-2">
+              {isItemTypeEnabled(ITEM_TYPES.COIN_POSITIONS) && (
+                <Button
+                  variant={currentMode === 'coin' ? 'default' : 'outline'}
+                  onClick={handleAddCoin}
+                  className="w-full justify-start"
+                >
+                  <Coins className="h-4 w-4 mr-2" />
+                  Coin
+                </Button>
+              )}
+              {isItemTypeEnabled(ITEM_TYPES.PEOPLE) && (
+                <Button
+                  variant={currentMode === 'people' ? 'default' : 'outline'}
+                  onClick={handleAddPeople}
+                  className="w-full justify-start"
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  People
+                </Button>
+              )}
+              {isItemTypeEnabled(ITEM_TYPES.TREASURES) && (
+                <Button
+                  variant={currentMode === 'treasure' ? 'default' : 'outline'}
+                  onClick={handleAddTreasure}
+                  className="w-full justify-start"
+                >
+                  <Gem className="h-4 w-4 mr-2" />
+                  Treasure
+                </Button>
+              )}
+            </div>
+            
+            {/* Coin Value Input Sub-section */}
+            {isItemTypeEnabled(ITEM_TYPES.COIN_POSITIONS) && currentMode === 'coin' && (
+               <div className="bg-gray-50 p-2 rounded-md border border-gray-100 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">
+                    Coin Value
+                  </label>
+                  <div className="flex items-center gap-2">
+                     <Coins className="w-3 h-3 text-yellow-500" />
+                     <Input
+                        type="number"
+                        min="1"
+                        value={coinValue || 10}
+                        onChange={(e) => {
+                          const newValue = e.target.value === '' ? 10 : parseInt(e.target.value, 10);
+                          const finalValue = isNaN(newValue) ? 10 : newValue;
+                          onCoinValueChange(finalValue);
+                        }}
+                        className="h-7 text-sm py-1"
+                        placeholder="10"
+                        autoFocus
+                     />
+                  </div>
+               </div>
+            )}
+          </div>
+        </div>
+      )}
+
+    
     </div>
   );
 };
 
 export default LevelElementsToolbar;
-

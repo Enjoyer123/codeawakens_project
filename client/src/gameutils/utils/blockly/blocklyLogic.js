@@ -80,6 +80,16 @@ export function defineLogicBlocks() {
     },
   };
 
+  Blockly.Blocks["logic_null"] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("null");
+      this.setOutput(true, null);
+      this.setColour(210);
+      this.setTooltip("ค่า null (ไม่มีค่า)");
+    },
+  };
+
   Blockly.Blocks["logic_negate"] = {
     init: function () {
       this.appendValueInput("BOOL")

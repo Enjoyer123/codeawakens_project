@@ -50,6 +50,19 @@ export function drawLevel(scene) {
     }
   });
 
+  // Initialize node labels array if it doesn't exist
+  if (!scene.nodeLabels) {
+    scene.nodeLabels = [];
+  } else {
+    // Clean up existing labels
+    scene.nodeLabels.forEach(label => {
+      if (label && !label.scene) {
+        label.destroy();
+      }
+    });
+    scene.nodeLabels = [];
+  }
+
   // Draw nodes AFTER edges (on top)
   scene.levelData.nodes.forEach((node) => {
     const isStart = node.id === scene.levelData.startNodeId;
@@ -64,6 +77,19 @@ export function drawLevel(scene) {
     graphics.fillCircle(node.x, node.y, 18);
     graphics.lineStyle(3, 0xffffff, 1);
     graphics.strokeCircle(node.x, node.y, 18);
+
+    // Add node ID label
+    const nodeLabel = scene.add.text(node.x, node.y, node.id.toString(), {
+      fontSize: '12px',
+      color: '#ffffff',
+      fontStyle: 'bold',
+      stroke: '#000000',
+      strokeThickness: 3,
+      align: 'center'
+    });
+    nodeLabel.setOrigin(0.5, 0.5);
+    nodeLabel.setDepth(2); // Above graphics but below player/monsters
+    scene.nodeLabels.push(nodeLabel);
   });
 
   // Store graphics reference

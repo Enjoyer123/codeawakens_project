@@ -8,6 +8,11 @@ import { defineStackBlocks } from './blocklyStack';
 import { defineFunctionBlocks } from './blocklyFunction';
 import { defineLoopBlocks } from './blocklyLoop';
 import { defineVariableBlocks } from './blocklyVariableBlocks';
+import { defineListBlocks } from './blocklyList';
+import { defineListOperationsBlocks } from './blocklyListOperations';
+import { defineGraphOperationsBlocks } from './blocklyGraphOperations';
+import { defineLogicOperatorsBlocks } from './blocklyLogicOperators';
+import { defineDfsVisualBlocks } from './blocklyDfsVisualBlocks';
 
 export function defineAllBlocks() {
   // Call all block definition functions
@@ -20,5 +25,10 @@ export function defineAllBlocks() {
   defineFunctionBlocks();
   defineLoopBlocks();
   defineVariableBlocks();
+  defineListBlocks(); // Must be called before list operations to override standard blocks
+  defineListOperationsBlocks();
+  defineGraphOperationsBlocks();
+  defineLogicOperatorsBlocks();
+  defineDfsVisualBlocks();
 }
 
