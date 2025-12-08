@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { SignInButton, SignUpButton, useAuth, useClerk } from '@clerk/clerk-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Menu, X } from 'lucide-react';
+import { fetchUserProfile } from '../../../services/profileService';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,17 +17,79 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 
-function Navbar({ navItems = [], isLoading = false }) {
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+
+function Navbar({ navItems = [], isLoading = false, isGamePage = false }) {
   const navigate = useNavigate();
-  const { isSignedIn, isLoaded, user } = useAuth();
+  const { isSignedIn, isLoaded, user, getToken } = useAuth(); // Added getToken
   const { signOut } = useClerk();
+  const [isOpen, setIsOpen] = useState(!isGamePage);
+  const [dbProfileImage, setDbProfileImage] = useState(null);
+
+  // Reset state when isGamePage changes
+  useEffect(() => {
+    setIsOpen(!isGamePage);
+  }, [isGamePage]);
+
+  // Fetch user profile from DB
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (isSignedIn) {
+        try {
+          const profileData = await fetchUserProfile(getToken);
+          if (profileData && profileData.profile_image) {
+            setDbProfileImage(profileData.profile_image);
+          }
+        } catch (error) {
+          console.error("Failed to load user profile for navbar:", error);
+        }
+      }
+    };
+    
+    if (isLoaded && isSignedIn) {
+       loadUserProfile();
+    }
+  }, [isSignedIn, isLoaded, getToken]);
+
+  // Collapsed state for game page
+  if (isGamePage && !isOpen) {
+    return (
+      <button 
+        onClick={() => setIsOpen(true)}
+        className="fixed top-2 left-2 z-50 p-2 bg-gray-800 text-white rounded-md shadow-lg hover:bg-gray-700 transition-colors"
+        title="Open User Menu"
+      >
+        <Menu size={24} />
+      </button>
+    );
+  }
+
+  // Construct image URL
+  const getAvatarSrc = () => {
+    if (dbProfileImage) {
+      if (dbProfileImage.startsWith('http') || dbProfileImage.startsWith('data:')) {
+        return dbProfileImage;
+      }
+      return `${API_BASE_URL}${dbProfileImage}`;
+    }
+    return user?.imageUrl;
+  };
 
   return (
-    <nav className="bg-gray-800 text-white shadow-lg">
+    <nav className="bg-gray-800 text-white shadow-lg relative">
+      {isGamePage && (
+        <button 
+          onClick={() => setIsOpen(false)}
+          className="absolute top-4 left-2 z-50 p-1 text-gray-400 hover:text-white"
+          title="Collapse Menu"
+        >
+          <X size={24} />
+        </button>
+      )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div 
-            className="text-xl font-bold cursor-pointer hover:text-gray-300 transition-colors"
+            className={`text-xl font-bold cursor-pointer hover:text-gray-300 transition-colors ${isGamePage ? 'ml-8' : ''}`}
             onClick={() => navigate("/")}
           >
             LOGO
@@ -73,7 +137,7 @@ function Navbar({ navItems = [], isLoading = false }) {
                         <button className="rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
                           <Avatar className="h-10 w-10">
                             <AvatarImage 
-                              src={user?.imageUrl}
+                              src={getAvatarSrc()}
                               alt={user?.fullName || user?.emailAddresses[0]?.emailAddress || "User"}
                             />
                             <AvatarFallback>

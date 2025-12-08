@@ -9,12 +9,15 @@ const AdminPageHeader = ({
   addButtonText = 'เพิ่ม',
   showBackButton = true,
   backPath = '/admin',
-  rightContent
+  rightContent,
+  className = '',
+  titleClassName = '',
+  subtitleClassName = ''
 }) => {
   const navigate = useNavigate();
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+    <div className={`bg-white rounded-lg shadow-md p-6 mb-6 ${className}`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           {showBackButton && (
@@ -28,8 +31,8 @@ const AdminPageHeader = ({
             </Button>
           )}
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">{title}</h1>
-            {subtitle && <p className="text-gray-600 mt-1">{subtitle}</p>}
+            <h1 className={`text-3xl font-bold text-gray-800 ${titleClassName}`}>{title}</h1>
+            {subtitle && <p className={`text-gray-600 mt-1 ${subtitleClassName}`}>{subtitle}</p>}
           </div>
         </div>
         <div className="flex items-center gap-2">

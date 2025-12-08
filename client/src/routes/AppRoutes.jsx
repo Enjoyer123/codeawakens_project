@@ -38,8 +38,8 @@ const AppRoutes = () => {
         <Route path="user/profile" element={<UserProfile />} />
         
         <Route path="user/mapselect" element={<MapSelect />} />
-        <Route path="mapselect/:categoryId" element={<CategoryLevels />} />
-        <Route path="mapselection/:levelId" element={<LevelGame />} />
+        <Route path="user/mapselect/:categoryId" element={<CategoryLevels />} />
+        <Route path="user/mapselection/:levelId" element={<LevelGame />} />
       </Route>
 
       <Route

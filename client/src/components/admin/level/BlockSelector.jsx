@@ -16,7 +16,7 @@ const BlockSelector = ({ allBlocks, selectedBlocks, onBlocksChange }) => {
   return (
     <div className="bg-white rounded-lg shadow-md p-4">
       <h2 className="text-xl font-bold mb-4">ADD BLOCK</h2>
-      <div className="space-y-2 max-h-64 overflow-y-auto">
+      <div className="space-y-2 max-auto ">
         {blockCategories.map(category => (
           <div key={category} className="border rounded p-2">
             <div className="font-semibold capitalize mb-2">{category}</div>

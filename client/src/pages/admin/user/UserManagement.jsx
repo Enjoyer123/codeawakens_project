@@ -5,7 +5,6 @@ import { fetchAllUsers, updateUserRole, deleteUser } from '../../../services/adm
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Eye, Trash2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import UserDetailsModal from '@/components/shared/userDetailProfile/UserDetailsModal';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
@@ -18,8 +17,6 @@ import { getImageUrlSafe } from '@/utils/imageUtils';
 import { createDeleteErrorMessage } from '@/utils/errorHandler';
 
 const UserManagement = () => {
-  const navigate = useNavigate();
-  const { user } = useAuth();
   const { getToken } = useAuth();
   const { page, rowsPerPage, handlePageChange } = usePagination(1, 5);
   const [users, setUsers] = useState([]);
@@ -88,11 +85,6 @@ const UserManagement = () => {
   const handleViewDetails = useCallback((userItem) => {
     setSelectedUser(userItem);
     setModalOpen(true);
-  }, []);
-
-  const handleCloseModal = useCallback(() => {
-    setModalOpen(false);
-    setSelectedUser(null);
   }, []);
 
   const handleDeleteClick = useCallback((userItem) => {
