@@ -50,4 +50,3 @@ const AdminPageHeader = ({
 };
 
 export default AdminPageHeader;
-

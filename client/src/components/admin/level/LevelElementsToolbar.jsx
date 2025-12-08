@@ -209,4 +209,3 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
 };
 
 export default LevelElementsToolbar;
-

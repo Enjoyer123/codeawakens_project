@@ -111,4 +111,3 @@ const LevelInfoForm = ({ formData, categories, prerequisiteLevels, isEditing, le
 };
 
 export default LevelInfoForm;
-

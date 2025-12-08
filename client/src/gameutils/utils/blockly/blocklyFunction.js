@@ -37,5 +37,18 @@ export function defineFunctionBlocks() {
       this.setTooltip("เรียกใช้ฟังก์ชันพร้อมส่งค่า argument");
     },
   };
+
+  // Return statement block for procedures_defreturn
+  Blockly.Blocks["procedures_return"] = {
+    init: function () {
+      this.appendValueInput("VALUE")
+        .setCheck(null)
+        .appendField("↩️ คืนค่า");
+      this.setPreviousStatement(true, null);
+      this.setColour(290);
+      this.setTooltip("คืนค่าจากฟังก์ชัน");
+      this.setHelpUrl("");
+    },
+  };
 }
 

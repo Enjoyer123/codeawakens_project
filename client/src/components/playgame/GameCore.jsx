@@ -44,6 +44,8 @@ import { useTextCodeValidation } from './hooks/useTextCodeValidation';
 import { calculateFinalScore } from './utils/scoreUtils';
 import { highlightBlocks as highlightBlocksUtil, clearHighlights as clearHighlightsUtil } from './utils/visualGuide';
 import { handleRestartGame as handleRestartGameUtil, handleVictory as handleVictoryUtil } from './utils/gameHandlers';
+import { loadDfsExampleBlocks } from '../../gameutils/utils/blockly/loadDfsExample';
+import { loadBfsExampleBlocks } from '../../gameutils/utils/blockly/loadBfsExample';
 
 /**
  * GameCore Component
@@ -205,8 +207,16 @@ const GameCore = ({
 
   // Sync combat state with combat system
   useEffect(() => {
+    let lastCombatState = isInCombat();
+    setInCombatMode(lastCombatState);
+    
     const interval = setInterval(() => {
-      setInCombatMode(isInCombat());
+      const currentCombatState = isInCombat();
+      // Only update if state changed to prevent infinite loop
+      if (currentCombatState !== lastCombatState) {
+        lastCombatState = currentCombatState;
+        setInCombatMode(currentCombatState);
+      }
     }, 100);
 
     return () => clearInterval(interval);
@@ -637,6 +647,33 @@ const GameCore = ({
                   {isPreview && <span className="ml-2 text-yellow-400 text-sm">(Preview)</span>}
                 </h2>
               </div>
+          {/* Temporary buttons to load example blocks - Remove after development */}
+          {workspaceRef.current && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  if (workspaceRef.current) {
+                    loadDfsExampleBlocks(workspaceRef.current);
+                  }
+                }}
+                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded"
+                title="โหลด DFS example blocks (ชั่วคราว - สำหรับทดสอบ)"
+              >
+                📦 โหลด DFS
+              </button>
+              <button
+                onClick={() => {
+                  if (workspaceRef.current) {
+                    loadBfsExampleBlocks(workspaceRef.current);
+                  }
+                }}
+                className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded"
+                title="โหลด BFS example blocks (ชั่วคราว - สำหรับทดสอบ)"
+              >
+                📦 โหลด BFS
+              </button>
+            </div>
+          )}
             </div>
           </div>
 

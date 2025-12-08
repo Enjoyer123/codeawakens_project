@@ -186,6 +186,43 @@ export function resetAllPeople() {
   return gameResetAllPeople();
 }
 
+// Move along path (for DFS)
+export async function moveAlongPath(path) {
+  if (!path || !Array.isArray(path) || path.length === 0) {
+    console.warn('Invalid path:', path);
+    return;
+  }
+
+  // Clear scanning highlights before moving (keep only path)
+  const currentState = getCurrentGameState();
+  if (currentState.currentScene) {
+    const { clearScanningHighlights } = await import('./blocklyDfsVisual');
+    clearScanningHighlights(currentState.currentScene);
+  }
+
+  // Move to each node in the path sequentially
+  for (let i = 0; i < path.length; i++) {
+    const nodeId = path[i];
+    if (nodeId !== null && nodeId !== undefined) {
+      await moveToNode(Number(nodeId));
+      
+      // Check if reached goal - if yes, clear all highlights except path
+      const state = getCurrentGameState();
+      if (state.currentScene && state.currentScene.levelData) {
+        const goalNodeId = state.currentScene.levelData.goalNodeId;
+        if (Number(nodeId) === goalNodeId) {
+          // Reached goal - clear scanning highlights, keep only path
+          const { clearScanningHighlights } = await import('./blocklyDfsVisual');
+          clearScanningHighlights(state.currentScene);
+        }
+      }
+      
+      // Add small delay between moves for visualization
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+  }
+}
+
 // Move to node function
 export async function moveToNode(targetNodeId) {
   const currentState = getCurrentGameState();
@@ -264,3 +301,23 @@ export function clearStack() {
   return gameClearStack();
 }
 
+// Graph operations functions
+export function getGraphNeighbors(graph, node) {
+  if (!graph || typeof graph !== 'object') {
+    console.warn('Invalid graph:', graph);
+    return [];
+  }
+  const nodeKey = String(node);
+  return graph[nodeKey] || graph[node] || [];
+}
+
+export function getNodeValue(node) {
+  // For now, return the node ID as its value
+  // This can be extended to get actual node data from the game state
+  return typeof node === 'number' ? node : parseInt(node) || 0;
+}
+
+export function getCurrentNode() {
+  const currentState = getCurrentGameState();
+  return currentState.currentNodeId || 0;
+}

@@ -22,6 +22,14 @@ export function createToolboxConfig(enabledBlocks) {
     console.log("✅ Adding hit block");
     movementBlocks.push({ kind: "block", type: "hit" });
   }
+  if (enabledBlocks["move_to_node"]) {
+    console.log("✅ Adding move_to_node block");
+    movementBlocks.push({ kind: "block", type: "move_to_node" });
+  }
+  if (enabledBlocks["move_along_path"]) {
+    console.log("✅ Adding move_along_path block");
+    movementBlocks.push({ kind: "block", type: "move_along_path" });
+  }
 
   console.log("🔧 Movement blocks count:", movementBlocks.length);
   if (movementBlocks.length > 0) {
@@ -49,6 +57,8 @@ export function createToolboxConfig(enabledBlocks) {
     logicBlocks.push({ kind: "block", type: "logic_negate" });
   if (enabledBlocks["logic_operation"])
     logicBlocks.push({ kind: "block", type: "logic_operation" });
+  if (enabledBlocks["logic_not_in"])
+    logicBlocks.push({ kind: "block", type: "logic_not_in" });
 
   if (logicBlocks.length > 0) {
     categories.push({
@@ -193,6 +203,26 @@ export function createToolboxConfig(enabledBlocks) {
     listBlocks.push({ kind: "block", type: "lists_getIndex" });
   if (enabledBlocks["lists_setIndex"])
     listBlocks.push({ kind: "block", type: "lists_setIndex" });
+  
+  // List Operations (new for DFS)
+  if (enabledBlocks["lists_add_item"])
+    listBlocks.push({ kind: "block", type: "lists_add_item" });
+  if (enabledBlocks["lists_remove_last"])
+    listBlocks.push({ kind: "block", type: "lists_remove_last" });
+  if (enabledBlocks["lists_get_last"])
+    listBlocks.push({ kind: "block", type: "lists_get_last" });
+  if (enabledBlocks["lists_remove_first_return"])
+    listBlocks.push({ kind: "block", type: "lists_remove_first_return" });
+  if (enabledBlocks["lists_get_first"])
+    listBlocks.push({ kind: "block", type: "lists_get_first" });
+  if (enabledBlocks["lists_contains"])
+    listBlocks.push({ kind: "block", type: "lists_contains" });
+  if (enabledBlocks["lists_concat"])
+    listBlocks.push({ kind: "block", type: "lists_concat" });
+  if (enabledBlocks["lists_remove_last_return"])
+    listBlocks.push({ kind: "block", type: "lists_remove_last_return" });
+  if (enabledBlocks["for_each_in_list"])
+    listBlocks.push({ kind: "block", type: "for_each_in_list" });
 
   if (listBlocks.length > 0) {
     categories.push({
@@ -222,27 +252,71 @@ export function createToolboxConfig(enabledBlocks) {
     });
   }
 
-  // Function category
-  const functionBlocks = [];
-  
-  if (enabledBlocks["procedures_defreturn"]) {
-    functionBlocks.push({ kind: "block", type: "procedures_defreturn" });
-  }
-  if (enabledBlocks["procedures_defnoreturn"]) {
-    functionBlocks.push({ kind: "block", type: "procedures_defnoreturn" });
-  }
-
-  if (enabledBlocks["move_to_node"]) {
-    functionBlocks.push({ kind: "block", type: "move_to_node" });
-  }
-
-  if (functionBlocks.length > 0) {
+  // Function category - use custom: "PROCEDURE" to let Blockly manage procedure blocks
+  // This will automatically show both definition blocks and call blocks dynamically
+  if (enabledBlocks["procedures_defreturn"] || enabledBlocks["procedures_defnoreturn"]) {
     categories.push({
       kind: "category",
       name: "🔧 ฟังก์ชัน",
       categorystyle: "procedure_category",
-      contents: functionBlocks,
-      custom: "PROCEDURE"
+      custom: "PROCEDURE", // Blockly will manage procedure blocks and call blocks automatically
+    });
+    
+    // Add procedures_return block separately since custom PROCEDURE category may not show it
+    // This block is needed inside procedures_defreturn functions
+    if (enabledBlocks["procedures_defreturn"]) {
+      categories.push({
+        kind: "category",
+        name: "↩️ คืนค่า",
+        categorystyle: "procedure_category",
+        contents: [{ kind: "block", type: "procedures_return" }]
+      });
+    }
+  }
+  
+  // Custom function blocks (if enabled) - separate category
+  const customFunctionBlocks = [];
+  if (enabledBlocks["function_definition"]) {
+    customFunctionBlocks.push({ kind: "block", type: "function_definition" });
+  }
+  if (enabledBlocks["function_call"]) {
+    customFunctionBlocks.push({ kind: "block", type: "function_call" });
+  }
+  
+  if (customFunctionBlocks.length > 0) {
+    categories.push({
+      kind: "category",
+      name: "🔧 ฟังก์ชันกำหนดเอง",
+      categorystyle: "procedure_category",
+      contents: customFunctionBlocks
+    });
+  }
+
+  // Movement to node block - separate category
+  if (enabledBlocks["move_to_node"]) {
+    categories.push({
+      kind: "category",
+      name: "🚀 การเคลื่อนที่ขั้นสูง",
+      categorystyle: "procedure_category",
+      contents: [{ kind: "block", type: "move_to_node" }]
+    });
+  }
+
+  // Graph Operations category (for DFS/BFS)
+  const graphBlocks = [];
+  if (enabledBlocks["graph_get_neighbors"])
+    graphBlocks.push({ kind: "block", type: "graph_get_neighbors" });
+  if (enabledBlocks["graph_get_node_value"])
+    graphBlocks.push({ kind: "block", type: "graph_get_node_value" });
+  if (enabledBlocks["graph_get_current_node"])
+    graphBlocks.push({ kind: "block", type: "graph_get_current_node" });
+
+  if (graphBlocks.length > 0) {
+    categories.push({
+      kind: "category",
+      name: "🗺️ Graph",
+      categorystyle: "procedure_category",
+      contents: graphBlocks,
     });
   }
 

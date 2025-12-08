@@ -1089,4 +1089,3 @@ const PhaserMapEditor = ({
 };
 
 export default PhaserMapEditor;
-

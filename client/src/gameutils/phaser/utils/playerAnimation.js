@@ -1,5 +1,18 @@
 export function playIdle(player) {
+    // Ensure directions array exists
+    if (!player.directions) {
+        player.directions = ['right', 'down', 'left', 'up'];
+    }
+    
+    // Ensure directionIndex is valid
+    if (player.directionIndex === undefined || player.directionIndex === null) {
+        player.directionIndex = 0;
+    }
+    
     const dir = player.directions[player.directionIndex];
+    
+    // Debug: Log direction to verify it's correct
+    console.log('playIdle - directionIndex:', player.directionIndex, 'direction:', dir);
     
     try {
         if (dir === 'left' || dir === 'right') {
@@ -10,7 +23,7 @@ export function playIdle(player) {
             player.setFlipX(false);
         }
     } catch (error) {
-        console.warn(`Animation not found for direction:`, dir);
+        console.warn(`Animation not found for direction:`, dir, error);
         player.setFlipX(dir === 'left');
     }
 }
@@ -37,7 +50,20 @@ export function playAttack(player) {
 }
 
 export function playWalk(player) {
+    // Ensure directions array exists
+    if (!player.directions) {
+        player.directions = ['right', 'down', 'left', 'up'];
+    }
+    
+    // Ensure directionIndex is valid
+    if (player.directionIndex === undefined || player.directionIndex === null) {
+        player.directionIndex = 0;
+    }
+    
     const dir = player.directions[player.directionIndex];
+    
+    // Debug: Log direction to verify it's correct
+    console.log('playWalk - directionIndex:', player.directionIndex, 'direction:', dir);
     
     try {
         if (dir === 'left' || dir === 'right') {
@@ -48,7 +74,7 @@ export function playWalk(player) {
             player.setFlipX(false);
         }
     } catch (error) {
-        console.warn(`Walk animation not found for direction:`, dir);
+        console.warn(`Walk animation not found for direction:`, dir, error);
         player.setFlipX(dir === 'left');
     }
 }

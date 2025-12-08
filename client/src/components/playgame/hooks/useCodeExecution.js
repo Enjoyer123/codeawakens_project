@@ -20,7 +20,9 @@ import { checkVictoryConditions, generateVictoryHint } from '../../../gameutils/
 import { calculateFinalScore } from '../utils/scoreUtils';
 import {
   collectCoin, haveCoin, getCoinCount, getCoinValue, swapCoins, compareCoins, isSorted,
-  rescuePersonAtNode, hasPerson, personRescued, getPersonCount, moveToNode,
+  rescuePersonAtNode, hasPerson, personRescued, getPersonCount, moveToNode, moveAlongPath,
+  getCurrentNode, getGraphNeighbors, getNodeValue,
+  getGraphNeighborsWithVisual, getGraphNeighborsWithVisualSync, markVisitedWithVisual, showPathUpdateWithVisual, clearDfsVisuals,
   pushNode, popNode, keepItem, hasTreasure, treasureCollected, stackEmpty, stackCount
 } from '../../../gameutils/utils/blocklyUtils';
 import {
@@ -184,6 +186,12 @@ export function useCodeExecution({
       }
     }
 
+    // Clear DFS visual feedback before starting
+    const currentScene = getCurrentGameState().currentScene;
+    if (currentScene) {
+      clearDfsVisuals(currentScene);
+    }
+
     // Reset monsters state using new utility functions
     if (getCurrentGameState().currentScene && getCurrentGameState().currentScene.monsters) {
       getCurrentGameState().currentScene.monsters.forEach(monster => {
@@ -207,10 +215,19 @@ export function useCodeExecution({
 
     setPlayerNodeId(currentLevel.startNodeId);
     setPlayerDirection(0);
+    
+    // Set direction in game state first
+    setCurrentGameState({ direction: 0 });
 
     // Update player position in Phaser (HP bar now handled in bottom UI)
+    // Pass direction 0 (right) explicitly to ensure correct initial direction
     if (getCurrentGameState().currentScene) {
-      updatePlayer(getCurrentGameState().currentScene, currentLevel.startNodeId, 0);
+      const scene = getCurrentGameState().currentScene;
+      if (scene.player) {
+        scene.player.directionIndex = 0;
+        scene.player.currentNodeIndex = currentLevel.startNodeId;
+      }
+      updatePlayer(scene, currentLevel.startNodeId, 0);
     }
 
     const code = javascriptGenerator.workspaceToCode(workspaceRef.current);
@@ -232,9 +249,38 @@ export function useCodeExecution({
     await new Promise(resolve => setTimeout(resolve, 1000)); // รอ 1 วินาที
 
     try {
+      // Create graph map from level data
+      const createGraphMap = (nodes, edges) => {
+        const graph = {};
+        if (!nodes || !edges) return graph;
+        
+        // Initialize all nodes with empty arrays
+        nodes.forEach(node => {
+          graph[String(node.id)] = [];
+        });
+        
+        // Add edges (bidirectional)
+        edges.forEach(edge => {
+          const from = String(edge.from);
+          const to = String(edge.to);
+          if (graph[from] && !graph[from].includes(Number(to))) {
+            graph[from].push(Number(to));
+          }
+          if (graph[to] && !graph[to].includes(Number(from))) {
+            graph[to].push(Number(from));
+          }
+        });
+        
+        return graph;
+      };
+      
+      const map = createGraphMap(currentLevel?.nodes || [], currentLevel?.edges || []);
+      console.log("Created graph map:", map);
+
       console.log("Creating AsyncFunction with code:", code);
       const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
       const execFunction = new AsyncFunction(
+        "map", // Add map as first parameter
         "moveForward", "turnLeft", "turnRight", "hit", "foundMonster", "canMoveForward", "nearPit", "atGoal",
         "collectCoin", "haveCoin", "getCoinCount", "getCoinValue", "swapCoins", "compareCoins", "isSorted",
         "getPlayerCoins", "addCoinToPlayer", "clearPlayerCoins", "swapPlayerCoins", "comparePlayerCoins",
@@ -242,7 +288,8 @@ export function useCodeExecution({
         "rescuePersonAtNode", "hasPerson", "personRescued", "getPersonCount", "allPeopleRescued",
         "getStack", "pushToStack", "popFromStack", "isStackEmpty", "getStackCount", "hasTreasureAtNode", "collectTreasure", "isTreasureCollected", "clearStack",
         "pushNode", "popNode", "keepItem", "hasTreasure", "treasureCollected", "stackEmpty", "stackCount",
-        "moveToNode",
+        "moveToNode", "moveAlongPath", "getCurrentNode", "getGraphNeighbors", "getNodeValue",
+        "getGraphNeighborsWithVisual", "getGraphNeighborsWithVisualSync", "markVisitedWithVisual", "showPathUpdateWithVisual", "clearDfsVisuals",
         code
       );
 
@@ -266,8 +313,18 @@ export function useCodeExecution({
         return await moveToNode(nodeId);
       };
 
+      // Wrap moveAlongPath to count executions
+      const wrappedMoveAlongPath = async (path) => {
+        executionCount++;
+        if (executionCount > maxExecutions) {
+          throw new Error("Too many executions - possible infinite loop");
+        }
+        return await moveAlongPath(path);
+      };
+
       await Promise.race([
         execFunction(
+          map, // Pass map as first argument
           moveForward, turnLeft, turnRight, hit, foundMonster, canMoveForward, nearPit, atGoal,
           collectCoin, haveCoin, getCoinCount, getCoinValue, swapCoins, compareCoins, isSorted,
           getPlayerCoins, addCoinToPlayer, clearPlayerCoinsUtil, swapPlayerCoins, comparePlayerCoins,
@@ -275,7 +332,8 @@ export function useCodeExecution({
           rescuePersonAtNode, hasPerson, personRescued, getPersonCount, allPeopleRescued,
           getStack, pushToStack, popFromStack, isStackEmpty, getStackCount, hasTreasureAtNode, collectTreasure, isTreasureCollected, clearStack,
           pushNode, popNode, keepItem, hasTreasure, treasureCollected, stackEmpty, stackCount,
-          wrappedMoveToNode
+          wrappedMoveToNode, wrappedMoveAlongPath, getCurrentNode, getGraphNeighbors, getNodeValue,
+          getGraphNeighborsWithVisual, getGraphNeighborsWithVisualSync, markVisitedWithVisual, showPathUpdateWithVisual, clearDfsVisuals
         ),
         timeoutPromise
       ]);

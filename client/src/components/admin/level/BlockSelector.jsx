@@ -40,4 +40,3 @@ const BlockSelector = ({ allBlocks, selectedBlocks, onBlocksChange }) => {
 };
 
 export default BlockSelector;
-

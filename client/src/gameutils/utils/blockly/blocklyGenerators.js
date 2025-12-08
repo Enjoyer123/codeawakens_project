@@ -25,6 +25,11 @@ export function defineAllGenerators() {
     return `await moveToNode(${nodeId});\n`;
   };
 
+  javascriptGenerator.forBlock["move_along_path"] = function (block) {
+    const path = javascriptGenerator.valueToCode(block, 'PATH', javascriptGenerator.ORDER_NONE) || '[]';
+    return `await moveAlongPath(${path});\n`;
+  };
+
   // Logic generators
   javascriptGenerator.forBlock["if_else"] = function (block) {
     const condition = javascriptGenerator.valueToCode(block, 'CONDITION', javascriptGenerator.ORDER_NONE) || 'false';
@@ -69,6 +74,10 @@ export function defineAllGenerators() {
   javascriptGenerator.forBlock["logic_boolean"] = function (block) {
     const bool = block.getFieldValue('BOOL');
     return [`${bool === 'TRUE'}`, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock["logic_null"] = function (block) {
+    return ["null", javascriptGenerator.ORDER_ATOMIC];
   };
 
   javascriptGenerator.forBlock["logic_negate"] = function (block) {
@@ -338,6 +347,318 @@ export function defineAllGenerators() {
     const functionName = block.getFieldValue('FUNCTION_NAME');
     const argument = javascriptGenerator.valueToCode(block, 'ARGUMENT', javascriptGenerator.ORDER_ATOMIC) || '0';
     return `await ${functionName}(${argument});\n`;
+  };
+
+  // Override procedures_defreturn to generate async function
+  // This is needed because we use await inside the function
+  javascriptGenerator.forBlock["procedures_defreturn"] = function (block) {
+    const name = javascriptGenerator.nameDB_.getName(
+      block.getFieldValue('NAME') || 'unnamed',
+      Blockly.Names.NameType.PROCEDURE
+    );
+    const args = [];
+    const variables = block.getVars();
+    for (let i = 0; i < variables.length; i++) {
+      args[i] = javascriptGenerator.nameDB_.getName(
+        variables[i],
+        Blockly.Names.NameType.VARIABLE
+      );
+    }
+    const argsString = args.length > 0 ? args.join(', ') : '';
+    const branch = javascriptGenerator.statementToCode(block, 'STACK');
+    
+    // Generate async function
+    // The branch already contains return statements from procedures_return blocks
+    const code = `async function ${name}(${argsString}) {\n${branch}}`;
+    return code;
+  };
+
+  // Return statement generator for procedures_defreturn
+  javascriptGenerator.forBlock["procedures_return"] = function (block) {
+    const value = javascriptGenerator.valueToCode(block, 'VALUE', javascriptGenerator.ORDER_NONE) || 'null';
+    return `return ${value};\n`;
+  };
+
+  // Procedure call generators - CRITICAL: Handle "unnamed" and invalid procedures
+  javascriptGenerator.forBlock["procedures_callreturn"] = function (block) {
+    // Get procedure name - try multiple methods
+    let procedureName = null;
+    try {
+      // Try getProcParam first (Blockly standard method)
+      if (typeof block.getProcParam === 'function') {
+        procedureName = block.getProcParam();
+      }
+      // Fallback to getFieldValue
+      if (!procedureName) {
+        const nameField = block.getField('NAME');
+        if (nameField) {
+          procedureName = nameField.getValue();
+        }
+      }
+      // Last resort: try getFieldValue directly
+      if (!procedureName) {
+        procedureName = block.getFieldValue('NAME');
+      }
+    } catch (e) {
+      console.warn('Error getting procedure name:', e);
+    }
+    
+    // Validate procedure name
+    if (!procedureName || procedureName === 'unnamed' || procedureName === 'undefined' || 
+        (typeof procedureName === 'string' && procedureName.trim() === '')) {
+      // Invalid procedure name - try to get from workspace procedure map
+      console.warn('Procedure call block has invalid name, trying to fix:', procedureName);
+      
+      try {
+        const workspace = block.workspace;
+        if (workspace) {
+          const procedureMap = workspace.getProcedureMap();
+          if (procedureMap) {
+            const procedures = procedureMap.getProcedures();
+            if (procedures.length > 0) {
+              // Use first available procedure
+              procedureName = procedures[0].getName();
+              console.log('Using first available procedure:', procedureName);
+            } else {
+              // No procedures available - return null
+              console.warn('No procedures available in workspace');
+              return ['null', javascriptGenerator.ORDER_ATOMIC];
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Error trying to fix procedure name:', e);
+        return ['null', javascriptGenerator.ORDER_ATOMIC];
+      }
+      
+      // If still invalid after trying to fix
+      if (!procedureName || procedureName === 'unnamed' || procedureName === 'undefined' || 
+          (typeof procedureName === 'string' && procedureName.trim() === '')) {
+        return ['null', javascriptGenerator.ORDER_ATOMIC];
+      }
+    }
+    
+    // Get arguments
+    const args = [];
+    if (block.arguments_ && block.arguments_.length > 0) {
+      for (let i = 0; i < block.arguments_.length; i++) {
+        const argCode = javascriptGenerator.valueToCode(block, 'ARG' + i, javascriptGenerator.ORDER_NONE) || 'null';
+        args.push(argCode);
+      }
+    }
+    
+    const argsString = args.length > 0 ? args.join(', ') : '';
+    // Since the function is async, we need to await it
+    // Wrap in parentheses to allow await in expression context
+    return [`(await ${procedureName}(${argsString}))`, javascriptGenerator.ORDER_FUNCTION_CALL];
+  };
+
+  javascriptGenerator.forBlock["procedures_callnoreturn"] = function (block) {
+    // Get procedure name - try multiple methods
+    let procedureName = null;
+    try {
+      // Try getProcParam first (Blockly standard method)
+      if (typeof block.getProcParam === 'function') {
+        procedureName = block.getProcParam();
+      }
+      // Fallback to getFieldValue
+      if (!procedureName) {
+        const nameField = block.getField('NAME');
+        if (nameField) {
+          procedureName = nameField.getValue();
+        }
+      }
+      // Last resort: try getFieldValue directly
+      if (!procedureName) {
+        procedureName = block.getFieldValue('NAME');
+      }
+    } catch (e) {
+      console.warn('Error getting procedure name:', e);
+    }
+    
+    // Validate procedure name
+    if (!procedureName || procedureName === 'unnamed' || procedureName === 'undefined' || 
+        (typeof procedureName === 'string' && procedureName.trim() === '')) {
+      // Invalid procedure name - try to get from workspace procedure map
+      console.warn('Procedure call block has invalid name, trying to fix:', procedureName);
+      
+      try {
+        const workspace = block.workspace;
+        if (workspace) {
+          const procedureMap = workspace.getProcedureMap();
+          if (procedureMap) {
+            const procedures = procedureMap.getProcedures();
+            if (procedures.length > 0) {
+              // Use first available procedure
+              procedureName = procedures[0].getName();
+              console.log('Using first available procedure:', procedureName);
+            } else {
+              // No procedures available - return comment
+              console.warn('No procedures available in workspace');
+              return '// Invalid procedure call\n';
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Error trying to fix procedure name:', e);
+        return '// Invalid procedure call\n';
+      }
+      
+      // If still invalid after trying to fix
+      if (!procedureName || procedureName === 'unnamed' || procedureName === 'undefined' || 
+          (typeof procedureName === 'string' && procedureName.trim() === '')) {
+        return '// Invalid procedure call\n';
+      }
+    }
+    
+    // Get arguments
+    const args = [];
+    if (block.arguments_ && block.arguments_.length > 0) {
+      for (let i = 0; i < block.arguments_.length; i++) {
+        const argCode = javascriptGenerator.valueToCode(block, 'ARG' + i, javascriptGenerator.ORDER_NONE) || 'null';
+        args.push(argCode);
+      }
+    }
+    
+    const argsString = args.length > 0 ? args.join(', ') : '';
+    return `${procedureName}(${argsString});\n`;
+  };
+
+  // List Operations generators
+  javascriptGenerator.forBlock["lists_add_item"] = function (block) {
+    const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
+    const item = javascriptGenerator.valueToCode(block, 'ITEM', javascriptGenerator.ORDER_NONE) || 'null';
+    
+    // Try to detect if this is adding to visited or container for DFS visual feedback
+    // This is a simple heuristic - could be improved
+    const listCode = list.trim();
+    const isVisited = listCode.includes('visited') || listCode.includes('visit');
+    const isContainer = listCode.includes('container') || listCode.includes('stack');
+    
+    if (isVisited) {
+      // Adding to visited list - mark as visited with visual feedback
+      return `${list}.push(${item});\nawait markVisitedWithVisual(${item});\n`;
+    } else if (isContainer) {
+      // Adding to container - might be a path, show path update
+      // Check if item is a path (array)
+      return `${list}.push(${item});\nawait showPathUpdateWithVisual(${item});\n`;
+    }
+    
+    return `${list}.push(${item});\n`;
+  };
+
+  javascriptGenerator.forBlock["lists_remove_last"] = function (block) {
+    const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
+    return `${list}.pop();\n`;
+  };
+
+  javascriptGenerator.forBlock["lists_remove_last_return"] = function (block) {
+    const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
+    return [`${list}.pop()`, javascriptGenerator.ORDER_MEMBER];
+  };
+
+  javascriptGenerator.forBlock["lists_get_last"] = function (block) {
+    const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
+    return [`${list}[${list}.length - 1]`, javascriptGenerator.ORDER_MEMBER];
+  };
+
+  javascriptGenerator.forBlock["lists_remove_first_return"] = function (block) {
+    const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
+    return [`${list}.shift()`, javascriptGenerator.ORDER_MEMBER];
+  };
+
+  javascriptGenerator.forBlock["lists_get_first"] = function (block) {
+    const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
+    return [`${list}[0]`, javascriptGenerator.ORDER_MEMBER];
+  };
+
+  javascriptGenerator.forBlock["lists_contains"] = function (block) {
+    const item = javascriptGenerator.valueToCode(block, 'ITEM', javascriptGenerator.ORDER_EQUALITY) || 'null';
+    const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
+    return [`${list}.includes(${item})`, javascriptGenerator.ORDER_EQUALITY];
+  };
+
+  javascriptGenerator.forBlock["lists_concat"] = function (block) {
+    const list1 = javascriptGenerator.valueToCode(block, 'LIST1', javascriptGenerator.ORDER_ADDITION) || '[]';
+    const list2 = javascriptGenerator.valueToCode(block, 'LIST2', javascriptGenerator.ORDER_ADDITION) || '[]';
+    return [`${list1}.concat(${list2})`, javascriptGenerator.ORDER_ADDITION];
+  };
+
+  javascriptGenerator.forBlock["lists_isEmpty"] = function (block) {
+    const list = javascriptGenerator.valueToCode(block, 'VALUE', javascriptGenerator.ORDER_MEMBER) || '[]';
+    return [`${list}.length === 0`, javascriptGenerator.ORDER_EQUALITY];
+  };
+
+  javascriptGenerator.forBlock["for_each_in_list"] = function (block) {
+    const variable = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
+    const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
+    const branch = javascriptGenerator.statementToCode(block, 'DO');
+    
+    // Check if list is an async expression (contains await)
+    const isAsync = list.includes('await');
+    
+    if (isAsync) {
+      // If list is async, we need to await it first
+      const code = `
+      const listItems = await (${list});
+      for (let i = 0; i < listItems.length; i++) {
+          const ${variable} = listItems[i];
+          ${branch}
+      }
+      `;
+      return code;
+    } else {
+      const code = `
+      const listItems = ${list};
+      for (let i = 0; i < listItems.length; i++) {
+          const ${variable} = listItems[i];
+          ${branch}
+      }
+      `;
+      return code;
+    }
+  };
+
+  // Graph Operations generators
+  javascriptGenerator.forBlock["graph_get_neighbors"] = function (block) {
+    const graph = javascriptGenerator.valueToCode(block, 'GRAPH', javascriptGenerator.ORDER_MEMBER) || '{}';
+    const node = javascriptGenerator.valueToCode(block, 'NODE', javascriptGenerator.ORDER_MEMBER) || '0';
+    // Use synchronous visual version for expression context
+    // This provides visual feedback without requiring await
+    return [`getGraphNeighborsWithVisualSync(${graph}, ${node})`, javascriptGenerator.ORDER_FUNCTION_CALL];
+  };
+
+  javascriptGenerator.forBlock["graph_get_node_value"] = function (block) {
+    const node = javascriptGenerator.valueToCode(block, 'NODE', javascriptGenerator.ORDER_ATOMIC) || '0';
+    return [`getNodeValue(${node})`, javascriptGenerator.ORDER_FUNCTION_CALL];
+  };
+
+  javascriptGenerator.forBlock["graph_get_current_node"] = function (block) {
+    return [`getCurrentNode()`, javascriptGenerator.ORDER_FUNCTION_CALL];
+  };
+
+  // Logic Operators generators
+  javascriptGenerator.forBlock["logic_not_in"] = function (block) {
+    const item = javascriptGenerator.valueToCode(block, 'ITEM', javascriptGenerator.ORDER_EQUALITY) || 'null';
+    const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
+    return [`!${list}.includes(${item})`, javascriptGenerator.ORDER_LOGICAL_NOT];
+  };
+
+  // DFS Visual Feedback generators
+  javascriptGenerator.forBlock["graph_get_neighbors_visual"] = function (block) {
+    const graph = javascriptGenerator.valueToCode(block, 'GRAPH', javascriptGenerator.ORDER_NONE) || 'null';
+    const node = javascriptGenerator.valueToCode(block, 'NODE', javascriptGenerator.ORDER_NONE) || '0';
+    return [`await getGraphNeighborsWithVisual(${graph}, ${node})`, javascriptGenerator.ORDER_FUNCTION_CALL];
+  };
+
+  javascriptGenerator.forBlock["mark_visited_visual"] = function (block) {
+    const node = javascriptGenerator.valueToCode(block, 'NODE', javascriptGenerator.ORDER_NONE) || '0';
+    return `await markVisitedWithVisual(${node});\n`;
+  };
+
+  javascriptGenerator.forBlock["show_path_visual"] = function (block) {
+    const path = javascriptGenerator.valueToCode(block, 'PATH', javascriptGenerator.ORDER_NONE) || '[]';
+    return `await showPathUpdateWithVisual(${path});\n`;
   };
 }
 

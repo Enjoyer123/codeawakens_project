@@ -53,5 +53,18 @@ export function defineMovementBlocks() {
       this.setTooltip("เดินไปที่ node ที่กำหนด");
     },
   };
+
+  // Move along path (for DFS)
+  Blockly.Blocks["move_along_path"] = {
+    init: function () {
+      this.appendValueInput("PATH")
+        .setCheck("Array")
+        .appendField("🚶 เดินตาม path");
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setColour(160);
+      this.setTooltip("เดินตาม path ที่กำหนด (list of nodes)");
+    },
+  };
 }
 

@@ -357,4 +357,3 @@ export function usePhaserGame({
 
   return { initPhaserGame };
 }
-

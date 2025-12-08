@@ -7,7 +7,7 @@ import {
   updateWeaponPosition
 } from '../gameUtils';
 import { isInCombat } from '../combatSystem';
-import { playIdle } from '../../phaser/utils/playerAnimation';
+import { playIdle, playWalk } from '../../phaser/utils/playerAnimation';
 import { moveToPosition } from '../../phaser/utils/playerMovement';
 import { updatePlayerArrow } from './phaserGameArrow';
 
@@ -15,12 +15,34 @@ export function updatePlayer(scene, nodeId, direction) {
   const targetNode = scene.levelData.nodes.find((n) => n.id === nodeId);
 
   if (targetNode && scene.player) {
+    // Calculate direction from current node to target node
+    const currentNodeId = scene.player.currentNodeIndex;
+    const currentNode = scene.levelData.nodes.find((n) => n.id === currentNodeId);
+    
+    let calculatedDirection = direction;
+    // Only calculate direction if we're actually moving to a different node
+    // If current node = target node (e.g., initial position), use the provided direction
+    if (currentNode && currentNodeId !== nodeId) {
+      const dx = targetNode.x - currentNode.x;
+      const dy = targetNode.y - currentNode.y;
+      
+      // Determine direction index based on movement
+      // 0 = right, 1 = down, 2 = left, 3 = up
+      if (Math.abs(dx) > Math.abs(dy)) {
+        // Horizontal movement
+        calculatedDirection = dx > 0 ? 0 : 2; // right : left
+      } else {
+        // Vertical movement
+        calculatedDirection = dy > 0 ? 1 : 3; // down : up
+      }
+    }
 
-    // Update player direction
-    scene.player.directionIndex = direction;
+    // Update player direction in both player sprite and gameState
+    scene.player.directionIndex = calculatedDirection;
+    setCurrentGameState({ direction: calculatedDirection });
 
     // Use new movement function with animation
-    moveToPosition(scene.player, targetNode.x, targetNode.y).then(() => {
+    moveToPosition(scene.player, targetNode.x, targetNode.y, calculatedDirection).then(() => {
       console.log("moveToPosition completed");
       // Update player node index
       scene.player.currentNodeIndex = nodeId;
@@ -28,8 +50,11 @@ export function updatePlayer(scene, nodeId, direction) {
       // Play idle animation after movement
       playIdle(scene.player);
 
-      // Update arrow position
-      updatePlayerArrow(scene, targetNode.x, targetNode.y, direction);
+      // Update weapon position after movement
+      updateWeaponPosition(scene);
+
+      // Update arrow position with calculated direction
+      updatePlayerArrow(scene, targetNode.x, targetNode.y, calculatedDirection);
 
       // Check win condition
       if (nodeId === scene.levelData.goalNodeId) {
@@ -56,6 +81,29 @@ export function movePlayerWithCollisionDetection(scene, fromNode, toNode) {
     const distance = Phaser.Math.Distance.Between(startX, startY, endX, endY);
     const duration = Math.max(800, distance * 2);
 
+    // Calculate direction based on movement vector
+    const dx = endX - startX;
+    const dy = endY - startY;
+    
+    // Determine direction index based on movement
+    // 0 = right, 1 = down, 2 = left, 3 = up
+    let directionIndex = scene.player.directionIndex || 0;
+    
+    if (Math.abs(dx) > Math.abs(dy)) {
+        // Horizontal movement
+        directionIndex = dx > 0 ? 0 : 2; // right : left
+    } else {
+        // Vertical movement
+        directionIndex = dy > 0 ? 1 : 3; // down : up
+    }
+    
+    // Update player direction in both player sprite and gameState
+    scene.player.directionIndex = directionIndex;
+    setCurrentGameState({ direction: directionIndex });
+    
+    // Play walk animation with correct direction
+    playWalk(scene.player);
+
     let hitObstacle = false;
     let hpDepleted = false;
     let stopX = endX;
@@ -69,6 +117,8 @@ export function movePlayerWithCollisionDetection(scene, fromNode, toNode) {
       ease: 'Linear',
       onUpdate: () => {
         updateWeaponPosition(scene);
+        // Update arrow position during movement
+        updatePlayerArrow(scene, scene.player.x, scene.player.y, directionIndex);
         
         // เช็ค HP และ isGameOver ในระหว่างการเคลื่อนที่ (เฉพาะเมื่อไม่ได้อยู่ใน combat mode)
         if (!hpDepleted && !isInCombat()) {
@@ -142,8 +192,11 @@ export function movePlayerWithCollisionDetection(scene, fromNode, toNode) {
         }
         
         if (!hitObstacle && !hpDepleted) {
-          const currentState = getCurrentGameState();
-          updatePlayerArrow(scene, endX, endY, currentState.direction);
+          // Play idle animation after movement completes
+          playIdle(scene.player);
+          
+          // Update arrow position after movement completes with calculated direction
+          updatePlayerArrow(scene, endX, endY, directionIndex);
           // Weapon icon position update removed - now only shown in bottom UI
           resolve({
             success: true,

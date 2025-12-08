@@ -29,4 +29,3 @@ const VictoryConditionSelector = ({ allVictoryConditions, selectedVictoryConditi
 };
 
 export default VictoryConditionSelector;
-
