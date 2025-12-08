@@ -1075,14 +1075,14 @@ const PhaserMapEditor = ({
   return (
     <div className="relative border-2 border-gray-300 rounded-lg bg-black overflow-hidden">
       {!phaserLoaded && typeof window !== 'undefined' && !window.Phaser ? (
-        <div className="w-full h-[900px] flex items-center justify-center text-white">
+        <div className="w-full flex items-center justify-center text-white" style={{ height: `${canvasSize.height}px` }}>
           <div className="text-center">
             <div className="text-lg mb-2">⏳ กำลังโหลด Level Editor...</div>
             <div className="text-sm text-gray-400">กรุณารอสักครู่</div>
           </div>
         </div>
       ) : (
-        <div ref={gameRef} id="phaser-game-container" style={{ width: '100%', height: '900px', display: 'flex', justifyContent: 'center' }}></div>
+        <div ref={gameRef} id="phaser-game-container" style={{ width: '100%', height: `${canvasSize.height}px`, display: 'flex', justifyContent: 'center' }}></div>
       )}
     </div>
   );

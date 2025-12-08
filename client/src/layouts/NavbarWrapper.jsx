@@ -1,3 +1,4 @@
+import { Outlet, useLocation } from "react-router-dom";
 import Navbar from '../components/shared/navbar/Navbar';
 import useUserStore from '../store/useUserStore';
 import { useAuth } from '@clerk/clerk-react';
@@ -8,6 +9,7 @@ const NavbarWrapper = () => {
   const { role, setRole } = useUserStore();
   const { isSignedIn, isLoaded, getToken } = useAuth();
   const [roleLoading, setRoleLoading] = useState(true);
+  const { pathname } = useLocation();
 
   useEffect(() => {
     const fetchRole = async () => {
@@ -97,7 +99,9 @@ const NavbarWrapper = () => {
     ];
   }
 
-  return <Navbar navItems={navItems} isLoading={isLoading} />;
+  const isGamePage = pathname.startsWith('/user/mapselection/');
+
+  return <Navbar navItems={navItems} isLoading={isLoading} isGamePage={isGamePage} />;
 };
 
 export default NavbarWrapper;

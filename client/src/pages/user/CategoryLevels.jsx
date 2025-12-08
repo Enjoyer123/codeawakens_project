@@ -85,7 +85,7 @@ const CategoryLevels = () => {
   }, [categoryId, getToken, reloadKey]);
 
   const handleLevelSelect = (levelId) => {
-    navigate(`/mapselection/${levelId}`);
+    navigate(`/user/mapselection/${levelId}`);
   };
 
   const getDifficultyColor = (difficulty) => {

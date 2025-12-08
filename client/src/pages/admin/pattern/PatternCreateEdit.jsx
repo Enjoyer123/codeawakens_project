@@ -15,10 +15,14 @@ import {
 import { fetchLevelById } from '../../../services/levelService';
 import { fetchPatternById, updatePattern, createPattern } from '../../../services/patternService';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
+import { Settings, ListOrdered } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+// Import new components
+import PatternInfoForm from '@/components/admin/pattern/PatternInfoForm';
+import StepEditor from '@/components/admin/pattern/StepEditor';
+import PatternBlocklyWorkspace from '@/components/admin/pattern/PatternBlocklyWorkspace';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 
@@ -549,7 +553,7 @@ const PatternCreateEdit = () => {
         console.log('✅ Created new step in ref:', currentStepIndex);
       }
       stepsRef.current = currentSteps;
-
+      
       // แล้วค่อยอัปเดต state
       setSteps(currentSteps);
 
@@ -760,6 +764,15 @@ const PatternCreateEdit = () => {
     );
   }
 
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader className="mx-auto" />
+        </div>
+      );
+    }
+  
+
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -773,192 +786,91 @@ const PatternCreateEdit = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <AdminPageHeader
-        title={isEditMode ? "แก้ไขรูปแบบคำตอบ" : "เพิ่มรูปแบบคำตอบ"}
-        subtitle={levelData?.level_name || 'Loading...'}
-      />
+    <div className="min-h-screen p-6 font-sans bg-gray-50">
+      <div className="max-w-[1920px] mx-auto space-y-6">
+        <AdminPageHeader
+          title={isEditMode ? "แก้ไขรูปแบบคำตอบ" : "เพิ่มรูปแบบคำตอบ"}
+          subtitle={levelData?.level_name || 'Loading...'}
+          backPath={`/admin/levels/${levelId ? `edit/${levelId}` : ''}`}
+          rightContent={
+             <Button
+                onClick={handleFinish}
+                disabled={saving || !patternName.trim()}
+                className="ml-2 bg-blue-600 hover:bg-blue-500 text-white shadow-lg border-0 min-w-[140px] font-bold tracking-wide"
+                size="default"
+              >
+                {saving ? 'กำลังบันทึก...' : (isEditMode ? 'บันทึกการแก้ไข' : 'สิ้นสุดและบันทึก')}
+              </Button>
+          }
+        />
 
-      <div className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left: Pattern Info Form */}
-          <div className="lg:col-span-1 space-y-4">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold mb-4">ข้อมูลรูปแบบคำตอบ</h2>
+        <div className="grid grid-cols-12 gap-6 h-[calc(100vh-140px)]">
+           {/* Left Sidebar: Tools & Properties */}
+           <div className="col-span-12 lg:col-span-4 xl:col-span-3 flex flex-col gap-4 overflow-hidden h-full">
+               <Tabs defaultValue="settings" className="flex flex-col h-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
+                   <div className="px-4 pt-4 bg-white border-b border-gray-100">
+                     <TabsList className="w-full p-1 bg-white border border-gray-200 rounded-lg">
+                        <TabsTrigger value="settings" className="flex-1 data-[state=active]:bg-white data-[state=active]:text-blue-600 text-xs uppercase font-bold tracking-wider py-2 shadow-sm">
+                           <Settings className="w-3 h-3 mr-2" /> Settings
+                        </TabsTrigger>
+                        <TabsTrigger value="steps" className="flex-1 data-[state=active]:bg-white data-[state=active]:text-blue-600 text-xs uppercase font-bold tracking-wider py-2 shadow-sm">
+                           <ListOrdered className="w-3 h-3 mr-2" /> Steps
+                        </TabsTrigger>
+                     </TabsList>
+                   </div>
 
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="patternName">ชื่อรูปแบบ *</Label>
-                  <Input
-                    id="patternName"
-                    value={patternName || ''}
-                    onChange={(e) => {
-                      console.log('🔍 patternName onChange:', e.target.value);
-                      setPatternName(e.target.value);
-                    }}
-                    placeholder="เช่น: ใช้ loop เพื่อเก็บเหรียญ"
-                  />
-                  {isEditMode && !patternName && !patternLoaded && (
-                    <p className="text-xs text-gray-500 mt-1">กำลังโหลดข้อมูล...</p>
-                  )}
-                  {isEditMode && patternLoaded && (
-                    <p className="text-xs text-green-500 mt-1">✅ ข้อมูลถูกโหลดแล้ว (patternName: {patternName || 'ว่าง'})</p>
-                  )}
-                </div>
+                   <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar bg-gray-50/50">
+                      <TabsContent value="settings" className="space-y-6 mt-0">
+                         <PatternInfoForm
+                            patternName={patternName}
+                            setPatternName={setPatternName}
+                            patternDescription={patternDescription}
+                            setPatternDescription={setPatternDescription}
+                            weaponId={weaponId}
+                            setWeaponId={setWeaponId}
+                            isEditMode={isEditMode}
+                            patternLoaded={patternLoaded}
+                          />
+                      </TabsContent>
 
-                <div>
-                  <Label htmlFor="patternDescription">คำอธิบาย</Label>
-                  <Textarea
-                    id="patternDescription"
-                    value={patternDescription || ''}
-                    onChange={(e) => setPatternDescription(e.target.value)}
-                    placeholder="อธิบายรูปแบบคำตอบ..."
-                    rows={3}
-                  />
-                </div>
+                      <TabsContent value="steps" className="space-y-6 mt-0">
+                         <StepEditor
+                            currentStepIndex={currentStepIndex}
+                            question={currentStepQuestion}
+                            setQuestion={setCurrentStepQuestion}
+                            reasoning={currentStepReasoning}
+                            setReasoning={setCurrentStepReasoning}
+                            suggestion={currentStepSuggestion}
+                            setSuggestion={setCurrentStepSuggestion}
+                            difficulty={currentStepDifficulty}
+                            setDifficulty={setCurrentStepDifficulty}
+                            highlightBlocks={currentStepHighlightBlocks}
+                            setHighlightBlocks={setCurrentStepHighlightBlocks}
+                            onPrev={handlePreviousStep}
+                            onNext={handleNextStep}
+                            stepsCount={steps.length}
+                          />
+                      </TabsContent>
+                   </div>
+               </Tabs>
+           </div>
 
-                {/* ระบบจะประเมินอัตโนมัติเสมอ */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <p className="text-sm text-blue-800">
-                    <strong>ระบบประเมินอัตโนมัติ:</strong> ระบบจะประเมินระดับรูปแบบคำตอบอัตโนมัติตามประเภทด่านและบล็อกที่ใช้
-                  </p>
-                </div>
-
-
-                <div>
-                  <Label htmlFor="weaponId">อาวุธ (ไม่บังคับ)</Label>
-                  <Input
-                    id="weaponId"
-                    type="number"
-                    value={weaponId || ''}
-                    onChange={(e) => setWeaponId(e.target.value)}
-                    placeholder="ID อาวุธ"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Step Management */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold mb-4">
-                Step {currentStepIndex + 1}
-              </h2>
-
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="stepQuestion">คำถาม *</Label>
-                  <Textarea
-                    id="stepQuestion"
-                    value={currentStepQuestion}
-                    onChange={(e) => setCurrentStepQuestion(e.target.value)}
-                    placeholder="เช่น: หลังจากวางบล็อก move_forward แล้วควรทำอย่างไรต่อ?"
-                    rows={2}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="stepReasoning">เหตุผล</Label>
-                  <Textarea
-                    id="stepReasoning"
-                    value={currentStepReasoning}
-                    onChange={(e) => setCurrentStepReasoning(e.target.value)}
-                    placeholder="เช่น: การเดินต่อเนื่องเป็นพื้นฐานในการเคลื่อนที่ไปข้างหน้า"
-                    rows={2}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="stepSuggestion">คำแนะนำ</Label>
-                  <Textarea
-                    id="stepSuggestion"
-                    value={currentStepSuggestion}
-                    onChange={(e) => setCurrentStepSuggestion(e.target.value)}
-                    placeholder="เช่น: ลองเพิ่ม move_forward block อีกครั้งเพื่อเดินต่อ"
-                    rows={2}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="stepDifficulty">ระดับความยาก</Label>
-                  <select
-                    id="stepDifficulty"
-                    value={currentStepDifficulty}
-                    onChange={(e) => setCurrentStepDifficulty(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  >
-                    <option value="basic">Basic</option>
-                    <option value="intermediate">Intermediate</option>
-                    <option value="advanced">Advanced</option>
-                  </select>
-                </div>
-
-                <div>
-                  <Label htmlFor="stepHighlightBlocks">Highlight Blocks (คั่นด้วย comma)</Label>
-                  <Input
-                    id="stepHighlightBlocks"
-                    value={currentStepHighlightBlocks}
-                    onChange={(e) => setCurrentStepHighlightBlocks(e.target.value)}
-                    placeholder="เช่น: move_forward, turn_left"
-                  />
-                </div>
-
-                <div className="flex gap-2">
-                  <Button
-                    onClick={handlePreviousStep}
-                    disabled={currentStepIndex === 0}
-                    variant="outline"
-                    className="flex-1"
-                  >
-                    ← ก่อนหน้า
-                  </Button>
-                  <Button
-                    onClick={handleNextStep}
-                    variant="outline"
-                    className="flex-1"
-                  >
-                    ถัดไป →
-                  </Button>
-                </div>
-
-                <div className="text-sm text-gray-600">
-                  Step ที่บันทึกแล้ว: {steps.length}
-                </div>
-              </div>
-            </div>
-
-            {/* Finish Button */}
-            <Button
-              onClick={handleFinish}
-              disabled={saving || !patternName.trim()}
-              className="w-full"
-              size="lg"
-            >
-              {saving ? 'กำลังบันทึก...' : (isEditMode ? 'บันทึกการแก้ไข' : 'สิ้นสุดและบันทึก')}
-            </Button>
-          </div>
-
-          {/* Right: Blockly Workspace */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold mb-4">
-                Blockly Workspace - Step {currentStepIndex + 1}
-              </h2>
-
-              {!blocklyLoaded && (
-                <div className="flex items-center justify-center h-96">
-                  <div className="text-center">
-                    <div className="text-lg mb-2">⏳ กำลังโหลด Blockly...</div>
+           {/* Right: Blockly Workspace */}
+           <div className="col-span-12 lg:col-span-8 xl:col-span-9 flex flex-col h-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden relative">
+              <div className="h-14 bg-gray-50 border-b border-gray-200 flex items-center justify-between px-4">
+                  <span className="text-xs font-bold text-black uppercase tracking-wider">Blockly Workspace</span>
+                  <div className="text-xs text-gray-500">
+                    Step {currentStepIndex + 1} of {steps.length || 1}
                   </div>
-                </div>
-              )}
-
-              <div
-                ref={blocklyRef}
-                id="blockly-workspace"
-                style={{ width: '100%', height: '600px' }}
-              />
-            </div>
-          </div>
+              </div>
+              <div className="flex-1 relative">
+                 <PatternBlocklyWorkspace
+                    ref={blocklyRef}
+                    currentStepIndex={currentStepIndex}
+                    blocklyLoaded={blocklyLoaded}
+                  />
+              </div>
+           </div>
         </div>
       </div>
     </div>

@@ -9,7 +9,9 @@ const VictoryConditionSelector = ({ allVictoryConditions, selectedVictoryConditi
 
   return (
     <div className="bg-white rounded-lg shadow-md p-4">
-      <h2 className="text-xl font-bold mb-4">ADD GOAL</h2>
+      <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+          Win Conditions
+      </h2>
       <div className="space-y-2">
         {allVictoryConditions.map(vc => (
           <label key={vc.victory_condition_id} className="flex items-center gap-2 cursor-pointer">

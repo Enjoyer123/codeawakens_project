@@ -510,7 +510,7 @@ const LevelGame = () => {
 
   const handleNextLevel = () => {
     const nextLevelId = parseInt(levelId) + 1;
-    navigate(`/mapselection/${nextLevelId}`);
+    navigate(`user/mapselection/${nextLevelId}`);
   };
 
   if (error) {

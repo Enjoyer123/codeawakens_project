@@ -43,7 +43,7 @@ const MapSelect = () => {
 
   const handleCategorySelect = (categoryId) => {
     // ไปหน้าแสดงด่านในประเภทที่เลือก
-    navigate(`/mapselect/${categoryId}`);
+    navigate(`/user/mapselect/${categoryId}`);
   };
 
   const getCategoryCount = (categoryId) => {

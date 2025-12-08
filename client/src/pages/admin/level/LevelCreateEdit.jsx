@@ -13,7 +13,7 @@ import { fetchAllBlocks } from '../../../services/blockService';
 import { fetchAllVictoryConditions } from '../../../services/victoryConditionService';
 import { Button } from '@/components/ui/button';
 import { Loader } from '@/components/ui/loader';
-import { ArrowLeft, Trash2, Eye } from 'lucide-react';
+import { ArrowLeft, Trash2, Eye, Save, Layout, Settings, Image as ImageIcon, Database, Box, Trophy } from 'lucide-react';
 import PhaserMapEditor from '../../../components/admin/level/PhaserMapEditor';
 import LevelInfoForm from '../../../components/admin/level/LevelInfoForm';
 import BlockSelector from '../../../components/admin/level/BlockSelector';
@@ -23,6 +23,9 @@ import BackgroundImageUpload from '../../../components/admin/level/BackgroundIma
 import LevelElementsToolbar from '../../../components/admin/level/LevelElementsToolbar';
 import PatternListDialog from '../../../components/admin/pattern/PatternListDialog';
 import ErrorAlert from '@/components/shared/alert/ErrorAlert';
+import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 
@@ -34,7 +37,7 @@ const LevelCreateEdit = () => {
   
   const [backgroundImage, setBackgroundImage] = useState(null);
   const [backgroundImageUrl, setBackgroundImageUrl] = useState(null);
-  const [canvasSize] = useState({ width: 1200, height: 900 });
+  const [canvasSize] = useState({ width: 1200, height: 700 });
   const [currentMode, setCurrentMode] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
   const [coinValue, setCoinValue] = useState(10); // ค่าเริ่มต้นสำหรับเหรียญ
@@ -338,154 +341,186 @@ const LevelCreateEdit = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen p-6 font-sans bg-gray-50">
+      <div className="max-w-[1920px] mx-auto space-y-6">
         <ErrorAlert message={error} />
-        <div className="mb-6">
-          <Button
-            variant="outline"
-            onClick={() => navigate('/admin/levels')}
-            className="mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Levels
-          </Button>
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-gray-800">
-              {isEditing ? 'Edit Level' : 'Create Level'}
-            </h1>
-            {isEditing && levelId && (
-              <Button
-                variant="outline"
-                onClick={() => setPatternListDialogOpen(true)}
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                ดูรูปแบบคำตอบ
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Top Panel - Map Preview */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-gray-800">Preview Map</h2>
-            <div className="flex items-center gap-2">
-              {currentMode && (
-                <div className="px-4 py-2 bg-blue-100 rounded-lg text-sm text-blue-800 font-medium">
-                  {currentMode === 'node' && 'โหมด: เพิ่ม Node - คลิกบน Canvas'}
-                  {currentMode === 'edge' && (selectedNode 
-                    ? `เลือก Node ${selectedNode.id} แล้ว - คลิก Node ปลายทาง`
-                    : 'โหมด: เชื่อม Edge - เลือก Node 2 ตัว')}
-                  {currentMode === 'start' && 'โหมด: ตั้ง Node เริ่ม - คลิกที่ Node ที่ต้องการ'}
-                  {currentMode === 'goal' && 'โหมด: ตั้ง Node ปลาย - คลิกที่ Node ที่ต้องการ'}
-                  {currentMode === 'monster' && 'โหมด: เพิ่ม Monster - คลิกบน Canvas เพื่อเลือกตำแหน่ง'}
-                  {currentMode === 'obstacle' && 'โหมด: เพิ่ม Obstacle - คลิกบน Canvas เพื่อเลือกตำแหน่ง'}
-                  {currentMode === 'delete' && 'โหมด: ลบ - คลิกที่ Node'}
-                </div>
+        
+        {/* Editor Header */}
+        <AdminPageHeader
+          title={isEditing ? 'Level Editor' : 'New Level Project'}
+          subtitle={isEditing ? `ID: ${levelId} • ${formData.difficulty}` : 'UNSAVED DRAFT'}
+          backPath="/admin/levels"
+          rightContent={
+            <div className="flex items-center gap-3">
+              {isEditing && levelId && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPatternListDialogOpen(true)}
+                  className="bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  Preview Pattern
+                </Button>
               )}
               <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleDeleteMap}
+                onClick={handleSave}
+                disabled={saving}
+                className="ml-2 bg-blue-600 hover:bg-blue-500 text-white shadow-lg border-0 min-w-[140px] font-bold tracking-wide"
+                size="default"
               >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete Map
+                {saving ? <Loader className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                {isEditing ? 'SAVE CHANGES' : 'CREATE LEVEL'}
               </Button>
             </div>
-          </div>
-          <PhaserMapEditor
-            canvasSize={canvasSize}
-            backgroundImageUrl={backgroundImageUrl}
-            formData={formData}
-            currentMode={currentMode}
-            selectedNode={selectedNode}
-            onFormDataChange={setFormData}
-            onSelectedNodeChange={setSelectedNode}
-            selectedCategory={selectedCategory}
-            coinValue={coinValue}
-          />
-        </div>
+          }
+        />
 
-        {/* Bottom Panel - Form Fields */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column */}
-          <div className="space-y-4">
-            <BackgroundImageUpload
-              onImageChange={handleBackgroundImageChange}
-              backgroundImageUrl={backgroundImageUrl}
-            />
+        <div className="grid grid-cols-12 gap-6 h-[calc(100vh-140px)]">
+           {/* Left Sidebar: Tools & Properties */}
+           <div className="col-span-12 lg:col-span-4 xl:col-span-3 flex flex-col gap-4 overflow-hidden h-full">
+              <Tabs defaultValue="settings" className="flex flex-col h-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
+                 <div className="px-4 pt-4 bg-white border-b border-gray-100">
+                   <TabsList className="w-full p-1 bg-white border border-gray-200 rounded-lg">
+                      <TabsTrigger value="settings" className="flex-1 data-[state=active]:bg-white data-[state=active]:text-blue-600 text-xs uppercase font-bold tracking-wider py-2 shadow-sm">
+                         <Settings className="w-3 h-3 mr-2" /> Settings
+                      </TabsTrigger>
+                      <TabsTrigger value="assets" className="flex-1 data-[state=active]:bg-white data-[state=active]:text-blue-600 text-xs uppercase font-bold tracking-wider py-2 shadow-sm">
+                         <ImageIcon className="w-3 h-3 mr-2" /> Assets
+                      </TabsTrigger>
+                      <TabsTrigger value="logic" className="flex-1 data-[state=active]:bg-white data-[state=active]:text-blue-600 text-xs uppercase font-bold tracking-wider py-2 shadow-sm">
+                         <Database className="w-3 h-3 mr-2" /> Logic
+                      </TabsTrigger>
+                   </TabsList>
+                 </div>
+                 
+                 <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar bg-gray-50/50">
+                    <TabsContent value="settings" className="space-y-6 mt-0">
+                       <LevelInfoForm
+                          formData={formData}
+                          categories={categories}
+                          prerequisiteLevels={prerequisiteLevels}
+                          isEditing={isEditing}
+                          levelId={levelId}
+                          onFormDataChange={(newFormData) => {
+                             setFormData(newFormData);
+                             // อัปเดต selectedCategory เมื่อเลือก category
+                             if (newFormData.category_id) {
+                               const category = categories.find(cat => cat.category_id.toString() === newFormData.category_id);
+                               setSelectedCategory(category || null);
+                               // Debug: ตรวจสอบว่า category มี category_items หรือไม่
+                               if (process.env.NODE_ENV === 'development' && category) {
+                                 console.log('Selected category changed:', {
+                                   category_id: category.category_id,
+                                   category_name: category.category_name,
+                                   item_enable: category.item_enable,
+                                   category_items: category.category_items,
+                                   item: category.item, // backward compatibility
+                                 });
+                               }
+                             } else {
+                               setSelectedCategory(null);
+                             }
+                          }}
+                        />
+                       
+                    </TabsContent>
 
-            <LevelInfoForm
-              formData={formData}
-              categories={categories}
-              prerequisiteLevels={prerequisiteLevels}
-              isEditing={isEditing}
-              levelId={levelId}
-              onFormDataChange={(newFormData) => {
-                setFormData(newFormData);
-                // อัปเดต selectedCategory เมื่อเลือก category
-                if (newFormData.category_id) {
-                  const category = categories.find(cat => cat.category_id.toString() === newFormData.category_id);
-                  setSelectedCategory(category || null);
-                  // Debug: ตรวจสอบว่า category มี category_items หรือไม่
-                  if (process.env.NODE_ENV === 'development' && category) {
-                    console.log('Selected category changed:', {
-                      category_id: category.category_id,
-                      category_name: category.category_name,
-                      item_enable: category.item_enable,
-                      category_items: category.category_items,
-                      item: category.item, // backward compatibility
-                    });
-                  }
-                } else {
-                  setSelectedCategory(null);
-                }
-              }}
-            />
+                    <TabsContent value="assets" className="space-y-6 mt-0">
+                       <BackgroundImageUpload
+                          onImageChange={handleBackgroundImageChange}
+                          backgroundImageUrl={backgroundImageUrl}
+                        />
+                         <div className="pt-4 border-t border-gray-200">
+                           
+                    
 
-            <LevelElementsToolbar
-              currentMode={currentMode}
-              selectedNode={selectedNode}
-              formData={formData}
-              onSetMode={handleSetMode}
-              onAddMonster={handleAddMonster}
-              onAddObstacle={handleAddObstacle}
-              selectedCategory={selectedCategory}
-              coinValue={coinValue}
-              onCoinValueChange={setCoinValue}
-            />
+                            <LevelElementsToolbar
+                              currentMode={currentMode}
+                              selectedNode={selectedNode}
+                              formData={formData}
+                              onSetMode={handleSetMode}
+                              onAddMonster={handleAddMonster}
+                              onAddObstacle={handleAddObstacle}
+                              selectedCategory={selectedCategory}
+                              coinValue={coinValue}
+                              onCoinValueChange={setCoinValue}
+                            />
+                        </div>
+                    </TabsContent>
 
-            <BlockSelector
-              allBlocks={allBlocks}
-              selectedBlocks={formData.selectedBlocks}
-              onBlocksChange={(blocks) => setFormData({ ...formData, selectedBlocks: blocks })}
-            />
+                    <TabsContent value="logic" className="space-y-6 mt-0">
+                    
+                       <VictoryConditionSelector
+                          allVictoryConditions={allVictoryConditions}
+                          selectedVictoryConditions={formData.selectedVictoryConditions}
+                          onVictoryConditionsChange={(conditions) => setFormData({ ...formData, selectedVictoryConditions: conditions })}
+                       />
+                       
+                       <div className="pt-4 border-t border-gray-200 mt-6">
+                           <BlockSelector
+                              allBlocks={allBlocks}
+                              selectedBlocks={formData.selectedBlocks}
+                              onBlocksChange={(blocks) => setFormData({ ...formData, selectedBlocks: blocks })}
+                           />
+                       </div>
+                    </TabsContent>
+                 </div>
+              </Tabs>
+           </div>
 
-            <VictoryConditionSelector
-              allVictoryConditions={allVictoryConditions}
-              selectedVictoryConditions={formData.selectedVictoryConditions}
-              onVictoryConditionsChange={(conditions) => setFormData({ ...formData, selectedVictoryConditions: conditions })}
-            />
+           {/* Main Workspace: Canvas */}
+           <div className="col-span-12 lg:col-span-8 xl:col-span-9 flex flex-col h-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden relative">
+              {/* Toolbar Header for Canvas */}
+              <div className="h-14 bg-gray-50 border-b border-gray-200 flex items-center justify-between px-4">
+                 <div className="flex items-center gap-2 overflow-x-auto">
+                    <span className="text-xs font-bold text-black uppercase tracking-wider mr-2">Workspace</span>
+                    
+                    {currentMode && (
+                      <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200 animate-pulse">
+                        {currentMode === 'node' && 'MODE: ADD NODE'}
+                        {currentMode === 'edge' && 'MODE: CONNECT EDGE'}
+                        {currentMode === 'start' && 'MODE: SET START'}
+                        {currentMode === 'goal' && 'MODE: SET GOAL'}
+                        {currentMode === 'monster' && 'MODE: PLACE MONSTER'}
+                        {currentMode === 'obstacle' && 'MODE: PLACE OBSTACLE'}
+                        {currentMode === 'delete' && 'MODE: DELETE'}
+                      </Badge>
+                    )}
+                 </div>
+                 
+                 <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleDeleteMap}
+                    className="h-8 text-xs bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
+                  >
+                    <Trash2 className="h-3 w-3 mr-2" />
+                    CLEAR MAP
+                  </Button>
+              </div>
 
-            <JSONDataEditor
-              formData={formData}
-              onJsonFieldChange={handleJsonFieldChange}
-            />
-          </div>
-        </div>
-
-        {/* Save Button */}
-        <div className="mt-6 flex justify-center">
-          <Button
-            onClick={handleSave}
-            disabled={saving}
-            className="px-8 py-2 text-lg"
-            size="lg"
-          >
-            {saving ? <Loader className="mr-2" /> : null}
-            SAVE
-          </Button>
+              {/* Canvas Container */}
+              <div className="flex-1 bg-gray-100 overflow-hidden relative flex items-center justify-center p-8">
+                  <div className="shadow-lg border-white rounded-lg overflow-hidden relative">
+                     <PhaserMapEditor
+                        canvasSize={canvasSize}
+                        backgroundImageUrl={backgroundImageUrl}
+                        formData={formData}
+                        currentMode={currentMode}
+                        selectedNode={selectedNode}
+                        onFormDataChange={setFormData}
+                        onSelectedNodeChange={setSelectedNode}
+                        selectedCategory={selectedCategory}
+                        coinValue={coinValue}
+                      />
+                      {/* Canvas Overlay Info */}
+                      <div className="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur rounded text-[10px] text-gray-200 font-mono pointer-events-none">
+                         {canvasSize.width} x {canvasSize.height}
+                      </div>
+                  </div>
+              </div>
+           </div>
         </div>
       </div>
 
