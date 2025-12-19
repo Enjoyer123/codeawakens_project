@@ -1,8 +1,67 @@
 // Blockly JavaScript Generators
 import * as Blockly from "blockly/core";
 import { javascriptGenerator } from "blockly/javascript";
+import { getCurrentGameState } from '../gameUtils';
+
+// Dictionary generators
+function defineDictionaryGenerators() {
+  console.log('🔧 Registering dictionary generators...');
+  
+  javascriptGenerator.forBlock["dict_create"] = function (block) {
+    return ["{}", javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock["dict_set"] = function (block) {
+    const dict = javascriptGenerator.valueToCode(block, 'DICT', javascriptGenerator.ORDER_MEMBER) || '{}';
+    const key = javascriptGenerator.valueToCode(block, 'KEY', javascriptGenerator.ORDER_MEMBER) || 'null';
+    const value = javascriptGenerator.valueToCode(block, 'VALUE', javascriptGenerator.ORDER_ASSIGNMENT) || 'null';
+    
+    // Check if setting parent dictionary (for Prim's algorithm MST visualization)
+    const dictCode = dict.trim();
+    const isParent = dictCode.includes('parent') || dictCode.includes('Parent');
+    
+    if (isParent) {
+      // Update MST edges visualization after setting parent with delay (like Kruskal)
+      return `${dict}[${key}] = ${value};\nconst currentState = getCurrentGameState();\nif (currentState && currentState.currentScene) {\n  showMSTEdges(currentState.currentScene, ${dict});\n  await new Promise(resolve => setTimeout(resolve, 500));\n}\n`;
+    }
+    
+    return `${dict}[${key}] = ${value};\n`;
+  };
+
+  javascriptGenerator.forBlock["dict_get"] = function (block) {
+    const dict = javascriptGenerator.valueToCode(block, 'DICT', javascriptGenerator.ORDER_MEMBER) || '{}';
+    const key = javascriptGenerator.valueToCode(block, 'KEY', javascriptGenerator.ORDER_MEMBER) || 'null';
+    return [`${dict}[${key}]`, javascriptGenerator.ORDER_MEMBER];
+  };
+
+  javascriptGenerator.forBlock["dict_has_key"] = function (block) {
+    const dict = javascriptGenerator.valueToCode(block, 'DICT', javascriptGenerator.ORDER_MEMBER) || '{}';
+    const key = javascriptGenerator.valueToCode(block, 'KEY', javascriptGenerator.ORDER_MEMBER) || 'null';
+    return [`${dict}.hasOwnProperty(${key})`, javascriptGenerator.ORDER_RELATIONAL];
+  };
+
+  // DSU operations for Kruskal's algorithm
+  javascriptGenerator.forBlock["dsu_find"] = function (block) {
+    const parent = javascriptGenerator.valueToCode(block, 'PARENT', javascriptGenerator.ORDER_MEMBER) || '{}';
+    const node = javascriptGenerator.valueToCode(block, 'NODE', javascriptGenerator.ORDER_MEMBER) || '0';
+    return [`await dsuFind(${parent}, ${node})`, javascriptGenerator.ORDER_FUNCTION_CALL];
+  };
+
+  javascriptGenerator.forBlock["dsu_union"] = function (block) {
+    const parent = javascriptGenerator.valueToCode(block, 'PARENT', javascriptGenerator.ORDER_MEMBER) || '{}';
+    const rank = javascriptGenerator.valueToCode(block, 'RANK', javascriptGenerator.ORDER_MEMBER) || '{}';
+    const rootU = javascriptGenerator.valueToCode(block, 'ROOT_U', javascriptGenerator.ORDER_MEMBER) || '0';
+    const rootV = javascriptGenerator.valueToCode(block, 'ROOT_V', javascriptGenerator.ORDER_MEMBER) || '0';
+    return `await dsuUnion(${parent}, ${rank}, ${rootU}, ${rootV});\n`;
+  };
+  
+  console.log('✅ Dictionary generators registered:', Object.keys(javascriptGenerator.forBlock).filter(k => k.startsWith('dict_') || k.startsWith('dsu_')));
+}
 
 export function defineAllGenerators() {
+  // Dictionary generators (must be called first)
+  defineDictionaryGenerators();
+  
   // Movement generators
   javascriptGenerator.forBlock["move_forward"] = function (block) {
     return "await moveForward();\n";
@@ -279,6 +338,33 @@ export function defineAllGenerators() {
     return [variable, javascriptGenerator.ORDER_ATOMIC];
   };
 
+  // Override variables_set to detect MST_weight updates
+  javascriptGenerator.forBlock["variables_set"] = function (block) {
+    const variable = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
+    const value = javascriptGenerator.valueToCode(block, 'VALUE', javascriptGenerator.ORDER_ASSIGNMENT) || 'null';
+    
+    // Check if setting MST_weight variable - use both field value and resolved name
+    const varFieldValue = block.getFieldValue('VAR');
+    const varName = variable || varFieldValue;
+    const varNameLower = String(varName).toLowerCase();
+    
+    // Check if setting MST_weight variable - check multiple variations
+    // Blockly variable names might have underscores or be camelCase
+    const isMSTWeight = varNameLower === 'mst_weight' || 
+                       varNameLower === 'mstweight' ||
+                       varNameLower.includes('mst_weight') ||
+                       varNameLower.includes('mstweight');
+    
+    if (isMSTWeight) {
+      // Update MST weight state after assignment
+      console.log('✅ Detected MST_weight update:', { varName, variable, value });
+      return `${variable} = ${value};\nupdateMSTWeight(${variable});\n`;
+    }
+    
+    // Default behavior
+    return `${variable} = ${value};\n`;
+  };
+
   // Person rescue generators
   javascriptGenerator.forBlock["rescue_person_at_node"] = function (block) {
     const nodeId = javascriptGenerator.valueToCode(block, 'NODE_ID', javascriptGenerator.ORDER_ATOMIC) || '0';
@@ -525,23 +611,40 @@ export function defineAllGenerators() {
   };
 
   // List Operations generators
+  // Create empty list generator
+  javascriptGenerator.forBlock["lists_create_empty"] = function (block) {
+    return ["[]", javascriptGenerator.ORDER_ATOMIC];
+  };
+
   javascriptGenerator.forBlock["lists_add_item"] = function (block) {
     const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
     const item = javascriptGenerator.valueToCode(block, 'ITEM', javascriptGenerator.ORDER_NONE) || 'null';
     
-    // Try to detect if this is adding to visited or container for DFS visual feedback
+    // Try to detect if this is adding to visited, container, PQ, or MST_edges for visual feedback
     // This is a simple heuristic - could be improved
     const listCode = list.trim();
     const isVisited = listCode.includes('visited') || listCode.includes('visit');
     const isContainer = listCode.includes('container') || listCode.includes('stack');
+    const isPQ = listCode.includes('PQ') || listCode.includes('pq');
+    const isMSTEdges = listCode.includes('MST_edges') || listCode.includes('mst_edges');
     
     if (isVisited) {
       // Adding to visited list - mark as visited with visual feedback
+      // markVisitedWithVisual will update Dijkstra state internally
       return `${list}.push(${item});\nawait markVisitedWithVisual(${item});\n`;
     } else if (isContainer) {
       // Adding to container - might be a path, show path update
-      // Check if item is a path (array)
+      // Container format: path directly
       return `${list}.push(${item});\nawait showPathUpdateWithVisual(${item});\n`;
+    } else if (isPQ) {
+      // PQ format: [distance, path] - don't await to avoid slowing down
+      // Just push, visual feedback will be shown when node is selected from PQ
+      // Update Dijkstra PQ state for real-time table
+      return `${list}.push(${item});\nupdateDijkstraPQ(${list});\n`;
+    } else if (isMSTEdges) {
+      // Adding edge to MST_edges list (for Kruskal's algorithm)
+      // Show MST edges visualization
+      return `${list}.push(${item});\nshowMSTEdgesFromList(${list});\n`;
     }
     
     return `${list}.push(${item});\n`;
@@ -589,29 +692,150 @@ export function defineAllGenerators() {
     return [`${list}.length === 0`, javascriptGenerator.ORDER_EQUALITY];
   };
 
+  javascriptGenerator.forBlock["lists_find_min_index"] = function (block) {
+    const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
+    return [`await findMinIndex(${list})`, javascriptGenerator.ORDER_FUNCTION_CALL];
+  };
+
+  javascriptGenerator.forBlock["lists_get_at_index"] = function (block) {
+    const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
+    const index = javascriptGenerator.valueToCode(block, 'INDEX', javascriptGenerator.ORDER_SUBTRACTION) || '0';
+    return [`(${list})[${index}]`, javascriptGenerator.ORDER_MEMBER];
+  };
+
+  javascriptGenerator.forBlock["lists_remove_at_index"] = function (block) {
+    const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
+    const index = javascriptGenerator.valueToCode(block, 'INDEX', javascriptGenerator.ORDER_ATOMIC) || '0';
+    return `${list}.splice(${index}, 1);\n`;
+  };
+
+  // Override lists_setIndex for REMOVE mode
+  // This MUST override Blockly's standard generator
+  javascriptGenerator.forBlock["lists_setIndex"] = function (block) {
+    const mode = block.getFieldValue('MODE');
+    const where = block.getFieldValue('WHERE');
+    const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
+    const at = javascriptGenerator.valueToCode(block, 'AT', javascriptGenerator.ORDER_ATOMIC) || '0';
+    
+    console.log(`🔧 lists_setIndex generator called: mode=${mode}, where=${where}, list=${list}, at=${at}`);
+    
+    if (mode === 'REMOVE') {
+      // Remove item at index using splice
+      if (where === 'FROM_START') {
+        const code = `${list}.splice(${at}, 1);\n`;
+        console.log(`🔧 Generated REMOVE code: ${code}`);
+        return code;
+      } else if (where === 'FROM_END') {
+        const code = `${list}.splice(${list}.length - 1 - ${at}, 1);\n`;
+        console.log(`🔧 Generated REMOVE code: ${code}`);
+        return code;
+      } else {
+        // FIRST or LAST
+        if (where === 'FIRST') {
+          const code = `${list}.splice(0, 1);\n`;
+          console.log(`🔧 Generated REMOVE code: ${code}`);
+          return code;
+        } else {
+          const code = `${list}.splice(${list}.length - 1, 1);\n`;
+          console.log(`🔧 Generated REMOVE code: ${code}`);
+          return code;
+        }
+      }
+    } else if (mode === 'GET') {
+      // Get item at index
+      if (where === 'FROM_START') {
+        return [`${list}[${at}]`, javascriptGenerator.ORDER_MEMBER];
+      } else if (where === 'FROM_END') {
+        return [`${list}[${list}.length - 1 - ${at}]`, javascriptGenerator.ORDER_MEMBER];
+      } else {
+        // FIRST or LAST
+        if (where === 'FIRST') {
+          return [`${list}[0]`, javascriptGenerator.ORDER_MEMBER];
+        } else {
+          return [`${list}[${list}.length - 1]`, javascriptGenerator.ORDER_MEMBER];
+        }
+      }
+    } else {
+      // SET mode - use standard Blockly generator if available
+      // Fallback to splice
+      const value = javascriptGenerator.valueToCode(block, 'TO', javascriptGenerator.ORDER_ASSIGNMENT) || 'null';
+      if (where === 'FROM_START') {
+        return `${list}[${at}] = ${value};\n`;
+      } else if (where === 'FROM_END') {
+        return `${list}[${list}.length - 1 - ${at}] = ${value};\n`;
+      } else {
+        if (where === 'FIRST') {
+          return `${list}[0] = ${value};\n`;
+        } else {
+          return `${list}[${list}.length - 1] = ${value};\n`;
+        }
+      }
+    }
+  };
+
   javascriptGenerator.forBlock["for_each_in_list"] = function (block) {
     const variable = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
     const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
     const branch = javascriptGenerator.statementToCode(block, 'DO');
+    
+    // Check if this is iterating over edges (for Kruskal's algorithm)
+    const listCode = list.trim();
+    const isEdges = listCode.includes('edges') || listCode.includes('Edges');
+    const varName = variable || block.getFieldValue('VAR') || 'item';
+    const isEdgeData = varName.includes('edge') || varName.includes('Edge');
     
     // Check if list is an async expression (contains await)
     const isAsync = list.includes('await');
     
     if (isAsync) {
       // If list is async, we need to await it first
-      const code = `
+      let code = `
       const listItems = await (${list});
       for (let i = 0; i < listItems.length; i++) {
-          const ${variable} = listItems[i];
+          const ${variable} = listItems[i];`;
+      
+      // Add visual feedback for Kruskal's algorithm (iterating over edges)
+      if (isEdges && isEdgeData) {
+        code += `
+          // Visual feedback: highlight edge being considered
+          if (Array.isArray(${variable}) && ${variable}.length >= 3) {
+            const u = ${variable}[0];
+            const v = ${variable}[1];
+            const weight = ${variable}[2];
+            const currentState = getCurrentGameState();
+            if (currentState && currentState.currentScene) {
+              await highlightKruskalEdge(currentState.currentScene, u, v, weight, 800);
+            }
+          }`;
+      }
+      
+      code += `
           ${branch}
       }
       `;
       return code;
     } else {
-      const code = `
+      let code = `
       const listItems = ${list};
       for (let i = 0; i < listItems.length; i++) {
-          const ${variable} = listItems[i];
+          const ${variable} = listItems[i];`;
+      
+      // Add visual feedback for Kruskal's algorithm (iterating over edges)
+      if (isEdges && isEdgeData) {
+        code += `
+          // Visual feedback: highlight edge being considered
+          if (Array.isArray(${variable}) && ${variable}.length >= 3) {
+            const u = ${variable}[0];
+            const v = ${variable}[1];
+            const weight = ${variable}[2];
+            const currentState = getCurrentGameState();
+            if (currentState && currentState.currentScene) {
+              await highlightKruskalEdge(currentState.currentScene, u, v, weight, 800);
+            }
+          }`;
+      }
+      
+      code += `
           ${branch}
       }
       `;
@@ -635,6 +859,24 @@ export function defineAllGenerators() {
 
   javascriptGenerator.forBlock["graph_get_current_node"] = function (block) {
     return [`getCurrentNode()`, javascriptGenerator.ORDER_FUNCTION_CALL];
+  };
+
+  javascriptGenerator.forBlock["graph_get_all_edges"] = function (block) {
+    const graph = javascriptGenerator.valueToCode(block, 'GRAPH', javascriptGenerator.ORDER_MEMBER) || '{}';
+    return [`getAllEdges(${graph})`, javascriptGenerator.ORDER_FUNCTION_CALL];
+  };
+
+  javascriptGenerator.forBlock["lists_sort_by_weight"] = function (block) {
+    const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
+    return [`sortEdgesByWeight(${list})`, javascriptGenerator.ORDER_FUNCTION_CALL];
+  };
+
+  javascriptGenerator.forBlock["graph_get_neighbors_with_weight"] = function (block) {
+    const graph = javascriptGenerator.valueToCode(block, 'GRAPH', javascriptGenerator.ORDER_MEMBER) || '{}';
+    const node = javascriptGenerator.valueToCode(block, 'NODE', javascriptGenerator.ORDER_MEMBER) || '0';
+    // Use async visual version for expression context (with delays like Kruskal)
+    // This provides visual feedback with delays to match Kruskal speed
+    return [`await getGraphNeighborsWithWeightWithVisualSync(${graph}, ${node})`, javascriptGenerator.ORDER_FUNCTION_CALL];
   };
 
   // Logic Operators generators

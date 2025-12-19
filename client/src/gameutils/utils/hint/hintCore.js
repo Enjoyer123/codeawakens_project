@@ -60,22 +60,23 @@ export function getNextBlockHint(workspace, goodPatterns) {
   console.log("🔍 Starting pattern matching with", sortedPatterns.length, "patterns");
 
   sortedPatterns.forEach((pattern, index) => {
-    console.log(`🔍 Checking pattern ${index + 1}: ${pattern.name} (type_id: ${pattern.pattern_type_id})`);
+    const patternName = pattern.name || pattern.pattern_name || `Pattern ${index + 1}`;
+    console.log(`🔍 Checking pattern ${index + 1}: ${patternName} (type_id: ${pattern.pattern_type_id})`);
     const patternXml = pattern.xmlPattern || pattern.xmlpattern;
     console.log(`🔍 Pattern XML:`, patternXml?.substring(0, 100) + "...");
 
     const score = calculateXmlMatchScore(currentXml, patternXml);
-    console.log(`🔍 Pattern ${pattern.name} score:`, score);
+    console.log(`🔍 Pattern ${patternName} score:`, score);
 
     if (score > bestMatchScore) {
       bestMatchScore = score;
       bestMatch = pattern;
-      console.log(`✅ New best match: ${pattern.name} (type_id: ${pattern.pattern_type_id}) with score ${score}`);
+      console.log(`✅ New best match: ${patternName} (type_id: ${pattern.pattern_type_id}) with score ${score}`);
     }
   });
 
   console.log("🔍 Final best match:", {
-    pattern: bestMatch?.name,
+    pattern: bestMatch?.name || bestMatch?.pattern_name,
     pattern_type_id: bestMatch?.pattern_type_id,
     score: bestMatchScore
   });
@@ -97,8 +98,8 @@ export function getNextBlockHint(workspace, goodPatterns) {
     };
   }
 
-  // หาขั้นตอนปัจจุบันจาก hints
-  const currentStep = findCurrentStep(currentXml, bestMatch);
+  // หาขั้นตอนปัจจุบันจาก hints (ใช้ workspace เพื่อช่วย resolve ตัวแปร)
+  const currentStep = findCurrentStep(currentXml, bestMatch, workspace);
   const totalSteps = bestMatch.hints?.length || 0;
   const progress = totalSteps > 0 ? (currentStep / totalSteps) * 100 : 0;
 
@@ -106,29 +107,38 @@ export function getNextBlockHint(workspace, goodPatterns) {
     currentStep,
     totalSteps,
     progress,
-    patternName: bestMatch.name,
+    patternName: bestMatch.name || bestMatch.pattern_name,
     hasHints: !!bestMatch.hints,
-    hintsLength: bestMatch.hints?.length
+    hintsLength: bestMatch.hints?.length,
+    bestMatchHints: bestMatch.hints,
+    conditionCheck: `${currentStep} > 0 && ${currentStep} <= ${totalSteps} = ${currentStep > 0 && currentStep <= totalSteps}`
   });
 
   // หาคำใบ้สำหรับขั้นตอนปัจจุบัน (ไม่ใช่ขั้นตอนถัดไป)
   let nextHint = "เสร็จแล้ว!";
   let showHint = true;
 
+  console.log(`🔍 Checking hint condition: currentStep=${currentStep}, totalSteps=${totalSteps}, condition=${currentStep > 0 && currentStep <= totalSteps}`);
+
   if (currentStep > 0 && currentStep <= totalSteps) {
     // แสดง hint จาก step ปัจจุบัน (currentStep - 1)
     const hintData = bestMatch.hints[currentStep - 1];
     console.log(`🔍 Getting hint for step ${currentStep - 1}:`, hintData);
 
-    // รองรับรูปแบบ hint ใหม่
-    if (hintData.content) {
-      // รูปแบบใหม่: มี content object
-      nextHint = hintData.content.question || hintData.content.suggestion || "ลองทำขั้นตอนถัดไป";
-      console.log(`✅ Using new format hint: "${nextHint}"`);
+    if (hintData) {
+      // รองรับรูปแบบ hint ใหม่
+      if (hintData.content) {
+        // รูปแบบใหม่: มี content object
+        nextHint = hintData.content.question || hintData.content.suggestion || "ลองทำขั้นตอนถัดไป";
+        console.log(`✅ Using new format hint: "${nextHint}"`);
+      } else {
+        // รูปแบบเก่า: มี hint string ตรงๆ
+        nextHint = hintData.hint || "ลองทำขั้นตอนถัดไป";
+        console.log(`✅ Using old format hint: "${nextHint}"`);
+      }
     } else {
-      // รูปแบบเก่า: มี hint string ตรงๆ
-      nextHint = hintData.hint || "ลองทำขั้นตอนถัดไป";
-      console.log(`✅ Using old format hint: "${nextHint}"`);
+      console.warn(`⚠️ Hint data not found for step ${currentStep - 1}`);
+      nextHint = "ลองทำขั้นตอนถัดไป";
     }
   } else if (currentStep === 0) {
     // ยังไม่ได้เริ่มต้น - แสดง hint แรกของ pattern
@@ -144,7 +154,8 @@ export function getNextBlockHint(workspace, goodPatterns) {
     }
     showHint = true;
   } else if (currentStep > totalSteps) {
-    nextHint = `🎉 Pattern "${bestMatch.name}" เสร็จสมบูรณ์!`;
+    const patternName = bestMatch.name || bestMatch.pattern_name || 'Pattern';
+    nextHint = `🎉 Pattern "${patternName}" เสร็จสมบูรณ์!`;
     showHint = true;
   } else {
     nextHint = "Pattern เสร็จแล้ว! ลองกด Run ดู";
@@ -162,19 +173,30 @@ export function getNextBlockHint(workspace, goodPatterns) {
   }
 
 
-  return {
+  const result = {
     hint: nextHint,
     showHint,
     currentStep,
     totalSteps,
     progress,
-    patternName: bestMatch.name,
+    patternName: bestMatch.name || bestMatch.pattern_name || null,
     isComplete: currentStep >= totalSteps,
     matchScore: bestMatchScore,
     hintData: currentHintData, // เพิ่ม hint data สำหรับ UI ใหม่
     patternPercentage: patternPercentage.percentage,
     bestPattern: patternPercentage.bestPattern
   };
+
+  console.log('🔍 getNextBlockHint RETURN:', {
+    hint: result.hint,
+    showHint: result.showHint,
+    currentStep: result.currentStep,
+    totalSteps: result.totalSteps,
+    patternName: result.patternName,
+    hasHintData: !!result.hintData
+  });
+
+  return result;
 }
 
 /**

@@ -245,6 +245,7 @@ exports.saveUserProgress = async (req, res) => {
       is_correct,
       stars_earned,
       hp_remaining,
+      user_big_o,
     } = req.body;
 
     // Validate required fields
@@ -344,6 +345,7 @@ exports.saveUserProgress = async (req, res) => {
       updateData.text_code = text_code || existingProgress.text_code;
       updateData.execution_time = execution_time !== undefined ? execution_time : existingProgress.execution_time;
       updateData.hp_remaining = hp_remaining !== undefined ? hp_remaining : existingProgress.hp_remaining;
+      updateData.user_big_o = user_big_o !== undefined ? user_big_o : existingProgress.user_big_o;
 
       // Keep first_attempt from existing record
       updateData.first_attempt = existingProgress.first_attempt;
@@ -381,6 +383,7 @@ exports.saveUserProgress = async (req, res) => {
         last_attempt: now,
         completed_at: is_correct ? now : null,
         hp_remaining: hp_remaining !== undefined ? hp_remaining : null,
+        user_big_o: user_big_o || null,
       };
 
       savedProgress = await prisma.userProgress.create({

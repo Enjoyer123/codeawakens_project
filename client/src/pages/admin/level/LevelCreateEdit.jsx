@@ -41,6 +41,7 @@ const LevelCreateEdit = () => {
   const [currentMode, setCurrentMode] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
   const [coinValue, setCoinValue] = useState(10); // ค่าเริ่มต้นสำหรับเหรียญ
+  const [edgeWeight, setEdgeWeight] = useState(1); // ค่าเริ่มต้นสำหรับ edge weight
   
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -122,7 +123,12 @@ const LevelCreateEdit = () => {
       
       // Parse JSON fields
       const nodes = level.nodes ? (typeof level.nodes === 'string' ? JSON.parse(level.nodes) : level.nodes) : [];
-      const edges = level.edges ? (typeof level.edges === 'string' ? JSON.parse(level.edges) : level.edges) : [];
+      let edges = level.edges ? (typeof level.edges === 'string' ? JSON.parse(level.edges) : level.edges) : [];
+      // ตรวจสอบและเพิ่ม value field ถ้าไม่มี (backward compatibility)
+      edges = edges.map(edge => ({
+        ...edge,
+        value: edge.value !== undefined && edge.value !== null ? edge.value : undefined,
+      }));
       const monsters = level.monsters ? (typeof level.monsters === 'string' ? JSON.parse(level.monsters) : level.monsters) : [];
       const obstacles = level.obstacles ? (typeof level.obstacles === 'string' ? JSON.parse(level.obstacles) : level.obstacles) : [];
       let coin_positions = level.coin_positions ? (typeof level.coin_positions === 'string' ? JSON.parse(level.coin_positions) : level.coin_positions) : [];
@@ -445,6 +451,8 @@ const LevelCreateEdit = () => {
                               selectedCategory={selectedCategory}
                               coinValue={coinValue}
                               onCoinValueChange={setCoinValue}
+                              edgeWeight={edgeWeight}
+                              onEdgeWeightChange={setEdgeWeight}
                             />
                         </div>
                     </TabsContent>
@@ -513,6 +521,7 @@ const LevelCreateEdit = () => {
                         onSelectedNodeChange={setSelectedNode}
                         selectedCategory={selectedCategory}
                         coinValue={coinValue}
+                        edgeWeight={edgeWeight}
                       />
                       {/* Canvas Overlay Info */}
                       <div className="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur rounded text-[10px] text-gray-200 font-mono pointer-events-none">

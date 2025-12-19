@@ -3,6 +3,7 @@
 
 import Phaser from "phaser";
 import { getCurrentGameState } from '../gameUtils';
+import { getGraphNeighborsWithWeight } from './blocklyHelpers';
 
 // Visual feedback state
 let dfsVisualState = {
@@ -336,8 +337,215 @@ export function clearScanningHighlights(scene) {
     scene.dfsEdgeGraphicsList = [];
   }
   
+  // Clear Kruskal visuals
+  clearKruskalVisuals(scene);
+  
+  // NOTE: Do NOT clear scene.mstGraphics here - MST edges should persist above scanning highlights
+  
   // Reset scanning state
   dfsVisualState.currentScanningNode = null;
+}
+
+/**
+ * Show MST edges (Minimum Spanning Tree edges) - เส้นที่ถูกเลือกใน MST
+ * @param {Phaser.Scene} scene - Phaser scene
+ * @param {Object} parent - Parent dictionary: {node: parentNode, ...}
+ * @param {number} color - Edge color (default: cyan/blue)
+ */
+export function showMSTEdges(scene, parent, color = 0x00ffff) {
+  if (!scene || !scene.levelData || !parent) return;
+  
+  if (!scene.mstGraphics) {
+    scene.mstGraphics = scene.add.graphics();
+    scene.mstGraphics.setDepth(3.0); // Above all other highlights (path is 2.8, scanning is 2.5)
+  }
+  
+  const graphics = scene.mstGraphics;
+  graphics.clear();
+  
+  // Draw MST edges from parent dictionary
+  graphics.lineStyle(6, color, 1.0); // Thick cyan/blue line for MST edges (thicker than scanning edges)
+  
+  Object.keys(parent).forEach(nodeId => {
+    const parentNodeId = parent[nodeId];
+    if (parentNodeId !== undefined && parentNodeId !== null) {
+      const fromNode = scene.levelData.nodes.find(n => n.id === Number(parentNodeId));
+      const toNode = scene.levelData.nodes.find(n => n.id === Number(nodeId));
+      
+      if (fromNode && toNode) {
+        graphics.lineBetween(fromNode.x, fromNode.y, toNode.x, toNode.y);
+        
+        // Add arrow in the middle to show direction (cyan/blue arrow for MST)
+        const midX = (fromNode.x + toNode.x) / 2;
+        const midY = (fromNode.y + toNode.y) / 2;
+        const angle = Math.atan2(toNode.y - fromNode.y, toNode.x - fromNode.x);
+        const arrowLength = 15;
+        const arrowX = midX - Math.cos(angle) * arrowLength;
+        const arrowY = midY - Math.sin(angle) * arrowLength;
+        
+        graphics.fillStyle(color, 1.0);
+        graphics.fillTriangle(
+          midX, midY,
+          arrowX + Math.sin(angle) * 8, arrowY - Math.cos(angle) * 8,
+          arrowX - Math.sin(angle) * 8, arrowY + Math.cos(angle) * 8
+        );
+      }
+    }
+  });
+}
+
+/**
+ * Highlight edge being considered in Kruskal's algorithm
+ * @param {Phaser.Scene} scene - Phaser scene
+ * @param {number} u - First node
+ * @param {number} v - Second node
+ * @param {number} weight - Edge weight
+ * @param {number} duration - Animation duration
+ */
+export async function highlightKruskalEdge(scene, u, v, weight, duration = 800) {
+  if (!scene || !scene.levelData) return;
+  
+  const fromNode = scene.levelData.nodes.find(n => n.id === Number(u));
+  const toNode = scene.levelData.nodes.find(n => n.id === Number(v));
+  
+  if (!fromNode || !toNode) return;
+  
+  // Clear previous scanning highlights
+  clearScanningHighlights(scene);
+  
+  // Highlight nodes u and v (green)
+  highlightNode(scene, Number(u), 0x00ff00, duration);
+  highlightNode(scene, Number(v), 0x00ff00, duration);
+  
+  // Highlight edge (green) with animation
+  highlightEdge(scene, Number(u), Number(v), 0x00ff00, duration);
+  
+  // Show weight text
+  const midX = (fromNode.x + toNode.x) / 2;
+  const midY = (fromNode.y + toNode.y) / 2;
+  
+  if (!scene.kruskalWeightText) {
+    scene.kruskalWeightText = scene.add.text(midX, midY - 30, `Weight: ${weight}`, {
+      fontSize: '16px',
+      color: '#00ff00',
+      fontStyle: 'bold',
+      backgroundColor: '#000000',
+      padding: { x: 5, y: 3 }
+    });
+    scene.kruskalWeightText.setDepth(4.0);
+  } else {
+    scene.kruskalWeightText.setText(`Weight: ${weight}`);
+    scene.kruskalWeightText.setPosition(midX, midY - 30);
+    scene.kruskalWeightText.setVisible(true);
+  }
+  
+  // Wait for animation
+  await new Promise(resolve => setTimeout(resolve, duration));
+}
+
+/**
+ * Show root information for Kruskal's algorithm
+ * @param {Phaser.Scene} scene - Phaser scene
+ * @param {number} nodeId - Node ID
+ * @param {number} rootId - Root ID
+ */
+export function showKruskalRoot(scene, nodeId, rootId) {
+  if (!scene || !scene.levelData) return;
+  
+  const node = scene.levelData.nodes.find(n => n.id === Number(nodeId));
+  if (!node) return;
+  
+  // Show root text above node
+  if (!scene.kruskalRootTexts) {
+    scene.kruskalRootTexts = {};
+  }
+  
+  const textKey = `root_${nodeId}`;
+  if (!scene.kruskalRootTexts[textKey]) {
+    scene.kruskalRootTexts[textKey] = scene.add.text(node.x, node.y - 50, `Root: ${rootId}`, {
+      fontSize: '14px',
+      color: '#ffff00',
+      fontStyle: 'bold',
+      backgroundColor: '#000000',
+      padding: { x: 4, y: 2 }
+    });
+    scene.kruskalRootTexts[textKey].setDepth(4.0);
+  } else {
+    scene.kruskalRootTexts[textKey].setText(`Root: ${rootId}`);
+    scene.kruskalRootTexts[textKey].setVisible(true);
+  }
+}
+
+/**
+ * Clear Kruskal visual feedback
+ * @param {Phaser.Scene} scene - Phaser scene
+ */
+export function clearKruskalVisuals(scene) {
+  if (!scene) return;
+  
+  // Clear weight text
+  if (scene.kruskalWeightText) {
+    scene.kruskalWeightText.setVisible(false);
+  }
+  
+  // Clear root texts
+  if (scene.kruskalRootTexts) {
+    Object.values(scene.kruskalRootTexts).forEach(text => {
+      if (text && text.setVisible) {
+        text.setVisible(false);
+      }
+    });
+  }
+}
+
+/**
+ * Show MST edges from a list of edges (for Kruskal's algorithm)
+ * @param {Phaser.Scene} scene - Phaser scene
+ * @param {Array} mstEdges - Array of edges: [[u, v, weight], ...]
+ * @param {number} color - Edge color (default: cyan/blue)
+ */
+export function showMSTEdgesFromList(scene, mstEdges, color = 0x00ffff) {
+  if (!scene || !scene.levelData || !Array.isArray(mstEdges)) return;
+  
+  if (!scene.mstGraphics) {
+    scene.mstGraphics = scene.add.graphics();
+    scene.mstGraphics.setDepth(3.0); // Above all other highlights (path is 2.8, scanning is 2.5)
+  }
+  
+  const graphics = scene.mstGraphics;
+  graphics.clear();
+  
+  // Draw MST edges from list
+  graphics.lineStyle(6, color, 1.0); // Thick cyan/blue line for MST edges
+  
+  mstEdges.forEach(edge => {
+    if (!Array.isArray(edge) || edge.length < 2) return;
+    
+    const u = Number(edge[0]);
+    const v = Number(edge[1]);
+    
+    const fromNode = scene.levelData.nodes.find(n => n.id === u);
+    const toNode = scene.levelData.nodes.find(n => n.id === v);
+    
+    if (fromNode && toNode) {
+      graphics.lineBetween(fromNode.x, fromNode.y, toNode.x, toNode.y);
+      
+      // Add arrow in the middle to show direction (cyan/blue arrow for MST)
+      const midX = (fromNode.x + toNode.x) / 2;
+      const midY = (fromNode.y + toNode.y) / 2;
+      const angle = Math.atan2(toNode.y - fromNode.y, toNode.x - fromNode.x);
+      const arrowLength = 15;
+      const arrowX = midX - Math.cos(angle) * arrowLength;
+      const arrowY = midY - Math.sin(angle) * arrowLength;
+      
+      graphics.fillStyle(color, 1.0);
+      graphics.fillTriangle(
+        midX, midY,
+        arrowX + Math.sin(angle) * 8, arrowY - Math.cos(angle) * 8,
+        arrowX - Math.sin(angle) * 8, arrowY + Math.cos(angle) * 8
+      );
+    }
+  });
 }
 
 /**
@@ -381,6 +589,9 @@ export function clearDfsVisuals(scene) {
   }
   if (scene.dfsVisitedGraphics) {
     scene.dfsVisitedGraphics.clear();
+  }
+  if (scene.mstGraphics) {
+    scene.mstGraphics.clear();
   }
   
   dfsVisualState = {
@@ -455,6 +666,42 @@ export function getGraphNeighborsWithVisualSync(graph, node) {
 }
 
 /**
+ * Get graph neighbors with weight and visual feedback (synchronous version for expression context)
+ * This function provides visual feedback but returns synchronously
+ */
+export async function getGraphNeighborsWithWeightWithVisualSync(graph, node) {
+  const currentState = getCurrentGameState();
+  const scene = currentState.currentScene;
+  
+  if (!scene) {
+    return getGraphNeighborsWithWeight(graph, node);
+  }
+
+  // Highlight current scanning node (green)
+  highlightNode(scene, node, 0x00ff00, 800);
+  dfsVisualState.currentScanningNode = node;
+  
+  // Get neighbors with weight
+  const neighborsWithWeight = getGraphNeighborsWithWeight(graph, node);
+  const neighbors = neighborsWithWeight.map(nw => nw[0]);
+  
+  // Highlight neighbor nodes (red)
+  if (neighbors.length > 0) {
+    highlightNeighborNodes(scene, neighbors, 0xff0000, 800);
+    
+    // Animate edges to neighbors with delay (like Kruskal)
+    for (let i = 0; i < neighborsWithWeight.length; i++) {
+      const [neighbor, weight] = neighborsWithWeight[i];
+      highlightEdge(scene, node, neighbor, 0xff0000, 800);
+      // Stagger delay for edges (like Kruskal)
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+  }
+  
+  return neighborsWithWeight;
+}
+
+/**
  * Get graph neighbors with visual feedback (async version with delays)
  * This is a wrapper around getGraphNeighbors that adds visual feedback
  * Note: This function is async and returns a Promise, so it must be awaited
@@ -521,10 +768,20 @@ export async function markVisitedWithVisual(node) {
   
   if (scene) {
     markNodeAsVisited(scene, node);
-    await new Promise(resolve => setTimeout(resolve, 250));
+    // Delay to show visual feedback clearly (increased to match Kruskal speed)
+    await new Promise(resolve => setTimeout(resolve, 500));
   }
   
   dfsVisualState.visitedNodes.add(node);
+  
+  // Update Dijkstra state for real-time table display
+  try {
+    const { updateDijkstraVisited } = await import('./dijkstraStateManager');
+    const visitedArray = Array.from(dfsVisualState.visitedNodes);
+    updateDijkstraVisited(visitedArray);
+  } catch (err) {
+    // Ignore if module not found
+  }
 }
 
 /**
@@ -557,7 +814,9 @@ export async function showPathUpdateWithVisual(path) {
     const pathArray = Array.isArray(path) ? path : (path && path.length !== undefined ? Array.from(path) : []);
     
     if (pathArray.length > 0) {
+      // Show the new path (don't clear scanning highlights here - keep them visible)
       showCurrentPath(scene, pathArray);
+      // Delay to show visual feedback clearly
       await new Promise(resolve => setTimeout(resolve, 400));
     }
     

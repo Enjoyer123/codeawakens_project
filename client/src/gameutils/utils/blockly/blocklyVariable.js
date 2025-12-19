@@ -5,6 +5,12 @@ import * as Blockly from "blockly/core";
 function ensureVariableExists(block, fieldName, defaultName) {
   if (!block || !block.workspace) return;
   
+  // CRITICAL: Don't create variables when block is in flyout (toolbox)
+  // Blocks in flyout are just templates and shouldn't create workspace variables
+  if (block.isInFlyout) {
+    return null;
+  }
+  
   const field = block.getField(fieldName);
   if (!field) return;
   
@@ -40,6 +46,20 @@ function ensureVariableExists(block, fieldName, defaultName) {
 // Simple FieldVariable handling - always use prompt
 function improveFieldVariableHandling() {
   if (!Blockly.FieldVariable) return;
+  
+  // Override doClassValidation_ to prevent auto-creation of variables when blocks are in flyout
+  const originalDoClassValidation = Blockly.FieldVariable.prototype.doClassValidation_;
+  if (originalDoClassValidation) {
+    Blockly.FieldVariable.prototype.doClassValidation_ = function(newValue) {
+      // Check if block is in flyout (toolbox)
+      if (this.sourceBlock_ && this.sourceBlock_.isInFlyout) {
+        // If in flyout, don't auto-create variables, just return the value as-is
+        return newValue;
+      }
+      // For blocks in workspace, use original validation (which may create variables)
+      return originalDoClassValidation.call(this, newValue);
+    };
+  }
   
   // Override showEditor to always use prompt
   Blockly.FieldVariable.prototype.showEditor_ = function() {

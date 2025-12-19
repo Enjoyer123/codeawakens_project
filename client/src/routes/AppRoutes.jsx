@@ -11,7 +11,9 @@ import UserManagement from "../pages/admin/user/UserManagement";
 import WeaponManagement from "../pages/admin/weapon/WeaponManagement";
 import LevelManagement from "../pages/admin/level/LevelManagement";
 import LevelCreateEdit from "../pages/admin/level/LevelCreateEdit";
+import LevelHintManagement from "../pages/admin/level/LevelHintManagement";
 import PatternCreateEdit from "../pages/admin/pattern/PatternCreateEdit";
+import StarterCreateEdit from "../pages/admin/level/StarterCreateEdit";
 import PreviewLevel from "../pages/admin/level/PreviewLevel";
 import RewardManagement from "../pages/admin/reward/RewardManagement";
 import GuideManagement from "../pages/admin/guide/GuideManagement";
@@ -55,8 +57,10 @@ const AppRoutes = () => {
         <Route path="admin/levels" element={<LevelManagement />} />
         <Route path="admin/levels/create" element={<LevelCreateEdit />} />
         <Route path="admin/levels/:levelId/edit" element={<LevelCreateEdit />} />
+        <Route path="admin/levels/:levelId/hints" element={<LevelHintManagement />} />
         <Route path="admin/levels/:levelId/patterns/create" element={<PatternCreateEdit />} />
         <Route path="admin/levels/:levelId/patterns/:patternId/edit" element={<PatternCreateEdit />} />
+        <Route path="admin/levels/:levelId/starters/create" element={<StarterCreateEdit />} />
         <Route path="admin/levels/:levelId/preview" element={<PreviewLevel />} />
         <Route path="admin/levels/:levelId/preview/:patternId" element={<PreviewLevel />} />
         <Route path="admin/level-categories" element={<LevelCategoryManagement />} />

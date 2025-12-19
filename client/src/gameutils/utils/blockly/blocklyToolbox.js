@@ -191,6 +191,8 @@ export function createToolboxConfig(enabledBlocks) {
 
   // Lists category (for DFS/BFS)
   const listBlocks = [];
+  if (enabledBlocks["lists_create_empty"])
+    listBlocks.push({ kind: "block", type: "lists_create_empty" });
   if (enabledBlocks["lists_create_with"])
     listBlocks.push({ kind: "block", type: "lists_create_with" });
   if (enabledBlocks["lists_length"])
@@ -221,6 +223,14 @@ export function createToolboxConfig(enabledBlocks) {
     listBlocks.push({ kind: "block", type: "lists_concat" });
   if (enabledBlocks["lists_remove_last_return"])
     listBlocks.push({ kind: "block", type: "lists_remove_last_return" });
+  if (enabledBlocks["lists_find_min_index"])
+    listBlocks.push({ kind: "block", type: "lists_find_min_index" });
+  if (enabledBlocks["lists_get_at_index"])
+    listBlocks.push({ kind: "block", type: "lists_get_at_index" });
+  if (enabledBlocks["lists_remove_at_index"])
+    listBlocks.push({ kind: "block", type: "lists_remove_at_index" });
+  if (enabledBlocks["lists_sort_by_weight"])
+    listBlocks.push({ kind: "block", type: "lists_sort_by_weight" });
   if (enabledBlocks["for_each_in_list"])
     listBlocks.push({ kind: "block", type: "for_each_in_list" });
 
@@ -306,6 +316,10 @@ export function createToolboxConfig(enabledBlocks) {
   const graphBlocks = [];
   if (enabledBlocks["graph_get_neighbors"])
     graphBlocks.push({ kind: "block", type: "graph_get_neighbors" });
+  if (enabledBlocks["graph_get_neighbors_with_weight"])
+    graphBlocks.push({ kind: "block", type: "graph_get_neighbors_with_weight" });
+  if (enabledBlocks["graph_get_all_edges"])
+    graphBlocks.push({ kind: "block", type: "graph_get_all_edges" });
   if (enabledBlocks["graph_get_node_value"])
     graphBlocks.push({ kind: "block", type: "graph_get_node_value" });
   if (enabledBlocks["graph_get_current_node"])
@@ -317,6 +331,30 @@ export function createToolboxConfig(enabledBlocks) {
       name: "🗺️ Graph",
       categorystyle: "procedure_category",
       contents: graphBlocks,
+    });
+  }
+
+  // Dictionary category
+  const dictBlocks = [];
+  if (enabledBlocks["dict_create"])
+    dictBlocks.push({ kind: "block", type: "dict_create" });
+  if (enabledBlocks["dict_set"])
+    dictBlocks.push({ kind: "block", type: "dict_set" });
+  if (enabledBlocks["dict_get"])
+    dictBlocks.push({ kind: "block", type: "dict_get" });
+  if (enabledBlocks["dict_has_key"])
+    dictBlocks.push({ kind: "block", type: "dict_has_key" });
+  if (enabledBlocks["dsu_find"])
+    dictBlocks.push({ kind: "block", type: "dsu_find" });
+  if (enabledBlocks["dsu_union"])
+    dictBlocks.push({ kind: "block", type: "dsu_union" });
+
+  if (dictBlocks.length > 0) {
+    categories.push({
+      kind: "category",
+      name: "📚 Dictionary",
+      categorystyle: "variable_category",
+      contents: dictBlocks,
     });
   }
 

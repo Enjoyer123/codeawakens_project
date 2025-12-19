@@ -1,5 +1,6 @@
 // Blockly List Operations Block Definitions (for DFS/BFS)
 import * as Blockly from "blockly/core";
+import { ensureVariableExists } from "./blocklyVariable";
 
 export function defineListOperationsBlocks() {
   // Add item to list
@@ -130,19 +131,84 @@ export function defineListOperationsBlocks() {
       
       this.setOnChange(function(event) {
         if (!event || !this.workspace) return;
+        
+        // Don't create variables when block is in flyout (toolbox)
+        if (this.isInFlyout) {
+          return;
+        }
+        
         if (event.type === Blockly.Events.BLOCK_CREATE && event.blockId === this.id) {
+          // เมื่อบล็อกถูกสร้าง ให้ตรวจสอบและสร้างตัวแปร (ถ้ายังไม่มี)
           setTimeout(() => {
-            const varName = this.getFieldValue('VAR') || 'item';
-            if (this.workspace) {
-              try {
-                this.workspace.createVariable(varName);
-              } catch (e) {
-                // Variable might already exist
-              }
-            }
+            ensureVariableExists(this, 'VAR', 'item');
           }, 10);
+        } else if (event.type === Blockly.Events.BLOCK_CHANGE && event.blockId === this.id) {
+          // เมื่อตัวแปรในบล็อกเปลี่ยน ให้ตรวจสอบและสร้างตัวแปรใหม่ (ถ้ายังไม่มี)
+          if (event.element === 'field' && event.name === 'VAR') {
+            const newValue = event.newValue || 'item';
+            ensureVariableExists(this, 'VAR', newValue);
+          }
         }
       });
+    },
+  };
+
+  // Find index of minimum value in list (for Priority Queue)
+  Blockly.Blocks["lists_find_min_index"] = {
+    init: function () {
+      this.appendValueInput("LIST")
+        .setCheck("Array")
+        .appendField("🔍 หา index ของค่าน้อยที่สุดใน");
+      this.appendDummyInput()
+        .appendField("(สำหรับ Priority Queue)");
+      this.setOutput(true, "Number");
+      this.setColour(260);
+      this.setTooltip("หา index ของ item ที่มีค่าน้อยที่สุดใน list (สำหรับ Priority Queue)");
+    },
+  };
+
+  // Get item at index (simplified array access)
+  Blockly.Blocks["lists_get_at_index"] = {
+    init: function () {
+      this.appendValueInput("LIST")
+        .setCheck("Array")
+        .appendField("📖 ดึง item ที่ index");
+      this.appendValueInput("INDEX")
+        .setCheck("Number")
+        .appendField("จาก");
+      this.setOutput(true, null);
+      this.setColour(260);
+      this.setTooltip("ดึง item จาก list ที่ index ที่กำหนด");
+    },
+  };
+
+  // Remove item at index
+  Blockly.Blocks["lists_remove_at_index"] = {
+    init: function () {
+      this.appendValueInput("LIST")
+        .setCheck("Array")
+        .appendField("🗑️ ลบ item ที่ index");
+      this.appendValueInput("INDEX")
+        .setCheck("Number")
+        .appendField("จาก");
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setColour(260);
+      this.setTooltip("ลบ item จาก list ที่ index ที่กำหนด");
+    },
+  };
+
+  // Sort list by weight (for Kruskal - sort edges by weight)
+  Blockly.Blocks["lists_sort_by_weight"] = {
+    init: function () {
+      this.appendValueInput("LIST")
+        .setCheck("Array")
+        .appendField("📊 เรียง");
+      this.appendDummyInput()
+        .appendField("ตาม weight (น้อยไปมาก)");
+      this.setOutput(true, "Array");
+      this.setColour(260);
+      this.setTooltip("เรียง list ของ edges ตาม weight จากน้อยไปมาก (สำหรับ Kruskal)");
     },
   };
 }

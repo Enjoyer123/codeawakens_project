@@ -219,7 +219,14 @@ export {
   moveAlongPath,
   getCurrentNode,
   getGraphNeighbors,
+  getGraphNeighborsWithWeight,
   getNodeValue,
+  findMinIndex,
+  getAllEdges,
+  sortEdgesByWeight,
+  dsuFind,
+  dsuUnion,
+  showMSTEdgesFromList,
   getStack,
   pushNode,
   popNode,
@@ -238,8 +245,18 @@ export {
   markVisitedWithVisual, 
   showPathUpdateWithVisual, 
   clearDfsVisuals,
+  getGraphNeighborsWithWeightWithVisualSync,
   highlightNode,
   highlightEdge,
   markNodeAsVisited,
-  showCurrentPath
+  showCurrentPath,
+  showMSTEdges
 } from './blockly/blocklyDfsVisual';
+
+// Re-export Dijkstra state management functions
+export {
+  updateDijkstraVisited,
+  updateDijkstraPQ,
+  updateMSTWeight,
+  resetDijkstraState
+} from './blockly/dijkstraStateManager';

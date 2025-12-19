@@ -170,6 +170,26 @@ export function ensureStandardBlocks() {
     console.log("Ensuring standard blocks and variables...");
   }
   
+  // Fix tooltip function to always return string
+  // This prevents "Tooltip function must return a string" error
+  if (Blockly.Block && Blockly.Block.prototype.getTooltip) {
+    const originalGetTooltip = Blockly.Block.prototype.getTooltip;
+    Blockly.Block.prototype.getTooltip = function() {
+      try {
+        const tooltip = originalGetTooltip.call(this);
+        // Ensure tooltip is always a string
+        if (typeof tooltip === 'function') {
+          const result = tooltip.call(this);
+          return typeof result === 'string' ? result : (result || '');
+        }
+        return typeof tooltip === 'string' ? tooltip : (tooltip || '');
+      } catch (e) {
+        console.warn('Error getting tooltip for block:', this.type, e);
+        return '';
+      }
+    };
+  }
+  
   // Define all custom blocks first
   defineAllBlocks();
   
@@ -223,7 +243,10 @@ export function ensureStandardBlocks() {
       }
     };
     
-    // Ensure generator exists
+    // Ensure generator exists - but don't override if it already exists (may have MST_weight detection)
+    // The generator in blocklyGenerators.js will handle MST_weight detection
+    // Since defineAllGenerators() is called in ensureStandardBlocks(), the generator from blocklyGenerators.js
+    // should already exist and include MST_weight detection, so we don't need to override it
     if (!javascriptGenerator.forBlock['variables_set']) {
       javascriptGenerator.forBlock['variables_set'] = function(block) {
         const variable = javascriptGenerator.nameDB_.getName(
@@ -231,8 +254,27 @@ export function ensureStandardBlocks() {
           Blockly.Names.NameType.VARIABLE
         );
         const value = javascriptGenerator.valueToCode(block, 'VALUE', javascriptGenerator.ORDER_ASSIGNMENT) || 'null';
+        
+        // Check if setting MST_weight variable
+        const varFieldValue = block.getFieldValue('VAR');
+        const varName = variable || varFieldValue;
+        const varNameLower = String(varName).toLowerCase();
+        const isMSTWeight = varNameLower === 'mst_weight' || 
+                           varNameLower === 'mstweight' ||
+                           varNameLower.includes('mst_weight') ||
+                           varNameLower.includes('mstweight');
+        
+        if (isMSTWeight) {
+          // Import updateMSTWeight from dijkstraStateManager
+          return `${variable} = ${value};\nupdateMSTWeight(${variable});\n`;
+        }
+        
         return `${variable} = ${value};\n`;
       };
+    } else {
+      // Generator already exists (likely from blocklyGenerators.js with MST_weight detection)
+      // Don't override it - keep the existing implementation
+      console.log('variables_set generator already exists, keeping existing implementation with MST_weight detection');
     }
     console.log('Overridden variables_set block to fix message format');
   } catch (e) {

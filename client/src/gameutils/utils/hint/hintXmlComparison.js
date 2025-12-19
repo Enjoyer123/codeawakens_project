@@ -91,15 +91,21 @@ function compareXmlStructure(currentNode, targetNode, depth = 0) {
 
 /**
  * เช็คว่า XML ตรงกันแบบ exact หรือไม่
+ * @param {Document|Element} currentXml - Current XML DOM
+ * @param {string} targetXmlString - Target XML string
+ * @param {Blockly.Workspace} workspace - Optional workspace to resolve variable IDs
+ * @returns {boolean} True if XML matches
  */
-export function checkExactXmlMatch(currentXml, targetXmlString) {
+export function checkExactXmlMatch(currentXml, targetXmlString, workspace = null) {
   if (!currentXml || !targetXmlString) return false;
 
   try {
     const parser = new DOMParser();
     const targetXml = parser.parseFromString(targetXmlString, 'text/xml');
 
-    return isXmlStructureEqual(currentXml, targetXml);
+    // ใช้ flexible matching เพื่อรองรับ starter XML
+    // CRITICAL: ส่ง workspace parameter เพื่อให้สามารถ resolve variable IDs เป็นชื่อตัวแปรได้
+    return isXmlStructureMatch(currentXml, targetXml, 0, workspace);
   } catch (error) {
     console.error("Error checking exact match:", error);
     return false;
@@ -108,8 +114,14 @@ export function checkExactXmlMatch(currentXml, targetXmlString) {
 
 /**
  * เปรียบเทียบ XML structure แบบยืดหยุ่น (flexible matching)
+ * รองรับ starter XML โดยค้นหา block ที่ตรงกับ target แทนที่จะเปรียบเทียบจาก block แรก
+ * @param {Document|Element} currentXml - Current XML DOM
+ * @param {Document|Element} targetXml - Target XML DOM
+ * @param {number} depth - Current depth for recursion
+ * @param {Blockly.Workspace} workspace - Optional workspace to resolve variable IDs
+ * @returns {boolean} True if structure matches
  */
-export function isXmlStructureMatch(currentXml, targetXml, depth = 0) {
+export function isXmlStructureMatch(currentXml, targetXml, depth = 0, workspace = null) {
   if (!currentXml || !targetXml) {
     console.log(`${'  '.repeat(depth)}❌ One of the nodes is null`);
     return false;
@@ -117,27 +129,157 @@ export function isXmlStructureMatch(currentXml, targetXml, depth = 0) {
 
   const indent = '  '.repeat(depth);
 
-  // ดึง blocks แรกของแต่ละ XML
-  const currentBlocks = currentXml.querySelectorAll(':scope > block');
-  const targetBlocks = targetXml.querySelectorAll(':scope > block');
+  // ดึง blocks ของแต่ละ XML
+  const currentBlocks = Array.from(currentXml.querySelectorAll(':scope > block'));
+  const targetBlocks = Array.from(targetXml.querySelectorAll(':scope > block'));
 
   if (currentBlocks.length === 0 || targetBlocks.length === 0) {
     console.log(`${indent}❌ One of the XMLs has no blocks`);
     return false;
   }
 
-  console.log(`${indent}🔍 Checking first blocks: ${currentBlocks[0]?.getAttribute('type')} vs ${targetBlocks[0]?.getAttribute('type')}`);
+  // CRITICAL: สร้าง variable ID to name mapping จาก XML variables section
+  const getVariableMap = (xml) => {
+    const variableMap = new Map();
+    const variablesSection = xml.querySelector('variables');
+    if (variablesSection) {
+      const variables = variablesSection.querySelectorAll('variable');
+      variables.forEach(variable => {
+        const varId = variable.getAttribute('id');
+        const varName = variable.textContent || variable.getAttribute('name') || '';
+        if (varId && varName) {
+          variableMap.set(varId, varName);
+        }
+      });
+    }
+    // ถ้าไม่มี variables section ใน XML แต่มี workspace ให้ resolve จาก workspace
+    if (!variablesSection && workspace && workspace.getVariableMap) {
+      try {
+        const variableMap_workspace = workspace.getVariableMap();
+        const allVariables = variableMap_workspace.getAllVariables();
+        allVariables.forEach(variable => {
+          const varId = variable.getId();
+          const varName = variable.name;
+          if (varId && varName) {
+            variableMap.set(varId, varName);
+          }
+        });
+      } catch (e) {
+        console.log(`  - ⚠️ Error getting variables from workspace: ${e.message}`);
+      }
+    }
+    return variableMap;
+  };
 
-  // เปรียบเทียบ block แรก
-  const currentFirstBlock = currentBlocks[0];
+  const currentVariableMap = getVariableMap(currentXml);
+  const targetVariableMap = getVariableMap(targetXml);
+
+  // Helper function to resolve variable name from field
+  const resolveVariableName = (block, variableMap) => {
+    const varField = block.querySelector('field[name="VAR"]');
+    if (!varField) return null;
+    
+    const varId = varField.getAttribute('id');
+    const varText = varField.textContent;
+    const varValueAttr = varField.getAttribute('value');
+    let varValue = varId || varText || varValueAttr || '';
+    
+    if (varValue && variableMap.has(varValue)) {
+      return variableMap.get(varValue);
+    }
+    
+    // Try to resolve from workspace if available
+    if (workspace && workspace.getVariableMap && varValue) {
+      try {
+        const variableMap_workspace = workspace.getVariableMap();
+        const variable = variableMap_workspace.getVariableById(varValue);
+        if (variable) {
+          return variable.name;
+        }
+      } catch (e) {
+        // Ignore
+      }
+    }
+    
+    return varValue;
+  };
+
+  // Helper function to get procedure name
+  const getProcedureName = (block) => {
+    const nameField = block.querySelector('field[name="NAME"]');
+    if (nameField) {
+      return nameField.textContent || nameField.getAttribute('value') || '';
+    }
+    return null;
+  };
+
+  // หา block แรกของ target
   const targetFirstBlock = targetBlocks[0];
+  const targetType = targetFirstBlock.getAttribute('type');
+  
+  console.log(`${indent}🔍 Looking for target block type: ${targetType} in ${currentBlocks.length} current blocks`);
+
+  // หา block ใน current XML ที่ตรงกับ target block แรก
+  // ถ้า depth = 0 (root level) ให้ค้นหาทั้งหมด แต่ถ้า depth > 0 ให้ใช้ block แรก
+  let currentFirstBlock = null;
+  
+  if (depth === 0) {
+    // ที่ root level ให้ค้นหา block ที่ตรงกับ target แรก (รองรับ starter XML)
+    currentFirstBlock = currentBlocks.find(block => {
+      const blockType = block.getAttribute('type');
+      return blockType === targetType;
+    });
+    
+    if (!currentFirstBlock) {
+      console.log(`${indent}❌ Could not find matching block type ${targetType} in current XML`);
+      // Log all current block types for debugging
+      const currentTypes = currentBlocks.map(b => b.getAttribute('type'));
+      console.log(`${indent}🔍 Current block types:`, currentTypes);
+      return false;
+    }
+    
+    console.log(`${indent}✅ Found matching block type ${targetType} in current XML`);
+  } else {
+    // ที่ nested level ให้ใช้ block แรก (เพราะ structure ควรจะตรงกันแล้ว)
+    currentFirstBlock = currentBlocks[0];
+    const currentType = currentFirstBlock.getAttribute('type');
+    
+    if (currentType !== targetType) {
+      console.log(`${indent}❌ Block types don't match at depth ${depth}: ${currentType} vs ${targetType}`);
+      return false;
+    }
+  }
 
   const currentType = currentFirstBlock.getAttribute('type');
-  const targetType = targetFirstBlock.getAttribute('type');
+  console.log(`${indent}🔍 Comparing blocks: ${currentType} vs ${targetType}`);
 
-  if (currentType !== targetType) {
-    console.log(`${indent}❌ First block types don't match: ${currentType} vs ${targetType}`);
-    return false;
+  // CRITICAL: เช็ค variable names สำหรับ variables_set และ variables_get
+  if (currentType === 'variables_set' || currentType === 'variables_get') {
+    const currentVarName = resolveVariableName(currentFirstBlock, currentVariableMap);
+    const targetVarName = resolveVariableName(targetFirstBlock, targetVariableMap);
+    
+    if (targetVarName && currentVarName !== targetVarName) {
+      console.log(`${indent}❌ Variable names don't match: current="${currentVarName}", target="${targetVarName}"`);
+      return false;
+    }
+    if (targetVarName) {
+      console.log(`${indent}✅ Variable names match: "${currentVarName}"`);
+    }
+  }
+
+  // CRITICAL: เช็ค procedure names สำหรับ procedure blocks
+  if (currentType === 'procedures_defreturn' || currentType === 'procedures_defnoreturn' ||
+      currentType === 'procedures_callreturn' || currentType === 'procedures_callnoreturn') {
+    const currentProcName = getProcedureName(currentFirstBlock);
+    const targetProcName = getProcedureName(targetFirstBlock);
+    
+    if (targetProcName && currentProcName !== targetProcName) {
+      console.log(`${indent}❌ Procedure names don't match: current="${currentProcName}", target="${targetProcName}"`);
+      return false;
+    }
+    if (targetProcName) {
+      console.log(`${indent}✅ Procedure names match: "${currentProcName}"`);
+    }
   }
 
   // เช็ค next blocks แบบ recursive
@@ -151,7 +293,10 @@ export function isXmlStructureMatch(currentXml, targetXml, depth = 0) {
 
   if (targetNext && currentNext) {
     console.log(`${indent}🔍 Checking next blocks recursively...`);
-    return isXmlStructureMatch(currentNext, targetNext, depth + 1);
+    // เปรียบเทียบ next blocks แบบ recursive (depth + 1 เพื่อให้ใช้ block แรก)
+    if (!isXmlStructureMatch(currentNext, targetNext, depth + 1, workspace)) {
+      return false;
+    }
   }
 
   // เช็ค statement blocks
@@ -165,7 +310,7 @@ export function isXmlStructureMatch(currentXml, targetXml, depth = 0) {
 
   if (targetStatement && currentStatement) {
     console.log(`${indent}🔍 Checking statement blocks...`);
-    if (!isXmlStructureMatch(currentStatement, targetStatement, depth + 1)) {
+    if (!isXmlStructureMatch(currentStatement, targetStatement, depth + 1, workspace)) {
       return false;
     }
   }
@@ -200,6 +345,25 @@ export function isXmlStructureMatch(currentXml, targetXml, depth = 0) {
 
         if (targetValueType !== currentValueType) {
           console.log(`${indent}❌ Value block ${i} types don't match: ${currentValueType} vs ${targetValueType}`);
+          return false;
+        }
+
+        // CRITICAL: เช็ค variable names ใน value blocks (เช่น variables_get ใน value)
+        if (currentValueType === 'variables_get') {
+          const currentVarName = resolveVariableName(currentValueBlock, currentVariableMap);
+          const targetVarName = resolveVariableName(targetValueBlock, targetVariableMap);
+          
+          if (targetVarName && currentVarName !== targetVarName) {
+            console.log(`${indent}❌ Value block ${i} variable names don't match: current="${currentVarName}", target="${targetVarName}"`);
+            return false;
+          }
+          if (targetVarName) {
+            console.log(`${indent}✅ Value block ${i} variable names match: "${currentVarName}"`);
+          }
+        }
+
+        // CRITICAL: เช็ค nested value blocks แบบ recursive
+        if (!isXmlStructureMatch(currentValueBlock, targetValueBlock, depth + 1, workspace)) {
           return false;
         }
       }

@@ -70,7 +70,12 @@ export function normalizeEdges(value) {
       if (!Number.isFinite(from) || !Number.isFinite(to)) {
         return null;
       }
-      return { from, to };
+      const normalizedEdge = { from, to };
+      // เพิ่ม value field ถ้ามี
+      if (edge.value !== undefined && edge.value !== null) {
+        normalizedEdge.value = Number(edge.value);
+      }
+      return normalizedEdge;
     })
     .filter(Boolean);
 

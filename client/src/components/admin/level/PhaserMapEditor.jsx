@@ -13,6 +13,7 @@ const PhaserMapEditor = ({
   onSelectedNodeChange,
   selectedCategory,
   coinValue = 10,
+  edgeWeight = 1,
 }) => {
   const gameRef = useRef(null);
   const phaserGameRef = useRef(null);
@@ -27,6 +28,8 @@ const PhaserMapEditor = ({
   const formDataRef = useRef(formData);
   const selectedNodeRef = useRef(selectedNode);
   const coinValueRef = useRef(coinValue);
+  const edgeWeightRef = useRef(edgeWeight);
+  const selectedCategoryRef = useRef(selectedCategory);
   
   // Refs for obstacle dragging
   const obstacleDragStartRef = useRef(null);
@@ -53,6 +56,14 @@ const PhaserMapEditor = ({
   useEffect(() => {
     coinValueRef.current = coinValue;
   }, [coinValue]);
+
+  useEffect(() => {
+    edgeWeightRef.current = edgeWeight;
+  }, [edgeWeight]);
+
+  useEffect(() => {
+    selectedCategoryRef.current = selectedCategory;
+  }, [selectedCategory]);
 
   // Phaser helper functions
   const findNodeAt = (x, y) => {
@@ -154,9 +165,40 @@ const PhaserMapEditor = ({
           );
           
           if (!edgeExists) {
+            // ตรวจสอบว่า category เป็น Shortest Path หรือ Minimum Spanning Tree
+            // ใช้ selectedCategoryRef.current แทน selectedCategory เพื่อให้ได้ค่าล่าสุด
+            const currentCategory = selectedCategoryRef.current;
+            const categoryName = (currentCategory?.category_name || '').toLowerCase();
+            const isWeightedGraph = categoryName.includes('shortest path') || 
+                                   categoryName.includes('minimum spanning tree') ||
+                                   categoryName.includes('dijkstra') ||
+                                   categoryName.includes('prim') ||
+                                   categoryName.includes('kruskal');
+            
+            // ใช้ edgeWeightRef.current แทน edgeWeight เพื่อให้ได้ค่าล่าสุด
+            const currentEdgeWeightFromRef = edgeWeightRef.current;
+            const edgeWeightNum = typeof currentEdgeWeightFromRef === 'number' 
+              ? currentEdgeWeightFromRef 
+              : parseInt(currentEdgeWeightFromRef, 10);
+            const currentEdgeWeight = (!isNaN(edgeWeightNum) && edgeWeightNum > 0) ? edgeWeightNum : 1;
+            
+            const newEdge = {
+              from: currentSelectedNode.id,
+              to: clickedNode.id,
+            };
+            
+            // เพิ่ม value field ถ้าเป็น weighted graph
+            if (isWeightedGraph) {
+              newEdge.value = currentEdgeWeight;
+            }
+            
+            if (process.env.NODE_ENV === 'development') {
+              console.log('Creating edge:', newEdge, 'isWeightedGraph:', isWeightedGraph, 'categoryName:', categoryName, 'currentCategory:', currentCategory);
+            }
+            
             onFormDataChange({
               ...currentFormData,
-              edges: [...currentFormData.edges, { from: currentSelectedNode.id, to: clickedNode.id }],
+              edges: [...currentFormData.edges, newEdge],
             });
           }
         }
@@ -423,6 +465,28 @@ const PhaserMapEditor = ({
       const toNode = currentFormData.nodes.find(n => n.id === edge.to);
       if (fromNode && toNode) {
         currentGraphics.lineBetween(fromNode.x, fromNode.y, toNode.x, toNode.y);
+        
+        // แสดง edge weight ถ้ามี
+        if (edge.value !== undefined && edge.value !== null && !isNaN(Number(edge.value))) {
+          const midX = (fromNode.x + toNode.x) / 2;
+          const midY = (fromNode.y + toNode.y) / 2;
+          if (currentGraphics.scene) {
+            const weightText = currentGraphics.scene.add.text(midX, midY, edge.value.toString(), {
+              fontSize: '14px',
+              color: '#000000',
+              fontStyle: 'bold',
+              backgroundColor: '#FFD700',
+              padding: { x: 6, y: 3 },
+            });
+            weightText.setOrigin(0.5);
+            weightText.setDepth(100);
+            coinTextsRef.current.push(weightText); // เก็บไว้เพื่อลบทีหลัง
+            
+            if (process.env.NODE_ENV === 'development') {
+              console.log('Drawing edge weight:', edge.value, 'at', midX, midY);
+            }
+          }
+        }
       }
     });
     
@@ -880,6 +944,13 @@ const PhaserMapEditor = ({
       redrawPhaser();
     }
   }, [formData.nodes, formData.edges, formData.start_node_id, formData.goal_node_id, formData.obstacles, formData.coin_positions, formData.people, formData.treasures, selectedNode, phaserLoaded]);
+  
+  // Debug: log edges when they change
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Edges updated:', formData.edges);
+    }
+  }, [formData.edges]);
 
   // Reload background image when it changes
   useEffect(() => {

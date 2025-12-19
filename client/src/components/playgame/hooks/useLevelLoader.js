@@ -50,6 +50,39 @@ export function useLevelLoader({
         await loadWeaponsData(getToken);
 
         const levelResponse = await fetchLevelById(getToken, levelId);
+        console.log('🔍 [useLevelLoader] levelResponse.hints:', {
+          hasHints: !!levelResponse.hints,
+          hintsType: typeof levelResponse.hints,
+          hintsLength: Array.isArray(levelResponse.hints) ? levelResponse.hints.length : 'n/a',
+          hints: levelResponse.hints
+        });
+        
+        // Debug: Log starter_xml
+        console.log('🔍 Level response starter_xml:', {
+          has_starter_xml: !!levelResponse.starter_xml,
+          starter_xml_type: typeof levelResponse.starter_xml,
+          starter_xml_length: levelResponse.starter_xml ? levelResponse.starter_xml.length : 0,
+          starter_xml_preview: levelResponse.starter_xml ? levelResponse.starter_xml.substring(0, 100) : null
+        });
+        
+        // Debug: Log test_cases
+        console.log('🔍 Level response test_cases:', {
+          has_test_cases: !!levelResponse.level_test_cases,
+          test_cases_type: typeof levelResponse.level_test_cases,
+          test_cases_length: levelResponse.level_test_cases?.length || 0,
+          test_cases: levelResponse.level_test_cases,
+          test_cases_raw: JSON.stringify(levelResponse.level_test_cases, null, 2)
+        });
+        
+        // Check if level_test_cases exists but is empty array
+        if (levelResponse.level_test_cases && Array.isArray(levelResponse.level_test_cases)) {
+          console.log('🔍 level_test_cases is array with length:', levelResponse.level_test_cases.length);
+          if (levelResponse.level_test_cases.length > 0) {
+            console.log('🔍 First test case:', levelResponse.level_test_cases[0]);
+          }
+        } else {
+          console.log('🔍 level_test_cases is NOT an array or is null/undefined');
+        }
         
         // ตรวจสอบว่าด่านถูกปลดล็อคหรือไม่ (สำหรับผู้เล่นปกติ, ไม่ใช่ preview)
         if (!isPreview && levelResponse.is_unlocked === false) {
@@ -129,6 +162,19 @@ export function useLevelLoader({
         const guides = (levelResponse.guides || []).map((guide) => ({
           ...guide,
           guide_images: guide.guide_images || []
+        }));
+
+        // Normalize level-based hints (for Need Hint button)
+        const levelHints = (levelResponse.hints || []).map((hint) => ({
+          hint_id: hint.hint_id,
+          level_id: hint.level_id,
+          title: hint.title,
+          description: hint.description,
+          display_order: hint.display_order || 0,
+          is_active: hint.is_active,
+          created_at: hint.created_at,
+          updated_at: hint.updated_at,
+          hint_images: hint.hint_images || []
         }));
 
         // Process enabled blocks from level_blocks
@@ -254,12 +300,58 @@ export function useLevelLoader({
           enabledBlocks: enabledBlocksObj,
           victoryConditions,
           guides,
+          hints: levelHints,
           defaultWeaponKey: "stick",
           goodPatterns,
           goalType: levelResponse.goal_type || "ถึงเป้าหมาย",
-          textcode: levelResponse.textcode || false
+          textcode: levelResponse.textcode || false,
+          // Include category data for DijkstraStateTable
+          category: levelResponse.category || null,
+          category_id: levelResponse.category_id || null,
+          // Include starter XML for auto-loading
+          starter_xml: levelResponse.starter_xml || null,
+          // Include test cases for function return validation
+          test_cases: (levelResponse.level_test_cases || []).map(tc => ({
+            test_case_id: tc.test_case_id,
+            test_case_name: tc.test_case_name,
+            is_primary: tc.is_primary,
+            function_name: tc.function_name,
+            input_params: tc.input_params,
+            expected_output: tc.expected_output,
+            comparison_type: tc.comparison_type || 'exact',
+            display_order: tc.display_order || 0
+          }))
         };
 
+        console.log("🔍 Final formattedLevelData starter_xml:", {
+          has_starter_xml: !!formattedLevelData.starter_xml,
+          starter_xml_type: typeof formattedLevelData.starter_xml,
+          starter_xml_length: formattedLevelData.starter_xml ? formattedLevelData.starter_xml.length : 0
+        });
+        
+        console.log("🔍 Final formattedLevelData test_cases:", {
+          has_test_cases: !!formattedLevelData.test_cases,
+          test_cases_type: typeof formattedLevelData.test_cases,
+          test_cases_length: formattedLevelData.test_cases?.length || 0,
+          test_cases: formattedLevelData.test_cases,
+          test_cases_raw: JSON.stringify(formattedLevelData.test_cases, null, 2)
+        });
+        
+        // Verify test_cases structure
+        if (formattedLevelData.test_cases && Array.isArray(formattedLevelData.test_cases)) {
+          console.log('🔍 ✅ test_cases is valid array');
+          formattedLevelData.test_cases.forEach((tc, idx) => {
+            console.log(`🔍 Test case ${idx + 1}:`, {
+              test_case_id: tc.test_case_id,
+              test_case_name: tc.test_case_name,
+              function_name: tc.function_name,
+              is_primary: tc.is_primary,
+              expected_output: tc.expected_output
+            });
+          });
+        } else {
+          console.log('🔍 ❌ test_cases is NOT a valid array!');
+        }
         console.log("🔍 Final formattedLevelData:", formattedLevelData);
         console.log("🔍 Final goodPatterns:", formattedLevelData.goodPatterns);
 

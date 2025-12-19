@@ -1,9 +1,9 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Trash2, Coins, Users, Gem } from 'lucide-react';
+import { Plus, Trash2, Coins, Users, Gem, Link } from 'lucide-react';
 import { ITEM_TYPES } from '@/constants/itemTypes';
 
-const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, onAddMonster, onAddObstacle, selectedCategory, coinValue, onCoinValueChange }) => {
+const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, onAddMonster, onAddObstacle, selectedCategory, coinValue, onCoinValueChange, edgeWeight, onEdgeWeightChange }) => {
   // ตรวจสอบว่า item enable หรือไม่
   const isItemEnabled = selectedCategory?.item_enable === true;
   
@@ -40,6 +40,17 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
   const isItemTypeEnabled = (itemName) => {
     if (!isItemEnabled) return false;
     return enabledItems.includes(itemName);
+  };
+
+  // ตรวจสอบว่า category เป็น Shortest Path หรือ Minimum Spanning Tree
+  const isWeightedGraphCategory = () => {
+    if (!selectedCategory) return false;
+    const categoryName = (selectedCategory.category_name || '').toLowerCase();
+    return categoryName.includes('shortest path') || 
+           categoryName.includes('minimum spanning tree') ||
+           categoryName.includes('dijkstra') ||
+           categoryName.includes('prim') ||
+           categoryName.includes('kruskal');
   };
 
   const handleAddCoin = () => {
@@ -89,6 +100,31 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
             Edge
           </Button>
         </div>
+        
+        {/* Edge Weight Input Sub-section - แสดงเมื่อเป็น Shortest Path หรือ Minimum Spanning Tree */}
+        {isWeightedGraphCategory() && currentMode === 'edge' && (
+          <div className="bg-gray-50 p-2 rounded-md border border-gray-100 animate-in fade-in slide-in-from-top-1 duration-200">
+            <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">
+              Edge Weight
+            </label>
+            <div className="flex items-center gap-2">
+              <Link className="w-3 h-3 text-blue-500" />
+              <Input
+                type="number"
+                min="1"
+                value={edgeWeight || 1}
+                onChange={(e) => {
+                  const newValue = e.target.value === '' ? 1 : parseInt(e.target.value, 10);
+                  const finalValue = isNaN(newValue) || newValue < 1 ? 1 : newValue;
+                  onEdgeWeightChange(finalValue);
+                }}
+                className="h-7 text-sm py-1"
+                placeholder="1"
+                autoFocus
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Group 2: Objectives */}

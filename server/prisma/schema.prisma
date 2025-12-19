@@ -7,7 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model User {
   user_id               Int                @id @default(autoincrement())
   clerk_user_id         String             @unique
@@ -21,17 +20,20 @@ model User {
   updated_at            DateTime           @updatedAt
   is_active             Boolean            @default(true)
   role                  UserRole           @default(user)
+  pre_score             Int?
+  post_score            Int?
   created_levels        Level[]            @relation("LevelCreator")
   created_notifications Notification[]     @relation("NotificationCreator")
   user_notifications    UserNotification[]
   user_progress         UserProgress[]
   user_rewards          UserReward[]
+  user_tests            UserTest[]
 
   @@map("users")
 }
 
 model LevelCategory {
-  category_id      Int                  @id @default(autoincrement())
+  category_id      Int                 @id @default(autoincrement())
   category_name    String
   description      String
   item_enable      Boolean
@@ -56,16 +58,14 @@ model LevelCategoryItem {
   @@map("level_category_items")
 }
 
-
-
 model VictoryCondition {
-  victory_condition_id     Int                      @id @default(autoincrement())
-  type                     String                   @unique
-  description              String                   
-  check                    String                   
-  is_available             Boolean                  @default(true)
-  created_at               DateTime                 @default(now())
-  updated_at               DateTime                 @updatedAt
+  victory_condition_id     Int                     @id @default(autoincrement())
+  type                     String                  @unique
+  description              String
+  check                    String
+  is_available             Boolean                 @default(true)
+  created_at               DateTime                @default(now())
+  updated_at               DateTime                @updatedAt
   level_victory_conditions LevelVictoryCondition[]
 
   @@map("victory_conditions")
@@ -82,72 +82,122 @@ model LevelVictoryCondition {
   @@map("level_victory_conditions")
 }
 
+model LevelTestCase {
+  test_case_id    Int      @id @default(autoincrement())
+  level_id        Int
+  test_case_name  String // เช่น "Test Case 1", "Test Case 2", "Test Case 3"
+  is_primary      Boolean  @default(false) // Test case หลัก (true) หรือ test case อื่น (false)
+  function_name   String // ชื่อ function ที่ต้องตรวจสอบ (เช่น "DFS", "BFS", "DIJ", "PRIM", "KRUSKAL")
+  input_params    Json // Parameters สำหรับเรียก function เช่น {"start": 0, "goal": 5} หรือ {"start": 0} สำหรับ Prim/Kruskal
+  expected_output Json // ผลลัพธ์ที่คาดหวัง เช่น [0, 1, 3, 5] หรือ 23 (MST weight)
+  comparison_type String   @default("exact") // "exact", "contains", "array_equals", "number_equals"
+  display_order   Int      @default(0)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  level           Level    @relation(fields: [level_id], references: [level_id])
+
+  @@map("level_test_cases")
+}
+
 model Level {
-  level_id               Int                      @id @default(autoincrement())
-  category_id            Int
-  level_name             String
-  description            String?
-  difficulty_level       Int
-  difficulty             String
-  is_unlocked            Boolean                  @default(false)
-  required_level_id      Int?
-  textcode               Boolean
-  background_image       String
-  start_node_id          Int?
-  goal_node_id           Int?
-  goal_type              String?
-  nodes                  Json?
-  edges                  Json?
-  monsters               Json?
-  obstacles              Json?
-  coin_positions         Json?
-  people                 Json?
-  treasures              Json?
-  created_at             DateTime                 @default(now())
-  updated_at             DateTime                 @updatedAt
-  created_by             Int
-  guides                 Guide[]                  // เปลี่ยนจาก hints
-  level_blocks           LevelBlock[]
+  level_id                 Int                     @id @default(autoincrement())
+  category_id              Int
+  level_name               String
+  description              String?
+  difficulty_level         Int
+  difficulty               String
+  is_unlocked              Boolean                 @default(false)
+  required_level_id        Int?
+  textcode                 Boolean
+  background_image         String
+  start_node_id            Int?
+  goal_node_id             Int?
+  goal_type                String?
+  nodes                    Json?
+  edges                    Json?
+  monsters                 Json?
+  obstacles                Json?
+  coin_positions           Json?
+  people                   Json?
+  treasures                Json?
+  starter_xml              String? // Blockly XML สำหรับ starter blocks (โหลดให้ผู้เล่นทุกคน)
+  created_at               DateTime                @default(now())
+  updated_at               DateTime                @updatedAt
+  created_by               Int
+  guides                   Guide[] // เปลี่ยนจาก hints
+  hints                    LevelHint[]            // Hint ของด่าน (เหมือน guide แต่ใช้ตอนเล่น)
+  level_blocks             LevelBlock[]
   level_victory_conditions LevelVictoryCondition[]
-  category               LevelCategory            @relation(fields: [category_id], references: [category_id])
-  creator                User                     @relation("LevelCreator", fields: [created_by], references: [user_id])
-  patterns               Pattern[]
-  rewards                Reward[]
-  user_progress          UserProgress[]
-  user_rewards           UserReward[]
-  required_level         Level?                   @relation("LevelPrerequisite", fields: [required_level_id], references: [level_id])
-  unlocked_levels        Level[]                  @relation("LevelPrerequisite")
+  level_test_cases         LevelTestCase[]
+  category                 LevelCategory           @relation(fields: [category_id], references: [category_id])
+  creator                  User                    @relation("LevelCreator", fields: [created_by], references: [user_id])
+  patterns                 Pattern[]
+  rewards                  Reward[]
+  user_progress            UserProgress[]
+  user_rewards             UserReward[]
+  required_level           Level?                  @relation("LevelPrerequisite", fields: [required_level_id], references: [level_id])
+  unlocked_levels          Level[]                 @relation("LevelPrerequisite")
 
   @@map("levels")
 }
 
 model PatternType {
-  pattern_type_id  Int       @id @default(autoincrement())
-  type_name        String
-  description      String?
-  quality_level    String
-  patterns         Pattern[]
+  pattern_type_id Int       @id @default(autoincrement())
+  type_name       String
+  description     String?
+  quality_level   String
+  patterns        Pattern[]
 
   @@map("pattern_types")
 }
 
 model Pattern {
-  pattern_id       Int         @id @default(autoincrement())
-  pattern_type_id  Int
-  level_id         Int
-  weapon_id        Int?
-  pattern_name     String
-  description      String?
-  xmlpattern       String?
-  hints            Json?
-  is_available     Boolean     @default(true)
-  created_at       DateTime    @default(now())
-  updated_at       DateTime    @updatedAt
-  level            Level       @relation(fields: [level_id], references: [level_id])
-  pattern_type     PatternType @relation(fields: [pattern_type_id], references: [pattern_type_id])
-  weapon           Weapon?     @relation(fields: [weapon_id], references: [weapon_id])
+  pattern_id      Int           @id @default(autoincrement())
+  pattern_type_id Int
+  level_id        Int
+  weapon_id       Int?
+  pattern_name    String
+  description     String?
+  xmlpattern      String?
+  hints           Json?
+  bigO            BigO?
+  is_available    Boolean       @default(true)
+  count           Int?
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @updatedAt
+  level           Level         @relation(fields: [level_id], references: [level_id])
+  pattern_type    PatternType   @relation(fields: [pattern_type_id], references: [pattern_type_id])
+  weapon          Weapon?       @relation(fields: [weapon_id], references: [weapon_id])
 
   @@map("patterns")
+}
+
+/// Hint สำหรับ Level (เหมือน Guide แต่ใช้แสดงระหว่างเล่นทีละข้อ)
+model LevelHint {
+  hint_id       Int            @id @default(autoincrement())
+  level_id      Int
+  title         String
+  description   String?
+  display_order Int            @default(0)
+  is_active     Boolean        @default(true)
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+  level         Level          @relation(fields: [level_id], references: [level_id])
+  hint_images   LevelHintImage[]
+
+  @@map("level_hints")
+}
+
+/// รูปภาพ/สื่อประกอบสำหรับ LevelHint (คล้ายกับ Guide_Image)
+model LevelHintImage {
+  hint_image_id Int        @id @default(autoincrement())
+  hint_id       Int
+  path_file     String
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
+  hint          LevelHint  @relation(fields: [hint_id], references: [hint_id])
+
+  @@map("level_hint_images")
 }
 
 model UserProgress {
@@ -167,6 +217,7 @@ model UserProgress {
   last_attempt        DateTime?
   completed_at        DateTime?
   hp_remaining        Int?
+  user_big_o          BigO?     // BigO ที่ผู้เล่นเลือกสำหรับด่านนี้ (จะใช้คำนวนคะแนนในอนาคต)
   level               Level     @relation(fields: [level_id], references: [level_id])
   user                User      @relation(fields: [user_id], references: [user_id])
 
@@ -192,6 +243,55 @@ model Reward {
   user_rewards   UserReward[]
 
   @@map("rewards")
+}
+
+model Test {
+  test_id       Int        @id @default(autoincrement())
+  test_type     TestType
+  question      String     @db.Text
+  description   String?    @db.Text
+  test_image    String?
+  is_active     Boolean    @default(true)
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
+  
+  choices       TestChoice[]
+  user_tests    UserTest[]
+  
+  @@map("tests")
+}
+
+model TestChoice {
+  test_choice_id Int         @id @default(autoincrement())
+  test_id        Int
+  choice_text    String      @db.Text
+  is_correct     Boolean     @default(false)
+  created_at     DateTime    @default(now())
+  updated_at     DateTime    @updatedAt
+  
+  test           Test        @relation(fields: [test_id], references: [test_id], onDelete: Cascade)
+  user_tests     UserTest[]
+  
+  @@index([test_id])
+  @@map("test_choices")
+}
+
+model UserTest {
+  user_test_id Int          @id @default(autoincrement())
+  user_id      Int
+  test_id      Int
+  choice_id    Int?
+  is_correct   Boolean?     // คำนวณจาก TestChoice.is_correct
+  answered_at  DateTime     @default(now())
+  
+  user         User         @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  test         Test         @relation(fields: [test_id], references: [test_id], onDelete: Cascade)
+  choice       TestChoice?  @relation(fields: [choice_id], references: [test_choice_id])
+  
+  @@unique([user_id, test_id])
+  @@index([test_id])
+  @@index([choice_id])
+  @@map("user_tests")
 }
 
 model UserReward {
@@ -236,87 +336,100 @@ model UserNotification {
 }
 
 model Weapon {
-  weapon_id             Int        @id @default(autoincrement())
-  weapon_key            String     @unique
-  weapon_name           String
-  description           String?
-  combat_power          Int        @default(0)
-  emoji                 String?
-  weapon_type           WeaponType
-  created_at            DateTime   @default(now())
-  updated_at            DateTime   @updatedAt
-  patterns              Pattern[]
-  weapon_images         Weapon_Image[]
+  weapon_id     Int            @id @default(autoincrement())
+  weapon_key    String         @unique
+  weapon_name   String
+  description   String?
+  combat_power  Int            @default(0)
+  emoji         String?
+  weapon_type   WeaponType
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+  patterns      Pattern[]
+  weapon_images Weapon_Image[]
 
   @@map("weapons")
 }
 
 model Block {
-  block_id         Int           @id @default(autoincrement())
-  block_key        String        @unique
-  block_name       String
-  description      String?
-  category         BlockCategory
-  blockly_type     String?
-  is_available     Boolean       @default(true)
-  syntax_example   String?
-  created_at       DateTime      @default(now())
-  updated_at       DateTime      @updatedAt
-  level_blocks     LevelBlock[]
+  block_id       Int           @id @default(autoincrement())
+  block_key      String        @unique
+  block_name     String
+  description    String?
+  category       BlockCategory
+  blockly_type   String?
+  is_available   Boolean       @default(true)
+  syntax_example String?
+  created_at     DateTime      @default(now())
+  updated_at     DateTime      @updatedAt
+  level_blocks   LevelBlock[]
 
   @@map("blocks")
 }
 
 model LevelBlock {
-  level_block_id Int     @id @default(autoincrement())
+  level_block_id Int   @id @default(autoincrement())
   level_id       Int
   block_id       Int
   order_sequence Int?
-  block          Block   @relation(fields: [block_id], references: [block_id])
-  level          Level   @relation(fields: [level_id], references: [level_id])
+  block          Block @relation(fields: [block_id], references: [block_id])
+  level          Level @relation(fields: [level_id], references: [level_id])
 
   @@unique([level_id, block_id])
   @@map("level_blocks")
 }
 
-model Guide {  // เปลี่ยนจาก Hint
-  guide_id          Int      @id @default(autoincrement())
-  level_id          Int
-  title             String
-  description       String?
-  display_order     Int      @default(0)
-  is_active         Boolean  @default(true)
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
-  level             Level    @relation(fields: [level_id], references: [level_id])
-  guide_images      Guide_Image[]
+model Guide {
+  guide_id      Int           @id @default(autoincrement())
+  level_id      Int
+  title         String
+  description   String?
+  display_order Int           @default(0)
+  is_active     Boolean       @default(true)
+  created_at    DateTime      @default(now())
+  updated_at    DateTime      @updatedAt
+  level         Level         @relation(fields: [level_id], references: [level_id])
+  guide_images  Guide_Image[]
 
   @@map("guides")
 }
 
 model Guide_Image {
-  guide_file_id   Int      @id @default(autoincrement())
-  guide_id        Int
-  path_file       String
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
-  guide           Guide    @relation(fields: [guide_id], references: [guide_id])
+  guide_file_id Int      @id @default(autoincrement())
+  guide_id      Int
+  path_file     String
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+  guide         Guide    @relation(fields: [guide_id], references: [guide_id])
 
   @@map("guide_image")
 }
 
 model Weapon_Image {
-  file_id          Int         @id @default(autoincrement())
-  weapon_id        Int
-  path_file        String
-  type_file        TypeFile
-  type_animation   TypeAnimation
-  frame            Int
-  created_at       DateTime    @default(now())
-  updated_at       DateTime    @updatedAt
-  weapon           Weapon      @relation(fields: [weapon_id], references: [weapon_id])
+  file_id        Int           @id @default(autoincrement())
+  weapon_id      Int
+  path_file      String
+  type_file      TypeFile
+  type_animation TypeAnimation
+  frame          Int
+  created_at     DateTime      @default(now())
+  updated_at     DateTime      @updatedAt
+  weapon         Weapon        @relation(fields: [weapon_id], references: [weapon_id])
 
   @@map("weapon_image")
+}
+
+// Basic asymptotic efficiency classes (g(n))
+// 1, log n, n, n log n, n^2, n^3, 2^n, n!
+enum BigO {
+  constant   // 1
+  log_n      // log n
+  n          // n
+  n_log_n    // n log n
+  n2         // n^2
+  n3         // n^3
+  pow2_n     // 2^n
+  factorial  // n!
 }
 
 enum TypeFile {
@@ -371,4 +484,9 @@ enum ItemType {
   coin_positions
   people
   treasures
+}
+
+enum TestType {
+  PreTest
+  PostTest
 }

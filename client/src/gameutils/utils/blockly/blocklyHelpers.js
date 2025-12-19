@@ -4,6 +4,8 @@ import {
   setCurrentGameState, 
   getCurrentScene
 } from '../gameUtils';
+import { highlightNode, showCurrentPath, showMSTEdges, showMSTEdgesFromList as showMSTEdgesFromListVisual, highlightKruskalEdge, showKruskalRoot, clearKruskalVisuals } from './blocklyDfsVisual';
+import { updateDijkstraVisited, updateDijkstraPQ } from './dijkstraStateManager';
 import { 
   getPlayerCoins,
   addCoinToPlayer,
@@ -320,4 +322,314 @@ export function getNodeValue(node) {
 export function getCurrentNode() {
   const currentState = getCurrentGameState();
   return currentState.currentNodeId || 0;
+}
+
+/**
+ * Get neighbors with weight (for Dijkstra algorithm)
+ * Returns array of [neighbor, weight] tuples
+ */
+export function getGraphNeighborsWithWeight(graph, node) {
+  if (!graph || typeof graph !== 'object') {
+    console.warn('Invalid graph:', graph);
+    return [];
+  }
+  
+  const currentState = getCurrentGameState();
+  const scene = currentState.currentScene;
+  const levelData = currentState.levelData;
+  
+  if (!levelData || !levelData.edges) {
+    console.warn('Level data or edges not available');
+    return [];
+  }
+  
+  const nodeKey = String(node);
+  const neighbors = graph[nodeKey] || graph[node] || [];
+  
+  // Get edges with weights
+  const neighborsWithWeight = neighbors.map(neighbor => {
+    // Find edge from node to neighbor
+    const edge = levelData.edges.find(e => 
+      (e.from === node && e.to === neighbor) || 
+      (e.from === neighbor && e.to === node)
+    );
+    
+    // Get weight from edge, default to 1 if not specified
+    const weight = edge && edge.value !== undefined && edge.value !== null 
+      ? Number(edge.value) 
+      : 1;
+    
+    return [neighbor, weight];
+  });
+  
+  return neighborsWithWeight;
+}
+
+/**
+ * Find index of minimum value in list (for Priority Queue)
+ * Assumes list contains tuples [distance, path] and finds minimum distance
+ * Also provides visual feedback by highlighting the selected node
+ */
+export async function findMinIndex(list) {
+  if (!Array.isArray(list) || list.length === 0) {
+    console.warn('findMinIndex: list is empty or not an array');
+    return -1;
+  }
+  
+  let minIndex = 0;
+  let minValue = null;
+  
+  for (let i = 0; i < list.length; i++) {
+    const item = list[i];
+    let value;
+    
+    // Handle tuple format [distance, path]
+    if (Array.isArray(item) && item.length > 0) {
+      value = Number(item[0]);
+    } else if (typeof item === 'number') {
+      value = item;
+    } else if (item && typeof item === 'object' && item.distance !== undefined) {
+      value = Number(item.distance);
+    } else {
+      continue;
+    }
+    
+    if (isNaN(value)) {
+      console.warn(`findMinIndex: item at index ${i} is not a valid number:`, item);
+      continue;
+    }
+    
+    if (minValue === null || value < minValue) {
+      minValue = value;
+      minIndex = i;
+    }
+  }
+  
+  if (minValue === null) {
+    console.warn('findMinIndex: no valid minimum value found');
+    return -1;
+  }
+  
+  // Update Dijkstra PQ state for real-time table display
+  try {
+    updateDijkstraPQ(list);
+  } catch (err) {
+    // Ignore if function not available
+  }
+  
+  // Visual feedback: Highlight the selected node from priority queue and show path
+  const currentState = getCurrentGameState();
+  const scene = currentState.currentScene;
+  
+  if (scene && list[minIndex] && Array.isArray(list[minIndex]) && list[minIndex].length > 1) {
+    const selectedDistance = list[minIndex][0];
+    const selectedPath = list[minIndex][1];
+    if (Array.isArray(selectedPath) && selectedPath.length > 0) {
+      const selectedNode = selectedPath[selectedPath.length - 1];
+      const node = scene.levelData.nodes.find(n => n.id === selectedNode);
+      
+      if (node) {
+        // Highlight the selected node (green magic circle) - shows which node was chosen from PQ
+        highlightNode(scene, selectedNode, 0x00ff00, 600);
+        // Show the path that was selected (non-blocking)
+        showCurrentPath(scene, selectedPath);
+        
+        // Show distance text above the node to explain why it was chosen
+        // Clear previous distance text if exists
+        if (scene.dijkstraDistanceText) {
+          scene.dijkstraDistanceText.destroy();
+        }
+        
+        const distanceText = scene.add.text(node.x, node.y - 50, `ระยะทาง: ${selectedDistance}`, {
+          fontSize: '16px',
+          color: '#00ff00',
+          fontStyle: 'bold',
+          stroke: '#000000',
+          strokeThickness: 3,
+          backgroundColor: '#000000',
+          padding: { x: 8, y: 4 }
+        });
+        distanceText.setOrigin(0.5, 0.5);
+        distanceText.setDepth(4); // Above highlight
+        scene.dijkstraDistanceText = distanceText;
+        
+        // Wait for visual feedback to be visible (like Kruskal)
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Fade out after 2 seconds
+        scene.tweens.add({
+          targets: distanceText,
+          alpha: 0,
+          duration: 1000,
+          delay: 2000,
+          onComplete: () => {
+            if (distanceText && distanceText.destroy) {
+              distanceText.destroy();
+            }
+            if (scene.dijkstraDistanceText === distanceText) {
+              scene.dijkstraDistanceText = null;
+            }
+          }
+        });
+      }
+    }
+  }
+  
+  return minIndex;
+}
+
+// Kruskal's algorithm helper functions
+
+/**
+ * Get all edges from graph
+ * @param {Object} graph - Graph object
+ * @returns {Array} Array of edges: [[u, v, weight], ...]
+ */
+export function getAllEdges(graph) {
+  if (!graph || typeof graph !== 'object') {
+    console.warn('getAllEdges: Invalid graph:', graph);
+    return [];
+  }
+  
+  const currentState = getCurrentGameState();
+  const levelData = currentState.levelData;
+  
+  if (!levelData || !levelData.edges) {
+    console.warn('getAllEdges: Level data or edges not available');
+    return [];
+  }
+  
+  // Convert edges to format [u, v, weight]
+  const edges = [];
+  levelData.edges.forEach(edge => {
+    if (edge.from !== undefined && edge.to !== undefined) {
+      const weight = edge.value !== undefined ? Number(edge.value) : 1;
+      edges.push([edge.from, edge.to, weight]);
+    }
+  });
+  
+  return edges;
+}
+
+/**
+ * Sort edges by weight (ascending)
+ * @param {Array} edges - Array of edges: [[u, v, weight], ...]
+ * @returns {Array} Sorted edges
+ */
+export function sortEdgesByWeight(edges) {
+  if (!Array.isArray(edges)) {
+    console.warn('sortEdgesByWeight: edges is not an array:', edges);
+    return [];
+  }
+  
+  // Sort by weight (index 2)
+  return [...edges].sort((a, b) => {
+    const weightA = Array.isArray(a) && a.length > 2 ? Number(a[2]) : 0;
+    const weightB = Array.isArray(b) && b.length > 2 ? Number(b[2]) : 0;
+    return weightA - weightB;
+  });
+}
+
+/**
+ * DSU Find operation - find root of node with path compression
+ * @param {Object} parent - Parent dictionary
+ * @param {number} node - Node to find root for
+ * @returns {number} Root node
+ */
+export async function dsuFind(parent, node) {
+  if (!parent || typeof parent !== 'object') {
+    console.warn('dsuFind: Invalid parent:', parent);
+    return node;
+  }
+  
+  const nodeKey = String(node);
+  
+  // If node is not in parent, initialize it
+  if (parent[nodeKey] === undefined || parent[nodeKey] === null) {
+    parent[nodeKey] = node;
+    const root = node;
+    
+    // Visual feedback: show root
+    const currentState = getCurrentGameState();
+    const scene = currentState.currentScene;
+    if (scene) {
+      showKruskalRoot(scene, Number(node), Number(root));
+      await new Promise(resolve => setTimeout(resolve, 200)); // Small delay for visual
+    }
+    
+    return root;
+  }
+  
+  // Path compression: if parent is not root, find root recursively
+  if (parent[nodeKey] !== node) {
+    parent[nodeKey] = await dsuFind(parent, parent[nodeKey]);
+  }
+  
+  const root = parent[nodeKey];
+  
+  // Visual feedback: show root
+  const currentState = getCurrentGameState();
+  const scene = currentState.currentScene;
+  if (scene) {
+    showKruskalRoot(scene, Number(node), Number(root));
+    await new Promise(resolve => setTimeout(resolve, 200)); // Small delay for visual
+  }
+  
+  return root;
+}
+
+/**
+ * DSU Union operation - union by rank
+ * @param {Object} parent - Parent dictionary
+ * @param {Object} rank - Rank dictionary
+ * @param {number} rootU - Root of first set
+ * @param {number} rootV - Root of second set
+ */
+export async function dsuUnion(parent, rank, rootU, rootV) {
+  if (!parent || typeof parent !== 'object') {
+    console.warn('dsuUnion: Invalid parent:', parent);
+    return;
+  }
+  
+  if (!rank || typeof rank !== 'object') {
+    console.warn('dsuUnion: Invalid rank:', rank);
+    return;
+  }
+  
+  const rootUKey = String(rootU);
+  const rootVKey = String(rootV);
+  
+  // Initialize ranks if not present
+  if (rank[rootUKey] === undefined) rank[rootUKey] = 0;
+  if (rank[rootVKey] === undefined) rank[rootVKey] = 0;
+  
+  // Union by rank: attach smaller tree to larger tree
+  if (rank[rootUKey] < rank[rootVKey]) {
+    parent[rootUKey] = rootV;
+  } else if (rank[rootUKey] > rank[rootVKey]) {
+    parent[rootVKey] = rootU;
+  } else {
+    // Same rank: attach one to other and increment rank
+    parent[rootVKey] = rootU;
+    rank[rootUKey] = (rank[rootUKey] || 0) + 1;
+  }
+  
+  // Small delay for visual feedback
+  await new Promise(resolve => setTimeout(resolve, 200));
+}
+
+/**
+ * Show MST edges from a list (for Kruskal's algorithm)
+ * @param {Array} mstEdges - Array of edges: [[u, v, weight], ...]
+ */
+export function showMSTEdgesFromList(mstEdges) {
+  const currentState = getCurrentGameState();
+  const scene = currentState.currentScene;
+  
+  if (!scene || !Array.isArray(mstEdges)) {
+    console.warn('showMSTEdgesFromList: Invalid scene or mstEdges');
+    return;
+  }
+  
+  showMSTEdgesFromListVisual(scene, mstEdges, 0x00ffff);
 }
