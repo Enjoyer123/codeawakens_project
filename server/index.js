@@ -9,10 +9,12 @@ const weaponRouter = require("./routes/WeaponRoute");
 const levelRouter = require("./routes/LevelRoute");
 const rewardRouter = require("./routes/RewardRoute");
 const guideRouter = require("./routes/GuideRoute");
+const levelHintRouter = require("./routes/LevelHintRoute");
 const blockRouter = require("./routes/BlockRoute");
 const victoryConditionRouter = require("./routes/VictoryConditionRoute");
 const levelCategoryRouter = require("./routes/LevelCategoryRoute");
 const patternRouter = require("./routes/PatternRoute");
+const testCaseRouter = require("./routes/testCaseRoutes");
 const path = require("path");
 const { clerkMiddleware } = require("@clerk/express");
 
@@ -33,10 +35,12 @@ app.use("/api", weaponRouter);
 app.use("/api", levelRouter);
 app.use("/api", rewardRouter);
 app.use("/api", guideRouter);
+app.use("/api", levelHintRouter);
 app.use("/api", blockRouter);
 app.use("/api", victoryConditionRouter);
 app.use("/api", levelCategoryRouter);
 app.use("/api", patternRouter);
+app.use("/api/test-cases", testCaseRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello World - Server is running!");

@@ -13,6 +13,7 @@ import { defineListOperationsBlocks } from './blocklyListOperations';
 import { defineGraphOperationsBlocks } from './blocklyGraphOperations';
 import { defineLogicOperatorsBlocks } from './blocklyLogicOperators';
 import { defineDfsVisualBlocks } from './blocklyDfsVisualBlocks';
+import { defineDictionaryBlocks } from './blocklyDictionary';
 
 export function defineAllBlocks() {
   // Call all block definition functions
@@ -26,9 +27,10 @@ export function defineAllBlocks() {
   defineLoopBlocks();
   defineVariableBlocks();
   defineListBlocks(); // Must be called before list operations to override standard blocks
-  defineListOperationsBlocks();
-  defineGraphOperationsBlocks();
-  defineLogicOperatorsBlocks();
-  defineDfsVisualBlocks();
+    defineListOperationsBlocks();
+    defineGraphOperationsBlocks();
+    defineLogicOperatorsBlocks();
+    defineDfsVisualBlocks();
+    defineDictionaryBlocks();
 }
 

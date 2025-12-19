@@ -40,27 +40,74 @@ export function drawLevel(scene) {
   }
   graphics.setDepth(1);
   
-  // Draw edges FIRST (behind nodes)
-  graphics.lineStyle(3, 0xffd700, 1);
-  scene.levelData.edges.forEach((edge) => {
-    const fromNode = scene.levelData.nodes.find((n) => n.id === edge.from);
-    const toNode = scene.levelData.nodes.find((n) => n.id === edge.to);
-    if (fromNode && toNode) {
-      graphics.lineBetween(fromNode.x, fromNode.y, toNode.x, toNode.y);
-    }
-  });
-
   // Initialize node labels array if it doesn't exist
   if (!scene.nodeLabels) {
     scene.nodeLabels = [];
   } else {
     // Clean up existing labels
     scene.nodeLabels.forEach(label => {
-      if (label && !label.scene) {
+      if (label && label.destroy) {
         label.destroy();
       }
     });
     scene.nodeLabels = [];
+  }
+
+  // Initialize edge weight labels array if it doesn't exist
+  if (!scene.edgeWeightLabels) {
+    scene.edgeWeightLabels = [];
+  } else {
+    // Clean up existing edge weight labels
+    scene.edgeWeightLabels.forEach(label => {
+      if (label && label.destroy) {
+        label.destroy();
+      }
+    });
+    scene.edgeWeightLabels = [];
+  }
+  
+  // Draw edges FIRST (behind nodes)
+  if (!scene.levelData.edges || !Array.isArray(scene.levelData.edges)) {
+    console.warn('⚠️ Edges is not an array:', scene.levelData.edges);
+  } else {
+    console.log(`🎨 Drawing ${scene.levelData.edges.length} edges...`);
+  }
+  
+  graphics.lineStyle(3, 0xffd700, 1);
+  if (scene.levelData.edges && Array.isArray(scene.levelData.edges)) {
+    scene.levelData.edges.forEach((edge, index) => {
+      try {
+        const fromNode = scene.levelData.nodes.find((n) => n.id === edge.from);
+        const toNode = scene.levelData.nodes.find((n) => n.id === edge.to);
+        
+        if (!fromNode || !toNode) {
+          console.warn(`⚠️ Edge ${index}: Cannot find nodes for edge from ${edge.from} to ${edge.to}`);
+          return;
+        }
+        
+        graphics.lineBetween(fromNode.x, fromNode.y, toNode.x, toNode.y);
+        
+        // แสดง edge weight ถ้ามี
+        if (edge.value !== undefined && edge.value !== null && !isNaN(Number(edge.value))) {
+          const midX = (fromNode.x + toNode.x) / 2;
+          const midY = (fromNode.y + toNode.y) / 2;
+          
+          const weightText = scene.add.text(midX, midY, edge.value.toString(), {
+            fontSize: '14px',
+            color: '#000000',
+            fontStyle: 'bold',
+            backgroundColor: '#FFD700',
+            padding: { x: 6, y: 3 },
+          });
+          weightText.setOrigin(0.5, 0.5);
+          weightText.setDepth(2); // Above graphics but below player/monsters
+          scene.edgeWeightLabels.push(weightText);
+        }
+      } catch (error) {
+        console.error(`❌ Error drawing edge ${index}:`, error, edge);
+      }
+    });
+    console.log(`✅ Drawn ${scene.levelData.edges.length} edges successfully`);
   }
 
   // Draw nodes AFTER edges (on top)

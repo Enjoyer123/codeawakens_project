@@ -1,8 +1,9 @@
 // src/components/GameArea.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { directions } from '../../gameutils/utils/gameUtils';
 import { fetchLevelById } from '../../services/levelService';
+import DijkstraStateTable from './DijkstraStateTable';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 
@@ -18,16 +19,45 @@ const GameArea = ({
   currentHint,
   hintData,
   hintOpen,
+  levelHints,
+  activeLevelHint,
+  onNeedHintClick,
+  needHintDisabled,
   onToggleHint,
   hintOpenCount,
   finalScore,
   inCombatMode,
   playerCoins = [],
   rescuedPeople = [],
+  workspaceRef,
+  userBigO,
+  onUserBigOChange,
 }) => {
   const { getToken } = useAuth();
   const [viewerData, setViewerData] = useState(null);
   const [viewerLoading, setViewerLoading] = useState(false);
+  const currentBlockCount = hintData?.currentBlockCount || 0;
+  
+  // ใช้ bestPattern.count ถ้ามี หรือใช้ totalBlocks เป็น fallback
+  const patternBlockCount = hintData?.bestPattern?.count || hintData?.totalBlocks || null;
+  
+  console.log('🔍 [GameArea] Block count debug:', {
+    currentBlockCount,
+    patternBlockCount,
+    hasBestPattern: !!hintData?.bestPattern,
+    bestPatternName: hintData?.bestPattern?.name,
+    bestPatternCount: hintData?.bestPattern?.count,
+    totalBlocks: hintData?.totalBlocks
+  });
+
+  console.log('🔍 [GameArea] render Assist panel state:', {
+    onNeedHintClickType: typeof onNeedHintClick,
+    hasLevelHints: Array.isArray(levelHints) && levelHints.length > 0,
+    levelHintsLength: levelHints?.length || 0,
+    hintOpen,
+    needHintDisabled,
+    hasActiveLevelHint: !!activeLevelHint,
+  });
 
   const closeDetail = () => setViewerData(null);
 
@@ -88,6 +118,8 @@ const GameArea = ({
           ref={gameRef}
           className="w-full h-full"
         />
+        {/* Dijkstra State Table - แสดงเฉพาะในด่าน Shortest Path */}
+        <DijkstraStateTable currentLevel={levelData} />
 </div>
 
         {/* Compact Bottom UI Bar */}
@@ -198,9 +230,9 @@ const GameArea = ({
                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Pattern Match</span>
                  <span className="text-[10px] text-gray-500">{hintData?.matchedBlocks || 0}/{hintData?.totalBlocks || 0}</span>
                </div>
-               
+
                {hintData && hintData.showPatternProgress ? (
-                 <div className="space-y-1">
+                 <div className="space-y-2">
                    <div className="w-full h-1.5 bg-gray-700 rounded-full overflow-hidden">
                       <div 
                         className={`h-full transition-all duration-300 ${
@@ -213,10 +245,78 @@ const GameArea = ({
                       <span className="text-[10px] text-gray-300 truncate max-w-[100px]">{hintData.patternName}</span>
                       <span className="text-[10px] text-blue-400 font-mono">{hintData.patternPercentage}%</span>
                    </div>
+                   
+                   {/* Three Parts Match Indicator */}
+                   {hintData.threePartsMatch && (
+                     <div className="mt-2 pt-2 border-t border-gray-700/50">
+                       <div className="flex items-center justify-between mb-1">
+                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Pattern Parts</span>
+                         <span className="text-[10px] text-gray-500">
+                           {hintData.threePartsMatch.matchedParts || 0}/3
+                         </span>
+                       </div>
+                       <div className="flex gap-1">
+                         {/* Part 1 Indicator */}
+                         <div className={`flex-1 h-1.5 rounded ${
+                           hintData.threePartsMatch.part1Match 
+                             ? 'bg-green-500' 
+                             : 'bg-gray-700'
+                         }`} title="Part 1: Initialization"></div>
+                         {/* Part 2 Indicator */}
+                         <div className={`flex-1 h-1.5 rounded ${
+                           hintData.threePartsMatch.part2Match 
+                             ? 'bg-green-500' 
+                             : hintData.threePartsMatch.part1Match
+                             ? 'bg-yellow-500'
+                             : 'bg-gray-700'
+                         }`} title="Part 2: While Loop"></div>
+                         {/* Part 3 Indicator */}
+                         <div className={`flex-1 h-1.5 rounded ${
+                           hintData.threePartsMatch.part3Match 
+                             ? 'bg-green-500' 
+                             : hintData.threePartsMatch.part2Match
+                             ? 'bg-yellow-500'
+                             : 'bg-gray-700'
+                         }`} title="Part 3: Neighbor Loop"></div>
+                       </div>
+                       <div className="text-[9px] text-gray-500 mt-1 text-center">
+                         {hintData.threePartsMatch.matchedParts === 0 && 'No parts matched'}
+                         {hintData.threePartsMatch.matchedParts === 1 && 'Part 1: Initialization ✓'}
+                         {hintData.threePartsMatch.matchedParts === 2 && 'Part 1+2: Initialization + While Loop ✓'}
+                         {hintData.threePartsMatch.matchedParts === 3 && 'Part 1+2+3: Full Pattern ✓'}
+                       </div>
+                     </div>
+                   )}
                  </div>
                ) : (
                  <p className="text-[10px] text-gray-600 italic text-center py-1">Place blocks to see pattern match</p>
                )}
+
+               {/* Block Count Progress - แสดงตลอดเวลา อยู่ใต้ Pattern Parts */}
+               <div className="mt-3 pt-3 border-t border-gray-700/50">
+                 <div className="flex items-center justify-between mb-1">
+                   <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Block Count</span>
+                   <span className="text-[10px] text-gray-500">
+                     {currentBlockCount}
+                     {patternBlockCount ? ` / ${patternBlockCount}` : ''}
+                   </span>
+                 </div>
+                 <div className="w-full h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                   <div
+                     className={`h-full transition-all duration-300 ${
+                       patternBlockCount && currentBlockCount >= patternBlockCount
+                         ? 'bg-green-500'
+                         : 'bg-blue-500'
+                     }`}
+                     style={{
+                       width: `${patternBlockCount && patternBlockCount > 0
+                         ? Math.min((currentBlockCount / patternBlockCount) * 100, 100)
+                         : 100
+                       }%`,
+                     }}
+                   ></div>
+                 </div>
+               </div>
              </div>
 
              {/* Hint & Actions */}
@@ -228,23 +328,117 @@ const GameArea = ({
                     </button>
                 </div>
                 
+                {/* Big O Complexity Dropdown */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                    Big O Complexity
+                  </label>
+                  <select
+                    value={userBigO || ''}
+                    onChange={(e) => {
+                      if (onUserBigOChange) {
+                        onUserBigOChange(e.target.value);
+                      }
+                    }}
+                    disabled={hintData?.patternPercentage !== 100}
+                    className={`w-full px-2 py-1.5 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-stone-500 focus:border-stone-500 ${
+                      hintData?.patternPercentage === 100
+                        ? 'bg-stone-800 border-stone-600 text-stone-300 cursor-pointer'
+                        : 'bg-stone-900 border-stone-700 text-stone-500 cursor-not-allowed opacity-60'
+                    }`}
+                  >
+                    <option value="">-- เลือก Big O --</option>
+                    <option value="constant">O(1) - Constant</option>
+                    <option value="log_n">O(log n) - Logarithmic</option>
+                    <option value="n">O(n) - Linear</option>
+                    <option value="n_log_n">O(n log n) - Linearithmic</option>
+                    <option value="n2">O(n²) - Quadratic</option>
+                    <option value="n3">O(n³) - Cubic</option>
+                    <option value="pow2_n">O(2ⁿ) - Exponential</option>
+                    <option value="factorial">O(n!) - Factorial</option>
+                  </select>
+                </div>
+                
                 <div className="flex gap-2 mt-auto">
                    <button 
-                     onClick={onToggleHint}
+                     onClick={() => {
+                       console.log('🟡 [GameArea] Need Hint button clicked');
+                       if (typeof onNeedHintClick === 'function') {
+                         onNeedHintClick();
+                       } else {
+                         console.warn('⚠️ [GameArea] onNeedHintClick is not a function:', onNeedHintClick);
+                       }
+                     }}
+                     disabled={needHintDisabled}
                      className={`flex-1 py-1.5 rounded text-xs font-medium transition-colors border ${
-                       hintOpen 
-                       ? 'bg-yellow-900/30 border-yellow-600/50 text-yellow-500 hover:bg-yellow-900/50' 
-                       : 'bg-stone-800 border-stone-600 text-stone-300 hover:bg-stone-700'
+                       needHintDisabled
+                         ? 'bg-stone-900 border-stone-700 text-stone-500 opacity-50 cursor-not-allowed'
+                         : 'bg-stone-800 border-stone-600 text-stone-300 hover:bg-stone-700'
                      }`}
                    >
-                     {hintOpen ? '💡 Close Hint' : '💡 Need Hint?'}
+                     💡 Need Hint
                    </button>
                 </div>
-                {/* Hint Text Fade In */}
-                {hintOpen && currentHint && (
-                   <div className="mt-2 p-2 bg-yellow-900/10 border border-yellow-900/30 rounded text-xs text-yellow-200/90 leading-relaxed animate-in fade-in slide-in-from-top-1">
-                      {currentHint}
-                   </div>
+                {/* Popup Hint Overlay */}
+                {hintOpen && activeLevelHint && (
+                  <div className="fixed inset-0 z-40 flex items-center justify-center">
+                    {console.log('🔍 [GameArea] Rendering Hint Popup:', {
+                      hintOpen,
+                      activeLevelHint,
+                      title: activeLevelHint?.title,
+                      hasImages: !!activeLevelHint?.hint_images?.length,
+                      imageCount: activeLevelHint?.hint_images?.length || 0
+                    })}
+                    <div className="absolute inset-0 bg-black/60" />
+                    <div className="relative z-50 bg-stone-900 rounded-2xl border border-yellow-700/80 shadow-2xl max-w-4xl w-[96%] max-h-[85vh] p-8 overflow-y-auto">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-xs uppercase tracking-wider text-yellow-300 font-bold">
+                          Hint
+                        </div>
+                        <button
+                          className="text-xs text-yellow-200 hover:text-white"
+                          onClick={onToggleHint || (() => {})}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="text-sm font-semibold text-white">
+                          {activeLevelHint.title}
+                        </div>
+                        {activeLevelHint.description && (
+                          <div className="text-xs text-yellow-100 leading-relaxed">
+                            {activeLevelHint.description}
+                          </div>
+                        )}
+                        {activeLevelHint.hint_images && activeLevelHint.hint_images.length > 0 && (
+                          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {activeLevelHint.hint_images.map(img => (
+                              <div
+                                key={img.hint_image_id}
+                                className="w-full h-60 md:h-72 bg-black/60 border border-yellow-700/50 rounded-xl flex items-center justify-center overflow-hidden"
+                              >
+                                <img
+                                  src={`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'}${img.path_file}`}
+                                  alt=""
+                                  className="w-full h-full object-contain"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div className="mt-4 text-[10px] text-yellow-400/80 text-right">
+                        กดปุ่ม "Need Hint" อีกครั้งเพื่อดู Hint ถัดไป (ถ้ามี)
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {/* Debug: Show hint status */}
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="mt-1 text-[8px] text-gray-600">
+                    Debug: hintOpen={hintOpen ? 'true' : 'false'}, currentHint={currentHint ? `"${currentHint.substring(0, 20)}..."` : 'null'}
+                  </div>
                 )}
              </div>
           </div>

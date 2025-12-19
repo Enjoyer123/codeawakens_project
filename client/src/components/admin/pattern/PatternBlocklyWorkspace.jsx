@@ -1,11 +1,13 @@
 import React, { forwardRef } from 'react';
 
-const PatternBlocklyWorkspace = forwardRef(({ currentStepIndex, blocklyLoaded }, ref) => {
+const PatternBlocklyWorkspace = forwardRef(({ currentStepIndex, blocklyLoaded, title }, ref) => {
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-xl font-bold mb-4">
-        Blockly Workspace - Step {currentStepIndex + 1}
-      </h2>
+    <div className="bg-white rounded-lg shadow p-6 h-full">
+      {title && (
+        <h2 className="text-xl font-bold mb-4">
+          {title}
+        </h2>
+      )}
 
       {!blocklyLoaded && (
         <div className="flex items-center justify-center h-96">

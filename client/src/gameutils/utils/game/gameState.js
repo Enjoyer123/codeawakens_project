@@ -15,7 +15,12 @@ let currentGameState = {
   playerHP: 100,
   weaponKey: "stick",
   weaponData: null,
-  playerCoins: [] // Array to store collected coins
+  playerCoins: [], // Array to store collected coins
+  dijkstraState: {
+    visited: [],
+    pq: [], // Priority Queue: [[distance, path], ...]
+    mstWeight: 0 // MST weight สำหรับ Prim's algorithm
+  }
 };
 
 // Directions array

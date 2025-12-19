@@ -10,6 +10,8 @@ const PatternInfoForm = ({
   setPatternDescription,
   weaponId,
   setWeaponId,
+  bigO,
+  setBigO,
   isEditMode,
   patternLoaded
 }) => {
@@ -61,6 +63,26 @@ const PatternInfoForm = ({
             onChange={(e) => setWeaponId(e.target.value)}
             placeholder="ID อาวุธ"
           />
+        </div>
+
+        <div className="relative">
+          <Label htmlFor="bigO">Big-O Complexity (ไม่บังคับ)</Label>
+          <select
+            id="bigO"
+            className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
+            value={bigO || ''}
+            onChange={(e) => setBigO(e.target.value || '')}
+          >
+            <option value="">-- ไม่ระบุ --</option>
+            <option value="constant">O(1) - constant</option>
+            <option value="log_n">O(log n) - logarithmic</option>
+            <option value="n">O(n) - linear</option>
+            <option value="n_log_n">O(n log n)</option>
+            <option value="n2">O(n²) - quadratic</option>
+            <option value="n3">O(n³) - cubic</option>
+            <option value="pow2_n">O(2ⁿ) - exponential</option>
+            <option value="factorial">O(n!) - factorial</option>
+          </select>
         </div>
       </div>
     </div>

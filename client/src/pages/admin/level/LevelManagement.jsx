@@ -11,7 +11,7 @@ import {
 } from '../../../services/levelService';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, Eye, Play } from 'lucide-react';
+import { Edit, Trash2, Eye, Play, Lightbulb, Blocks } from 'lucide-react';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import SearchInput from '@/components/admin/formFields/SearchInput';
@@ -352,6 +352,15 @@ const LevelManagement = () => {
                             <Button
                               variant="outline"
                               size="sm"
+                              onClick={() => navigate(`/admin/levels/${level.level_id}/hints`)}
+                              className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                            >
+                              <Lightbulb className="h-4 w-4 mr-2" />
+                              Hints
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
                               onClick={() => {
                                 setSelectedLevelForPatterns({ id: level.level_id, name: level.level_name });
                                 setPatternListDialogOpen(true);
@@ -360,6 +369,15 @@ const LevelManagement = () => {
                             >
                               <Eye className="h-4 w-4 mr-2" />
                               ดูรูปแบบคำตอบ
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => navigate(`/admin/levels/${level.level_id}/starters/create`)}
+                              className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                            >
+                              <Blocks className="h-4 w-4 mr-2" />
+                              เพิ่ม Starter
                             </Button>
                             <Button
                               variant="outline"

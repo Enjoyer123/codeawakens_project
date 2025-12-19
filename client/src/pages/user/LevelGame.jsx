@@ -32,6 +32,8 @@ import { clearGameOverScreen, showGameOver } from '../../gameutils/utils/phaserG
 import { createToolboxConfig } from '../../gameutils/utils/blocklyUtils';
 import { loadDfsExampleBlocks } from '../../gameutils/utils/blockly/loadDfsExample';
 import { loadBfsExampleBlocks } from '../../gameutils/utils/blockly/loadBfsExample';
+import { loadDijkstraExampleBlocks } from '../../gameutils/utils/blockly/loadDijkstraExample';
+import { loadPrimExampleBlocks } from '../../gameutils/utils/blockly/loadPrimExample';
 
 // Import components
 import GameArea from '../../components/playgame/GameArea';
@@ -39,6 +41,7 @@ import BlocklyArea from '../../components/playgame/BlocklyArea';
 import GameWithGuide from '../../components/playgame/GameWithGuide';
 
 const LevelGame = () => {
+  console.log('🔍 [LevelGame] Component render');
   const { levelId } = useParams();
   const navigate = useNavigate();
   const { getToken } = useAuth();
@@ -149,6 +152,11 @@ const LevelGame = () => {
     totalSteps: 0,
     progress: 0
   });
+  
+  // Debug: Log hintData changes
+  useEffect(() => {
+    console.log('🔍 [LevelGame] hintData state changed:', hintData);
+  }, [hintData]);
 
   // Score system state
   const [finalScore, setFinalScore] = useState(null);
@@ -157,6 +165,14 @@ const LevelGame = () => {
   const [hintOpen, setHintOpen] = useState(false);
   const [hintOpenCount, setHintOpenCount] = useState(0);
   const hintOpenAtStepRef = useRef(null);
+
+  // Level-based hints (from DB) state
+  const [levelHints, setLevelHints] = useState([]); // kept mainly for debug; source of truth is currentLevel.hints
+  const [levelHintIndex, setLevelHintIndex] = useState(0);
+  const [activeLevelHint, setActiveLevelHint] = useState(null);
+
+  // User Big O selection state
+  const [userBigO, setUserBigO] = useState(null);
 
   // Ensure finalScore is set when game is over (so UI can display 0)
   useEffect(() => {
@@ -291,6 +307,16 @@ const LevelGame = () => {
     handleRestartGame
   });
 
+  // Debug: Log currentLevel.starter_xml before passing to useBlocklySetup
+  console.log('🔍 [LevelGame] Before useBlocklySetup:', {
+    hasCurrentLevel: !!currentLevel,
+    currentLevelId: currentLevel?.level_id,
+    hasStarterXml: !!currentLevel?.starter_xml,
+    starterXmlType: typeof currentLevel?.starter_xml,
+    starterXmlLength: currentLevel?.starter_xml ? currentLevel.starter_xml.length : 0,
+    starterXmlPreview: currentLevel?.starter_xml ? currentLevel.starter_xml.substring(0, 100) : null
+  });
+
   // Use Blockly setup hook
   const { initBlocklyAndPhaser } = useBlocklySetup({
     blocklyRef,
@@ -300,7 +326,9 @@ const LevelGame = () => {
     setBlocklyLoaded,
     setBlocklyJavaScriptReady,
     setCurrentHint,
-    initPhaserGame
+    initPhaserGame,
+    starter_xml: currentLevel?.starter_xml || null,
+    blocklyLoaded
   });
 
   // เริ่มจับเวลาเมื่อเริ่มเกม
@@ -360,6 +388,9 @@ const LevelGame = () => {
     setIsRunning(false);
     setIsCompleted(false);
     setIsGameOver(false);
+    setLevelHints([]);
+    setLevelHintIndex(0);
+    setActiveLevelHint(null);
   }, [levelId]);
 
   // Use level loader hook
@@ -383,6 +414,31 @@ const LevelGame = () => {
     setGameState
   });
 
+  // Sync level hints from currentLevel (DB hints)
+  useEffect(() => {
+    console.log('🔍 [LevelGame] Sync level hints from currentLevel:', {
+      hasCurrentLevel: !!currentLevel,
+      levelId: currentLevel?.level_id,
+      rawHintsType: typeof currentLevel?.hints,
+      rawHintsLength: Array.isArray(currentLevel?.hints) ? currentLevel.hints.length : 'n/a',
+      rawHints: currentLevel?.hints
+    });
+
+    if (currentLevel && Array.isArray(currentLevel.hints)) {
+      const ordered = [...currentLevel.hints]
+        .filter(h => h.is_active !== false)
+        .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+      console.log('🔍 [LevelGame] Ordered levelHints:', ordered);
+      setLevelHints(ordered);
+      setLevelHintIndex(0);
+      setActiveLevelHint(null);
+    } else {
+      setLevelHints([]);
+      setLevelHintIndex(0);
+      setActiveLevelHint(null);
+    }
+  }, [currentLevel]);
+
   // Update toolbox when enabled blocks change
   useEffect(() => {
     if (blocklyLoaded && Object.keys(enabledBlocks).length > 0 && workspaceRef.current) {
@@ -396,11 +452,17 @@ const LevelGame = () => {
   }, [enabledBlocks, blocklyLoaded]);
 
   // Use pattern analysis hook
+  console.log('🔍 [LevelGame] Calling usePatternAnalysis with setCurrentHint:', {
+    hasSetCurrentHint: !!setCurrentHint,
+    setCurrentHintType: typeof setCurrentHint,
+    setCurrentHint: setCurrentHint
+  });
   usePatternAnalysis({
     blocklyLoaded,
     workspaceRef,
     goodPatterns,
     setHintData,
+    setCurrentHint,
     setCurrentWeaponData,
     setPatternFeedback,
     setPartialWeaponKey,
@@ -409,6 +471,53 @@ const LevelGame = () => {
     hintOpen,
     hintData
   });
+
+  // Update currentHint from hintData.hint
+  // Priority: hintData.hint > loading message
+  useEffect(() => {
+    const hintValue = hintData?.hint;
+    
+    console.log('🔍 [LevelGame] hintData update effect triggered:', {
+      hintDataHint: hintValue,
+      hintDataHintType: typeof hintValue,
+      hintDataHintLength: hintValue?.length,
+      hintDataCurrentStep: hintData?.currentStep,
+      hintDataTotalSteps: hintData?.totalSteps,
+      currentHint: currentHint,
+      hintDataExists: !!hintData,
+      hintDataKeys: hintData ? Object.keys(hintData) : [],
+      hintDataStringified: JSON.stringify(hintData)
+    });
+
+    // Always update if hintData.hint exists and is not empty
+    // This will override the loading message
+    if (hintValue && typeof hintValue === 'string' && hintValue.trim() !== '') {
+      console.log('🔍 [LevelGame] ✅ Condition passed! Updating currentHint from hintData.hint:', hintValue);
+      console.log('🔍 [LevelGame] Current currentHint before update:', currentHint);
+      if (currentHint !== hintValue) {
+        setCurrentHint(hintValue);
+        console.log('🔍 [LevelGame] ✅ setCurrentHint called with:', hintValue);
+      } else {
+        console.log('🔍 [LevelGame] ⚠️ currentHint already equals hintValue, skipping update');
+      }
+    } else {
+      console.log('🔍 [LevelGame] ❌ Condition NOT passed:', {
+        hasHintData: !!hintData,
+        hasHint: !!hintValue,
+        hintType: typeof hintValue,
+        hintValue: hintValue,
+        hintTrimmed: hintValue?.trim(),
+        hintIsEmpty: hintValue?.trim() === ''
+      });
+      
+      // If hintData exists but hint is empty, show default message
+      // But only if current hint is still the loading message
+      if (hintData && (!hintValue || hintValue.trim() === '') && currentHint && currentHint.includes('โหลดด่าน')) {
+        console.log('🔍 [LevelGame] Setting default hint: "วาง blocks เพื่อเริ่มต้น"');
+        setCurrentHint("วาง blocks เพื่อเริ่มต้น");
+      }
+    }
+  }, [hintData, currentHint]);
 
   // Auto-close hint when the user has progressed past the step that was open when they opened the hint
   useEffect(() => {
@@ -586,47 +695,48 @@ const LevelGame = () => {
             hintData={hintData}
             hintOpen={hintOpen}
             onToggleHint={() => {
-              console.log('🔔 onToggleHint called - hintOpen currently:', hintOpen, 'hintData.currentStep:', hintData?.currentStep);
-              if (!hintOpen) {
-                // opening
-                setHintOpen(true);
-                setHintOpenCount(c => c + 1);
-                hintOpenAtStepRef.current = hintData?.currentStep || 0;
-                console.log('🔔 Hint opened at step', hintOpenAtStepRef.current, 'new count:', hintOpenCount + 1);
-
-                // Immediately compute hint info and attempt to highlight (in case visual guide effect timing misses)
-                try {
-                  const ws = workspaceRef.current;
-                  const hp = getNextBlockHint(ws, goodPatterns);
-                  console.log('🔔 onToggleHint - getNextBlockHint result:', hp);
-                  const blocksToHighlight = hp?.hintData?.visualGuide?.highlightBlocks || hp?.hintData?.visualGuide?.highlightBlocks || hp?.patternName && (() => {
-                    // fallback: try find pattern by name and use its first hint visualGuide
-                    const p = goodPatterns.find(pp => pp.name === hp.patternName);
-                    return p?.hints?.[hp.currentStep > 0 ? hp.currentStep - 1 : 0]?.visualGuide?.highlightBlocks;
-                  })();
-                  console.log('🔔 onToggleHint - blocksToHighlight:', blocksToHighlight);
-                  if (Array.isArray(blocksToHighlight) && blocksToHighlight.length > 0) {
-                    highlightBlocks(blocksToHighlight);
-                  } else {
-                    console.log('🔔 onToggleHint - no visualGuide.highlightBlocks found');
-                  }
-                } catch (e) {
-                  console.warn('🔔 onToggleHint fallback failed:', e);
-                }
-              } else {
-                // closing
-                setHintOpen(false);
-                clearHighlights();
-                console.log('🔔 Hint closed');
-              }
+              console.log('🔔 onToggleHint (popup close) called - hintOpen currently:', hintOpen);
+              setHintOpen(false);
             }}
             hintOpenCount={hintOpenCount}
+            levelHints={levelHints}
+            activeLevelHint={activeLevelHint}
+            workspaceRef={workspaceRef}
+            onNeedHintClick={() => {
+              // คำนวณ hints จาก currentLevel โดยตรง (ไม่พึ่ง state ซิงค์)
+              const baseHints = Array.isArray(currentLevel?.hints)
+                ? [...currentLevel.hints]
+                    .filter(h => h.is_active !== false)
+                    .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+                : [];
+
+              console.log('🔔 Need Hint clicked', {
+                levelHintsLength: baseHints.length,
+                levelHintIndex,
+                needHintDisabled:
+                  !baseHints || baseHints.length === 0 || levelHintIndex >= baseHints.length
+              });
+              // ถ้าใช้หมดแล้ว ไม่ทำอะไร
+              if (!baseHints || baseHints.length === 0 || levelHintIndex >= baseHints.length) return;
+              const nextHint = baseHints[levelHintIndex];
+              console.log('🔔 Next level hint selected:', nextHint);
+              setActiveLevelHint(nextHint);
+              setLevelHintIndex(levelHintIndex + 1);
+              setHintOpen(true);
+            }}
+            needHintDisabled={
+              !Array.isArray(currentLevel?.hints) ||
+              currentLevel.hints.filter(h => h.is_active !== false).length === 0 ||
+              levelHintIndex >= currentLevel.hints.filter(h => h.is_active !== false).length
+            }
             playerCoins={getCurrentGameState().playerCoins || []}
             rescuedPeople={rescuedPeople}
             finalScore={finalScore}
             inCombatMode={inCombatMode}
             blocklyJavaScriptReady={blocklyJavaScriptReady}
             showScore={true}
+            userBigO={userBigO}
+            onUserBigOChange={setUserBigO}
           />
         </div>
 
@@ -665,6 +775,28 @@ const LevelGame = () => {
               >
                 📦 โหลด BFS
               </button>
+              <button
+                onClick={() => {
+                  if (workspaceRef.current) {
+                    loadDijkstraExampleBlocks(workspaceRef.current);
+                  }
+                }}
+                className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded"
+                title="โหลด Dijkstra example blocks (ชั่วคราว - สำหรับทดสอบ)"
+              >
+                📦 โหลด Dijkstra
+              </button>
+              <button
+                onClick={() => {
+                  if (workspaceRef.current) {
+                    loadPrimExampleBlocks(workspaceRef.current);
+                  }
+                }}
+                className="px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white text-sm rounded"
+                title="โหลด Prim example blocks (ชั่วคราว - สำหรับทดสอบ)"
+              >
+                📦 โหลด Prim
+              </button>
             </div>
           )}
             </div>
@@ -701,6 +833,7 @@ const LevelGame = () => {
         textCodeContent={currentLevel?.textcode ? textCode || '' : null}
         finalScore={finalScore}
         hp_remaining={playerHpState}
+        userBigO={userBigO}
         getToken={getToken}
       />
     </GameWithGuide>

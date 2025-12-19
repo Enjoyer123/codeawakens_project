@@ -25,6 +25,7 @@ export function checkVictoryConditions(victoryConditions, levelData) {
 
   const currentState = getCurrentGameState();
   console.log("🔍 Current state:", currentState);
+  console.log("🔍 testCaseResult in currentState:", currentState.testCaseResult);
   const failedConditions = [];
   let allCompleted = true;
 
@@ -151,6 +152,28 @@ function checkSingleVictoryCondition(condition, currentState, levelData) {
         reason: allCoinsCollected ? "" : "ยังเก็บเหรียญไม่หมด"
       };
 
+    case "mst_connected":
+      // เช็คว่าทุก node เชื่อมต่อกันได้ (Minimum Spanning Tree connected)
+      const mstConnected = checkMSTConnected(levelData);
+      return {
+        completed: mstConnected,
+        reason: mstConnected ? "" : "ยังเชื่อมต่อทุก node ไม่ได้"
+      };
+
+    case "function_return_test":
+      // เช็ค return value ของ function กับ test cases
+      const testCaseResult = currentState.testCaseResult;
+      if (!testCaseResult) {
+        return {
+          completed: false,
+          reason: "ยังไม่ได้รันโค้ดหรือไม่มี test cases"
+        };
+      }
+      return {
+        completed: testCaseResult.passed,
+        reason: testCaseResult.passed ? "" : testCaseResult.message
+      };
+
     default:
       return {
         completed: false,
@@ -215,6 +238,10 @@ export function generateVictoryHint(failedConditions, levelData) {
         hints.push(`❌ ยังเก็บเหรียญไม่หมด (${collectedCount}/${totalCoins})`);
         break;
 
+      case "mst_connected":
+        hints.push("❌ ยังเชื่อมต่อทุก node ไม่ได้");
+        break;
+
       default:
         hints.push(`❌ ${failedCondition.description}: ${failedCondition.reason}`);
     }
@@ -277,5 +304,55 @@ function getDefeatedMonstersCount(levelData) {
   }
 
   return levelData.monsters.filter(monster => monster.defeated === true).length;
+}
+
+/**
+ * ตรวจสอบว่าทุก node เชื่อมต่อกันได้ (Minimum Spanning Tree connected)
+ * ใช้ BFS/DFS เพื่อเช็คว่าทุก node สามารถไปถึงได้จาก start node
+ * @param {Object} levelData - ข้อมูลด่าน
+ * @returns {boolean} - true ถ้าทุก node เชื่อมต่อกันได้
+ */
+function checkMSTConnected(levelData) {
+  if (!levelData.nodes || levelData.nodes.length === 0) {
+    return true; // ไม่มี node = ผ่าน
+  }
+
+  if (!levelData.edges || levelData.edges.length === 0) {
+    return false; // ไม่มี edge = ไม่เชื่อมต่อ
+  }
+
+  const startNodeId = levelData.startNodeId || levelData.nodes[0].id;
+  const visited = new Set();
+  const queue = [startNodeId];
+
+  // BFS to check connectivity
+  while (queue.length > 0) {
+    const currentNodeId = queue.shift();
+    
+    if (visited.has(currentNodeId)) {
+      continue;
+    }
+
+    visited.add(currentNodeId);
+
+    // Find all connected nodes
+    const connectedNodes = levelData.edges
+      .filter(edge => edge.from === currentNodeId || edge.to === currentNodeId)
+      .map(edge => edge.from === currentNodeId ? edge.to : edge.from)
+      .filter(nodeId => !visited.has(nodeId));
+
+    queue.push(...connectedNodes);
+  }
+
+  // Check if all nodes are visited
+  const allNodesVisited = levelData.nodes.every(node => visited.has(node.id));
+  
+  console.log("🔍 MST Connected check:", {
+    totalNodes: levelData.nodes.length,
+    visitedNodes: visited.size,
+    allNodesVisited
+  });
+
+  return allNodesVisited;
 }
 

@@ -18,13 +18,21 @@ import { updatePlayer, showGameOver, showVictory } from '../../../gameutils/util
 import { resetEnemy } from '../../../gameutils/phaser/utils/enemyUtils';
 import { checkVictoryConditions, generateVictoryHint } from '../../../gameutils/utils/gameUtils';
 import { calculateFinalScore } from '../utils/scoreUtils';
+import { extractFunctionName, checkTestCases } from '../../../gameutils/utils/testCaseUtils';
+import { getGraphNeighbors as getGraphNeighborsNoVisual, getGraphNeighborsWithWeight as getGraphNeighborsWithWeightNoVisual } from '../../../gameutils/utils/blockly/blocklyHelpers';
 import {
   collectCoin, haveCoin, getCoinCount, getCoinValue, swapCoins, compareCoins, isSorted,
   rescuePersonAtNode, hasPerson, personRescued, getPersonCount, moveToNode, moveAlongPath,
-  getCurrentNode, getGraphNeighbors, getNodeValue,
-  getGraphNeighborsWithVisual, getGraphNeighborsWithVisualSync, markVisitedWithVisual, showPathUpdateWithVisual, clearDfsVisuals,
+  getCurrentNode, getGraphNeighbors, getGraphNeighborsWithWeight, getNodeValue,
+  getGraphNeighborsWithVisual, getGraphNeighborsWithVisualSync, getGraphNeighborsWithWeightWithVisualSync,
+  markVisitedWithVisual, showPathUpdateWithVisual, clearDfsVisuals, showMSTEdges,
+  findMinIndex, getAllEdges, sortEdgesByWeight, dsuFind, dsuUnion, showMSTEdgesFromList,
+  updateDijkstraVisited, updateDijkstraPQ, updateMSTWeight, resetDijkstraState,
   pushNode, popNode, keepItem, hasTreasure, treasureCollected, stackEmpty, stackCount
 } from '../../../gameutils/utils/blocklyUtils';
+import {
+  highlightKruskalEdge, showKruskalRoot, clearKruskalVisuals
+} from '../../../gameutils/utils/blockly/blocklyDfsVisual';
 import {
   getPlayerCoins, addCoinToPlayer, clearPlayerCoins as clearPlayerCoinsUtil,
   swapPlayerCoins, comparePlayerCoins, getPlayerCoinValue, getPlayerCoinCount,
@@ -134,6 +142,10 @@ export function useCodeExecution({
     // ล้างข้อมูล stack และสมบัติ
     clearStack();
     console.log("Game reset - Stack and treasure cleared");
+
+    // Reset Dijkstra state
+    resetDijkstraState();
+    console.log("Game reset - Dijkstra state cleared");
 
     // อัปเดตการแสดงผลสมบัติหลังจาก reset
     if (getCurrentGameState().currentScene) {
@@ -276,11 +288,16 @@ export function useCodeExecution({
       
       const map = createGraphMap(currentLevel?.nodes || [], currentLevel?.edges || []);
       console.log("Created graph map:", map);
+      
+      // Create all_nodes array for Prim's algorithm
+      const all_nodes = (currentLevel?.nodes || []).map(node => node.id);
+      console.log("Created all_nodes:", all_nodes);
 
       console.log("Creating AsyncFunction with code:", code);
       const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
       const execFunction = new AsyncFunction(
         "map", // Add map as first parameter
+        "all_nodes", // Add all_nodes for Prim's algorithm
         "moveForward", "turnLeft", "turnRight", "hit", "foundMonster", "canMoveForward", "nearPit", "atGoal",
         "collectCoin", "haveCoin", "getCoinCount", "getCoinValue", "swapCoins", "compareCoins", "isSorted",
         "getPlayerCoins", "addCoinToPlayer", "clearPlayerCoins", "swapPlayerCoins", "comparePlayerCoins",
@@ -288,16 +305,21 @@ export function useCodeExecution({
         "rescuePersonAtNode", "hasPerson", "personRescued", "getPersonCount", "allPeopleRescued",
         "getStack", "pushToStack", "popFromStack", "isStackEmpty", "getStackCount", "hasTreasureAtNode", "collectTreasure", "isTreasureCollected", "clearStack",
         "pushNode", "popNode", "keepItem", "hasTreasure", "treasureCollected", "stackEmpty", "stackCount",
-        "moveToNode", "moveAlongPath", "getCurrentNode", "getGraphNeighbors", "getNodeValue",
-        "getGraphNeighborsWithVisual", "getGraphNeighborsWithVisualSync", "markVisitedWithVisual", "showPathUpdateWithVisual", "clearDfsVisuals",
+        "moveToNode", "moveAlongPath", "getCurrentNode", "getGraphNeighbors", "getGraphNeighborsWithWeight", "getNodeValue",
+        "getGraphNeighborsWithVisual", "getGraphNeighborsWithVisualSync", "getGraphNeighborsWithWeightWithVisualSync",
+        "markVisitedWithVisual", "showPathUpdateWithVisual", "clearDfsVisuals", "showMSTEdges",
+        "findMinIndex", "getAllEdges", "sortEdgesByWeight", "dsuFind", "dsuUnion", "showMSTEdgesFromList",
+        "highlightKruskalEdge", "showKruskalRoot", "clearKruskalVisuals",
+        "updateDijkstraVisited", "updateDijkstraPQ", "updateMSTWeight", "resetDijkstraState",
+        "getCurrentGameState", "setCurrentGameState",
         code
       );
 
       console.log("Executing function...");
 
-      // Add timeout to prevent infinite loops - longer timeout for loop blocks
+      // Add timeout to prevent infinite loops - longer timeout for Dijkstra/algorithm blocks
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Execution timeout - possible infinite loop")), 30000); // 30 seconds timeout
+        setTimeout(() => reject(new Error("Execution timeout - possible infinite loop")), 60000); // 60 seconds timeout for algorithms
       });
 
       // Add execution counter to detect infinite loops - higher limit for loop blocks
@@ -322,30 +344,231 @@ export function useCodeExecution({
         return await moveAlongPath(path);
       };
 
-      await Promise.race([
-        execFunction(
-          map, // Pass map as first argument
-          moveForward, turnLeft, turnRight, hit, foundMonster, canMoveForward, nearPit, atGoal,
-          collectCoin, haveCoin, getCoinCount, getCoinValue, swapCoins, compareCoins, isSorted,
-          getPlayerCoins, addCoinToPlayer, clearPlayerCoinsUtil, swapPlayerCoins, comparePlayerCoins,
-          getPlayerCoinValue, getPlayerCoinCount, arePlayerCoinsSorted,
-          rescuePersonAtNode, hasPerson, personRescued, getPersonCount, allPeopleRescued,
-          getStack, pushToStack, popFromStack, isStackEmpty, getStackCount, hasTreasureAtNode, collectTreasure, isTreasureCollected, clearStack,
-          pushNode, popNode, keepItem, hasTreasure, treasureCollected, stackEmpty, stackCount,
-          wrappedMoveToNode, wrappedMoveAlongPath, getCurrentNode, getGraphNeighbors, getNodeValue,
-          getGraphNeighborsWithVisual, getGraphNeighborsWithVisualSync, markVisitedWithVisual, showPathUpdateWithVisual, clearDfsVisuals
-        ),
-        timeoutPromise
-      ]);
-      console.log("Function execution completed");
+      // Capture return value from function execution
+      // Parse code to find the variable name that stores the function result
+      const pathMatch = code.match(/(?:var\s+)?(\w+)\s*=\s*\(?\s*await\s+\w+\s*\(/i);
+      const varName = pathMatch ? pathMatch[1] : 'path'; // Default to 'path' if not found
+      console.log("🔍 Found variable name for return value:", varName);
+      
+      // Create a wrapper that captures return value AND executes code only once
+      const codeWithReturnCapture = `
+        ${code}
+        // After executing code, return the variable that stores the function result
+        return ${varName};
+      `;
+      
+      const execFunctionWithReturn = new AsyncFunction(
+        "map", "all_nodes",
+        "moveForward", "turnLeft", "turnRight", "hit", "foundMonster", "canMoveForward", "nearPit", "atGoal",
+        "collectCoin", "haveCoin", "getCoinCount", "getCoinValue", "swapCoins", "compareCoins", "isSorted",
+        "getPlayerCoins", "addCoinToPlayer", "clearPlayerCoins", "swapPlayerCoins", "comparePlayerCoins",
+        "getPlayerCoinValue", "getPlayerCoinCount", "arePlayerCoinsSorted",
+        "rescuePersonAtNode", "hasPerson", "personRescued", "getPersonCount", "allPeopleRescued",
+        "getStack", "pushToStack", "popFromStack", "isStackEmpty", "getStackCount", "hasTreasureAtNode", "collectTreasure", "isTreasureCollected", "clearStack",
+        "pushNode", "popNode", "keepItem", "hasTreasure", "treasureCollected", "stackEmpty", "stackCount",
+        "moveToNode", "moveAlongPath", "getCurrentNode", "getGraphNeighbors", "getGraphNeighborsWithWeight", "getNodeValue",
+        "getGraphNeighborsWithVisual", "getGraphNeighborsWithVisualSync", "getGraphNeighborsWithWeightWithVisualSync",
+        "markVisitedWithVisual", "showPathUpdateWithVisual", "clearDfsVisuals", "showMSTEdges",
+        "findMinIndex", "getAllEdges", "sortEdgesByWeight", "dsuFind", "dsuUnion", "showMSTEdgesFromList",
+        "highlightKruskalEdge", "showKruskalRoot", "clearKruskalVisuals",
+        "updateDijkstraVisited", "updateDijkstraPQ", "updateMSTWeight", "resetDijkstraState",
+        "getCurrentGameState", "setCurrentGameState",
+        codeWithReturnCapture
+      );
+      
+      // Execute code ONCE with return capture (no separate execution)
+      let functionReturnValue = null;
+      try {
+        const returnValue = await Promise.race([
+          execFunctionWithReturn(
+            map, all_nodes,
+            moveForward, turnLeft, turnRight, hit, foundMonster, canMoveForward, nearPit, atGoal,
+            collectCoin, haveCoin, getCoinCount, getCoinValue, swapCoins, compareCoins, isSorted,
+            getPlayerCoins, addCoinToPlayer, clearPlayerCoinsUtil, swapPlayerCoins, comparePlayerCoins,
+            getPlayerCoinValue, getPlayerCoinCount, arePlayerCoinsSorted,
+            rescuePersonAtNode, hasPerson, personRescued, getPersonCount, allPeopleRescued,
+            getStack, pushToStack, popFromStack, isStackEmpty, getStackCount, hasTreasureAtNode, collectTreasure, isTreasureCollected, clearStack,
+            pushNode, popNode, keepItem, hasTreasure, treasureCollected, stackEmpty, stackCount,
+            wrappedMoveToNode, wrappedMoveAlongPath, getCurrentNode, getGraphNeighbors, getGraphNeighborsWithWeight, getNodeValue,
+            getGraphNeighborsWithVisual, getGraphNeighborsWithVisualSync, getGraphNeighborsWithWeightWithVisualSync,
+            markVisitedWithVisual, showPathUpdateWithVisual, clearDfsVisuals, showMSTEdges,
+            findMinIndex, getAllEdges, sortEdgesByWeight, dsuFind, dsuUnion, showMSTEdgesFromList,
+            highlightKruskalEdge, showKruskalRoot, clearKruskalVisuals,
+            updateDijkstraVisited, updateDijkstraPQ, updateMSTWeight, resetDijkstraState,
+            getCurrentGameState, setCurrentGameState
+          ),
+          timeoutPromise
+        ]);
+        functionReturnValue = returnValue;
+        console.log("Function execution completed with return capture");
+        console.log("Function return value (from capture):", functionReturnValue);
+      } catch (returnError) {
+        console.warn("Could not capture return value:", returnError);
+        functionReturnValue = undefined;
+        console.log("Function execution completed");
+        console.log("Function return value (fallback):", functionReturnValue);
+      }
 
       const finalState = getCurrentGameState();
       console.log("Final state after execution:", finalState);
+
+      // Extract function name from code
+      console.log("🔍 ===== EXTRACTING FUNCTION NAME =====");
+      console.log("🔍 Full code length:", code.length);
+      console.log("🔍 Full code:", code);
+      console.log("🔍 Code snippet (first 500 chars):", code.substring(0, 500));
+      console.log("🔍 Code snippet (last 500 chars):", code.substring(Math.max(0, code.length - 500)));
+      
+      const functionName = extractFunctionName(code);
+      console.log("🔍 Extracted function name:", functionName);
+      console.log("🔍 =====================================");
+
+      // Check test cases if available
+      let testCaseResult = null;
+      console.log("🔍 Checking test cases condition:", {
+        hasTestCases: !!currentLevel?.test_cases,
+        testCasesLength: currentLevel?.test_cases?.length || 0,
+        hasFunctionName: !!functionName,
+        testCases: currentLevel?.test_cases
+      });
+      
+      if (currentLevel?.test_cases && currentLevel.test_cases.length > 0 && functionName) {
+        console.log("🔍 ✅ Condition passed! Checking test cases for function:", functionName);
+        
+        // Prepare game functions for test case execution (without visual feedback)
+        // No-op functions for visual feedback (test cases run in background)
+        const noOpVisual = () => Promise.resolve();
+        const noOpVisualSync = () => {};
+        const noOpMove = () => Promise.resolve(true); // No-op for movement
+        
+        const gameFunctionsForTest = {
+          // Movement functions - all no-op for test cases (no visual feedback)
+          moveForward: noOpMove,
+          turnLeft: noOpVisual,
+          turnRight: noOpVisual,
+          hit: noOpMove,
+          foundMonster: () => false,
+          canMoveForward: () => true,
+          nearPit: () => false,
+          atGoal: () => false,
+          // Coin functions - no-op
+          collectCoin: noOpMove,
+          haveCoin: () => false,
+          getCoinCount: () => 0,
+          getCoinValue: () => 0,
+          swapCoins: noOpMove,
+          compareCoins: () => 0,
+          isSorted: () => true,
+          getPlayerCoins: () => [],
+          addCoinToPlayer: noOpMove,
+          clearPlayerCoins: noOpVisualSync,
+          swapPlayerCoins: noOpMove,
+          comparePlayerCoins: () => 0,
+          getPlayerCoinValue: () => 0,
+          getPlayerCoinCount: () => 0,
+          arePlayerCoinsSorted: () => true,
+          // Person rescue functions - no-op
+          rescuePersonAtNode: noOpMove,
+          hasPerson: () => false,
+          personRescued: () => false,
+          getPersonCount: () => 0,
+          allPeopleRescued: () => true,
+          // Stack functions - no-op
+          getStack: () => [],
+          pushToStack: noOpMove,
+          popFromStack: () => null,
+          isStackEmpty: () => true,
+          getStackCount: () => 0,
+          hasTreasureAtNode: () => false,
+          collectTreasure: noOpMove,
+          isTreasureCollected: () => false,
+          clearStack: noOpVisualSync,
+          pushNode: noOpMove,
+          popNode: noOpMove,
+          keepItem: noOpMove,
+          hasTreasure: () => false,
+          treasureCollected: () => false,
+          stackEmpty: () => true,
+          stackCount: () => 0,
+          // Movement functions - all no-op for test cases
+          moveToNode: noOpMove,
+          moveAlongPath: noOpVisual,
+          getCurrentNode: () => 0, // Return default node
+          // Graph functions - use non-visual versions
+          getGraphNeighbors: getGraphNeighborsNoVisual || getGraphNeighbors,
+          getGraphNeighborsWithWeight: getGraphNeighborsWithWeightNoVisual || getGraphNeighborsWithWeight,
+          getNodeValue: (node) => typeof node === 'number' ? node : parseInt(node) || 0,
+          // Visual functions - all no-op for test cases
+          getGraphNeighborsWithVisual: getGraphNeighborsNoVisual || getGraphNeighbors,
+          getGraphNeighborsWithVisualSync: getGraphNeighborsNoVisual || getGraphNeighbors,
+          getGraphNeighborsWithWeightWithVisualSync: getGraphNeighborsWithWeightNoVisual || getGraphNeighborsWithWeight,
+          markVisitedWithVisual: noOpVisual,
+          showPathUpdateWithVisual: noOpVisual,
+          clearDfsVisuals: noOpVisualSync,
+          showMSTEdges: noOpVisualSync,
+          findMinIndex, // Keep this as it's needed for algorithms
+          getAllEdges, // Keep this as it's needed for algorithms
+          sortEdgesByWeight, // Keep this as it's needed for algorithms
+          dsuFind, // Keep this as it's needed for algorithms
+          dsuUnion, // Keep this as it's needed for algorithms
+          showMSTEdgesFromList: noOpVisualSync,
+          highlightKruskalEdge: noOpVisualSync,
+          showKruskalRoot: noOpVisualSync,
+          clearKruskalVisuals: noOpVisualSync,
+          updateDijkstraVisited: noOpVisualSync,
+          updateDijkstraPQ: noOpVisualSync,
+          updateMSTWeight: noOpVisualSync,
+          resetDijkstraState: noOpVisualSync,
+          getCurrentGameState, 
+          setCurrentGameState
+        };
+        
+        testCaseResult = await checkTestCases(
+          functionReturnValue, 
+          currentLevel.test_cases, 
+          functionName,
+          code,
+          gameFunctionsForTest,
+          map,
+          all_nodes
+        );
+        console.log("\n🔍 ===== TEST CASE RESULT SUMMARY =====");
+        console.log("🔍 Passed:", testCaseResult.passed);
+        console.log("🔍 Total tests:", testCaseResult.totalTests);
+        console.log("🔍 Passed tests:", testCaseResult.passedTests.length, testCaseResult.passedTests);
+        console.log("🔍 Failed tests:", testCaseResult.failedTests.length, testCaseResult.failedTests);
+        console.log("🔍 Message:", testCaseResult.message);
+        console.log("🔍 ======================================\n");
+        
+        // Store test case result in game state for victory condition check
+        setCurrentGameState({
+          testCaseResult: testCaseResult
+        });
+        console.log("🔍 Stored testCaseResult in game state");
+        
+        if (!testCaseResult.passed) {
+          setCurrentHint(testCaseResult.message);
+        } else {
+          setCurrentHint(testCaseResult.message);
+        }
+      } else {
+        console.log("🔍 ❌ Condition NOT passed - test cases check skipped");
+        console.log("🔍 Reasons:", {
+          noTestCases: !currentLevel?.test_cases,
+          emptyTestCases: currentLevel?.test_cases?.length === 0,
+          noFunctionName: !functionName
+        });
+      }
 
       // ตรวจสอบเงื่อนไขการผ่านด่านตาม victoryConditions
       console.log("🔍 CHECKING VICTORY CONDITIONS");
       console.log("🔍 Current Level ID:", currentLevel.id);
       console.log("🔍 Victory Conditions:", currentLevel.victoryConditions);
+      
+      // Get updated state that includes testCaseResult (after setCurrentGameState)
+      const stateForVictoryCheck = getCurrentGameState();
+      console.log("🔍 State for victory check:", stateForVictoryCheck);
+      console.log("🔍 testCaseResult in state:", stateForVictoryCheck.testCaseResult);
 
       const victoryResult = checkVictoryConditions(currentLevel.victoryConditions, currentLevel);
       const levelCompleted = victoryResult.completed;

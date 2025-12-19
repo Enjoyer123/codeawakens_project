@@ -2,6 +2,20 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 /**
+ * Count number of Blockly blocks in XML by counting <block ...> tags
+ */
+function countBlocksFromXml(xmlPattern) {
+  if (!xmlPattern || typeof xmlPattern !== "string") return 0;
+  try {
+    const matches = xmlPattern.match(/<block\b/gi);
+    return matches ? matches.length : 0;
+  } catch (e) {
+    console.error("Error counting blocks from XML:", e);
+    return 0;
+  }
+}
+
+/**
  * Extract block keys from Blockly XML pattern string
  */
 function extractBlockKeysFromXml(xmlPattern) {
@@ -174,7 +188,7 @@ async function evaluatePatternType(levelId, xmlPattern, blockKeywords = null) {
 // Create pattern
 exports.createPattern = async (req, res) => {
   try {
-    const { level_id, pattern_type_id, weapon_id, pattern_name, description, xmlpattern, hints, block_keywords } = req.body;
+    const { level_id, pattern_type_id, weapon_id, pattern_name, description, xmlpattern, hints, block_keywords, bigO } = req.body;
 
     if (!level_id || !pattern_name) {
       return res.status(400).json({ 
@@ -225,6 +239,8 @@ exports.createPattern = async (req, res) => {
       }
     }
 
+    const blockCount = countBlocksFromXml(xmlpattern);
+
     const pattern = await prisma.pattern.create({
       data: {
         level_id: parseInt(level_id),
@@ -234,6 +250,8 @@ exports.createPattern = async (req, res) => {
         description: description || null,
         xmlpattern: xmlpattern || null,
         hints: hints ? JSON.parse(JSON.stringify(hints)) : null,
+        count: blockCount || 0,
+        bigO: bigO || null,
         is_available: false, // Lock pattern until admin tests it in preview mode
       },
       include: {
@@ -350,7 +368,7 @@ exports.getPatternById = async (req, res) => {
 exports.updatePattern = async (req, res) => {
   try {
     const { patternId } = req.params;
-    const { pattern_type_id, weapon_id, pattern_name, description, xmlpattern, hints, is_available } = req.body;
+    const { pattern_type_id, weapon_id, pattern_name, description, xmlpattern, hints, is_available, bigO } = req.body;
 
     const existingPattern = await prisma.pattern.findUnique({
       where: { pattern_id: parseInt(patternId) },
@@ -365,9 +383,13 @@ exports.updatePattern = async (req, res) => {
     if (weapon_id !== undefined) updateData.weapon_id = weapon_id ? parseInt(weapon_id) : null;
     if (pattern_name) updateData.pattern_name = pattern_name;
     if (description !== undefined) updateData.description = description;
-    if (xmlpattern !== undefined) updateData.xmlpattern = xmlpattern;
+    if (xmlpattern !== undefined) {
+      updateData.xmlpattern = xmlpattern;
+      updateData.count = countBlocksFromXml(xmlpattern);
+    }
     if (hints !== undefined) updateData.hints = JSON.parse(JSON.stringify(hints));
     if (is_available !== undefined) updateData.is_available = is_available;
+    if (bigO !== undefined) updateData.bigO = bigO || null;
 
     const pattern = await prisma.pattern.update({
       where: { pattern_id: parseInt(patternId) },

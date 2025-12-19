@@ -5,7 +5,7 @@ export function defineListBlocks() {
   Blockly.Blocks['lists_create_with'] = {
     init: function() {
       this.setColour(260);
-      this.itemCount_ = 3;
+      this.itemCount_ = 1; // เปลี่ยนจาก 3 เป็น 1 เพื่อให้ตรงกับ pattern ที่รับค่าเดียว
       this.updateShape_();
       this.setOutput(true, 'Array');
       // Note: Mutator is not available in Blockly v12+ in the same way
@@ -77,6 +77,33 @@ export function defineListBlocks() {
       this.setOutput(true, 'Boolean');
       this.setColour(260);
       this.setTooltip('เช็คว่า list ว่างหรือไม่');
+    }
+  };
+
+  // List length block - override to fix message format issues
+  // Blockly's standard lists_length may have JSON format problems
+  Blockly.Blocks['lists_length'] = {
+    init: function() {
+      this.appendDummyInput()
+        .appendField('ความยาวของ');
+      this.appendValueInput('VALUE')
+        .setCheck('Array');
+      this.appendDummyInput()
+        .appendField('ลิสต์');
+      this.setOutput(true, 'Number');
+      this.setColour(260);
+      this.setTooltip('นับจำนวน items ใน list');
+    }
+  };
+
+  // Create empty list block - dedicated block for creating empty lists
+  Blockly.Blocks['lists_create_empty'] = {
+    init: function() {
+      this.appendDummyInput()
+        .appendField('สร้างลิสต์ว่าง');
+      this.setOutput(true, 'Array');
+      this.setColour(260);
+      this.setTooltip('สร้างลิสต์ว่าง (ไม่มี items)');
     }
   };
 }

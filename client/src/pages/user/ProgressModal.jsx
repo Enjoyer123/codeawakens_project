@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { saveUserProgress, checkAndAwardRewards } from '../../services/profileService';
 
-const ProgressModal = ({ isOpen, onClose, gameResult, levelData, attempts, timeSpent, blocklyXml, textCodeContent, finalScore, hp_remaining, getToken }) => {
+const ProgressModal = ({ isOpen, onClose, gameResult, levelData, attempts, timeSpent, blocklyXml, textCodeContent, finalScore, hp_remaining, userBigO, getToken }) => {
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState(null); // 'success', 'error', null
   const [saveError, setSaveError] = useState(null);
@@ -21,6 +21,7 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, attempts, timeS
     is_correct: gameResult === 'victory',
     stars_earned: finalScore?.stars ?? (gameResult === 'victory' ? 3 : 0),
     hp_remaining: hp_remaining ?? 0,
+    user_big_o: userBigO || null,
   };
 
   // บันทึกข้อมูลเมื่อ modal เปิด
@@ -44,6 +45,7 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, attempts, timeS
             is_correct: gameResult === 'victory',
             stars_earned: finalScore?.stars ?? (gameResult === 'victory' ? 3 : 0),
             hp_remaining: hp_remaining ?? 0,
+            user_big_o: userBigO || null,
           };
 
           await saveUserProgress(getToken, progressData);

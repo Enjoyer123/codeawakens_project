@@ -189,6 +189,19 @@ exports.getLevelById = async (req, res) => {
             display_order: 'asc',
           },
         },
+        hints: {
+          include: {
+            hint_images: true,
+          },
+          orderBy: {
+            display_order: 'asc',
+          },
+        },
+        level_test_cases: {
+          orderBy: {
+            display_order: 'asc',
+          },
+        },
       },
     });
 
@@ -226,6 +239,7 @@ exports.createLevel = async (req, res) => {
       coin_positions,
       people,
       treasures,
+      starter_xml,
       block_ids,
       victory_condition_ids,
     } = req.body;
@@ -361,6 +375,7 @@ exports.createLevel = async (req, res) => {
         coin_positions: parseJsonField(coin_positions),
         people: parseJsonField(people),
         treasures: parseJsonField(treasures),
+        starter_xml: starter_xml || null,
         created_by: user.user_id,
         level_blocks: block_ids && block_ids.length > 0 ? {
           create: block_ids.map((blockId, index) => ({
@@ -442,6 +457,7 @@ exports.updateLevel = async (req, res) => {
       coin_positions,
       people,
       treasures,
+      starter_xml,
       block_ids,
       victory_condition_ids,
     } = req.body;
@@ -510,6 +526,7 @@ exports.updateLevel = async (req, res) => {
     if (coin_positions !== undefined) updateData.coin_positions = parseJsonField(coin_positions);
     if (people !== undefined) updateData.people = parseJsonField(people);
     if (treasures !== undefined) updateData.treasures = parseJsonField(treasures);
+    if (starter_xml !== undefined) updateData.starter_xml = starter_xml || null;
 
     // Use transaction to update level and relationships
     const level = await prisma.$transaction(async (tx) => {

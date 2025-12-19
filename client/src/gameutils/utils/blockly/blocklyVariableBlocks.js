@@ -27,6 +27,11 @@ export function defineVariableBlocks() {
     onVariableChange: function(event) {
       if (!event || !this.workspace) return;
       
+      // Don't create variables when block is in flyout (toolbox)
+      if (this.isInFlyout) {
+        return;
+      }
+      
       if (event.type === Blockly.Events.BLOCK_CHANGE && event.blockId === this.id) {
         if (event.name === 'VAR') {
           ensureVariableExists(this, 'VAR', 'i');
@@ -49,6 +54,11 @@ export function defineVariableBlocks() {
     
     onVariableChange: function(event) {
       if (!event || !this.workspace) return;
+      
+      // Don't create variables when block is in flyout (toolbox)
+      if (this.isInFlyout) {
+        return;
+      }
       
       if (event.type === Blockly.Events.BLOCK_CREATE && event.blockId === this.id) {
         setTimeout(() => {

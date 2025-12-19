@@ -46,6 +46,9 @@ import { highlightBlocks as highlightBlocksUtil, clearHighlights as clearHighlig
 import { handleRestartGame as handleRestartGameUtil, handleVictory as handleVictoryUtil } from './utils/gameHandlers';
 import { loadDfsExampleBlocks } from '../../gameutils/utils/blockly/loadDfsExample';
 import { loadBfsExampleBlocks } from '../../gameutils/utils/blockly/loadBfsExample';
+import { loadDijkstraExampleBlocks } from '../../gameutils/utils/blockly/loadDijkstraExample';
+import { loadPrimExampleBlocks } from '../../gameutils/utils/blockly/loadPrimExample';
+import { loadKruskalExampleBlocks } from '../../gameutils/utils/blockly/loadKruskalExample';
 
 /**
  * GameCore Component
@@ -175,6 +178,9 @@ const GameCore = ({
   const [partialWeaponKey, setPartialWeaponKey] = useState(null);
   const [earnedWeaponKey, setEarnedWeaponKey] = useState(null);
 
+  // Big O complexity state
+  const [userBigO, setUserBigO] = useState(null);
+
   // Hint system state
   const [hintData, setHintData] = useState({
     hint: "วาง blocks เพื่อเริ่มต้น",
@@ -204,6 +210,10 @@ const GameCore = ({
 
   // Person rescue state
   const [rescuedPeople, setRescuedPeople] = useState([]);
+
+  // Level-based hints (from DB) state for Need Hint button
+  const [levelHintIndex, setLevelHintIndex] = useState(0);
+  const [activeLevelHint, setActiveLevelHint] = useState(null);
 
   // Sync combat state with combat system
   useEffect(() => {
@@ -503,7 +513,9 @@ const GameCore = ({
     setBlocklyLoaded,
     setBlocklyJavaScriptReady,
     setCurrentHint,
-    initPhaserGame
+    initPhaserGame,
+    starter_xml: currentLevel?.starter_xml || null,
+    blocklyLoaded
   });
 
   // Code execution
@@ -628,12 +640,44 @@ const GameCore = ({
             currentHint={currentHint}
             hintData={hintData}
             hintOpen={hintOpen}
-            onToggleHint={() => setHintOpen(!hintOpen)}
+            onToggleHint={() => setHintOpen(false)}
             hintOpenCount={hintOpenCount}
+            levelHints={Array.isArray(currentLevel?.hints) ? currentLevel.hints : []}
+            activeLevelHint={activeLevelHint}
+            onNeedHintClick={() => {
+              const baseHints = Array.isArray(currentLevel?.hints)
+                ? [...currentLevel.hints]
+                    .filter(h => h.is_active !== false)
+                    .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+                : [];
+
+              console.log('🔔 [GameCore] Need Hint clicked (preview)', {
+                levelHintsLength: baseHints.length,
+                levelHintIndex,
+                needHintDisabled:
+                  !baseHints || baseHints.length === 0 || levelHintIndex >= baseHints.length
+              });
+
+              if (!baseHints || baseHints.length === 0 || levelHintIndex >= baseHints.length) return;
+
+              const nextHint = baseHints[levelHintIndex];
+              console.log('🔔 [GameCore] Next level hint selected:', nextHint);
+              setActiveLevelHint(nextHint);
+              setLevelHintIndex(levelHintIndex + 1);
+              setHintOpen(true);
+            }}
+            needHintDisabled={
+              !Array.isArray(currentLevel?.hints) ||
+              currentLevel.hints.filter(h => h.is_active !== false).length === 0 ||
+              levelHintIndex >= currentLevel.hints.filter(h => h.is_active !== false).length
+            }
             finalScore={finalScore}
             inCombatMode={inCombatMode}
             playerCoins={getCurrentGameState().playerCoins || []}
             rescuedPeople={rescuedPeople}
+            workspaceRef={workspaceRef}
+            userBigO={userBigO}
+            onUserBigOChange={setUserBigO}
           />
         </div>
 
@@ -671,6 +715,39 @@ const GameCore = ({
                 title="โหลด BFS example blocks (ชั่วคราว - สำหรับทดสอบ)"
               >
                 📦 โหลด BFS
+              </button>
+              <button
+                onClick={() => {
+                  if (workspaceRef.current) {
+                    loadDijkstraExampleBlocks(workspaceRef.current);
+                  }
+                }}
+                className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded"
+                title="โหลด Dijkstra example blocks (ชั่วคราว - สำหรับทดสอบ)"
+              >
+                📦 โหลด Dijkstra
+              </button>
+              <button
+                onClick={() => {
+                  if (workspaceRef.current) {
+                    loadPrimExampleBlocks(workspaceRef.current);
+                  }
+                }}
+                className="px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white text-sm rounded"
+                title="โหลด Prim example blocks (ชั่วคราว - สำหรับทดสอบ)"
+              >
+                📦 โหลด Prim
+              </button>
+              <button
+                onClick={() => {
+                  if (workspaceRef.current) {
+                    loadKruskalExampleBlocks(workspaceRef.current);
+                  }
+                }}
+                className="px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white text-sm rounded"
+                title="โหลด Kruskal example blocks (ชั่วคราว - สำหรับทดสอบ)"
+              >
+                📦 โหลด Kruskal
               </button>
             </div>
           )}
