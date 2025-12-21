@@ -120,6 +120,10 @@ model Level {
   coin_positions           Json?
   people                   Json?
   treasures                Json?
+  knapsack_data            Json? // Knapsack problem data: { capacity, bag: {x, y, label}, items: [{id, weight, price, label, x, y}] }
+  subset_sum_data          Json? // Subset Sum problem data: { warriors: [power], target_sum, side1: {x, y, label}, side2: {x, y, label}, warriors_display: [{power, id, x, y}] }
+  coin_change_data         Json? // Coin Change problem data: { monster_power, warriors: [power] } - ตำแหน่งการแสดงผล fix ไว้ในโค้ด
+  nqueen_data              Json? // N-Queen problem data: { n } - ขนาดตาราง n x n (ตารางต้องเป็นสี่เหลี่ยมจัตุรัส)
   starter_xml              String? // Blockly XML สำหรับ starter blocks (โหลดให้ผู้เล่นทุกคน)
   created_at               DateTime                @default(now())
   updated_at               DateTime                @updatedAt

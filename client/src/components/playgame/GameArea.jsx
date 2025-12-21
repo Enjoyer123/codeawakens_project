@@ -40,24 +40,6 @@ const GameArea = ({
   
   // ใช้ bestPattern.count ถ้ามี หรือใช้ totalBlocks เป็น fallback
   const patternBlockCount = hintData?.bestPattern?.count || hintData?.totalBlocks || null;
-  
-  console.log('🔍 [GameArea] Block count debug:', {
-    currentBlockCount,
-    patternBlockCount,
-    hasBestPattern: !!hintData?.bestPattern,
-    bestPatternName: hintData?.bestPattern?.name,
-    bestPatternCount: hintData?.bestPattern?.count,
-    totalBlocks: hintData?.totalBlocks
-  });
-
-  console.log('🔍 [GameArea] render Assist panel state:', {
-    onNeedHintClickType: typeof onNeedHintClick,
-    hasLevelHints: Array.isArray(levelHints) && levelHints.length > 0,
-    levelHintsLength: levelHints?.length || 0,
-    hintOpen,
-    needHintDisabled,
-    hasActiveLevelHint: !!activeLevelHint,
-  });
 
   const closeDetail = () => setViewerData(null);
 
@@ -382,13 +364,6 @@ const GameArea = ({
                 {/* Popup Hint Overlay */}
                 {hintOpen && activeLevelHint && (
                   <div className="fixed inset-0 z-40 flex items-center justify-center">
-                    {console.log('🔍 [GameArea] Rendering Hint Popup:', {
-                      hintOpen,
-                      activeLevelHint,
-                      title: activeLevelHint?.title,
-                      hasImages: !!activeLevelHint?.hint_images?.length,
-                      imageCount: activeLevelHint?.hint_images?.length || 0
-                    })}
                     <div className="absolute inset-0 bg-black/60" />
                     <div className="relative z-50 bg-stone-900 rounded-2xl border border-yellow-700/80 shadow-2xl max-w-4xl w-[96%] max-h-[85vh] p-8 overflow-y-auto">
                       <div className="flex items-center justify-between mb-2">

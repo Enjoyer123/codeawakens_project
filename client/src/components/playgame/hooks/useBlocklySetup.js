@@ -7,6 +7,7 @@ import * as Blockly from "blockly";
 import "blockly/blocks";
 import "blockly/javascript";
 import "blockly/msg/en";
+import { javascriptGenerator } from "blockly/javascript";
 import {
   createToolboxConfig,
   ensureStandardBlocks,
@@ -404,6 +405,18 @@ export function useBlocklySetup({
         
         console.log("🔧 Defining JavaScript generators...");
         defineAllGenerators();
+        
+        // CRITICAL: Force override procedures_defreturn generator AFTER defineAllGenerators
+        // This ensures our custom generator is used, not the default one
+        const customProcGen = javascriptGenerator.forBlock["procedures_defreturn"];
+        if (customProcGen) {
+          javascriptGenerator.forBlock["procedures_defreturn"] = customProcGen;
+          console.log("✅ Force override procedures_defreturn generator");
+        }
+        
+        // Verify that custom generator was set
+        console.log("🔍 Verifying procedures_defreturn generator:", typeof javascriptGenerator.forBlock["procedures_defreturn"]);
+        console.log("🔍 Generator is custom:", javascriptGenerator.forBlock["procedures_defreturn"]?.toString().includes('CUSTOM GENERATOR'));
 
         // Create toolbox
         console.log("🔧 Creating toolbox");
@@ -632,24 +645,8 @@ export function useBlocklySetup({
     return result;
   };
 
-  // Debug: Log starter_xml prop
-  console.log('🔍 [useBlocklySetup] starter_xml prop:', {
-    has_starter_xml: !!starter_xml,
-    starter_xml_type: typeof starter_xml,
-    starter_xml_length: starter_xml ? starter_xml.length : 0,
-    starter_xml_preview: starter_xml ? starter_xml.substring(0, 100) : null,
-    lastLoadedXml: lastLoadedXmlRef.current ? lastLoadedXmlRef.current.substring(0, 100) : null
-  });
-  
   // Load starter XML when workspace is ready
   useEffect(() => {
-    console.log('🔍 [useBlocklySetup] useEffect triggered for starter XML:', {
-      has_starter_xml: !!starter_xml,
-      has_workspace: !!workspaceRef.current,
-      blocklyLoaded,
-      lastLoadedXml: lastLoadedXmlRef.current ? 'exists' : 'null',
-      starter_xml_preview: starter_xml ? starter_xml.substring(0, 100) : null
-    });
     
     // Check if workspace is ready - but don't require blocklyLoaded to be true
     // because workspace might be ready before blocklyLoaded is set

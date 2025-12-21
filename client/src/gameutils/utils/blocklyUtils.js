@@ -235,7 +235,26 @@ export {
   treasureCollected,
   stackEmpty,
   stackCount,
-  clearStack
+  clearStack,
+  selectKnapsackItemVisual,
+  unselectKnapsackItemVisual,
+  resetKnapsackItemsVisual,
+  knapsackMaxWithVisual,
+  resetKnapsackSelectionTracking,
+  startKnapsackSelectionTracking,
+  showKnapsackFinalSelection,
+  addWarriorToSide1Visual,
+  addWarriorToSide2Visual,
+  resetSubsetSumWarriorsVisual,
+  startSubsetSumTrackingVisual,
+  showSubsetSumFinalSolutionVisual,
+  resetSubsetSumTrackingVisual,
+  addWarriorToSelectionVisual,
+  resetCoinChangeVisualDisplay,
+  resetCoinChangeSelectionTrackingWrapper as resetCoinChangeSelectionTracking,
+  startCoinChangeSelectionTrackingWrapper as startCoinChangeSelectionTracking,
+  trackCoinChangeDecisionWrapper as trackCoinChangeDecision,
+  showCoinChangeFinalSolutionWrapper as showCoinChangeFinalSolution
 } from './blockly/blocklyHelpers';
 
 // Re-export DFS visual feedback functions

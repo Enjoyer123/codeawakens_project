@@ -91,7 +91,11 @@ export function useLevelLoader({
         
         // Helper functions for data normalization
         const safeParse = (data, defaultValue = []) => {
-          if (!data) return defaultValue;
+          if (data === null || data === undefined) return defaultValue;
+          // If data is already an object (parsed by Prisma), return it
+          if (typeof data === 'object' && !Array.isArray(data)) {
+            return data;
+          }
           if (typeof data === 'string') {
             try {
               return JSON.parse(data);
@@ -297,6 +301,10 @@ export function useLevelLoader({
           coins: safeParse(levelResponse.coins, []),
           people: safeParse(levelResponse.people, []),
           treasures: safeParse(levelResponse.treasures, []),
+          knapsackData: safeParse(levelResponse.knapsack_data, null),
+          subsetSumData: safeParse(levelResponse.subset_sum_data, null),
+          coinChangeData: safeParse(levelResponse.coin_change_data, null),
+          nqueenData: safeParse(levelResponse.nqueen_data, null),
           enabledBlocks: enabledBlocksObj,
           victoryConditions,
           guides,

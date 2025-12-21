@@ -48,7 +48,11 @@ import { loadDfsExampleBlocks } from '../../gameutils/utils/blockly/loadDfsExamp
 import { loadBfsExampleBlocks } from '../../gameutils/utils/blockly/loadBfsExample';
 import { loadDijkstraExampleBlocks } from '../../gameutils/utils/blockly/loadDijkstraExample';
 import { loadPrimExampleBlocks } from '../../gameutils/utils/blockly/loadPrimExample';
+import { loadKnapsackExampleBlocks } from '../../gameutils/utils/blockly/loadKnapsackExample';
 import { loadKruskalExampleBlocks } from '../../gameutils/utils/blockly/loadKruskalExample';
+import { loadSubsetSumExampleBlocks } from '../../gameutils/utils/blockly/loadSubsetSumExample';
+import { loadCoinChangeExampleBlocks } from '../../gameutils/utils/blockly/loadCoinChangeExample';
+import { loadNQueenExampleBlocks } from '../../gameutils/utils/blockly/loadNQueenExample';
 
 /**
  * GameCore Component
@@ -684,16 +688,18 @@ const GameCore = ({
         {/* Blockly Area - 35% ของหน้าจอ */}
         <div className="w-[35%] border-l border-black flex flex-col bg-gray-800/50 backdrop-blur-sm overflow-hidden">
           <div className="bg-stone-900 p-4 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-bold text-white">
-                  {currentLevel?.level_name || `ด่าน ${levelId}`}
-                  {isPreview && <span className="ml-2 text-yellow-400 text-sm">(Preview)</span>}
-                </h2>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-white">
+                    {currentLevel?.level_name || `ด่าน ${levelId}`}
+                    {isPreview && <span className="ml-2 text-yellow-400 text-sm">(Preview)</span>}
+                  </h2>
+                </div>
               </div>
           {/* Temporary buttons to load example blocks - Remove after development */}
           {workspaceRef.current && (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => {
                   if (workspaceRef.current) {
@@ -748,6 +754,50 @@ const GameCore = ({
                 title="โหลด Kruskal example blocks (ชั่วคราว - สำหรับทดสอบ)"
               >
                 📦 โหลด Kruskal
+              </button>
+              <button
+                onClick={() => {
+                  if (workspaceRef.current) {
+                    loadKnapsackExampleBlocks(workspaceRef.current);
+                  }
+                }}
+                className="px-3 py-1 bg-pink-600 hover:bg-pink-700 text-white text-sm rounded"
+                title="โหลด Knapsack example blocks (ชั่วคราว - สำหรับทดสอบ)"
+              >
+                📦 โหลด Knapsack
+              </button>
+              <button
+                onClick={() => {
+                  if (workspaceRef.current) {
+                    loadSubsetSumExampleBlocks(workspaceRef.current);
+                  }
+                }}
+                className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded"
+                title="โหลด Subset Sum example blocks (ชั่วคราว - สำหรับทดสอบ)"
+              >
+                ➕ โหลด Subset Sum
+              </button>
+              <button
+                onClick={() => {
+                  if (workspaceRef.current) {
+                    loadCoinChangeExampleBlocks(workspaceRef.current);
+                  }
+                }}
+                className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded"
+                title="โหลด Coin Change example blocks (ชั่วคราว - สำหรับทดสอบ)"
+              >
+                🪙 โหลด Coin Change
+              </button>
+              <button
+                onClick={() => {
+                  if (workspaceRef.current) {
+                    loadNQueenExampleBlocks(workspaceRef.current);
+                  }
+                }}
+                className="px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white text-sm rounded"
+                title="โหลด N-Queen example blocks (ชั่วคราว - สำหรับทดสอบ)"
+              >
+                👑 โหลด N-Queen
               </button>
             </div>
           )}

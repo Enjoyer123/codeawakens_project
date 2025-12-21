@@ -32,6 +32,9 @@ import { clearGameOverScreen, showGameOver } from '../../gameutils/utils/phaserG
 import { createToolboxConfig } from '../../gameutils/utils/blocklyUtils';
 import { loadDfsExampleBlocks } from '../../gameutils/utils/blockly/loadDfsExample';
 import { loadBfsExampleBlocks } from '../../gameutils/utils/blockly/loadBfsExample';
+import { loadKnapsackExampleBlocks } from '../../gameutils/utils/blockly/loadKnapsackExample';
+import { loadSubsetSumExampleBlocks } from '../../gameutils/utils/blockly/loadSubsetSumExample';
+import { loadCoinChangeExampleBlocks } from '../../gameutils/utils/blockly/loadCoinChangeExample';
 import { loadDijkstraExampleBlocks } from '../../gameutils/utils/blockly/loadDijkstraExample';
 import { loadPrimExampleBlocks } from '../../gameutils/utils/blockly/loadPrimExample';
 
@@ -744,15 +747,17 @@ const LevelGame = () => {
         <div className="w-[35%] border-l border-black flex flex-col bg-gray-800/50 backdrop-blur-sm overflow-hidden">
           {/* Level Header - Simplified */}
           <div className="bg-stone-900 p-4  shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-bold text-white">
-                  {currentLevel?.name || `ด่าน ${levelId}`}
-                </h2>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-white">
+                    {currentLevel?.name || `ด่าน ${levelId}`}
+                  </h2>
+                </div>
               </div>
           {/* Temporary buttons to load example blocks - Remove after development */}
           {workspaceRef.current && (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => {
                   if (workspaceRef.current) {
@@ -796,6 +801,39 @@ const LevelGame = () => {
                 title="โหลด Prim example blocks (ชั่วคราว - สำหรับทดสอบ)"
               >
                 📦 โหลด Prim
+              </button>
+              <button
+                onClick={() => {
+                  if (workspaceRef.current) {
+                    loadKnapsackExampleBlocks(workspaceRef.current);
+                  }
+                }}
+                className="px-3 py-1 bg-pink-600 hover:bg-pink-700 text-white text-sm rounded"
+                title="โหลด Knapsack example blocks (ชั่วคราว - สำหรับทดสอบ)"
+              >
+                📦 โหลด Knapsack
+              </button>
+              <button
+                onClick={() => {
+                  if (workspaceRef.current) {
+                    loadSubsetSumExampleBlocks(workspaceRef.current);
+                  }
+                }}
+                className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded"
+                title="โหลด Subset Sum example blocks (ชั่วคราว - สำหรับทดสอบ)"
+              >
+                ➕ โหลด Subset Sum
+              </button>
+              <button
+                onClick={() => {
+                  if (workspaceRef.current) {
+                    loadCoinChangeExampleBlocks(workspaceRef.current);
+                  }
+                }}
+                className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded"
+                title="โหลด Coin Change example blocks (ชั่วคราว - สำหรับทดสอบ)"
+              >
+                🪙 โหลด Coin Change
               </button>
             </div>
           )}

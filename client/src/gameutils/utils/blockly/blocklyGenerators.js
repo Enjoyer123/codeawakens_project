@@ -59,6 +59,7 @@ function defineDictionaryGenerators() {
 }
 
 export function defineAllGenerators() {
+  console.log('[defineAllGenerators] Starting generator definition...');
   // Dictionary generators (must be called first)
   defineDictionaryGenerators();
   
@@ -94,13 +95,134 @@ export function defineAllGenerators() {
     const condition = javascriptGenerator.valueToCode(block, 'CONDITION', javascriptGenerator.ORDER_NONE) || 'false';
     const ifCode = javascriptGenerator.statementToCode(block, 'IF_DO');
     const elseCode = javascriptGenerator.statementToCode(block, 'ELSE_DO');
+    // Blockly automatically handles next blocks via statementToCode in parent generators
+    // The parent block generator (e.g., procedures_defreturn) will call statementToCode
+    // which will automatically process the next connection chain
     return `if (${condition}) {\n${ifCode}} else {\n${elseCode}}\n`;
   };
 
   javascriptGenerator.forBlock["if_only"] = function (block) {
     const condition = javascriptGenerator.valueToCode(block, 'CONDITION', javascriptGenerator.ORDER_NONE) || 'false';
-    const doCode = javascriptGenerator.statementToCode(block, 'DO');
-    return `if (${condition}) {\n${doCode}}\n`;
+    let doCode = javascriptGenerator.statementToCode(block, 'DO');
+    
+    // CRITICAL FIX: statementToCode may not process all next chains in statements
+    // Manually traverse the entire chain to find any blocks that weren't processed
+    const doBlock = block.getInputTargetBlock('DO');
+    if (doBlock) {
+      // Helper function to traverse next chains and find return statements
+      const traverseForReturns = (startBlock) => {
+        let code = '';
+        let currentBlock = startBlock;
+        let processedIds = new Set();
+        
+        while (currentBlock && !processedIds.has(currentBlock.id)) {
+          processedIds.add(currentBlock.id);
+          
+          // Check if this is a return block
+          if (currentBlock.type === 'procedures_return') {
+            try {
+              const returnCode = javascriptGenerator.blockToCode(currentBlock);
+              if (returnCode) {
+                const codeStr = typeof returnCode === 'string' ? returnCode : (Array.isArray(returnCode) ? returnCode[0] : '');
+                if (codeStr && codeStr.trim()) {
+                  code += codeStr;
+                  console.log('[if_only generator] 🔧 Found return statement in chain:', codeStr);
+                }
+              }
+            } catch (e) {
+              console.warn('[if_only generator] Error processing return block:', e);
+            }
+          }
+          
+          // Also check for nested next chains in loops (e.g., for_loop_dynamic)
+          // Some blocks may have nested next connections that statementToCode doesn't process
+          if (currentBlock.type === 'for_loop_dynamic' || currentBlock.type === 'controls_for') {
+            // Check if the loop has a next block after it
+            if (currentBlock.nextConnection && currentBlock.nextConnection.targetBlock()) {
+              const nextAfterLoop = currentBlock.nextConnection.targetBlock();
+              code += traverseForReturns(nextAfterLoop);
+            }
+          }
+          
+          // Move to next block in chain
+          if (currentBlock.nextConnection && currentBlock.nextConnection.targetBlock()) {
+            currentBlock = currentBlock.nextConnection.targetBlock();
+          } else {
+            break;
+          }
+        }
+        
+        return code;
+      };
+      
+      // Check if doCode already includes return statements in base case context
+      // For N-Queen, we specifically look for "return solution" in base case
+      const hasReturnSolution = doCode.includes('return solution');
+      
+      // If not, manually traverse the entire chain to find return statements
+      if (!hasReturnSolution) {
+        const manuallyProcessedCode = traverseForReturns(doBlock);
+        
+        // If we found additional code, append it
+        if (manuallyProcessedCode.trim()) {
+          console.log('[if_only generator] 🔧 Manually processed additional code:', manuallyProcessedCode);
+          doCode += manuallyProcessedCode;
+        }
+      }
+    }
+    
+    // CRITICAL FIX: Process <next> blocks (e.g., recursive case after if block)
+    // These blocks are NOT in the DO statement, but are connected via nextConnection
+    let nextCode = '';
+    const hasNextConnection = block.nextConnection && block.nextConnection.targetBlock();
+    console.log('[if_only generator] 🔍 Checking next connection:', {
+      hasNextConnection: !!hasNextConnection,
+      blockType: block.type,
+      blockId: block.id
+    });
+    
+    if (hasNextConnection) {
+      let currentBlock = block.nextConnection.targetBlock();
+      let processedIds = new Set();
+      
+      console.log('[if_only generator] 🔍 Found next block:', currentBlock.type, currentBlock.id);
+      
+      while (currentBlock && !processedIds.has(currentBlock.id)) {
+        processedIds.add(currentBlock.id);
+        
+        try {
+          const blockCode = javascriptGenerator.blockToCode(currentBlock);
+          if (blockCode) {
+            const codeStr = typeof blockCode === 'string' ? blockCode : (Array.isArray(blockCode) ? blockCode[0] : '');
+            if (codeStr && codeStr.trim()) {
+              nextCode += codeStr;
+              console.log('[if_only generator] 🔧 Processed next block:', currentBlock.type, '- code length:', codeStr.length);
+              console.log('[if_only generator] 🔧 Next block code preview:', codeStr.substring(0, 200));
+            }
+          }
+        } catch (e) {
+          console.warn('[if_only generator] Error processing next block:', currentBlock.type, e);
+        }
+        
+        // Move to next block in chain
+        if (currentBlock.nextConnection && currentBlock.nextConnection.targetBlock()) {
+          currentBlock = currentBlock.nextConnection.targetBlock();
+        } else {
+          break;
+        }
+      }
+      
+      if (nextCode.trim()) {
+        console.log('[if_only generator] ✅ Total next code length:', nextCode.length);
+        console.log('[if_only generator] ✅ Next code preview:', nextCode.substring(0, 500));
+      } else {
+        console.warn('[if_only generator] ⚠️ No code generated from next blocks');
+      }
+    } else {
+      console.log('[if_only generator] ℹ️ No next connection found');
+    }
+    
+    return `if (${condition}) {\n${doCode}}${nextCode}\n`;
   };
 
   javascriptGenerator.forBlock["if_return"] = function (block) {
@@ -118,16 +240,22 @@ export function defineAllGenerators() {
     
     let op;
     switch (operator) {
-      case 'EQ': op = '==='; break;
-      case 'NEQ': op = '!=='; break;
+      case 'EQ': op = '=='; break;  // Use == instead of === for number comparison compatibility
+      case 'NEQ': op = '!='; break;
       case 'LT': op = '<'; break;
       case 'LTE': op = '<='; break;
       case 'GT': op = '>'; break;
       case 'GTE': op = '>='; break;
-      default: op = '===';
+      default: op = '==';
     }
     
-    return [`(${valueA} ${op} ${valueB})`, javascriptGenerator.ORDER_ATOMIC];
+    // Add safety check to prevent NaN errors when comparing undefined values
+    return [`(function() { 
+      const valA = ${valueA}; 
+      const valB = ${valueB}; 
+      if (valA === undefined || valA === null || (typeof valA === 'number' && isNaN(valA)) || valB === undefined || valB === null || (typeof valB === 'number' && isNaN(valB))) return false; 
+      return valA ${op} valB; 
+    })()`, javascriptGenerator.ORDER_ATOMIC];
   };
 
   javascriptGenerator.forBlock["logic_boolean"] = function (block) {
@@ -254,12 +382,49 @@ export function defineAllGenerators() {
     const to = javascriptGenerator.valueToCode(block, 'TO', javascriptGenerator.ORDER_ATOMIC) || '0';
     const branch = javascriptGenerator.statementToCode(block, 'DO');
     
+    // CRITICAL FIX: Process next blocks (e.g., return statements after loop completes)
+    // Manually traverse the next connection chain
+    let nextCode = '';
+    if (block.nextConnection && block.nextConnection.targetBlock()) {
+      let currentBlock = block.nextConnection.targetBlock();
+      let processedIds = new Set();
+      
+      while (currentBlock && !processedIds.has(currentBlock.id)) {
+        processedIds.add(currentBlock.id);
+        
+        try {
+          const blockCode = javascriptGenerator.blockToCode(currentBlock);
+          if (blockCode) {
+            const codeStr = typeof blockCode === 'string' ? blockCode : (Array.isArray(blockCode) ? blockCode[0] : '');
+            if (codeStr && codeStr.trim()) {
+              nextCode += codeStr;
+              console.log('[for_loop_dynamic generator] 🔧 Processed next block:', currentBlock.type, '- code:', codeStr.substring(0, 50));
+            }
+          }
+        } catch (e) {
+          console.warn('[for_loop_dynamic generator] Error processing next block:', currentBlock.type, e);
+        }
+        
+        // Move to next block in chain
+        if (currentBlock.nextConnection && currentBlock.nextConnection.targetBlock()) {
+          currentBlock = currentBlock.nextConnection.targetBlock();
+        } else {
+          break;
+        }
+      }
+      
+      if (nextCode.trim()) {
+        console.log('[for_loop_dynamic generator] ✅ Total next code length:', nextCode.length);
+      }
+    }
+    
     const code = `
     const fromValue = ${from};
     const toValue = ${to};
     for (let ${variable} = fromValue; ${variable} <= toValue; ${variable}++) {
         ${branch}
     }
+    ${nextCode}
     `;
     return code;
   };
@@ -289,6 +454,104 @@ export function defineAllGenerators() {
     }
     
     return [`(${valueA} ${op} ${valueB})`, javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock["math_max"] = function (block) {
+    const a = javascriptGenerator.valueToCode(block, 'A', javascriptGenerator.ORDER_ATOMIC);
+    const b = javascriptGenerator.valueToCode(block, 'B', javascriptGenerator.ORDER_ATOMIC);
+    
+    const valueA = (a && a.trim()) ? a : '0';
+    const valueB = (b && b.trim()) ? b : '0';
+    
+    // Check if this is inside a knapsack function
+    try {
+      let parentBlock = block.getParent();
+      let isKnapsack = false;
+      
+      // Walk up the block tree to find the function definition
+      while (parentBlock) {
+        if (parentBlock.type === 'procedures_defreturn') {
+          const funcName = parentBlock.getFieldValue('NAME') || '';
+          if (funcName.toLowerCase().includes('knapsack')) {
+            isKnapsack = true;
+            break;
+          }
+        }
+        parentBlock = parentBlock.getParent();
+      }
+      
+      // If this is knapsack, use knapsackMaxWithVisual to track selections
+      // (but don't show visual immediately - will show at the end)
+      if (isKnapsack) {
+        // Try to extract the item index 'i' from the function parameters
+        let funcDefBlock = block.getParent();
+        while (funcDefBlock && funcDefBlock.type !== 'procedures_defreturn') {
+          funcDefBlock = funcDefBlock.getParent();
+        }
+        
+        if (funcDefBlock) {
+          // Get parameter names (should be w, v, i, j for knapsack)
+          const paramNames = funcDefBlock.getVars();
+          // Parameter 'i' should be at index 2 (third parameter), 'j' at index 3
+          const iParamName = paramNames && paramNames.length > 2 ? paramNames[2] : 'i';
+          const jParamName = paramNames && paramNames.length > 3 ? paramNames[3] : 'j';
+          
+          // Use knapsackMaxWithVisual to track decisions at (i, j) state (will trace back at the end)
+          return [`await knapsackMaxWithVisual(${valueA}, ${valueB}, ${iParamName}, ${jParamName})`, javascriptGenerator.ORDER_FUNCTION_CALL];
+        }
+      }
+    } catch (e) {
+      // If any error, just return normally
+      console.debug('Error checking knapsack context in math_max:', e);
+    }
+    
+    return [`Math.max(${valueA}, ${valueB})`, javascriptGenerator.ORDER_FUNCTION_CALL];
+  };
+
+  javascriptGenerator.forBlock["math_min"] = function (block) {
+    const a = javascriptGenerator.valueToCode(block, 'A', javascriptGenerator.ORDER_ATOMIC);
+    const b = javascriptGenerator.valueToCode(block, 'B', javascriptGenerator.ORDER_ATOMIC);
+    
+    const valueA = (a && a.trim()) ? a : '0';
+    const valueB = (b && b.trim()) ? b : '0';
+    
+    return [`Math.min(${valueA}, ${valueB})`, javascriptGenerator.ORDER_FUNCTION_CALL];
+  };
+
+  // Knapsack visual feedback generators
+  javascriptGenerator.forBlock["knapsack_select_item"] = function (block) {
+    const itemIndex = javascriptGenerator.valueToCode(block, 'ITEM_INDEX', javascriptGenerator.ORDER_NONE) || '0';
+    return `await selectKnapsackItemVisual(${itemIndex});\n`;
+  };
+
+  javascriptGenerator.forBlock["knapsack_unselect_item"] = function (block) {
+    const itemIndex = javascriptGenerator.valueToCode(block, 'ITEM_INDEX', javascriptGenerator.ORDER_NONE) || '0';
+    return `await unselectKnapsackItemVisual(${itemIndex});\n`;
+  };
+
+  // Subset Sum visual feedback generators
+  javascriptGenerator.forBlock["subset_sum_add_warrior_to_side1"] = function (block) {
+    const warriorIndex = javascriptGenerator.valueToCode(block, 'WARRIOR_INDEX', javascriptGenerator.ORDER_NONE) || '0';
+    return `await addWarriorToSide1Visual(${warriorIndex});\n`;
+  };
+
+  // Coin Change visual feedback generators
+  javascriptGenerator.forBlock["coin_change_add_warrior_to_selection"] = function (block) {
+    const warriorIndex = javascriptGenerator.valueToCode(block, 'WARRIOR_INDEX', javascriptGenerator.ORDER_NONE) || '0';
+    return `await addWarriorToSelectionVisual(${warriorIndex});\n`;
+  };
+
+  javascriptGenerator.forBlock["coin_change_track_decision"] = function (block) {
+    const amount = javascriptGenerator.valueToCode(block, 'AMOUNT', javascriptGenerator.ORDER_NONE) || '0';
+    const index = javascriptGenerator.valueToCode(block, 'INDEX', javascriptGenerator.ORDER_NONE) || '0';
+    const include = javascriptGenerator.valueToCode(block, 'INCLUDE', javascriptGenerator.ORDER_NONE) || '-1';
+    const exclude = javascriptGenerator.valueToCode(block, 'EXCLUDE', javascriptGenerator.ORDER_NONE) || '-1';
+    return `trackCoinChangeDecision(${amount}, ${index}, ${include}, ${exclude});\n`;
+  };
+
+  javascriptGenerator.forBlock["subset_sum_add_warrior_to_side2"] = function (block) {
+    const warriorIndex = javascriptGenerator.valueToCode(block, 'WARRIOR_INDEX', javascriptGenerator.ORDER_NONE) || '0';
+    return `await addWarriorToSide2Visual(${warriorIndex});\n`;
   };
 
   javascriptGenerator.forBlock["text"] = function (block) {
@@ -438,30 +701,122 @@ export function defineAllGenerators() {
   // Override procedures_defreturn to generate async function
   // This is needed because we use await inside the function
   javascriptGenerator.forBlock["procedures_defreturn"] = function (block) {
+    console.log('[CUSTOM GENERATOR] procedures_defreturn called');
     const name = javascriptGenerator.nameDB_.getName(
       block.getFieldValue('NAME') || 'unnamed',
       Blockly.Names.NameType.PROCEDURE
     );
+    console.log('[CUSTOM GENERATOR] Function name:', name);
     const args = [];
-    const variables = block.getVars();
-    for (let i = 0; i < variables.length; i++) {
-      args[i] = javascriptGenerator.nameDB_.getName(
-        variables[i],
-        Blockly.Names.NameType.VARIABLE
-      );
+    // CRITICAL: Read function parameters ONLY from mutation DOM
+    // DO NOT use getVars() because it returns ALL variables in the function body (including loop variables like 'col')
+    // We only want parameters from the mutation, not variables from the function body
+    try {
+      if (block.mutationToDom) {
+        const mutation = block.mutationToDom();
+        if (mutation) {
+          // Use querySelectorAll for better compatibility
+          const argNodes = mutation.querySelectorAll ? mutation.querySelectorAll('arg') : mutation.getElementsByTagName('arg');
+          console.log('[CUSTOM GENERATOR] Mutation DOM arg nodes:', argNodes.length);
+          for (let i = 0; i < argNodes.length; i++) {
+            const argNode = argNodes[i];
+            const argName = argNode.getAttribute('name');
+            if (argName) {
+              // Use the argument name directly - it's already a variable name from mutation
+              args[i] = javascriptGenerator.nameDB_.getName(
+                argName,
+                Blockly.Names.NameType.VARIABLE
+              );
+            }
+          }
+        } else {
+          console.warn('[CUSTOM GENERATOR] mutationToDom() returned null or undefined');
+        }
+      } else {
+        console.warn('[CUSTOM GENERATOR] block.mutationToDom is not a function');
+      }
+      
+      // DO NOT use getVars() as fallback - it includes loop variables and other function body variables
+      // Only use mutation DOM to get parameters
+      console.log('[CUSTOM GENERATOR] Final args (from mutation only):', args);
+    } catch (e) {
+      console.error('[CUSTOM GENERATOR] Error reading function parameters:', e);
+      // If there's an error, args will remain empty array, which is correct for parameterless functions
     }
+    
+    // Add parameter validation for knapsack function
+    let paramValidation = '';
+    if (name.toLowerCase().includes('knapsack') && args.length === 4) {
+      // For knapsack(w, v, i, j), validate parameters
+      paramValidation = `
+        // Validate knapsack parameters
+        if (!Array.isArray(${args[0]}) || !Array.isArray(${args[1]}) || 
+            typeof ${args[2]} !== 'number' || isNaN(${args[2]}) ||
+            typeof ${args[3]} !== 'number' || isNaN(${args[3]})) {
+          console.error('knapsack: Invalid parameters', { w: ${args[0]}, v: ${args[1]}, i: ${args[2]}, j: ${args[3]} });
+          return 0;
+        }
+      `;
+    }
+    
+    // Add variable declarations for coinChange function
+    let localVarDeclarations = '';
+    if (name.toLowerCase().includes('coinchange')) {
+      // Declare local variables that are used but not parameters
+      const includeVar = javascriptGenerator.nameDB_.getName('include', Blockly.Names.NameType.VARIABLE);
+      const excludeVar = javascriptGenerator.nameDB_.getName('exclude', Blockly.Names.NameType.VARIABLE);
+      const includeResultVar = javascriptGenerator.nameDB_.getName('includeResult', Blockly.Names.NameType.VARIABLE);
+      localVarDeclarations = `let ${includeVar}, ${excludeVar}, ${includeResultVar};\n`;
+    }
+    
     const argsString = args.length > 0 ? args.join(', ') : '';
     const branch = javascriptGenerator.statementToCode(block, 'STACK');
     
     // Generate async function
     // The branch already contains return statements from procedures_return blocks
-    const code = `async function ${name}(${argsString}) {\n${branch}}`;
+    const code = `async function ${name}(${argsString}) {\n${paramValidation}${localVarDeclarations}${branch}}`;
+    console.log('[CUSTOM GENERATOR] Generated code:', code.substring(0, 200));
+    console.log('[CUSTOM GENERATOR] Generator function:', typeof javascriptGenerator.forBlock["procedures_defreturn"]);
     return code;
   };
+  
+  // Verify that our generator was set
+  console.log('[defineAllGenerators] procedures_defreturn generator set:', typeof javascriptGenerator.forBlock["procedures_defreturn"]);
 
   // Return statement generator for procedures_defreturn
   javascriptGenerator.forBlock["procedures_return"] = function (block) {
     const value = javascriptGenerator.valueToCode(block, 'VALUE', javascriptGenerator.ORDER_NONE) || 'null';
+    
+    // Check if we're inside a knapsack function and the return value uses math_max
+    // If so, add visual feedback for item selection
+    try {
+      let parentBlock = block.getParent();
+      let isKnapsack = false;
+      
+      // Walk up the block tree to find the function definition
+      while (parentBlock) {
+        if (parentBlock.type === 'procedures_defreturn') {
+          const funcName = parentBlock.getFieldValue('NAME') || '';
+          if (funcName.toLowerCase().includes('knapsack')) {
+            isKnapsack = true;
+            break;
+          }
+        }
+        parentBlock = parentBlock.getParent();
+      }
+      
+      // If this is knapsack and value contains math_max, it's the final return
+      // We'll add visual feedback by wrapping the return value
+      if (isKnapsack && typeof value === 'string' && value.includes('Math.max')) {
+        // Extract the variable i from the function context (would need to parse, but simpler approach)
+        // For now, we'll just return normally - visual feedback will be handled differently
+        return `return ${value};\n`;
+      }
+    } catch (e) {
+      // If any error, just return normally
+      console.debug('Error checking knapsack context:', e);
+    }
+    
     return `return ${value};\n`;
   };
 
@@ -469,57 +824,187 @@ export function defineAllGenerators() {
   javascriptGenerator.forBlock["procedures_callreturn"] = function (block) {
     // Get procedure name - try multiple methods
     let procedureName = null;
+    let isNQueenHelper = false;
+    
     try {
-      // Try getProcParam first (Blockly standard method)
-      if (typeof block.getProcParam === 'function') {
-        procedureName = block.getProcParam();
+      // CRITICAL: For N-Queen helper functions, check mutation FIRST (most reliable source)
+      // Mutation has: <mutation name="safe"> or <mutation name="place"> or <mutation name="remove">
+      if (block.mutationToDom) {
+        try {
+          const mutation = block.mutationToDom();
+          if (mutation) {
+            // Try multiple ways to get the name attribute
+            let mutationName = null;
+            if (mutation.getAttribute) {
+              mutationName = mutation.getAttribute('name');
+            } else if (mutation.getAttributeNS) {
+              mutationName = mutation.getAttributeNS(null, 'name');
+            } else if (mutation.attributes && mutation.attributes.name) {
+              mutationName = mutation.attributes.name.value;
+            } else if (mutation.querySelector) {
+              // If mutation is a document, try to get the mutation element
+              const mutationEl = mutation.querySelector ? mutation.querySelector('mutation') : mutation;
+              if (mutationEl && mutationEl.getAttribute) {
+                mutationName = mutationEl.getAttribute('name');
+              }
+            }
+            
+            console.log(`[blocklyGenerators] 🔍 Mutation element:`, mutation);
+            console.log(`[blocklyGenerators] 🔍 Mutation name extracted: "${mutationName}"`);
+            
+            // For N-Queen helper functions, use mutation name directly
+            if (mutationName && (mutationName === 'safe' || mutationName === 'place' || mutationName === 'remove')) {
+              procedureName = mutationName;
+              isNQueenHelper = true;
+              console.log(`[blocklyGenerators] ✅ Found N-Queen helper name from mutation attribute: ${procedureName}`);
+            }
+          }
+        } catch (e) {
+          console.warn('Error reading mutation:', e);
+        }
       }
-      // Fallback to getFieldValue
+      
+      // CRITICAL: Check NAME field (should match mutation) - but ONLY if mutation didn't give us a name
+      // For N-Queen helper functions, we trust mutation/NAME field over getProcParam()
       if (!procedureName) {
         const nameField = block.getField('NAME');
         if (nameField) {
-          procedureName = nameField.getValue();
+          const nameFromField = nameField.getValue();
+          if (nameFromField === 'safe' || nameFromField === 'place' || nameFromField === 'remove') {
+            procedureName = nameFromField;
+            isNQueenHelper = true;
+            console.log(`[blocklyGenerators] ✅ Found N-Queen helper name from NAME field: "${procedureName}"`);
+          } else if (nameFromField) {
+            procedureName = nameFromField;
+            console.log(`[blocklyGenerators] procedures_callreturn: Got name from NAME field: "${procedureName}"`);
+          }
         }
       }
-      // Last resort: try getFieldValue directly
+      
+      // Fallback to getFieldValue directly
       if (!procedureName) {
-        procedureName = block.getFieldValue('NAME');
+        const nameFromGetFieldValue = block.getFieldValue('NAME');
+        if (nameFromGetFieldValue === 'safe' || nameFromGetFieldValue === 'place' || nameFromGetFieldValue === 'remove') {
+          procedureName = nameFromGetFieldValue;
+          isNQueenHelper = true;
+          console.log(`[blocklyGenerators] ✅ Found N-Queen helper name from getFieldValue: "${procedureName}"`);
+        } else if (nameFromGetFieldValue) {
+          procedureName = nameFromGetFieldValue;
+          console.log(`[blocklyGenerators] procedures_callreturn: Got name from getFieldValue: "${procedureName}"`);
+        }
+      }
+      
+      // CRITICAL: For N-Queen helper functions, NEVER use getProcParam() as it resolves to wrong procedure
+      // getProcParam() may resolve to 'solve' from workspace procedure map
+      // Only use getProcParam() if we don't have a name yet AND it's not an N-Queen helper function
+      if (!procedureName && !isNQueenHelper && typeof block.getProcParam === 'function') {
+        procedureName = block.getProcParam();
+        console.log(`[blocklyGenerators] procedures_callreturn: Got name from getProcParam: "${procedureName}"`);
+      }
+      
+      // CRITICAL: Final check BEFORE generating code - if procedureName is 'solve' but mutation/NAME says safe/place/remove
+      // This prevents Blockly from resolving to wrong procedure name
+      if (procedureName === 'solve') {
+        // Check mutation first
+        if (block.mutationToDom) {
+          try {
+            const mutation = block.mutationToDom();
+            if (mutation) {
+              // Try multiple ways to get the name attribute
+              let mutationName = null;
+              if (mutation.getAttribute) {
+                mutationName = mutation.getAttribute('name');
+              } else if (mutation.getAttributeNS) {
+                mutationName = mutation.getAttributeNS(null, 'name');
+              } else if (mutation.attributes && mutation.attributes.name) {
+                mutationName = mutation.attributes.name.value;
+              } else if (mutation.querySelector) {
+                const mutationEl = mutation.querySelector ? mutation.querySelector('mutation') : mutation;
+                if (mutationEl && mutationEl.getAttribute) {
+                  mutationName = mutationEl.getAttribute('name');
+                }
+              }
+              
+              if (mutationName === 'safe' || mutationName === 'place' || mutationName === 'remove') {
+                console.warn(`[blocklyGenerators] ⚠️ Override: procedureName was 'solve' but mutation says '${mutationName}'. Using mutation.`);
+                procedureName = mutationName;
+              }
+            }
+          } catch (e) {
+            console.warn('Error checking mutation in final check:', e);
+          }
+        }
+        
+        // Also check NAME field
+        if (procedureName === 'solve') {
+          const nameFieldFinal = block.getField('NAME');
+          if (nameFieldFinal) {
+            const nameFromFieldFinal = nameFieldFinal.getValue();
+            if (nameFromFieldFinal === 'safe' || nameFromFieldFinal === 'place' || nameFromFieldFinal === 'remove') {
+              console.warn(`[blocklyGenerators] ⚠️ Override: procedureName was 'solve' but NAME field says '${nameFromFieldFinal}'. Using NAME field.`);
+              procedureName = nameFromFieldFinal;
+            }
+          }
+        }
+      }
+      
+      // Debug logging for ALL procedure calls (to debug N-Queen issue)
+      console.log(`[blocklyGenerators] procedures_callreturn: Final procedureName = "${procedureName}"`);
+      
+      // Debug logging for N-Queen helper functions
+      if (procedureName === 'safe' || procedureName === 'place' || procedureName === 'remove') {
+        console.log(`[blocklyGenerators] ✅ Confirmed N-Queen helper function: ${procedureName}`);
       }
     } catch (e) {
       console.warn('Error getting procedure name:', e);
     }
     
     // Validate procedure name
+    // CRITICAL: Don't fallback for N-Queen helper functions (safe, place, remove)
+    // These will be injected into the generated code
+    // Update isNQueenHelper flag if we have a procedure name
+    if (procedureName && (procedureName === 'safe' || procedureName === 'place' || procedureName === 'remove')) {
+      isNQueenHelper = true;
+    }
+    
     if (!procedureName || procedureName === 'unnamed' || procedureName === 'undefined' || 
         (typeof procedureName === 'string' && procedureName.trim() === '')) {
       // Invalid procedure name - try to get from workspace procedure map
-      console.warn('Procedure call block has invalid name, trying to fix:', procedureName);
-      
-      try {
-        const workspace = block.workspace;
-        if (workspace) {
-          const procedureMap = workspace.getProcedureMap();
-          if (procedureMap) {
-            const procedures = procedureMap.getProcedures();
-            if (procedures.length > 0) {
-              // Use first available procedure
-              procedureName = procedures[0].getName();
-              console.log('Using first available procedure:', procedureName);
-            } else {
-              // No procedures available - return null
-              console.warn('No procedures available in workspace');
-              return ['null', javascriptGenerator.ORDER_ATOMIC];
+      // BUT skip fallback for N-Queen helper functions
+      if (!isNQueenHelper) {
+        console.warn('Procedure call block has invalid name, trying to fix:', procedureName);
+        
+        try {
+          const workspace = block.workspace;
+          if (workspace) {
+            const procedureMap = workspace.getProcedureMap();
+            if (procedureMap) {
+              const procedures = procedureMap.getProcedures();
+              if (procedures.length > 0) {
+                // Use first available procedure
+                procedureName = procedures[0].getName();
+                console.log('Using first available procedure:', procedureName);
+              } else {
+                // No procedures available - return null
+                console.warn('No procedures available in workspace');
+                return ['null', javascriptGenerator.ORDER_ATOMIC];
+              }
             }
           }
+        } catch (e) {
+          console.warn('Error trying to fix procedure name:', e);
+          return ['null', javascriptGenerator.ORDER_ATOMIC];
         }
-      } catch (e) {
-        console.warn('Error trying to fix procedure name:', e);
-        return ['null', javascriptGenerator.ORDER_ATOMIC];
+      } else {
+        // For N-Queen helper functions, allow them even if not defined
+        // They will be injected into the generated code
+        console.log(`[blocklyGenerators] ✅ Allowing N-Queen helper function (will be injected): ${procedureName}`);
       }
       
-      // If still invalid after trying to fix
-      if (!procedureName || procedureName === 'unnamed' || procedureName === 'undefined' || 
-          (typeof procedureName === 'string' && procedureName.trim() === '')) {
+      // If still invalid after trying to fix (and not N-Queen helper)
+      const finalIsNQueenHelper = procedureName === 'safe' || procedureName === 'place' || procedureName === 'remove';
+      if (!finalIsNQueenHelper && (!procedureName || procedureName === 'unnamed' || procedureName === 'undefined' || 
+          (typeof procedureName === 'string' && procedureName.trim() === ''))) {
         return ['null', javascriptGenerator.ORDER_ATOMIC];
       }
     }
@@ -542,57 +1027,187 @@ export function defineAllGenerators() {
   javascriptGenerator.forBlock["procedures_callnoreturn"] = function (block) {
     // Get procedure name - try multiple methods
     let procedureName = null;
+    let isNQueenHelper = false;
+    
     try {
-      // Try getProcParam first (Blockly standard method)
-      if (typeof block.getProcParam === 'function') {
-        procedureName = block.getProcParam();
+      // CRITICAL: For N-Queen helper functions, check mutation FIRST (most reliable source)
+      // Mutation has: <mutation name="safe"> or <mutation name="place"> or <mutation name="remove">
+      if (block.mutationToDom) {
+        try {
+          const mutation = block.mutationToDom();
+          if (mutation) {
+            // Try multiple ways to get the name attribute
+            let mutationName = null;
+            if (mutation.getAttribute) {
+              mutationName = mutation.getAttribute('name');
+            } else if (mutation.getAttributeNS) {
+              mutationName = mutation.getAttributeNS(null, 'name');
+            } else if (mutation.attributes && mutation.attributes.name) {
+              mutationName = mutation.attributes.name.value;
+            } else if (mutation.querySelector) {
+              // If mutation is a document, try to get the mutation element
+              const mutationEl = mutation.querySelector ? mutation.querySelector('mutation') : mutation;
+              if (mutationEl && mutationEl.getAttribute) {
+                mutationName = mutationEl.getAttribute('name');
+              }
+            }
+            
+            console.log(`[blocklyGenerators] 🔍 Mutation element (no-return):`, mutation);
+            console.log(`[blocklyGenerators] 🔍 Mutation name extracted (no-return): "${mutationName}"`);
+            
+            // For N-Queen helper functions, use mutation name directly
+            if (mutationName && (mutationName === 'safe' || mutationName === 'place' || mutationName === 'remove')) {
+              procedureName = mutationName;
+              isNQueenHelper = true;
+              console.log(`[blocklyGenerators] ✅ Found N-Queen helper name from mutation attribute (no-return): ${procedureName}`);
+            }
+          }
+        } catch (e) {
+          console.warn('Error reading mutation (no-return):', e);
+        }
       }
-      // Fallback to getFieldValue
+      
+      // CRITICAL: Check NAME field (should match mutation) - but ONLY if mutation didn't give us a name
+      // For N-Queen helper functions, we trust mutation/NAME field over getProcParam()
       if (!procedureName) {
         const nameField = block.getField('NAME');
         if (nameField) {
-          procedureName = nameField.getValue();
+          const nameFromField = nameField.getValue();
+          if (nameFromField === 'safe' || nameFromField === 'place' || nameFromField === 'remove') {
+            procedureName = nameFromField;
+            isNQueenHelper = true;
+            console.log(`[blocklyGenerators] ✅ Found N-Queen helper name from NAME field (no-return): "${procedureName}"`);
+          } else if (nameFromField) {
+            procedureName = nameFromField;
+            console.log(`[blocklyGenerators] procedures_callnoreturn: Got name from NAME field: "${procedureName}"`);
+          }
         }
       }
-      // Last resort: try getFieldValue directly
+      
+      // Fallback to getFieldValue directly
       if (!procedureName) {
-        procedureName = block.getFieldValue('NAME');
+        const nameFromGetFieldValue = block.getFieldValue('NAME');
+        if (nameFromGetFieldValue === 'safe' || nameFromGetFieldValue === 'place' || nameFromGetFieldValue === 'remove') {
+          procedureName = nameFromGetFieldValue;
+          isNQueenHelper = true;
+          console.log(`[blocklyGenerators] ✅ Found N-Queen helper name from getFieldValue (no-return): "${procedureName}"`);
+        } else if (nameFromGetFieldValue) {
+          procedureName = nameFromGetFieldValue;
+          console.log(`[blocklyGenerators] procedures_callnoreturn: Got name from getFieldValue: "${procedureName}"`);
+        }
+      }
+      
+      // CRITICAL: For N-Queen helper functions, NEVER use getProcParam() as it resolves to wrong procedure
+      // getProcParam() may resolve to 'solve' from workspace procedure map
+      // Only use getProcParam() if we don't have a name yet AND it's not an N-Queen helper function
+      if (!procedureName && !isNQueenHelper && typeof block.getProcParam === 'function') {
+        procedureName = block.getProcParam();
+        console.log(`[blocklyGenerators] procedures_callnoreturn: Got name from getProcParam: "${procedureName}"`);
+      }
+      
+      // CRITICAL: Final check BEFORE generating code - if procedureName is 'solve' but mutation/NAME says safe/place/remove
+      // This prevents Blockly from resolving to wrong procedure name
+      if (procedureName === 'solve') {
+        // Check mutation first
+        if (block.mutationToDom) {
+          try {
+            const mutation = block.mutationToDom();
+            if (mutation) {
+              // Try multiple ways to get the name attribute
+              let mutationName = null;
+              if (mutation.getAttribute) {
+                mutationName = mutation.getAttribute('name');
+              } else if (mutation.getAttributeNS) {
+                mutationName = mutation.getAttributeNS(null, 'name');
+              } else if (mutation.attributes && mutation.attributes.name) {
+                mutationName = mutation.attributes.name.value;
+              } else if (mutation.querySelector) {
+                const mutationEl = mutation.querySelector ? mutation.querySelector('mutation') : mutation;
+                if (mutationEl && mutationEl.getAttribute) {
+                  mutationName = mutationEl.getAttribute('name');
+                }
+              }
+              
+              if (mutationName === 'safe' || mutationName === 'place' || mutationName === 'remove') {
+                console.warn(`[blocklyGenerators] ⚠️ Override: procedureName was 'solve' but mutation says '${mutationName}' (no-return). Using mutation.`);
+                procedureName = mutationName;
+              }
+            }
+          } catch (e) {
+            console.warn('Error checking mutation in final check (no-return):', e);
+          }
+        }
+        
+        // Also check NAME field
+        if (procedureName === 'solve') {
+          const nameFieldFinal = block.getField('NAME');
+          if (nameFieldFinal) {
+            const nameFromFieldFinal = nameFieldFinal.getValue();
+            if (nameFromFieldFinal === 'safe' || nameFromFieldFinal === 'place' || nameFromFieldFinal === 'remove') {
+              console.warn(`[blocklyGenerators] ⚠️ Override: procedureName was 'solve' but NAME field says '${nameFromFieldFinal}' (no-return). Using NAME field.`);
+              procedureName = nameFromFieldFinal;
+            }
+          }
+        }
+      }
+      
+      // Debug logging for ALL procedure calls (to debug N-Queen issue)
+      console.log(`[blocklyGenerators] procedures_callnoreturn: Final procedureName = "${procedureName}"`);
+      
+      // Debug logging for N-Queen helper functions
+      if (procedureName === 'safe' || procedureName === 'place' || procedureName === 'remove') {
+        console.log(`[blocklyGenerators] ✅ Confirmed N-Queen helper function (no-return): ${procedureName}`);
       }
     } catch (e) {
       console.warn('Error getting procedure name:', e);
     }
     
     // Validate procedure name
+    // CRITICAL: Don't fallback for N-Queen helper functions (safe, place, remove)
+    // These will be injected into the generated code
+    // Update isNQueenHelper flag if we have a procedure name
+    if (procedureName && (procedureName === 'safe' || procedureName === 'place' || procedureName === 'remove')) {
+      isNQueenHelper = true;
+    }
+    
     if (!procedureName || procedureName === 'unnamed' || procedureName === 'undefined' || 
         (typeof procedureName === 'string' && procedureName.trim() === '')) {
       // Invalid procedure name - try to get from workspace procedure map
-      console.warn('Procedure call block has invalid name, trying to fix:', procedureName);
-      
-      try {
-        const workspace = block.workspace;
-        if (workspace) {
-          const procedureMap = workspace.getProcedureMap();
-          if (procedureMap) {
-            const procedures = procedureMap.getProcedures();
-            if (procedures.length > 0) {
-              // Use first available procedure
-              procedureName = procedures[0].getName();
-              console.log('Using first available procedure:', procedureName);
-            } else {
-              // No procedures available - return comment
-              console.warn('No procedures available in workspace');
-              return '// Invalid procedure call\n';
+      // BUT skip fallback for N-Queen helper functions
+      if (!isNQueenHelper) {
+        console.warn('Procedure call block has invalid name, trying to fix:', procedureName);
+        
+        try {
+          const workspace = block.workspace;
+          if (workspace) {
+            const procedureMap = workspace.getProcedureMap();
+            if (procedureMap) {
+              const procedures = procedureMap.getProcedures();
+              if (procedures.length > 0) {
+                // Use first available procedure
+                procedureName = procedures[0].getName();
+                console.log('Using first available procedure:', procedureName);
+              } else {
+                // No procedures available - return comment
+                console.warn('No procedures available in workspace');
+                return '// Invalid procedure call\n';
+              }
             }
           }
+        } catch (e) {
+          console.warn('Error trying to fix procedure name:', e);
+          return '// Invalid procedure call\n';
         }
-      } catch (e) {
-        console.warn('Error trying to fix procedure name:', e);
-        return '// Invalid procedure call\n';
+      } else {
+        // For N-Queen helper functions, allow them even if not defined
+        // They will be injected into the generated code
+        console.log(`[blocklyGenerators] ✅ Allowing N-Queen helper function (no-return, will be injected): ${procedureName}`);
       }
       
-      // If still invalid after trying to fix
-      if (!procedureName || procedureName === 'unnamed' || procedureName === 'undefined' || 
-          (typeof procedureName === 'string' && procedureName.trim() === '')) {
+      // If still invalid after trying to fix (and not N-Queen helper)
+      const finalIsNQueenHelper = procedureName === 'safe' || procedureName === 'place' || procedureName === 'remove';
+      if (!finalIsNQueenHelper && (!procedureName || procedureName === 'unnamed' || procedureName === 'undefined' || 
+          (typeof procedureName === 'string' && procedureName.trim() === ''))) {
         return '// Invalid procedure call\n';
       }
     }
@@ -607,7 +1222,13 @@ export function defineAllGenerators() {
     }
     
     const argsString = args.length > 0 ? args.join(', ') : '';
-    return `${procedureName}(${argsString});\n`;
+    
+    // Debug logging for N-Queen helper functions
+    if (procedureName === 'safe' || procedureName === 'place' || procedureName === 'remove') {
+      console.log(`[blocklyGenerators] Generating code for ${procedureName}(${argsString}) (no-return)`);
+    }
+    
+    return `await ${procedureName}(${argsString});\n`;
   };
 
   // List Operations generators
@@ -692,6 +1313,13 @@ export function defineAllGenerators() {
     return [`${list}.length === 0`, javascriptGenerator.ORDER_EQUALITY];
   };
 
+  // List length generator
+  javascriptGenerator.forBlock["lists_length"] = function (block) {
+    const list = javascriptGenerator.valueToCode(block, 'VALUE', javascriptGenerator.ORDER_MEMBER) || '[]';
+    // Add safety check to prevent undefined.length error
+    return [`(function() { const listVar = ${list}; return listVar && Array.isArray(listVar) ? listVar.length : 0; })()`, javascriptGenerator.ORDER_MEMBER];
+  };
+
   javascriptGenerator.forBlock["lists_find_min_index"] = function (block) {
     const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
     return [`await findMinIndex(${list})`, javascriptGenerator.ORDER_FUNCTION_CALL];
@@ -700,7 +1328,23 @@ export function defineAllGenerators() {
   javascriptGenerator.forBlock["lists_get_at_index"] = function (block) {
     const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
     const index = javascriptGenerator.valueToCode(block, 'INDEX', javascriptGenerator.ORDER_SUBTRACTION) || '0';
-    return [`(${list})[${index}]`, javascriptGenerator.ORDER_MEMBER];
+    // Add comprehensive safety check to prevent undefined/NaN errors
+    // Handle cases where list or index might be undefined, null, or NaN
+    // Use unique variable names to avoid shadowing function parameters (e.g., 'arr' in subsetSum)
+    return [`(function() { 
+      try {
+        const listVar = ${list}; 
+        const idx = typeof ${index} === 'number' ? ${index} : Number(${index}); 
+        if (!listVar || !Array.isArray(listVar) || typeof idx !== 'number' || isNaN(idx) || idx < 0 || idx >= listVar.length) {
+          console.warn('lists_get_at_index: Invalid access', { listVar, idx, listLength: listVar?.length });
+          return undefined; 
+        }
+        return listVar[idx]; 
+      } catch (e) {
+        console.error('lists_get_at_index error:', e);
+        return undefined;
+      }
+    })()`, javascriptGenerator.ORDER_MEMBER];
   };
 
   javascriptGenerator.forBlock["lists_remove_at_index"] = function (block) {
@@ -902,5 +1546,27 @@ export function defineAllGenerators() {
     const path = javascriptGenerator.valueToCode(block, 'PATH', javascriptGenerator.ORDER_NONE) || '[]';
     return `await showPathUpdateWithVisual(${path});\n`;
   };
+  
+  // CRITICAL: Force override procedures_defreturn generator at the END to ensure it's not overridden
+  // Save reference to our custom generator BEFORE it might be overwritten
+  const customProcGen = javascriptGenerator.forBlock["procedures_defreturn"];
+  
+  // Force override one more time at the end
+  if (customProcGen) {
+    javascriptGenerator.forBlock["procedures_defreturn"] = customProcGen;
+    console.log('[defineAllGenerators] ✅ Force override procedures_defreturn generator');
+  } else {
+    console.error('[defineAllGenerators] ❌ ERROR: Custom generator not found!');
+  }
+  
+  // Final verification
+  const finalGen = javascriptGenerator.forBlock["procedures_defreturn"];
+  const isCustom = finalGen?.toString().includes('CUSTOM GENERATOR');
+  console.log('[defineAllGenerators] Final check - procedures_defreturn generator type:', typeof finalGen);
+  console.log('[defineAllGenerators] procedures_defreturn generator is our custom one:', isCustom);
+  
+  if (!isCustom) {
+    console.error('[defineAllGenerators] ❌ WARNING: Custom generator verification failed!');
+  }
 }
 

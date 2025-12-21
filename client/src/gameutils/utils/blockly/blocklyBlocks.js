@@ -14,6 +14,9 @@ import { defineGraphOperationsBlocks } from './blocklyGraphOperations';
 import { defineLogicOperatorsBlocks } from './blocklyLogicOperators';
 import { defineDfsVisualBlocks } from './blocklyDfsVisualBlocks';
 import { defineDictionaryBlocks } from './blocklyDictionary';
+import { defineKnapsackVisualBlocks } from './blocklyKnapsackVisualBlocks';
+import { defineSubsetSumVisualBlocks } from './blocklySubsetSumVisualBlocks';
+import { defineCoinChangeVisualBlocks } from './blocklyCoinChangeVisualBlocks';
 
 export function defineAllBlocks() {
   // Call all block definition functions
@@ -32,5 +35,8 @@ export function defineAllBlocks() {
     defineLogicOperatorsBlocks();
     defineDfsVisualBlocks();
     defineDictionaryBlocks();
+    defineKnapsackVisualBlocks();
+    defineSubsetSumVisualBlocks();
+    defineCoinChangeVisualBlocks();
 }
 

@@ -501,25 +501,39 @@ export function drawPlayer(scene) {
   }
 
   try {
-    const startNode = scene.levelData.nodes.find(n => n.id === scene.levelData.startNodeId);
-    if (!startNode) return;
+    // ตรวจสอบว่ามี nodes หรือไม่
+    const hasNodes = scene.levelData.nodes && scene.levelData.nodes.length > 0;
+    const startNode = hasNodes ? scene.levelData.nodes.find(n => n.id === scene.levelData.startNodeId) : null;
+    
+    // ถ้าไม่มี nodes หรือไม่มี startNode ให้แสดงตัวละครที่มุมล่างซ้าย
+    let playerX, playerY;
+    if (!hasNodes || !startNode) {
+      // ตำแหน่งมุมล่างซ้าย (ห่างจากขอบ 100px, 100px)
+      playerX = 100;
+      playerY = (scene.scale && scene.scale.height) ? scene.scale.height - 100 : 600;
+      console.log('⚠️ No nodes found, displaying player at bottom-left corner:', playerX, playerY);
+    } else {
+      playerX = startNode.x;
+      playerY = startNode.y;
+    }
 
     // Create player sprite instead of circle
-    scene.player = scene.add.sprite(startNode.x, startNode.y, 'player');
+    scene.player = scene.add.sprite(playerX, playerY, 'player');
     scene.player.setScale(1.8); // Increase sprite size
     scene.player.setDepth(8);
 
     // Set player properties for new utility functions
     scene.player.directions = ['right', 'down', 'left', 'up'];
     scene.player.directionIndex = 0;
-    scene.player.currentNodeIndex = scene.levelData.startNodeId;
+    scene.player.currentNodeIndex = hasNodes && startNode ? scene.levelData.startNodeId : null;
     scene.player.mapConfig = { tileSize: 32 }; // Default tile size
     scene.player.mapImage = null; // Will be set if needed
+    scene.player.hasNodes = hasNodes; // เพิ่ม flag เพื่อระบุว่ามี nodes หรือไม่
 
     // Create player arrow for direction indication - larger to match bigger sprite
     scene.playerArrow = scene.add.triangle(
-      startNode.x + 30,
-      startNode.y,
+      playerX + 30,
+      playerY,
       0,
       15,
       12,
@@ -538,10 +552,691 @@ export function drawPlayer(scene) {
     // Update arrow position to match initial direction (direction 0 = right)
     // Use setTimeout to ensure game state is ready
     setTimeout(() => {
-      updatePlayerArrow(scene, startNode.x, startNode.y, 0);
+      updatePlayerArrow(scene, playerX, playerY, 0);
     }, 100);
   } catch (error) {
     console.error('❌ Error creating player:', error);
   }
+}
+
+// Function to setup Knapsack problem display
+export function setupKnapsack(scene) {
+  console.log('🔍 setupKnapsack called');
+  console.log('🔍 scene.levelData:', scene.levelData);
+  console.log('🔍 scene.levelData.knapsackData:', scene.levelData?.knapsackData);
+  
+  if (!scene.levelData || !scene.levelData.knapsackData) {
+    console.log('⚠️ No knapsackData found, skipping setup');
+    return;
+  }
+
+  const knapsackData = scene.levelData.knapsackData;
+  console.log('✅ Knapsack data found:', knapsackData);
+  scene.knapsack = {
+    bag: null,
+    items: []
+  };
+
+  // Setup bag (กระเป๋า) - สี่เหลี่ยม
+  if (knapsackData.bag) {
+    const bagX = knapsackData.bag.x || 400;
+    const bagY = knapsackData.bag.y || 450;
+    const bagLabel = knapsackData.bag.label || 'กระเป๋า';
+
+    // Create bag as rectangle (สี่เหลี่ยม)
+    const bag = scene.add.rectangle(bagX, bagY, 200, 150, 0x8B4513, 1); // สีน้ำตาล
+    bag.setStrokeStyle(3, 0x654321);
+    bag.setDepth(5);
+
+    // Add bag label
+    const bagLabelText = scene.add.text(bagX, bagY - 80, bagLabel, {
+      fontSize: '14px',
+      color: '#ffffff',
+      fontStyle: 'bold',
+      backgroundColor: '#000000',
+      padding: { x: 5, y: 3 }
+    });
+    bagLabelText.setOrigin(0.5, 0.5);
+    bagLabelText.setDepth(6);
+
+    // Add capacity label if available
+    if (knapsackData.capacity) {
+      const capacityText = scene.add.text(bagX, bagY, `${knapsackData.capacity} kg`, {
+        fontSize: '16px',
+        color: '#ffffff',
+        fontStyle: 'bold',
+        backgroundColor: '#000000',
+        padding: { x: 5, y: 3 }
+      });
+      capacityText.setOrigin(0.5, 0.5);
+      capacityText.setDepth(6);
+      bag.capacityText = capacityText;
+    }
+
+    bag.labelText = bagLabelText;
+    scene.knapsack.bag = bag;
+
+    console.log(`Setup knapsack bag at (${bagX}, ${bagY})`);
+  }
+
+  // Setup items (สมบัติ) - รูปเพชร
+  if (knapsackData.items && Array.isArray(knapsackData.items)) {
+    knapsackData.items.forEach((itemData) => {
+      const itemX = itemData.x || 200;
+      const itemY = itemData.y || 150;
+
+      // Create item as diamond shape (รูปเพชร) - เหมือน treasure
+      const item = scene.add.polygon(itemX, itemY, [
+        0, -20,  // top
+        15, 0,   // right
+        0, 20,   // bottom
+        -15, 0   // left
+      ], 0xffd700, 1); // สีทอง
+      item.setStrokeStyle(3, 0xffaa00);
+      item.setDepth(7);
+
+      // Add item data
+      item.setData({
+        id: itemData.id,
+        weight: itemData.weight,
+        price: itemData.price,
+        label: itemData.label,
+        selected: false // สำหรับเก็บว่า item ถูกเลือกแล้วหรือยัง
+      });
+
+      // Create item label
+      const itemLabel = itemData.label || `${itemData.weight} kg, ${itemData.price} baht`;
+      const itemLabelText = scene.add.text(itemX, itemY - 35, itemLabel, {
+        fontSize: '11px',
+        color: '#ffffff',
+        fontStyle: 'bold',
+        backgroundColor: '#000000',
+        padding: { x: 4, y: 2 }
+      });
+      itemLabelText.setOrigin(0.5, 0.5);
+      itemLabelText.setDepth(8);
+
+      // Add weight and price text
+      const itemInfoText = scene.add.text(itemX, itemY, `${itemData.weight}kg / ${itemData.price}฿`, {
+        fontSize: '10px',
+        color: '#ffffff',
+        fontStyle: 'bold',
+        backgroundColor: '#000000',
+        padding: { x: 3, y: 1 }
+      });
+      itemInfoText.setOrigin(0.5, 0.5);
+      itemInfoText.setDepth(8);
+
+      // Create glow effect
+      const glowEffect = scene.add.circle(itemX, itemY, 30, 0xffd700, 0.3);
+      glowEffect.setStrokeStyle(2, 0xffd700);
+      glowEffect.setDepth(6);
+
+      // Add pulsing animation
+      scene.tweens.add({
+        targets: [item, glowEffect],
+        scaleX: 1.15,
+        scaleY: 1.15,
+        duration: 1000,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+
+      // Store references
+      item.labelText = itemLabelText;
+      item.infoText = itemInfoText;
+      item.glowEffect = glowEffect;
+      item.setData('glowEffect', glowEffect);
+
+      scene.knapsack.items.push({
+        id: itemData.id,
+        sprite: item,
+        weight: itemData.weight,
+        price: itemData.price,
+        label: itemData.label,
+        x: itemX,
+        y: itemY
+      });
+    });
+
+    console.log(`Setup ${scene.knapsack.items.length} knapsack items`);
+  }
+}
+
+export function setupSubsetSum(scene) {
+  console.log('🔍 setupSubsetSum called');
+  console.log('🔍 scene.levelData:', scene.levelData);
+  console.log('🔍 scene.levelData.subsetSumData:', scene.levelData?.subsetSumData);
+  
+  if (!scene.levelData || !scene.levelData.subsetSumData) {
+    console.log('⚠️ No subsetSumData found, skipping setup');
+    return;
+  }
+
+  const subsetSumData = scene.levelData.subsetSumData;
+  console.log('✅ Subset Sum data found:', subsetSumData);
+  scene.subsetSum = {
+    side1: null,
+    side2: null,
+    warriors: []
+  };
+
+  // Setup side1 (ฝั่งที่ 1) - สี่เหลี่ยมโปร่งใสเส้นสีเหลือง
+  if (subsetSumData.side1) {
+    const side1X = subsetSumData.side1.x || 200;
+    const side1Y = subsetSumData.side1.y || 400;
+    const side1Label = subsetSumData.side1.label || 'ฝั่ง 1';
+    const side1Width = 150;
+    const side1Height = 100;
+    const targetSum = subsetSumData.target_sum !== undefined ? subsetSumData.target_sum : 0;
+    
+    // สร้าง label ที่รวม target_sum
+    const side1LabelWithTarget = `${side1Label}\n${targetSum}`;
+
+    // Create side1 as rectangle with transparent fill and yellow stroke
+    const side1 = scene.add.rectangle(side1X, side1Y, side1Width, side1Height);
+    side1.setFillStyle(0x000000, 0); // fill โปร่งใส (alpha = 0)
+    side1.setStrokeStyle(3, 0xffd700); // เส้นสีเหลือง
+    side1.setDepth(5);
+
+    // Add side1 label with target_sum
+    const side1LabelText = scene.add.text(side1X, side1Y - 60, side1LabelWithTarget, {
+      fontSize: '14px',
+      color: '#ffffff',
+      fontStyle: 'bold',
+      backgroundColor: '#000000',
+      padding: { x: 5, y: 3 },
+      align: 'center'
+    });
+    side1LabelText.setOrigin(0.5, 0.5);
+    side1LabelText.setDepth(6);
+
+    side1.labelText = side1LabelText;
+    scene.subsetSum.side1 = side1;
+
+    console.log(`Setup subset sum side1 at (${side1X}, ${side1Y})`);
+  }
+
+  // Setup side2 (ฝั่งที่ 2) - สี่เหลี่ยมโปร่งใสเส้นสีเหลือง
+  if (subsetSumData.side2) {
+    const side2X = subsetSumData.side2.x || 600;
+    const side2Y = subsetSumData.side2.y || 400;
+    const side2Label = subsetSumData.side2.label || 'ฝั่ง 2';
+    const side2Width = 150;
+    const side2Height = 100;
+    const targetSum = subsetSumData.target_sum !== undefined ? subsetSumData.target_sum : 0;
+    
+    // สร้าง label ที่รวม target_sum
+    const side2LabelWithTarget = `${side2Label}\n${targetSum}`;
+
+    // Create side2 as rectangle with transparent fill and yellow stroke
+    const side2 = scene.add.rectangle(side2X, side2Y, side2Width, side2Height);
+    side2.setFillStyle(0x000000, 0); // fill โปร่งใส (alpha = 0)
+    side2.setStrokeStyle(3, 0xffd700); // เส้นสีเหลือง
+    side2.setDepth(5);
+
+    // Add side2 label with target_sum
+    const side2LabelText = scene.add.text(side2X, side2Y - 60, side2LabelWithTarget, {
+      fontSize: '14px',
+      color: '#ffffff',
+      fontStyle: 'bold',
+      backgroundColor: '#000000',
+      padding: { x: 5, y: 3 },
+      align: 'center'
+    });
+    side2LabelText.setOrigin(0.5, 0.5);
+    side2LabelText.setDepth(6);
+
+    side2.labelText = side2LabelText;
+    scene.subsetSum.side2 = side2;
+
+    console.log(`Setup subset sum side2 at (${side2X}, ${side2Y})`);
+  }
+
+  // Setup warriors (นักรบ) - วงกลมสีแดง
+  if (subsetSumData.warriors_display && Array.isArray(subsetSumData.warriors_display)) {
+    subsetSumData.warriors_display.forEach((warriorData) => {
+      const warriorX = warriorData.x || 200;
+      const warriorY = warriorData.y || 150;
+      const warriorPower = warriorData.power || 0;
+      const warriorLabel = warriorData.label || `${warriorPower}`;
+
+      // Create warrior as circle (วงกลมสีแดง)
+      const warrior = scene.add.circle(warriorX, warriorY, 25, 0xff0000, 1); // สีแดง
+      warrior.setStrokeStyle(2, 0xcc0000); // เส้นขอบสีแดงเข้ม
+      warrior.setDepth(7);
+
+      // Add warrior data
+      warrior.setData({
+        id: warriorData.id,
+        power: warriorPower,
+        label: warriorLabel,
+        selected: false, // สำหรับเก็บว่านักรบถูกเลือกแล้วหรือยัง
+        side: null // เก็บว่าอยู่ฝั่งไหน (1 หรือ 2)
+      });
+
+      // Create warrior label (แสดงพลัง)
+      const warriorLabelText = scene.add.text(warriorX, warriorY - 40, warriorLabel, {
+        fontSize: '14px',
+        color: '#ffffff',
+        fontStyle: 'bold',
+        backgroundColor: '#000000',
+        padding: { x: 4, y: 2 }
+      });
+      warriorLabelText.setOrigin(0.5, 0.5);
+      warriorLabelText.setDepth(8);
+
+      // Add power text inside circle
+      const powerText = scene.add.text(warriorX, warriorY, warriorPower.toString(), {
+        fontSize: '16px',
+        color: '#ffffff',
+        fontStyle: 'bold',
+        backgroundColor: '#000000',
+        padding: { x: 3, y: 2 }
+      });
+      powerText.setOrigin(0.5, 0.5);
+      powerText.setDepth(8);
+
+      // Store references
+      warrior.labelText = warriorLabelText;
+      warrior.powerText = powerText;
+
+      scene.subsetSum.warriors.push({
+        id: warriorData.id,
+        sprite: warrior,
+        power: warriorPower,
+        label: warriorLabel,
+        x: warriorX,
+        y: warriorY,
+        originalX: warriorX, // Store original position for reset
+        originalY: warriorY
+      });
+    });
+
+    console.log(`Setup ${scene.subsetSum.warriors.length} subset sum warriors`);
+  } else if (subsetSumData.warriors && Array.isArray(subsetSumData.warriors)) {
+    // ถ้าไม่มี warriors_display ให้ใช้ warriors array มาสร้างเอง
+    const spacing = 150;
+    const startX = 200;
+    const startY = 150;
+    
+    subsetSumData.warriors.forEach((power, index) => {
+      const warriorX = startX + (index * spacing);
+      const warriorY = startY;
+      const warriorLabel = power.toString();
+
+      // Create warrior as circle (วงกลมสีแดง)
+      const warrior = scene.add.circle(warriorX, warriorY, 25, 0xff0000, 1); // สีแดง
+      warrior.setStrokeStyle(2, 0xcc0000); // เส้นขอบสีแดงเข้ม
+      warrior.setDepth(7);
+
+      // Add warrior data
+      warrior.setData({
+        id: index + 1,
+        power: power,
+        label: warriorLabel,
+        selected: false,
+        side: null
+      });
+
+      // Create warrior label
+      const warriorLabelText = scene.add.text(warriorX, warriorY - 40, warriorLabel, {
+        fontSize: '14px',
+        color: '#ffffff',
+        fontStyle: 'bold',
+        backgroundColor: '#000000',
+        padding: { x: 4, y: 2 }
+      });
+      warriorLabelText.setOrigin(0.5, 0.5);
+      warriorLabelText.setDepth(8);
+
+      // Add power text inside circle
+      const powerText = scene.add.text(warriorX, warriorY, power.toString(), {
+        fontSize: '16px',
+        color: '#ffffff',
+        fontStyle: 'bold',
+        backgroundColor: '#000000',
+        padding: { x: 3, y: 2 }
+      });
+      powerText.setOrigin(0.5, 0.5);
+      powerText.setDepth(8);
+
+      // Store references
+      warrior.labelText = warriorLabelText;
+      warrior.powerText = powerText;
+
+      scene.subsetSum.warriors.push({
+        id: index + 1,
+        sprite: warrior,
+        power: power,
+        label: warriorLabel,
+        x: warriorX,
+        y: warriorY,
+        originalX: warriorX, // Store original position for reset
+        originalY: warriorY
+      });
+    });
+
+    console.log(`Setup ${scene.subsetSum.warriors.length} subset sum warriors from warriors array`);
+  }
+}
+
+export function setupCoinChange(scene) {
+  console.log('🔍 setupCoinChange called');
+  console.log('🔍 scene.levelData:', scene.levelData);
+  console.log('🔍 scene.levelData.coinChangeData:', scene.levelData?.coinChangeData);
+  
+  if (!scene.levelData || !scene.levelData.coinChangeData) {
+    console.log('⚠️ No coinChangeData found, skipping setup');
+    return;
+  }
+
+  const coinChangeData = scene.levelData.coinChangeData;
+  console.log('✅ Coin Change data found:', coinChangeData);
+  
+  const monsterPower = coinChangeData.monster_power || 32;
+  const warriors = coinChangeData.warriors || [1, 5, 10, 25]; // Default warriors levels
+  
+  scene.coinChange = {
+    monster: null,
+    warriors: [],
+    selectedBox: null
+  };
+
+  // Setup warriors (นักรบ 4 ระดับ) - แสดงด้านบน
+  // แต่ละชุดมี: square ด้านบน (dotted outline) + blue circle ด้านล่าง
+  const warriorStartX = 150;
+  const warriorY = 150;
+  const warriorSpacing = 150;
+  
+  warriors.forEach((power, index) => {
+    const warriorX = warriorStartX + (index * warriorSpacing);
+    const warriorNumber = index + 1; // 1, 2, 3, 4
+    
+    // Square ด้านบน (dotted outline) - แสดงพลัง
+    // ใช้ rectangle ที่มี fill โปร่งใสและ stroke แทน (เพื่อความง่าย)
+    const powerSquare = scene.add.rectangle(warriorX, warriorY, 50, 50);
+    powerSquare.setFillStyle(0xffffff, 0); // fill โปร่งใส
+    powerSquare.setStrokeStyle(2, 0x000000, 0.8); // stroke สีดำ (ใช้ alpha ต่ำเพื่อดูเหมือน dotted)
+    powerSquare.setDepth(7);
+    
+    // Text แสดงพลังใน square
+    const powerText = scene.add.text(warriorX, warriorY, power.toString(), {
+      fontSize: '20px',
+      color: '#000000',
+      fontStyle: 'bold'
+    });
+    powerText.setOrigin(0.5, 0.5);
+    powerText.setDepth(8);
+    
+    // Blue circle ด้านล่าง (solid outline) - แสดงหมายเลข
+    const warriorCircle = scene.add.circle(warriorX, warriorY + 60, 30, 0x0066ff, 1); // สีฟ้า
+    warriorCircle.setStrokeStyle(3, 0x0044cc); // เส้นขอบสีฟ้าเข้ม
+    warriorCircle.setDepth(7);
+    
+    // Text แสดงหมายเลขใน circle
+    const numberText = scene.add.text(warriorX, warriorY + 60, warriorNumber.toString(), {
+      fontSize: '20px',
+      color: '#ffffff',
+      fontStyle: 'bold'
+    });
+    numberText.setOrigin(0.5, 0.5);
+    numberText.setDepth(8);
+    
+    scene.coinChange.warriors.push({
+      power: power,
+      index: index,
+      number: warriorNumber,
+      powerSquare: powerSquare,
+      powerText: powerText,
+      circle: warriorCircle,
+      numberText: numberText,
+      x: warriorX,
+      y: warriorY,
+      originalX: warriorX,
+      originalY: warriorY
+    });
+  });
+
+  // Setup monster (มอนสเตอร์) - ด้านขวา
+  const monsterX = 900; // ขยับไปทางขวา
+  const monsterY = 150;
+  
+  // Square ด้านบน (dotted outline) - แสดงพลัง
+  // ใช้ rectangle ที่มี fill โปร่งใสและ stroke แทน (เพื่อความง่าย)
+  const monsterPowerSquare = scene.add.rectangle(monsterX, monsterY, 50, 50);
+  monsterPowerSquare.setFillStyle(0xffffff, 0); // fill โปร่งใส
+  monsterPowerSquare.setStrokeStyle(2, 0x000000, 0.8); // stroke สีดำ (ใช้ alpha ต่ำเพื่อดูเหมือน dotted)
+  monsterPowerSquare.setDepth(7);
+  
+  // Text แสดงพลังใน square
+  const monsterPowerText = scene.add.text(monsterX, monsterY, monsterPower.toString(), {
+    fontSize: '20px',
+    color: '#000000',
+    fontStyle: 'bold'
+  });
+  monsterPowerText.setOrigin(0.5, 0.5);
+  monsterPowerText.setDepth(8);
+  
+  // Red circle ด้านล่าง (solid outline, filled light red) - แสดงคำว่า "Monster"
+  const monsterCircle = scene.add.circle(monsterX, monsterY + 60, 40, 0xff6666, 1); // สีแดงอ่อน
+  monsterCircle.setStrokeStyle(3, 0xff0000); // เส้นขอบสีแดงเข้ม
+  monsterCircle.setDepth(7);
+  
+  // Text แสดงคำว่า "Monster" ใน circle
+  const monsterLabelText = scene.add.text(monsterX, monsterY + 60, 'Monster', {
+    fontSize: '14px',
+    color: '#ffffff',
+    fontStyle: 'bold'
+  });
+  monsterLabelText.setOrigin(0.5, 0.5);
+  monsterLabelText.setDepth(8);
+  
+  scene.coinChange.monster = {
+    power: monsterPower,
+    powerSquare: monsterPowerSquare,
+    powerText: monsterPowerText,
+    circle: monsterCircle,
+    labelText: monsterLabelText,
+    x: monsterX,
+    y: monsterY
+  };
+
+  // Setup large rectangular box (ด้านล่างซ้าย) - สำหรับแสดงผลนักรบที่เลือก
+  const boxX = 400; // ขยับไปทางขวา
+  const boxY = 500; // ขยับขึ้นมาอีก
+  const boxWidth = 400;
+  const boxHeight = 200;
+  
+  const selectedBox = scene.add.graphics();
+  selectedBox.lineStyle(4, 0x000000, 1);
+  selectedBox.strokeRoundedRect(boxX - boxWidth / 2, boxY - boxHeight / 2, boxWidth, boxHeight, 10);
+  selectedBox.setDepth(5);
+  
+  scene.coinChange.selectedBox = {
+    graphics: selectedBox,
+    x: boxX,
+    y: boxY,
+    width: boxWidth,
+    height: boxHeight
+  };
+
+  console.log(`Setup Coin Change: ${warriors.length} warriors, monster power: ${monsterPower}`);
+}
+
+/**
+ * Setup N-Queen board and queens
+ * @param {Phaser.Scene} scene - Phaser scene
+ */
+export function setupNQueen(scene) {
+  console.log('🔍 setupNQueen called');
+  console.log('🔍 scene.levelData:', scene.levelData);
+  console.log('🔍 scene.levelData.nqueenData:', scene.levelData?.nqueenData);
+  
+  if (!scene.levelData || !scene.levelData.nqueenData) {
+    console.log('⚠️ No nqueenData found, skipping setup');
+    return;
+  }
+
+  const nqueenData = scene.levelData.nqueenData;
+  console.log('✅ N-Queen data found:', nqueenData);
+  
+  const n = nqueenData.n || 4; // Board size (n×n)
+  
+  scene.nqueen = {
+    n: n,
+    board: null,
+    queens: [],
+    cellSize: 60, // Size of each cell in pixels
+    boardStartX: 400, // Center of the board
+    boardStartY: 300, // Center of the board
+    labels: []
+  };
+
+  const cellSize = scene.nqueen.cellSize;
+  const boardStartX = scene.nqueen.boardStartX;
+  const boardStartY = scene.nqueen.boardStartY;
+  const boardWidth = n * cellSize;
+  const boardHeight = n * cellSize;
+  const labelOffset = 25; // Offset for row/column labels
+
+  // Create board graphics container
+  const boardGraphics = scene.add.graphics();
+  boardGraphics.setDepth(5);
+
+  // Draw grid lines
+  boardGraphics.lineStyle(2, 0x000000, 1);
+  
+  // Draw vertical lines
+  for (let i = 0; i <= n; i++) {
+    const x = boardStartX - boardWidth / 2 + (i * cellSize);
+    const y1 = boardStartY - boardHeight / 2;
+    const y2 = boardStartY + boardHeight / 2;
+    boardGraphics.moveTo(x, y1);
+    boardGraphics.lineTo(x, y2);
+  }
+  
+  // Draw horizontal lines
+  for (let i = 0; i <= n; i++) {
+    const y = boardStartY - boardHeight / 2 + (i * cellSize);
+    const x1 = boardStartX - boardWidth / 2;
+    const x2 = boardStartX + boardWidth / 2;
+    boardGraphics.moveTo(x1, y);
+    boardGraphics.lineTo(x2, y);
+  }
+  
+  boardGraphics.strokePath();
+  
+  // Draw column labels (0, 1, 2, 3, ...)
+  for (let col = 0; col < n; col++) {
+    const x = boardStartX - boardWidth / 2 + (col * cellSize) + cellSize / 2;
+    const y = boardStartY - boardHeight / 2 - labelOffset;
+    
+    const label = scene.add.text(x, y, col.toString(), {
+      fontSize: '18px',
+      color: '#000000',
+      fontStyle: 'bold'
+    });
+    label.setOrigin(0.5, 0.5);
+    label.setDepth(6);
+    
+    scene.nqueen.labels.push(label);
+  }
+  
+  // Draw row labels (0, 1, 2, 3, ...)
+  for (let row = 0; row < n; row++) {
+    const x = boardStartX - boardWidth / 2 - labelOffset;
+    const y = boardStartY - boardHeight / 2 + (row * cellSize) + cellSize / 2;
+    
+    const label = scene.add.text(x, y, row.toString(), {
+      fontSize: '18px',
+      color: '#000000',
+      fontStyle: 'bold'
+    });
+    label.setOrigin(0.5, 0.5);
+    label.setDepth(6);
+    
+    scene.nqueen.labels.push(label);
+  }
+  
+  scene.nqueen.board = boardGraphics;
+
+  console.log(`Setup N-Queen: ${n}×${n} board`);
+}
+
+/**
+ * Draw queen on the board at position (row, col)
+ * @param {Phaser.Scene} scene - Phaser scene
+ * @param {number} row - Row index (0-based)
+ * @param {number} col - Column index (0-based)
+ */
+export function drawQueenOnBoard(scene, row, col) {
+  if (!scene.nqueen) {
+    console.warn('⚠️ N-Queen board not initialized');
+    return;
+  }
+
+  const cellSize = scene.nqueen.cellSize;
+  const boardStartX = scene.nqueen.boardStartX;
+  const boardStartY = scene.nqueen.boardStartY;
+  const boardWidth = scene.nqueen.n * cellSize;
+  
+  // Calculate center position of the cell
+  const x = boardStartX - boardWidth / 2 + (col * cellSize) + cellSize / 2;
+  const y = boardStartY - boardWidth / 2 + (row * cellSize) + cellSize / 2;
+  
+  // Draw star-like symbol (queen) - using graphics to create 8-pointed star
+  const queenGraphics = scene.add.graphics();
+  queenGraphics.setDepth(7);
+  
+  // Draw 8-pointed star pattern
+  // Outer points
+  const outerRadius = 18;
+  const innerRadius = 8;
+  const points = [];
+  
+  for (let i = 0; i < 8; i++) {
+    const angle = (i * Math.PI) / 4; // 8 points = 360/8 = 45 degrees each
+    if (i % 2 === 0) {
+      // Outer point
+      points.push({
+        x: x + Math.cos(angle) * outerRadius,
+        y: y + Math.sin(angle) * outerRadius
+      });
+    } else {
+      // Inner point
+      points.push({
+        x: x + Math.cos(angle) * innerRadius,
+        y: y + Math.sin(angle) * innerRadius
+      });
+    }
+  }
+  
+  // Draw filled star
+  queenGraphics.fillStyle(0x000000, 1);
+  queenGraphics.beginPath();
+  queenGraphics.moveTo(points[0].x, points[0].y);
+  for (let i = 1; i < points.length; i++) {
+    queenGraphics.lineTo(points[i].x, points[i].y);
+  }
+  queenGraphics.closePath();
+  queenGraphics.fillPath();
+  
+  // Draw center circle
+  queenGraphics.fillCircle(x, y, 3);
+  
+  // Store queen reference
+  const queen = {
+    graphics: queenGraphics,
+    row: row,
+    col: col,
+    x: x,
+    y: y
+  };
+  
+  scene.nqueen.queens.push(queen);
+  
+  console.log(`✅ Queen drawn at position (${row}, ${col})`);
 }
 

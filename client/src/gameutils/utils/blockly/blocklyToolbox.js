@@ -155,6 +155,10 @@ export function createToolboxConfig(enabledBlocks) {
     mathBlocks.push({ kind: "block", type: "math_number" });
   if (enabledBlocks["math_arithmetic"])
     mathBlocks.push({ kind: "block", type: "math_arithmetic" });
+  if (enabledBlocks["math_max"])
+    mathBlocks.push({ kind: "block", type: "math_max" });
+  if (enabledBlocks["math_min"])
+    mathBlocks.push({ kind: "block", type: "math_min" });
   if (enabledBlocks["math_compare"])
     mathBlocks.push({ kind: "block", type: "math_compare" });
   if (enabledBlocks["var_math"])
