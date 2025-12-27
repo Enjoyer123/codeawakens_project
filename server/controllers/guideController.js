@@ -71,6 +71,43 @@ exports.getAllGuides = async (req, res) => {
   }
 };
 
+// Get guides by level
+exports.getGuidesByLevel = async (req, res) => {
+  try {
+    const { levelId } = req.params;
+    
+    // Check if level exists
+    const level = await prisma.level.findUnique({
+      where: { level_id: parseInt(levelId) }
+    });
+
+    if (!level) {
+      return res.status(404).json({ message: "Level not found" });
+    }
+
+    const guides = await prisma.guide.findMany({
+      where: {
+        level_id: parseInt(levelId),
+      },
+      include: {
+        guide_images: {
+          orderBy: {
+            guide_file_id: 'asc',
+          },
+        },
+      },
+      orderBy: {
+        display_order: 'asc',
+      },
+    });
+
+    res.json(guides);
+  } catch (error) {
+    console.error("Error fetching guides by level:", error);
+    res.status(500).json({ message: "Error fetching guides by level", error: error.message });
+  }
+};
+
 // Get all levels for dropdown
 exports.getLevelsForGuide = async (req, res) => {
   try {

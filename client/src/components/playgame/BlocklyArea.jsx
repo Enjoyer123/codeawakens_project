@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Editor from '@monaco-editor/react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Code, Box, FlaskConical, CheckCircle2, XCircle } from 'lucide-react';
 
 const BlocklyArea = ({
   blocklyRef,
@@ -14,203 +16,309 @@ const BlocklyArea = ({
   codeValidation,
   blocklyJavaScriptReady,
   textCode,
-  handleTextCodeChange
+  handleTextCodeChange,
+  testCaseResult
 }) => {
+  const [activeTab, setActiveTab] = useState("blocks");
+
+  // Auto-switch to test tab when results arrive
+  React.useEffect(() => {
+    if (testCaseResult) {
+      setActiveTab("test");
+    }
+  }, [testCaseResult]);
+
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-transparent">
+   
+      
+      {/* Tabs Header */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+        <div className="bg-stone-900 border-b border-gray-700 px-4 pt-2">
+          <TabsList className="bg-stone-800 border border-stone-700">
+            <TabsTrigger value="blocks" className="data-[state=active]:bg-stone-700 text-stone-300 data-[state=active]:text-white flex items-center gap-2">
+              <Box size={16} />
+              <span>Visual Blocks</span>
+            </TabsTrigger>
+            {currentLevel?.textcode && (
+              <TabsTrigger value="text" className="data-[state=active]:bg-stone-700 text-stone-300 data-[state=active]:text-white flex items-center gap-2">
+                 <Code size={16} />
+                 <span>Text Code</span>
+                 <div className={`ml-2 w-2 h-2 rounded-full ${
+                    !blocklyJavaScriptReady 
+                      ? 'bg-yellow-500 animate-pulse' 
+                      : codeValidation?.isValid 
+                        ? 'bg-green-500' 
+                        : 'bg-red-500'
+                 }`} />
+              </TabsTrigger>
+            )}
+            {/* Test Results Tab Trigger */}
+            <TabsTrigger value="test" className="data-[state=active]:bg-stone-700 text-stone-300 data-[state=active]:text-white flex items-center gap-2 relative">
+               <FlaskConical size={16} />
+               <span>Test Results</span>
+               {testCaseResult && (
+                 <span className={`flex h-2 w-2 rounded-full absolute top-1 right-1 ${testCaseResult.passed ? 'bg-green-500' : 'bg-red-500'}`} />
+               )}
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
-      {/* Blockly Workspace - ปรับขนาดตาม textcode */}
-      <div
-        ref={blocklyRef}
-        className="bg-white shadow-inner blockly-workspace"
-        style={{
-          // ลดความสูงของ workspace เล็กน้อยเมื่อต้องแสดง textcode ในส่วนปุ่มด้านล่าง
-          height: currentLevel?.textcode
-            ? "calc(100vh - 400px)"  // เพิ่มพื้นที่สำหรับ textcode
-            : "calc(100vh - 180px)",
-          width: "100%",
-          border: "2px dashed rgba(255,255,255,0.08)"
-        }}
-      />
-
-      {/* Control Buttons - Compact and prominent */}
-      <div className="flex flex-col bg-stone-900 border-t border-gray-700 shadow-xl z-10">
-        <div className="p-4 space-y-4">
+        {/* Tab Contents Container - grows to fill space */}
+        <div className="flex-1 relative bg-transparent overflow-hidden">
           
-          {/* Text Code Editor Section */}
-          {currentLevel?.textcode && (
-            <div className="flex flex-col gap-2 animate-in slide-in-from-bottom-2 duration-300">
-              <div className="flex items-center justify-between px-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">📝</span>
-                  <div>
-                    <h3 className="text-sm font-bold text-blue-100 leading-tight">Text Code</h3>
-                    <p className="text-[10px] text-gray-400">Write JavaScript that matches your blocks</p>
-                  </div>
-                </div>
-                {/* Validation Status Badge */}
-                <div className={`px-2 py-1 rounded text-xs font-bold border ${
-                  !blocklyJavaScriptReady 
-                    ? 'bg-yellow-900/30 border-yellow-600/50 text-yellow-500' 
-                    : codeValidation?.isValid 
-                      ? 'bg-green-900/30 border-green-600/50 text-green-400' 
-                      : 'bg-red-900/30 border-red-600/50 text-red-400'
-                }`}>
-                  {!blocklyJavaScriptReady ? '⏳ Loading...' : codeValidation?.isValid ? '✅ Valid' : '❌ Invalid'}
-                </div>
-              </div>
-
-              <div className="border border-gray-700 rounded-md overflow-hidden shadow-sm bg-[#1e1e1e]">
-                <Editor
-                  height="160px"
-                  defaultLanguage="javascript"
-                  value={textCode}
-                  onChange={(value) => handleTextCodeChange(value || '')}
-                  theme="vs-dark"
-                  onMount={(editor, monaco) => {
-                    // เพิ่ม custom functions สำหรับเกม
-                    monaco.languages.typescript.javascriptDefaults.addExtraLib(`
-                        // Game Functions
-                        declare function moveForward(): Promise<void>;
-                        declare function turnLeft(): Promise<void>;
-                        declare function turnRight(): Promise<void>;
-                        declare function hit(): Promise<void>;
-                        declare function collectCoin(): Promise<void>;
-                        declare function rescuePerson(): Promise<void>;
-                        declare function pushNode(): Promise<void>;
-                        declare function popNode(): Promise<void>;
-                        
-                        // Condition Functions
-                        declare function foundMonster(): boolean;
-                        declare function canMoveForward(): boolean;
-                        declare function nearPit(): boolean;
-                        declare function atGoal(): boolean;
-                        declare function hasPerson(): boolean;
-                        declare function hasTreasure(): boolean;
-                        declare function hasCoin(): boolean;
-                        
-                        // Loop Functions
-                        declare function forEachCoin(callback: () => Promise<void>): Promise<void>;
-                        
-                        // Variables
-                        declare var coins: number;
-                        declare var hp: number;
-                        declare var score: number;
-                      `, 'file:///game-functions.d.ts');
-
-                    // เพิ่ม auto-completion แบบ dynamic
-                    monaco.languages.registerCompletionItemProvider('javascript', {
-                      provideCompletionItems: (model, position) => {
-                        const word = model.getWordUntilPosition(position);
-                        const range = {
-                          startLineNumber: position.lineNumber,
-                          endLineNumber: position.lineNumber,
-                          startColumn: word.startColumn,
-                          endColumn: word.endColumn,
-                        };
-
-                        const gameFunctions = [
-                          { label: 'moveForward', kind: monaco.languages.CompletionItemKind.Function, insertText: 'moveForward()', detail: 'เดินไปข้างหน้า', documentation: 'เดินไปข้างหน้าหนึ่งก้าว', range },
-                          { label: 'turnLeft', kind: monaco.languages.CompletionItemKind.Function, insertText: 'turnLeft()', detail: 'เลี้ยวซ้าย', documentation: 'หมุนตัวไปทางซ้าย 90 องศา', range },
-                          { label: 'turnRight', kind: monaco.languages.CompletionItemKind.Function, insertText: 'turnRight()', detail: 'เลี้ยวขวา', documentation: 'หมุนตัวไปทางขวา 90 องศา', range },
-                          { label: 'hit', kind: monaco.languages.CompletionItemKind.Function, insertText: 'hit()', detail: 'โจมตีศัตรู', documentation: 'โจมตีศัตรูที่อยู่ข้างหน้า', range },
-                          { label: 'collectCoin', kind: monaco.languages.CompletionItemKind.Function, insertText: 'collectCoin()', detail: 'เก็บเหรียญ', documentation: 'เก็บเหรียญที่อยู่ตำแหน่งปัจจุบัน', range },
-                          { label: 'rescuePerson', kind: monaco.languages.CompletionItemKind.Function, insertText: 'rescuePerson()', detail: 'ช่วยคน', documentation: 'ช่วยคนที่ติดอยู่', range },
-                          { label: 'pushNode', kind: monaco.languages.CompletionItemKind.Function, insertText: 'pushNode()', detail: 'เพิ่มตำแหน่งใน stack', documentation: 'เพิ่มตำแหน่งปัจจุบันใน stack', range },
-                          { label: 'popNode', kind: monaco.languages.CompletionItemKind.Function, insertText: 'popNode()', detail: 'ลบตำแหน่งจาก stack', documentation: 'ลบตำแหน่งล่าสุดจาก stack', range },
-                          { label: 'foundMonster', kind: monaco.languages.CompletionItemKind.Function, insertText: 'foundMonster()', detail: 'ตรวจสอบว่ามีศัตรู', documentation: 'คืนค่า true ถ้ามีศัตรูอยู่ข้างหน้า', range },
-                          { label: 'canMoveForward', kind: monaco.languages.CompletionItemKind.Function, insertText: 'canMoveForward()', detail: 'ตรวจสอบว่าสามารถเดินได้', documentation: 'คืนค่า true ถ้าสามารถเดินไปข้างหน้าได้', range },
-                          { label: 'nearPit', kind: monaco.languages.CompletionItemKind.Function, insertText: 'nearPit()', detail: 'ตรวจสอบว่าอยู่ใกล้หลุม', documentation: 'คืนค่า true ถ้าอยู่ใกล้หลุม', range },
-                          { label: 'atGoal', kind: monaco.languages.CompletionItemKind.Function, insertText: 'atGoal()', detail: 'ตรวจสอบว่าถึงเป้าหมาย', documentation: 'คืนค่า true ถ้าถึงเป้าหมายแล้ว', range },
-                          { label: 'hasPerson', kind: monaco.languages.CompletionItemKind.Function, insertText: 'hasPerson()', detail: 'ตรวจสอบว่ามีคน', documentation: 'คืนค่า true ถ้ามีคนที่ต้องการช่วย', range },
-                          { label: 'hasTreasure', kind: monaco.languages.CompletionItemKind.Function, insertText: 'hasTreasure()', detail: 'ตรวจสอบว่ามีสมบัติ', documentation: 'คืนค่า true ถ้ามีสมบัติในตำแหน่งปัจจุบัน', range },
-                          { label: 'hasCoin', kind: monaco.languages.CompletionItemKind.Function, insertText: 'hasCoin()', detail: 'ตรวจสอบว่ามีเหรียญ', documentation: 'คืนค่า true ถ้ามีเหรียญในตำแหน่งปัจจุบัน', range },
-                          { label: 'forEachCoin', kind: monaco.languages.CompletionItemKind.Function, insertText: 'forEachCoin(async () => {\n  \n})', detail: 'วนลูปเหรียญทั้งหมด', documentation: 'วนลูปเหรียญทั้งหมดในด่าน', range }
-                        ];
-
-                        const currentWord = word.word.toLowerCase();
-                        const filteredFunctions = gameFunctions.filter(func => func.label.toLowerCase().startsWith(currentWord));
-
-                        return { suggestions: filteredFunctions, incomplete: false };
-                      },
-                      triggerCharacters: ['.', '(']
-                    });
-                  }}
-                  options={{
-                    fontSize: 12,
-                    minimap: { enabled: false },
-                    scrollBeyondLastLine: false,
-                    automaticLayout: true,
-                    wordWrap: 'on',
-                    lineNumbers: 'on',
-                    renderLineHighlight: 'all',
-                    cursorStyle: 'line',
-                    fontFamily: '"Fira Code", monospace',
-                    suggestOnTriggerCharacters: true,
-                    quickSuggestions: true,
-                    padding: { top: 8, bottom: 8 },
-                  }}
-                />
-              </div>
-
-              {/* Validation Message Detail */}
-              {codeValidation?.message && !codeValidation.isValid && blocklyJavaScriptReady && (
-                 <div className="flex items-start gap-2 text-xs text-red-300 bg-red-900/20 p-2 rounded border border-red-900/50">
-                    <span>⚠️</span>
-                    <span>{codeValidation.message}</span>
-                 </div>
-              )}
-            </div>
-          )}
-
-          {/* Action Buttons Group */}
-          <div className="grid grid-cols-4 gap-2 pt-2">
-            <button
-              onClick={() => {
-                runCode();
-              }}
-              disabled={
-                gameState === "running" ||
-                !blocklyLoaded ||
-                isRunning ||
-                isGameOver ||
-                (currentLevel?.textcode && !blocklyJavaScriptReady) ||
-                (currentLevel?.textcode && (!codeValidation || !codeValidation.isValid))
-              }
-              className="col-span-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white py-2 rounded-lg font-bold shadow-lg transform transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {gameState === "running" ? (
-                <>
-                  <span className="animate-spin">🌀</span> Running...
-                </>
-              ) : (
-                <>
-                  <span>▶️</span> RUN CODE
-                </>
-              )}
-            </button>
-
-            <button
-              onClick={() => window.location.reload()}
-              className="bg-stone-700 hover:bg-stone-600 text-stone-200 py-2 rounded-lg font-semibold shadow transition active:scale-95 flex items-center justify-center gap-1"
-            >
-              🔄 Reset
-            </button>
-            
-            <button
-              onClick={onDebugToggle}
-              className={`py-2 rounded-lg font-semibold shadow transition active:scale-95 flex items-center justify-center gap-1 ${
-                debugMode
-                ? "bg-yellow-600 text-white ring-2 ring-yellow-400/50"
-                : "bg-stone-700 hover:bg-stone-600 text-stone-300"
-              }`}
-            >
-              🐞 Debug
-            </button>
+          {/* Visual Blocks Tab - Always mounted/rendered but toggled visibility to preserve state */}
+          <div 
+             className="absolute inset-0 blockly-workspace"
+             style={{ 
+               visibility: activeTab === 'blocks' ? 'visible' : 'hidden',
+               zIndex: activeTab === 'blocks' ? 1 : -1
+             }}
+          >
+             <div
+                ref={blocklyRef}
+                className="w-full h-full"
+                style={{
+                  border: "none"
+                }}
+              />
           </div>
+
+          {/* Text Code Tab */}
+          {currentLevel?.textcode && (
+             <TabsContent value="text" className="h-full m-0 p-0 absolute inset-0 z-10 data-[state=inactive]:hidden">
+                <div className="flex flex-col h-full">
+                  {/* Validation Message Banner */}
+                  <div className={`px-4 py-2 text-xs font-mono border-b flex items-center justify-between ${
+                     !blocklyJavaScriptReady 
+                      ? 'bg-stone-800 text-yellow-400 border-yellow-900/30' 
+                      : codeValidation?.isValid 
+                        ? 'bg-stone-800 text-green-400 border-green-900/30' 
+                        : 'bg-stone-800 text-red-400 border-red-900/30'
+                  }`}>
+                    <div className="flex items-center gap-2">
+                       <span>{
+                         !blocklyJavaScriptReady ? '⏳ Syncing...' : 
+                         codeValidation?.isValid ? '✅ Code Valid' : '❌ Code Invalid'
+                       }</span>
+                       {codeValidation?.message && !codeValidation.isValid && blocklyJavaScriptReady && (
+                         <span className="opacity-80 border-l border-white/20 pl-2 ml-2">
+                           {codeValidation.message}
+                         </span>
+                       )}
+                    </div>
+                  </div>
+
+                  <Editor
+                    height="100%"
+                    defaultLanguage="javascript"
+                    value={textCode}
+                    onChange={(value) => handleTextCodeChange(value || '')}
+                    theme="vs-dark"
+                    options={{
+                      fontSize: 14,
+                      minimap: { enabled: false },
+                      scrollBeyondLastLine: false,
+                      automaticLayout: true,
+                      wordWrap: 'on',
+                      lineNumbers: 'on',
+                      renderLineHighlight: 'all',
+                      fontFamily: '"Fira Code", monospace',
+                      padding: { top: 16, bottom: 16 },
+                    }}
+                    onMount={(editor, monaco) => {
+                      // Custom functions definitions
+                      monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+                          noSemanticValidation: true,
+                          noSyntaxValidation: false,
+                      });
+
+                      monaco.languages.typescript.javascriptDefaults.addExtraLib(`
+                          declare function moveForward(): Promise<void>;
+                          declare function turnLeft(): Promise<void>;
+                          declare function turnRight(): Promise<void>;
+                          declare function hit(): Promise<void>;
+                          declare function collectCoin(): Promise<void>;
+                          declare function rescuePerson(): Promise<void>;
+                          declare function pushNode(): Promise<void>;
+                          declare function popNode(): Promise<void>;
+                          declare function foundMonster(): boolean;
+                          declare function canMoveForward(): boolean;
+                          declare function nearPit(): boolean;
+                          declare function atGoal(): boolean;
+                          declare function hasPerson(): boolean;
+                          declare function hasTreasure(): boolean;
+                          declare function hasCoin(): boolean;
+                          declare function forEachCoin(callback: () => Promise<void>): Promise<void>;
+                          declare var coins: number;
+                          declare var hp: number;
+                          declare var score: number;
+                        `, 'filename/game.d.ts');
+                    }}
+                  />
+                </div>
+             </TabsContent>
+          )}
+          {/* Test Results Tab Content */}
+          <TabsContent value="test" className="h-full m-0 p-0 absolute inset-0 z-10 data-[state=inactive]:hidden bg-stone-900 overflow-y-auto">
+             {!testCaseResult ? (
+               <div className="flex flex-col items-center justify-center h-full text-stone-500 gap-4">
+                 <FlaskConical size={48} className="opacity-20" />
+                 <p>Run code to see test results</p>
+               </div>
+             ) : (
+               <div className="p-4 space-y-6 max-w-3xl mx-auto">
+                 {/* Summary Header */}
+                 <div className={`p-4 rounded-lg border ${testCaseResult.passed ? 'bg-green-900/20 border-green-900/50' : 'bg-red-900/20 border-red-900/50'} flex items-center gap-4`}>
+                    <div className={`p-3 rounded-full ${testCaseResult.passed ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                      {testCaseResult.passed ? <CheckCircle2 size={32} /> : <XCircle size={32} />}
+                    </div>
+                    <div>
+                      <h3 className={`text-lg font-bold ${testCaseResult.passed ? 'text-green-400' : 'text-red-400'}`}>
+                        {testCaseResult.passed ? 'All Tests Passed' : 'Test Failed'}
+                      </h3>
+                      <p className="text-stone-400 text-sm">
+                        {testCaseResult.message}
+                      </p>
+                    </div>
+                 </div>
+
+                 {/* Failed Tests */}
+                 {testCaseResult.failedTests && testCaseResult.failedTests.length > 0 && (
+                   <div className="space-y-3">
+                     <h4 className="text-red-400 font-semibold flex items-center gap-2">
+                       <XCircle size={16} />
+                       Failed Test Cases ({testCaseResult.failedTests.length})
+                     </h4>
+                     {testCaseResult.failedTests.map((test, index) => (
+                       <div key={index} className="bg-stone-800 rounded-lg p-4 border border-red-900/30 space-y-3">
+                         <div className="flex items-center justify-between border-b border-stone-700 pb-2">
+                           <span className="font-mono text-sm text-red-300">{test.test_case_name}</span>
+                           {test.is_primary && <span className="text-[10px] bg-red-900/40 text-red-300 px-2 py-0.5 rounded border border-red-800/50">PRIMARY</span>}
+                         </div>
+                         
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                           <div className="space-y-1">
+                             <label className="text-[10px] uppercase text-stone-500 font-bold tracking-wider">Example Input</label>
+                             <div className="bg-stone-900 p-2 rounded text-xs font-mono text-stone-300 overflow-x-auto">
+                               {/* Input details not currently returned by checkTestCases in failedTests object, improving this would require updating testCaseUtils.js */}
+                               See Logic Details
+                             </div>
+                           </div>
+                           <div className="space-y-1">
+                             <label className="text-[10px] uppercase text-stone-500 font-bold tracking-wider">Expected Output</label>
+                             <div className="bg-stone-900 p-2 rounded text-xs font-mono text-green-300/80 overflow-x-auto">
+                               {JSON.stringify(test.expected, null, 2)}
+                             </div>
+                           </div>
+                         </div>
+                         
+                         <div className="space-y-1">
+                           <label className="text-[10px] uppercase text-stone-500 font-bold tracking-wider">Actual Output</label>
+                           <div className="bg-red-950/30 p-2 rounded text-xs font-mono text-red-300 border border-red-900/30 overflow-x-auto">
+                             {test.actual === undefined ? 'undefined' : JSON.stringify(test.actual, null, 2)}
+                           </div>
+                         </div>
+                       </div>
+                     ))}
+                   </div>
+                 )}
+
+                 {/* Passed Tests */}
+                 {testCaseResult.passedTests && testCaseResult.passedTests.length > 0 && (
+                   <div className="space-y-3">
+                     <h4 className="text-green-400 font-semibold flex items-center gap-2">
+                       <CheckCircle2 size={16} />
+                       Passed Test Cases ({testCaseResult.passedTests.length})
+                     </h4>
+                     {testCaseResult.passedTests.map((test, index) => (
+                       <div key={index} className="bg-stone-800/50 rounded-lg p-4 border border-green-900/10 space-y-3">
+                         <div className="flex items-center justify-between border-b border-stone-700/50 pb-2">
+                           <span className="font-mono text-sm text-stone-300">{test.test_case_name}</span>
+                           <span className="text-green-500 text-[10px] font-bold px-2 py-0.5 bg-green-900/20 rounded border border-green-900/30">PASSED</span>
+                         </div>
+                         
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                           <div className="space-y-1">
+                             <label className="text-[10px] uppercase text-stone-500 font-bold tracking-wider">Example Input</label>
+                             <div className="bg-stone-900 p-2 rounded text-xs font-mono text-stone-300 overflow-x-auto">
+                               {/* Input details not currently returned by checkTestCases in passedTests object */}
+                               See Logic Details
+                             </div>
+                           </div>
+                           <div className="space-y-1">
+                             <label className="text-[10px] uppercase text-stone-500 font-bold tracking-wider">Expected Output</label>
+                             <div className="bg-stone-900 p-2 rounded text-xs font-mono text-green-300/80 overflow-x-auto">
+                               {JSON.stringify(test.expected, null, 2)}
+                             </div>
+                           </div>
+                         </div>
+                         
+                         <div className="space-y-1">
+                           <label className="text-[10px] uppercase text-stone-500 font-bold tracking-wider">Actual Output</label>
+                           <div className="bg-green-950/20 p-2 rounded text-xs font-mono text-green-300 border border-green-900/20 overflow-x-auto">
+                             {test.actual === undefined ? 'undefined' : JSON.stringify(test.actual, null, 2)}
+                           </div>
+                         </div>
+                       </div>
+                     ))}
+                   </div>
+                 )}
+               </div>
+             )}
+          </TabsContent>
+        </div>
+      </Tabs>
+
+      {/* Control Buttons - Fixed at bottom */}
+      <div className="flex-none bg-stone-900 border-t border-gray-700 shadow-xl z-20 p-4">
+        <div className="grid grid-cols-4 gap-2">
+          <button
+            onClick={() => {
+              runCode();
+            }}
+            disabled={
+              gameState === "running" ||
+              !blocklyLoaded ||
+              isRunning ||
+              isGameOver ||
+              (currentLevel?.textcode && !blocklyJavaScriptReady) ||
+              (currentLevel?.textcode && (!codeValidation || !codeValidation.isValid))
+            }
+            className="col-span-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white py-2 rounded-lg font-bold shadow-lg transform transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {gameState === "running" ? (
+              <>
+                <span className="animate-spin">🌀</span> Running...
+              </>
+            ) : (
+              <>
+                <span>▶️</span> RUN CODE
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-stone-700 hover:bg-stone-600 text-stone-200 py-2 rounded-lg font-semibold shadow transition active:scale-95 flex items-center justify-center gap-1"
+          >
+            🔄 Reset
+          </button>
+          
+          <button
+            onClick={onDebugToggle}
+            className={`py-2 rounded-lg font-semibold shadow transition active:scale-95 flex items-center justify-center gap-1 ${
+              debugMode
+              ? "bg-yellow-600 text-white ring-2 ring-yellow-400/50"
+              : "bg-stone-700 hover:bg-stone-600 text-stone-300"
+            }`}
+          >
+            🐞 Debug
+          </button>
         </div>
       </div>
     </div>
+   
   );
 };
 
