@@ -12,10 +12,14 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000
 export function safeParse(value, fallback = []) {
   if (value === null || value === undefined) return fallback;
   if (Array.isArray(value)) return value;
-  if (typeof value === 'object') return value;
+  if (typeof value === 'object') {
+    // For JSON fields from database (already parsed by Prisma)
+    return value;
+  }
   if (typeof value === 'string') {
     try {
-      return JSON.parse(value);
+      const parsed = JSON.parse(value);
+      return parsed;
     } catch (e) {
       console.warn("Failed to parse JSON field:", e, value);
       return fallback;
@@ -264,6 +268,18 @@ export function formatLevelData(levelResponse, enabledBlocksObj, goodPatterns) {
     coinPositions: safeParse(levelResponse.coin_positions, []),
     people: safeParse(levelResponse.people, []),
     treasures: safeParse(levelResponse.treasures, []),
+    knapsackData: (() => {
+      const parsed = safeParse(levelResponse.knapsack_data, null);
+      console.log('🔍 Parsing knapsack_data:', {
+        raw: levelResponse.knapsack_data,
+        parsed: parsed,
+        type: typeof parsed
+      });
+      return parsed;
+    })(),
+    subsetSumData: safeParse(levelResponse.subset_sum_data, null),
+    coinChangeData: safeParse(levelResponse.coin_change_data, null),
+    nqueenData: safeParse(levelResponse.nqueen_data, null),
     enabledBlocks: enabledBlocksObj,
     victoryConditions,
     guides,

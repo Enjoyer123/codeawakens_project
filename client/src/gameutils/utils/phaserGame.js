@@ -9,8 +9,17 @@ export {
   setupPeople,
   setupTreasures,
   setupMonsters,
-  drawPlayer
+  drawPlayer,
+  setupKnapsack,
+  setupSubsetSum,
+  setupCoinChange,
+  setupAntDp,
+  setupNQueen,
+  drawQueenOnBoard
 } from './phaser/phaserSetup';
+export { setupTrainSchedule, updateTrainScheduleVisuals } from './phaser/trainSchedulePhaser';
+export { setupRopePartition, updateRopePartitionVisuals } from './phaser/ropePartitionPhaser';
+export { setupEmeiMountain, highlightPeak, highlightCableCar, showEmeiFinalResult } from './phaser/emeiMountainPhaser';
 
 export {
   updatePersonDisplay,

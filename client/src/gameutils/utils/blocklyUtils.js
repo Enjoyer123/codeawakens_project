@@ -19,24 +19,24 @@ function overrideProcedureBlocksInUtils() {
       console.log(`[blocklyUtils] Found ${blockType}, overriding...`);
       const originalRename = Blockly.Blocks[blockType].renameProcedure;
       const originalLoadExtraState = Blockly.Blocks[blockType].loadExtraState;
-      
+
       // Override renameProcedure
       // CRITICAL: This must completely replace the original to prevent calling .replace() on undefined
       // Note: originalRename may be undefined if blocklyStandardBlocks.js already overrode it
-      Blockly.Blocks[blockType].renameProcedure = function(oldName, newName) {
+      Blockly.Blocks[blockType].renameProcedure = function (oldName, newName) {
         // CRITICAL: Early return to prevent calling original with undefined
         if (oldName === undefined || oldName === null || newName === undefined || newName === null) {
-      return;
-    }
-    
+          return;
+        }
+
         // Convert to string safely
         const safeOldName = String(oldName).trim();
         const safeNewName = String(newName).trim();
-        
+
         if (!safeOldName || !safeNewName) {
-      return;
-    }
-    
+          return;
+        }
+
         // Only call original if it exists and is a function
         // originalRename may be undefined if blocklyStandardBlocks.js already overrode it
         if (originalRename && typeof originalRename === 'function') {
@@ -49,14 +49,14 @@ function overrideProcedureBlocksInUtils() {
         // If originalRename is undefined, it means blocklyStandardBlocks.js already handled it
         // So we can just return without doing anything
       };
-      
+
       // CRITICAL: Override loadExtraState to NEVER call renameProcedure
       // Store original to check if it exists
       console.log(`[blocklyUtils] Original loadExtraState for ${blockType}:`, typeof originalLoadExtraState);
-      Blockly.Blocks[blockType].loadExtraState = function(state) {
-        console.log(`[${blockType}] loadExtraState (blocklyUtils) called:`, { 
-          state, 
-          stateName: state?.name, 
+      Blockly.Blocks[blockType].loadExtraState = function (state) {
+        console.log(`[${blockType}] loadExtraState (blocklyUtils) called:`, {
+          state,
+          stateName: state?.name,
           stateParams: state?.params,
           thisBlock: this.id || 'new block',
           hasOriginal: !!originalLoadExtraState
@@ -65,7 +65,7 @@ function overrideProcedureBlocksInUtils() {
           if (!state || typeof state !== 'object') {
             state = {};
           }
-          
+
           let safeName = 'function';
           if (state.name && typeof state.name === 'string' && state.name.trim()) {
             const trimmedName = state.name.trim();
@@ -73,9 +73,9 @@ function overrideProcedureBlocksInUtils() {
               safeName = trimmedName;
             }
           }
-          
+
           const safeParams = Array.isArray(state.params) ? state.params : [];
-          
+
           // Set name field directly WITHOUT calling renameProcedure
           try {
             const nameField = this.getField('NAME');
@@ -85,10 +85,10 @@ function overrideProcedureBlocksInUtils() {
             } else {
               console.warn(`[${blockType}] loadExtraState: nameField not found`);
             }
-    } catch (e) {
+          } catch (e) {
             console.error(`[${blockType}] loadExtraState error setting name:`, e);
           }
-          
+
           // Handle params
           if (safeParams.length > 0) {
             try {
@@ -100,18 +100,18 @@ function overrideProcedureBlocksInUtils() {
                   this.domToMutation(mutation);
                 }
               }
-    } catch (e) {
+            } catch (e) {
               console.error(`[${blockType}] loadExtraState error updating mutation:`, e);
             }
           }
-          
+
           return { name: safeName, params: safeParams };
-    } catch (e) {
+        } catch (e) {
           console.error(`[${blockType}] loadExtraState error:`, e);
           return { name: 'function', params: [] };
         }
       };
-      
+
       console.log(`[blocklyUtils] Overridden ${blockType}`);
       console.log(`[blocklyUtils] ${blockType} loadExtraState type:`, typeof Blockly.Blocks[blockType].loadExtraState);
       console.log(`[blocklyUtils] ${blockType} renameProcedure type:`, typeof Blockly.Blocks[blockType].renameProcedure);
@@ -120,27 +120,27 @@ function overrideProcedureBlocksInUtils() {
     }
   });
   console.log('[blocklyUtils] Procedure blocks override completed');
-  
+
   // Override procedure call blocks (created automatically by custom: "PROCEDURE")
   ['procedures_callreturn', 'procedures_callnoreturn'].forEach(blockType => {
     if (Blockly.Blocks[blockType]) {
       console.log(`[blocklyUtils] Found ${blockType}, overriding...`);
       const originalRename = Blockly.Blocks[blockType].renameProcedure;
-      
+
       if (originalRename) {
-        Blockly.Blocks[blockType].renameProcedure = function(oldName, newName) {
+        Blockly.Blocks[blockType].renameProcedure = function (oldName, newName) {
           if (!oldName || !newName || oldName === undefined || newName === undefined) {
             return;
           }
-          
+
           try {
             const safeOldName = String(oldName).trim();
             const safeNewName = String(newName).trim();
-            
+
             if (!safeOldName || !safeNewName || safeOldName === 'undefined' || safeNewName === 'undefined') {
               return;
             }
-            
+
             // Only call original if it exists and is a function
             if (originalRename && typeof originalRename === 'function') {
               try {
@@ -158,11 +158,11 @@ function overrideProcedureBlocksInUtils() {
           }
         };
       }
-      
+
       console.log(`[blocklyUtils] Overridden ${blockType}`);
     }
   });
-  
+
   // Verify override worked
   ['procedures_defreturn', 'procedures_defnoreturn', 'procedures_callreturn', 'procedures_callnoreturn'].forEach(blockType => {
     if (Blockly.Blocks[blockType]) {
@@ -185,9 +185,9 @@ setTimeout(() => {
 
 // Re-export from sub-modules
 export { ensureDefaultBlocks } from './blockly/blocklyDefault';
-export { 
-  ensureCommonVariables, 
-  initializeImprovedVariableHandling 
+export {
+  ensureCommonVariables,
+  initializeImprovedVariableHandling
 } from './blockly/blocklyVariable';
 export { ensureStandardBlocks } from './blockly/blocklyStandardBlocks';
 export { defineAllBlocks } from './blockly/blocklyBlocks';
@@ -222,6 +222,7 @@ export {
   getGraphNeighborsWithWeight,
   getNodeValue,
   findMinIndex,
+  findMaxIndex,
   getAllEdges,
   sortEdgesByWeight,
   dsuFind,
@@ -235,15 +236,36 @@ export {
   treasureCollected,
   stackEmpty,
   stackCount,
-  clearStack
+  clearStack,
+  selectKnapsackItemVisual,
+  unselectKnapsackItemVisual,
+  resetKnapsackItemsVisual,
+  knapsackMaxWithVisual,
+  antMaxWithVisual,
+  showAntDpFinalPath,
+  resetKnapsackSelectionTracking,
+  startKnapsackSelectionTracking,
+  showKnapsackFinalSelection,
+  addWarriorToSide1Visual,
+  addWarriorToSide2Visual,
+  resetSubsetSumWarriorsVisual,
+  startSubsetSumTrackingVisual,
+  showSubsetSumFinalSolutionVisual,
+  resetSubsetSumTrackingVisual,
+  addWarriorToSelectionVisual,
+  resetCoinChangeVisualDisplay,
+  resetCoinChangeSelectionTrackingWrapper as resetCoinChangeSelectionTracking,
+  startCoinChangeSelectionTrackingWrapper as startCoinChangeSelectionTracking,
+  trackCoinChangeDecisionWrapper as trackCoinChangeDecision,
+  showCoinChangeFinalSolutionWrapper as showCoinChangeFinalSolution
 } from './blockly/blocklyHelpers';
 
 // Re-export DFS visual feedback functions
-export { 
+export {
   getGraphNeighborsWithVisual,
   getGraphNeighborsWithVisualSync,
-  markVisitedWithVisual, 
-  showPathUpdateWithVisual, 
+  markVisitedWithVisual,
+  showPathUpdateWithVisual,
   clearDfsVisuals,
   getGraphNeighborsWithWeightWithVisualSync,
   highlightNode,
@@ -260,3 +282,9 @@ export {
   updateMSTWeight,
   resetDijkstraState
 } from './blockly/dijkstraStateManager';
+// Re-export Emei Mountain visual functions
+export {
+  highlightPeak,
+  highlightCableCar,
+  showEmeiFinalResult
+} from './phaser/emeiMountainPhaser';

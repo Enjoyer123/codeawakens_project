@@ -128,15 +128,15 @@ export function defineListOperationsBlocks() {
       this.setNextStatement(true, null);
       this.setColour(120);
       this.setTooltip("วนลูปผ่านแต่ละ item ใน list");
-      
-      this.setOnChange(function(event) {
+
+      this.setOnChange(function (event) {
         if (!event || !this.workspace) return;
-        
+
         // Don't create variables when block is in flyout (toolbox)
         if (this.isInFlyout) {
           return;
         }
-        
+
         if (event.type === Blockly.Events.BLOCK_CREATE && event.blockId === this.id) {
           // เมื่อบล็อกถูกสร้าง ให้ตรวจสอบและสร้างตัวแปร (ถ้ายังไม่มี)
           setTimeout(() => {
@@ -159,11 +159,33 @@ export function defineListOperationsBlocks() {
       this.appendValueInput("LIST")
         .setCheck("Array")
         .appendField("🔍 หา index ของค่าน้อยที่สุดใน");
+      this.appendValueInput("EXCLUDE")
+        .setCheck("Array")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("ยกเว้น (Boolean Array)");
       this.appendDummyInput()
         .appendField("(สำหรับ Priority Queue)");
       this.setOutput(true, "Number");
       this.setColour(260);
       this.setTooltip("หา index ของ item ที่มีค่าน้อยที่สุดใน list (สำหรับ Priority Queue)");
+    },
+  };
+
+  // Find index of maximum value in list (for Max-Capacity Priority Queue)
+  Blockly.Blocks["lists_find_max_index"] = {
+    init: function () {
+      this.appendValueInput("LIST")
+        .setCheck("Array")
+        .appendField("🔍 หา index ของค่ามากที่สุดใน");
+      this.appendValueInput("EXCLUDE")
+        .setCheck("Array")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("ยกเว้น (Boolean Array)");
+      this.appendDummyInput()
+        .appendField("(สำหรับ Priority Queue)");
+      this.setOutput(true, "Number");
+      this.setColour(260);
+      this.setTooltip("หา index ของ item ที่มีค่ามากที่สุดใน list (สำหรับ Max-Capacity Priority Queue)");
     },
   };
 

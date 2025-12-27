@@ -320,6 +320,10 @@ const LevelCreateEdit = () => {
         coin_positions: formData.coin_positions.length > 0 ? JSON.stringify(formData.coin_positions) : null,
         people: formData.people.length > 0 ? JSON.stringify(formData.people) : null,
         treasures: formData.treasures.length > 0 ? JSON.stringify(formData.treasures) : null,
+        knapsack_data: formData.knapsack_data ? JSON.stringify(formData.knapsack_data) : null,
+        subset_sum_data: formData.subset_sum_data ? JSON.stringify(formData.subset_sum_data) : null,
+        coin_change_data: formData.coin_change_data ? JSON.stringify(formData.coin_change_data) : null,
+        nqueen_data: formData.nqueen_data ? JSON.stringify(formData.nqueen_data) : null,
         block_ids: formData.selectedBlocks,
         victory_condition_ids: formData.selectedVictoryConditions,
       };

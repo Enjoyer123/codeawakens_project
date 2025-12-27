@@ -515,7 +515,43 @@ export function ensureStandardBlocks() {
         };
       }
       
-      console.log('Patched procedures_callreturn to fix undefined errors');
+      // CRITICAL: Override getProcParam() to prevent wrong procedure name resolution for N-Queen helper functions
+      const originalGetProcParamReturn = Blockly.Blocks['procedures_callreturn'].getProcParam;
+      if (originalGetProcParamReturn) {
+        Blockly.Blocks['procedures_callreturn'].getProcParam = function() {
+          // For N-Queen helper functions, read from NAME field or mutation directly
+          // Check mutation first (most reliable)
+          if (this.mutationToDom) {
+            try {
+              const mutation = this.mutationToDom();
+              if (mutation && mutation.getAttribute) {
+                const mutationName = mutation.getAttribute('name');
+                if (mutationName === 'safe' || mutationName === 'place' || mutationName === 'remove') {
+                  console.log(`[blocklyStandardBlocks] getProcParam override: Using mutation name for N-Queen helper: ${mutationName}`);
+                  return mutationName;
+                }
+              }
+            } catch (e) {
+              console.debug('Error reading mutation in getProcParam:', e);
+            }
+          }
+          
+          // Check NAME field
+          const nameField = this.getField('NAME');
+          if (nameField) {
+            const nameFromField = nameField.getValue();
+            if (nameFromField === 'safe' || nameFromField === 'place' || nameFromField === 'remove') {
+              console.log(`[blocklyStandardBlocks] getProcParam override: Using NAME field for N-Queen helper: ${nameFromField}`);
+              return nameFromField;
+            }
+          }
+          
+          // Fallback to original method for non-N-Queen functions
+          return originalGetProcParamReturn.call(this);
+        };
+      }
+      
+      console.log('Patched procedures_callreturn to fix undefined errors and override getProcParam for N-Queen');
     }
     
     // Override procedures_callnoreturn
@@ -543,7 +579,43 @@ export function ensureStandardBlocks() {
         };
       }
       
-      console.log('Patched procedures_callnoreturn to fix undefined errors');
+      // CRITICAL: Override getProcParam() to prevent wrong procedure name resolution for N-Queen helper functions
+      const originalGetProcParamNoReturn = Blockly.Blocks['procedures_callnoreturn'].getProcParam;
+      if (originalGetProcParamNoReturn) {
+        Blockly.Blocks['procedures_callnoreturn'].getProcParam = function() {
+          // For N-Queen helper functions, read from NAME field or mutation directly
+          // Check mutation first (most reliable)
+          if (this.mutationToDom) {
+            try {
+              const mutation = this.mutationToDom();
+              if (mutation && mutation.getAttribute) {
+                const mutationName = mutation.getAttribute('name');
+                if (mutationName === 'safe' || mutationName === 'place' || mutationName === 'remove') {
+                  console.log(`[blocklyStandardBlocks] getProcParam override (no-return): Using mutation name for N-Queen helper: ${mutationName}`);
+                  return mutationName;
+                }
+              }
+            } catch (e) {
+              console.debug('Error reading mutation in getProcParam:', e);
+            }
+          }
+          
+          // Check NAME field
+          const nameField = this.getField('NAME');
+          if (nameField) {
+            const nameFromField = nameField.getValue();
+            if (nameFromField === 'safe' || nameFromField === 'place' || nameFromField === 'remove') {
+              console.log(`[blocklyStandardBlocks] getProcParam override (no-return): Using NAME field for N-Queen helper: ${nameFromField}`);
+              return nameFromField;
+            }
+          }
+          
+          // Fallback to original method for non-N-Queen functions
+          return originalGetProcParamNoReturn.call(this);
+        };
+      }
+      
+      console.log('Patched procedures_callnoreturn to fix undefined errors and override getProcParam for N-Queen');
     }
   } catch (e) {
     console.error('Failed to patch procedure call blocks:', e);

@@ -61,6 +61,37 @@ const CategoryLevels = () => {
         setCategoryInfo(categoryData);
         // กรองเฉพาะด่านที่ is_unlocked = true
         const unlockedLevels = derivedLevels.filter(level => level.is_unlocked === true);
+
+        // Manual Injection for Greedy Category
+        if (categoryData.category_name === 'Greedy' || categoryId === '4' || categoryData.category_id === 4) {
+           // check if specifically not already there
+           if (!unlockedLevels.find(l => l.level_id === 'train-schedule')) {
+             unlockedLevels.push({
+               level_id: 'train-schedule',
+               level_name: 'Train Scheduling (Interval Partitioning)',
+               difficulty: 'ปานกลาง',
+               is_unlocked: true,
+               description: 'Manage train platforms using Greedy Algorithm',
+               goal_node_id: 'Optimize Platforms',
+               monsters: [],
+               category_id: 4 // Ensure it matches
+             });
+           }
+        }
+
+        // Manual Injection for Greedy Category (categoryId could be string or number, check name as fallback)
+        if (categoryData.category_name === 'Greedy' || categoryId === '4' || categoryData.category_id === 4) {
+          unlockedLevels.push({
+            level_id: 'train-schedule',
+            level_name: 'Train Scheduling (Interval Partitioning)',
+            difficulty: 'ปานกลาง',
+            is_unlocked: true,
+            description: 'Manage train platforms using Greedy Algorithm',
+            goal_node_id: 'Optimize Platforms',
+            monsters: []
+          });
+        }
+
         console.log('🔍 CategoryLevels - Total levels:', derivedLevels.length, 'Unlocked levels:', unlockedLevels.length);
         console.log('🔍 CategoryLevels - Levels is_unlocked values:', derivedLevels.map(l => ({ id: l.level_id, name: l.level_name, is_unlocked: l.is_unlocked })));
         setLevels(unlockedLevels);
@@ -85,6 +116,10 @@ const CategoryLevels = () => {
   }, [categoryId, getToken, reloadKey]);
 
   const handleLevelSelect = (levelId) => {
+    if (levelId === 'train-schedule') {
+      navigate('/user/train-schedule');
+      return;
+    }
     navigate(`/user/mapselection/${levelId}`);
   };
 
@@ -125,7 +160,7 @@ const CategoryLevels = () => {
         <div className="text-center">
           <div className="text-red-500 text-4xl mb-4">⚠</div>
           <p className="text-gray-700 text-lg mb-4">{error}</p>
-          <button 
+          <button
             onClick={() => setReloadKey((prev) => prev + 1)}
             className="bg-gray-800 hover:bg-gray-900 text-white px-6 py-2 rounded transition-colors"
           >
@@ -142,7 +177,7 @@ const CategoryLevels = () => {
         <div className="text-center">
           <div className="text-red-500 text-4xl mb-4">❌</div>
           <p className="text-gray-700 text-lg mb-4">ไม่พบประเภทด่านที่ต้องการ</p>
-          <button 
+          <button
             onClick={() => navigate('/user/mapselect')}
             className="bg-gray-800 hover:bg-gray-900 text-white px-6 py-2 rounded transition-colors"
           >
@@ -193,7 +228,7 @@ const CategoryLevels = () => {
                 </div>
 
                 {/* Level Info */}
-                <div className="space-y-3">                 
+                <div className="space-y-3">
                   {/* Level Stats */}
                   <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
                     <div className="text-center">
@@ -207,7 +242,7 @@ const CategoryLevels = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                 </div>
 
                 {/* Play Button */}

@@ -32,6 +32,76 @@ export function defineMathBlocks() {
     },
   };
 
+  Blockly.Blocks["math_max"] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("📈 ค่าสูงสุด");
+      this.appendValueInput("A")
+        .setCheck("Number")
+        .appendField("ระหว่าง");
+      this.appendValueInput("B")
+        .setCheck("Number")
+        .appendField("กับ");
+      this.setOutput(true, "Number");
+      this.setColour(230);
+      this.setTooltip("หาค่าสูงสุดระหว่าง 2 จำนวน");
+    },
+  };
+
+  Blockly.Blocks["math_min"] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("📉 ค่าต่ำสุด");
+      this.appendValueInput("A")
+        .setCheck("Number")
+        .appendField("ระหว่าง");
+      this.appendValueInput("B")
+        .setCheck("Number")
+        .appendField("กับ");
+      this.setOutput(true, "Number");
+      this.setColour(230);
+      this.setTooltip("หาค่าต่ำสุดระหว่าง 2 จำนวน");
+    },
+  };
+
+  // math_single (for CEIL, ROUND, etc.)
+  Blockly.Blocks["math_single"] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField(new Blockly.FieldDropdown([
+          ["ปัดขึ้น (CEIL)", "CEIL"],
+          ["ปัดลง (FLOOR)", "FLOOR"],
+          ["ปัดเศษ (ROUND)", "ROUND"],
+          ["รากที่สอง (ROOT)", "ROOT"]
+        ]), "OP");
+      this.appendValueInput("NUM")
+        .setCheck("Number");
+      this.setOutput(true, "Number");
+      this.setColour(230);
+      this.setTooltip("การคำนวณทางคณิตศาสตร์แบบเดี่ยว");
+    },
+  };
+
+  // math_min_max (fallback for non-existent blocks in XML)
+  Blockly.Blocks["math_min_max"] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField(new Blockly.FieldDropdown([
+          ["📈 ค่าสูงสุด", "MAX"],
+          ["📉 ค่าต่ำสุด", "MIN"]
+        ]), "OP");
+      this.appendValueInput("A")
+        .setCheck("Number")
+        .appendField("ระหว่าง");
+      this.appendValueInput("B")
+        .setCheck("Number")
+        .appendField("กับ");
+      this.setOutput(true, "Number");
+      this.setColour(230);
+      this.setTooltip("หาค่าสูงสุดหรือต่ำสุดระหว่าง 2 จำนวน");
+    },
+  };
+
   Blockly.Blocks["text"] = {
     init: function () {
       this.appendDummyInput()

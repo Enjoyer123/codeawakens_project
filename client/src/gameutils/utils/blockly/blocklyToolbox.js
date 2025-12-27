@@ -155,6 +155,14 @@ export function createToolboxConfig(enabledBlocks) {
     mathBlocks.push({ kind: "block", type: "math_number" });
   if (enabledBlocks["math_arithmetic"])
     mathBlocks.push({ kind: "block", type: "math_arithmetic" });
+  if (enabledBlocks["math_max"])
+    mathBlocks.push({ kind: "block", type: "math_max" });
+  if (enabledBlocks["math_min"])
+    mathBlocks.push({ kind: "block", type: "math_min" });
+  if (enabledBlocks["math_single"])
+    mathBlocks.push({ kind: "block", type: "math_single" });
+  if (enabledBlocks["math_min_max"])
+    mathBlocks.push({ kind: "block", type: "math_min_max" });
   if (enabledBlocks["math_compare"])
     mathBlocks.push({ kind: "block", type: "math_compare" });
   if (enabledBlocks["var_math"])
@@ -205,7 +213,7 @@ export function createToolboxConfig(enabledBlocks) {
     listBlocks.push({ kind: "block", type: "lists_getIndex" });
   if (enabledBlocks["lists_setIndex"])
     listBlocks.push({ kind: "block", type: "lists_setIndex" });
-  
+
   // List Operations (new for DFS)
   if (enabledBlocks["lists_add_item"])
     listBlocks.push({ kind: "block", type: "lists_add_item" });
@@ -225,6 +233,8 @@ export function createToolboxConfig(enabledBlocks) {
     listBlocks.push({ kind: "block", type: "lists_remove_last_return" });
   if (enabledBlocks["lists_find_min_index"])
     listBlocks.push({ kind: "block", type: "lists_find_min_index" });
+  if (enabledBlocks["lists_find_max_index"])
+    listBlocks.push({ kind: "block", type: "lists_find_max_index" });
   if (enabledBlocks["lists_get_at_index"])
     listBlocks.push({ kind: "block", type: "lists_get_at_index" });
   if (enabledBlocks["lists_remove_at_index"])
@@ -271,7 +281,7 @@ export function createToolboxConfig(enabledBlocks) {
       categorystyle: "procedure_category",
       custom: "PROCEDURE", // Blockly will manage procedure blocks and call blocks automatically
     });
-    
+
     // Add procedures_return block separately since custom PROCEDURE category may not show it
     // This block is needed inside procedures_defreturn functions
     if (enabledBlocks["procedures_defreturn"]) {
@@ -283,7 +293,7 @@ export function createToolboxConfig(enabledBlocks) {
       });
     }
   }
-  
+
   // Custom function blocks (if enabled) - separate category
   const customFunctionBlocks = [];
   if (enabledBlocks["function_definition"]) {
@@ -292,7 +302,7 @@ export function createToolboxConfig(enabledBlocks) {
   if (enabledBlocks["function_call"]) {
     customFunctionBlocks.push({ kind: "block", type: "function_call" });
   }
-  
+
   if (customFunctionBlocks.length > 0) {
     categories.push({
       kind: "category",
@@ -359,12 +369,12 @@ export function createToolboxConfig(enabledBlocks) {
   }
 
   // Variables category
-  const hasVariableBlocks = 
-    enabledBlocks["variables_get"] || 
-    enabledBlocks["variables_set"] || 
-    enabledBlocks["var_math"] || 
+  const hasVariableBlocks =
+    enabledBlocks["variables_get"] ||
+    enabledBlocks["variables_set"] ||
+    enabledBlocks["var_math"] ||
     enabledBlocks["get_var_value"];
-  
+
   if (hasVariableBlocks) {
     console.log("✅ Adding Variables category - variable blocks enabled");
     categories.push({

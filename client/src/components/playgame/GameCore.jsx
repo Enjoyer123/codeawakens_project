@@ -1,6 +1,7 @@
 // src/components/playegame/GameCore.jsx
 // Core game component that can be reused for both normal play and preview mode
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { updateTrainScheduleVisuals, updateRopePartitionVisuals } from '../../gameutils/utils/phaserGame';
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import ProgressModal from '../../pages/user/ProgressModal';
@@ -48,7 +49,19 @@ import { loadDfsExampleBlocks } from '../../gameutils/utils/blockly/loadDfsExamp
 import { loadBfsExampleBlocks } from '../../gameutils/utils/blockly/loadBfsExample';
 import { loadDijkstraExampleBlocks } from '../../gameutils/utils/blockly/loadDijkstraExample';
 import { loadPrimExampleBlocks } from '../../gameutils/utils/blockly/loadPrimExample';
+import { loadKnapsackExampleBlocks } from '../../gameutils/utils/blockly/loadKnapsackExample';
+import { loadDynamicKnapsackExampleBlocks } from '../../gameutils/utils/blockly/loadDynamicKnapsackExample';
 import { loadKruskalExampleBlocks } from '../../gameutils/utils/blockly/loadKruskalExample';
+import { loadSubsetSumExampleBlocks } from '../../gameutils/utils/blockly/loadSubsetSumExample';
+import { loadDynamicSubsetSumExampleBlocks } from '../../gameutils/utils/blockly/loadDynamicSubsetSumExample';
+import { loadCoinChangeExampleBlocks } from '../../gameutils/utils/blockly/loadCoinChangeExample';
+import { loadDynamicCoinChangeExampleBlocks } from '../../gameutils/utils/blockly/loadDynamicCoinChangeExample';
+import { loadGreedyCoinChangeExampleBlocks } from '../../gameutils/utils/blockly/loadGreedyCoinChangeExample';
+import { loadNQueenExampleBlocks } from '../../gameutils/utils/blockly/loadNQueenExample';
+import { loadDynamicAntDpExampleBlocks } from '../../gameutils/utils/blockly/loadDynamicAntDpExample';
+import { loadTrainScheduleExampleBlocks } from '../../gameutils/utils/blockly/loadTrainScheduleExample';
+import { loadRopePartitionExampleBlocks } from '../../gameutils/utils/blockly/loadRopePartitionExample';
+import { loadEmeiMountainExample } from '../../gameutils/utils/blockly/loadEmeiMountainExample';
 
 /**
  * GameCore Component
@@ -61,18 +74,18 @@ import { loadKruskalExampleBlocks } from '../../gameutils/utils/blockly/loadKrus
  * @param {Function} props.onUnlockPattern - Callback function when pattern is unlocked (optional, for preview mode)
  * @param {Function} props.onUnlockLevel - Callback function when level is unlocked (optional, for preview mode)
  */
-const GameCore = ({ 
-  levelId: propLevelId, 
-  isPreview = false, 
+const GameCore = ({
+  levelId: propLevelId,
+  isPreview = false,
   patternId = null,
   onSaveProgress = null,
   onUnlockPattern = null,
-  onUnlockLevel = null 
+  onUnlockLevel = null
 }) => {
   const { levelId: paramLevelId } = useParams();
   const navigate = useNavigate();
   const { getToken } = useAuth();
-  
+
   // Use prop levelId if provided, otherwise use param from route
   const levelId = propLevelId || paramLevelId;
 
@@ -219,7 +232,7 @@ const GameCore = ({
   useEffect(() => {
     let lastCombatState = isInCombat();
     setInCombatMode(lastCombatState);
-    
+
     const interval = setInterval(() => {
       const currentCombatState = isInCombat();
       // Only update if state changed to prevent infinite loop
@@ -288,7 +301,7 @@ const GameCore = ({
       blocklyJavaScriptReady,
       shouldSet: blocklyLoaded && workspaceRef.current && !blocklyJavaScriptReady
     });
-    
+
     if (blocklyLoaded && workspaceRef.current && !blocklyJavaScriptReady) {
       console.log("✅ blocklyLoaded is true, setting blocklyJavaScriptReady to true");
       setBlocklyJavaScriptReady(true);
@@ -405,13 +418,13 @@ const GameCore = ({
           const data = await response.json();
           // Handle both array and object with patterns property
           const patterns = Array.isArray(data) ? data : (data.patterns || []);
-          
+
           // In preview mode, use all patterns (including is_available = false)
           // In normal mode, only use patterns with is_available = true
-          const filteredPatterns = isPreview 
-            ? patterns 
+          const filteredPatterns = isPreview
+            ? patterns
             : patterns.filter(p => p.is_available === true);
-          
+
           setGoodPatterns(filteredPatterns);
         }
       } catch (err) {
@@ -504,7 +517,7 @@ const GameCore = ({
     })
   });
 
-        // Initialize Blockly
+  // Initialize Blockly
   const { initBlocklyAndPhaser } = useBlocklySetup({
     blocklyRef,
     workspaceRef,
@@ -552,7 +565,8 @@ const GameCore = ({
     foundMonster,
     canMoveForward,
     nearPit,
-    atGoal
+    atGoal,
+    setHintData // Pass setHintData to allow visualization updates from execution
   });
 
   // Handle restart game - using utils
@@ -573,13 +587,71 @@ const GameCore = ({
 
   // Game action and condition functions are now provided by custom hooks (useGameActions, useGameConditions)
 
+  // Rope Partition Visual API Bridge
+  useEffect(() => {
+    if (!currentLevel) return;
+    const isRopePartition = currentLevel.gameType === 'rope_partition' || (currentLevel.appliedData && currentLevel.appliedData.type === 'BACKTRACKING_ROPE_PARTITION');
+
+    if (isRopePartition) {
+      // Rope Partition API Bridge
+      if (typeof globalThis !== 'undefined') {
+        console.log('[Rope Bridge] Initializing Rope Partition API');
+        globalThis.__ropePartition_api = {
+          updateCuts: (cuts) => {
+            console.log('[Rope Bridge] updateCuts called with:', cuts);
+            // cuts is array of segment lengths e.g. [1, 2, 7]
+            // We need to pass this to hintData so phaser can render it
+            setHintData(prev => ({
+              ...prev,
+              current: cuts ? [...cuts] : []
+            }));
+          }
+        };
+        // Initialize state
+        setHintData({ current: [], status: 'Adding cuts...' });
+      }
+    } else {
+      // Cleanup
+      if (typeof globalThis !== 'undefined') {
+        if (globalThis.__ropePartition_api) delete globalThis.__ropePartition_api;
+      }
+    }
+
+    return () => {
+      if (typeof globalThis !== 'undefined' && globalThis.__ropePartition_api) {
+        delete globalThis.__ropePartition_api;
+      }
+    };
+  }, [currentLevel]);
+
+
+  useEffect(() => {
+    // Train Schedule Visuals
+    if (currentLevel?.gameType === 'train_schedule' && hintData?.assignments) {
+      const scene = getCurrentGameState().currentScene;
+      if (scene) {
+        console.log('[GameCore] Triggering Train Schedule Visuals from Core', hintData.assignments);
+        updateTrainScheduleVisuals(scene, hintData.assignments);
+      }
+    }
+
+    // Rope Partition Visuals
+    if ((currentLevel?.gameType === 'rope_partition' || currentLevel?.appliedData?.type === 'BACKTRACKING_ROPE_PARTITION') && hintData) {
+      const scene = getCurrentGameState().currentScene;
+      if (scene) {
+        // Passing the whole hintData as it contains the rich state object (current, total, status, etc)
+        updateRopePartitionVisuals(scene, hintData);
+      }
+    }
+  }, [currentLevel, hintData, hintData?.assignments]);
+
   // Update player weapon display
   const updatePlayerWeaponDisplay = () => {
     const currentState = getCurrentGameState();
     const weaponKey = currentState.weaponKey || 'stick';
     const weaponData = getWeaponData(weaponKey);
     setCurrentWeaponData(weaponData);
-    
+
     const currentScene = getCurrentGameState().currentScene;
     if (currentScene && currentScene.add && currentScene.player) {
       try {
@@ -623,7 +695,7 @@ const GameCore = ({
     >
       <div className={`flex ${isPreview ? 'h-full' : 'h-screen'} bg-gray-900`}>
         {/* Game Area - 65% ของหน้าจอ */}
-        
+
         <div className="w-[50%] relative bg-black">
           <GameArea
             gameRef={gameRef}
@@ -648,8 +720,8 @@ const GameCore = ({
             onNeedHintClick={() => {
               const baseHints = Array.isArray(currentLevel?.hints)
                 ? [...currentLevel.hints]
-                    .filter(h => h.is_active !== false)
-                    .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+                  .filter(h => h.is_active !== false)
+                  .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
                 : [];
 
               console.log('🔔 [GameCore] Need Hint clicked (preview)', {
@@ -683,7 +755,7 @@ const GameCore = ({
         </div>
 
         {/* Blockly Area - 35% ของหน้าจอ */}
-        <div 
+        <div
           className="w-[50%] border-l border-black flex flex-col backdrop-blur-sm overflow-hidden"
           style={{
             backgroundImage: "url('/paper.png')",
@@ -692,97 +764,238 @@ const GameCore = ({
             backgroundRepeat: "no-repeat"
           }}
         >
-                   <div className="flex flex-col h-full px-4 py-4 md:px-20">
+          <div className="flex flex-col h-full px-4 py-4 md:px-20">
 
             <div className="bg-stone-900 p-4 shadow-lg shrink-0 mb-4 rounded-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-bold text-white">
-                  {currentLevel?.level_name || `ด่าน ${levelId}`}
-                  {isPreview && <span className="ml-2 text-yellow-400 text-sm">(Preview)</span>}
-                </h2>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-white">
+                    {currentLevel?.level_name || `ด่าน ${levelId}`}
+                    {isPreview && <span className="ml-2 text-yellow-400 text-sm">(Preview)</span>}
+                  </h2>
+                </div>
+                {/* Temporary buttons to load example blocks - Remove after development */}
+                {workspaceRef.current && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        if (workspaceRef.current) {
+                          loadDfsExampleBlocks(workspaceRef.current);
+                        }
+                      }}
+                      className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded"
+                      title="โหลด DFS example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                    >
+                      📦 โหลด DFS
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (workspaceRef.current) {
+                          loadBfsExampleBlocks(workspaceRef.current);
+                        }
+                      }}
+                      className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded"
+                      title="โหลด BFS example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                    >
+                      📦 โหลด BFS
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (workspaceRef.current) {
+                          loadDijkstraExampleBlocks(workspaceRef.current);
+                        }
+                      }}
+                      className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded"
+                      title="โหลด Dijkstra example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                    >
+                      📦 โหลด Dijkstra
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (workspaceRef.current) {
+                          loadPrimExampleBlocks(workspaceRef.current);
+                        }
+                      }}
+                      className="px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white text-sm rounded"
+                      title="โหลด Prim example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                    >
+                      📦 โหลด Prim
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (workspaceRef.current) {
+                          loadKruskalExampleBlocks(workspaceRef.current);
+                        }
+                      }}
+                      className="px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white text-sm rounded"
+                      title="โหลด Kruskal example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                    >
+                      📦 โหลด Kruskal
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (workspaceRef.current) {
+                          loadKnapsackExampleBlocks(workspaceRef.current);
+                        }
+                      }}
+                      className="px-3 py-1 bg-pink-600 hover:bg-pink-700 text-white text-sm rounded"
+                      title="โหลด Knapsack example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                    >
+                      📦 โหลด Knapsack
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (workspaceRef.current) {
+                          loadTrainScheduleExampleBlocks(workspaceRef.current);
+                        }
+                      }}
+                      className="px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white text-sm rounded"
+                      title="โหลด Train Schedule Blocks"
+                    >
+                      📦 โหลด Train Schedule
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (workspaceRef.current) {
+                          loadDynamicKnapsackExampleBlocks(workspaceRef.current);
+                        }
+                      }}
+                      className="px-3 py-1 bg-pink-700 hover:bg-pink-800 text-white text-sm rounded"
+                      title="โหลด Dynamic Knapsack (DP) example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                    >
+                      📦 โหลด Dynamic Knap
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (workspaceRef.current) {
+                          loadSubsetSumExampleBlocks(workspaceRef.current);
+                        }
+                      }}
+                      className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded"
+                      title="โหลด Subset Sum example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                    >
+                      ➕ โหลด Subset Sum
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (workspaceRef.current) {
+                          loadDynamicSubsetSumExampleBlocks(workspaceRef.current);
+                        }
+                      }}
+                      className="px-3 py-1 bg-purple-700 hover:bg-purple-800 text-white text-sm rounded"
+                      title="โหลด Dynamic Subset Sum (DP) example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                    >
+                      ➕ โหลด Dynamic Subset
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (workspaceRef.current) {
+                          loadCoinChangeExampleBlocks(workspaceRef.current);
+                        }
+                      }}
+                      className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded"
+                      title="โหลด Coin Change example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                    >
+                      🪙 โหลด Coin Change
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (workspaceRef.current) {
+                          loadDynamicCoinChangeExampleBlocks(workspaceRef.current);
+                        }
+                      }}
+                      className="px-3 py-1 bg-indigo-700 hover:bg-indigo-800 text-white text-sm rounded"
+                      title="โหลด Dynamic Coin Change (DP) example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                    >
+                      🪙 โหลด Dynamic Coin
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (workspaceRef.current) {
+                          loadGreedyCoinChangeExampleBlocks(workspaceRef.current);
+                        }
+                      }}
+                      className="px-3 py-1 bg-indigo-800 hover:bg-indigo-900 text-white text-sm rounded"
+                      title="โหลด Greedy Coin Change example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                    >
+                      🪙 โหลด Coin Greedy
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (workspaceRef.current) {
+                          loadNQueenExampleBlocks(workspaceRef.current);
+                        }
+                      }}
+                      className="px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white text-sm rounded"
+                      title="โหลด N-Queen example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                    >
+                      👑 โหลด N-Queen
+                    </button>
+
+                    {/* Ant DP (Applied Dynamic) */}
+                    <button
+                      onClick={() => {
+                        if (workspaceRef.current) {
+                          loadDynamicAntDpExampleBlocks(workspaceRef.current);
+                        }
+                      }}
+                      className="px-3 py-1 bg-emerald-700 hover:bg-emerald-800 text-white text-sm rounded"
+                      title="โหลด Ant DP example blocks (แบบสั้น - สำหรับโชว์ตาราง)"
+                    >
+                      🐜 โหลด Ant (สั้น)
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (workspaceRef.current) {
+                          loadRopePartitionExampleBlocks(workspaceRef.current);
+                        }
+                      }}
+                      className="px-3 py-1 bg-cyan-600 hover:bg-cyan-700 text-white text-sm rounded"
+                      title="โหลด Rope Partition (Backtracking)"
+                    >
+                      🪢 โหลด Rope Partition
+                    </button>
+
+                    <>
+                      <button
+                        onClick={() => workspaceRef.current && loadEmeiMountainExample(workspaceRef.current, 'dijkstra')}
+                        className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded shadow-md"
+                        title="โหลด Dijkstra Max-Cap (ง้อไบ๊)"
+                      >
+                        📦 โหลด Dijkstra (ง้อไบ๊)
+                      </button>
+                      <button
+                        onClick={() => workspaceRef.current && loadEmeiMountainExample(workspaceRef.current, 'prim')}
+                        className="px-3 py-1 bg-pink-600 hover:bg-pink-700 text-white text-sm rounded shadow-md"
+                        title="โหลด Prim Max-Cap (ง้อไบ๊)"
+                      >
+                        📦 โหลด Prim (ง้อไบ๊)
+                      </button>
+                    </>
+                  </div>
+                )}
               </div>
-          {/* Temporary buttons to load example blocks - Remove after development */}
-          {workspaceRef.current && (
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  if (workspaceRef.current) {
-                    loadDfsExampleBlocks(workspaceRef.current);
-                  }
-                }}
-                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded"
-                title="โหลด DFS example blocks (ชั่วคราว - สำหรับทดสอบ)"
-              >
-                📦 โหลด DFS
-              </button>
-              <button
-                onClick={() => {
-                  if (workspaceRef.current) {
-                    loadBfsExampleBlocks(workspaceRef.current);
-                  }
-                }}
-                className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded"
-                title="โหลด BFS example blocks (ชั่วคราว - สำหรับทดสอบ)"
-              >
-                📦 โหลด BFS
-              </button>
-              <button
-                onClick={() => {
-                  if (workspaceRef.current) {
-                    loadDijkstraExampleBlocks(workspaceRef.current);
-                  }
-                }}
-                className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded"
-                title="โหลด Dijkstra example blocks (ชั่วคราว - สำหรับทดสอบ)"
-              >
-                📦 โหลด Dijkstra
-              </button>
-              <button
-                onClick={() => {
-                  if (workspaceRef.current) {
-                    loadPrimExampleBlocks(workspaceRef.current);
-                  }
-                }}
-                className="px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white text-sm rounded"
-                title="โหลด Prim example blocks (ชั่วคราว - สำหรับทดสอบ)"
-              >
-                📦 โหลด Prim
-              </button>
-              <button
-                onClick={() => {
-                  if (workspaceRef.current) {
-                    loadKruskalExampleBlocks(workspaceRef.current);
-                  }
-                }}
-                className="px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white text-sm rounded"
-                title="โหลด Kruskal example blocks (ชั่วคราว - สำหรับทดสอบ)"
-              >
-                📦 โหลด Kruskal
-              </button>
             </div>
-          )}
-            </div>
-          </div>
             <div className="flex-1 min-h-0 relative shadow-2xl rounded-lg overflow-hidden">
 
-          <BlocklyArea
-            blocklyRef={blocklyRef}
-            blocklyLoaded={blocklyLoaded}
-            runCode={runCode}
-            gameState={gameState}
-            isRunning={isRunning}
-            isGameOver={isGameOver}
-            onDebugToggle={handleDebugToggle}
-            debugMode={debugMode}
-            currentLevel={currentLevel}
-            codeValidation={codeValidation}
-            blocklyJavaScriptReady={blocklyJavaScriptReady}
-            textCode={textCode}
-            handleTextCodeChange={handleTextCodeChangeWithState}
-          />
-           </div>
-             </div>
+              <BlocklyArea
+                blocklyRef={blocklyRef}
+                blocklyLoaded={blocklyLoaded}
+                runCode={runCode}
+                gameState={gameState}
+                isRunning={isRunning}
+                isGameOver={isGameOver}
+                onDebugToggle={handleDebugToggle}
+                debugMode={debugMode}
+                currentLevel={currentLevel}
+                codeValidation={codeValidation}
+                blocklyJavaScriptReady={blocklyJavaScriptReady}
+                textCode={textCode}
+                handleTextCodeChange={handleTextCodeChangeWithState}
+              />
+            </div>
+          </div>
 
         </div>
       </div>
@@ -808,4 +1021,3 @@ const GameCore = ({
 };
 
 export default GameCore;
-

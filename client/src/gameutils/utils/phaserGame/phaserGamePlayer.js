@@ -12,7 +12,9 @@ import { moveToPosition } from '../../phaser/utils/playerMovement';
 import { updatePlayerArrow } from './phaserGameArrow';
 
 export function updatePlayer(scene, nodeId, direction) {
-  const targetNode = scene.levelData.nodes.find((n) => n.id === nodeId);
+  // ตรวจสอบว่ามี nodes หรือไม่
+  const hasNodes = scene.levelData.nodes && scene.levelData.nodes.length > 0;
+  const targetNode = hasNodes ? scene.levelData.nodes.find((n) => n.id === nodeId) : null;
 
   if (targetNode && scene.player) {
     // Calculate direction from current node to target node
@@ -67,6 +69,27 @@ export function updatePlayer(scene, nodeId, direction) {
     // Reset player appearance (in case it was affected by pit fall)
     scene.player.alpha = 1;
     scene.player.setScale(1.8);
+  } else if (!hasNodes && scene.player) {
+    // ถ้าไม่มี nodes แต่มีการเรียก updatePlayer ให้ทำแค่ update direction และ animation
+    // เพื่อให้ผู้เล่นเห็นการเปลี่ยนแปลงตัวละคร (สำหรับด่านที่ไม่มี nodes เช่น Backtrack)
+    const calculatedDirection = direction !== undefined ? direction : (scene.player.directionIndex || 0);
+    
+    // Update player direction
+    scene.player.directionIndex = calculatedDirection;
+    setCurrentGameState({ direction: calculatedDirection });
+    
+    // Play idle animation to show player is active
+    playIdle(scene.player);
+    
+    // Update arrow position (ถ้ามี arrow)
+    if (scene.playerArrow) {
+      updatePlayerArrow(scene, scene.player.x, scene.player.y, calculatedDirection);
+    }
+    
+    // Update weapon position
+    updateWeaponPosition(scene);
+    
+    console.log('⚠️ No nodes in level, player animation updated at current position');
   }
 }
 

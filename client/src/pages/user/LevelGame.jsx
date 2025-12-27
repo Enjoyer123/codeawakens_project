@@ -33,8 +33,17 @@ import { clearGameOverScreen, showGameOver } from '../../gameutils/utils/phaserG
 import { createToolboxConfig } from '../../gameutils/utils/blocklyUtils';
 import { loadDfsExampleBlocks } from '../../gameutils/utils/blockly/loadDfsExample';
 import { loadBfsExampleBlocks } from '../../gameutils/utils/blockly/loadBfsExample';
+import { loadKnapsackExampleBlocks } from '../../gameutils/utils/blockly/loadKnapsackExample';
+import { loadDynamicKnapsackExampleBlocks } from '../../gameutils/utils/blockly/loadDynamicKnapsackExample';
+import { loadSubsetSumExampleBlocks } from '../../gameutils/utils/blockly/loadSubsetSumExample';
+import { loadDynamicSubsetSumExampleBlocks } from '../../gameutils/utils/blockly/loadDynamicSubsetSumExample';
+import { loadCoinChangeExampleBlocks } from '../../gameutils/utils/blockly/loadCoinChangeExample';
+import { loadDynamicCoinChangeExampleBlocks } from '../../gameutils/utils/blockly/loadDynamicCoinChangeExample';
+import { loadGreedyCoinChangeExampleBlocks } from '../../gameutils/utils/blockly/loadGreedyCoinChangeExample';
 import { loadDijkstraExampleBlocks } from '../../gameutils/utils/blockly/loadDijkstraExample';
 import { loadPrimExampleBlocks } from '../../gameutils/utils/blockly/loadPrimExample';
+import { loadDynamicAntDpExampleBlocks } from '../../gameutils/utils/blockly/loadDynamicAntDpExample';
+import { loadTrainScheduleExampleBlocks } from '../../gameutils/utils/blockly/loadTrainScheduleExample';
 
 // Import components
 import GameArea from '../../components/playgame/GameArea';
@@ -156,7 +165,7 @@ const LevelGame = () => {
     totalSteps: 0,
     progress: 0
   });
-  
+
   // Debug: Log hintData changes
   useEffect(() => {
     console.log('🔍 [LevelGame] hintData state changed:', hintData);
@@ -196,7 +205,7 @@ const LevelGame = () => {
   useEffect(() => {
     let lastCombatState = isInCombat();
     setInCombatMode(lastCombatState);
-    
+
     const interval = setInterval(() => {
       const currentCombatState = isInCombat();
       // Only update if state changed to prevent infinite loop
@@ -450,7 +459,7 @@ const LevelGame = () => {
       try {
         const newToolbox = createToolboxConfig(enabledBlocks);
         workspaceRef.current.updateToolbox(newToolbox);
-          } catch (error) {
+      } catch (error) {
         console.warn("Error updating toolbox:", error);
       }
     }
@@ -481,7 +490,7 @@ const LevelGame = () => {
   // Priority: hintData.hint > loading message
   useEffect(() => {
     const hintValue = hintData?.hint;
-    
+
     console.log('🔍 [LevelGame] hintData update effect triggered:', {
       hintDataHint: hintValue,
       hintDataHintType: typeof hintValue,
@@ -514,7 +523,7 @@ const LevelGame = () => {
         hintTrimmed: hintValue?.trim(),
         hintIsEmpty: hintValue?.trim() === ''
       });
-      
+
       // If hintData exists but hint is empty, show default message
       // But only if current hint is still the loading message
       if (hintData && (!hintValue || hintValue.trim() === '') && currentHint && currentHint.includes('โหลดด่าน')) {
@@ -688,82 +697,82 @@ const LevelGame = () => {
       <div className="flex flex-col lg:flex-row h-screen bg-stone-900 text-white overflow-hidden">
         {/* Left Side: Game Area (Top on mobile) */}
         <div className="w-full lg:w-[40%] flex flex-col h-[60vh] lg:h-full shrink-0 bg-stone-900 border-r border-stone-700">
-           {/* Header */}
-           <div className="px-3 py-2 bg-stone-900 border-b border-stone-800 shrink-0 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-stone-200">
-                {currentLevel?.name || `ด่าน ${levelId}`}
-              </h2>
-              {/* Temporary buttons */}
-              {workspaceRef.current && (
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => workspaceRef.current && loadDfsExampleBlocks(workspaceRef.current)}
-                    className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded"
-                    title="Load DFS"
-                  >
-                    DFS
-                  </button>
-                  <button
-                    onClick={() => workspaceRef.current && loadBfsExampleBlocks(workspaceRef.current)}
-                    className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded"
-                    title="Load BFS"
-                  >
-                    BFS
-                  </button>
-                </div>
-              )}
-           </div>
+          {/* Header */}
+          <div className="px-3 py-2 bg-stone-900 border-b border-stone-800 shrink-0 flex items-center justify-between">
+            <h2 className="text-lg font-bold text-stone-200">
+              {currentLevel?.name || `ด่าน ${levelId}`}
+            </h2>
+            {/* Temporary buttons */}
+            {workspaceRef.current && (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => workspaceRef.current && loadDfsExampleBlocks(workspaceRef.current)}
+                  className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded"
+                  title="Load DFS"
+                >
+                  DFS
+                </button>
+                <button
+                  onClick={() => workspaceRef.current && loadBfsExampleBlocks(workspaceRef.current)}
+                  className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded"
+                  title="Load BFS"
+                >
+                  BFS
+                </button>
+              </div>
+            )}
+          </div>
 
-           {/* Game Canvas & Info */}
-           <div className="flex-1 overflow-hidden flex flex-col">
-              <GameArea
-                gameRef={gameRef}
-                levelData={currentLevel}
-                playerNodeId={playerNodeId}
-                playerDirection={playerDirection}
-                playerHpState={playerHpState}
-                isCompleted={isCompleted}
-                isGameOver={isGameOver}
-                currentWeaponData={currentWeaponData}
-                currentHint={currentHint}
-                hintData={hintData}
-                hintOpen={hintOpen}
-                onToggleHint={() => setHintOpen(!hintOpen)}
-                hintOpenCount={hintOpenCount}
-                levelHints={levelHints}
-                activeLevelHint={activeLevelHint}
-                workspaceRef={workspaceRef}
-                onNeedHintClick={() => {
-                    const baseHints = Array.isArray(currentLevel?.hints)
-                      ? [...currentLevel.hints]
-                          .filter(h => h.is_active !== false)
-                          .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
-                      : [];
-                    if (!baseHints || baseHints.length === 0 || levelHintIndex >= baseHints.length) return;
-                    const nextHint = baseHints[levelHintIndex];
-                    setActiveLevelHint(nextHint);
-                    setLevelHintIndex(levelHintIndex + 1);
-                    setHintOpen(true);
-                }}
-                needHintDisabled={
-                    !Array.isArray(currentLevel?.hints) ||
-                    currentLevel.hints.filter(h => h.is_active !== false).length === 0 ||
-                    levelHintIndex >= currentLevel.hints.filter(h => h.is_active !== false).length
-                }
-                playerCoins={getCurrentGameState().playerCoins || []}
-                rescuedPeople={rescuedPeople}
-                finalScore={finalScore}
-                inCombatMode={inCombatMode}
-                blocklyJavaScriptReady={blocklyJavaScriptReady}
-                showScore={true}
-                userBigO={userBigO}
-                onUserBigOChange={setUserBigO}
-              />
-           </div>
+          {/* Game Canvas & Info */}
+          <div className="flex-1 overflow-hidden flex flex-col">
+            <GameArea
+              gameRef={gameRef}
+              levelData={currentLevel}
+              playerNodeId={playerNodeId}
+              playerDirection={playerDirection}
+              playerHpState={playerHpState}
+              isCompleted={isCompleted}
+              isGameOver={isGameOver}
+              currentWeaponData={currentWeaponData}
+              currentHint={currentHint}
+              hintData={hintData}
+              hintOpen={hintOpen}
+              onToggleHint={() => setHintOpen(!hintOpen)}
+              hintOpenCount={hintOpenCount}
+              levelHints={levelHints}
+              activeLevelHint={activeLevelHint}
+              workspaceRef={workspaceRef}
+              onNeedHintClick={() => {
+                const baseHints = Array.isArray(currentLevel?.hints)
+                  ? [...currentLevel.hints]
+                    .filter(h => h.is_active !== false)
+                    .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+                  : [];
+                if (!baseHints || baseHints.length === 0 || levelHintIndex >= baseHints.length) return;
+                const nextHint = baseHints[levelHintIndex];
+                setActiveLevelHint(nextHint);
+                setLevelHintIndex(levelHintIndex + 1);
+                setHintOpen(true);
+              }}
+              needHintDisabled={
+                !Array.isArray(currentLevel?.hints) ||
+                currentLevel.hints.filter(h => h.is_active !== false).length === 0 ||
+                levelHintIndex >= currentLevel.hints.filter(h => h.is_active !== false).length
+              }
+              playerCoins={getCurrentGameState().playerCoins || []}
+              rescuedPeople={rescuedPeople}
+              finalScore={finalScore}
+              inCombatMode={inCombatMode}
+              blocklyJavaScriptReady={blocklyJavaScriptReady}
+              showScore={true}
+              userBigO={userBigO}
+              onUserBigOChange={setUserBigO}
+            />
+          </div>
         </div>
 
         {/* Right Side: Blockly Area (Bottom on mobile) */}
-        <div 
+        <div
           className="w-full lg:w-[60%] flex flex-col h-[50vh] lg:h-full bg-[#1e1e1e]"
           style={{
             backgroundImage: "url('/paper.png')",
@@ -773,24 +782,24 @@ const LevelGame = () => {
           }}
         >
           <div className="flex flex-col h-full px-4 py-4 md:px-8">
-             <div className="flex-1 min-h-0 relative shadow-2xl rounded-lg overflow-hidden bg-stone-900/50 backdrop-blur-sm border border-white/10">
-               <BlocklyArea
-                  blocklyRef={blocklyRef}
-                  blocklyLoaded={blocklyLoaded}
-                  runCode={runCode}
-                  gameState={gameState}
-                  isRunning={isRunning}
-                  isGameOver={isGameOver}
-                  onDebugToggle={handleDebugToggle}
-                  debugMode={debugMode}
-                  currentLevel={currentLevel}
-                  codeValidation={codeValidation}
-                  blocklyJavaScriptReady={blocklyJavaScriptReady}
-                  textCode={textCode}
-                  handleTextCodeChange={handleTextCodeChange}
-                  testCaseResult={testCaseResult}
-                />
-             </div>
+            <div className="flex-1 min-h-0 relative shadow-2xl rounded-lg overflow-hidden bg-stone-900/50 backdrop-blur-sm border border-white/10">
+              <BlocklyArea
+                blocklyRef={blocklyRef}
+                blocklyLoaded={blocklyLoaded}
+                runCode={runCode}
+                gameState={gameState}
+                isRunning={isRunning}
+                isGameOver={isGameOver}
+                onDebugToggle={handleDebugToggle}
+                debugMode={debugMode}
+                currentLevel={currentLevel}
+                codeValidation={codeValidation}
+                blocklyJavaScriptReady={blocklyJavaScriptReady}
+                textCode={textCode}
+                handleTextCodeChange={handleTextCodeChange}
+                testCaseResult={testCaseResult}
+              />
+            </div>
           </div>
         </div>
       </div>

@@ -4,6 +4,11 @@ import { useAuth } from '@clerk/clerk-react';
 import { directions } from '../../gameutils/utils/gameUtils';
 import { fetchLevelById } from '../../services/levelService';
 import DijkstraStateTable from './DijkstraStateTable';
+import KnapsackStateTable from './KnapsackStateTable';
+import SubsetSumStateTable from './SubsetSumStateTable';
+import CoinChangeStateTable from './CoinChangeStateTable';
+import AntDpStateTable from './AntDpStateTable';
+import { getCurrentGameState } from '../../gameutils/utils/gameUtils';
 import {
   Dialog,
   DialogContent,
@@ -44,7 +49,7 @@ const GameArea = ({
   const [viewerData, setViewerData] = useState(null);
   const [viewerLoading, setViewerLoading] = useState(false);
   const currentBlockCount = hintData?.currentBlockCount || 0;
-  
+
   // ใช้ bestPattern.count ถ้ามี หรือใช้ totalBlocks เป็น fallback
   const patternBlockCount = hintData?.bestPattern?.count || hintData?.totalBlocks || null;
   console.log('🔍 [GameArea] patternBlockCount:', patternBlockCount);
@@ -125,44 +130,51 @@ const GameArea = ({
         />
         {/* Dijkstra State Table - แสดงเฉพาะในด่าน Shortest Path */}
         <DijkstraStateTable currentLevel={levelData} />
+        {/* Knapsack DP/Memo Table */}
+        <KnapsackStateTable currentLevel={levelData} />
+        {/* Subset Sum DP Table */}
+        <SubsetSumStateTable currentLevel={levelData} />
+        {/* Coin Change DP/Backtrack Table */}
+        <CoinChangeStateTable currentLevel={levelData} />
+        {/* Applied Dynamic (Ant) DP Table */}
+        <AntDpStateTable currentLevel={levelData} />
       </div>
 
       {/* Compact Bottom UI Bar */}
       <div className="flex-shrink-0 bg-stone-900/95 backdrop-blur-md border-t border-gray-700/50 shadow-2xl z-30">
         <div className="flex items-center gap-4 p-3 text-gray-200">
-          
+
           {/* STATUS: HP & Weapon */}
           <div className="flex-shrink-0 bg-black/30 rounded-lg p-3 border border-gray-700/50 min-w-[200px]">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Status</span>
               {currentWeaponData && (
                 <span className="text-[10px] bg-blue-900/40 text-blue-300 px-2 py-0.5 rounded border border-blue-800/50">
-                   ⚔️ {currentWeaponData.name}
+                  ⚔️ {currentWeaponData.name}
                 </span>
               )}
             </div>
-            
+
             {/* HP Bar */}
             <div className="relative h-4 bg-gray-800 rounded-full overflow-hidden border border-gray-700">
-               <div
-                  className={`h-full transition-all duration-500 ease-out ${
-                    playerHpState > 50 ? 'bg-gradient-to-r from-green-600 to-green-500' : 
-                    playerHpState > 20 ? 'bg-gradient-to-r from-yellow-600 to-yellow-500' : 'bg-gradient-to-r from-red-600 to-red-500'
+              <div
+                className={`h-full transition-all duration-500 ease-out ${playerHpState > 50 ? 'bg-gradient-to-r from-green-600 to-green-500' :
+                  playerHpState > 20 ? 'bg-gradient-to-r from-yellow-600 to-yellow-500' : 'bg-gradient-to-r from-red-600 to-red-500'
                   }`}
-                  style={{ width: `${playerHpState}%` }}
-                ></div>
-                <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white drop-shadow-md">
-                  {playerHpState} / 100 HP
-                </div>
+                style={{ width: `${playerHpState}%` }}
+              ></div>
+              <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white drop-shadow-md">
+                {playerHpState} / 100 HP
+              </div>
             </div>
           </div>
 
           {/* Block Count */}
           <div className="flex-shrink-0 bg-black/30 rounded-lg p-3 border border-gray-700/50 flex items-center gap-3">
             <div className="w-10 h-10 flex-shrink-0">
-              <img 
-                src="/blockcount.png" 
-                alt="Block Count" 
+              <img
+                src="/blockcount.png"
+                alt="Block Count"
                 className="w-full h-full object-contain drop-shadow-md"
               />
             </div>
@@ -178,7 +190,7 @@ const GameArea = ({
 
           {/* Hint Button */}
           <div className="flex-shrink-0 bg-black/30 rounded-lg p-3 border border-gray-700/50">
-            <button 
+            <button
               onClick={() => {
                 console.log('🟡 [GameArea] Need Hint button clicked');
                 if (typeof onNeedHintClick === 'function') {
@@ -188,16 +200,15 @@ const GameArea = ({
                 }
               }}
               disabled={needHintDisabled}
-              className={`w-10 h-10 p-1 rounded-full transition-all duration-300 transform hover:scale-110 active:scale-95 ${
-                needHintDisabled
-                  ? 'opacity-40 grayscale cursor-not-allowed'
-                  : 'opacity-100 hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] cursor-pointer'
-              }`}
+              className={`w-10 h-10 p-1 rounded-full transition-all duration-300 transform hover:scale-110 active:scale-95 ${needHintDisabled
+                ? 'opacity-40 grayscale cursor-not-allowed'
+                : 'opacity-100 hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] cursor-pointer'
+                }`}
               title="Need Hints"
             >
-              <img 
-                src="/glass.png" 
-                alt="Hint" 
+              <img
+                src="/glass.png"
+                alt="Hint"
                 className="w-full h-full object-contain"
               />
             </button>
@@ -213,18 +224,17 @@ const GameArea = ({
             {hintData && hintData.showPatternProgress ? (
               <div className="space-y-2">
                 <div className="w-full h-1.5 bg-gray-700 rounded-full overflow-hidden">
-                   <div 
-                     className={`h-full transition-all duration-300 ${
-                       (hintData.patternPercentage || 0) === 100 ? 'bg-green-500' : 'bg-blue-500'
-                     }`}
-                     style={{ width: `${hintData.patternPercentage || 0}%` }}
-                   ></div>
+                  <div
+                    className={`h-full transition-all duration-300 ${(hintData.patternPercentage || 0) === 100 ? 'bg-green-500' : 'bg-blue-500'
+                      }`}
+                    style={{ width: `${hintData.patternPercentage || 0}%` }}
+                  ></div>
                 </div>
                 <div className="flex justify-between items-center">
-                   <span className="text-[10px] text-gray-300 truncate max-w-[120px]">{hintData.patternName}</span>
-                   <span className="text-[10px] text-blue-400 font-mono">{hintData.patternPercentage}%</span>
+                  <span className="text-[10px] text-gray-300 truncate max-w-[120px]">{hintData.patternName}</span>
+                  <span className="text-[10px] text-blue-400 font-mono">{hintData.patternPercentage}%</span>
                 </div>
-                
+
                 {/* Three Parts Match Indicator */}
                 {hintData.threePartsMatch && (
                   <div className="mt-2 pt-2 border-t border-gray-700/50">
@@ -235,19 +245,16 @@ const GameArea = ({
                       </span>
                     </div>
                     <div className="flex gap-1">
-                      <div className={`flex-1 h-1.5 rounded ${
-                        hintData.threePartsMatch.part1Match ? 'bg-green-500' : 'bg-gray-700'
-                      }`} title="Part 1: Initialization"></div>
-                      <div className={`flex-1 h-1.5 rounded ${
-                        hintData.threePartsMatch.part2Match 
-                          ? 'bg-green-500' 
-                          : hintData.threePartsMatch.part1Match ? 'bg-yellow-500' : 'bg-gray-700'
-                      }`} title="Part 2: While Loop"></div>
-                      <div className={`flex-1 h-1.5 rounded ${
-                        hintData.threePartsMatch.part3Match 
-                          ? 'bg-green-500' 
-                          : hintData.threePartsMatch.part2Match ? 'bg-yellow-500' : 'bg-gray-700'
-                      }`} title="Part 3: Neighbor Loop"></div>
+                      <div className={`flex-1 h-1.5 rounded ${hintData.threePartsMatch.part1Match ? 'bg-green-500' : 'bg-gray-700'
+                        }`} title="Part 1: Initialization"></div>
+                      <div className={`flex-1 h-1.5 rounded ${hintData.threePartsMatch.part2Match
+                        ? 'bg-green-500'
+                        : hintData.threePartsMatch.part1Match ? 'bg-yellow-500' : 'bg-gray-700'
+                        }`} title="Part 2: While Loop"></div>
+                      <div className={`flex-1 h-1.5 rounded ${hintData.threePartsMatch.part3Match
+                        ? 'bg-green-500'
+                        : hintData.threePartsMatch.part2Match ? 'bg-yellow-500' : 'bg-gray-700'
+                        }`} title="Part 3: Neighbor Loop"></div>
                     </div>
                     <div className="text-[9px] text-gray-500 mt-1 text-center">
                       {hintData.threePartsMatch.matchedParts === 0 && 'No parts matched'}
@@ -276,11 +283,10 @@ const GameArea = ({
                 }
               }}
               disabled={hintData?.patternPercentage !== 100}
-              className={`w-full px-2 py-1.5 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-stone-500 focus:border-stone-500 ${
-                hintData?.patternPercentage === 100
-                  ? 'bg-stone-800 border-stone-600 text-stone-300 cursor-pointer'
-                  : 'bg-stone-900 border-stone-700 text-stone-500 cursor-not-allowed opacity-60'
-              }`}
+              className={`w-full px-2 py-1.5 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-stone-500 focus:border-stone-500 ${hintData?.patternPercentage === 100
+                ? 'bg-stone-800 border-stone-600 text-stone-300 cursor-pointer'
+                : 'bg-stone-900 border-stone-700 text-stone-500 cursor-not-allowed opacity-60'
+                }`}
             >
               <option value="">-- เลือก Big O --</option>
               <option value="constant">O(1) - Constant</option>
@@ -298,8 +304,8 @@ const GameArea = ({
       </div>
 
       {/* Popup Hint Dialog */}
-      <Dialog 
-        open={hintOpen && !!activeLevelHint} 
+      <Dialog
+        open={hintOpen && !!activeLevelHint}
         onOpenChange={(isOpen) => {
           if (!isOpen && onToggleHint) {
             onToggleHint();
@@ -340,7 +346,7 @@ const GameArea = ({
                 ))}
               </div>
             )}
-            
+
             <div className="mt-4 text-[10px] text-yellow-400/80 text-right">
               กดปุ่ม "Need Hint" อีกครั้งเพื่อดู Hint ถัดไป (ถ้ามี)
             </div>

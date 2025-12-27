@@ -42,6 +42,12 @@ const AppRoutes = () => {
         }
       >
         <Route path="user/profile" element={<UserProfile />} />
+<<<<<<< HEAD
+
+        <Route path="user/mapselect" element={<MapSelect />} />
+        <Route path="user/mapselect/:categoryId" element={<CategoryLevels />} />
+        <Route path="user/mapselection/:levelId" element={<LevelGame />} />
+=======
         
         <Route element={<RequirePreTest><Outlet /></RequirePreTest>}>
           <Route path="user/mapselect" element={<MapSelect />} />
@@ -51,6 +57,7 @@ const AppRoutes = () => {
         
         {/* Test Routes */}
         <Route path="test/:type" element={<TestPage />} />
+>>>>>>> 9b30804c30a57667b4ce6eaecce292ad650934ed
       </Route>
 
       <Route

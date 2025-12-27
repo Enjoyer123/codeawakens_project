@@ -7,6 +7,7 @@ import * as Blockly from "blockly";
 import "blockly/blocks";
 import "blockly/javascript";
 import "blockly/msg/en";
+import { javascriptGenerator } from "blockly/javascript";
 import {
   createToolboxConfig,
   ensureStandardBlocks,
@@ -14,52 +15,61 @@ import {
   initializeImprovedVariableHandling
 } from '../../../gameutils/utils/blocklyUtils';
 import { defineAllGenerators } from '../../../gameutils/utils/blockly/blocklyGenerators';
+import { registerRopePartitionBlocks } from '../../../gameutils/utils/blockly/blocklyRopePartition';
+
+// Verify and register custom blocks immediately
+try {
+  registerRopePartitionBlocks();
+  console.log('✅ Rope Partition blocks registered');
+} catch (e) {
+  console.error('Failed to register Rope Partition blocks:', e);
+}
 
 /**
  * Override procedure blocks to prevent auto-creation of definitions
  */
 function overrideProcedureBlocks(workspace = null) {
   console.debug("🔧 Overriding procedure blocks...");
-  
-        // Override procedure definition blocks
-        ['procedures_defreturn', 'procedures_defnoreturn'].forEach(blockType => {
-          const blockDef = Blockly.Blocks[blockType];
-          if (!blockDef) {
-            console.debug(`[useBlocklySetup] ${blockType} block not found, skipping`);
-            return;
-          }
 
-          // Avoid double-overriding
+  // Override procedure definition blocks
+  ['procedures_defreturn', 'procedures_defnoreturn'].forEach(blockType => {
+    const blockDef = Blockly.Blocks[blockType];
+    if (!blockDef) {
+      console.debug(`[useBlocklySetup] ${blockType} block not found, skipping`);
+      return;
+    }
+
+    // Avoid double-overriding
     if (blockDef.__overridden) {
-            return;
-          }
+      return;
+    }
 
-          console.debug(`[useBlocklySetup] Overriding ${blockType}...`);
-          const originalRename = blockDef.renameProcedure;
-          const originalLoadExtraState = blockDef.loadExtraState;
+    console.debug(`[useBlocklySetup] Overriding ${blockType}...`);
+    const originalRename = blockDef.renameProcedure;
+    const originalLoadExtraState = blockDef.loadExtraState;
     const originalInit = blockDef.init;
 
     // CRITICAL: Override init to fix call block names
     if (originalInit) {
-      blockDef.init = function() {
+      blockDef.init = function () {
         // Call original init first
         originalInit.call(this);
-        
+
         // After init, fix any call blocks that were auto-created with wrong names
         setTimeout(() => {
           if (!this.workspace || this.isDisposed()) return;
-          
+
           const definitionName = this.getFieldValue('NAME');
           if (!definitionName || definitionName === 'unnamed' || definitionName === 'undefined') {
             return;
           }
-          
+
           console.log(`✅ Procedure definition created with name: ${definitionName}`);
-          
+
           // Find all call blocks and fix those with "unnamed" to use this definition's name
           const allCallBlocks = this.workspace.getBlocksByType('procedures_callreturn', false)
             .concat(this.workspace.getBlocksByType('procedures_callnoreturn', false));
-          
+
           allCallBlocks.forEach(callBlock => {
             const nameField = callBlock.getField('NAME');
             if (nameField) {
@@ -75,111 +85,111 @@ function overrideProcedureBlocks(workspace = null) {
       };
     }
 
-          // Override renameProcedure
-          blockDef.renameProcedure = function(oldName, newName) {
-            if (oldName == null || newName == null) {
-              return;
-            }
-            if (originalRename) {
-              try {
-                return originalRename.call(this, String(oldName).trim(), String(newName).trim());
-              } catch (e) {
-                console.error(`[${blockType}] renameProcedure error:`, e);
-              }
-            }
-          };
+    // Override renameProcedure
+    blockDef.renameProcedure = function (oldName, newName) {
+      if (oldName == null || newName == null) {
+        return;
+      }
+      if (originalRename) {
+        try {
+          return originalRename.call(this, String(oldName).trim(), String(newName).trim());
+        } catch (e) {
+          console.error(`[${blockType}] renameProcedure error:`, e);
+        }
+      }
+    };
 
     // Override loadExtraState
-          blockDef.loadExtraState = function(state) {
-            try {
-              if (!state || typeof state !== 'object') {
-                state = {};
-              }
+    blockDef.loadExtraState = function (state) {
+      try {
+        if (!state || typeof state !== 'object') {
+          state = {};
+        }
 
-              let safeName = 'function';
-              if (state.name && typeof state.name === 'string') {
-                const trimmedName = state.name.trim();
-                if (trimmedName && trimmedName !== 'unnamed' && trimmedName !== 'undefined') {
-                  safeName = trimmedName;
-                }
-              }
+        let safeName = 'function';
+        if (state.name && typeof state.name === 'string') {
+          const trimmedName = state.name.trim();
+          if (trimmedName && trimmedName !== 'unnamed' && trimmedName !== 'undefined') {
+            safeName = trimmedName;
+          }
+        }
 
-              const safeParams = Array.isArray(state.params) ? state.params : [];
+        const safeParams = Array.isArray(state.params) ? state.params : [];
 
-              try {
-                if (this.getField && typeof this.getField === 'function') {
-                  const nameField = this.getField('NAME');
-                  if (nameField && typeof nameField.setValue === 'function') {
-                    nameField.setValue(safeName);
-                  }
-                }
-              } catch (e) {
-                console.error(`[${blockType}] loadExtraState: error setting name field:`, e);
-              }
-
-              if (originalLoadExtraState) {
-                try {
-                  return originalLoadExtraState.call(this, state);
-                } catch (e) {
-                  console.error(`[${blockType}] original loadExtraState error:`, e);
-                }
-              }
-
-              return { name: safeName, params: safeParams };
-            } catch (e) {
-              console.error(`[${blockType}] loadExtraState error:`, e);
-              return { name: 'function', params: [] };
+        try {
+          if (this.getField && typeof this.getField === 'function') {
+            const nameField = this.getField('NAME');
+            if (nameField && typeof nameField.setValue === 'function') {
+              nameField.setValue(safeName);
             }
-          };
+          }
+        } catch (e) {
+          console.error(`[${blockType}] loadExtraState: error setting name field:`, e);
+        }
+
+        if (originalLoadExtraState) {
+          try {
+            return originalLoadExtraState.call(this, state);
+          } catch (e) {
+            console.error(`[${blockType}] original loadExtraState error:`, e);
+          }
+        }
+
+        return { name: safeName, params: safeParams };
+      } catch (e) {
+        console.error(`[${blockType}] loadExtraState error:`, e);
+        return { name: 'function', params: [] };
+      }
+    };
 
     blockDef.__overridden = true;
-        });
-        
+  });
+
   // Override procedure call blocks - CRITICAL: Prevent auto-creation
-        ['procedures_callreturn', 'procedures_callnoreturn'].forEach(blockType => {
+  ['procedures_callreturn', 'procedures_callnoreturn'].forEach(blockType => {
     const blockDef = Blockly.Blocks[blockType];
     if (!blockDef) return;
-    
+
     if (blockDef.__overridden) return;
 
     console.debug(`[useBlocklySetup] Overriding ${blockType}...`);
-    
+
     // Store original methods
     const originalRename = blockDef.renameProcedure;
     const originalGetProcedureDef = blockDef.getProcedureDef;
     const originalOnchange = blockDef.onchange;
-    
+
     // Override renameProcedure
-            if (originalRename) {
-      blockDef.renameProcedure = function(oldName, newName) {
+    if (originalRename) {
+      blockDef.renameProcedure = function (oldName, newName) {
         if (oldName == null || newName == null) return;
-                try {
-                  const safeOldName = String(oldName).trim();
-                  const safeNewName = String(newName).trim();
+        try {
+          const safeOldName = String(oldName).trim();
+          const safeNewName = String(newName).trim();
           if (!safeOldName || !safeNewName) return;
-                  return originalRename.call(this, safeOldName, safeNewName);
-                } catch (e) {
-                  console.error(`[${blockType}] renameProcedure error:`, e);
-                }
-              };
-            }
-            
+          return originalRename.call(this, safeOldName, safeNewName);
+        } catch (e) {
+          console.error(`[${blockType}] renameProcedure error:`, e);
+        }
+      };
+    }
+
     // Override getProcedureDef to return procedure if exists, null if not
     // This prevents auto-creation but allows normal operation
     if (originalGetProcedureDef) {
-      blockDef.getProcedureDef = function() {
+      blockDef.getProcedureDef = function () {
         try {
           // First, try to fix the procedure name if it's invalid
           const nameField = this.getField('NAME');
           if (nameField) {
             const currentName = nameField.getValue();
             const blockWorkspace = this.workspace;
-            
+
             if (blockWorkspace) {
               // Get all definition blocks
               const definitionBlocks = blockWorkspace.getBlocksByType('procedures_defreturn', false)
                 .concat(blockWorkspace.getBlocksByType('procedures_defnoreturn', false));
-              
+
               // Get valid procedure names
               const validProcedureNames = new Set();
               definitionBlocks.forEach(defBlock => {
@@ -192,7 +202,7 @@ function overrideProcedureBlocks(workspace = null) {
                   // Ignore errors
                 }
               });
-              
+
               // If current name doesn't match any definition, fix it
               if (currentName && !validProcedureNames.has(currentName) && validProcedureNames.size > 0) {
                 // Check if it's a numbered variant (e.g., DFS2, DFS3) of a valid procedure
@@ -201,7 +211,7 @@ function overrideProcedureBlocks(workspace = null) {
                   const currentBaseName = currentName.replace(/\d+$/, '');
                   return baseName === currentBaseName && currentName !== validName;
                 });
-                
+
                 if (isNumberedVariant) {
                   // Find the matching base procedure
                   const matchingProcedure = Array.from(validProcedureNames).find(validName => {
@@ -209,7 +219,7 @@ function overrideProcedureBlocks(workspace = null) {
                     const currentBaseName = currentName.replace(/\d+$/, '');
                     return baseName === currentBaseName;
                   });
-                  
+
                   if (matchingProcedure) {
                     console.log(`🔧 Fixing call block name in getProcedureDef: "${currentName}" -> "${matchingProcedure}"`);
                     nameField.setValue(matchingProcedure);
@@ -223,7 +233,7 @@ function overrideProcedureBlocks(workspace = null) {
               }
             }
           }
-          
+
           // Call original to get procedure definition
           const def = originalGetProcedureDef.call(this);
           return def; // Return the definition if it exists, null if not
@@ -234,10 +244,10 @@ function overrideProcedureBlocks(workspace = null) {
         }
       };
     }
-    
+
     // Override onchange to prevent auto-creating definitions when block is created
     if (originalOnchange) {
-      blockDef.onchange = function(changeEvent) {
+      blockDef.onchange = function (changeEvent) {
         const blockWorkspace = this.workspace;
         if (!blockWorkspace) {
           // Call original if workspace not available
@@ -250,16 +260,16 @@ function overrideProcedureBlocks(workspace = null) {
           }
           return;
         }
-        
+
         try {
           const nameField = this.getField('NAME');
           if (nameField) {
             const currentName = nameField.getValue();
-            
+
             // Get all definition blocks to find valid procedure names
             const definitionBlocks = blockWorkspace.getBlocksByType('procedures_defreturn', false)
               .concat(blockWorkspace.getBlocksByType('procedures_defnoreturn', false));
-            
+
             const validProcedureNames = new Set();
             definitionBlocks.forEach(defBlock => {
               try {
@@ -271,7 +281,7 @@ function overrideProcedureBlocks(workspace = null) {
                 // Ignore errors
               }
             });
-            
+
             // Fix procedure name if needed
             if (validProcedureNames.size > 0) {
               if (!currentName || currentName === 'unnamed' || currentName === 'undefined' || currentName.trim() === '') {
@@ -287,7 +297,7 @@ function overrideProcedureBlocks(workspace = null) {
                   const currentBaseName = currentName.replace(/\d+$/, '');
                   return baseName === currentBaseName && currentName !== validName;
                 });
-                
+
                 if (isNumberedVariant) {
                   // Find the matching base procedure
                   const matchingProcedure = Array.from(validProcedureNames).find(validName => {
@@ -295,7 +305,7 @@ function overrideProcedureBlocks(workspace = null) {
                     const currentBaseName = currentName.replace(/\d+$/, '');
                     return baseName === currentBaseName;
                   });
-                  
+
                   if (matchingProcedure) {
                     console.log(`[${blockType}] Fixed numbered variant: "${currentName}" -> "${matchingProcedure}"`);
                     nameField.setValue(matchingProcedure);
@@ -312,7 +322,7 @@ function overrideProcedureBlocks(workspace = null) {
         } catch (e) {
           console.warn(`[${blockType}] Error in onchange:`, e);
         }
-        
+
         // Call original onchange - it will use the name we just set
         if (originalOnchange) {
           try {
@@ -342,7 +352,7 @@ function overrideProcedureBlocks(workspace = null) {
         }
       };
     }
-    
+
     blockDef.__overridden = true;
   });
 }
@@ -395,15 +405,27 @@ export function useBlocklySetup({
 
         // Initialize
         initializeImprovedVariableHandling();
-        
+
         console.log("🔧 Ensuring standard blocks...");
         ensureStandardBlocks();
-        
+
         // Override BEFORE defining generators
         overrideProcedureBlocks();
-        
+
         console.log("🔧 Defining JavaScript generators...");
         defineAllGenerators();
+
+        // CRITICAL: Force override procedures_defreturn generator AFTER defineAllGenerators
+        // This ensures our custom generator is used, not the default one
+        const customProcGen = javascriptGenerator.forBlock["procedures_defreturn"];
+        if (customProcGen) {
+          javascriptGenerator.forBlock["procedures_defreturn"] = customProcGen;
+          console.log("✅ Force override procedures_defreturn generator");
+        }
+
+        // Verify that custom generator was set
+        console.log("🔍 Verifying procedures_defreturn generator:", typeof javascriptGenerator.forBlock["procedures_defreturn"]);
+        console.log("🔍 Generator is custom:", javascriptGenerator.forBlock["procedures_defreturn"]?.toString().includes('CUSTOM GENERATOR'));
 
         // Create toolbox
         console.log("🔧 Creating toolbox");
@@ -424,10 +446,10 @@ export function useBlocklySetup({
           scrollbars: true,
           sounds: false,
           oneBasedIndex: true,
-          variables: enabledBlocks["variables_get"] || 
-                     enabledBlocks["variables_set"] || 
-                     enabledBlocks["var_math"] || 
-                     enabledBlocks["get_var_value"] || false,
+          variables: enabledBlocks["variables_get"] ||
+            enabledBlocks["variables_set"] ||
+            enabledBlocks["var_math"] ||
+            enabledBlocks["get_var_value"] || false,
           grid: {
             spacing: 20,
             length: 3,
@@ -447,14 +469,14 @@ export function useBlocklySetup({
         console.log("Creating Blockly workspace...");
         const workspace = Blockly.inject(blocklyRef.current, workspaceConfig);
         console.log("Blockly workspace created");
-        
+
         // Override again after workspace creation
         overrideProcedureBlocks(workspace);
-        
+
         workspaceRef.current = workspace;
         setBlocklyLoaded(true);
         setBlocklyJavaScriptReady(true);
-        
+
         // Store workspace ready state for useEffect
         window.__blocklyWorkspaceReady = true;
 
@@ -472,26 +494,26 @@ export function useBlocklySetup({
 
         // CRITICAL: Prevent auto-creation of procedure definitions
         let isCreatingCallBlock = false;
-        
+
         workspace.addChangeListener((event) => {
           // Track when call blocks are being created
           if (event.type === Blockly.Events.BLOCK_CREATE) {
             const block = workspace.getBlockById(event.blockId);
-            
+
             if (block && (block.type === 'procedures_callreturn' || block.type === 'procedures_callnoreturn')) {
               isCreatingCallBlock = true;
               console.log('📞 Call block created:', event.blockId);
-              
+
               // Fix procedure name immediately to prevent getDefinition error
               setTimeout(() => {
                 try {
                   const nameField = block.getField('NAME');
                   if (nameField) {
                     const currentValue = nameField.getValue();
-                    
+
                     // If value is invalid, fix it
-                    if (!currentValue || currentValue === 'unnamed' || currentValue === 'undefined' || 
-                        currentValue === 'temp_procedure' || (typeof currentValue === 'string' && currentValue.trim() === '')) {
+                    if (!currentValue || currentValue === 'unnamed' || currentValue === 'undefined' ||
+                      currentValue === 'temp_procedure' || (typeof currentValue === 'string' && currentValue.trim() === '')) {
                       const procedureMap = workspace.getProcedureMap();
                       if (procedureMap) {
                         const procedures = procedureMap.getProcedures();
@@ -519,7 +541,7 @@ export function useBlocklySetup({
                 isCreatingCallBlock = false;
               }, 50);
             }
-            
+
             // If a definition block is created while we're creating a call block, delete it
             if (block && (block.type === 'procedures_defreturn' || block.type === 'procedures_defnoreturn')) {
               if (isCreatingCallBlock) {
@@ -536,7 +558,7 @@ export function useBlocklySetup({
               }
             }
           }
-          
+
           // Error handler
           if (event.type === Blockly.Events.ERROR) {
             console.warn("Blockly error event:", event);
@@ -608,7 +630,7 @@ export function useBlocklySetup({
   // Load starter XML when workspace is ready and starter_xml is available
   // Use a ref to track the last loaded XML to avoid reloading the same XML
   const lastLoadedXmlRef = React.useRef(null);
-  
+
   // Helper: ensure variables/args have IDs (for malformed starter XML without ids/varids)
   const ensureVariableIds = (xmlString) => {
     if (!xmlString || typeof xmlString !== 'string') return xmlString;
@@ -632,25 +654,9 @@ export function useBlocklySetup({
     return result;
   };
 
-  // Debug: Log starter_xml prop
-  console.log('🔍 [useBlocklySetup] starter_xml prop:', {
-    has_starter_xml: !!starter_xml,
-    starter_xml_type: typeof starter_xml,
-    starter_xml_length: starter_xml ? starter_xml.length : 0,
-    starter_xml_preview: starter_xml ? starter_xml.substring(0, 100) : null,
-    lastLoadedXml: lastLoadedXmlRef.current ? lastLoadedXmlRef.current.substring(0, 100) : null
-  });
-  
   // Load starter XML when workspace is ready
   useEffect(() => {
-    console.log('🔍 [useBlocklySetup] useEffect triggered for starter XML:', {
-      has_starter_xml: !!starter_xml,
-      has_workspace: !!workspaceRef.current,
-      blocklyLoaded,
-      lastLoadedXml: lastLoadedXmlRef.current ? 'exists' : 'null',
-      starter_xml_preview: starter_xml ? starter_xml.substring(0, 100) : null
-    });
-    
+
     // Check if workspace is ready - but don't require blocklyLoaded to be true
     // because workspace might be ready before blocklyLoaded is set
     if (!workspaceRef.current) {
@@ -677,7 +683,7 @@ export function useBlocklySetup({
           console.warn('⚠️ Workspace disappeared before loading XML');
           return;
         }
-        
+
         try {
           console.log('📦 Loading starter XML after workspace ready...', {
             starter_xml_length: starter_xml.length,
@@ -710,24 +716,24 @@ export function useBlocklySetup({
             });
             return result;
           };
-          
+
           // Helper function: Add mutation to procedure definition blocks that don't have it
           // This fixes the issue where starter XML has call blocks with parameters but definition blocks don't
           // Use string manipulation instead of DOM to avoid serialization issues
           const addMutationToProcedureDefinitions = (xmlString) => {
             if (!xmlString) return xmlString;
-            
+
             try {
               // First, extract parameters from call blocks using regex
               const callBlockRegex = /<block[^>]*type="procedures_call(return|noreturn)"[^>]*>[\s\S]*?<\/block>/g;
               const callBlocks = xmlString.match(callBlockRegex) || [];
               const procedureParams = new Map();
-              
+
               callBlocks.forEach(callBlockXml => {
                 try {
                   const nameMatch = callBlockXml.match(/<field name="NAME">([^<]+)<\/field>/);
                   const name = nameMatch ? nameMatch[1] : null;
-                  
+
                   if (name) {
                     const mutationMatch = callBlockXml.match(/<mutation[^>]*>([\s\S]*?)<\/mutation>/);
                     if (mutationMatch) {
@@ -749,42 +755,42 @@ export function useBlocklySetup({
                   console.warn('Error extracting parameters from call block:', e);
                 }
               });
-              
+
               console.log(`🔍 Total procedures with parameters found: ${procedureParams.size}`);
-              
+
               if (procedureParams.size === 0) {
                 return xmlString; // No parameters to add
               }
-              
+
               // Now find definition blocks and add mutations using string replacement
               let result = xmlString;
-              
+
               procedureParams.forEach((params, name) => {
                 // Find definition block for this procedure
                 const defBlockRegex = new RegExp(
                   `(<block[^>]*type="procedures_def(return|noreturn)"[^>]*>\\s*<field name="NAME">${name}<\\/field>)`,
                   'g'
                 );
-                
+
                 result = result.replace(defBlockRegex, (match, fieldPart) => {
                   // Check if mutation already exists
                   if (match.includes('<mutation')) {
                     console.log(`⚠️ Function ${name} already has mutation, skipping`);
                     return match;
                   }
-                  
+
                   // Build mutation XML string
                   const argXml = params.map(paramName => `    <arg name="${paramName}"></arg>`).join('\n');
                   const mutationXml = `\n    <mutation name="${name}">\n${argXml}\n    </mutation>`;
-                  
+
                   // Insert mutation after NAME field
                   const newBlock = fieldPart + mutationXml;
                   console.log(`✅ Added mutation to function definition ${name} with ${params.length} params:`, params);
-                  
+
                   return newBlock;
                 });
               });
-              
+
               // Verify mutations were added
               console.log('🔍 Checking processed XML for mutations...');
               const defBlocksAfter = result.match(/<block[^>]*type="procedures_def(return|noreturn)"[^>]*>[\s\S]*?<\/block>/g);
@@ -809,17 +815,17 @@ export function useBlocklySetup({
                   }
                 });
               }
-              
+
               return result;
             } catch (e) {
               console.error('Error processing XML to add mutations:', e);
               return xmlString; // Return original if error
             }
           };
-          
+
           // Use starter_xml as-is; assume ids/mutations already present
           let cleanedStarterXml = starter_xml;
-          
+
           // Check if XML contains any blocks (not just procedure definitions)
           // Starter XML can contain regular blocks without functions
           const hasBlocks = cleanedStarterXml.match(/<block[^>]*type="/);
@@ -845,7 +851,7 @@ export function useBlocklySetup({
               return;
             }
           }
-          
+
           // Verify that function definitions have parameters after loading
           setTimeout(() => {
             const defBlocks = workspaceRef.current.getBlocksByType('procedures_defreturn', false)
@@ -860,11 +866,11 @@ export function useBlocklySetup({
               }
             });
           }, 100);
-          
+
           console.log('✅ Starter XML loaded successfully', {
             blockCount: workspaceRef.current.getAllBlocks().length
           });
-          
+
           // CRITICAL: Fix procedure call blocks immediately after loading starter XML
           // This prevents Blockly from auto-creating new procedure definitions with wrong names
           // Use multiple attempts with increasing delays to catch all cases
@@ -873,10 +879,10 @@ export function useBlocklySetup({
               try {
                 const definitionBlocks = workspaceRef.current.getBlocksByType('procedures_defreturn', false)
                   .concat(workspaceRef.current.getBlocksByType('procedures_defnoreturn', false));
-                
+
                 const callBlocks = workspaceRef.current.getBlocksByType('procedures_callreturn', false)
                   .concat(workspaceRef.current.getBlocksByType('procedures_callnoreturn', false));
-                
+
                 // CRITICAL: Extract parameters from call blocks to add to definition blocks
                 // This fixes the issue where starter XML has call blocks with parameters but definition blocks don't
                 const procedureParams = new Map(); // procedureName -> array of parameter names
@@ -899,7 +905,7 @@ export function useBlocklySetup({
                     console.warn('Error extracting parameters from call block:', e);
                   }
                 });
-                
+
                 // Get valid procedure names from definitions
                 const validProcedureNames = new Set();
                 definitionBlocks.forEach(defBlock => {
@@ -907,14 +913,14 @@ export function useBlocklySetup({
                     const name = defBlock.getFieldValue('NAME');
                     if (name && name !== 'unnamed' && name !== 'undefined' && name.trim() !== '') {
                       validProcedureNames.add(name);
-                      
+
                       // CRITICAL: Check if function definition has parameters
                       // Priority: Use parameters from call blocks if available, otherwise check function body
                       const vars = defBlock.getVars();
                       console.log(`🔍 Function ${name} has ${vars.length} parameters:`, vars);
-                      
+
                       let paramsToAdd = [];
-                      
+
                       // First, try to get parameters from call blocks
                       if (procedureParams.has(name)) {
                         paramsToAdd = procedureParams.get(name);
@@ -923,7 +929,7 @@ export function useBlocklySetup({
                         // If no parameters from call blocks, check function body
                         const allBlocks = defBlock.getDescendants(false);
                         const usedVars = new Set();
-                        
+
                         allBlocks.forEach(block => {
                           try {
                             // Check for variables_get blocks
@@ -937,7 +943,7 @@ export function useBlocklySetup({
                             // Ignore errors
                           }
                         });
-                        
+
                         if (usedVars.size > 0) {
                           // Add parameters to function definition
                           // Order: garph/graph, start, goal
@@ -953,11 +959,11 @@ export function useBlocklySetup({
                           console.log(`🔍 Function ${name} uses variables but has no parameters:`, Array.from(usedVars));
                         }
                       }
-                      
+
                       // Add parameters if needed
                       if (paramsToAdd.length > 0 && vars.length === 0) {
                         console.log(`🔧 Adding parameters to function ${name}:`, paramsToAdd);
-                        
+
                         // Add parameters using Blockly's mutation API
                         try {
                           // Get current mutation or create new one
@@ -965,7 +971,7 @@ export function useBlocklySetup({
                           if (defBlock.mutationToDom) {
                             mutation = defBlock.mutationToDom();
                           }
-                          
+
                           // Create new mutation if needed
                           if (!mutation) {
                             const parser = new DOMParser();
@@ -974,28 +980,28 @@ export function useBlocklySetup({
                             // Update name in existing mutation
                             mutation.setAttribute('name', name);
                           }
-                          
+
                           // Remove existing arg elements
                           const existingArgs = mutation.querySelectorAll('arg');
                           existingArgs.forEach(arg => arg.remove());
-                          
+
                           // Add new arg elements for each parameter
                           paramsToAdd.forEach(paramName => {
                             const arg = mutation.ownerDocument.createElement('arg');
                             arg.setAttribute('name', paramName);
                             mutation.appendChild(arg);
                           });
-                          
+
                           // Apply mutation to block
                           if (defBlock.domToMutation) {
                             defBlock.domToMutation(mutation);
                           }
-                          
+
                           // Update function shape
                           if (defBlock.updateShape_) {
                             defBlock.updateShape_();
                           }
-                          
+
                           console.log(`✅ Added parameters to function ${name}:`, paramsToAdd);
                           console.log(`✅ Function ${name} now has ${defBlock.getVars().length} parameters:`, defBlock.getVars());
                         } catch (e) {
@@ -1007,7 +1013,7 @@ export function useBlocklySetup({
                     console.warn('Error processing definition block:', e);
                   }
                 });
-                
+
                 console.log(`🔧 Fixing call blocks after starter XML load (attempt ${attempt}):`, {
                   validProcedures: Array.from(validProcedureNames),
                   callBlocksCount: callBlocks.length,
@@ -1026,16 +1032,16 @@ export function useBlocklySetup({
                     }
                   })
                 });
-                
+
                 let fixedCount = 0;
-                
+
                 // Fix each call block to use a valid procedure name
                 callBlocks.forEach(callBlock => {
                   try {
                     const nameField = callBlock.getField('NAME');
                     if (nameField) {
                       const currentName = nameField.getValue();
-                      
+
                       // If call block name doesn't match any definition, fix it
                       if (!validProcedureNames.has(currentName)) {
                         if (validProcedureNames.size > 0) {
@@ -1045,7 +1051,7 @@ export function useBlocklySetup({
                             const currentBaseName = currentName.replace(/\d+$/, '');
                             return baseName === currentBaseName && currentName !== validName;
                           });
-                          
+
                           if (isNumberedVariant) {
                             // Find the matching base procedure
                             const matchingProcedure = Array.from(validProcedureNames).find(validName => {
@@ -1053,7 +1059,7 @@ export function useBlocklySetup({
                               const currentBaseName = currentName.replace(/\d+$/, '');
                               return baseName === currentBaseName;
                             });
-                            
+
                             if (matchingProcedure) {
                               nameField.setValue(matchingProcedure);
                               console.log(`✅ Fixed call block (numbered variant): "${currentName}" -> "${matchingProcedure}"`);
@@ -1075,7 +1081,7 @@ export function useBlocklySetup({
                     console.warn('Error fixing call block:', e);
                   }
                 });
-                
+
                 // Remove any auto-created procedure definitions that don't match valid names
                 definitionBlocks.forEach(defBlock => {
                   try {
@@ -1088,7 +1094,7 @@ export function useBlocklySetup({
                         const defBaseName = defName.replace(/\d+$/, '');
                         return baseName === defBaseName && defName !== validName;
                       });
-                      
+
                       if (isNumberedVariant) {
                         console.log(`🗑️ Removing auto-created numbered variant: "${defName}"`);
                         if (!defBlock.isDisposed()) {
@@ -1100,7 +1106,7 @@ export function useBlocklySetup({
                     console.warn('Error checking definition block:', e);
                   }
                 });
-                
+
                 // If we fixed blocks or this is the first attempt, try again with longer delay
                 if (fixedCount > 0 && attempt < maxAttempts) {
                   console.log(`🔄 Fixed ${fixedCount} call blocks, retrying in case more need fixing...`);
@@ -1111,9 +1117,9 @@ export function useBlocklySetup({
               }
             }, attempt === 1 ? 100 : attempt * 200); // Increasing delays: 100ms, 400ms, 600ms
           };
-          
+
           fixCallBlocks(); // Start first attempt
-          
+
           setCurrentHint('✅ โหลด starter blocks แล้ว');
         } catch (xmlError) {
           console.error('⚠️ Error loading starter XML:', xmlError);
