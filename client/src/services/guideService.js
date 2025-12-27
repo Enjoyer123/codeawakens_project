@@ -32,6 +32,28 @@ export const fetchAllGuides = async (getToken, page = 1, limit = 10, search = ''
   }
 };
 
+// Fetch guides by level
+export const fetchGuidesByLevel = async (getToken, levelId) => {
+  try {
+    const token = await getToken();
+    const response = await fetch(`${API_BASE_URL}/api/guides/level/${levelId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Failed to fetch guides' }));
+      throw new Error(errorData.message || 'Failed to fetch guides');
+    }
+
+    return await response.json();
+  } catch (error) {
+    throw error;
+  }
+};
+
 // Fetch levels for guide dropdown
 export const fetchLevelsForGuide = async (getToken) => {
   try {

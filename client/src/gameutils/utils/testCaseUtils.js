@@ -521,7 +521,9 @@ export async function checkTestCases(functionReturnValue, testCases, functionNam
       passedTests.push({
         test_case_id: testCase.test_case_id,
         test_case_name: testCase.test_case_name,
-        is_primary: testCase.is_primary
+        is_primary: testCase.is_primary,
+        expected: expected,
+        actual: actual
       });
       console.log(`✅ ${testCase.test_case_name} PASSED`);
     } else {

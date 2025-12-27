@@ -81,7 +81,8 @@ export function useCodeExecution({
   foundMonster,
   canMoveForward,
   nearPit,
-  atGoal
+  atGoal,
+  setTestCaseResult
 }) {
   const runCode = async () => {
     console.log("runCode function called!");
@@ -109,7 +110,13 @@ export function useCodeExecution({
     setGameState("running");
     setIsCompleted(false);
     setIsGameOver(false);
+    setIsGameOver(false);
     setCurrentHint("🏃 กำลังเรียกใช้โปรแกรม...");
+    
+    // Clear previous test results
+    if (setTestCaseResult) {
+      setTestCaseResult(null);
+    }
 
     // Start timing the attempt
     gameStartTime.current = Date.now();
@@ -546,6 +553,11 @@ export function useCodeExecution({
         });
         console.log("🔍 Stored testCaseResult in game state");
         
+        // Update UI with test results
+        if (setTestCaseResult) {
+          setTestCaseResult(testCaseResult);
+        }
+
         if (!testCaseResult.passed) {
           setCurrentHint(testCaseResult.message);
         } else {

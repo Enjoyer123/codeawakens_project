@@ -1,10 +1,11 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { UserButton } from '@clerk/clerk-react';
-import { fetchAllUsers, updateUserRole, deleteUser } from '../../../services/adminService';
+import { fetchAllUsers, updateUserRole, deleteUser, resetUserTestScore, fetchUserTestHistory } from '../../../services/adminService';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Trash2 } from 'lucide-react';
+import { Eye, Trash2, FileText } from 'lucide-react';
+import UserTestResultModal from '@/components/admin/modals/UserTestResultModal';
 import UserDetailsModal from '@/components/shared/userDetailProfile/UserDetailsModal';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
@@ -36,6 +37,10 @@ const UserManagement = () => {
     page: 1,
     limit: 5,
   });
+  
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [selectedUserForHistory, setSelectedUserForHistory] = useState(null);
+  const [testHistory, setTestHistory] = useState([]);
 
   const loadUsers = useCallback(async () => {
     try {
@@ -111,6 +116,29 @@ const UserManagement = () => {
       setDeleting(false);
     }
   }, [userToDelete, getToken, loadUsers]);
+
+  const handleResetScore = async (userId, type) => {
+      if(!window.confirm(`Are you sure you want to reset the ${type}-test score for this user?`)) return;
+      try {
+          await resetUserTestScore(getToken, userId, type);
+          alert(`Reset ${type}-test score successfully`);
+          loadUsers();
+      } catch (err) {
+          alert('Failed to reset: ' + err.message);
+      }
+  };
+
+  const handleViewHistory = async (user) => {
+    try {
+        setSelectedUserForHistory(user);
+        const history = await fetchUserTestHistory(getToken, user.user_id || user.id);
+        setTestHistory(history);
+        setHistoryModalOpen(true);
+    } catch (err) {
+        console.error("Failed to fetch history:", err);
+        alert("Failed to fetch test history");
+    }
+  };
 
   const handleDeleteDialogChange = useCallback((open) => {
     if (!deleting) {
@@ -246,6 +274,14 @@ const UserManagement = () => {
                                 <Eye className="h-4 w-4 mr-2" />
                                 ดูข้อมูล
                               </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleViewHistory(userItem)}
+                                title="View Test Results"
+                              >
+                                <FileText className="h-4 w-4 text-blue-600" />
+                              </Button>
                               <select
                                 value={userItem.role || 'user'}
                                 onChange={(e) => handleRoleChange(
@@ -263,9 +299,12 @@ const UserManagement = () => {
                                 onClick={() => handleDeleteClick(userItem)}
                                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
                               >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                ลบ
+                                <Trash2 className="h-4 w-4" />
                               </Button>
+                              <div className="flex flex-col gap-1">
+                                <Button variant="ghost" size="xs" onClick={() => handleResetScore(userItem.user_id, 'pre')} className="text-xs h-6">Reset Pre</Button>
+                                <Button variant="ghost" size="xs" onClick={() => handleResetScore(userItem.user_id, 'post')} className="text-xs h-6">Reset Post</Button>
+                              </div>
                             </div>
                           </td>
                         </tr>
@@ -304,6 +343,13 @@ const UserManagement = () => {
           userToDelete?.username || userToDelete?.email
         )}
         deleting={deleting}
+      />
+      
+      <UserTestResultModal 
+        open={historyModalOpen}
+        onOpenChange={setHistoryModalOpen}
+        user={selectedUserForHistory}
+        testHistory={testHistory}
       />
     </div>
   );

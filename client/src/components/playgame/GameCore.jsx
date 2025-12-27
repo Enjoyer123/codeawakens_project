@@ -621,9 +621,10 @@ const GameCore = ({
       blocklyJavaScriptReady={blocklyJavaScriptReady}
       showScore={true}
     >
-      <div className="flex h-screen bg-gray-900">
+      <div className={`flex ${isPreview ? 'h-full' : 'h-screen'} bg-gray-900`}>
         {/* Game Area - 65% ของหน้าจอ */}
-        <div className="w-[65%] relative bg-black">
+        
+        <div className="w-[50%] relative bg-black">
           <GameArea
             gameRef={gameRef}
             gameState={gameState}
@@ -682,8 +683,18 @@ const GameCore = ({
         </div>
 
         {/* Blockly Area - 35% ของหน้าจอ */}
-        <div className="w-[35%] border-l border-black flex flex-col bg-gray-800/50 backdrop-blur-sm overflow-hidden">
-          <div className="bg-stone-900 p-4 shadow-lg">
+        <div 
+          className="w-[50%] border-l border-black flex flex-col backdrop-blur-sm overflow-hidden"
+          style={{
+            backgroundImage: "url('/paper.png')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat"
+          }}
+        >
+                   <div className="flex flex-col h-full px-4 py-4 md:px-20">
+
+            <div className="bg-stone-900 p-4 shadow-lg shrink-0 mb-4 rounded-lg">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-bold text-white">
@@ -753,6 +764,7 @@ const GameCore = ({
           )}
             </div>
           </div>
+            <div className="flex-1 min-h-0 relative shadow-2xl rounded-lg overflow-hidden">
 
           <BlocklyArea
             blocklyRef={blocklyRef}
@@ -769,6 +781,9 @@ const GameCore = ({
             textCode={textCode}
             handleTextCodeChange={handleTextCodeChangeWithState}
           />
+           </div>
+             </div>
+
         </div>
       </div>
 

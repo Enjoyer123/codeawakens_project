@@ -35,6 +35,52 @@ export function usePatternAnalysis({
   hintData
 }) {
   
+  /* 
+   * Store latest values in refs to avoid useEffect dependency cycles 
+   * This is a common pattern to fix "Maximum update depth exceeded" when 
+   * dependencies change frequently but we only want to react to specific events (like workspace changes)
+   */
+  const processingRef = useRef(false); // To prevent recursive calls if needed
+  const valuesRef = useRef({
+    goodPatterns,
+    hintOpen,
+    blocklyLoaded,
+    highlightBlocks,
+    clearHighlights,
+    setHintData,
+    setCurrentWeaponData,
+    setPatternFeedback,
+    setPartialWeaponKey,
+    hintData
+  });
+
+  // Update refs when props change
+  useEffect(() => {
+    valuesRef.current = {
+      goodPatterns,
+      hintOpen,
+      blocklyLoaded,
+      highlightBlocks,
+      clearHighlights,
+      setHintData,
+      setCurrentWeaponData,
+      setPatternFeedback,
+      setPartialWeaponKey,
+      hintData
+    };
+  }, [
+    goodPatterns,
+    hintOpen,
+    blocklyLoaded,
+    highlightBlocks,
+    clearHighlights,
+    setHintData,
+    setCurrentWeaponData,
+    setPatternFeedback,
+    setPartialWeaponKey,
+    hintData
+  ]);
+  
   // Update currentHint when hintData.hint changes
   // Use a ref to store setCurrentHint to avoid dependency issues
   const setCurrentHintRef = useRef(setCurrentHint);
@@ -45,12 +91,10 @@ export function usePatternAnalysis({
   useEffect(() => {
     const hintValue = hintData?.hint;
     if (hintValue && typeof hintValue === 'string' && hintValue.trim() !== '') {
-      console.log("🔍 [usePatternAnalysis] useEffect: Updating currentHint from hintData.hint:", hintValue);
+      // console.log("🔍 [usePatternAnalysis] useEffect: Updating currentHint from hintData.hint:", hintValue);
       if (setCurrentHintRef.current) {
         setCurrentHintRef.current(hintValue);
-        console.log("🔍 [usePatternAnalysis] ✅ setCurrentHint called with:", hintValue);
-      } else {
-        console.warn("🔍 [usePatternAnalysis] ⚠️ setCurrentHintRef.current is null/undefined");
+        // console.log("🔍 [usePatternAnalysis] ✅ setCurrentHint called with:", hintValue);
       }
     }
   }, [hintData?.hint]);
@@ -64,11 +108,24 @@ export function usePatternAnalysis({
     if (!workspace) return;
 
     const analyzePattern = () => {
+      // Access latest values from ref
+      const {
+        goodPatterns,
+        hintOpen,
+        highlightBlocks,
+        clearHighlights,
+        setHintData,
+        setCurrentWeaponData,
+        setPatternFeedback,
+        setPartialWeaponKey
+      } = valuesRef.current;
+
       if (!workspace || !workspace.getAllBlocks) return;
 
       const allBlocks = workspace.getAllBlocks(false);
       const currentBlockCount = allBlocks.length;
-      console.log("🔍 [usePatternAnalysis] currentBlockCount:", currentBlockCount);
+      // console.log("🔍 [usePatternAnalysis] currentBlockCount:", currentBlockCount);
+      
       if (currentBlockCount === 0) {
         // No blocks → แสดง default weapon
         const currentState = getCurrentGameState();
@@ -87,14 +144,18 @@ export function usePatternAnalysis({
         }
         
         // Update hintData even when no blocks
+        // We use a simplified check to avoid sending identical data repeatedly
         if (!goodPatterns || goodPatterns.length === 0) {
-          setHintData({
+           const newHintData = {
             hint: "วาง blocks เพื่อเริ่มต้น",
             showHint: true,
             currentStep: 0,
             totalSteps: 0,
             progress: 0
-          });
+          };
+          // Simple equality check to avoid infinite loops if setHintData triggers a re-render
+          // (Though here we are reading from ref, so next run won't trigger unless workspace changes)
+          setHintData(newHintData);
         }
         return;
       }
@@ -109,28 +170,28 @@ export function usePatternAnalysis({
           totalSteps: 0,
           progress: 0
         });
-        if (setCurrentHint) {
-          setCurrentHint(defaultHint);
+        if (setCurrentHintRef.current) {
+          setCurrentHintRef.current(defaultHint);
         }
         return;
       }
 
       // คำนวณเปอร์เซ็นต์การตรงกับ pattern
       const patternPercentage = calculatePatternMatchPercentage(workspace, goodPatterns);
-      console.log("🔍 Pattern percentage:", patternPercentage);
+      // console.log("🔍 Pattern percentage:", patternPercentage);
 
       // ตรวจสอบ three parts match
       // CRITICAL: ถ้า percentage = 100% ให้ตรวจสอบ part3 โดยตรง
       let threePartsMatch = findBestThreePartsMatch(workspace, goodPatterns);
-      console.log("🔍 Three parts match (initial):", threePartsMatch);
+      // console.log("🔍 Three parts match (initial):", threePartsMatch);
       
       // ถ้า percentage = 100% แต่ matchedParts ไม่ใช่ 3 ให้ตรวจสอบ part3 อีกครั้ง
       if (patternPercentage.percentage === 100 && patternPercentage.bestPattern && threePartsMatch.matchedParts !== 3) {
-        console.log("🔍 Percentage is 100% but matchedParts is not 3, rechecking part3...");
+        // console.log("🔍 Percentage is 100% but matchedParts is not 3, rechecking part3...");
         const patternXml = patternPercentage.bestPattern.xmlPattern || patternPercentage.bestPattern.xmlpattern;
         if (patternXml) {
           const recheckResult = checkThreePartsMatch(workspace, patternXml);
-          console.log("🔍 Recheck result:", recheckResult);
+          // console.log("🔍 Recheck result:", recheckResult);
           
           if (recheckResult.matchedParts === 3) {
             threePartsMatch = {
@@ -140,17 +201,14 @@ export function usePatternAnalysis({
               part2Match: true,
               part3Match: true
             };
-            console.log("🔍 Updated threePartsMatch to 3:", threePartsMatch);
+            // console.log("🔍 Updated threePartsMatch to 3:", threePartsMatch);
           }
         }
       }
 
       // Get hint info
       const hintInfo = getNextBlockHint(workspace, goodPatterns);
-      console.log("🔍 [usePatternAnalysis] Hint info from getNextBlockHint:", hintInfo);
-      console.log("🔍 [usePatternAnalysis] Hint info.hint:", hintInfo?.hint);
-      console.log("🔍 [usePatternAnalysis] Hint info.currentStep:", hintInfo?.currentStep);
-      console.log("🔍 [usePatternAnalysis] Hint info.totalSteps:", hintInfo?.totalSteps);
+      // console.log("🔍 [usePatternAnalysis] Hint info from getNextBlockHint:", hintInfo);
 
       // อัปเดต hintData ด้วยข้อมูล pattern percentage และ three parts match
       const updatedHintInfo = {
@@ -172,37 +230,20 @@ export function usePatternAnalysis({
         currentBlockCount
       };
 
-      console.log("🔍 [usePatternAnalysis] Setting hintData with hint:", updatedHintInfo.hint);
+      // console.log("🔍 [usePatternAnalysis] Setting hintData with hint:", updatedHintInfo.hint);
       setHintData(updatedHintInfo);
       
       // Also update currentHint directly
-      console.log("🔍 [usePatternAnalysis] Checking setCurrentHint:", {
-        hasSetCurrentHint: !!setCurrentHint,
-        hintValue: updatedHintInfo.hint,
-        hintType: typeof updatedHintInfo.hint,
-        hintTrimmed: updatedHintInfo.hint?.trim(),
-        hintIsEmpty: updatedHintInfo.hint?.trim() === ''
-      });
-      
-      if (setCurrentHint && updatedHintInfo.hint && typeof updatedHintInfo.hint === 'string' && updatedHintInfo.hint.trim() !== '') {
-        console.log("🔍 [usePatternAnalysis] ✅ Also updating currentHint with:", updatedHintInfo.hint);
-        setCurrentHint(updatedHintInfo.hint);
-      } else {
-        console.log("🔍 [usePatternAnalysis] ❌ NOT updating currentHint:", {
-          hasSetCurrentHint: !!setCurrentHint,
-          hasHint: !!updatedHintInfo.hint,
-          hintType: typeof updatedHintInfo.hint,
-          hintIsString: typeof updatedHintInfo.hint === 'string',
-          hintTrimmed: updatedHintInfo.hint?.trim(),
-          hintIsEmpty: updatedHintInfo.hint?.trim() === ''
-        });
+      if (setCurrentHintRef.current && updatedHintInfo.hint && typeof updatedHintInfo.hint === 'string' && updatedHintInfo.hint.trim() !== '') {
+        // console.log("🔍 [usePatternAnalysis] ✅ Also updating currentHint with:", updatedHintInfo.hint);
+        setCurrentHintRef.current(updatedHintInfo.hint);
       }
 
       // Highlight blocks if hint is open and visual guide is available
       if (hintOpen && highlightBlocks && hintInfo?.hintData?.visualGuide?.highlightBlocks) {
         const blocksToHighlight = hintInfo.hintData.visualGuide.highlightBlocks;
         if (Array.isArray(blocksToHighlight) && blocksToHighlight.length > 0) {
-          console.log("🔔 Highlighting blocks from pattern analysis:", blocksToHighlight);
+          // console.log("🔔 Highlighting blocks from pattern analysis:", blocksToHighlight);
           highlightBlocks(blocksToHighlight);
         }
       } else if (!hintOpen && clearHighlights) {
@@ -210,38 +251,15 @@ export function usePatternAnalysis({
       }
 
       // CRITICAL: ใช้ patternPercentage เป็นหลักในการตรวจสอบ exact match
-      // เพราะ patternPercentage ใช้การเปรียบเทียบ variable names ที่ถูกต้อง
       const isExactMatch = patternPercentage.percentage === 100 && patternPercentage.bestPattern;
-      console.log("🔍 Pattern match check:", {
-        percentage: patternPercentage.percentage,
-        isExactMatch: isExactMatch,
-        bestPattern: patternPercentage.bestPattern?.name,
-        bestPatternWeaponKey: patternPercentage.bestPattern?.weaponKey
-      });
-
-      // Get XML text for hint system
-      const xml = Blockly.Xml.workspaceToDom(workspace);
-      const xmlText = Blockly.Xml.domToText(xml);
 
       if (isExactMatch && patternPercentage.bestPattern) {
         // Exact match → แสดง weapon ของ pattern
         const matchedPattern = patternPercentage.bestPattern;
         const weaponKey = matchedPattern.weaponKey || matchedPattern.weapon?.weapon_key || null;
         
-        console.log("🎉 EXACT MATCH FOUND! Updating weapon to:", weaponKey);
-        console.log("🔍 Matched pattern:", matchedPattern.name);
-        console.log("🔍 Pattern weaponKey:", weaponKey);
-        console.log("🔍 Pattern weapon object:", matchedPattern.weapon);
-        
-        if (!weaponKey) {
-          console.warn("⚠️ Pattern matched but weaponKey is missing!");
-          console.warn("⚠️ Pattern weapon_id:", matchedPattern.weapon_id);
-          console.warn("⚠️ Pattern weapon object:", matchedPattern.weapon);
-        }
-        
         if (weaponKey) {
           const weaponData = getWeaponData(weaponKey);
-          console.log("🔍 Weapon data:", weaponData);
           setCurrentWeaponData(weaponData);
           setPatternFeedback(`🎉 Perfect Pattern: ${matchedPattern.name}`);
           setCurrentGameState({
@@ -249,30 +267,18 @@ export function usePatternAnalysis({
             weaponData: weaponData,
             patternTypeId: matchedPattern.pattern_type_id
           });
-          console.log("🔍 Setting weapon in game state:", {
-            weaponKey: weaponKey,
-            weaponData: weaponData,
-            patternTypeId: matchedPattern.pattern_type_id
-          });
           const currentScene = getCurrentGameState().currentScene;
           if (currentScene && currentScene.add && currentScene.player) {
             try {
-              console.log("🔍 Calling displayPlayerWeapon with:", weaponKey);
               displayPlayerWeapon(weaponKey, currentScene);
             } catch (error) {
               console.error("❌ Error displaying weapon:", error);
             }
-          } else {
-            console.warn("⚠️ Scene not ready for weapon display");
           }
-        } else {
-          console.warn("⚠️ Cannot display weapon - weaponKey is missing");
         }
-
         setPartialWeaponKey(null);
       } else {
         // Partial match หรือ No match → แสดง default weapon
-        console.log("🔍 No exact match (percentage:", patternPercentage.percentage, "), using default weapon");
         const currentState = getCurrentGameState();
         const defaultWeaponKey = currentState.levelData?.defaultWeaponKey || "stick";
         const defaultWeaponData = getWeaponData(defaultWeaponKey);
@@ -303,11 +309,16 @@ export function usePatternAnalysis({
     };
 
     workspace.addChangeListener(analyzePattern);
-    analyzePattern(); // run once on mount
+    
+    // We want to run analysis immediately when:
+    // 1. Workspace is loaded (mount)
+    // 2. hintOpen toggles (to update highlights)
+    // 3. But we DON'T want to re-attach the listener constantly for other prop changes
+    analyzePattern(); 
 
     return () => {
       if (workspace.removeChangeListener) workspace.removeChangeListener(analyzePattern);
     };
-  }, [blocklyLoaded, goodPatterns, workspaceRef.current, hintOpen, highlightBlocks, clearHighlights, setHintData, setCurrentWeaponData, setPatternFeedback, setPartialWeaponKey]);
+  }, [blocklyLoaded, workspaceRef.current, hintOpen]); // Reduced dependencies to just stable ones + hintOpen trigger
 }
 

@@ -13,10 +13,12 @@ const {
   getLevelsForGuide,
   uploadGuideImage,
   deleteGuideImage,
+  getGuidesByLevel,
 } = require("../controllers/guideController");
 
 // Guide CRUD routes
 router.get("/guides", authCheck, requireAdmin, getAllGuides);
+router.get("/guides/level/:levelId", authCheck, requireAdmin, getGuidesByLevel);
 router.get("/guides/levels", authCheck, requireAdmin, getLevelsForGuide);
 router.get("/guides/:guideId", authCheck, requireAdmin, getGuideById);
 router.post("/guides", authCheck, requireAdmin, createGuide);

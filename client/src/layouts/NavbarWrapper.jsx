@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation } from "react-router";
 import Navbar from '../components/shared/navbar/Navbar';
 import useUserStore from '../store/useUserStore';
 import { useAuth } from '@clerk/clerk-react';
@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { fetchUserProfile } from '../services/profileService';
 
 const NavbarWrapper = () => {
-  const { role, setRole } = useUserStore();
+  const { role, setRole, setScores } = useUserStore();
   const { isSignedIn, isLoaded, getToken } = useAuth();
   const [roleLoading, setRoleLoading] = useState(true);
   const { pathname } = useLocation();
@@ -22,6 +22,7 @@ const NavbarWrapper = () => {
         try {
           const profile = await fetchUserProfile(getToken);
           setRole(profile.role);
+          setScores(profile.pre_score, profile.post_score);
         } catch (error) {
           console.error('Failed to fetch user role:', error);
         } finally {

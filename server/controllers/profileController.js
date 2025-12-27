@@ -60,6 +60,8 @@ exports.checkProfile = async (req, res) => {
       email: userInDb.email,
       profile_image: userInDb.profile_image,
       role: userInDb.role,
+      pre_score: userInDb.pre_score,
+      post_score: userInDb.post_score,
     });
 
   } catch (err) {

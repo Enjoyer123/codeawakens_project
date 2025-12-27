@@ -6,9 +6,9 @@ const GameWithGuide = ({ levelData, children, levelName }) => {
   const { showGuide, guides, closeGuide } = useGuideSystem(levelData);
 
   return (
-    <div className="relative">
+    <div className="relative h-full">
       {/* Main Game Content */}
-      <div className={`transition-all duration-300 ${showGuide ? 'opacity-80' : 'opacity-100'}`}>
+      <div className={`h-full transition-all duration-300 ${showGuide ? 'opacity-80' : 'opacity-100'}`}>
         {children}
       </div>
 
