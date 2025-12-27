@@ -243,6 +243,7 @@ exports.createLevel = async (req, res) => {
       subset_sum_data,
       coin_change_data,
       nqueen_data,
+      applied_data,
       starter_xml,
       block_ids,
       victory_condition_ids,
@@ -383,6 +384,7 @@ exports.createLevel = async (req, res) => {
         subset_sum_data: parseJsonField(subset_sum_data),
         coin_change_data: parseJsonField(coin_change_data),
         nqueen_data: parseJsonField(nqueen_data),
+        applied_data: parseJsonField(applied_data),
         starter_xml: starter_xml || null,
         created_by: user.user_id,
         level_blocks: block_ids && block_ids.length > 0 ? {
@@ -469,6 +471,7 @@ exports.updateLevel = async (req, res) => {
       subset_sum_data,
       coin_change_data,
       nqueen_data,
+      applied_data,
       starter_xml,
       block_ids,
       victory_condition_ids,
@@ -542,6 +545,7 @@ exports.updateLevel = async (req, res) => {
     if (subset_sum_data !== undefined) updateData.subset_sum_data = parseJsonField(subset_sum_data);
     if (coin_change_data !== undefined) updateData.coin_change_data = parseJsonField(coin_change_data);
     if (nqueen_data !== undefined) updateData.nqueen_data = parseJsonField(nqueen_data);
+    if (applied_data !== undefined) updateData.applied_data = parseJsonField(applied_data);
     if (starter_xml !== undefined) updateData.starter_xml = starter_xml || null;
 
     // Use transaction to update level and relationships

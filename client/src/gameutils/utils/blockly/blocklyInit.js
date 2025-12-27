@@ -4,6 +4,7 @@ import { defineAllBlocks } from './blocklyBlocks';
 import { defineListBlocks } from './blocklyList';
 import { createToolboxConfig } from './blocklyToolbox';
 import { defineAllGenerators } from './blocklyGenerators';
+console.log('blocklyInit.js loaded - reloading generators v3');
 import { ensureStandardBlocks } from './blocklyStandardBlocks';
 
 // Helper function to completely override procedure blocks
@@ -13,18 +14,18 @@ function overrideProcedureBlocks() {
       console.warn(`${blockType} not found`);
       return;
     }
-    
+
     console.log(`Overriding ${blockType}...`);
-    
+
     // Store original methods
     const originalInit = Blockly.Blocks[blockType].init;
     const originalRenameProcedure = Blockly.Blocks[blockType].renameProcedure;
-    
+
     // Override init to set default name
     if (originalInit) {
-      Blockly.Blocks[blockType].init = function() {
+      Blockly.Blocks[blockType].init = function () {
         originalInit.call(this);
-        
+
         // Set default name immediately
         const nameField = this.getField('NAME');
         if (nameField && !nameField.getValue()) {
@@ -32,56 +33,56 @@ function overrideProcedureBlocks() {
         }
       };
     }
-    
+
     // COMPLETELY replace renameProcedure - don't call original at all
-    Blockly.Blocks[blockType].renameProcedure = function(oldName, newName) {
+    Blockly.Blocks[blockType].renameProcedure = function (oldName, newName) {
       console.log(`${blockType}.renameProcedure:`, { oldName, newName });
-      
+
       // Just do nothing - this prevents all errors
       // The block will keep its current name
       return;
     };
-    
+
     // COMPLETELY replace loadExtraState - don't call original at all  
-    Blockly.Blocks[blockType].loadExtraState = function(state) {
+    Blockly.Blocks[blockType].loadExtraState = function (state) {
       console.log(`${blockType}.loadExtraState:`, state);
-      
+
       try {
         // Get safe name
         let name = 'do_something';
         if (state && state.name && typeof state.name === 'string') {
           name = state.name;
         }
-        
+
         // Get safe params
         let params = [];
         if (state && Array.isArray(state.params)) {
           params = state.params;
         }
-        
+
         console.log(`${blockType}.loadExtraState: using name="${name}", params=`, params);
-        
+
         // Set name field directly
         const nameField = this.getField('NAME');
         if (nameField) {
           nameField.setValue(name);
         }
-        
+
         // Store params on the block
         this.arguments_ = params;
-        
+
         // Update block shape if method exists
         if (this.updateShape_) {
           this.updateShape_();
         }
-        
+
         return { name, params };
       } catch (e) {
         console.error(`${blockType}.loadExtraState error:`, e);
         return { name: 'do_something', params: [] };
       }
     };
-    
+
     console.log(`${blockType} overridden successfully`);
   });
 }
@@ -92,17 +93,17 @@ export function initBlockly(containerRef, enabledBlocks) {
 
   try {
     console.log('=== Starting Blockly initialization ===');
-    
+
     // Override standard blocks first
     ensureStandardBlocks();
     defineListBlocks();
     defineAllBlocks();
     defineAllGenerators();
-    
+
     // Override procedure blocks BEFORE creating workspace
     console.log('Overriding procedure blocks...');
     overrideProcedureBlocks();
-    
+
     const toolbox = createToolboxConfig(enabledBlocks);
 
     const workspaceConfig = {
@@ -140,13 +141,13 @@ export function initBlockly(containerRef, enabledBlocks) {
 
     console.log('Creating workspace...');
     const workspace = Blockly.inject(containerRef.current, workspaceConfig);
-    
+
     // Override again after workspace creation
     console.log('Overriding procedure blocks again after workspace creation...');
     overrideProcedureBlocks();
-    
+
     console.log('=== Blockly initialization complete ===');
-    
+
     return workspace;
   } catch (error) {
     console.error("Error initializing workspace:", error);

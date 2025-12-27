@@ -39,7 +39,7 @@ export function drawLevel(scene) {
     return;
   }
   graphics.setDepth(1);
-  
+
   // Initialize node labels array if it doesn't exist
   if (!scene.nodeLabels) {
     scene.nodeLabels = [];
@@ -65,33 +65,33 @@ export function drawLevel(scene) {
     });
     scene.edgeWeightLabels = [];
   }
-  
+
   // Draw edges FIRST (behind nodes)
   if (!scene.levelData.edges || !Array.isArray(scene.levelData.edges)) {
     console.warn('⚠️ Edges is not an array:', scene.levelData.edges);
   } else {
     console.log(`🎨 Drawing ${scene.levelData.edges.length} edges...`);
   }
-  
+
   graphics.lineStyle(3, 0xffd700, 1);
   if (scene.levelData.edges && Array.isArray(scene.levelData.edges)) {
     scene.levelData.edges.forEach((edge, index) => {
       try {
         const fromNode = scene.levelData.nodes.find((n) => n.id === edge.from);
         const toNode = scene.levelData.nodes.find((n) => n.id === edge.to);
-        
+
         if (!fromNode || !toNode) {
           console.warn(`⚠️ Edge ${index}: Cannot find nodes for edge from ${edge.from} to ${edge.to}`);
           return;
         }
-        
+
         graphics.lineBetween(fromNode.x, fromNode.y, toNode.x, toNode.y);
-        
+
         // แสดง edge weight ถ้ามี
         if (edge.value !== undefined && edge.value !== null && !isNaN(Number(edge.value))) {
           const midX = (fromNode.x + toNode.x) / 2;
           const midY = (fromNode.y + toNode.y) / 2;
-          
+
           const weightText = scene.add.text(midX, midY, edge.value.toString(), {
             fontSize: '14px',
             color: '#000000',
@@ -114,12 +114,12 @@ export function drawLevel(scene) {
   scene.levelData.nodes.forEach((node) => {
     const isStart = node.id === scene.levelData.startNodeId;
     const isGoal = node.id === scene.levelData.goalNodeId;
-    
+
     // Node color based on type
     let nodeColor = 0x667eea; // Blue default
     if (isStart) nodeColor = 0x10b981; // Green start
     else if (isGoal) nodeColor = 0xf59e0b; // Yellow/Orange goal
-    
+
     graphics.fillStyle(nodeColor, 1);
     graphics.fillCircle(node.x, node.y, 18);
     graphics.lineStyle(3, 0xffffff, 1);
@@ -423,10 +423,10 @@ export function setupMonsters(scene) {
         return;
       }
 
-      const startPos = monsterData.patrol && monsterData.patrol.length > 0 
-        ? monsterData.patrol[0] 
+      const startPos = monsterData.patrol && monsterData.patrol.length > 0
+        ? monsterData.patrol[0]
         : scene.levelData.nodes.find(n => n.id === monsterData.startNode);
-      
+
       if (!startPos) return;
 
       // Create vampire sprite instead of circle
@@ -504,7 +504,7 @@ export function drawPlayer(scene) {
     // ตรวจสอบว่ามี nodes หรือไม่
     const hasNodes = scene.levelData.nodes && scene.levelData.nodes.length > 0;
     const startNode = hasNodes ? scene.levelData.nodes.find(n => n.id === scene.levelData.startNodeId) : null;
-    
+
     // ถ้าไม่มี nodes หรือไม่มี startNode ให้แสดงตัวละครที่มุมล่างซ้าย
     let playerX, playerY;
     if (!hasNodes || !startNode) {
@@ -564,7 +564,7 @@ export function setupKnapsack(scene) {
   console.log('🔍 setupKnapsack called');
   console.log('🔍 scene.levelData:', scene.levelData);
   console.log('🔍 scene.levelData.knapsackData:', scene.levelData?.knapsackData);
-  
+
   if (!scene.levelData || !scene.levelData.knapsackData) {
     console.log('⚠️ No knapsackData found, skipping setup');
     return;
@@ -708,7 +708,7 @@ export function setupSubsetSum(scene) {
   console.log('🔍 setupSubsetSum called');
   console.log('🔍 scene.levelData:', scene.levelData);
   console.log('🔍 scene.levelData.subsetSumData:', scene.levelData?.subsetSumData);
-  
+
   if (!scene.levelData || !scene.levelData.subsetSumData) {
     console.log('⚠️ No subsetSumData found, skipping setup');
     return;
@@ -730,7 +730,7 @@ export function setupSubsetSum(scene) {
     const side1Width = 150;
     const side1Height = 100;
     const targetSum = subsetSumData.target_sum !== undefined ? subsetSumData.target_sum : 0;
-    
+
     // สร้าง label ที่รวม target_sum
     const side1LabelWithTarget = `${side1Label}\n${targetSum}`;
 
@@ -766,7 +766,7 @@ export function setupSubsetSum(scene) {
     const side2Width = 150;
     const side2Height = 100;
     const targetSum = subsetSumData.target_sum !== undefined ? subsetSumData.target_sum : 0;
-    
+
     // สร้าง label ที่รวม target_sum
     const side2LabelWithTarget = `${side2Label}\n${targetSum}`;
 
@@ -860,7 +860,7 @@ export function setupSubsetSum(scene) {
     const spacing = 150;
     const startX = 200;
     const startY = 150;
-    
+
     subsetSumData.warriors.forEach((power, index) => {
       const warriorX = startX + (index * spacing);
       const warriorY = startY;
@@ -926,7 +926,7 @@ export function setupCoinChange(scene) {
   console.log('🔍 setupCoinChange called');
   console.log('🔍 scene.levelData:', scene.levelData);
   console.log('🔍 scene.levelData.coinChangeData:', scene.levelData?.coinChangeData);
-  
+
   if (!scene.levelData || !scene.levelData.coinChangeData) {
     console.log('⚠️ No coinChangeData found, skipping setup');
     return;
@@ -934,10 +934,10 @@ export function setupCoinChange(scene) {
 
   const coinChangeData = scene.levelData.coinChangeData;
   console.log('✅ Coin Change data found:', coinChangeData);
-  
+
   const monsterPower = coinChangeData.monster_power || 32;
   const warriors = coinChangeData.warriors || [1, 5, 10, 25]; // Default warriors levels
-  
+
   scene.coinChange = {
     monster: null,
     warriors: [],
@@ -949,18 +949,18 @@ export function setupCoinChange(scene) {
   const warriorStartX = 150;
   const warriorY = 150;
   const warriorSpacing = 150;
-  
+
   warriors.forEach((power, index) => {
     const warriorX = warriorStartX + (index * warriorSpacing);
     const warriorNumber = index + 1; // 1, 2, 3, 4
-    
+
     // Square ด้านบน (dotted outline) - แสดงพลัง
     // ใช้ rectangle ที่มี fill โปร่งใสและ stroke แทน (เพื่อความง่าย)
     const powerSquare = scene.add.rectangle(warriorX, warriorY, 50, 50);
     powerSquare.setFillStyle(0xffffff, 0); // fill โปร่งใส
     powerSquare.setStrokeStyle(2, 0x000000, 0.8); // stroke สีดำ (ใช้ alpha ต่ำเพื่อดูเหมือน dotted)
     powerSquare.setDepth(7);
-    
+
     // Text แสดงพลังใน square
     const powerText = scene.add.text(warriorX, warriorY, power.toString(), {
       fontSize: '20px',
@@ -969,12 +969,12 @@ export function setupCoinChange(scene) {
     });
     powerText.setOrigin(0.5, 0.5);
     powerText.setDepth(8);
-    
+
     // Blue circle ด้านล่าง (solid outline) - แสดงหมายเลข
     const warriorCircle = scene.add.circle(warriorX, warriorY + 60, 30, 0x0066ff, 1); // สีฟ้า
     warriorCircle.setStrokeStyle(3, 0x0044cc); // เส้นขอบสีฟ้าเข้ม
     warriorCircle.setDepth(7);
-    
+
     // Text แสดงหมายเลขใน circle
     const numberText = scene.add.text(warriorX, warriorY + 60, warriorNumber.toString(), {
       fontSize: '20px',
@@ -983,7 +983,7 @@ export function setupCoinChange(scene) {
     });
     numberText.setOrigin(0.5, 0.5);
     numberText.setDepth(8);
-    
+
     scene.coinChange.warriors.push({
       power: power,
       index: index,
@@ -1002,14 +1002,14 @@ export function setupCoinChange(scene) {
   // Setup monster (มอนสเตอร์) - ด้านขวา
   const monsterX = 900; // ขยับไปทางขวา
   const monsterY = 150;
-  
+
   // Square ด้านบน (dotted outline) - แสดงพลัง
   // ใช้ rectangle ที่มี fill โปร่งใสและ stroke แทน (เพื่อความง่าย)
   const monsterPowerSquare = scene.add.rectangle(monsterX, monsterY, 50, 50);
   monsterPowerSquare.setFillStyle(0xffffff, 0); // fill โปร่งใส
   monsterPowerSquare.setStrokeStyle(2, 0x000000, 0.8); // stroke สีดำ (ใช้ alpha ต่ำเพื่อดูเหมือน dotted)
   monsterPowerSquare.setDepth(7);
-  
+
   // Text แสดงพลังใน square
   const monsterPowerText = scene.add.text(monsterX, monsterY, monsterPower.toString(), {
     fontSize: '20px',
@@ -1018,12 +1018,12 @@ export function setupCoinChange(scene) {
   });
   monsterPowerText.setOrigin(0.5, 0.5);
   monsterPowerText.setDepth(8);
-  
+
   // Red circle ด้านล่าง (solid outline, filled light red) - แสดงคำว่า "Monster"
   const monsterCircle = scene.add.circle(monsterX, monsterY + 60, 40, 0xff6666, 1); // สีแดงอ่อน
   monsterCircle.setStrokeStyle(3, 0xff0000); // เส้นขอบสีแดงเข้ม
   monsterCircle.setDepth(7);
-  
+
   // Text แสดงคำว่า "Monster" ใน circle
   const monsterLabelText = scene.add.text(monsterX, monsterY + 60, 'Monster', {
     fontSize: '14px',
@@ -1032,7 +1032,7 @@ export function setupCoinChange(scene) {
   });
   monsterLabelText.setOrigin(0.5, 0.5);
   monsterLabelText.setDepth(8);
-  
+
   scene.coinChange.monster = {
     power: monsterPower,
     powerSquare: monsterPowerSquare,
@@ -1048,12 +1048,12 @@ export function setupCoinChange(scene) {
   const boxY = 500; // ขยับขึ้นมาอีก
   const boxWidth = 400;
   const boxHeight = 200;
-  
+
   const selectedBox = scene.add.graphics();
   selectedBox.lineStyle(4, 0x000000, 1);
   selectedBox.strokeRoundedRect(boxX - boxWidth / 2, boxY - boxHeight / 2, boxWidth, boxHeight, 10);
   selectedBox.setDepth(5);
-  
+
   scene.coinChange.selectedBox = {
     graphics: selectedBox,
     x: boxX,
@@ -1073,7 +1073,7 @@ export function setupNQueen(scene) {
   console.log('🔍 setupNQueen called');
   console.log('🔍 scene.levelData:', scene.levelData);
   console.log('🔍 scene.levelData.nqueenData:', scene.levelData?.nqueenData);
-  
+
   if (!scene.levelData || !scene.levelData.nqueenData) {
     console.log('⚠️ No nqueenData found, skipping setup');
     return;
@@ -1081,9 +1081,9 @@ export function setupNQueen(scene) {
 
   const nqueenData = scene.levelData.nqueenData;
   console.log('✅ N-Queen data found:', nqueenData);
-  
+
   const n = nqueenData.n || 4; // Board size (n×n)
-  
+
   scene.nqueen = {
     n: n,
     board: null,
@@ -1107,7 +1107,7 @@ export function setupNQueen(scene) {
 
   // Draw grid lines
   boardGraphics.lineStyle(2, 0x000000, 1);
-  
+
   // Draw vertical lines
   for (let i = 0; i <= n; i++) {
     const x = boardStartX - boardWidth / 2 + (i * cellSize);
@@ -1116,7 +1116,7 @@ export function setupNQueen(scene) {
     boardGraphics.moveTo(x, y1);
     boardGraphics.lineTo(x, y2);
   }
-  
+
   // Draw horizontal lines
   for (let i = 0; i <= n; i++) {
     const y = boardStartY - boardHeight / 2 + (i * cellSize);
@@ -1125,14 +1125,14 @@ export function setupNQueen(scene) {
     boardGraphics.moveTo(x1, y);
     boardGraphics.lineTo(x2, y);
   }
-  
+
   boardGraphics.strokePath();
-  
+
   // Draw column labels (0, 1, 2, 3, ...)
   for (let col = 0; col < n; col++) {
     const x = boardStartX - boardWidth / 2 + (col * cellSize) + cellSize / 2;
     const y = boardStartY - boardHeight / 2 - labelOffset;
-    
+
     const label = scene.add.text(x, y, col.toString(), {
       fontSize: '18px',
       color: '#000000',
@@ -1140,15 +1140,15 @@ export function setupNQueen(scene) {
     });
     label.setOrigin(0.5, 0.5);
     label.setDepth(6);
-    
+
     scene.nqueen.labels.push(label);
   }
-  
+
   // Draw row labels (0, 1, 2, 3, ...)
   for (let row = 0; row < n; row++) {
     const x = boardStartX - boardWidth / 2 - labelOffset;
     const y = boardStartY - boardHeight / 2 + (row * cellSize) + cellSize / 2;
-    
+
     const label = scene.add.text(x, y, row.toString(), {
       fontSize: '18px',
       color: '#000000',
@@ -1156,14 +1156,526 @@ export function setupNQueen(scene) {
     });
     label.setOrigin(0.5, 0.5);
     label.setDepth(6);
-    
+
     scene.nqueen.labels.push(label);
   }
-  
+
   scene.nqueen.board = boardGraphics;
+
+  // Initialize overlays Map for highlights and previews
+  scene.nqueen.overlays = {}; // key: `${row}_${col}` -> { rectGraphics, previewGraphics }
+
+  // Helper to compute cell bounds and center
+  const cellBounds = (row, col) => {
+    const x1 = boardStartX - boardWidth / 2 + (col * cellSize);
+    const y1 = boardStartY - boardHeight / 2 + (row * cellSize);
+    const x2 = x1 + cellSize;
+    const y2 = y1 + cellSize;
+    const cx = x1 + cellSize / 2;
+    const cy = y1 + cellSize / 2;
+    return { x1, y1, x2, y2, cx, cy };
+  };
+
+  // Create or update overlay for a cell (color: hex, alpha: number)
+  scene.nqueen.setCellOverlay = (row, col, color = 0xffff00, alpha = 0.35) => {
+    const key = `${row}_${col}`;
+    try {
+      if (!scene.nqueen.overlays[key]) scene.nqueen.overlays[key] = {};
+
+      // Create rectangle if not exists
+      if (!scene.nqueen.overlays[key].rectGraphics) {
+        const g = scene.add.graphics();
+        g.setDepth(8);
+        scene.nqueen.overlays[key].rectGraphics = g;
+      }
+      const g = scene.nqueen.overlays[key].rectGraphics;
+      const b = cellBounds(row, col);
+      g.clear();
+      g.fillStyle(color, alpha);
+      g.fillRect(b.x1 + 1, b.y1 + 1, cellSize - 2, cellSize - 2);
+
+    } catch (e) {
+      console.warn('Error setting cell overlay', e);
+    }
+  };
+
+  scene.nqueen.clearCellOverlay = (row, col) => {
+    const key = `${row}_${col}`;
+    const entry = scene.nqueen.overlays[key];
+    if (entry && entry.rectGraphics) {
+      try { entry.rectGraphics.destroy(); } catch (e) { }
+      delete scene.nqueen.overlays[key];
+    }
+  };
+
+  scene.nqueen.clearAllOverlays = () => {
+    Object.keys(scene.nqueen.overlays).forEach(k => {
+      const e = scene.nqueen.overlays[k];
+      try { if (e.rectGraphics) e.rectGraphics.destroy(); } catch (er) { }
+    });
+    scene.nqueen.overlays = {};
+  };
+
+  // Visual API exposed to sandboxed solver/runtime
+  const registerVisualApi = () => {
+    // Ensure configurable flash duration for placed cell (ms)
+    try { if (typeof globalThis !== 'undefined' && typeof globalThis.__nqueenVisual_placeFlashDuration === 'undefined') globalThis.__nqueenVisual_placeFlashDuration = 140; } catch (e) { }
+    // Default: do NOT accumulate overlays (keeps board clean). We still flash rejected cells briefly.
+    try { if (typeof globalThis !== 'undefined' && typeof globalThis.__nqueenVisual_accumulate === 'undefined') globalThis.__nqueenVisual_accumulate = false; } catch (e) { }
+    // If not accumulating, keep rejected cell visible for a bit (ms)
+    try { if (typeof globalThis !== 'undefined' && typeof globalThis.__nqueenVisual_rejectFlashMs === 'undefined') globalThis.__nqueenVisual_rejectFlashMs = 650; } catch (e) { }
+    // Optional: keep rejected cells persistent (debugging). Default false.
+    try { if (typeof globalThis !== 'undefined' && typeof globalThis.__nqueenVisual_persistReject === 'undefined') globalThis.__nqueenVisual_persistReject = false; } catch (e) { }
+
+    // Attach helpers to globalThis so injected user code can call them via capture shim
+    try {
+      globalThis.__nqueenVisual_api = {
+        onConsider: (r, c, canPlace) => {
+          try {
+            console.log('🔍 [nqueenVisual] onConsider called:', { r, c, canPlace });
+            // Be tolerant: solver/runtime may pass numeric strings
+            const rr = typeof r === 'number' ? r : Number(r);
+            const cc = typeof c === 'number' ? c : Number(c);
+            if (!Number.isFinite(rr) || !Number.isFinite(cc)) return;
+
+            // Mark that we have real-time consider events (used to avoid "replay from output" overwriting the run)
+            try { if (typeof globalThis !== 'undefined') globalThis.__nqueenVisual_seenConsider = true; } catch (e) { }
+
+            const accumulate = !!(typeof globalThis !== 'undefined' && globalThis.__nqueenVisual_accumulate);
+            const persistReject = !!(typeof globalThis !== 'undefined' && globalThis.__nqueenVisual_persistReject);
+            // Clear previous overlays ONLY for "focus mode" and only on safe/thinking.
+            // If unsafe (red), keep it visible (flash) even in focus mode.
+            try {
+              if (!accumulate && canPlace && scene.nqueen && typeof scene.nqueen.clearAllOverlays === 'function') {
+                scene.nqueen.clearAllOverlays();
+              }
+            } catch (e) { }
+
+            // Visual Logic:
+            // canPlace = true  -> "Thinking" / "Safe-so-far" -> ORANGE (0xFFA500)
+            // canPlace = false -> "Unsafe" / "Rejected"      -> RED (0xFF0000)
+
+            const color = canPlace ? 0xFFA500 : 0xFF0000;
+            const alpha = 0.7; // High visibility
+
+            scene.nqueen.setCellOverlay(rr, cc, color, alpha);
+
+            // Auto-clear rejected cells after a short delay so the board doesn't stay fully red.
+            try {
+              if (!persistReject && !canPlace) {
+                const ms = (typeof globalThis !== 'undefined' && Number.isFinite(Number(globalThis.__nqueenVisual_rejectFlashMs)))
+                  ? Number(globalThis.__nqueenVisual_rejectFlashMs)
+                  : 650;
+                setTimeout(() => {
+                  try { scene.nqueen.clearCellOverlay(rr, cc); } catch (e) { }
+                }, Math.max(0, ms));
+              }
+            } catch (e) { }
+
+          } catch (e) { console.warn('nqueenVisual onConsider error', e); }
+        },
+
+        onPlace: (r, c) => {
+          try {
+            console.log('🔍 [nqueenVisual] onPlace called:', { r, c });
+            const rr = typeof r === 'number' ? r : Number(r);
+            const cc = typeof c === 'number' ? c : Number(c);
+            if (!Number.isFinite(rr) || !Number.isFinite(cc)) return;
+
+            // Placement -> GREEN flash before Queen
+            const color = 0x00FF00;
+            const alpha = 0.8;
+
+            try { scene.nqueen.setCellOverlay(rr, cc, color, alpha); } catch (e) { }
+            try {
+              setTimeout(() => {
+                try { scene.nqueen.clearCellOverlay(rr, cc); } catch (e) { }
+                try { drawQueenOnBoard(scene, rr, cc); } catch (e) { }
+              }, Math.max(0, (globalThis.__nqueenVisual_placeFlashDuration || 140)));
+            } catch (e) { /* swallow */ }
+          } catch (e) { console.warn('nqueenVisual onPlace error', e); }
+        },
+        onRemove: (r, c) => {
+          try {
+            console.log('🔍 [nqueenVisual] onRemove called:', { r, c });
+            const rr = typeof r === 'number' ? r : Number(r);
+            const cc = typeof c === 'number' ? c : Number(c);
+            if (!Number.isFinite(rr) || !Number.isFinite(cc)) return;
+            // Remove queen graphics if present
+            const qIndex = scene.nqueen.queens.findIndex(q => q.row === rr && q.col === cc);
+            if (qIndex !== -1) {
+              try { scene.nqueen.queens[qIndex].graphics.destroy(); } catch (e) { }
+              scene.nqueen.queens.splice(qIndex, 1);
+            }
+            // Add a transient red flash to indicate removal
+            const b = cellBounds(rr, cc);
+            const flash = scene.add.rectangle(b.cx, b.cy, cellSize - 6, cellSize - 6, 0xff0000, 0.5);
+            flash.setDepth(9);
+            scene.tweens.add({ targets: flash, alpha: 0, duration: 300, onComplete: () => { try { flash.destroy(); } catch (e) { } } });
+          } catch (e) { console.warn('nqueenVisual onRemove error', e); }
+        },
+        clear: () => { try { scene.nqueen.clearAllOverlays(); } catch (e) { } }
+      };
+    } catch (e) {
+      console.warn('Could not register nqueen visual api:', e);
+    }
+
+    // Cleanup on scene shutdown
+    try {
+      scene.events.once('shutdown', () => { try { delete globalThis.__nqueenVisual_api; } catch (e) { } });
+    } catch (e) { }
+  };
+
+  registerVisualApi();
 
   console.log(`Setup N-Queen: ${n}×${n} board`);
 }
+
+/**
+ * Setup Applied Dynamic (Ant) DP board in Phaser (grid with sugar + dp value)
+ * This is the "main visual" for the applied dynamic Ant level, similar to N-Queen.
+ * @param {Phaser.Scene} scene
+ */
+export function setupAntDp(scene) {
+  try {
+    const level = scene?.levelData;
+    const applied = level?.appliedData || null;
+    if (!applied) {
+      try { console.warn('setupAntDp: no appliedData on levelData', { hasLevel: !!level, levelId: level?.level_id, keys: level ? Object.keys(level) : null }); } catch (e) { }
+      return;
+    }
+
+    const appliedType = String(applied.type || '').toUpperCase();
+    const isAnt = appliedType === 'APPLIED_DYNAMIC_ANT'
+      || appliedType === 'ANT_SUGAR_PATH'
+      || appliedType === 'APPLIED_ANT'
+      || appliedType.includes('ANT');
+    if (!isAnt) {
+      try { console.warn('setupAntDp: appliedData.type not ANT', { appliedType, applied }); } catch (e) { }
+      return;
+    }
+
+    const payload = applied.payload || {};
+    const sugarGrid = Array.isArray(payload.sugarGrid) ? payload.sugarGrid : [];
+    const rows = Number(payload.rows ?? sugarGrid.length ?? 0) || (Array.isArray(sugarGrid) ? sugarGrid.length : 0) || 1;
+    const cols = Number(payload.cols ?? (Array.isArray(sugarGrid?.[0]) ? sugarGrid[0].length : 0) ?? 0) || (Array.isArray(sugarGrid?.[0]) ? sugarGrid[0].length : 0) || 1;
+    const start = payload.start || { r: 0, c: 0 };
+    const goal = payload.goal || { r: rows - 1, c: cols - 1 };
+
+    // Clean up previous ant dp visuals if reloading
+    if (scene.antDp && scene.antDp.destroy) {
+      try { scene.antDp.destroy(); } catch (e) { }
+    }
+
+    // Match N-Queen look & placement (fixed cell size like a board)
+    const cellSize = 60;
+    const boardWidth = cols * cellSize;
+    const boardHeight = rows * cellSize;
+
+    // Same anchor as N-Queen
+    const boardStartX = 400;
+    const boardStartY = 300;
+    const labelOffset = 25;
+
+    const boardGraphics = scene.add.graphics();
+    boardGraphics.setDepth(5);
+
+    // Visible debug badge (helps confirm the board is active even if the grid is offscreen or background is dark)
+    const debugBadge = scene.add.text(12, 10, `🐜 ANT DP ACTIVE (${rows}×${cols})`, {
+      fontSize: '16px',
+      color: '#ffffff',
+      fontStyle: 'bold',
+      backgroundColor: '#111827',
+      padding: { x: 8, y: 6 },
+      stroke: '#000000',
+      strokeThickness: 3,
+    });
+    debugBadge.setDepth(10000);
+    debugBadge.setScrollFactor(0);
+
+    // No panel / alternating background — keep it identical to N-Queen grid style
+
+    // Grid lines
+    // Use white lines so the board is visible on dark backgrounds too.
+    boardGraphics.lineStyle(2, 0xffffff, 1);
+    for (let i = 0; i <= cols; i++) {
+      const x = boardStartX - boardWidth / 2 + (i * cellSize);
+      const y1 = boardStartY - boardHeight / 2;
+      const y2 = boardStartY + boardHeight / 2;
+      boardGraphics.moveTo(x, y1);
+      boardGraphics.lineTo(x, y2);
+    }
+    for (let i = 0; i <= rows; i++) {
+      const y = boardStartY - boardHeight / 2 + (i * cellSize);
+      const x1 = boardStartX - boardWidth / 2;
+      const x2 = boardStartX + boardWidth / 2;
+      boardGraphics.moveTo(x1, y);
+      boardGraphics.lineTo(x2, y);
+    }
+    boardGraphics.strokePath();
+
+    const labels = [];
+    // Column labels
+    for (let c = 0; c < cols; c++) {
+      const x = boardStartX - boardWidth / 2 + (c * cellSize) + cellSize / 2;
+      const y = boardStartY - boardHeight / 2 - labelOffset;
+      const t = scene.add.text(x, y, c.toString(), { fontSize: '18px', color: '#ffffff', fontStyle: 'bold', stroke: '#000000', strokeThickness: 3 });
+      t.setOrigin(0.5, 0.5);
+      t.setDepth(6);
+      labels.push(t);
+    }
+    // Row labels
+    for (let r = 0; r < rows; r++) {
+      const x = boardStartX - boardWidth / 2 - labelOffset;
+      const y = boardStartY - boardHeight / 2 + (r * cellSize) + cellSize / 2;
+      const t = scene.add.text(x, y, r.toString(), { fontSize: '18px', color: '#ffffff', fontStyle: 'bold', stroke: '#000000', strokeThickness: 3 });
+      t.setOrigin(0.5, 0.5);
+      t.setDepth(6);
+      labels.push(t);
+    }
+
+    const overlays = {}; // key -> graphics
+    const dpTexts = Array.from({ length: rows }, () => Array.from({ length: cols }, () => null));
+    const sugarTexts = Array.from({ length: rows }, () => Array.from({ length: cols }, () => null));
+
+    const cellBounds = (r, c) => {
+      const x1 = boardStartX - boardWidth / 2 + (c * cellSize);
+      const y1 = boardStartY - boardHeight / 2 + (r * cellSize);
+      const cx = x1 + cellSize / 2;
+      const cy = y1 + cellSize / 2;
+      return { x1, y1, cx, cy };
+    };
+
+    // Color Start/Goal cells (instead of showing S/G text)
+    const startGoalBg = scene.add.graphics();
+    startGoalBg.setDepth(4.5); // behind grid lines, above background
+    try {
+      const sr = Math.max(0, Math.min(rows - 1, Number(start?.r ?? 0)));
+      const sc = Math.max(0, Math.min(cols - 1, Number(start?.c ?? 0)));
+      const sB = cellBounds(sr, sc);
+      startGoalBg.fillStyle(0x10B981, 0.35); // green
+      startGoalBg.fillRect(sB.x1 + 1, sB.y1 + 1, cellSize - 2, cellSize - 2);
+    } catch (e) { }
+    try {
+      const gr = Math.max(0, Math.min(rows - 1, Number(goal?.r ?? (rows - 1))));
+      const gc = Math.max(0, Math.min(cols - 1, Number(goal?.c ?? (cols - 1))));
+      const gB = cellBounds(gr, gc);
+      startGoalBg.fillStyle(0xEF4444, 0.35); // red
+      startGoalBg.fillRect(gB.x1 + 1, gB.y1 + 1, cellSize - 2, cellSize - 2);
+    } catch (e) { }
+
+    // Create per-cell texts
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const b = cellBounds(r, c);
+        const sugar = (sugarGrid?.[r] && typeof sugarGrid[r][c] !== 'undefined') ? sugarGrid[r][c] : null;
+
+        const st = scene.add.text(
+          b.cx,
+          b.cy - 12,
+          sugar === null ? '' : `s:${sugar}`,
+          { fontSize: '12px', color: '#ffffff', fontStyle: 'bold', stroke: '#000000', strokeThickness: 3 }
+        );
+        st.setOrigin(0.5, 0.5);
+        st.setDepth(6);
+        sugarTexts[r][c] = st;
+
+        const dt = scene.add.text(b.cx, b.cy + 10, '·', { fontSize: '18px', color: '#ffffff', fontStyle: 'bold', stroke: '#000000', strokeThickness: 3 });
+        dt.setOrigin(0.5, 0.5);
+        dt.setDepth(6);
+        dpTexts[r][c] = dt;
+      }
+    }
+
+    // Ant placeholder (square) at Start cell (future: swap to pixel ant sprite)
+    const clampCell = (r, c) => ({
+      r: Math.max(0, Math.min(rows - 1, Number(r))),
+      c: Math.max(0, Math.min(cols - 1, Number(c))),
+    });
+    const startCell = clampCell(start?.r ?? 0, start?.c ?? 0);
+    const startB = cellBounds(startCell.r, startCell.c);
+    // Smaller than the cell so it reads as an "ant" placeholder (future sprite)
+    const antSize = Math.max(14, Math.floor(cellSize * 0.42));
+    const antRect = scene.add.rectangle(startB.cx, startB.cy, antSize, antSize, 0x111827, 0.95);
+    antRect.setDepth(9);
+    antRect.setStrokeStyle(2, 0xFBBF24, 1); // yellow outline
+
+    // Sequential animation queue so visuals can be awaited before Victory.
+    let pendingAnimations = 0;
+    let queue = Promise.resolve();
+    const enqueue = (fn) => {
+      queue = queue.then(() => fn()).catch(() => { /* swallow */ });
+      return queue;
+    };
+
+    const tweenMoveAntToCell = (r, c, durationMs = 180) => {
+      return new Promise((resolve) => {
+        try {
+          const cc = clampCell(r, c);
+          const b = cellBounds(cc.r, cc.c);
+          pendingAnimations += 1;
+          scene.tweens.add({
+            targets: antRect,
+            x: b.cx,
+            y: b.cy,
+            duration: Math.max(0, Number(durationMs) || 0),
+            ease: 'Sine.easeInOut',
+            onComplete: () => {
+              pendingAnimations = Math.max(0, pendingAnimations - 1);
+              resolve(true);
+            }
+          });
+        } catch (e) {
+          pendingAnimations = Math.max(0, pendingAnimations - 1);
+          resolve(false);
+        }
+      });
+    };
+
+    const moveAntToCell = (r, c) => {
+      try {
+        const cc = clampCell(r, c);
+        const b = cellBounds(cc.r, cc.c);
+        antRect.setPosition(b.cx, b.cy);
+      } catch (e) { /* ignore */ }
+    };
+
+    const setCellOverlay = (r, c, color = 0xfbbf24, alpha = 0.35) => {
+      const key = `${r}_${c}`;
+      if (!overlays[key]) {
+        overlays[key] = scene.add.graphics();
+        overlays[key].setDepth(8);
+      }
+      const g = overlays[key];
+      const b = cellBounds(r, c);
+      g.clear();
+      g.fillStyle(color, alpha);
+      g.fillRect(b.x1 + 1, b.y1 + 1, cellSize - 2, cellSize - 2);
+    };
+
+    const clearAllOverlays = () => {
+      Object.keys(overlays).forEach(k => {
+        try { overlays[k].destroy(); } catch (e) { }
+        delete overlays[k];
+      });
+    };
+
+    scene.antDp = {
+      rows,
+      cols,
+      cellSize,
+      boardStartX,
+      boardStartY,
+      boardWidth,
+      boardHeight,
+      startGoalBg,
+      ant: {
+        rect: antRect,
+        moveToCell: moveAntToCell,
+        tweenToCell: tweenMoveAntToCell
+      },
+      board: boardGraphics,
+      debugBadge,
+      labels,
+      overlays,
+      dpTexts,
+      sugarTexts,
+      setCellOverlay,
+      clearAllOverlays,
+      getPendingAnimations: () => pendingAnimations,
+      waitForIdle: async ({ timeoutMs = 600000, pollMs = 40 } = {}) => {
+        const start = Date.now();
+        // Wait for queue chain and pending tweens
+        while (Date.now() - start < timeoutMs) {
+          try { await Promise.race([queue, new Promise(r => setTimeout(r, pollMs))]); } catch (e) { }
+          if ((pendingAnimations || 0) <= 0) return true;
+          await new Promise(r => setTimeout(r, pollMs));
+        }
+        return false;
+      },
+      destroy: () => {
+        try { clearAllOverlays(); } catch (e) { }
+        try { debugBadge.destroy(); } catch (e) { }
+        try { startGoalBg.destroy(); } catch (e) { }
+        try { antRect.destroy(); } catch (e) { }
+        try { boardGraphics.destroy(); } catch (e) { }
+        try { labels.forEach(t => t && t.destroy && t.destroy()); } catch (e) { }
+        try {
+          for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+              try { if (dpTexts[r][c]) dpTexts[r][c].destroy(); } catch (e) { }
+              try { if (sugarTexts[r][c]) sugarTexts[r][c].destroy(); } catch (e) { }
+            }
+          }
+        } catch (e) { }
+      }
+    };
+
+    // Expose visual API to runtime (useCodeExecution / state manager)
+    try {
+      globalThis.__antDpVisual_api = {
+        onUpdate: (i, j, value, meta) => {
+          // Queue everything so we can await completion before Victory.
+          return enqueue(async () => {
+            try {
+              const rr = Math.max(0, Math.min(rows - 1, Number(i)));
+              const cc = Math.max(0, Math.min(cols - 1, Number(j)));
+              const kind = String(meta?.kind ?? meta?.type ?? '').toLowerCase();
+              const isChosen = !!meta?.chosen || kind === 'chosen' || kind === 'choose' || kind === 'path' || !!meta?.moveAnt;
+              const keepTrail = !!meta?.keepTrail || kind === 'path' || kind === 'chosen' || kind === 'choose';
+
+              // Colors: considered = yellow, chosen/path = green
+              const color = isChosen ? 0x10B981 : 0xFBBF24;
+              const alpha = (kind === 'path' || kind === 'chosen') ? 0.8 : (isChosen ? 0.4 : 0.35);
+
+              // Highlight cell
+              if (!keepTrail) {
+                try { scene.antDp.clearAllOverlays(); } catch (e) { }
+              }
+              setCellOverlay(rr, cc, color, alpha);
+
+              // Update dp text if value is concrete
+              if (value !== null && typeof value !== 'undefined' && scene.antDp.dpTexts?.[rr]?.[cc]) {
+                scene.antDp.dpTexts[rr][cc].setText(String(value));
+              }
+
+              // Optional: animate ant movement
+              if (meta?.moveAnt) {
+                const dur = Number(meta?.moveMs ?? meta?.durationMs ?? 180);
+                await tweenMoveAntToCell(rr, cc, dur);
+              }
+            } catch (e) { /* ignore */ }
+          });
+        },
+        moveAnt: (r, c, opts = {}) => {
+          try {
+            return globalThis.__antDpVisual_api.onUpdate(r, c, null, { moveAnt: true, kind: 'path', keepTrail: true, ...(opts || {}) });
+          } catch (e) { }
+        },
+        getPending: () => {
+          try { return scene?.antDp?.getPendingAnimations?.() ?? 0; } catch (e) { return 0; }
+        },
+        waitForIdle: (opts = {}) => {
+          try { return scene?.antDp?.waitForIdle?.(opts) ?? Promise.resolve(true); } catch (e) { return Promise.resolve(true); }
+        },
+        clear: () => { try { clearAllOverlays(); } catch (e) { } }
+      };
+    } catch (e) {
+      console.warn('Could not register antDp visual api:', e);
+    }
+
+    // Cleanup on scene shutdown
+    try {
+      scene.events.once('shutdown', () => { try { delete globalThis.__antDpVisual_api; } catch (e) { } });
+    } catch (e) { }
+
+    console.log('✅ setupAntDp complete:', { rows, cols, cellSize });
+  } catch (e) {
+    console.warn('setupAntDp error:', e);
+  }
+}
+
+
 
 /**
  * Draw queen on the board at position (row, col)
@@ -1181,21 +1693,21 @@ export function drawQueenOnBoard(scene, row, col) {
   const boardStartX = scene.nqueen.boardStartX;
   const boardStartY = scene.nqueen.boardStartY;
   const boardWidth = scene.nqueen.n * cellSize;
-  
+
   // Calculate center position of the cell
   const x = boardStartX - boardWidth / 2 + (col * cellSize) + cellSize / 2;
   const y = boardStartY - boardWidth / 2 + (row * cellSize) + cellSize / 2;
-  
+
   // Draw star-like symbol (queen) - using graphics to create 8-pointed star
   const queenGraphics = scene.add.graphics();
   queenGraphics.setDepth(7);
-  
+
   // Draw 8-pointed star pattern
   // Outer points
   const outerRadius = 18;
   const innerRadius = 8;
   const points = [];
-  
+
   for (let i = 0; i < 8; i++) {
     const angle = (i * Math.PI) / 4; // 8 points = 360/8 = 45 degrees each
     if (i % 2 === 0) {
@@ -1212,7 +1724,7 @@ export function drawQueenOnBoard(scene, row, col) {
       });
     }
   }
-  
+
   // Draw filled star
   queenGraphics.fillStyle(0x000000, 1);
   queenGraphics.beginPath();
@@ -1222,10 +1734,10 @@ export function drawQueenOnBoard(scene, row, col) {
   }
   queenGraphics.closePath();
   queenGraphics.fillPath();
-  
+
   // Draw center circle
   queenGraphics.fillCircle(x, y, 3);
-  
+
   // Store queen reference
   const queen = {
     graphics: queenGraphics,
@@ -1234,9 +1746,9 @@ export function drawQueenOnBoard(scene, row, col) {
     x: x,
     y: y
   };
-  
+
   scene.nqueen.queens.push(queen);
-  
+
   console.log(`✅ Queen drawn at position (${row}, ${col})`);
 }
 

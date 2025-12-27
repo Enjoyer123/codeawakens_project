@@ -6,7 +6,30 @@ import { getCurrentGameState } from '../gameUtils';
 // Dictionary generators
 function defineDictionaryGenerators() {
   console.log('🔧 Registering dictionary generators...');
-  
+
+  // Coerce miswired dictionary key code into the intended "r"/"c" string keys.
+  // Users often drop variable blocks like G/C/D (or renamed variants like c2, g_ , (G)) instead of text blocks.
+  const coerceRcKeyCode = (keyCode) => {
+    try {
+      let s = String(keyCode || '').trim();
+      // Strip wrapping parentheses that sometimes appear in generated expressions
+      while (s.startsWith('(') && s.endsWith(')')) {
+        s = s.slice(1, -1).trim();
+      }
+      // If it's already quoted "r"/"c", keep it
+      if (/^['"]r['"]$/i.test(s)) return `'r'`;
+      if (/^['"]c['"]$/i.test(s)) return `'c'`;
+      // Get first alphabetic char from the code (handles g_, c2, goalKeyR, etc.)
+      const m = s.match(/[A-Za-z]/);
+      const letter = m ? String(m[0]).toLowerCase() : null;
+      if (letter === 'r' || letter === 'g' || letter === 'd') return `'r'`;
+      if (letter === 'c') return `'c'`;
+      return keyCode;
+    } catch (e) {
+      return keyCode;
+    }
+  };
+
   javascriptGenerator.forBlock["dict_create"] = function (block) {
     return ["{}", javascriptGenerator.ORDER_ATOMIC];
   };
@@ -15,23 +38,61 @@ function defineDictionaryGenerators() {
     const dict = javascriptGenerator.valueToCode(block, 'DICT', javascriptGenerator.ORDER_MEMBER) || '{}';
     const key = javascriptGenerator.valueToCode(block, 'KEY', javascriptGenerator.ORDER_MEMBER) || 'null';
     const value = javascriptGenerator.valueToCode(block, 'VALUE', javascriptGenerator.ORDER_ASSIGNMENT) || 'null';
-    
+    const keyCodeCoerced = coerceRcKeyCode(key);
+
     // Check if setting parent dictionary (for Prim's algorithm MST visualization)
     const dictCode = dict.trim();
     const isParent = dictCode.includes('parent') || dictCode.includes('Parent');
-    
+
     if (isParent) {
       // Update MST edges visualization after setting parent with delay (like Kruskal)
-      return `${dict}[${key}] = ${value};\nconst currentState = getCurrentGameState();\nif (currentState && currentState.currentScene) {\n  showMSTEdges(currentState.currentScene, ${dict});\n  await new Promise(resolve => setTimeout(resolve, 500));\n}\n`;
+      return `(async function() {
+  try {
+    const dictVar = (${dict});
+    const keyVar = (${keyCodeCoerced});
+    if (!dictVar || (typeof dictVar !== 'object' && typeof dictVar !== 'function')) return;
+    dictVar[keyVar] = (${value});
+    const currentState = getCurrentGameState();
+    if (currentState && currentState.currentScene) {
+      showMSTEdges(currentState.currentScene, dictVar);
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
-    
-    return `${dict}[${key}] = ${value};\n`;
+  } catch (e) {
+    console.warn('dict_set (parent) error:', e);
+  }
+})();\n`;
+    }
+
+    return `(function() {
+  try {
+    const dictVar = (${dict});
+    const keyVar = (${keyCodeCoerced});
+    if (!dictVar || (typeof dictVar !== 'object' && typeof dictVar !== 'function')) return;
+    dictVar[keyVar] = (${value});
+  } catch (e) {
+    console.warn('dict_set error:', e);
+  }
+})();\n`;
   };
 
   javascriptGenerator.forBlock["dict_get"] = function (block) {
     const dict = javascriptGenerator.valueToCode(block, 'DICT', javascriptGenerator.ORDER_MEMBER) || '{}';
     const key = javascriptGenerator.valueToCode(block, 'KEY', javascriptGenerator.ORDER_MEMBER) || 'null';
-    return [`${dict}[${key}]`, javascriptGenerator.ORDER_MEMBER];
+    const keyCodeCoerced = coerceRcKeyCode(key);
+    // Safe get: avoid crashing when dict is undefined/null
+    return [`(function() { 
+  try { 
+    const dictVar = (${dict}); 
+    const keyVar = (${keyCodeCoerced}); 
+    if (dictVar && (typeof dictVar === 'object' || typeof dictVar === 'function')) {
+        return dictVar[keyVar] !== undefined ? dictVar[keyVar] : null;
+    }
+    return null;
+  } catch (e) { 
+    console.warn('dict_get error:', e); 
+    return null; 
+  } 
+})()`, javascriptGenerator.ORDER_FUNCTION_CALL];
   };
 
   javascriptGenerator.forBlock["dict_has_key"] = function (block) {
@@ -54,7 +115,7 @@ function defineDictionaryGenerators() {
     const rootV = javascriptGenerator.valueToCode(block, 'ROOT_V', javascriptGenerator.ORDER_MEMBER) || '0';
     return `await dsuUnion(${parent}, ${rank}, ${rootU}, ${rootV});\n`;
   };
-  
+
   console.log('✅ Dictionary generators registered:', Object.keys(javascriptGenerator.forBlock).filter(k => k.startsWith('dict_') || k.startsWith('dsu_')));
 }
 
@@ -62,7 +123,24 @@ export function defineAllGenerators() {
   console.log('[defineAllGenerators] Starting generator definition...');
   // Dictionary generators (must be called first)
   defineDictionaryGenerators();
-  
+
+  const originalGenerators = {};
+  const saveGen = (type) => {
+    if (javascriptGenerator.forBlock[type]) {
+      originalGenerators[type] = javascriptGenerator.forBlock[type];
+    }
+  };
+
+  // Variables: safe get to avoid ReferenceError for undeclared globals (common when learners forget to initialize a var)
+  // NOTE: `typeof x` is safe even if x was never declared (in non-TDZ cases), which is how most Blockly code runs here.
+  javascriptGenerator.forBlock["variables_get"] = function (block) {
+    const varName = javascriptGenerator.nameDB_.getName(
+      block.getFieldValue('VAR'),
+      Blockly.Names.NameType.VARIABLE
+    );
+    return [varName, javascriptGenerator.ORDER_ATOMIC];
+  };
+
   // Movement generators
   javascriptGenerator.forBlock["move_forward"] = function (block) {
     return "await moveForward();\n";
@@ -103,126 +181,8 @@ export function defineAllGenerators() {
 
   javascriptGenerator.forBlock["if_only"] = function (block) {
     const condition = javascriptGenerator.valueToCode(block, 'CONDITION', javascriptGenerator.ORDER_NONE) || 'false';
-    let doCode = javascriptGenerator.statementToCode(block, 'DO');
-    
-    // CRITICAL FIX: statementToCode may not process all next chains in statements
-    // Manually traverse the entire chain to find any blocks that weren't processed
-    const doBlock = block.getInputTargetBlock('DO');
-    if (doBlock) {
-      // Helper function to traverse next chains and find return statements
-      const traverseForReturns = (startBlock) => {
-        let code = '';
-        let currentBlock = startBlock;
-        let processedIds = new Set();
-        
-        while (currentBlock && !processedIds.has(currentBlock.id)) {
-          processedIds.add(currentBlock.id);
-          
-          // Check if this is a return block
-          if (currentBlock.type === 'procedures_return') {
-            try {
-              const returnCode = javascriptGenerator.blockToCode(currentBlock);
-              if (returnCode) {
-                const codeStr = typeof returnCode === 'string' ? returnCode : (Array.isArray(returnCode) ? returnCode[0] : '');
-                if (codeStr && codeStr.trim()) {
-                  code += codeStr;
-                  console.log('[if_only generator] 🔧 Found return statement in chain:', codeStr);
-                }
-              }
-            } catch (e) {
-              console.warn('[if_only generator] Error processing return block:', e);
-            }
-          }
-          
-          // Also check for nested next chains in loops (e.g., for_loop_dynamic)
-          // Some blocks may have nested next connections that statementToCode doesn't process
-          if (currentBlock.type === 'for_loop_dynamic' || currentBlock.type === 'controls_for') {
-            // Check if the loop has a next block after it
-            if (currentBlock.nextConnection && currentBlock.nextConnection.targetBlock()) {
-              const nextAfterLoop = currentBlock.nextConnection.targetBlock();
-              code += traverseForReturns(nextAfterLoop);
-            }
-          }
-          
-          // Move to next block in chain
-          if (currentBlock.nextConnection && currentBlock.nextConnection.targetBlock()) {
-            currentBlock = currentBlock.nextConnection.targetBlock();
-          } else {
-            break;
-          }
-        }
-        
-        return code;
-      };
-      
-      // Check if doCode already includes return statements in base case context
-      // For N-Queen, we specifically look for "return solution" in base case
-      const hasReturnSolution = doCode.includes('return solution');
-      
-      // If not, manually traverse the entire chain to find return statements
-      if (!hasReturnSolution) {
-        const manuallyProcessedCode = traverseForReturns(doBlock);
-        
-        // If we found additional code, append it
-        if (manuallyProcessedCode.trim()) {
-          console.log('[if_only generator] 🔧 Manually processed additional code:', manuallyProcessedCode);
-          doCode += manuallyProcessedCode;
-        }
-      }
-    }
-    
-    // CRITICAL FIX: Process <next> blocks (e.g., recursive case after if block)
-    // These blocks are NOT in the DO statement, but are connected via nextConnection
-    let nextCode = '';
-    const hasNextConnection = block.nextConnection && block.nextConnection.targetBlock();
-    console.log('[if_only generator] 🔍 Checking next connection:', {
-      hasNextConnection: !!hasNextConnection,
-      blockType: block.type,
-      blockId: block.id
-    });
-    
-    if (hasNextConnection) {
-      let currentBlock = block.nextConnection.targetBlock();
-      let processedIds = new Set();
-      
-      console.log('[if_only generator] 🔍 Found next block:', currentBlock.type, currentBlock.id);
-      
-      while (currentBlock && !processedIds.has(currentBlock.id)) {
-        processedIds.add(currentBlock.id);
-        
-        try {
-          const blockCode = javascriptGenerator.blockToCode(currentBlock);
-          if (blockCode) {
-            const codeStr = typeof blockCode === 'string' ? blockCode : (Array.isArray(blockCode) ? blockCode[0] : '');
-            if (codeStr && codeStr.trim()) {
-              nextCode += codeStr;
-              console.log('[if_only generator] 🔧 Processed next block:', currentBlock.type, '- code length:', codeStr.length);
-              console.log('[if_only generator] 🔧 Next block code preview:', codeStr.substring(0, 200));
-            }
-          }
-        } catch (e) {
-          console.warn('[if_only generator] Error processing next block:', currentBlock.type, e);
-        }
-        
-        // Move to next block in chain
-        if (currentBlock.nextConnection && currentBlock.nextConnection.targetBlock()) {
-          currentBlock = currentBlock.nextConnection.targetBlock();
-        } else {
-          break;
-        }
-      }
-      
-      if (nextCode.trim()) {
-        console.log('[if_only generator] ✅ Total next code length:', nextCode.length);
-        console.log('[if_only generator] ✅ Next code preview:', nextCode.substring(0, 500));
-      } else {
-        console.warn('[if_only generator] ⚠️ No code generated from next blocks');
-      }
-    } else {
-      console.log('[if_only generator] ℹ️ No next connection found');
-    }
-    
-    return `if (${condition}) {\n${doCode}}${nextCode}\n`;
+    const doCode = javascriptGenerator.statementToCode(block, 'DO');
+    return `if (${condition}) {\n${doCode}}\n`;
   };
 
   javascriptGenerator.forBlock["if_return"] = function (block) {
@@ -234,13 +194,13 @@ export function defineAllGenerators() {
     const a = javascriptGenerator.valueToCode(block, 'A', javascriptGenerator.ORDER_ATOMIC);
     const b = javascriptGenerator.valueToCode(block, 'B', javascriptGenerator.ORDER_ATOMIC);
     const operator = block.getFieldValue('OP');
-    
+
     const valueA = (a && a.trim()) ? a : '0';
     const valueB = (b && b.trim()) ? b : '0';
-    
+
     let op;
     switch (operator) {
-      case 'EQ': op = '=='; break;  // Use == instead of === for number comparison compatibility
+      case 'EQ': op = '=='; break;
       case 'NEQ': op = '!='; break;
       case 'LT': op = '<'; break;
       case 'LTE': op = '<='; break;
@@ -248,14 +208,21 @@ export function defineAllGenerators() {
       case 'GTE': op = '>='; break;
       default: op = '==';
     }
-    
-    // Add safety check to prevent NaN errors when comparing undefined values
-    return [`(function() { 
-      const valA = ${valueA}; 
-      const valB = ${valueB}; 
-      if (valA === undefined || valA === null || (typeof valA === 'number' && isNaN(valA)) || valB === undefined || valB === null || (typeof valB === 'number' && isNaN(valB))) return false; 
-      return valA ${op} valB; 
-    })()`, javascriptGenerator.ORDER_ATOMIC];
+
+    const code = `(function() {
+      const _vA = ${valueA};
+      const _vB = ${valueB};
+      const _nA = Number(_vA);
+      const _nB = Number(_vB);
+      const _res = _nA ${op} _nB;
+      // Only log numeric comparisons to avoid spamming string/null comparisons.
+      // We log evaluated values to avoid code explosion from logging raw source strings.
+      if (!isNaN(_nA) && !isNaN(_nB)) {
+        console.log('[DEBUG-COMPARE] ' + _nA + ' ${op} ' + _nB + ' result:', _res);
+      }
+      return _res;
+    })()`;
+    return [code, javascriptGenerator.ORDER_RELATIONAL];
   };
 
   javascriptGenerator.forBlock["logic_boolean"] = function (block) {
@@ -276,10 +243,10 @@ export function defineAllGenerators() {
     const a = javascriptGenerator.valueToCode(block, 'A', javascriptGenerator.ORDER_LOGICAL_AND) || 'false';
     const b = javascriptGenerator.valueToCode(block, 'B', javascriptGenerator.ORDER_LOGICAL_AND) || 'false';
     const operator = block.getFieldValue('OP');
-    
+
     const op = operator === 'AND' ? '&&' : '||';
     const order = operator === 'AND' ? javascriptGenerator.ORDER_LOGICAL_AND : javascriptGenerator.ORDER_LOGICAL_OR;
-    
+
     return [`(${a} ${op} ${b})`, order];
   };
 
@@ -309,7 +276,41 @@ export function defineAllGenerators() {
   javascriptGenerator.forBlock["while_loop"] = function (block) {
     const condition = javascriptGenerator.valueToCode(block, 'CONDITION', javascriptGenerator.ORDER_NONE) || 'false';
     const doCode = javascriptGenerator.statementToCode(block, 'DO');
-    return `while (${condition}) {\n${doCode}}\n`;
+    // Special logging for Dijkstra PQ loop
+    const isPQCheck = condition.includes('PQ') || condition.includes('pq');
+    const logTag = isPQCheck ? '[DEBUG-LOOP-PQ]' : '[DEBUG-LOOP-WHILE]';
+
+    return `
+    console.log(${JSON.stringify(logTag)} + " Entering loop - condition: " + ${JSON.stringify(condition)});
+    while (${condition}) {
+      ${doCode}
+      console.log(${JSON.stringify(logTag)} + " Iteration end - re-checking: " + ${JSON.stringify(condition)});
+    }
+    console.log(${JSON.stringify(logTag)} + " Exited loop");
+    \n`;
+  };
+
+  // Override controls_for to use LET for recursion safety
+  javascriptGenerator.forBlock["controls_for"] = function (block) {
+    const variable = javascriptGenerator.nameDB_.getName(
+      block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
+    const from = javascriptGenerator.valueToCode(block, 'FROM',
+      javascriptGenerator.ORDER_ASSIGNMENT) || '0';
+    const to = javascriptGenerator.valueToCode(block, 'TO',
+      javascriptGenerator.ORDER_ASSIGNMENT) || '0';
+    const increment = javascriptGenerator.valueToCode(block, 'BY',
+      javascriptGenerator.ORDER_ASSIGNMENT) || '1';
+
+    const branch = javascriptGenerator.statementToCode(block, 'DO');
+
+    // Use block-scoped 'let' to ensure safe recursion
+    return `
+    console.log('[DEBUG-LOOP-FOR] Start:', { var: '${variable}', from: ${from}, to: ${to} });
+    for (let ${variable} = ${from}; ${variable} <= ${to}; ${variable} += ${increment}) {
+       ${branch}
+    }
+    console.log('[DEBUG-LOOP-FOR] End:', { var: '${variable}' });
+    \n`;
   };
 
   // Coin generators
@@ -351,7 +352,7 @@ export function defineAllGenerators() {
   javascriptGenerator.forBlock["for_each_coin"] = function (block) {
     const variable = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
     const branch = javascriptGenerator.statementToCode(block, 'DO');
-    
+
     const code = `
     const coins = getPlayerCoins();
     for (let coinIndex = 0; coinIndex < coins.length; coinIndex++) {
@@ -367,7 +368,7 @@ export function defineAllGenerators() {
     const from = block.getFieldValue('FROM');
     const to = block.getFieldValue('TO');
     const branch = javascriptGenerator.statementToCode(block, 'DO');
-    
+
     const code = `
     for (let ${variable} = ${from}; ${variable} <= ${to}; ${variable}++) {
         ${branch}
@@ -381,50 +382,18 @@ export function defineAllGenerators() {
     const from = javascriptGenerator.valueToCode(block, 'FROM', javascriptGenerator.ORDER_ATOMIC) || '0';
     const to = javascriptGenerator.valueToCode(block, 'TO', javascriptGenerator.ORDER_ATOMIC) || '0';
     const branch = javascriptGenerator.statementToCode(block, 'DO');
-    
-    // CRITICAL FIX: Process next blocks (e.g., return statements after loop completes)
-    // Manually traverse the next connection chain
-    let nextCode = '';
-    if (block.nextConnection && block.nextConnection.targetBlock()) {
-      let currentBlock = block.nextConnection.targetBlock();
-      let processedIds = new Set();
-      
-      while (currentBlock && !processedIds.has(currentBlock.id)) {
-        processedIds.add(currentBlock.id);
-        
-        try {
-          const blockCode = javascriptGenerator.blockToCode(currentBlock);
-          if (blockCode) {
-            const codeStr = typeof blockCode === 'string' ? blockCode : (Array.isArray(blockCode) ? blockCode[0] : '');
-            if (codeStr && codeStr.trim()) {
-              nextCode += codeStr;
-              console.log('[for_loop_dynamic generator] 🔧 Processed next block:', currentBlock.type, '- code:', codeStr.substring(0, 50));
-            }
-          }
-        } catch (e) {
-          console.warn('[for_loop_dynamic generator] Error processing next block:', currentBlock.type, e);
-        }
-        
-        // Move to next block in chain
-        if (currentBlock.nextConnection && currentBlock.nextConnection.targetBlock()) {
-          currentBlock = currentBlock.nextConnection.targetBlock();
-        } else {
-          break;
-        }
-      }
-      
-      if (nextCode.trim()) {
-        console.log('[for_loop_dynamic generator] ✅ Total next code length:', nextCode.length);
-      }
-    }
-    
+
+    // IMPORTANT:
+    // - Do NOT declare helper vars like `const fromValue...` here.
+    //   Blockly's generator scrubber already appends next-block code and can cause duplication;
+    //   helper var redeclarations then become a SyntaxError.
+    // - Inline `from`/`to` directly in the `for` header (safe for nesting).
+    const normFrom = `((v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; })(${from})`;
+    const normTo = `((v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; })(${to})`;
     const code = `
-    const fromValue = ${from};
-    const toValue = ${to};
-    for (let ${variable} = fromValue; ${variable} <= toValue; ${variable}++) {
+    for (let ${variable} = ${normFrom}; ${variable} <= ${normTo}; ${variable}++) {
         ${branch}
     }
-    ${nextCode}
     `;
     return code;
   };
@@ -439,10 +408,10 @@ export function defineAllGenerators() {
     const a = javascriptGenerator.valueToCode(block, 'A', javascriptGenerator.ORDER_ATOMIC);
     const b = javascriptGenerator.valueToCode(block, 'B', javascriptGenerator.ORDER_ATOMIC);
     const operator = block.getFieldValue('OP');
-    
+
     const valueA = (a && a.trim()) ? a : '0';
     const valueB = (b && b.trim()) ? b : '0';
-    
+
     let op;
     switch (operator) {
       case 'ADD': op = '+'; break;
@@ -452,23 +421,23 @@ export function defineAllGenerators() {
       case 'MODULO': op = '%'; break;
       default: op = '+';
     }
-    
+
     return [`(${valueA} ${op} ${valueB})`, javascriptGenerator.ORDER_ATOMIC];
   };
 
   javascriptGenerator.forBlock["math_max"] = function (block) {
-    const a = javascriptGenerator.valueToCode(block, 'A', javascriptGenerator.ORDER_ATOMIC);
-    const b = javascriptGenerator.valueToCode(block, 'B', javascriptGenerator.ORDER_ATOMIC);
-    
+    console.log('[GENERATOR] math_max being called');
+    const a = javascriptGenerator.valueToCode(block, 'A', javascriptGenerator.ORDER_ATOMIC) || '0';
+    const b = javascriptGenerator.valueToCode(block, 'B', javascriptGenerator.ORDER_ATOMIC) || '0';
+
     const valueA = (a && a.trim()) ? a : '0';
     const valueB = (b && b.trim()) ? b : '0';
-    
-    // Check if this is inside a knapsack function
+
     try {
+      // Check if this is inside a knapsack function
       let parentBlock = block.getParent();
       let isKnapsack = false;
-      
-      // Walk up the block tree to find the function definition
+
       while (parentBlock) {
         if (parentBlock.type === 'procedures_defreturn') {
           const funcName = parentBlock.getFieldValue('NAME') || '';
@@ -479,43 +448,128 @@ export function defineAllGenerators() {
         }
         parentBlock = parentBlock.getParent();
       }
-      
-      // If this is knapsack, use knapsackMaxWithVisual to track selections
-      // (but don't show visual immediately - will show at the end)
+
       if (isKnapsack) {
-        // Try to extract the item index 'i' from the function parameters
+        // Find function definition block for knapsack parameters
         let funcDefBlock = block.getParent();
         while (funcDefBlock && funcDefBlock.type !== 'procedures_defreturn') {
           funcDefBlock = funcDefBlock.getParent();
         }
-        
+
         if (funcDefBlock) {
-          // Get parameter names (should be w, v, i, j for knapsack)
-          const paramNames = funcDefBlock.getVars();
-          // Parameter 'i' should be at index 2 (third parameter), 'j' at index 3
-          const iParamName = paramNames && paramNames.length > 2 ? paramNames[2] : 'i';
-          const jParamName = paramNames && paramNames.length > 3 ? paramNames[3] : 'j';
-          
-          // Use knapsackMaxWithVisual to track decisions at (i, j) state (will trace back at the end)
-          return [`await knapsackMaxWithVisual(${valueA}, ${valueB}, ${iParamName}, ${jParamName})`, javascriptGenerator.ORDER_FUNCTION_CALL];
+          let iParamName = 'i';
+          let jParamName = 'j';
+          try {
+            if (funcDefBlock.mutationToDom) {
+              const mutation = funcDefBlock.mutationToDom();
+              const argNodes = mutation && (mutation.querySelectorAll ? mutation.querySelectorAll('arg') : mutation.getElementsByTagName('arg'));
+              if (argNodes && argNodes.length >= 4) {
+                const iArg = argNodes[2] && argNodes[2].getAttribute ? argNodes[2].getAttribute('name') : null;
+                const jArg = argNodes[3] && argNodes[3].getAttribute ? argNodes[3].getAttribute('name') : null;
+                if (iArg) iParamName = javascriptGenerator.nameDB_.getName(iArg, Blockly.Names.NameType.VARIABLE);
+                if (jArg) jParamName = javascriptGenerator.nameDB_.getName(jArg, Blockly.Names.NameType.VARIABLE);
+              }
+            }
+          } catch (e) { }
+
+          let itemVarName = null;
+          let capVarName = null;
+          try {
+            let p = block.getParent();
+            while (p) {
+              if (p.type === 'for_loop_dynamic' || p.type === 'for_index' || p.type === 'controls_for') {
+                const varField = p.getFieldValue && p.getFieldValue('VAR');
+                if (varField) {
+                  const resolved = javascriptGenerator.nameDB_.getName(varField, Blockly.Names.NameType.VARIABLE);
+                  if (resolved === 'item') itemVarName = resolved;
+                  if (resolved === 'cap') capVarName = resolved;
+                }
+              }
+              p = p.getParent();
+            }
+          } catch (e) { }
+
+          const iState = itemVarName || iParamName;
+          const jState = capVarName || jParamName;
+          return [`await knapsackMaxWithVisual(${valueA}, ${valueB}, ${iState}, ${jState})`, javascriptGenerator.ORDER_FUNCTION_CALL];
         }
       }
+
+      // Default to Ant DP for non-knapsack max blocks (to ensure debug logs run)
+      // Attempt to resolve loop variables r and c
+      let rVarName = 'typeof r !== "undefined" ? r : 0';
+      let cVarName = 'typeof c !== "undefined" ? c : 0';
+      try {
+        let p = block.getParent();
+        while (p) {
+          if (p.type === 'for_loop_dynamic' || p.type === 'for_index' || p.type === 'controls_for') {
+            const varField = p.getFieldValue && p.getFieldValue('VAR');
+            if (varField) {
+              const resolved = javascriptGenerator.nameDB_.getName(varField, Blockly.Names.NameType.VARIABLE);
+              if (resolved === 'r') rVarName = 'r';
+              if (resolved === 'c') cVarName = 'c';
+            }
+          }
+          p = p.getParent();
+        }
+      } catch (e) { }
+
+      // Injected log to confirm call
+      const logCode = `console.log('--- Calling antMaxWithVisual at (' + (${rVarName}) + ',' + (${cVarName}) + ') ---')`;
+      return [`(${logCode}, await antMaxWithVisual(${valueA}, ${valueB}, ${rVarName}, ${cVarName}))`, javascriptGenerator.ORDER_FUNCTION_CALL];
+
     } catch (e) {
-      // If any error, just return normally
-      console.debug('Error checking knapsack context in math_max:', e);
+      console.error('Generator error in math_max:', e);
     }
-    
+
     return [`Math.max(${valueA}, ${valueB})`, javascriptGenerator.ORDER_FUNCTION_CALL];
   };
+  saveGen("math_max");
 
   javascriptGenerator.forBlock["math_min"] = function (block) {
     const a = javascriptGenerator.valueToCode(block, 'A', javascriptGenerator.ORDER_ATOMIC);
     const b = javascriptGenerator.valueToCode(block, 'B', javascriptGenerator.ORDER_ATOMIC);
-    
+
     const valueA = (a && a.trim()) ? a : '0';
     const valueB = (b && b.trim()) ? b : '0';
-    
+
     return [`Math.min(${valueA}, ${valueB})`, javascriptGenerator.ORDER_FUNCTION_CALL];
+  };
+
+  javascriptGenerator.forBlock["math_single"] = function (block) {
+    const operator = block.getFieldValue('OP');
+    const num = javascriptGenerator.valueToCode(block, 'NUM', javascriptGenerator.ORDER_NONE) || '0';
+    let code;
+    switch (operator) {
+      case 'CEIL': code = `Math.ceil(${num})`; break;
+      case 'FLOOR': code = `Math.floor(${num})`; break;
+      case 'ROUND': code = `Math.round(${num})`; break;
+      case 'ROOT': code = `Math.sqrt(${num})`; break;
+      default: code = `${num}`;
+    }
+    return [code, javascriptGenerator.ORDER_FUNCTION_CALL];
+  };
+
+  javascriptGenerator.forBlock["math_min_max"] = function (block) {
+    const operator = block.getFieldValue('OP');
+    const a = javascriptGenerator.valueToCode(block, 'A', javascriptGenerator.ORDER_ATOMIC) || '0';
+    const b = javascriptGenerator.valueToCode(block, 'B', javascriptGenerator.ORDER_ATOMIC) || '0';
+
+    // Wrapped in a self-executing function for safe numeric conversion and logging
+    const code = `(function() {
+      const _vA = ${a};
+      const _vB = ${b};
+      const _nA = Number(_vA);
+      const _nB = Number(_vB);
+      const _res = ${operator === 'MAX' ? 'Math.max(_nA, _nB)' : 'Math.min(_nA, _nB)'};
+      if (isNaN(_res)) console.warn('[DEBUG-MATH] math_min_max resulted in NaN:', { a: _nA, b: _nB, op: '${operator}' });
+      else if (_nA !== 1000000 || _nB !== 1000000) { // Don't log INF-INF comparisons to avoid spam
+         // We log evaluated values to avoid code explosion.
+         console.log('[DEBUG-MATH] ' + ${JSON.stringify(operator)} + '(' + _nA + ', ' + _nB + ') result:', _res);
+      }
+      return _res;
+    })()`;
+    return [code, javascriptGenerator.ORDER_FUNCTION_CALL];
   };
 
   // Knapsack visual feedback generators
@@ -563,7 +617,7 @@ export function defineAllGenerators() {
     const a = javascriptGenerator.valueToCode(block, 'A', javascriptGenerator.ORDER_ATOMIC) || '0';
     const b = javascriptGenerator.valueToCode(block, 'B', javascriptGenerator.ORDER_ATOMIC) || '0';
     const operator = block.getFieldValue('OP');
-    
+
     let op;
     switch (operator) {
       case 'EQ': op = '==='; break;
@@ -574,8 +628,20 @@ export function defineAllGenerators() {
       case 'GTE': op = '>='; break;
       default: op = '===';
     }
-    
-    return [`(${a} ${op} ${b})`, javascriptGenerator.ORDER_ATOMIC];
+
+    // Wrapped in a self-executing function for safe numeric conversion and logging
+    // IMPORTANT: Dijkstra bottleneck depends on (min_cap > capacities[v])
+    const code = `(function() {
+      const valA = (typeof ${a} === 'number') ? ${a} : Number(${a});
+      const valB = (typeof ${b} === 'number') ? ${b} : Number(${b});
+      const res = valA ${op} valB;
+      // Only log numeric comparisons to avoid spamming string/null comparisons
+      if (!isNaN(valA) && !isNaN(valB)) {
+        console.log('[DEBUG-COMPARE]', { a: valA, b: valB, op: '${op}', result: res });
+      }
+      return res;
+    })()`;
+    return [code, javascriptGenerator.ORDER_RELATIONAL];
   };
 
   // Variable generators
@@ -583,7 +649,7 @@ export function defineAllGenerators() {
     const variable = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
     const operator = block.getFieldValue('OP');
     const value = javascriptGenerator.valueToCode(block, 'VALUE', javascriptGenerator.ORDER_ATOMIC) || '0';
-    
+
     let code;
     switch (operator) {
       case 'ADD': code = `${variable} + ${value}`; break;
@@ -592,7 +658,7 @@ export function defineAllGenerators() {
       case 'DIVIDE': code = `${variable} / ${value}`; break;
       default: code = `${variable}`;
     }
-    
+
     return [code, javascriptGenerator.ORDER_ADDITIVE];
   };
 
@@ -605,25 +671,25 @@ export function defineAllGenerators() {
   javascriptGenerator.forBlock["variables_set"] = function (block) {
     const variable = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
     const value = javascriptGenerator.valueToCode(block, 'VALUE', javascriptGenerator.ORDER_ASSIGNMENT) || 'null';
-    
+
     // Check if setting MST_weight variable - use both field value and resolved name
     const varFieldValue = block.getFieldValue('VAR');
     const varName = variable || varFieldValue;
     const varNameLower = String(varName).toLowerCase();
-    
+
     // Check if setting MST_weight variable - check multiple variations
     // Blockly variable names might have underscores or be camelCase
-    const isMSTWeight = varNameLower === 'mst_weight' || 
-                       varNameLower === 'mstweight' ||
-                       varNameLower.includes('mst_weight') ||
-                       varNameLower.includes('mstweight');
-    
+    const isMSTWeight = varNameLower === 'mst_weight' ||
+      varNameLower === 'mstweight' ||
+      varNameLower.includes('mst_weight') ||
+      varNameLower.includes('mstweight');
+
     if (isMSTWeight) {
       // Update MST weight state after assignment
       console.log('✅ Detected MST_weight update:', { varName, variable, value });
       return `${variable} = ${value};\nupdateMSTWeight(${variable});\n`;
     }
-    
+
     // Default behavior
     return `${variable} = ${value};\n`;
   };
@@ -735,7 +801,7 @@ export function defineAllGenerators() {
       } else {
         console.warn('[CUSTOM GENERATOR] block.mutationToDom is not a function');
       }
-      
+
       // DO NOT use getVars() as fallback - it includes loop variables and other function body variables
       // Only use mutation DOM to get parameters
       console.log('[CUSTOM GENERATOR] Final args (from mutation only):', args);
@@ -743,7 +809,7 @@ export function defineAllGenerators() {
       console.error('[CUSTOM GENERATOR] Error reading function parameters:', e);
       // If there's an error, args will remain empty array, which is correct for parameterless functions
     }
-    
+
     // Add parameter validation for knapsack function
     let paramValidation = '';
     if (name.toLowerCase().includes('knapsack') && args.length === 4) {
@@ -758,7 +824,7 @@ export function defineAllGenerators() {
         }
       `;
     }
-    
+
     // Add variable declarations for coinChange function
     let localVarDeclarations = '';
     if (name.toLowerCase().includes('coinchange')) {
@@ -768,10 +834,10 @@ export function defineAllGenerators() {
       const includeResultVar = javascriptGenerator.nameDB_.getName('includeResult', Blockly.Names.NameType.VARIABLE);
       localVarDeclarations = `let ${includeVar}, ${excludeVar}, ${includeResultVar};\n`;
     }
-    
+
     const argsString = args.length > 0 ? args.join(', ') : '';
     const branch = javascriptGenerator.statementToCode(block, 'STACK');
-    
+
     // Generate async function
     // The branch already contains return statements from procedures_return blocks
     const code = `async function ${name}(${argsString}) {\n${paramValidation}${localVarDeclarations}${branch}}`;
@@ -779,20 +845,20 @@ export function defineAllGenerators() {
     console.log('[CUSTOM GENERATOR] Generator function:', typeof javascriptGenerator.forBlock["procedures_defreturn"]);
     return code;
   };
-  
+
   // Verify that our generator was set
   console.log('[defineAllGenerators] procedures_defreturn generator set:', typeof javascriptGenerator.forBlock["procedures_defreturn"]);
 
   // Return statement generator for procedures_defreturn
   javascriptGenerator.forBlock["procedures_return"] = function (block) {
     const value = javascriptGenerator.valueToCode(block, 'VALUE', javascriptGenerator.ORDER_NONE) || 'null';
-    
+
     // Check if we're inside a knapsack function and the return value uses math_max
     // If so, add visual feedback for item selection
     try {
       let parentBlock = block.getParent();
       let isKnapsack = false;
-      
+
       // Walk up the block tree to find the function definition
       while (parentBlock) {
         if (parentBlock.type === 'procedures_defreturn') {
@@ -804,7 +870,7 @@ export function defineAllGenerators() {
         }
         parentBlock = parentBlock.getParent();
       }
-      
+
       // If this is knapsack and value contains math_max, it's the final return
       // We'll add visual feedback by wrapping the return value
       if (isKnapsack && typeof value === 'string' && value.includes('Math.max')) {
@@ -816,7 +882,7 @@ export function defineAllGenerators() {
       // If any error, just return normally
       console.debug('Error checking knapsack context:', e);
     }
-    
+
     return `return ${value};\n`;
   };
 
@@ -825,7 +891,7 @@ export function defineAllGenerators() {
     // Get procedure name - try multiple methods
     let procedureName = null;
     let isNQueenHelper = false;
-    
+
     try {
       // CRITICAL: For N-Queen helper functions, check mutation FIRST (most reliable source)
       // Mutation has: <mutation name="safe"> or <mutation name="place"> or <mutation name="remove">
@@ -848,10 +914,10 @@ export function defineAllGenerators() {
                 mutationName = mutationEl.getAttribute('name');
               }
             }
-            
+
             console.log(`[blocklyGenerators] 🔍 Mutation element:`, mutation);
             console.log(`[blocklyGenerators] 🔍 Mutation name extracted: "${mutationName}"`);
-            
+
             // For N-Queen helper functions, use mutation name directly
             if (mutationName && (mutationName === 'safe' || mutationName === 'place' || mutationName === 'remove')) {
               procedureName = mutationName;
@@ -863,7 +929,7 @@ export function defineAllGenerators() {
           console.warn('Error reading mutation:', e);
         }
       }
-      
+
       // CRITICAL: Check NAME field (should match mutation) - but ONLY if mutation didn't give us a name
       // For N-Queen helper functions, we trust mutation/NAME field over getProcParam()
       if (!procedureName) {
@@ -880,7 +946,7 @@ export function defineAllGenerators() {
           }
         }
       }
-      
+
       // Fallback to getFieldValue directly
       if (!procedureName) {
         const nameFromGetFieldValue = block.getFieldValue('NAME');
@@ -893,7 +959,7 @@ export function defineAllGenerators() {
           console.log(`[blocklyGenerators] procedures_callreturn: Got name from getFieldValue: "${procedureName}"`);
         }
       }
-      
+
       // CRITICAL: For N-Queen helper functions, NEVER use getProcParam() as it resolves to wrong procedure
       // getProcParam() may resolve to 'solve' from workspace procedure map
       // Only use getProcParam() if we don't have a name yet AND it's not an N-Queen helper function
@@ -901,7 +967,7 @@ export function defineAllGenerators() {
         procedureName = block.getProcParam();
         console.log(`[blocklyGenerators] procedures_callreturn: Got name from getProcParam: "${procedureName}"`);
       }
-      
+
       // CRITICAL: Final check BEFORE generating code - if procedureName is 'solve' but mutation/NAME says safe/place/remove
       // This prevents Blockly from resolving to wrong procedure name
       if (procedureName === 'solve') {
@@ -924,7 +990,7 @@ export function defineAllGenerators() {
                   mutationName = mutationEl.getAttribute('name');
                 }
               }
-              
+
               if (mutationName === 'safe' || mutationName === 'place' || mutationName === 'remove') {
                 console.warn(`[blocklyGenerators] ⚠️ Override: procedureName was 'solve' but mutation says '${mutationName}'. Using mutation.`);
                 procedureName = mutationName;
@@ -934,7 +1000,7 @@ export function defineAllGenerators() {
             console.warn('Error checking mutation in final check:', e);
           }
         }
-        
+
         // Also check NAME field
         if (procedureName === 'solve') {
           const nameFieldFinal = block.getField('NAME');
@@ -947,10 +1013,10 @@ export function defineAllGenerators() {
           }
         }
       }
-      
+
       // Debug logging for ALL procedure calls (to debug N-Queen issue)
       console.log(`[blocklyGenerators] procedures_callreturn: Final procedureName = "${procedureName}"`);
-      
+
       // Debug logging for N-Queen helper functions
       if (procedureName === 'safe' || procedureName === 'place' || procedureName === 'remove') {
         console.log(`[blocklyGenerators] ✅ Confirmed N-Queen helper function: ${procedureName}`);
@@ -958,7 +1024,7 @@ export function defineAllGenerators() {
     } catch (e) {
       console.warn('Error getting procedure name:', e);
     }
-    
+
     // Validate procedure name
     // CRITICAL: Don't fallback for N-Queen helper functions (safe, place, remove)
     // These will be injected into the generated code
@@ -966,14 +1032,14 @@ export function defineAllGenerators() {
     if (procedureName && (procedureName === 'safe' || procedureName === 'place' || procedureName === 'remove')) {
       isNQueenHelper = true;
     }
-    
-    if (!procedureName || procedureName === 'unnamed' || procedureName === 'undefined' || 
-        (typeof procedureName === 'string' && procedureName.trim() === '')) {
+
+    if (!procedureName || procedureName === 'unnamed' || procedureName === 'undefined' ||
+      (typeof procedureName === 'string' && procedureName.trim() === '')) {
       // Invalid procedure name - try to get from workspace procedure map
       // BUT skip fallback for N-Queen helper functions
       if (!isNQueenHelper) {
         console.warn('Procedure call block has invalid name, trying to fix:', procedureName);
-        
+
         try {
           const workspace = block.workspace;
           if (workspace) {
@@ -1000,15 +1066,15 @@ export function defineAllGenerators() {
         // They will be injected into the generated code
         console.log(`[blocklyGenerators] ✅ Allowing N-Queen helper function (will be injected): ${procedureName}`);
       }
-      
+
       // If still invalid after trying to fix (and not N-Queen helper)
       const finalIsNQueenHelper = procedureName === 'safe' || procedureName === 'place' || procedureName === 'remove';
-      if (!finalIsNQueenHelper && (!procedureName || procedureName === 'unnamed' || procedureName === 'undefined' || 
-          (typeof procedureName === 'string' && procedureName.trim() === ''))) {
+      if (!finalIsNQueenHelper && (!procedureName || procedureName === 'unnamed' || procedureName === 'undefined' ||
+        (typeof procedureName === 'string' && procedureName.trim() === ''))) {
         return ['null', javascriptGenerator.ORDER_ATOMIC];
       }
     }
-    
+
     // Get arguments
     const args = [];
     if (block.arguments_ && block.arguments_.length > 0) {
@@ -1017,7 +1083,7 @@ export function defineAllGenerators() {
         args.push(argCode);
       }
     }
-    
+
     const argsString = args.length > 0 ? args.join(', ') : '';
     // Since the function is async, we need to await it
     // Wrap in parentheses to allow await in expression context
@@ -1028,7 +1094,7 @@ export function defineAllGenerators() {
     // Get procedure name - try multiple methods
     let procedureName = null;
     let isNQueenHelper = false;
-    
+
     try {
       // CRITICAL: For N-Queen helper functions, check mutation FIRST (most reliable source)
       // Mutation has: <mutation name="safe"> or <mutation name="place"> or <mutation name="remove">
@@ -1051,10 +1117,10 @@ export function defineAllGenerators() {
                 mutationName = mutationEl.getAttribute('name');
               }
             }
-            
+
             console.log(`[blocklyGenerators] 🔍 Mutation element (no-return):`, mutation);
             console.log(`[blocklyGenerators] 🔍 Mutation name extracted (no-return): "${mutationName}"`);
-            
+
             // For N-Queen helper functions, use mutation name directly
             if (mutationName && (mutationName === 'safe' || mutationName === 'place' || mutationName === 'remove')) {
               procedureName = mutationName;
@@ -1066,7 +1132,7 @@ export function defineAllGenerators() {
           console.warn('Error reading mutation (no-return):', e);
         }
       }
-      
+
       // CRITICAL: Check NAME field (should match mutation) - but ONLY if mutation didn't give us a name
       // For N-Queen helper functions, we trust mutation/NAME field over getProcParam()
       if (!procedureName) {
@@ -1083,7 +1149,7 @@ export function defineAllGenerators() {
           }
         }
       }
-      
+
       // Fallback to getFieldValue directly
       if (!procedureName) {
         const nameFromGetFieldValue = block.getFieldValue('NAME');
@@ -1096,7 +1162,7 @@ export function defineAllGenerators() {
           console.log(`[blocklyGenerators] procedures_callnoreturn: Got name from getFieldValue: "${procedureName}"`);
         }
       }
-      
+
       // CRITICAL: For N-Queen helper functions, NEVER use getProcParam() as it resolves to wrong procedure
       // getProcParam() may resolve to 'solve' from workspace procedure map
       // Only use getProcParam() if we don't have a name yet AND it's not an N-Queen helper function
@@ -1104,7 +1170,7 @@ export function defineAllGenerators() {
         procedureName = block.getProcParam();
         console.log(`[blocklyGenerators] procedures_callnoreturn: Got name from getProcParam: "${procedureName}"`);
       }
-      
+
       // CRITICAL: Final check BEFORE generating code - if procedureName is 'solve' but mutation/NAME says safe/place/remove
       // This prevents Blockly from resolving to wrong procedure name
       if (procedureName === 'solve') {
@@ -1127,7 +1193,7 @@ export function defineAllGenerators() {
                   mutationName = mutationEl.getAttribute('name');
                 }
               }
-              
+
               if (mutationName === 'safe' || mutationName === 'place' || mutationName === 'remove') {
                 console.warn(`[blocklyGenerators] ⚠️ Override: procedureName was 'solve' but mutation says '${mutationName}' (no-return). Using mutation.`);
                 procedureName = mutationName;
@@ -1137,7 +1203,7 @@ export function defineAllGenerators() {
             console.warn('Error checking mutation in final check (no-return):', e);
           }
         }
-        
+
         // Also check NAME field
         if (procedureName === 'solve') {
           const nameFieldFinal = block.getField('NAME');
@@ -1150,10 +1216,10 @@ export function defineAllGenerators() {
           }
         }
       }
-      
+
       // Debug logging for ALL procedure calls (to debug N-Queen issue)
       console.log(`[blocklyGenerators] procedures_callnoreturn: Final procedureName = "${procedureName}"`);
-      
+
       // Debug logging for N-Queen helper functions
       if (procedureName === 'safe' || procedureName === 'place' || procedureName === 'remove') {
         console.log(`[blocklyGenerators] ✅ Confirmed N-Queen helper function (no-return): ${procedureName}`);
@@ -1161,7 +1227,7 @@ export function defineAllGenerators() {
     } catch (e) {
       console.warn('Error getting procedure name:', e);
     }
-    
+
     // Validate procedure name
     // CRITICAL: Don't fallback for N-Queen helper functions (safe, place, remove)
     // These will be injected into the generated code
@@ -1169,14 +1235,14 @@ export function defineAllGenerators() {
     if (procedureName && (procedureName === 'safe' || procedureName === 'place' || procedureName === 'remove')) {
       isNQueenHelper = true;
     }
-    
-    if (!procedureName || procedureName === 'unnamed' || procedureName === 'undefined' || 
-        (typeof procedureName === 'string' && procedureName.trim() === '')) {
+
+    if (!procedureName || procedureName === 'unnamed' || procedureName === 'undefined' ||
+      (typeof procedureName === 'string' && procedureName.trim() === '')) {
       // Invalid procedure name - try to get from workspace procedure map
       // BUT skip fallback for N-Queen helper functions
       if (!isNQueenHelper) {
         console.warn('Procedure call block has invalid name, trying to fix:', procedureName);
-        
+
         try {
           const workspace = block.workspace;
           if (workspace) {
@@ -1203,15 +1269,15 @@ export function defineAllGenerators() {
         // They will be injected into the generated code
         console.log(`[blocklyGenerators] ✅ Allowing N-Queen helper function (no-return, will be injected): ${procedureName}`);
       }
-      
+
       // If still invalid after trying to fix (and not N-Queen helper)
       const finalIsNQueenHelper = procedureName === 'safe' || procedureName === 'place' || procedureName === 'remove';
-      if (!finalIsNQueenHelper && (!procedureName || procedureName === 'unnamed' || procedureName === 'undefined' || 
-          (typeof procedureName === 'string' && procedureName.trim() === ''))) {
+      if (!finalIsNQueenHelper && (!procedureName || procedureName === 'unnamed' || procedureName === 'undefined' ||
+        (typeof procedureName === 'string' && procedureName.trim() === ''))) {
         return '// Invalid procedure call\n';
       }
     }
-    
+
     // Get arguments
     const args = [];
     if (block.arguments_ && block.arguments_.length > 0) {
@@ -1220,14 +1286,14 @@ export function defineAllGenerators() {
         args.push(argCode);
       }
     }
-    
+
     const argsString = args.length > 0 ? args.join(', ') : '';
-    
+
     // Debug logging for N-Queen helper functions
     if (procedureName === 'safe' || procedureName === 'place' || procedureName === 'remove') {
       console.log(`[blocklyGenerators] Generating code for ${procedureName}(${argsString}) (no-return)`);
     }
-    
+
     return `await ${procedureName}(${argsString});\n`;
   };
 
@@ -1240,7 +1306,7 @@ export function defineAllGenerators() {
   javascriptGenerator.forBlock["lists_add_item"] = function (block) {
     const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
     const item = javascriptGenerator.valueToCode(block, 'ITEM', javascriptGenerator.ORDER_NONE) || 'null';
-    
+
     // Try to detect if this is adding to visited, container, PQ, or MST_edges for visual feedback
     // This is a simple heuristic - could be improved
     const listCode = list.trim();
@@ -1248,27 +1314,27 @@ export function defineAllGenerators() {
     const isContainer = listCode.includes('container') || listCode.includes('stack');
     const isPQ = listCode.includes('PQ') || listCode.includes('pq');
     const isMSTEdges = listCode.includes('MST_edges') || listCode.includes('mst_edges');
-    
+
     if (isVisited) {
       // Adding to visited list - mark as visited with visual feedback
       // markVisitedWithVisual will update Dijkstra state internally
-      return `${list}.push(${item});\nawait markVisitedWithVisual(${item});\n`;
+      return `${list}.push(${item});\nconsole.log('[DEBUG-PQ-PUSH] Added to visited:', ${item});\nawait markVisitedWithVisual(${item});\n`;
     } else if (isContainer) {
       // Adding to container - might be a path, show path update
       // Container format: path directly
-      return `${list}.push(${item});\nawait showPathUpdateWithVisual(${item});\n`;
+      return `${list}.push(${item});\nconsole.log('[DEBUG-PQ-PUSH] Added to container:', ${item});\nawait showPathUpdateWithVisual(${item});\n`;
     } else if (isPQ) {
       // PQ format: [distance, path] - don't await to avoid slowing down
       // Just push, visual feedback will be shown when node is selected from PQ
       // Update Dijkstra PQ state for real-time table
-      return `${list}.push(${item});\nupdateDijkstraPQ(${list});\n`;
+      return `${list}.push(${item});\nconsole.log('[DEBUG-PQ-PUSH] Added to PQ:', JSON.stringify(${item}));\nupdateDijkstraPQ(${list});\n`;
     } else if (isMSTEdges) {
       // Adding edge to MST_edges list (for Kruskal's algorithm)
       // Show MST edges visualization
-      return `${list}.push(${item});\nshowMSTEdgesFromList(${list});\n`;
+      return `${list}.push(${item});\nconsole.log('[DEBUG-MST-PUSH] Added to MST:', JSON.stringify(${item}));\nshowMSTEdgesFromList(${list});\n`;
     }
-    
-    return `${list}.push(${item});\n`;
+
+    return `${list}.push(${item});\nconsole.log('[DEBUG-LIST-PUSH] Added to list:', ${item});\n`;
   };
 
   javascriptGenerator.forBlock["lists_remove_last"] = function (block) {
@@ -1283,7 +1349,16 @@ export function defineAllGenerators() {
 
   javascriptGenerator.forBlock["lists_get_last"] = function (block) {
     const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
-    return [`${list}[${list}.length - 1]`, javascriptGenerator.ORDER_MEMBER];
+    return [`(function() {
+      try {
+        const listVar = (${list});
+        if (!listVar || !Array.isArray(listVar) || listVar.length === 0) return undefined;
+        return listVar[listVar.length - 1];
+      } catch (e) {
+        console.warn('lists_get_last error:', e);
+        return undefined;
+      }
+    })()`, javascriptGenerator.ORDER_FUNCTION_CALL];
   };
 
   javascriptGenerator.forBlock["lists_remove_first_return"] = function (block) {
@@ -1293,7 +1368,58 @@ export function defineAllGenerators() {
 
   javascriptGenerator.forBlock["lists_get_first"] = function (block) {
     const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
-    return [`${list}[0]`, javascriptGenerator.ORDER_MEMBER];
+    return [`(function() {
+      try {
+        const listVar = (${list});
+        if (!listVar || !Array.isArray(listVar) || listVar.length === 0) return undefined;
+        return listVar[0];
+      } catch (e) {
+        console.warn('lists_get_first error:', e);
+        return undefined;
+      }
+    })()`, javascriptGenerator.ORDER_FUNCTION_CALL];
+  };
+
+  // Standard Blockly block: lists_getIndex (GET / GET_REMOVE / REMOVE)
+  // Override to prevent crashes when list/index are undefined/NaN.
+  javascriptGenerator.forBlock["lists_getIndex"] = function (block) {
+    const mode = block.getFieldValue('MODE');
+    const where = block.getFieldValue('WHERE');
+    const list = javascriptGenerator.valueToCode(block, 'VALUE', javascriptGenerator.ORDER_MEMBER) || '[]';
+    const at = javascriptGenerator.valueToCode(block, 'AT', javascriptGenerator.ORDER_ATOMIC) || '0';
+
+    const body = `(function() {
+      try {
+        const listVar = (${list});
+        if (!listVar || !Array.isArray(listVar)) return undefined;
+        let idx;
+        if ('${where}' === 'FIRST') idx = 0;
+        else if ('${where}' === 'LAST') idx = listVar.length - 1;
+        else if ('${where}' === 'RANDOM') idx = Math.floor(Math.random() * listVar.length);
+        else {
+          const rawIdx = (${at});
+          const n = (typeof rawIdx === 'number') ? rawIdx : Number(rawIdx);
+          if (!Number.isFinite(n)) return undefined;
+          idx = ('${where}' === 'FROM_END') ? (listVar.length - 1 - n) : n;
+        }
+
+        if (!Number.isFinite(idx) || idx < 0 || idx >= listVar.length) return undefined;
+
+        if ('${mode}' === 'GET') return listVar[idx];
+        if ('${mode}' === 'GET_REMOVE') return listVar.splice(idx, 1)[0];
+        if ('${mode}' === 'REMOVE') { listVar.splice(idx, 1); return undefined; }
+        return undefined;
+      } catch (e) {
+        console.warn('lists_getIndex error:', e);
+        return undefined;
+      }
+    })()`;
+
+    // lists_getIndex can be value-output or statement depending on MODE.
+    if (mode === 'REMOVE') {
+      return `${body};\n`;
+    }
+    return [body, javascriptGenerator.ORDER_FUNCTION_CALL];
   };
 
   javascriptGenerator.forBlock["lists_contains"] = function (block) {
@@ -1322,35 +1448,114 @@ export function defineAllGenerators() {
 
   javascriptGenerator.forBlock["lists_find_min_index"] = function (block) {
     const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
-    return [`await findMinIndex(${list})`, javascriptGenerator.ORDER_FUNCTION_CALL];
+    const exclude = javascriptGenerator.valueToCode(block, 'EXCLUDE', javascriptGenerator.ORDER_MEMBER) || 'null';
+    return [`await findMinIndex(${list}, ${exclude})`, javascriptGenerator.ORDER_FUNCTION_CALL];
+  };
+
+  javascriptGenerator.forBlock["lists_find_max_index"] = function (block) {
+    const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
+    const exclude = javascriptGenerator.valueToCode(block, 'EXCLUDE', javascriptGenerator.ORDER_MEMBER) || 'null';
+    return [`await findMaxIndex(${list}, ${exclude})`, javascriptGenerator.ORDER_FUNCTION_CALL];
   };
 
   javascriptGenerator.forBlock["lists_get_at_index"] = function (block) {
     const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
-    const index = javascriptGenerator.valueToCode(block, 'INDEX', javascriptGenerator.ORDER_SUBTRACTION) || '0';
-    // Add comprehensive safety check to prevent undefined/NaN errors
-    // Handle cases where list or index might be undefined, null, or NaN
-    // Use unique variable names to avoid shadowing function parameters (e.g., 'arr' in subsetSum)
+    // Robustly try both 'INDEX' and 'AT' names, falling back to '0' if both are empty/missing
+    let indexCode = '';
+    if (block.getInput('INDEX')) {
+      indexCode = javascriptGenerator.valueToCode(block, 'INDEX', javascriptGenerator.ORDER_SUBTRACTION);
+    }
+    if (!indexCode && block.getInput('AT')) {
+      indexCode = javascriptGenerator.valueToCode(block, 'AT', javascriptGenerator.ORDER_SUBTRACTION);
+    }
+    const index = indexCode || '0';
+
+    // Hyper-safe version with CHECKPOINTS [Step 149]
     return [`(function() { 
       try {
-        const listVar = ${list}; 
-        const idx = typeof ${index} === 'number' ? ${index} : Number(${index}); 
-        if (!listVar || !Array.isArray(listVar) || typeof idx !== 'number' || isNaN(idx) || idx < 0 || idx >= listVar.length) {
-          console.warn('lists_get_at_index: Invalid access', { listVar, idx, listLength: listVar?.length });
-          return undefined; 
+        const _safe_list_ = (${list});
+        const _safe_idx_raw_ = (${index});
+        let _safe_result_ = undefined;
+        
+
+        // Robust checks (using if-else to prevent execution fall-through if returns are stripped)
+        // Nuclear Option: Disabled explicit validation because of phantom undefined issues.
+        // If _safe_list_ is invalid, standard JS access will throw and be caught by the outer catch.
+        _safe_result_ = (_safe_list_ && _safe_list_[Number(_safe_idx_raw_)]);
+        
+        if (typeof _safe_list_ !== 'undefined' && _safe_list_ && Array.isArray(_safe_list_)) {
+          // Only log if it's one of our key arrays for Dijkstra (simple heuristic)
+          if (_safe_list_.length < 20) {
+            console.log('[DEBUG-GET]', { index: _safe_idx_raw_, value: _safe_result_ });
+          }
         }
-        return listVar[idx]; 
+
+        return _safe_result_ !== undefined ? _safe_result_ : null;
       } catch (e) {
-        console.error('lists_get_at_index error:', e);
-        return undefined;
+        console.error('lists_get_at_index [Safe] Unexpected error:', e);
+        return null;
       }
     })()`, javascriptGenerator.ORDER_MEMBER];
+  };
+
+  // Override lists_setIndex to use 0-based indexing for Emei/Graph compatibility
+  javascriptGenerator.forBlock["lists_setIndex"] = function (block) {
+    const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
+    const mode = block.getFieldValue('MODE') || 'SET';
+    const where = block.getFieldValue('WHERE') || 'FROM_START';
+    const at = javascriptGenerator.valueToCode(block, 'AT', javascriptGenerator.ORDER_ADDITION) || '0';
+    const value = javascriptGenerator.valueToCode(block, 'TO', javascriptGenerator.ORDER_ASSIGNMENT) || 'null';
+
+    return `(function() {
+      try {
+        const listVar = ${list};
+        const val = ${value};
+        let idx;
+        // Force 0-based indexing for FROM_START to match our graph nodes
+        // BUT also support legacy 1-based indexing for standard levels via flag
+        const isZeroBased = (typeof globalThis !== 'undefined' && globalThis.__useZeroBasedIndexing);
+        
+        if ('${where}' === 'FROM_START') {
+           if (isZeroBased) {
+             idx = Number(${at});
+           } else {
+             // Standard Blockly behavior: 1-based -> 0-based
+             idx = Number(${at}) - 1;
+           }
+        } else if ('${where}' === 'FROM_END') {
+           idx = (listVar ? listVar.length : 0) - 1 - Number(${at});
+        } else if ('${where}' === 'FIRST') {
+           idx = 0;
+        } else if ('${where}' === 'LAST') {
+           idx = (listVar ? listVar.length : 0) - 1;
+        } else {
+           if (isZeroBased) {
+             idx = Number(${at});
+           } else {
+             idx = Number(${at}) - 1;
+           }
+        }
+
+        if (listVar && Array.isArray(listVar) && Number.isFinite(idx) && idx >= 0) {
+            if ('${mode}' === 'SET') {
+                listVar[idx] = val;
+            } else if ('${mode}' === 'INSERT') {
+                listVar.splice(idx, 0, val);
+            }
+        }
+      } catch (e) { console.warn('lists_setIndex error:', e); }
+    })();\n`;
   };
 
   javascriptGenerator.forBlock["lists_remove_at_index"] = function (block) {
     const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
     const index = javascriptGenerator.valueToCode(block, 'INDEX', javascriptGenerator.ORDER_ATOMIC) || '0';
-    return `${list}.splice(${index}, 1);\n`;
+    return `(function() {
+      const _b_list = ${list};
+      const _b_idx = ${index};
+      console.log('[DEBUG-REMOVE]', { list: '${list}', idx: _b_idx });
+      if (_b_list && Array.isArray(_b_list)) _b_list.splice(_b_idx, 1);
+    })();\n`;
   };
 
   // Override lists_setIndex for REMOVE mode
@@ -1360,43 +1565,151 @@ export function defineAllGenerators() {
     const where = block.getFieldValue('WHERE');
     const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
     const at = javascriptGenerator.valueToCode(block, 'AT', javascriptGenerator.ORDER_ATOMIC) || '0';
-    
+
     console.log(`🔧 lists_setIndex generator called: mode=${mode}, where=${where}, list=${list}, at=${at}`);
-    
+
     if (mode === 'REMOVE') {
       // Remove item at index using splice
       if (where === 'FROM_START') {
-        const code = `${list}.splice(${at}, 1);\n`;
-        console.log(`🔧 Generated REMOVE code: ${code}`);
+        const code = `(function() {
+  try {
+    const listVar = ${list};
+    const idx = (typeof ${at} === 'number') ? ${at} : Number(${at});
+    if (!listVar || !Array.isArray(listVar) || !Number.isFinite(idx) || idx < 0 || idx >= listVar.length) {
+      console.warn('lists_setIndex: Invalid REMOVE', { listVar, idx, listLength: listVar?.length });
+      return;
+    }
+    listVar.splice(idx, 1);
+  } catch (e) {
+    console.error('lists_setIndex REMOVE error:', e);
+  }
+})();\n`;
+        console.log(`🔧 Generated REMOVE code (safe): ${code}`);
         return code;
       } else if (where === 'FROM_END') {
-        const code = `${list}.splice(${list}.length - 1 - ${at}, 1);\n`;
-        console.log(`🔧 Generated REMOVE code: ${code}`);
+        const code = `(function() {
+  try {
+    const listVar = ${list};
+    const atIdx = (typeof ${at} === 'number') ? ${at} : Number(${at});
+    if (!listVar || !Array.isArray(listVar) || !Number.isFinite(atIdx)) {
+      console.warn('lists_setIndex: Invalid REMOVE', { listVar, idx: atIdx, listLength: listVar?.length });
+      return;
+    }
+    const idx = (listVar.length - 1 - atIdx);
+    if (!Number.isFinite(idx) || idx < 0 || idx >= listVar.length) {
+      console.warn('lists_setIndex: Invalid REMOVE', { listVar, idx, listLength: listVar?.length });
+      return;
+    }
+    listVar.splice(idx, 1);
+  } catch (e) {
+    console.error('lists_setIndex REMOVE error:', e);
+  }
+})();\n`;
+        console.log(`🔧 Generated REMOVE code (safe): ${code}`);
         return code;
       } else {
         // FIRST or LAST
         if (where === 'FIRST') {
-          const code = `${list}.splice(0, 1);\n`;
-          console.log(`🔧 Generated REMOVE code: ${code}`);
+          const code = `(function() {
+  try {
+    const listVar = ${list};
+    if (!listVar || !Array.isArray(listVar) || listVar.length <= 0) {
+      console.warn('lists_setIndex: Invalid REMOVE', { listVar, idx: 0, listLength: listVar?.length });
+      return;
+    }
+    listVar.splice(0, 1);
+  } catch (e) {
+    console.error('lists_setIndex REMOVE error:', e);
+  }
+})();\n`;
+          console.log(`🔧 Generated REMOVE code (safe): ${code}`);
           return code;
         } else {
-          const code = `${list}.splice(${list}.length - 1, 1);\n`;
-          console.log(`🔧 Generated REMOVE code: ${code}`);
+          const code = `(function() {
+  try {
+    const listVar = ${list};
+    if (!listVar || !Array.isArray(listVar) || listVar.length <= 0) {
+      console.warn('lists_setIndex: Invalid REMOVE', { listVar, idx: -1, listLength: listVar?.length });
+      return;
+    }
+    listVar.splice(listVar.length - 1, 1);
+  } catch (e) {
+    console.error('lists_setIndex REMOVE error:', e);
+  }
+})();\n`;
+          console.log(`🔧 Generated REMOVE code (safe): ${code}`);
           return code;
         }
       }
     } else if (mode === 'GET') {
       // Get item at index
       if (where === 'FROM_START') {
-        return [`${list}[${at}]`, javascriptGenerator.ORDER_MEMBER];
+        return [`(function() {
+  try {
+    const listVar = ${list};
+    let idx = (typeof ${at} === 'number') ? ${at} : Number(${at});
+    if (!Number.isFinite(idx)) { try { idx = parseInt(${at}, 10); } catch (e) { } }
+    if (!listVar || !Array.isArray(listVar) || !Number.isFinite(idx) || idx < 0 || idx >= listVar.length) {
+      console.warn('lists_setIndex: Invalid GET', { listVar, idx, listLength: listVar?.length });
+      return undefined;
+    }
+    return listVar[idx];
+  } catch (e) {
+    console.error('lists_setIndex GET error:', e);
+    return undefined;
+  }
+})()`, javascriptGenerator.ORDER_MEMBER];
       } else if (where === 'FROM_END') {
-        return [`${list}[${list}.length - 1 - ${at}]`, javascriptGenerator.ORDER_MEMBER];
+        return [`(function() {
+  try {
+    const listVar = ${list};
+    let atIdx = (typeof ${at} === 'number') ? ${at} : Number(${at});
+    if (!Number.isFinite(atIdx)) { try { atIdx = parseInt(${at}, 10); } catch (e) { } }
+    if (!listVar || !Array.isArray(listVar) || !Number.isFinite(atIdx)) {
+      console.warn('lists_setIndex: Invalid GET', { listVar, idx: atIdx, listLength: listVar?.length });
+      return undefined;
+    }
+    const idx = listVar.length - 1 - atIdx;
+    if (!Number.isFinite(idx) || idx < 0 || idx >= listVar.length) {
+      console.warn('lists_setIndex: Invalid GET', { listVar, idx, listLength: listVar?.length });
+      return undefined;
+    }
+    return listVar[idx];
+  } catch (e) {
+    console.error('lists_setIndex GET error:', e);
+    return undefined;
+  }
+})()`, javascriptGenerator.ORDER_MEMBER];
       } else {
         // FIRST or LAST
         if (where === 'FIRST') {
-          return [`${list}[0]`, javascriptGenerator.ORDER_MEMBER];
+          return [`(function() {
+  try {
+    const listVar = ${list};
+    if (!listVar || !Array.isArray(listVar) || listVar.length <= 0) {
+      console.warn('lists_setIndex: Invalid GET', { listVar, idx: 0, listLength: listVar?.length });
+      return undefined;
+    }
+    return listVar[0];
+  } catch (e) {
+    console.error('lists_setIndex GET error:', e);
+    return undefined;
+  }
+})()`, javascriptGenerator.ORDER_MEMBER];
         } else {
-          return [`${list}[${list}.length - 1]`, javascriptGenerator.ORDER_MEMBER];
+          return [`(function() {
+  try {
+    const listVar = ${list};
+    if (!listVar || !Array.isArray(listVar) || listVar.length <= 0) {
+      console.warn('lists_setIndex: Invalid GET', { listVar, idx: -1, listLength: listVar?.length });
+      return undefined;
+    }
+    return listVar[listVar.length - 1];
+  } catch (e) {
+    console.error('lists_setIndex GET error:', e);
+    return undefined;
+  }
+})()`, javascriptGenerator.ORDER_MEMBER];
         }
       }
     } else {
@@ -1404,14 +1717,175 @@ export function defineAllGenerators() {
       // Fallback to splice
       const value = javascriptGenerator.valueToCode(block, 'TO', javascriptGenerator.ORDER_ASSIGNMENT) || 'null';
       if (where === 'FROM_START') {
-        return `${list}[${at}] = ${value};\n`;
+        // Subset Sum DP table hook:
+        // Detect pattern: curr[cap] = ... inside a for_loop_dynamic over itemIndex/cap.
+        // If matched, emit an extra (guarded) call to updateSubsetSumCellVisual(itemIndex, cap, curr[cap] value).
+        let subsetSumHook = '';
+        // Coin Change DP table hook:
+        // Detect pattern: dp[a] = ... inside a for_loop_dynamic over coinIndex and amount loop a.
+        // If matched, emit updateCoinChangeCellVisual(coinIndex, a, dp[a] value).
+        let coinChangeHook = '';
+        // Ant DP table hook:
+        // Detect pattern: dpRow[c] = ... inside nested for_loop_dynamic over r and c.
+        // If matched, emit updateAntDpCellVisual(r, c, dpRow[c] value).
+        let antDpHook = '';
+        try {
+          const listTrim = String(list || '').trim();
+          const atTrim = String(at || '').trim();
+
+          // Coin Change: dp[amount] updates
+          try {
+            const isDp = /\bdp\b/.test(listTrim);
+            let coinIndexVarName = null;
+            try {
+              let p = block.getParent();
+              while (p) {
+                if (p.type === 'for_loop_dynamic' || p.type === 'for_index' || p.type === 'controls_for') {
+                  const varField = p.getFieldValue && p.getFieldValue('VAR');
+                  if (varField) {
+                    const resolved = javascriptGenerator.nameDB_.getName(varField, Blockly.Names.NameType.VARIABLE);
+                    if (resolved === 'coinIndex') coinIndexVarName = resolved;
+                  }
+                }
+                p = p.getParent();
+              }
+            } catch (e) { }
+
+            if (isDp) {
+              const rowExpr = coinIndexVarName || '0';
+              coinChangeHook = `try { if (typeof updateCoinChangeCellVisual === 'function') updateCoinChangeCellVisual(${rowExpr}, ${atTrim}, ${value}, { kind: 'set' }); } catch (e) {}\n`;
+            }
+          } catch (e) { }
+
+          const isCurr = /\bcurr\b/.test(listTrim);
+          const isCap = /\bcap\b/.test(atTrim);
+          let itemVarName = null;
+          try {
+            let p = block.getParent();
+            while (p) {
+              if (p.type === 'for_loop_dynamic' || p.type === 'for_index' || p.type === 'controls_for') {
+                const varField = p.getFieldValue && p.getFieldValue('VAR');
+                if (varField) {
+                  const resolved = javascriptGenerator.nameDB_.getName(varField, Blockly.Names.NameType.VARIABLE);
+                  if (resolved === 'itemIndex') itemVarName = resolved;
+                }
+              }
+              p = p.getParent();
+            }
+          } catch (e) { }
+
+          if (isCurr && isCap && itemVarName) {
+            subsetSumHook = `try { if (typeof updateSubsetSumCellVisual === 'function') updateSubsetSumCellVisual(${itemVarName}, ${atTrim}, ${value}); } catch (e) {}\n`;
+          }
+
+          // Ant DP: dpRow[c] updates inside loops (r, c)
+          try {
+            const listTrim = String(list || '').trim();
+            const isDpRow = /\bdpRow\b/i.test(listTrim) || /\bdp\b/i.test(listTrim); // Support dp[r][c] or dpRow[c]
+            let rVarName = 'typeof r !== "undefined" ? r : 0';
+            let cVarName = 'typeof c !== "undefined" ? c : 0';
+            try {
+              let p = block.getParent();
+              while (p) {
+                if (p.type === 'for_loop_dynamic' || p.type === 'for_index' || p.type === 'controls_for') {
+                  const varField = p.getFieldValue && p.getFieldValue('VAR');
+                  if (varField) {
+                    const resolved = javascriptGenerator.nameDB_.getName(varField, Blockly.Names.NameType.VARIABLE);
+                    if (resolved === 'r') rVarName = 'r';
+                    if (resolved === 'c') cVarName = 'c';
+                  }
+                }
+                p = p.getParent();
+              }
+            } catch (e) { }
+
+            if (isDpRow) {
+              // Safety: Ensure we don't send NaN to the visualizer
+              antDpHook = `try { if (typeof updateAntDpCellVisual === 'function') updateAntDpCellVisual(${rVarName}, ${cVarName}, (Number(${value}) || 0)); } catch (e) {}\n`;
+            }
+          } catch (e) { }
+        } catch (e) { }
+
+        return `(function() {
+  try {
+    const _b_list = ${list};
+    const _b_at = ${at};
+    const _b_val = ${value};
+    let _b_idx = (typeof _b_at === 'number') ? _b_at : Number(_b_at);
+    // If idx is something weird (e.g., string-like), try parsing once more
+    if (!Number.isFinite(_b_idx)) {
+      try { _b_idx = parseInt(_b_at, 10); } catch (e) { /* ignore */ }
+    }
+    // For SET we allow auto-grow (like JS arrays). Only block truly invalid indices.
+    const isIndexOk = (typeof _b_idx === 'number') && (_b_idx === _b_idx) && _b_idx >= 0;
+    const isArrayLike = !!_b_list && (Array.isArray(_b_list) || typeof _b_list.length === 'number');
+    if (!isArrayLike || !isIndexOk) {
+      console.warn('[DIAGNOSTIC] lists_setIndex: Invalid SET', { _b_list, _b_idx, listLength: _b_list?.length });
+      return;
+    }
+    // JS arrays can grow via direct assignment; allow SET past current length.
+    try {
+      if (typeof _b_list.length === 'number' && _b_idx >= _b_list.length) _b_list.length = _b_idx + 1;
+    } catch (e) { /* ignore */ }
+    
+    if ('${mode}' === 'INSERT') {
+      _b_list.splice(_b_idx, 0, _b_val);
+      console.log('[DEBUG-INSERT] ' + ${JSON.stringify(list)} + '[' + _b_idx + '] = ' + _b_val);
+    } else {
+      _b_list[_b_idx] = _b_val;
+      console.log('[DEBUG-SET] ' + ${JSON.stringify(list)} + '[' + _b_idx + '] = ' + _b_val);
+    }
+${subsetSumHook}${coinChangeHook}${antDpHook}
+  } catch (e) {
+    console.error('lists_setIndex error:', e);
+  }
+})();\n`;
       } else if (where === 'FROM_END') {
-        return `${list}[${list}.length - 1 - ${at}] = ${value};\n`;
+        return `(function() {
+  try {
+    const listVar = ${list};
+    const atIdx = (typeof ${at} === 'number') ? ${at} : Number(${at});
+    if (!listVar || !Array.isArray(listVar) || !Number.isFinite(atIdx)) {
+      // Invalid SET - ignored
+      return;
+    }
+    const idx = (listVar.length - 1 - atIdx);
+    if (!Number.isFinite(idx) || idx < 0 || idx >= listVar.length) {
+      console.warn('lists_setIndex: Invalid SET', { listVar, idx, listLength: listVar?.length });
+      return;
+    }
+    listVar[idx] = ${value};
+  } catch (e) {
+    console.error('lists_setIndex SET error:', e);
+  }
+})();\n`;
       } else {
         if (where === 'FIRST') {
-          return `${list}[0] = ${value};\n`;
+          return `(function() {
+  try {
+    const listVar = ${list};
+    if (!listVar || !Array.isArray(listVar) || listVar.length <= 0) {
+      console.warn('lists_setIndex: Invalid SET', { listVar, idx: 0, listLength: listVar?.length });
+      return;
+    }
+    listVar[0] = ${value};
+  } catch (e) {
+    console.error('lists_setIndex SET error:', e);
+  }
+})();\n`;
         } else {
-          return `${list}[${list}.length - 1] = ${value};\n`;
+          return `(function() {
+  try {
+    const listVar = ${list};
+    if (!listVar || !Array.isArray(listVar) || listVar.length <= 0) {
+      console.warn('lists_setIndex: Invalid SET', { listVar, idx: -1, listLength: listVar?.length });
+      return;
+    }
+    listVar[listVar.length - 1] = ${value};
+  } catch (e) {
+    console.error('lists_setIndex SET error:', e);
+  }
+})();\n`;
         }
       }
     }
@@ -1421,23 +1895,23 @@ export function defineAllGenerators() {
     const variable = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
     const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
     const branch = javascriptGenerator.statementToCode(block, 'DO');
-    
+
     // Check if this is iterating over edges (for Kruskal's algorithm)
     const listCode = list.trim();
     const isEdges = listCode.includes('edges') || listCode.includes('Edges');
     const varName = variable || block.getFieldValue('VAR') || 'item';
     const isEdgeData = varName.includes('edge') || varName.includes('Edge');
-    
+
     // Check if list is an async expression (contains await)
     const isAsync = list.includes('await');
-    
+
     if (isAsync) {
       // If list is async, we need to await it first
       let code = `
       const listItems = await (${list});
       for (let i = 0; i < listItems.length; i++) {
           const ${variable} = listItems[i];`;
-      
+
       // Add visual feedback for Kruskal's algorithm (iterating over edges)
       if (isEdges && isEdgeData) {
         code += `
@@ -1452,7 +1926,7 @@ export function defineAllGenerators() {
             }
           }`;
       }
-      
+
       code += `
           ${branch}
       }
@@ -1460,10 +1934,10 @@ export function defineAllGenerators() {
       return code;
     } else {
       let code = `
-      const listItems = ${list};
-      for (let i = 0; i < listItems.length; i++) {
+      const listItems = await ${list};
+      for (let i = 0; i < (listItems ? listItems.length : 0); i++) {
           const ${variable} = listItems[i];`;
-      
+
       // Add visual feedback for Kruskal's algorithm (iterating over edges)
       if (isEdges && isEdgeData) {
         code += `
@@ -1478,7 +1952,7 @@ export function defineAllGenerators() {
             }
           }`;
       }
-      
+
       code += `
           ${branch}
       }
@@ -1546,27 +2020,91 @@ export function defineAllGenerators() {
     const path = javascriptGenerator.valueToCode(block, 'PATH', javascriptGenerator.ORDER_NONE) || '[]';
     return `await showPathUpdateWithVisual(${path});\n`;
   };
-  
-  // CRITICAL: Force override procedures_defreturn generator at the END to ensure it's not overridden
-  // Save reference to our custom generator BEFORE it might be overwritten
-  const customProcGen = javascriptGenerator.forBlock["procedures_defreturn"];
-  
-  // Force override one more time at the end
-  if (customProcGen) {
-    javascriptGenerator.forBlock["procedures_defreturn"] = customProcGen;
-    console.log('[defineAllGenerators] ✅ Force override procedures_defreturn generator');
-  } else {
-    console.error('[defineAllGenerators] ❌ ERROR: Custom generator not found!');
-  }
-  
+
+  // Store references to our custom generators before any potential overwrites
+  // We use the already declared originalGenerators object
+  originalGenerators["math_max"] = javascriptGenerator.forBlock["math_max"];
+  originalGenerators["lists_setIndex"] = javascriptGenerator.forBlock["lists_setIndex"];
+  originalGenerators["procedures_defreturn"] = javascriptGenerator.forBlock["procedures_defreturn"];
+  originalGenerators["math_arithmetic"] = javascriptGenerator.forBlock["math_arithmetic"];
+  originalGenerators["variables_get"] = javascriptGenerator.forBlock["variables_get"];
+
+  // NUCLEAR FORCE: Re-apply our custom generators at the VERY END
+  // We REMOVE "lists_setIndex" from here because we WANT our custom 0-based override to stay!
+  const criticals = ["math_max", "variables_get", "math_arithmetic", "procedures_defreturn"];
+  criticals.forEach(type => {
+    if (originalGenerators[type]) {
+      javascriptGenerator.forBlock[type] = originalGenerators[type];
+      console.log(`[defineAllGenerators] 🚀 Nuclear Force Champion: ${type}`);
+    }
+  });
+
   // Final verification
   const finalGen = javascriptGenerator.forBlock["procedures_defreturn"];
   const isCustom = finalGen?.toString().includes('CUSTOM GENERATOR');
-  console.log('[defineAllGenerators] Final check - procedures_defreturn generator type:', typeof finalGen);
-  console.log('[defineAllGenerators] procedures_defreturn generator is our custom one:', isCustom);
-  
-  if (!isCustom) {
-    console.error('[defineAllGenerators] ❌ WARNING: Custom generator verification failed!');
-  }
-}
+  console.log('[defineAllGenerators] Final check - procedures_defreturn generator is our custom one:', isCustom);
 
+  console.log('[defineAllGenerators] Finished generator definition.');
+
+  // Emei Mountain Visuals
+  javascriptGenerator.forBlock["emei_highlight_peak"] = function (block) {
+    const node = javascriptGenerator.valueToCode(block, "NODE", javascriptGenerator.ORDER_NONE) || "0";
+    return `await highlightPeak(${node});\n`;
+  };
+
+  javascriptGenerator.forBlock["emei_highlight_cable_car"] = function (block) {
+    const u = javascriptGenerator.valueToCode(block, "U", javascriptGenerator.ORDER_NONE) || "0";
+    const v = javascriptGenerator.valueToCode(block, "V", javascriptGenerator.ORDER_NONE) || "0";
+    const capacity = javascriptGenerator.valueToCode(block, "CAPACITY", javascriptGenerator.ORDER_NONE) || "0";
+    return `await highlightCableCar(${u}, ${v}, ${capacity});\n`;
+  };
+
+  javascriptGenerator.forBlock["emei_show_final_result"] = function (block) {
+    const bottleneck = javascriptGenerator.valueToCode(block, "BOTTLENECK", javascriptGenerator.ORDER_NONE) || "0";
+    const rounds = javascriptGenerator.valueToCode(block, "ROUNDS", javascriptGenerator.ORDER_NONE) || "0";
+    return `await showEmeiFinalResult(${bottleneck}, ${rounds});\n`;
+  };
+
+  javascriptGenerator.forBlock["emei_highlight_path"] = function (block) {
+    const parent = javascriptGenerator.valueToCode(block, "PARENT", javascriptGenerator.ORDER_NONE) || "[]";
+    const end = javascriptGenerator.valueToCode(block, "END", javascriptGenerator.ORDER_NONE) || "0";
+    const bottleneck = javascriptGenerator.valueToCode(block, "BOTTLENECK", javascriptGenerator.ORDER_NONE) || "0";
+    // Internal reconstruction and highlighting
+    return `await (async function() {
+      console.log('🚩 [emei_highlight_path] START');
+      // Clear previous search visuals (red arrows) to show nice result
+      try { 
+        if (typeof clearDfsVisuals === 'function') {
+           console.log('🚩 [emei_highlight_path] Calling clearDfsVisuals...');
+           clearDfsVisuals(getCurrentGameState().currentScene); 
+        } else {
+           console.warn('🚩 [emei_highlight_path] clearDfsVisuals NOT FOUND');
+        }
+      } catch (e) {
+        console.warn('🚩 [emei_highlight_path] Error clearing visuals:', e);
+      }
+      
+      let _curr = ${end};
+      let _p = ${parent};
+      console.log('🚩 [emei_highlight_path] End Node:', _curr);
+      console.log('🚩 [emei_highlight_path] Parent Array:', JSON.stringify(_p));
+
+      let _path_edges = [];
+      while (_curr !== undefined && _p[_curr] !== undefined) {
+        let _u = _p[_curr];
+        if (_u === -1) break; // Use explicit break for -1 sentinel
+        _path_edges.push({u: _u, v: _curr});
+        _curr = _u;
+      }
+      console.log('🚩 [emei_highlight_path] Reconstructed Path Edges:', JSON.stringify(_path_edges));
+
+      // Highlight in reverse order (from start to end)
+      for (let i = _path_edges.length - 1; i >= 0; i--) {
+        const _edge = _path_edges[i];
+        console.log('🚩 [emei_highlight_path] Highlighting edge:', _edge.u, '->', _edge.v);
+        await highlightCableCar(_edge.u, _edge.v, ${bottleneck});
+      }
+      console.log('🚩 [emei_highlight_path] DONE');
+    })();\n`;
+  };
+}

@@ -1,12 +1,12 @@
 // Blockly Helper Functions - Game Functions
-import { 
-  getCurrentGameState, 
-  setCurrentGameState, 
+import {
+  getCurrentGameState,
+  setCurrentGameState,
   getCurrentScene
 } from '../gameUtils';
 import { highlightNode, showCurrentPath, showMSTEdges, showMSTEdgesFromList as showMSTEdgesFromListVisual, highlightKruskalEdge, showKruskalRoot, clearKruskalVisuals } from './blocklyDfsVisual';
 import { updateDijkstraVisited, updateDijkstraPQ } from './dijkstraStateManager';
-import { 
+import {
   getPlayerCoins,
   addCoinToPlayer,
   swapPlayerCoins,
@@ -16,19 +16,19 @@ import {
   arePlayerCoinsSorted
 } from '../gameUtils';
 import { collectCoinByPlayer, haveCoinAtPosition } from '../phaser/phaserCollection';
-import { 
+import {
   rescuePerson as gameRescuePerson,
   rescuePersonAtNode as gameRescuePersonAtNode,
   hasPerson as gameHasPerson,
   personRescued as gamePersonRescued,
-  getPersonCount as gameGetPersonCount, 
+  getPersonCount as gameGetPersonCount,
   allPeopleRescued as gameAllPeopleRescued,
   getRescuedPeople as gameGetRescuedPeople,
   clearRescuedPeople as gameClearRescuedPeople,
   resetAllPeople as gameResetAllPeople
 } from '../gameUtils';
 import { moveToNode as phaserMoveToNode } from '../../phaser/utils/playerMovement';
-import { 
+import {
   getStack as gameGetStack,
   pushToStack as gamePushToStack,
   popFromStack as gamePopFromStack,
@@ -39,15 +39,16 @@ import {
   isTreasureCollected as gameIsTreasureCollected,
   clearStack as gameClearStack
 } from '../gameUtils';
-import { 
-  selectKnapsackItem, 
-  unselectKnapsackItem, 
-  resetKnapsackItems 
+import {
+  selectKnapsackItem,
+  unselectKnapsackItem,
+  resetKnapsackItems
 } from './blocklyKnapsackVisual';
-import { 
-  addWarriorToSide1, 
-  addWarriorToSide2, 
-  resetSubsetSumWarriors 
+import { antMaxWithVisual, showAntDpFinalPath } from './blocklyAntDpVisual';
+import {
+  addWarriorToSide1,
+  addWarriorToSide2,
+  resetSubsetSumWarriors
 } from './blocklySubsetSumVisual';
 import {
   resetSubsetSumTracking,
@@ -82,30 +83,30 @@ export async function turnRight() {
 export async function collectCoin() {
   const currentState = getCurrentGameState();
   if (currentState.goalReached || currentState.isGameOver) return;
-  
+
   console.log("Collect coin function called");
   await new Promise((resolve) => setTimeout(resolve, 200));
-  
+
   const scene = getCurrentScene();
-  
+
   if (scene && scene.player) {
     console.log(`collectCoin called - player at (${scene.player.x}, ${scene.player.y})`);
     const collected = collectCoinByPlayer(scene, scene.player.x, scene.player.y);
-    
+
     if (collected) {
       const playerX = scene.player.x;
       const playerY = scene.player.y;
-      
+
       const collectedCoins = scene.coins.filter(coin => {
         if (!coin.collected) return false;
-        
+
         const distance = Math.sqrt(
           Math.pow(playerX - coin.x, 2) + Math.pow(playerY - coin.y, 2)
         );
-        
+
         return distance <= 100;
       });
-      
+
       if (collectedCoins.length === 0) {
         const recentlyCollected = scene.coins.filter(coin => {
           if (!coin.collected) return false;
@@ -115,11 +116,11 @@ export async function collectCoin() {
         });
         collectedCoins.push(...recentlyCollected);
       }
-      
+
       for (const collectedCoin of collectedCoins) {
         const existingCoins = getPlayerCoins();
         const alreadyCollected = existingCoins.some(coin => coin.id === collectedCoin.id);
-        
+
         if (!alreadyCollected) {
           addCoinToPlayer({
             id: collectedCoin.id,
@@ -131,20 +132,20 @@ export async function collectCoin() {
       }
     }
   }
-  
+
   await new Promise((resolve) => setTimeout(resolve, 300));
 }
 
 export function haveCoin() {
   const currentState = getCurrentGameState();
   if (currentState.goalReached || currentState.isGameOver) return false;
-  
+
   const scene = getCurrentScene();
-  
+
   if (scene && scene.player) {
     return haveCoinAtPosition(scene, scene.player.x, scene.player.y);
   }
-  
+
   return false;
 }
 
@@ -152,7 +153,7 @@ export function haveCoin() {
 export async function swapCoins(index1, index2) {
   const currentState = getCurrentGameState();
   if (currentState.goalReached || currentState.isGameOver) return;
-  
+
   await new Promise((resolve) => setTimeout(resolve, 200));
   swapPlayerCoins(index1, index2);
   await new Promise((resolve) => setTimeout(resolve, 300));
@@ -230,7 +231,7 @@ export async function moveAlongPath(path) {
     const nodeId = path[i];
     if (nodeId !== null && nodeId !== undefined) {
       await moveToNode(Number(nodeId));
-      
+
       // Check if reached goal - if yes, clear all highlights except path
       const state = getCurrentGameState();
       if (state.currentScene && state.currentScene.levelData) {
@@ -241,7 +242,7 @@ export async function moveAlongPath(path) {
           clearScanningHighlights(state.currentScene);
         }
       }
-      
+
       // Add small delay between moves for visualization
       await new Promise(resolve => setTimeout(resolve, 300));
     }
@@ -255,25 +256,25 @@ export async function moveToNode(targetNodeId) {
     console.log("No current scene available");
     return false;
   }
-  
+
   const player = currentState.currentScene.player;
   if (!player) {
     console.log("No player found");
     return false;
   }
-  
+
   const result = await phaserMoveToNode(player, targetNodeId);
-  
+
   if (result) {
     const levelData = currentState.levelData;
     const goalReached = targetNodeId === levelData.goalNodeId;
-    
-    setCurrentGameState({ 
+
+    setCurrentGameState({
       currentNodeId: targetNodeId,
       goalReached: goalReached
     });
   }
-  
+
   return result;
 }
 
@@ -352,39 +353,184 @@ export function getCurrentNode() {
  * Returns array of [neighbor, weight] tuples
  */
 export function getGraphNeighborsWithWeight(graph, node) {
+  console.log('[getGraphNeighborsWithWeight] ===== CALLED =====');
+  console.log('[getGraphNeighborsWithWeight] Graph:', graph);
+  console.log('[getGraphNeighborsWithWeight] Graph type:', typeof graph);
+  console.log('[getGraphNeighborsWithWeight] IsArray:', Array.isArray(graph));
+  console.log('[getGraphNeighborsWithWeight] Graph keys:', Object.keys(graph).slice(0, 10));
+  console.log('[getGraphNeighborsWithWeight] Node:', node);
+  console.log('[getGraphNeighborsWithWeight] ==================');
+
   if (!graph || typeof graph !== 'object') {
     console.warn('Invalid graph:', graph);
     return [];
   }
-  
+
+  // Check if graph is an adjacency list object format: {0: [1, 2], 1: [0, 2], ...}
+  // This happens when edges parameter is passed as an object
+  if (!Array.isArray(graph)) {
+    const nodeKey = String(node);
+    const neighbors = graph[nodeKey] || graph[node];
+
+    if (Array.isArray(neighbors) && neighbors.length > 0) {
+      console.log('[getGraphNeighborsWithWeight] Detected adjacency list object format');
+      console.log('[getGraphNeighborsWithWeight] Neighbors for node', node, ':', neighbors);
+
+      // Need to get weights from levelData.edges
+      const currentState = getCurrentGameState();
+      const levelData = currentState.levelData;
+
+      if (levelData && levelData.edges) {
+        const neighborsWithWeight = neighbors.map(neighbor => {
+          const edge = levelData.edges.find(e =>
+            (e.from === node && e.to === neighbor) ||
+            (e.from === neighbor && e.to === node) ||
+            (e.u === node && e.v === neighbor) ||
+            (e.u === neighbor && e.v === node)
+          );
+          const weight = edge && edge.value !== undefined && edge.value !== null
+            ? Number(edge.value)
+            : (edge && edge.weight !== undefined ? Number(edge.weight) : 1);
+          return [neighbor, weight];
+        });
+        console.log('[getGraphNeighborsWithWeight] Found neighbors with weights:', neighborsWithWeight);
+        return neighborsWithWeight;
+      }
+
+      // Fallback: return neighbors with default weight 1
+      console.warn('[getGraphNeighborsWithWeight] No levelData.edges, using default weight 1');
+      return neighbors.map(n => [n, 1]);
+    }
+  }
+
+  // Check if graph is an edge list format: [[u, v, weight], ...] or [{from, to, value}, ...]
+  if (Array.isArray(graph) && graph.length > 0) {
+    const firstEdge = graph[0];
+
+    // Check if it's array format [[u, v, weight], ...] or [[u, v], ...] (without weight)
+    if (Array.isArray(firstEdge)) {
+      console.log('[getGraphNeighborsWithWeight] Detected edge list format (array)');
+      console.log('[getGraphNeighborsWithWeight] First edge:', firstEdge, 'Type:', typeof firstEdge, 'IsArray:', Array.isArray(firstEdge));
+      console.log('[getGraphNeighborsWithWeight] First edge[0]:', firstEdge[0], 'edge[1]:', firstEdge[1], 'edge[2]:', firstEdge[2]);
+
+      // Check if edges have weights
+      const hasWeights = firstEdge.length >= 3 && firstEdge[2] !== undefined;
+      console.log('[getGraphNeighborsWithWeight] Has weights:', hasWeights);
+
+      if (!hasWeights) {
+        // Edges don't have weights, need to get from levelData.edges
+        console.log('[getGraphNeighborsWithWeight] Edges missing weights, fetching from levelData');
+        const currentState = getCurrentGameState();
+        const levelData = currentState.levelData;
+
+        if (levelData && levelData.edges) {
+          const neighbors = [];
+          for (const edge of graph) {
+            if (!Array.isArray(edge) || edge.length < 2) continue;
+            const u = edge[0];
+            const v = edge[1];
+
+            // Check if this edge connects to our node
+            if (u === node || v === node) {
+              const neighbor = u === node ? v : u;
+              // Find weight from levelData.edges
+              const edgeData = levelData.edges.find(e =>
+                (e.from === u && e.to === v) ||
+                (e.from === v && e.to === u) ||
+                (e.u === u && e.v === v) ||
+                (e.u === v && e.v === u)
+              );
+              const weight = edgeData && edgeData.value !== undefined
+                ? Number(edgeData.value)
+                : (edgeData && edgeData.weight !== undefined ? Number(edgeData.weight) : 1);
+              neighbors.push([neighbor, weight]);
+            }
+          }
+          console.log('[getGraphNeighborsWithWeight] Found neighbors with weights from levelData:', neighbors);
+          return neighbors;
+        }
+
+        console.warn('[getGraphNeighborsWithWeight] No levelData.edges, cannot get weights');
+        return [];
+      }
+
+      // Edges have weights, proceed normally
+      const neighbors = [];
+      for (const edge of graph) {
+        if (!Array.isArray(edge) || edge.length < 3) continue;
+        console.log('[getGraphNeighborsWithWeight] Processing edge:', edge, 'Length:', edge.length);
+        console.log('[getGraphNeighborsWithWeight] Edge keys:', Object.keys(edge));
+        console.log('[getGraphNeighborsWithWeight] Edge values:', Object.values(edge));
+        console.log('[getGraphNeighborsWithWeight] Edge entries:', Object.entries(edge));
+        console.log('[getGraphNeighborsWithWeight] Edge[0]:', edge[0], 'Edge[1]:', edge[1], 'Edge[2]:', edge[2]);
+        console.log('[getGraphNeighborsWithWeight] Edge.0:', edge['0'], 'Edge.1:', edge['1'], 'Edge.2:', edge['2']);
+
+        const u = edge[0];
+        const v = edge[1];
+        const weight = edge[2];
+        console.log('[getGraphNeighborsWithWeight] Extracted:', { u, v, weight });
+
+        // Check if this edge connects to our node (undirected)
+        if (u === node) {
+          neighbors.push([v, weight]);
+        } else if (v === node) {
+          neighbors.push([u, weight]);
+        }
+      }
+      console.log('[getGraphNeighborsWithWeight] Found neighbors for node', node, ':', neighbors);
+      return neighbors;
+    }
+
+    // Check if it's object format [{from, to, value}, ...]
+    if (firstEdge && typeof firstEdge === 'object' && ('from' in firstEdge || 'u' in firstEdge)) {
+      console.log('[getGraphNeighborsWithWeight] Detected edge list format (object)');
+      const neighbors = [];
+      for (const edge of graph) {
+        const u = edge.from !== undefined ? edge.from : edge.u;
+        const v = edge.to !== undefined ? edge.to : edge.v;
+        const weight = edge.value !== undefined ? edge.value : edge.weight;
+
+        // Check if this edge connects to our node (undirected)
+        if (u === node) {
+          neighbors.push([v, weight]);
+        } else if (v === node) {
+          neighbors.push([u, weight]);
+        }
+      }
+      console.log('[getGraphNeighborsWithWeight] Found neighbors for node', node, ':', neighbors);
+      return neighbors;
+    }
+  }
+
+  // Otherwise, use adjacency list format with levelData.edges
   const currentState = getCurrentGameState();
   const scene = currentState.currentScene;
   const levelData = currentState.levelData;
-  
+
   if (!levelData || !levelData.edges) {
     console.warn('Level data or edges not available');
     return [];
   }
-  
+
   const nodeKey = String(node);
   const neighbors = graph[nodeKey] || graph[node] || [];
-  
+
   // Get edges with weights
   const neighborsWithWeight = neighbors.map(neighbor => {
     // Find edge from node to neighbor
-    const edge = levelData.edges.find(e => 
-      (e.from === node && e.to === neighbor) || 
+    const edge = levelData.edges.find(e =>
+      (e.from === node && e.to === neighbor) ||
       (e.from === neighbor && e.to === node)
     );
-    
+
     // Get weight from edge, default to 1 if not specified
-    const weight = edge && edge.value !== undefined && edge.value !== null 
-      ? Number(edge.value) 
+    const weight = edge && edge.value !== undefined && edge.value !== null
+      ? Number(edge.value)
       : 1;
-    
+
     return [neighbor, weight];
   });
-  
+
   return neighborsWithWeight;
 }
 
@@ -393,19 +539,23 @@ export function getGraphNeighborsWithWeight(graph, node) {
  * Assumes list contains tuples [distance, path] and finds minimum distance
  * Also provides visual feedback by highlighting the selected node
  */
-export async function findMinIndex(list) {
+export async function findMinIndex(list, exclusionList = null) {
   if (!Array.isArray(list) || list.length === 0) {
     console.warn('findMinIndex: list is empty or not an array');
     return -1;
   }
-  
-  let minIndex = 0;
+
+  let minIndex = -1;
   let minValue = null;
-  
+
   for (let i = 0; i < list.length; i++) {
+    // Skip if in exclusion list
+    if (exclusionList && Array.isArray(exclusionList) && exclusionList[i] === true) {
+      continue;
+    }
     const item = list[i];
     let value;
-    
+
     // Handle tuple format [distance, path]
     if (Array.isArray(item) && item.length > 0) {
       value = Number(item[0]);
@@ -416,53 +566,53 @@ export async function findMinIndex(list) {
     } else {
       continue;
     }
-    
+
     if (isNaN(value)) {
       console.warn(`findMinIndex: item at index ${i} is not a valid number:`, item);
       continue;
     }
-    
+
     if (minValue === null || value < minValue) {
       minValue = value;
       minIndex = i;
     }
   }
-  
+
   if (minValue === null) {
     console.warn('findMinIndex: no valid minimum value found');
     return -1;
   }
-  
+
   // Update Dijkstra PQ state for real-time table display
   try {
     updateDijkstraPQ(list);
   } catch (err) {
     // Ignore if function not available
   }
-  
+
   // Visual feedback: Highlight the selected node from priority queue and show path
   const currentState = getCurrentGameState();
   const scene = currentState.currentScene;
-  
+
   if (scene && list[minIndex] && Array.isArray(list[minIndex]) && list[minIndex].length > 1) {
     const selectedDistance = list[minIndex][0];
     const selectedPath = list[minIndex][1];
     if (Array.isArray(selectedPath) && selectedPath.length > 0) {
       const selectedNode = selectedPath[selectedPath.length - 1];
       const node = scene.levelData.nodes.find(n => n.id === selectedNode);
-      
+
       if (node) {
         // Highlight the selected node (green magic circle) - shows which node was chosen from PQ
         highlightNode(scene, selectedNode, 0x00ff00, 600);
         // Show the path that was selected (non-blocking)
         showCurrentPath(scene, selectedPath);
-        
+
         // Show distance text above the node to explain why it was chosen
         // Clear previous distance text if exists
         if (scene.dijkstraDistanceText) {
           scene.dijkstraDistanceText.destroy();
         }
-        
+
         const distanceText = scene.add.text(node.x, node.y - 50, `ระยะทาง: ${selectedDistance}`, {
           fontSize: '16px',
           color: '#00ff00',
@@ -475,10 +625,10 @@ export async function findMinIndex(list) {
         distanceText.setOrigin(0.5, 0.5);
         distanceText.setDepth(4); // Above highlight
         scene.dijkstraDistanceText = distanceText;
-        
+
         // Wait for visual feedback to be visible (like Kruskal)
         await new Promise(resolve => setTimeout(resolve, 500));
-        
+
         // Fade out after 2 seconds
         scene.tweens.add({
           targets: distanceText,
@@ -497,8 +647,64 @@ export async function findMinIndex(list) {
       }
     }
   }
-  
+
   return minIndex;
+}
+
+/**
+ * Find index of maximum value in list
+ * Useful for Max-Capacity path finding (Bottleneck Dijkstra)
+ */
+export async function findMaxIndex(list, exclusionList = null) {
+  if (!Array.isArray(list) || list.length === 0) {
+    console.warn('findMaxIndex: list is empty or not an array');
+    return -1;
+  }
+
+  let maxIndex = -1;
+  let maxValue = null;
+
+  for (let i = 0; i < list.length; i++) {
+    // Skip if in exclusion list
+    if (exclusionList && Array.isArray(exclusionList) && exclusionList[i] === true) {
+      continue;
+    }
+    const item = list[i];
+    let value;
+
+    // Handle tuple format [capacity, path] or simple list
+    if (Array.isArray(item) && item.length > 0) {
+      value = Number(item[0]);
+    } else if (typeof item === 'number') {
+      value = item;
+    } else if (item && typeof item === 'object') {
+      value = Number(item.value || item.capacity || 0);
+    } else {
+      continue;
+    }
+
+    if (isNaN(value)) continue;
+
+    if (maxValue === null || value > maxValue) {
+      maxValue = value;
+      maxIndex = i;
+    }
+  }
+
+  // Visual feedback for search
+  const currentState = getCurrentGameState();
+  const scene = currentState.currentScene;
+
+  if (scene && list[maxIndex] && Array.isArray(list[maxIndex]) && list[maxIndex].length > 1) {
+    const selectedPath = list[maxIndex][1];
+    if (Array.isArray(selectedPath) && selectedPath.length > 0) {
+      const selectedNode = selectedPath[selectedPath.length - 1];
+      // Highlight the node being picked from PQ
+      highlightNode(scene, selectedNode, 0x3b82f6, 600); // Blue for Cable Car theme
+    }
+  }
+
+  return maxIndex;
 }
 
 // Kruskal's algorithm helper functions
@@ -513,15 +719,15 @@ export function getAllEdges(graph) {
     console.warn('getAllEdges: Invalid graph:', graph);
     return [];
   }
-  
+
   const currentState = getCurrentGameState();
   const levelData = currentState.levelData;
-  
+
   if (!levelData || !levelData.edges) {
     console.warn('getAllEdges: Level data or edges not available');
     return [];
   }
-  
+
   // Convert edges to format [u, v, weight]
   const edges = [];
   levelData.edges.forEach(edge => {
@@ -530,7 +736,7 @@ export function getAllEdges(graph) {
       edges.push([edge.from, edge.to, weight]);
     }
   });
-  
+
   return edges;
 }
 
@@ -544,7 +750,7 @@ export function sortEdgesByWeight(edges) {
     console.warn('sortEdgesByWeight: edges is not an array:', edges);
     return [];
   }
-  
+
   // Sort by weight (index 2)
   return [...edges].sort((a, b) => {
     const weightA = Array.isArray(a) && a.length > 2 ? Number(a[2]) : 0;
@@ -564,14 +770,14 @@ export async function dsuFind(parent, node) {
     console.warn('dsuFind: Invalid parent:', parent);
     return node;
   }
-  
+
   const nodeKey = String(node);
-  
+
   // If node is not in parent, initialize it
   if (parent[nodeKey] === undefined || parent[nodeKey] === null) {
     parent[nodeKey] = node;
     const root = node;
-    
+
     // Visual feedback: show root
     const currentState = getCurrentGameState();
     const scene = currentState.currentScene;
@@ -579,17 +785,17 @@ export async function dsuFind(parent, node) {
       showKruskalRoot(scene, Number(node), Number(root));
       await new Promise(resolve => setTimeout(resolve, 200)); // Small delay for visual
     }
-    
+
     return root;
   }
-  
+
   // Path compression: if parent is not root, find root recursively
   if (parent[nodeKey] !== node) {
     parent[nodeKey] = await dsuFind(parent, parent[nodeKey]);
   }
-  
+
   const root = parent[nodeKey];
-  
+
   // Visual feedback: show root
   const currentState = getCurrentGameState();
   const scene = currentState.currentScene;
@@ -597,7 +803,7 @@ export async function dsuFind(parent, node) {
     showKruskalRoot(scene, Number(node), Number(root));
     await new Promise(resolve => setTimeout(resolve, 200)); // Small delay for visual
   }
-  
+
   return root;
 }
 
@@ -613,19 +819,19 @@ export async function dsuUnion(parent, rank, rootU, rootV) {
     console.warn('dsuUnion: Invalid parent:', parent);
     return;
   }
-  
+
   if (!rank || typeof rank !== 'object') {
     console.warn('dsuUnion: Invalid rank:', rank);
     return;
   }
-  
+
   const rootUKey = String(rootU);
   const rootVKey = String(rootV);
-  
+
   // Initialize ranks if not present
   if (rank[rootUKey] === undefined) rank[rootUKey] = 0;
   if (rank[rootVKey] === undefined) rank[rootVKey] = 0;
-  
+
   // Union by rank: attach smaller tree to larger tree
   if (rank[rootUKey] < rank[rootVKey]) {
     parent[rootUKey] = rootV;
@@ -636,7 +842,7 @@ export async function dsuUnion(parent, rank, rootU, rootV) {
     parent[rootVKey] = rootU;
     rank[rootUKey] = (rank[rootUKey] || 0) + 1;
   }
-  
+
   // Small delay for visual feedback
   await new Promise(resolve => setTimeout(resolve, 200));
 }
@@ -648,12 +854,12 @@ export async function dsuUnion(parent, rank, rootU, rootV) {
 export function showMSTEdgesFromList(mstEdges) {
   const currentState = getCurrentGameState();
   const scene = currentState.currentScene;
-  
+
   if (!scene || !Array.isArray(mstEdges)) {
     console.warn('showMSTEdgesFromList: Invalid scene or mstEdges');
     return;
   }
-  
+
   showMSTEdgesFromListVisual(scene, mstEdges, 0x00ffff);
 }
 
@@ -677,12 +883,17 @@ export async function unselectKnapsackItemVisual(itemIndex) {
  * Helper function for Math.max in knapsack that adds visual feedback
  * Re-export from blocklyKnapsackVisual
  */
-export { 
+export {
   knapsackMaxWithVisual,
   resetKnapsackSelectionTracking,
   startKnapsackSelectionTracking,
   showKnapsackFinalSelection
 } from './blocklyKnapsackVisual';
+
+/**
+ * Helper for Math.max in Ant DP that adds visual feedback (consider vs chosen)
+ */
+export { antMaxWithVisual, showAntDpFinalPath };
 
 /**
  * Reset all knapsack items to original positions

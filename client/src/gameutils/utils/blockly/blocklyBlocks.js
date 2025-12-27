@@ -17,6 +17,9 @@ import { defineDictionaryBlocks } from './blocklyDictionary';
 import { defineKnapsackVisualBlocks } from './blocklyKnapsackVisualBlocks';
 import { defineSubsetSumVisualBlocks } from './blocklySubsetSumVisualBlocks';
 import { defineCoinChangeVisualBlocks } from './blocklyCoinChangeVisualBlocks';
+import { defineTrainScheduleBlocks } from './blocklyTrainScheduleVisualBlocks';
+import { defineEmeiVisualBlocks } from './blocklyEmeiVisualBlocks';
+
 
 export function defineAllBlocks() {
   // Call all block definition functions
@@ -30,13 +33,16 @@ export function defineAllBlocks() {
   defineLoopBlocks();
   defineVariableBlocks();
   defineListBlocks(); // Must be called before list operations to override standard blocks
-    defineListOperationsBlocks();
-    defineGraphOperationsBlocks();
-    defineLogicOperatorsBlocks();
-    defineDfsVisualBlocks();
-    defineDictionaryBlocks();
-    defineKnapsackVisualBlocks();
-    defineSubsetSumVisualBlocks();
-    defineCoinChangeVisualBlocks();
+  defineListOperationsBlocks();
+  defineGraphOperationsBlocks();
+  defineLogicOperatorsBlocks();
+  defineDfsVisualBlocks();
+  defineDictionaryBlocks();
+  defineKnapsackVisualBlocks();
+  defineSubsetSumVisualBlocks();
+  defineCoinChangeVisualBlocks();
+  defineTrainScheduleBlocks();
+  defineEmeiVisualBlocks();
 }
+
 

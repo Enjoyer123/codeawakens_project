@@ -17,6 +17,14 @@ import {
   setupCoins,
   setupPeople,
   setupTreasures,
+  setupKnapsack,
+  setupSubsetSum,
+  setupCoinChange,
+  setupAntDp,
+  setupNQueen,
+  setupTrainSchedule,
+  setupRopePartition,
+  setupEmeiMountain,
   drawPlayer,
   updateMonsters,
   clearGameOverScreen
@@ -108,9 +116,14 @@ export function usePhaserGame({
         console.log("Scene.add.graphics available:", !!this.add?.graphics);
         console.log("Scene.sys available:", !!this.sys);
         console.log("Scene.scene available:", !!this.scene);
-        
+
         setCurrentScene(this);
         this.levelData = currentLevel;
+        console.log('🔍 Level data assigned to scene:', {
+          hasLevelData: !!this.levelData,
+          hasKnapsackData: !!this.levelData?.knapsackData,
+          knapsackData: this.levelData?.knapsackData
+        });
 
         // Create animations
         createCharacterAnims(this.anims);
@@ -252,7 +265,7 @@ export function usePhaserGame({
           }
 
           drawLevel(this);
-          
+
           // ตรวจสอบอีกครั้งก่อน drawPlayer
           if (!this.add || !this.add.sprite || !this.add.triangle) {
             console.error('❌ Scene.add not ready for drawPlayer, retrying...');
@@ -263,9 +276,9 @@ export function usePhaserGame({
             }, 200);
             return;
           }
-          
+
           drawPlayer(this);
-          
+
           // ตรวจสอบอีกครั้งก่อน setupMonsters
           if (!this.add || !this.add.sprite || !this.add.circle || !this.add.rectangle) {
             console.error('❌ Scene.add not ready for setupMonsters, retrying...');
@@ -276,12 +289,20 @@ export function usePhaserGame({
             }, 200);
             return;
           }
-          
+
           setupMonsters(this);
           setupObstacles(this);
           setupCoins(this);
           setupPeople(this);
           setupTreasures(this);
+          setupKnapsack(this);
+          setupSubsetSum(this);
+          setupCoinChange(this);
+          setupAntDp(this);
+          setupNQueen(this);
+          setupTrainSchedule(this);
+          setupRopePartition(this);
+          setupEmeiMountain(this);
 
           const currentState = getCurrentGameState();
           console.log("Current scene set in game state:", !!currentState.currentScene);
@@ -295,7 +316,7 @@ export function usePhaserGame({
               weaponKey: defaultWeaponKey,
               weaponData: defaultWeaponData
             });
-            
+
             // Wait a bit for scene to be fully ready before displaying weapon
             this.time.delayedCall(300, () => {
               if (this && this.add && this.player) {
@@ -333,7 +354,7 @@ export function usePhaserGame({
     const config = {
       type: Phaser.AUTO,
       width: 1200,
-      height: 700,
+      height: 920,
       backgroundColor: "#222222",
       parent: gameRef.current,
       scene: GameScene,
@@ -342,7 +363,7 @@ export function usePhaserGame({
       },
       scale: {
         mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_BOTH
+        autoCenter: Phaser.Scale.NO_CENTER
       }
     };
 

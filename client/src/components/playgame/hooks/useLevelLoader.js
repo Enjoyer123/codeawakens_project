@@ -42,6 +42,10 @@ export function useLevelLoader({
     const loadLevel = async () => {
       if (!levelId) return;
 
+
+
+
+
       setLoading(true);
       setError(null);
 
@@ -49,6 +53,7 @@ export function useLevelLoader({
         // Load weapons data first
         await loadWeaponsData(getToken);
 
+        // Check for manual hardcoded level
         const levelResponse = await fetchLevelById(getToken, levelId);
         console.log('🔍 [useLevelLoader] levelResponse.hints:', {
           hasHints: !!levelResponse.hints,
@@ -56,7 +61,7 @@ export function useLevelLoader({
           hintsLength: Array.isArray(levelResponse.hints) ? levelResponse.hints.length : 'n/a',
           hints: levelResponse.hints
         });
-        
+
         // Debug: Log starter_xml
         console.log('🔍 Level response starter_xml:', {
           has_starter_xml: !!levelResponse.starter_xml,
@@ -64,7 +69,7 @@ export function useLevelLoader({
           starter_xml_length: levelResponse.starter_xml ? levelResponse.starter_xml.length : 0,
           starter_xml_preview: levelResponse.starter_xml ? levelResponse.starter_xml.substring(0, 100) : null
         });
-        
+
         // Debug: Log test_cases
         console.log('🔍 Level response test_cases:', {
           has_test_cases: !!levelResponse.level_test_cases,
@@ -73,7 +78,7 @@ export function useLevelLoader({
           test_cases: levelResponse.level_test_cases,
           test_cases_raw: JSON.stringify(levelResponse.level_test_cases, null, 2)
         });
-        
+
         // Check if level_test_cases exists but is empty array
         if (levelResponse.level_test_cases && Array.isArray(levelResponse.level_test_cases)) {
           console.log('🔍 level_test_cases is array with length:', levelResponse.level_test_cases.length);
@@ -83,12 +88,12 @@ export function useLevelLoader({
         } else {
           console.log('🔍 level_test_cases is NOT an array or is null/undefined');
         }
-        
+
         // ตรวจสอบว่าด่านถูกปลดล็อคหรือไม่ (สำหรับผู้เล่นปกติ, ไม่ใช่ preview)
         if (!isPreview && levelResponse.is_unlocked === false) {
           throw new Error('ด่านนี้ยังไม่ถูกปลดล็อค กรุณารอให้ admin ทดสอบด่านก่อน');
         }
-        
+
         // Helper functions for data normalization
         const safeParse = (data, defaultValue = []) => {
           if (data === null || data === undefined) return defaultValue;
@@ -140,10 +145,10 @@ export function useLevelLoader({
               difficulty: hint.difficulty || 'basic',
               visualGuide: hint.visualGuide
                 ? {
-                    highlightBlocks: Array.isArray(hint.visualGuide.highlightBlocks)
-                      ? hint.visualGuide.highlightBlocks
-                      : []
-                  }
+                  highlightBlocks: Array.isArray(hint.visualGuide.highlightBlocks)
+                    ? hint.visualGuide.highlightBlocks
+                    : []
+                }
                 : {},
               xmlCheck: hint.xmlCheck
             }));
@@ -257,7 +262,7 @@ export function useLevelLoader({
               console.log(`ℹ️ Pattern "${pattern.pattern_name}" has no weapon_id, using default weapon`);
               weaponKey = "stick"; // Default weapon
             }
-            
+
             return {
               ...pattern,
               name: pattern.pattern_name,
@@ -270,11 +275,11 @@ export function useLevelLoader({
           .filter((pattern, index, self) =>
             index === self.findIndex((p) => p.pattern_id === pattern.pattern_id)
           );
-        
+
         // In preview mode, use all patterns (including is_available = false)
         // In normal mode, only use patterns with is_available = true
-        const goodPatterns = isPreview 
-          ? allPatterns 
+        const goodPatterns = isPreview
+          ? allPatterns
           : allPatterns.filter(p => p.is_available === true);
 
         const backgroundPath = levelResponse.background_image
@@ -305,6 +310,7 @@ export function useLevelLoader({
           subsetSumData: safeParse(levelResponse.subset_sum_data, null),
           coinChangeData: safeParse(levelResponse.coin_change_data, null),
           nqueenData: safeParse(levelResponse.nqueen_data, null),
+          appliedData: safeParse(levelResponse.applied_data, null),
           enabledBlocks: enabledBlocksObj,
           victoryConditions,
           guides,
@@ -316,10 +322,22 @@ export function useLevelLoader({
           // Include category data for DijkstraStateTable
           category: levelResponse.category || null,
           category_id: levelResponse.category_id || null,
+          // Custom data for special levels like Train Schedule
+          customData: levelResponse.custom_data || null,
+          gameType: levelResponse.game_type || (safeParse(levelResponse.applied_data)?.type === 'GREEDY_TRAIN_SCHEDULE' ? 'train_schedule' : null),
+          isMaxCapacityLevel: (levelResponse.level_name && (
+            levelResponse.level_name.toLowerCase().includes('ง้อไบ๊') ||
+            levelResponse.level_name.toLowerCase().includes('emei') ||
+            levelResponse.level_name.toLowerCase().includes('cable car') ||
+            levelResponse.level_name.toLowerCase().includes('minimum')
+          )) ||
+            (safeParse(levelResponse.applied_data)?.type === 'graph_max_capacity' ||
+              safeParse(levelResponse.applied_data)?.type === 'GRAPH_MAX_CAPACITY'),
           // Include starter XML for auto-loading
           starter_xml: levelResponse.starter_xml || null,
           // Include test cases for function return validation
-          test_cases: (levelResponse.level_test_cases || []).map(tc => ({
+          // Fallback to custom_data.test_cases if not provided in top-level response
+          test_cases: (levelResponse.level_test_cases || safeParse(levelResponse.custom_data, {})?.test_cases || []).map(tc => ({
             test_case_id: tc.test_case_id,
             test_case_name: tc.test_case_name,
             is_primary: tc.is_primary,
@@ -336,7 +354,7 @@ export function useLevelLoader({
           starter_xml_type: typeof formattedLevelData.starter_xml,
           starter_xml_length: formattedLevelData.starter_xml ? formattedLevelData.starter_xml.length : 0
         });
-        
+
         console.log("🔍 Final formattedLevelData test_cases:", {
           has_test_cases: !!formattedLevelData.test_cases,
           test_cases_type: typeof formattedLevelData.test_cases,
@@ -344,7 +362,7 @@ export function useLevelLoader({
           test_cases: formattedLevelData.test_cases,
           test_cases_raw: JSON.stringify(formattedLevelData.test_cases, null, 2)
         });
-        
+
         // Verify test_cases structure
         if (formattedLevelData.test_cases && Array.isArray(formattedLevelData.test_cases)) {
           console.log('🔍 ✅ test_cases is valid array');

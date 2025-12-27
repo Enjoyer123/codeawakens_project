@@ -33,10 +33,16 @@ import { createToolboxConfig } from '../../gameutils/utils/blocklyUtils';
 import { loadDfsExampleBlocks } from '../../gameutils/utils/blockly/loadDfsExample';
 import { loadBfsExampleBlocks } from '../../gameutils/utils/blockly/loadBfsExample';
 import { loadKnapsackExampleBlocks } from '../../gameutils/utils/blockly/loadKnapsackExample';
+import { loadDynamicKnapsackExampleBlocks } from '../../gameutils/utils/blockly/loadDynamicKnapsackExample';
 import { loadSubsetSumExampleBlocks } from '../../gameutils/utils/blockly/loadSubsetSumExample';
+import { loadDynamicSubsetSumExampleBlocks } from '../../gameutils/utils/blockly/loadDynamicSubsetSumExample';
 import { loadCoinChangeExampleBlocks } from '../../gameutils/utils/blockly/loadCoinChangeExample';
+import { loadDynamicCoinChangeExampleBlocks } from '../../gameutils/utils/blockly/loadDynamicCoinChangeExample';
+import { loadGreedyCoinChangeExampleBlocks } from '../../gameutils/utils/blockly/loadGreedyCoinChangeExample';
 import { loadDijkstraExampleBlocks } from '../../gameutils/utils/blockly/loadDijkstraExample';
 import { loadPrimExampleBlocks } from '../../gameutils/utils/blockly/loadPrimExample';
+import { loadDynamicAntDpExampleBlocks } from '../../gameutils/utils/blockly/loadDynamicAntDpExample';
+import { loadTrainScheduleExampleBlocks } from '../../gameutils/utils/blockly/loadTrainScheduleExample';
 
 // Import components
 import GameArea from '../../components/playgame/GameArea';
@@ -155,7 +161,7 @@ const LevelGame = () => {
     totalSteps: 0,
     progress: 0
   });
-  
+
   // Debug: Log hintData changes
   useEffect(() => {
     console.log('🔍 [LevelGame] hintData state changed:', hintData);
@@ -195,7 +201,7 @@ const LevelGame = () => {
   useEffect(() => {
     let lastCombatState = isInCombat();
     setInCombatMode(lastCombatState);
-    
+
     const interval = setInterval(() => {
       const currentCombatState = isInCombat();
       // Only update if state changed to prevent infinite loop
@@ -448,7 +454,7 @@ const LevelGame = () => {
       try {
         const newToolbox = createToolboxConfig(enabledBlocks);
         workspaceRef.current.updateToolbox(newToolbox);
-          } catch (error) {
+      } catch (error) {
         console.warn("Error updating toolbox:", error);
       }
     }
@@ -479,7 +485,7 @@ const LevelGame = () => {
   // Priority: hintData.hint > loading message
   useEffect(() => {
     const hintValue = hintData?.hint;
-    
+
     console.log('🔍 [LevelGame] hintData update effect triggered:', {
       hintDataHint: hintValue,
       hintDataHintType: typeof hintValue,
@@ -512,7 +518,7 @@ const LevelGame = () => {
         hintTrimmed: hintValue?.trim(),
         hintIsEmpty: hintValue?.trim() === ''
       });
-      
+
       // If hintData exists but hint is empty, show default message
       // But only if current hint is still the loading message
       if (hintData && (!hintValue || hintValue.trim() === '') && currentHint && currentHint.includes('โหลดด่าน')) {
@@ -709,8 +715,8 @@ const LevelGame = () => {
               // คำนวณ hints จาก currentLevel โดยตรง (ไม่พึ่ง state ซิงค์)
               const baseHints = Array.isArray(currentLevel?.hints)
                 ? [...currentLevel.hints]
-                    .filter(h => h.is_active !== false)
-                    .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+                  .filter(h => h.is_active !== false)
+                  .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
                 : [];
 
               console.log('🔔 Need Hint clicked', {
@@ -755,88 +761,158 @@ const LevelGame = () => {
                   </h2>
                 </div>
               </div>
-          {/* Temporary buttons to load example blocks - Remove after development */}
-          {workspaceRef.current && (
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => {
-                  if (workspaceRef.current) {
-                    loadDfsExampleBlocks(workspaceRef.current);
-                  }
-                }}
-                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded"
-                title="โหลด DFS example blocks (ชั่วคราว - สำหรับทดสอบ)"
-              >
-                📦 โหลด DFS
-              </button>
-              <button
-                onClick={() => {
-                  if (workspaceRef.current) {
-                    loadBfsExampleBlocks(workspaceRef.current);
-                  }
-                }}
-                className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded"
-                title="โหลด BFS example blocks (ชั่วคราว - สำหรับทดสอบ)"
-              >
-                📦 โหลด BFS
-              </button>
-              <button
-                onClick={() => {
-                  if (workspaceRef.current) {
-                    loadDijkstraExampleBlocks(workspaceRef.current);
-                  }
-                }}
-                className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded"
-                title="โหลด Dijkstra example blocks (ชั่วคราว - สำหรับทดสอบ)"
-              >
-                📦 โหลด Dijkstra
-              </button>
-              <button
-                onClick={() => {
-                  if (workspaceRef.current) {
-                    loadPrimExampleBlocks(workspaceRef.current);
-                  }
-                }}
-                className="px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white text-sm rounded"
-                title="โหลด Prim example blocks (ชั่วคราว - สำหรับทดสอบ)"
-              >
-                📦 โหลด Prim
-              </button>
-              <button
-                onClick={() => {
-                  if (workspaceRef.current) {
-                    loadKnapsackExampleBlocks(workspaceRef.current);
-                  }
-                }}
-                className="px-3 py-1 bg-pink-600 hover:bg-pink-700 text-white text-sm rounded"
-                title="โหลด Knapsack example blocks (ชั่วคราว - สำหรับทดสอบ)"
-              >
-                📦 โหลด Knapsack
-              </button>
-              <button
-                onClick={() => {
-                  if (workspaceRef.current) {
-                    loadSubsetSumExampleBlocks(workspaceRef.current);
-                  }
-                }}
-                className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded"
-                title="โหลด Subset Sum example blocks (ชั่วคราว - สำหรับทดสอบ)"
-              >
-                ➕ โหลด Subset Sum
-              </button>
-              <button
-                onClick={() => {
-                  if (workspaceRef.current) {
-                    loadCoinChangeExampleBlocks(workspaceRef.current);
-                  }
-                }}
-                className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded"
-                title="โหลด Coin Change example blocks (ชั่วคราว - สำหรับทดสอบ)"
-              >
-                🪙 โหลด Coin Change
-              </button>
-            </div>
-          )}
+              {/* Temporary buttons to load example blocks - Remove after development */}
+              {workspaceRef.current && (
+                <div className="flex flex-wrap gap-2 max-h-28 overflow-y-auto pr-1">
+                  <button
+                    onClick={() => {
+                      if (workspaceRef.current) {
+                        loadDfsExampleBlocks(workspaceRef.current);
+                      }
+                    }}
+                    className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded"
+                    title="โหลด DFS example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                  >
+                    📦 โหลด DFS
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (workspaceRef.current) {
+                        loadTrainScheduleExampleBlocks(workspaceRef.current);
+                      }
+                    }}
+                    className="px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white text-sm rounded"
+                    title="โหลด Train Schedule Blocks"
+                  >
+                    📦 โหลด Train Schedule
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (workspaceRef.current) {
+                        loadBfsExampleBlocks(workspaceRef.current);
+                      }
+                    }}
+                    className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded"
+                    title="โหลด BFS example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                  >
+                    📦 โหลด BFS
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (workspaceRef.current) {
+                        loadDijkstraExampleBlocks(workspaceRef.current);
+                      }
+                    }}
+                    className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded"
+                    title="โหลด Dijkstra example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                  >
+                    📦 โหลด Dijkstra
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (workspaceRef.current) {
+                        loadPrimExampleBlocks(workspaceRef.current);
+                      }
+                    }}
+                    className="px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white text-sm rounded"
+                    title="โหลด Prim example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                  >
+                    📦 โหลด Prim
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (workspaceRef.current) {
+                        loadKnapsackExampleBlocks(workspaceRef.current);
+                      }
+                    }}
+                    className="px-3 py-1 bg-pink-600 hover:bg-pink-700 text-white text-sm rounded"
+                    title="โหลด Knapsack example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                  >
+                    📦 โหลด Knapsack
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (workspaceRef.current) {
+                        loadDynamicKnapsackExampleBlocks(workspaceRef.current);
+                      }
+                    }}
+                    className="px-3 py-1 bg-pink-700 hover:bg-pink-800 text-white text-sm rounded"
+                    title="โหลด Dynamic Knapsack (DP) example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                  >
+                    📦 โหลด Dynamic Knap
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (workspaceRef.current) {
+                        loadSubsetSumExampleBlocks(workspaceRef.current);
+                      }
+                    }}
+                    className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded"
+                    title="โหลด Subset Sum example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                  >
+                    ➕ โหลด Subset Sum
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (workspaceRef.current) {
+                        loadDynamicSubsetSumExampleBlocks(workspaceRef.current);
+                      }
+                    }}
+                    className="px-3 py-1 bg-purple-700 hover:bg-purple-800 text-white text-sm rounded"
+                    title="โหลด Dynamic Subset Sum (DP) example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                  >
+                    ➕ โหลด Dynamic Subset
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (workspaceRef.current) {
+                        loadCoinChangeExampleBlocks(workspaceRef.current);
+                      }
+                    }}
+                    className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded"
+                    title="โหลด Coin Change example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                  >
+                    🪙 โหลด Coin Change
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (workspaceRef.current) {
+                        loadDynamicCoinChangeExampleBlocks(workspaceRef.current);
+                      }
+                    }}
+                    className="px-3 py-1 bg-indigo-700 hover:bg-indigo-800 text-white text-sm rounded"
+                    title="โหลด Dynamic Coin Change (DP) example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                  >
+                    🪙 โหลด Dynamic Coin
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (workspaceRef.current) {
+                        loadGreedyCoinChangeExampleBlocks(workspaceRef.current);
+                      }
+                    }}
+                    className="px-3 py-1 bg-indigo-800 hover:bg-indigo-900 text-white text-sm rounded"
+                    title="โหลด Greedy Coin Change example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                  >
+                    🪙 โหลด Coin Greedy
+                  </button>
+
+                  {/* Ant DP (Applied Dynamic) */}
+                  {currentLevel?.appliedData?.type?.includes('ANT') && (
+                    <button
+                      onClick={() => {
+                        if (workspaceRef.current) {
+                          loadDynamicAntDpExampleBlocks(workspaceRef.current);
+                        }
+                      }}
+                      className="px-3 py-1 bg-emerald-700 hover:bg-emerald-800 text-white text-sm rounded"
+                      title="โหลด Ant DP example blocks (แบบสั้น - สำหรับโชว์ตาราง)"
+                    >
+                      🐜 โหลด Ant (สั้น)
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
