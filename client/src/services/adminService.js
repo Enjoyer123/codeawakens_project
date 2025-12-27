@@ -112,4 +112,53 @@ export const deleteUser = async (getToken, userId) => {
     } catch (error) {
       throw error;
     }
+  
+  };
+
+export const resetUserTestScore = async (getToken, userId, type) => {
+    try {
+      const token = await getToken();
+      if (!token) throw new Error('No token');
+  
+      const response = await fetch(`${API_BASE_URL}/api/users/${userId}/reset-test`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ type }), // 'pre' or 'post'
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Failed to reset score' }));
+        throw new Error(errorData.message || 'Failed to reset score');
+      }
+  
+      return await response.json();
+    } catch (error) {
+      throw error;
+    }
+  };
+
+export const fetchUserTestHistory = async (getToken, userId) => {
+    try {
+      const token = await getToken();
+      if (!token) throw new Error('No token');
+  
+      const response = await fetch(`${API_BASE_URL}/api/users/${userId}/tests`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Failed to fetch history' }));
+        throw new Error(errorData.message || 'Failed to fetch history');
+      }
+  
+      return await response.json();
+    } catch (error) {
+      throw error;
+    }
   };

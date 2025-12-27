@@ -11,7 +11,7 @@ import {
 } from '../../../services/levelService';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, Eye, Play, Lightbulb, Blocks } from 'lucide-react';
+import { Edit, Trash2, Eye, Play, Lightbulb, Blocks, Terminal, BookOpen } from 'lucide-react';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import SearchInput from '@/components/admin/formFields/SearchInput';
@@ -357,6 +357,24 @@ const LevelManagement = () => {
                             >
                               <Lightbulb className="h-4 w-4 mr-2" />
                               Hints
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => navigate(`/admin/levels/${level.level_id}/guides`)}
+                              className="text-cyan-600 hover:text-cyan-700 hover:bg-cyan-50"
+                            >
+                              <BookOpen className="h-4 w-4 mr-2" />
+                              Guides
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => navigate(`/admin/levels/${level.level_id}/test-cases`)}
+                              className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                            >
+                              <Terminal className="h-4 w-4 mr-2" />
+                              Test Cases
                             </Button>
                             <Button
                               variant="outline"

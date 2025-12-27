@@ -108,7 +108,7 @@ const PreviewLevel = () => {
   }
 
   return (
-    <div className="h-screen w-screen overflow-hidden">
+    <div className="h-full w-full overflow-hidden">
       <GameCore
         levelId={levelId}
         isPreview={true}

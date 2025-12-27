@@ -1082,11 +1082,15 @@ const PhaserMapEditor = ({
 
           const config = {
             type: window.Phaser.AUTO,
-            width: canvasSize.width,
-            height: canvasSize.height,
+            width: 1200,
+            height: 920,
             parent: gameRef.current,
             backgroundColor: '#000000',
             scene: EditorScene,
+            scale: {
+              mode: window.Phaser.Scale.FIT,
+              autoCenter: window.Phaser.Scale.CENTER_BOTH
+            },
             physics: {
               default: 'arcade',
               arcade: {
@@ -1153,7 +1157,17 @@ const PhaserMapEditor = ({
           </div>
         </div>
       ) : (
-        <div ref={gameRef} id="phaser-game-container" style={{ width: '100%', height: `${canvasSize.height}px`, display: 'flex', justifyContent: 'center' }}></div>
+        <div 
+          ref={gameRef} 
+          id="phaser-game-container" 
+          style={{ 
+            width: '100%', 
+            height: '100%', 
+            display: 'flex', 
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}
+        ></div>
       )}
     </div>
   );

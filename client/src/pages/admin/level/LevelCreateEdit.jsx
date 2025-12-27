@@ -37,7 +37,7 @@ const LevelCreateEdit = () => {
   
   const [backgroundImage, setBackgroundImage] = useState(null);
   const [backgroundImageUrl, setBackgroundImageUrl] = useState(null);
-  const [canvasSize] = useState({ width: 1200, height: 700 });
+  const [canvasSize] = useState({ width: 1200, height: 920 });
   const [currentMode, setCurrentMode] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
   const [coinValue, setCoinValue] = useState(10); // ค่าเริ่มต้นสำหรับเหรียญ
@@ -386,9 +386,9 @@ const LevelCreateEdit = () => {
           }
         />
 
-        <div className="grid grid-cols-12 gap-6 h-[calc(100vh-140px)]">
+        <div className="grid grid-cols-12 gap-6 lg:h-[calc(100vh-140px)] h-auto">
            {/* Left Sidebar: Tools & Properties */}
-           <div className="col-span-12 lg:col-span-4 xl:col-span-3 flex flex-col gap-4 overflow-hidden h-full">
+           <div className="col-span-12 lg:col-span-4 xl:col-span-3 flex flex-col gap-4 overflow-hidden lg:h-full h-[600px]">
               <Tabs defaultValue="settings" className="flex flex-col h-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
                  <div className="px-4 pt-4 bg-white border-b border-gray-100">
                    <TabsList className="w-full p-1 bg-white border border-gray-200 rounded-lg">
@@ -482,7 +482,7 @@ const LevelCreateEdit = () => {
            </div>
 
            {/* Main Workspace: Canvas */}
-           <div className="col-span-12 lg:col-span-8 xl:col-span-9 flex flex-col h-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden relative">
+           <div className="col-span-12 lg:col-span-8 xl:col-span-9 flex flex-col lg:h-full h-[600px] bg-white border border-gray-200 rounded-xl shadow-xl relative">
               {/* Toolbar Header for Canvas */}
               <div className="h-14 bg-gray-50 border-b border-gray-200 flex items-center justify-between px-4">
                  <div className="flex items-center gap-2 overflow-x-auto">
@@ -513,8 +513,8 @@ const LevelCreateEdit = () => {
               </div>
 
               {/* Canvas Container */}
-              <div className="flex-1 bg-gray-100 overflow-hidden relative flex items-center justify-center p-8">
-                  <div className="shadow-lg border-white rounded-lg overflow-hidden relative">
+              <div className="flex-1 bg-white relative flex items-center justify-center p-0 lg:p-8 overflow-hidden">
+                  <div className="shadow-lg border-white rounded-lg relative w-full h-full flex items-center justify-center">
                      <PhaserMapEditor
                         canvasSize={canvasSize}
                         backgroundImageUrl={backgroundImageUrl}

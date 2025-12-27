@@ -96,7 +96,8 @@ export function useCodeExecution({
   canMoveForward,
   nearPit,
   atGoal,
-  setHintData
+  setHintData,
+  setTestCaseResult
 }) {
   const runCode = async () => {
     console.log("runCode function called!");
@@ -134,7 +135,13 @@ export function useCodeExecution({
     setGameState("running");
     setIsCompleted(false);
     setIsGameOver(false);
+    setIsGameOver(false);
     setCurrentHint("🏃 กำลังเรียกใช้โปรแกรม...");
+
+    // Clear previous test results
+    if (setTestCaseResult) {
+      setTestCaseResult(null);
+    }
 
     // Setup Cable Car API bridge for visual feedback
     const isEmeiMountain = currentLevel?.level_name?.includes('ง้อไบ๊') ||
@@ -3120,6 +3127,11 @@ async function ${originalName}(${paramsStr}) {
           testCaseResult: testCaseResult
         });
         console.log("🔍 Stored testCaseResult in game state");
+
+        // Update UI with test results
+        if (setTestCaseResult) {
+          setTestCaseResult(testCaseResult);
+        }
 
         if (!testCaseResult.passed) {
           setCurrentHint(testCaseResult.message);

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Users, Map, Award, Sword, Bell, LayoutDashboard, ChevronLeft, ChevronRight, Book, Blocks, Trophy, FolderTree } from 'lucide-react';
+import { Users, Map, Award, Sword, Bell, LayoutDashboard, ChevronLeft, ChevronRight, Blocks, Trophy, FolderTree, Book } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const AdminSidebar = () => {
@@ -41,10 +41,11 @@ const AdminSidebar = () => {
       icon: Award,
     },
     {
-      label: 'Guide Management',
-      path: '/admin/guides',
+      label: 'Test Management',
+      path: '/admin/tests',
       icon: Book,
     },
+
     {
       label: 'Block Management',
       path: '/admin/blocks',
