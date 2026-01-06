@@ -7,12 +7,11 @@ import { allPeopleRescued, getRescuedPeople } from '../items/personUtils';
  * ตรวจสอบเงื่อนไขชนะตาม victoryConditions ที่กำหนดใน level
  * @param {Array} victoryConditions - อาร์เรย์ของเงื่อนไขชนะ
  * @param {Object} levelData - ข้อมูลด่าน
- * @returns {Object} - ผลลัพธ์การตรวจสอบ { completed: boolean, message: string, failedConditions: Array }
+ * @param {Object|null} overrideState - (Optional) State to use instead of getCurrentGameState()
  */
-export function checkVictoryConditions(victoryConditions, levelData) {
+export function checkVictoryConditions(victoryConditions, levelData, overrideState = null) {
   console.log("🔍 checkVictoryConditions called");
-  console.log("🔍 victoryConditions:", victoryConditions);
-  console.log("🔍 levelData.id:", levelData.id);
+  console.log("🔍 using overrideState:", !!overrideState);
 
   if (!victoryConditions || victoryConditions.length === 0) {
     console.log("🔍 No victory conditions found");
@@ -23,7 +22,7 @@ export function checkVictoryConditions(victoryConditions, levelData) {
     };
   }
 
-  const currentState = getCurrentGameState();
+  const currentState = overrideState || getCurrentGameState();
   console.log("🔍 Current state:", currentState);
   console.log("🔍 testCaseResult in currentState:", currentState.testCaseResult);
   const failedConditions = [];
@@ -328,7 +327,7 @@ function checkMSTConnected(levelData) {
   // BFS to check connectivity
   while (queue.length > 0) {
     const currentNodeId = queue.shift();
-    
+
     if (visited.has(currentNodeId)) {
       continue;
     }
@@ -346,7 +345,7 @@ function checkMSTConnected(levelData) {
 
   // Check if all nodes are visited
   const allNodesVisited = levelData.nodes.every(node => visited.has(node.id));
-  
+
   console.log("🔍 MST Connected check:", {
     totalNodes: levelData.nodes.length,
     visitedNodes: visited.size,

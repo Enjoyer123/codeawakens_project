@@ -276,7 +276,7 @@ const TestCaseManagement = () => {
               <h2 className="text-lg font-semibold border-b pb-2">
                 {editingTestCase ? 'แก้ไข Test Case' : 'เพิ่ม Test Case ใหม่'}
               </h2>
-              
+
               <ErrorAlert message={saveError} />
 
               <div className="grid grid-cols-1 gap-4">
@@ -317,14 +317,37 @@ const TestCaseManagement = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">
-                      Expected Output (JSON)
+                      Expected Output
                     </label>
-                    <textarea
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm font-mono h-[120px]"
-                      value={formData.expected_output}
-                      onChange={e => setFormData({ ...formData, expected_output: e.target.value })}
-                      placeholder='[1, 2, 3]'
-                    />
+                    {formData.comparison_type === 'boolean_equals' ? (
+                      <select
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                        value={formData.expected_output === 'true' || formData.expected_output === true ? 'true' : 'false'}
+                        onChange={(e) => setFormData({ ...formData, expected_output: e.target.value })}
+                      >
+                        <option value="true">True</option>
+                        <option value="false">False</option>
+                      </select>
+                    ) : formData.comparison_type === 'number_equals' ? (
+                      <input
+                        type="number"
+                        step="any"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                        value={formData.expected_output}
+                        onChange={(e) => setFormData({ ...formData, expected_output: e.target.value })}
+                        placeholder="e.g. 10.5"
+                      />
+                    ) : (
+                      <textarea
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm font-mono h-[120px]"
+                        value={typeof formData.expected_output === 'string' ? formData.expected_output : JSON.stringify(formData.expected_output, null, 2)}
+                        onChange={(e) => setFormData({ ...formData, expected_output: e.target.value })}
+                        placeholder='[1, 2, 3]'
+                      />
+                    )}
+                    {formData.comparison_type !== 'boolean_equals' && formData.comparison_type !== 'number_equals' && (
+                      <p className="text-xs text-gray-500 mt-1">Accepts valid JSON format (e.g. [1, 2] or 40.5)</p>
+                    )}
                   </div>
                 </div>
 
@@ -334,12 +357,37 @@ const TestCaseManagement = () => {
                     <select
                       className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
                       value={formData.comparison_type}
-                      onChange={e => setFormData({ ...formData, comparison_type: e.target.value })}
+                      onChange={(e) => {
+                        const newType = e.target.value;
+                        let newOutput = formData.expected_output;
+
+                        // Auto-reset expected output based on target type
+                        if (newType === 'boolean_equals') {
+                          newOutput = 'true';
+                        } else if (newType === 'number_equals') {
+                          // Try to parse existing as number, else reset to 0
+                          const num = parseFloat(newOutput);
+                          newOutput = isNaN(num) ? '0' : String(num);
+                        } else if (newType === 'array_equals') {
+                          // Switching to Array Equals -> Ensure it looks like an array
+                          if (!newOutput || newOutput === 'true' || newOutput === 'false') {
+                            newOutput = '[]';
+                          } else if (!newOutput.trim().startsWith('[')) {
+                            // Wrap scalar (like '0' or '10.5') in array
+                            newOutput = `[${newOutput}]`;
+                          }
+                        } else {
+                          // Switching to Exact Match (JSON) -> 0 or scalars are fine
+                          if (!newOutput || newOutput === 'true' || newOutput === 'false') newOutput = '{}';
+                        }
+
+                        setFormData({ ...formData, comparison_type: newType, expected_output: newOutput });
+                      }}
                     >
-                      <option value="exact">Exact Match</option>
-                      <option value="contains">Contains</option>
+                      <option value="exact">Exact Match (JSON)</option>
                       <option value="array_equals">Array Equals (Order insensitive)</option>
                       <option value="number_equals">Number Equals</option>
+                      <option value="boolean_equals">Boolean Equals</option>
                     </select>
                   </div>
                   <div>
@@ -391,7 +439,7 @@ const TestCaseManagement = () => {
           deleting={deleting}
         />
       </div>
-    </div>
+    </div >
   );
 };
 

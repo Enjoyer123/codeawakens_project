@@ -22,6 +22,7 @@ export {
   getWeaponData,
   calculateDamage,
   displayPlayerWeapon,
+  displayPlayerEffect,
   updateWeaponPosition,
   getPlayerWeaponSprite,
   updatePlayerWeaponDisplay,
@@ -82,7 +83,8 @@ export {
   hasTreasure,
   treasureCollected,
   stackEmpty,
-  stackCount
+  stackCount,
+  getCollectedTreasures
 } from './items/stackUtils';
 
 // Movement utilities

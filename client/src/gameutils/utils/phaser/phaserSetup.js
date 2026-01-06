@@ -399,7 +399,7 @@ export function setupMonsters(scene) {
     return;
   }
 
-  scene.monsters = [];
+  if (!scene.monsters) scene.monsters = [];
 
   scene.levelData.monsters.forEach((monsterData, index) => {
     try {
@@ -431,7 +431,7 @@ export function setupMonsters(scene) {
 
       // Create vampire sprite instead of circle
       const monsterSprite = scene.add.sprite(startPos.x, startPos.y, 'vampire');
-      monsterSprite.setScale(1.8); // Increase sprite size
+      monsterSprite.setScale(1.8); // Restored to standard size
       monsterSprite.setData('defaultScale', 1.8);
       monsterSprite.setDepth(8);
 
@@ -519,7 +519,9 @@ export function drawPlayer(scene) {
 
     // Create player sprite instead of circle
     scene.player = scene.add.sprite(playerX, playerY, 'player');
-    scene.player.setScale(1.8); // Increase sprite size
+    const playerScale = 1.8; // Restored to standard size
+    scene.player.setScale(playerScale);
+    scene.player.setData('defaultScale', 1.8);
     scene.player.setDepth(8);
 
     // Set player properties for new utility functions
@@ -556,6 +558,59 @@ export function drawPlayer(scene) {
     }, 100);
   } catch (error) {
     console.error('❌ Error creating player:', error);
+  }
+}
+
+// Function to draw cinematic monster (idle state) for no-node levels
+export function drawCinematicMonster(scene) {
+  if (!scene || !scene.levelData) return;
+  if (!scene.add) return;
+
+  // Check condition: Only draw if level has no nodes (same logic as drawPlayer for cinematic placement)
+  // FIX: Also check startNode. If nodes exist but no startNode, drawPlayer falls back to cinematic, so we should too.
+  const hasNodes = scene.levelData.nodes && scene.levelData.nodes.length > 0;
+  const startNode = hasNodes ? scene.levelData.nodes.find(n => n.id === scene.levelData.startNodeId) : null;
+
+  const isCinematic = !hasNodes || !startNode;
+  console.log('DEBUG: drawCinematicMonster checking:', { hasNodes, hasStartNode: !!startNode, isCinematic });
+
+  if (!isCinematic) return; // Skip for normal node-based levels
+
+  const width = scene.scale.width;
+  const height = scene.scale.height;
+  // Match the specific height used in drawPlayer fallback (bottom-left)
+  // drawPlayer uses: scene.scale.height - 100
+  // So we use same Y for alignment
+  const monsterY = height - 100;
+  const monsterX = width - 100;
+
+  console.log('🎬 Drawing Cinematic Monster at', monsterX, monsterY);
+
+  try {
+    const monster = scene.add.sprite(monsterX, monsterY, 'vampire');
+    monster.setScale(1.8); // Restored to standard size
+    monster.setData('defaultScale', 1.8);
+    monster.setDepth(8);
+    monster.setFlipX(true); // Face left towards player
+
+    // Play idle animation
+    if (monster.anims && scene.anims.exists('vampire-idle')) {
+      monster.play('vampire-idle');
+    }
+
+    // Add to scene.monsters so it gets cleaned up properly
+    if (!scene.monsters) scene.monsters = [];
+
+    // Wrap it in a structure compatible with updateMonsters loop to avoid crashes
+    // but mark it as 'cinematic' so it doesn't try to patrol/chase
+    scene.monsters.push({
+      sprite: monster,
+      isCinematic: true,
+      data: { hp: 100, maxHp: 100, defeated: false }
+    });
+
+  } catch (err) {
+    console.error('❌ Error drawing cinematic monster:', err);
   }
 }
 

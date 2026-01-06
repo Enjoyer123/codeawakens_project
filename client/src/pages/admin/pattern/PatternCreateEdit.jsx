@@ -94,22 +94,22 @@ const PatternCreateEdit = () => {
       // ใช้ polling ตรวจสอบว่า blocks พร้อมแล้ว แทนการใช้ fixed delay
       let checkCount = 0;
       const maxChecks = 30; // สูงสุด 30 ครั้ง (3 วินาที) เป็น fallback
-      
+
       const checkAndCleanup = () => {
         checkCount++;
-        
+
         if (!workspaceRef.current) {
           isXmlLoadingRef.current = false;
           setBlocklyProcessing(false);
           return;
         }
-        
+
         const allBlocks = workspaceRef.current.getAllBlocks(false);
-        const callBlocks = allBlocks.filter(b => 
+        const callBlocks = allBlocks.filter(b =>
           (b.type === 'procedures_callreturn' || b.type === 'procedures_callnoreturn') &&
           !b.isInFlyout && !b.isDisposed()
         );
-        
+
         // ตรวจสอบว่าทุก call block มีชื่อแล้ว
         const allReady = callBlocks.length === 0 || callBlocks.every(cb => {
           try {
@@ -117,19 +117,19 @@ const PatternCreateEdit = () => {
             const hasName = name && name !== 'unnamed' && name !== 'undefined' && name.trim();
             const hasField = cb.getField('NAME') !== null;
             return hasName && hasField && !cb.isDisposed();
-          } catch (e) { 
-            return false; 
+          } catch (e) {
+            return false;
           }
         });
-        
+
         if (allReady || checkCount >= maxChecks) {
           // Blocks พร้อมแล้ว หรือถึงเวลาสูงสุดแล้ว - ทำ cleanup
           isXmlLoadingRef.current = false;
-          
+
           if (cleanupDuplicateProceduresRef.current) {
             cleanupDuplicateProceduresRef.current();
           }
-          
+
           // รอ cleanup เสร็จ (cleanup ใช้เวลา ~300-500ms)
           setTimeout(() => {
             setBlocklyProcessing(false);
@@ -139,7 +139,7 @@ const PatternCreateEdit = () => {
           setTimeout(checkAndCleanup, 100);
         }
       };
-      
+
       // เริ่มตรวจสอบหลังจาก 200ms (ให้ Blockly สร้าง blocks ก่อน)
       setTimeout(checkAndCleanup, 200);
     }
@@ -252,12 +252,12 @@ const PatternCreateEdit = () => {
 
           // Load steps from hints - ถ้า xmlCheck ว่างให้ใส่ starter_xml
           if (hintsArray && Array.isArray(hintsArray) && hintsArray.length > 0) {
-            const loadedSteps = hintsArray.map((hint, index) => {
+            const loadedSteps = hintsArray.slice(0, 3).map((hint, index) => {
               // ใช้ xmlCheck ถ้ามี ไม่งั้น fallback เป็น starter_xml เพื่อไม่ให้ workspace ว่างเปล่า
               const xml = (hint.xmlCheck && hint.xmlCheck.trim())
                 ? hint.xmlCheck
                 : (pattern.starter_xml || '<xml xmlns="https://developers.google.com/blockly/xml"></xml>');
-              
+
               return {
                 step: index,
                 xml: xml
@@ -328,7 +328,7 @@ const PatternCreateEdit = () => {
     const saveBeforeSwitch = async () => {
       try {
         const prevStepIndex = prevStepIndexRef.current;
-        
+
         // ถ้ายังอยู่ step เดิม หรือ index ไม่ valid ไม่ต้องเซฟ
         if (prevStepIndex === currentStepIndex || prevStepIndex < 0) {
           prevStepIndexRef.current = currentStepIndex;
@@ -357,7 +357,7 @@ const PatternCreateEdit = () => {
             }
           }
 
-              const currentSteps = [...stepsRef.current];
+          const currentSteps = [...stepsRef.current];
           while (currentSteps.length <= prevStepIndex) currentSteps.push(null);
 
           const existing = currentSteps[prevStepIndex];
@@ -365,23 +365,23 @@ const PatternCreateEdit = () => {
 
           // อัปเดตเฉพาะเมื่อ XML เปลี่ยนจริง ๆ
           if (!isSame) {
-                currentSteps[prevStepIndex] = {
+            currentSteps[prevStepIndex] = {
               ...(existing || { step: prevStepIndex }),
-                  xml: xmlText,
+              xml: xmlText,
               xmlCheck: xmlText,
-                };
-                stepsRef.current = currentSteps;
-                setSteps(currentSteps);
+            };
+            stepsRef.current = currentSteps;
+            setSteps(currentSteps);
           }
         }
-        
+
         // อัปเดต ref สำหรับรอบถัดไป
         prevStepIndexRef.current = currentStepIndex;
       } catch (e) {
         prevStepIndexRef.current = currentStepIndex;
       }
     };
-    
+
     // เรียกด้วย await เพื่อไม่ให้ซ้อนซ้ำ
     (async () => { await saveBeforeSwitch(); })();
 
@@ -427,7 +427,7 @@ const PatternCreateEdit = () => {
     // 1. ตรวจสอบว่ามี Step ที่ถูกต้องหรือไม่
     if (currentStepIndex < 0 || currentStepIndex > steps.length) {
       workspaceRef.current.clear();
-      
+
       // Clear variable map เพื่อป้องกัน variable ID conflict
       const variableMap = workspaceRef.current.getVariableMap();
       if (variableMap) {
@@ -439,26 +439,28 @@ const PatternCreateEdit = () => {
           }
         });
       }
-      
+
       if (hasStarterXml) {
         setTimeout(() => {
           try {
             if (!workspaceRef.current) return;
-            
+
             // Helper function: Remove variable IDs from XML to prevent conflicts
             const removeVariableIdsFromXml = (xmlString) => {
               if (!xmlString) return xmlString;
               // Remove all variable id attributes from XML
               return xmlString.replace(/varid="[^"]*"/g, '');
             };
-            
+
             // Remove variable IDs from starter XML to prevent conflicts
             const cleanedStarterXml = removeVariableIdsFromXml(starter_xml);
             const xml = Blockly.utils.xml.textToDom(cleanedStarterXml);
             loadXmlDomSafely(xml);
-            } catch (err) {
-            }
-          }, 500); // เพิ่ม delay จาก 100ms เป็น 500ms เพื่อให้ call blocks ไม่หายไป
+          } catch (err) {
+          }
+        }, 500); // เพิ่ม delay จาก 100ms เป็น 500ms เพื่อให้ call blocks ไม่หายไป
+      } else {
+        setBlocklyProcessing(false);
       }
       return;
     }
@@ -469,17 +471,17 @@ const PatternCreateEdit = () => {
       const previousStepIndex = steps.length - 1;
       const previousStep = previousStepIndex >= 0 ? steps[previousStepIndex] : null;
       const previousStepXml = previousStep?.xml || previousStep?.xmlCheck || '';
-      
+
       // CRITICAL: ALWAYS set flag to true for new steps to prevent cleanup
       // This ensures starter XML blocks (including call blocks) are preserved
       isLoadingFromPreviousStepRef.current = true;
-      
+
       // ถ้ามี step ก่อนหน้า - โหลด XML จาก step ก่อนหน้า (ซึ่งมี starter + all previous steps)
       if (previousStepXml && previousStepXml.trim()) {
         try {
           // เคลียร์ workspace และ variables ก่อน
           workspaceRef.current.clear();
-          
+
           // Clear variable map เพื่อป้องกัน variable ID conflict
           const variableMap = workspaceRef.current.getVariableMap();
           if (variableMap) {
@@ -516,21 +518,21 @@ const PatternCreateEdit = () => {
 
               // Remove variable IDs from previous step XML to prevent conflicts
               const cleanedPreviousStepXml = removeVariableIdsFromXml(previousStepXml);
-              
+
               // ใช้ XML จาก step ก่อนหน้า (ซึ่งมี starter + all previous steps)
               const xml = Blockly.utils.xml.textToDom(cleanedPreviousStepXml);
               loadXmlDomSafely(xml);
               starterXmlLoadedRef.current = true; // Mark as loaded
-              
+
               // CRITICAL: Fix call blocks immediately after loading to prevent auto-creation of wrong procedure names
               setTimeout(() => {
                 try {
                   const definitionBlocks = workspaceRef.current.getBlocksByType('procedures_defreturn', false)
                     .concat(workspaceRef.current.getBlocksByType('procedures_defnoreturn', false));
-                  
+
                   const callBlocks = workspaceRef.current.getBlocksByType('procedures_callreturn', false)
                     .concat(workspaceRef.current.getBlocksByType('procedures_callnoreturn', false));
-                  
+
                   // Get valid procedure names from definitions
                   const validProcedureNames = new Set();
                   definitionBlocks.forEach(defBlock => {
@@ -542,7 +544,7 @@ const PatternCreateEdit = () => {
                     } catch (e) {
                     }
                   });
-                  
+
                   // Fix each call block to use a valid procedure name
                   callBlocks.forEach(callBlock => {
                     try {
@@ -589,12 +591,12 @@ const PatternCreateEdit = () => {
         // CRITICAL: Also set flag to true when loading starter XML for first step
         // This ensures starter XML blocks are preserved
         isLoadingFromPreviousStepRef.current = true;
-        
+
         // ถ้า starter XML ถูกโหลดแล้วและ workspace มี blocks อยู่แล้ว - ไม่ต้อง clear
         const existingBlocks = workspaceRef.current.getAllBlocks(false);
         if (!starterXmlLoadedRef.current || existingBlocks.length === 0) {
           workspaceRef.current.clear();
-          
+
           // Clear variable map เพื่อป้องกัน variable ID conflict
           const variableMap = workspaceRef.current.getVariableMap();
           if (variableMap) {
@@ -607,7 +609,7 @@ const PatternCreateEdit = () => {
             });
           }
         }
-        
+
         // Load starter XML if available and not already loaded
         if (hasStarterXml && !starterXmlLoadedRef.current) {
           setTimeout(() => {
@@ -617,14 +619,14 @@ const PatternCreateEdit = () => {
             }
             try {
               if (!workspaceRef.current) return;
-              
+
               // Helper function: Remove variable IDs from XML to prevent conflicts
               const removeVariableIdsFromXml = (xmlString) => {
                 if (!xmlString) return xmlString;
                 // Remove all variable id attributes from XML
                 return xmlString.replace(/varid="[^"]*"/g, '');
               };
-              
+
               // Remove variable IDs from starter XML to prevent conflicts
               const cleanedStarterXml = removeVariableIdsFromXml(starter_xml);
               const xml = Blockly.utils.xml.textToDom(cleanedStarterXml);
@@ -636,6 +638,7 @@ const PatternCreateEdit = () => {
           }, 150);
         } else if (!hasStarterXml) {
           starterXmlLoadedRef.current = false;
+          setBlocklyProcessing(false);
         }
         // Keep flag as true for new steps to prevent cleanup
         // isLoadingFromPreviousStepRef.current remains true
@@ -650,10 +653,10 @@ const PatternCreateEdit = () => {
       // เพื่อป้องกันไม่ให้ starter XML หายไป
       // CRITICAL: Set flag to true when loading without step (new step scenario)
       isLoadingFromPreviousStepRef.current = true;
-      
+
       if (!starterXmlLoadedRef.current) {
         workspaceRef.current.clear();
-        
+
         // Clear variable map เพื่อป้องกัน variable ID conflict
         const variableMap = workspaceRef.current.getVariableMap();
         if (variableMap) {
@@ -666,7 +669,7 @@ const PatternCreateEdit = () => {
           });
         }
       }
-      
+
       if (hasStarterXml && !starterXmlLoadedRef.current) {
         setTimeout(() => {
           // Check effectKey again before loading
@@ -675,14 +678,14 @@ const PatternCreateEdit = () => {
           }
           try {
             if (!workspaceRef.current) return;
-            
+
             // Helper function: Remove variable IDs from XML to prevent conflicts
             const removeVariableIdsFromXml = (xmlString) => {
               if (!xmlString) return xmlString;
               // Remove all variable id attributes from XML
               return xmlString.replace(/varid="[^"]*"/g, '');
             };
-            
+
             // Remove variable IDs from starter XML to prevent conflicts
             const cleanedStarterXml = removeVariableIdsFromXml(starter_xml);
             const xml = Blockly.utils.xml.textToDom(cleanedStarterXml);
@@ -694,6 +697,7 @@ const PatternCreateEdit = () => {
         }, 150);
       } else if (!hasStarterXml) {
         starterXmlLoadedRef.current = false;
+        setBlocklyProcessing(false);
       }
       return;
     }
@@ -701,7 +705,7 @@ const PatternCreateEdit = () => {
     // CRITICAL: Reset flag to false when editing existing step (not new step)
     // This ensures duplicate removal works correctly for existing steps
     isLoadingFromPreviousStepRef.current = false;
-    
+
     const xmlToLoad = currentStep.xml;
 
     // กำหนด Delay: 250ms สำหรับ Initial load (Step 0) เพื่อให้ Blockly มีเวลาในการสร้างตัวเองให้เสร็จ
@@ -717,7 +721,7 @@ const PatternCreateEdit = () => {
       try {
         // เคลียร์ workspace และ variables ก่อน (เพื่อป้องกัน variable ID conflict)
         workspaceRef.current.clear();
-        
+
         // Clear variable map เพื่อป้องกัน variable ID conflict
         const variableMap = workspaceRef.current.getVariableMap();
         if (variableMap) {
@@ -781,18 +785,18 @@ const PatternCreateEdit = () => {
                 // Use string manipulation instead of DOM to avoid serialization issues
                 const addMutationToProcedureDefinitions = (xmlString) => {
                   if (!xmlString) return xmlString;
-                  
+
                   try {
                     // First, extract parameters from call blocks using regex
                     const callBlockRegex = /<block[^>]*type="procedures_call(return|noreturn)"[^>]*>[\s\S]*?<\/block>/g;
                     const callBlocks = xmlString.match(callBlockRegex) || [];
                     const procedureParams = new Map();
-                    
+
                     callBlocks.forEach(callBlockXml => {
                       try {
                         const nameMatch = callBlockXml.match(/<field name="NAME">([^<]+)<\/field>/);
                         const name = nameMatch ? nameMatch[1] : null;
-                        
+
                         if (name) {
                           const mutationMatch = callBlockXml.match(/<mutation[^>]*>([\s\S]*?)<\/mutation>/);
                           if (mutationMatch) {
@@ -815,47 +819,47 @@ const PatternCreateEdit = () => {
                     if (procedureParams.size === 0) {
                       return xmlString; // No parameters to add
                     }
-                    
+
                     // Now find definition blocks and add mutations using string replacement
                     let result = xmlString;
-                    
+
                     procedureParams.forEach((params, name) => {
                       // Find definition block for this procedure
                       const defBlockRegex = new RegExp(
                         `(<block[^>]*type="procedures_def(return|noreturn)"[^>]*>\\s*<field name="NAME">${name}<\\/field>)`,
                         'g'
                       );
-                      
+
                       result = result.replace(defBlockRegex, (match, fieldPart) => {
                         // Check if mutation already exists
                         if (match.includes('<mutation')) {
                           return match;
                         }
-                        
+
                         // Build mutation XML string
                         const argXml = params.map(paramName => `    <arg name="${paramName}"></arg>`).join('\n');
                         const mutationXml = `\n    <mutation name="${name}">\n${argXml}\n    </mutation>`;
-                        
+
                         // Insert mutation after NAME field
                         const newBlock = fieldPart + mutationXml;
                         return newBlock;
                       });
                     });
-                    
+
                     return result;
                   } catch (e) {
                     return xmlString; // Return original if error
                   }
                 };
 
-                    // CRITICAL: When step has saved XML, we should NOT load starter XML first
-                    // because step XML already includes starter XML + blocks from previous steps
-                    // Only load starter XML first if step XML doesn't exist
-                    // Skip loading starter XML if step has saved XML (it's already in step XML)
-                    // CRITICAL: Track if we're loading from previous step (not starter XML) to skip duplicate removal
-                    // Use ref to check if we're loading from previous step
-                    const isLoadingFromPreviousStep = isLoadingFromPreviousStepRef.current;
-                    if (hasStarterXml && !xmlToLoad) { // Only load starter XML if step has no saved XML
+                // CRITICAL: When step has saved XML, we should NOT load starter XML first
+                // because step XML already includes starter XML + blocks from previous steps
+                // Only load starter XML first if step XML doesn't exist
+                // Skip loading starter XML if step has saved XML (it's already in step XML)
+                // CRITICAL: Track if we're loading from previous step (not starter XML) to skip duplicate removal
+                // Use ref to check if we're loading from previous step
+                const isLoadingFromPreviousStep = isLoadingFromPreviousStepRef.current;
+                if (hasStarterXml && !xmlToLoad) { // Only load starter XML if step has no saved XML
                   try {
                     // Remove variable IDs from starter XML to prevent conflicts
                     let cleanedStarterXml = removeVariableIdsFromXml(starter_xml);
@@ -870,10 +874,10 @@ const PatternCreateEdit = () => {
                       try {
                         const definitionBlocks = workspaceRef.current.getBlocksByType('procedures_defreturn', false)
                           .concat(workspaceRef.current.getBlocksByType('procedures_defnoreturn', false));
-                        
+
                         const callBlocks = workspaceRef.current.getBlocksByType('procedures_callreturn', false)
                           .concat(workspaceRef.current.getBlocksByType('procedures_callnoreturn', false));
-                        
+
                         // Get valid procedure names from definitions
                         const validProcedureNames = new Set();
                         definitionBlocks.forEach(defBlock => {
@@ -886,14 +890,14 @@ const PatternCreateEdit = () => {
                             // Ignore errors
                           }
                         });
-                        
+
                         // Fix each call block to use a valid procedure name
                         callBlocks.forEach(callBlock => {
                           try {
                             const nameField = callBlock.getField('NAME');
                             if (nameField) {
                               const currentName = nameField.getValue();
-                              
+
                               // If call block name doesn't match any definition, fix it
                               if (!validProcedureNames.has(currentName)) {
                                 if (validProcedureNames.size > 0) {
@@ -907,7 +911,7 @@ const PatternCreateEdit = () => {
                           } catch (e) {
                           }
                         });
-                        
+
                         // Remove any auto-created procedure definitions that don't match valid names
                         // These are typically created by Blockly when it can't find a matching definition
                         definitionBlocks.forEach(defBlock => {
@@ -921,7 +925,7 @@ const PatternCreateEdit = () => {
                                 const defBaseName = defName.replace(/\d+$/, '');
                                 return baseName === defBaseName && defName !== validName;
                               });
-                              
+
                               if (isNumberedVariant) {
                                 if (!defBlock.isDisposed()) {
                                   defBlock.dispose(false);
@@ -934,7 +938,7 @@ const PatternCreateEdit = () => {
                       } catch (e) {
                       }
                     }, 50); // Small delay to ensure blocks are fully loaded
-                    
+
                     // Clear variable map หลังจากโหลด starter XML เพื่อให้ step XML สร้าง variables ใหม่
                     // แต่เก็บ variable names ไว้เพื่อให้ Blockly reuse variables ที่มีอยู่แล้ว
                     const variableMapAfterStarter = workspaceRef.current.getVariableMap();
@@ -974,20 +978,20 @@ const PatternCreateEdit = () => {
                     // CRITICAL: Add mutation to procedure definition blocks in step XML too
                     cleanedStepXml = addMutationToProcedureDefinitions(cleanedStepXml);
                     const xmlDom = Blockly.utils.xml.textToDom(cleanedStepXml);
-                    
+
                     // CRITICAL: When loading step XML directly (not loading starter XML first),
                     // we should NOT remove duplicate blocks because step XML is the complete XML
                     // that includes starter XML + blocks from previous steps
                     // Only remove duplicates if we loaded starter XML first (which we don't do when step has saved XML)
                     // CRITICAL: Don't remove duplicates if loading from previous step (to preserve call blocks)
                     // CRITICAL: Also skip duplicate removal when editing existing step (currentStepIndex < steps.length)
-                    const shouldRemoveDuplicates = hasStarterXml && starterXmlLoadedRef.current && 
-                      !isLoadingFromPreviousStepRef.current && 
+                    const shouldRemoveDuplicates = hasStarterXml && starterXmlLoadedRef.current &&
+                      !isLoadingFromPreviousStepRef.current &&
                       currentStepIndex >= steps.length; // Only remove duplicates for new steps, not when editing
                     if (shouldRemoveDuplicates) {
                       // This should NOT happen when step has saved XML because we skip loading starter XML
                       const existingBlocks = workspaceRef.current.getAllBlocks(false);
-                      
+
                       // Parse starter XML to get list of block types and IDs that are in starter XML
                       // We'll use this to identify which blocks in step XML are from starter XML vs previous steps
                       const starterXmlDom = Blockly.utils.xml.textToDom(starter_xml);
@@ -995,20 +999,20 @@ const PatternCreateEdit = () => {
                       const starterBlockIds = new Set();
                       const starterProcedureNames = new Set();
                       const starterMainCodeBlocks = new Set(); // Track main code blocks in starter XML
-                      
+
                       starterXmlDom.querySelectorAll('block').forEach(starterBlock => {
                         const type = starterBlock.getAttribute('type');
                         const id = starterBlock.getAttribute('id');
                         if (type) starterBlockTypes.add(type);
                         if (id) starterBlockIds.add(id);
-                        
+
                         // Track procedure names in starter XML
                         if (type === 'procedures_defreturn' || type === 'procedures_defnoreturn') {
                           const nameField = starterBlock.querySelector('field[name="NAME"]');
                           const name = nameField ? nameField.textContent : null;
                           if (name) starterProcedureNames.add(name);
                         }
-                        
+
                         // Track main code blocks in starter XML
                         if (type === 'variables_set') {
                           const varField = starterBlock.querySelector('field[name="VAR"]');
@@ -1039,7 +1043,7 @@ const PatternCreateEdit = () => {
                           // Ignore errors
                         }
                       });
-                      
+
                       // Check if we have main code block (path = ...) in workspace
                       // Main code block is a variables_set block with VAR="path" that contains a procedure call
                       const hasMainCodeBlock = existingBlocks.some(block => {
@@ -1071,10 +1075,10 @@ const PatternCreateEdit = () => {
                       starterXmlDom.querySelectorAll('block').forEach((starterBlock, idx) => {
                         const type = starterBlock.getAttribute('type');
                         const id = starterBlock.getAttribute('id');
-                        
+
                         // Create a signature based on block type and key fields
                         let signature = type;
-                        
+
                         // For procedures, use name
                         if (type === 'procedures_defreturn' || type === 'procedures_defnoreturn') {
                           const nameField = starterBlock.querySelector('field[name="NAME"]');
@@ -1091,7 +1095,7 @@ const PatternCreateEdit = () => {
                             signature = `${type}:${varName}`;
                           }
                         }
-                        
+
                         // Store signature with block index for reference
                         if (!starterBlockSignatures.has(signature)) {
                           starterBlockSignatures.set(signature, []);
@@ -1129,10 +1133,10 @@ const PatternCreateEdit = () => {
                           if (stepBlockName) {
                             // Create signature for this step block
                             const stepSignature = `${stepBlockType}:${stepBlockName}`;
-                            
+
                             // Check if this exact signature exists in starter XML
                             const isExactStarterBlock = starterBlockSignatures.has(stepSignature);
-                            
+
                             // Check if exact name exists in workspace (from starter XML)
                             const exactMatch = existingProcedureNames.has(stepBlockName);
                             // Only remove if:
@@ -1157,17 +1161,17 @@ const PatternCreateEdit = () => {
                         else if (stepBlockType === 'variables_set') {
                           const varField = stepBlock.querySelector('field[name="VAR"]');
                           const varName = varField ? varField.textContent : null;
-                          
+
                           if (varName === 'path') {
                             // Check if this is the main code block by looking for procedure call inside
                             const callBlock = stepBlock.querySelector('block[type="procedures_callreturn"], block[type="procedures_callnoreturn"]');
                             if (callBlock) {
                               // Create signature for this main code block
                               const mainCodeSignature = `variables_set:path`;
-                              
+
                               // Check if this exact signature exists in starter XML
                               const isExactStarterMainCode = starterBlockSignatures.has(mainCodeSignature);
-                              
+
                               // Check if this main code block is from starter XML
                               const isMainCodeInStarter = starterMainCodeBlocks.has('path');
                               // CRITICAL: Only remove if:
@@ -1193,7 +1197,7 @@ const PatternCreateEdit = () => {
                                     }
                                     currentSibling = currentSibling.nextSibling;
                                   }
-                                  
+
                                   // Also check for next block using <next> element
                                   const nextElement = stepBlock.querySelector('next > block');
                                   if (nextElement && nextElement.getAttribute('type') === 'move_along_path') {
@@ -1202,7 +1206,7 @@ const PatternCreateEdit = () => {
                                       removedCount++;
                                     }
                                   }
-                                  
+
                                   if (stepBlock.parentNode) {
                                     stepBlock.parentNode.removeChild(stepBlock);
                                     removedCount++;
@@ -1218,7 +1222,7 @@ const PatternCreateEdit = () => {
                         else if (stepBlockType === 'procedures_callreturn' || stepBlockType === 'procedures_callnoreturn') {
                           const nameField = stepBlock.querySelector('field[name="NAME"]');
                           const stepBlockName = nameField ? nameField.textContent : null;
-                          
+
                           if (stepBlockName) {
                             // Create signature for this call block
                             let parentContext = 'root';
@@ -1227,15 +1231,15 @@ const PatternCreateEdit = () => {
                               parentContext = parentBlock.getAttribute('type') || 'root';
                             }
                             const callSignature = `${stepBlockType}:${stepBlockName}:${parentContext}`;
-                            
+
                             // Check if this exact call block exists in starter XML
                             const isExactStarterCallBlock = starterCallBlocks.has(callSignature);
-                            
+
                             // Check if we already have this call block in workspace
                             const hasDuplicateCallBlock = existingBlocks.some(block => {
                               try {
                                 if ((block.type === 'procedures_callreturn' || block.type === 'procedures_callnoreturn') &&
-                                    block.getFieldValue('NAME') === stepBlockName) {
+                                  block.getFieldValue('NAME') === stepBlockName) {
                                   // Check if it's in the same context
                                   const blockParent = block.getParent();
                                   let blockParentContext = 'root';
@@ -1256,7 +1260,7 @@ const PatternCreateEdit = () => {
                             // 4. AND we're not editing existing step (to preserve call blocks)
                             // This ensures we don't remove call blocks from previous steps or when editing
                             const shouldRemoveThisCallBlock = isExactStarterCallBlock && hasDuplicateCallBlock &&
-                              !isLoadingFromPreviousStepRef.current && 
+                              !isLoadingFromPreviousStepRef.current &&
                               currentStepIndex >= steps.length; // Only remove for new steps, not when editing
                             if (shouldRemoveThisCallBlock) {
                               try {
@@ -1273,7 +1277,7 @@ const PatternCreateEdit = () => {
                       });
                     } else {
                     }
-                    
+
                     // Load step XML into workspace
                     // When step has saved XML, we load it directly (it includes starter XML + blocks from previous steps)
                     // We don't need to check if starter XML was loaded because we skip loading starter XML when step has saved XML
@@ -1298,17 +1302,17 @@ const PatternCreateEdit = () => {
 
                     // Check what blocks were loaded
                     const loadedBlocks = workspaceRef.current.getAllBlocks(false);
-                    const callBlocksAfterLoad = loadedBlocks.filter(block => 
+                    const callBlocksAfterLoad = loadedBlocks.filter(block =>
                       block.type === 'procedures_callreturn' || block.type === 'procedures_callnoreturn'
                     );
-                    
+
                     // CRITICAL: Store call block IDs immediately after loading to track them
                     const callBlockIdsAfterLoad = new Set(callBlocksAfterLoad.map(b => b.id));
-                    
+
                     // Check call blocks again after a short delay to see if Blockly disposed them
                     setTimeout(() => {
                       const blocksAfterShortDelay = workspaceRef.current.getAllBlocks(false);
-                      const callBlocksAfterShortDelay = blocksAfterShortDelay.filter(block => 
+                      const callBlocksAfterShortDelay = blocksAfterShortDelay.filter(block =>
                         block.type === 'procedures_callreturn' || block.type === 'procedures_callnoreturn'
                       );
                       const callBlockIdsAfterShortDelay = new Set(callBlocksAfterShortDelay.map(b => b.id));
@@ -1357,7 +1361,7 @@ const PatternCreateEdit = () => {
                         return false;
                       }
                     });
-                    
+
                     // Store protected block IDs in a Set that will be accessible in the setTimeout
                     const protectedBlockIdsImmediate = new Set();
                     mainCodeBlocksToProtectImmediately.forEach(mainBlock => {
@@ -1395,8 +1399,8 @@ const PatternCreateEdit = () => {
                         const valueConnection = b.getInput('VALUE')?.connection?.targetBlock();
                         const valueType = valueConnection ? valueConnection.type : 'none';
                         const isPathVar = varName === 'path' || (varId && varId.includes('path'));
-                        return { 
-                          id: b.id, 
+                        return {
+                          id: b.id,
                           var: varName,
                           varId: varId,
                           varFieldValue: b.getFieldValue('VAR'),
@@ -1407,7 +1411,7 @@ const PatternCreateEdit = () => {
                         return { id: b.id, var: 'error', valueType: 'error', isMainCode: false, error: e.message };
                       }
                     });
-                    
+
                     // Also check for path variables_set blocks specifically
                     // Note: getFieldValue('VAR') might return variable ID instead of name after removeVariableIdsFromXml
                     const pathVariablesSetBlocks = loadedBlocks.filter(b => {
@@ -1421,7 +1425,7 @@ const PatternCreateEdit = () => {
                         return false;
                       }
                     });
-                    
+
                     const pathVariablesSetDetails = pathVariablesSetBlocks.map(b => {
                       try {
                         const valueInput = b.getInput('VALUE');
@@ -1475,16 +1479,16 @@ const PatternCreateEdit = () => {
                       } catch (e) {
                       }
                     });
-                    
+
                     // CRITICAL: Fix call blocks immediately after loading to prevent auto-creation of DFS2
                     setTimeout(() => {
                       try {
                         const allCallBlocks = workspaceRef.current.getBlocksByType('procedures_callreturn', false)
                           .concat(workspaceRef.current.getBlocksByType('procedures_callnoreturn', false));
-                        
+
                         const allDefinitionBlocks = workspaceRef.current.getBlocksByType('procedures_defreturn', false)
                           .concat(workspaceRef.current.getBlocksByType('procedures_defnoreturn', false));
-                        
+
                         // Get valid procedure names
                         const validProcedureNames = new Set();
                         allDefinitionBlocks.forEach(defBlock => {
@@ -1518,13 +1522,13 @@ const PatternCreateEdit = () => {
                           } catch (e) {
                           }
                         });
-                        
+
                         // After fix, just proceed without logging
                       } catch (e) {
                         console.error('❌ [PatternCreateEdit] Error in fix call blocks:', e);
                       }
                     }, 400); // เพิ่มเวลาเพื่อให้ Blockly สร้าง/เชื่อมชื่อ procedure ให้เสร็จก่อน
-                    
+
                     // After loading step XML, also check for duplicate call blocks in workspace
                     // This handles cases where call blocks weren't removed from XML but are now duplicates
                     // CRITICAL: Skip duplicate removal if loading from previous step (to preserve call blocks)
@@ -1534,276 +1538,316 @@ const PatternCreateEdit = () => {
                       setTimeout(() => {
                         try {
                           const allBlocks = workspaceRef.current.getAllBlocks(false);
-                          const allCallBlocks = allBlocks.filter(block => 
+                          const allCallBlocks = allBlocks.filter(block =>
                             block.type === 'procedures_callreturn' || block.type === 'procedures_callnoreturn'
                           );
-                        
-                        // CRITICAL: First, identify and protect main code blocks BEFORE any cleanup
-                        // Check if blocks from protectedBlockIdsImmediate still exist
-                        const existingProtectedBlocks = allBlocks.filter(block => protectedBlockIdsImmediate.has(block.id));
-                        
-                        const mainCodeBlocksToProtect = allBlocks.filter(block => {
-                          try {
-                            // CRITICAL: First check if this block is already in the protected set
-                            if (protectedBlockIdsImmediate.has(block.id)) {
-                              return true; // Already protected, keep it
-                            }
-                            
-                            if (block.type !== 'variables_set') return false;
-                            const varField = block.getField('VAR');
-                            const varModel = varField ? varField.getVariable() : null;
-                            const varName = varModel ? varModel.name : block.getFieldValue('VAR');
-                            if (varName === 'path') {
-                              const valueConnection = block.getInput('VALUE')?.connection?.targetBlock();
-                              if (valueConnection) {
-                                const valueType = valueConnection.type;
-                                if (valueType === 'procedures_callreturn' || valueType === 'procedures_callnoreturn') {
-                                  return true;
+
+                          // CRITICAL: First, identify and protect main code blocks BEFORE any cleanup
+                          // Check if blocks from protectedBlockIdsImmediate still exist
+                          const existingProtectedBlocks = allBlocks.filter(block => protectedBlockIdsImmediate.has(block.id));
+
+                          const mainCodeBlocksToProtect = allBlocks.filter(block => {
+                            try {
+                              // CRITICAL: First check if this block is already in the protected set
+                              if (protectedBlockIdsImmediate.has(block.id)) {
+                                return true; // Already protected, keep it
+                              }
+
+                              if (block.type !== 'variables_set') return false;
+                              const varField = block.getField('VAR');
+                              const varModel = varField ? varField.getVariable() : null;
+                              const varName = varModel ? varModel.name : block.getFieldValue('VAR');
+                              if (varName === 'path') {
+                                const valueConnection = block.getInput('VALUE')?.connection?.targetBlock();
+                                if (valueConnection) {
+                                  const valueType = valueConnection.type;
+                                  if (valueType === 'procedures_callreturn' || valueType === 'procedures_callnoreturn') {
+                                    return true;
+                                  }
                                 }
                               }
+                              return false;
+                            } catch (e) {
+                              return false;
                             }
-                            return false;
-                          } catch (e) {
-                            return false;
+                          });
+                          // CRITICAL: If main code blocks were found earlier but not now, they may have been disposed
+                          // In that case, we MUST use the protected IDs to prevent any further disposal
+                          if (mainCodeBlocksToProtect.length === 0 && protectedBlockIdsImmediate.size > 0) {
                           }
-                        });
-                        // CRITICAL: If main code blocks were found earlier but not now, they may have been disposed
-                        // In that case, we MUST use the protected IDs to prevent any further disposal
-                        if (mainCodeBlocksToProtect.length === 0 && protectedBlockIdsImmediate.size > 0) {
-                        }
-                        
-                        // CRITICAL: Create a set of ALL block IDs that are part of main code blocks
-                        // This includes the variables_set block itself, the call block inside it, and the move_along_path block next to it
-                        // ALWAYS start with the immediately protected IDs from before the setTimeout
-                        // This ensures we protect blocks even if they were disposed between loading and cleanup
-                        const protectedBlockIds = new Set(protectedBlockIdsImmediate);
-                        const protectedCallBlocks = new Set();
-                        
-                        // Add any newly found main code blocks to the protected set
-                        mainCodeBlocksToProtect.forEach(mainBlock => {
-                          try {
-                            // Protect the main variables_set block itself
-                            protectedBlockIds.add(mainBlock.id);
-                            
-                            // Protect the call block inside the main code block
-                            const valueConnection = mainBlock.getInput('VALUE')?.connection?.targetBlock();
-                            if (valueConnection && (valueConnection.type === 'procedures_callreturn' || valueConnection.type === 'procedures_callnoreturn')) {
-                              protectedCallBlocks.add(valueConnection.id);
-                              protectedBlockIds.add(valueConnection.id);
-                            }
-                            
-                            // Protect move_along_path blocks that are next to main code blocks
-                            const nextBlock = mainBlock.getNextBlock();
-                            if (nextBlock && nextBlock.type === 'move_along_path') {
-                              protectedBlockIds.add(nextBlock.id);
-                            }
-                            
-                            // Also protect all child blocks recursively
-                            const protectChildren = (block) => {
-                              try {
-                                const children = block.getChildren(false);
-                                children.forEach(child => {
-                                  protectedBlockIds.add(child.id);
-                                  protectChildren(child); // Recursively protect grandchildren
-                                });
-                              } catch (e) {
-                                // Ignore errors
+
+                          // CRITICAL: Create a set of ALL block IDs that are part of main code blocks
+                          // This includes the variables_set block itself, the call block inside it, and the move_along_path block next to it
+                          // ALWAYS start with the immediately protected IDs from before the setTimeout
+                          // This ensures we protect blocks even if they were disposed between loading and cleanup
+                          const protectedBlockIds = new Set(protectedBlockIdsImmediate);
+                          const protectedCallBlocks = new Set();
+
+                          // Add any newly found main code blocks to the protected set
+                          mainCodeBlocksToProtect.forEach(mainBlock => {
+                            try {
+                              // Protect the main variables_set block itself
+                              protectedBlockIds.add(mainBlock.id);
+
+                              // Protect the call block inside the main code block
+                              const valueConnection = mainBlock.getInput('VALUE')?.connection?.targetBlock();
+                              if (valueConnection && (valueConnection.type === 'procedures_callreturn' || valueConnection.type === 'procedures_callnoreturn')) {
+                                protectedCallBlocks.add(valueConnection.id);
+                                protectedBlockIds.add(valueConnection.id);
                               }
-                            };
-                            protectChildren(mainBlock);
-                          } catch (e) {
-                          }
-                        });
-                        const callBlocksForGrouping = allBlocks.filter(block => 
-                          block.type === 'procedures_callreturn' || block.type === 'procedures_callnoreturn'
-                        );
-                        
-                        // Group call blocks by their procedure name AND their position in the workspace
-                        // We want to keep call blocks that are in different contexts (e.g., inside different blocks)
-                        // But remove exact duplicates (same procedure, same position)
-                        const callBlocksByProcedure = new Map();
-                        callBlocksForGrouping.forEach(callBlock => {
-                          try {
-                            const procName = callBlock.getFieldValue('NAME');
-                            if (procName) {
-                              // Create a key that includes the procedure name and parent block type
-                              // This helps identify if call blocks are in different contexts
-                              let parentContext = 'root';
+
+                              // Protect move_along_path blocks that are next to main code blocks
+                              const nextBlock = mainBlock.getNextBlock();
+                              if (nextBlock && nextBlock.type === 'move_along_path') {
+                                protectedBlockIds.add(nextBlock.id);
+                              }
+
+                              // Also protect all child blocks recursively
+                              const protectChildren = (block) => {
+                                try {
+                                  const children = block.getChildren(false);
+                                  children.forEach(child => {
+                                    protectedBlockIds.add(child.id);
+                                    protectChildren(child); // Recursively protect grandchildren
+                                  });
+                                } catch (e) {
+                                  // Ignore errors
+                                }
+                              };
+                              protectChildren(mainBlock);
+                            } catch (e) {
+                            }
+                          });
+                          const callBlocksForGrouping = allBlocks.filter(block =>
+                            block.type === 'procedures_callreturn' || block.type === 'procedures_callnoreturn'
+                          );
+
+                          // Group call blocks by their procedure name AND their position in the workspace
+                          // We want to keep call blocks that are in different contexts (e.g., inside different blocks)
+                          // But remove exact duplicates (same procedure, same position)
+                          const callBlocksByProcedure = new Map();
+                          callBlocksForGrouping.forEach(callBlock => {
+                            try {
+                              const procName = callBlock.getFieldValue('NAME');
+                              if (procName) {
+                                // Create a key that includes the procedure name and parent block type
+                                // This helps identify if call blocks are in different contexts
+                                let parentContext = 'root';
+                                try {
+                                  const parentBlock = callBlock.getParent();
+                                  if (parentBlock) {
+                                    parentContext = parentBlock.type;
+                                  }
+                                } catch (e) {
+                                  // Ignore errors
+                                }
+
+                                const key = `${procName}_${parentContext}`;
+                                if (!callBlocksByProcedure.has(key)) {
+                                  callBlocksByProcedure.set(key, []);
+                                }
+                                callBlocksByProcedure.get(key).push(callBlock);
+                              }
+                            } catch (e) {
+                              // Ignore errors
+                            }
+                          });
+
+                          // For each procedure+context combination, if there are multiple call blocks, keep only one
+                          callBlocksByProcedure.forEach((blocks, key) => {
+                            if (blocks.length > 1) {
+                              const procName = key.split('_')[0];
+                              // CRITICAL: Check each block to see if it's part of a main code block
+                              const blocksToRemove = [];
+                              for (let i = 1; i < blocks.length; i++) {
+                                try {
+                                  // CRITICAL: Check if this call block is protected
+                                  if (protectedCallBlocks.has(blocks[i].id)) {
+                                    continue; // Don't remove protected call blocks
+                                  }
+
+                                  // CRITICAL: Check if this call block is part of a main code block
+                                  const parentBlock = blocks[i].getParent();
+                                  if (parentBlock && parentBlock.type === 'variables_set') {
+                                    try {
+                                      const varField = parentBlock.getField('VAR');
+                                      const varModel = varField ? varField.getVariable() : null;
+                                      const varName = varModel ? varModel.name : parentBlock.getFieldValue('VAR');
+                                      if (varName === 'path') {
+                                        protectedCallBlocks.add(blocks[i].id); // Add to protected set
+                                        continue; // Don't remove call blocks from main code blocks
+                                      }
+                                    } catch (e) {
+                                      // Ignore errors, but still check if it's a main code block
+                                    }
+                                  }
+
+                                  // If we get here, it's safe to remove
+                                  blocksToRemove.push(blocks[i]);
+                                } catch (e) {
+                                }
+                              }
+
+                              // Now remove only the blocks that are safe to remove
+                              blocksToRemove.forEach(block => {
+                                try {
+                                  // CRITICAL: Double-check that this block is not protected
+                                  if (protectedBlockIds.has(block.id) || protectedCallBlocks.has(block.id)) {
+                                    return;
+                                  }
+
+                                  // CRITICAL: Also check if parent is protected
+                                  try {
+                                    const parentBlock = block.getParent();
+                                    if (parentBlock) {
+                                      if (protectedBlockIds.has(parentBlock.id)) {
+                                        // CRITICAL: Also protect this block to prevent future disposal
+                                        protectedBlockIds.add(block.id);
+                                        protectedCallBlocks.add(block.id);
+                                        return;
+                                      }
+                                      // Also check grandparent
+                                      const grandParent = parentBlock.getParent();
+                                      if (grandParent && protectedBlockIds.has(grandParent.id)) {
+                                        protectedBlockIds.add(block.id);
+                                        protectedCallBlocks.add(block.id);
+                                        return;
+                                      }
+                                    }
+                                  } catch (e) {
+                                    // Ignore errors
+                                  }
+
+                                  if (!block.isDisposed()) {
+                                    block.dispose(false);
+                                  }
+                                } catch (e) {
+                                }
+                              });
+                            }
+                          });
+
+                          // CRITICAL: Also check for root-level call blocks (inside variables_set with VAR="path")
+                          // These are the main code blocks that should only appear once
+                          // IMPORTANT: Don't filter by procName - we need to check ALL call blocks, even if name is empty
+                          const rootCallBlocks = new Map();
+                          const mainCodeBlockCalls = []; // Track main code block calls separately
+
+                          callBlocks.forEach(callBlock => {
+                            try {
+                              // CRITICAL: Skip if this call block is protected (part of main code block)
+                              if (protectedCallBlocks.has(callBlock.id)) {
+                                return; // Skip this call block - it's protected
+                              }
+
+                              const procName = callBlock.getFieldValue('NAME') || 'unnamed';
                               try {
                                 const parentBlock = callBlock.getParent();
-                                if (parentBlock) {
-                                  parentContext = parentBlock.type;
-                                }
-                              } catch (e) {
-                                // Ignore errors
-                              }
-                              
-                              const key = `${procName}_${parentContext}`;
-                              if (!callBlocksByProcedure.has(key)) {
-                                callBlocksByProcedure.set(key, []);
-                              }
-                              callBlocksByProcedure.get(key).push(callBlock);
-                            }
-                          } catch (e) {
-                            // Ignore errors
-                          }
-                        });
-                        
-                        // For each procedure+context combination, if there are multiple call blocks, keep only one
-                        callBlocksByProcedure.forEach((blocks, key) => {
-                          if (blocks.length > 1) {
-                            const procName = key.split('_')[0];
-                            // CRITICAL: Check each block to see if it's part of a main code block
-                            const blocksToRemove = [];
-                            for (let i = 1; i < blocks.length; i++) {
-                              try {
-                                // CRITICAL: Check if this call block is protected
-                                if (protectedCallBlocks.has(blocks[i].id)) {
-                                  continue; // Don't remove protected call blocks
-                                }
-                                
-                                // CRITICAL: Check if this call block is part of a main code block
-                                const parentBlock = blocks[i].getParent();
-                                if (parentBlock && parentBlock.type === 'variables_set') {
+                                // If no parent or parent is variables_set with VAR="path", it's a root call block
+                                let isRootCall = false;
+                                let isMainCodeCall = false;
+
+                                if (!parentBlock) {
+                                  isRootCall = true;
+                                } else if (parentBlock.type === 'variables_set') {
                                   try {
                                     const varField = parentBlock.getField('VAR');
                                     const varModel = varField ? varField.getVariable() : null;
                                     const varName = varModel ? varModel.name : parentBlock.getFieldValue('VAR');
                                     if (varName === 'path') {
-                                      protectedCallBlocks.add(blocks[i].id); // Add to protected set
-                                      continue; // Don't remove call blocks from main code blocks
+                                      isRootCall = true;
+                                      isMainCodeCall = true;
+                                      mainCodeBlockCalls.push(callBlock);
+                                      protectedCallBlocks.add(callBlock.id); // Also add to protected set
                                     }
                                   } catch (e) {
-                                    // Ignore errors, but still check if it's a main code block
+                                    // Ignore errors
                                   }
                                 }
-                                
-                                // If we get here, it's safe to remove
-                                blocksToRemove.push(blocks[i]);
-                              } catch (e) {
-                              }
-                            }
-                            
-                            // Now remove only the blocks that are safe to remove
-                            blocksToRemove.forEach(block => {
-                              try {
-                                // CRITICAL: Double-check that this block is not protected
-                                if (protectedBlockIds.has(block.id) || protectedCallBlocks.has(block.id)) {
-                                  return;
-                                }
-                                
-                                // CRITICAL: Also check if parent is protected
-                                try {
-                                  const parentBlock = block.getParent();
-                                  if (parentBlock) {
-                                    if (protectedBlockIds.has(parentBlock.id)) {
-                                      // CRITICAL: Also protect this block to prevent future disposal
-                                      protectedBlockIds.add(block.id);
-                                      protectedCallBlocks.add(block.id);
-                                      return;
-                                    }
-                                    // Also check grandparent
-                                    const grandParent = parentBlock.getParent();
-                                    if (grandParent && protectedBlockIds.has(grandParent.id)) {
-                                      protectedBlockIds.add(block.id);
-                                      protectedCallBlocks.add(block.id);
-                                      return;
-                                    }
+
+                                if (isRootCall) {
+                                  if (!rootCallBlocks.has(procName)) {
+                                    rootCallBlocks.set(procName, []);
                                   }
-                                } catch (e) {
-                                  // Ignore errors
-                                }
-                                
-                                if (!block.isDisposed()) {
-                                  block.dispose(false);
+                                  rootCallBlocks.get(procName).push(callBlock);
                                 }
                               } catch (e) {
-                              }
-                            });
-                          }
-                        });
-                        
-                        // CRITICAL: Also check for root-level call blocks (inside variables_set with VAR="path")
-                        // These are the main code blocks that should only appear once
-                        // IMPORTANT: Don't filter by procName - we need to check ALL call blocks, even if name is empty
-                        const rootCallBlocks = new Map();
-                        const mainCodeBlockCalls = []; // Track main code block calls separately
-                        
-                        callBlocks.forEach(callBlock => {
-                          try {
-                            // CRITICAL: Skip if this call block is protected (part of main code block)
-                            if (protectedCallBlocks.has(callBlock.id)) {
-                              return; // Skip this call block - it's protected
-                            }
-                            
-                            const procName = callBlock.getFieldValue('NAME') || 'unnamed';
-                            try {
-                              const parentBlock = callBlock.getParent();
-                              // If no parent or parent is variables_set with VAR="path", it's a root call block
-                              let isRootCall = false;
-                              let isMainCodeCall = false;
-                              
-                              if (!parentBlock) {
-                                isRootCall = true;
-                              } else if (parentBlock.type === 'variables_set') {
-                                try {
-                                  const varField = parentBlock.getField('VAR');
-                                  const varModel = varField ? varField.getVariable() : null;
-                                  const varName = varModel ? varModel.name : parentBlock.getFieldValue('VAR');
-                                  if (varName === 'path') {
-                                    isRootCall = true;
-                                    isMainCodeCall = true;
-                                    mainCodeBlockCalls.push(callBlock);
-                                    protectedCallBlocks.add(callBlock.id); // Also add to protected set
-                                  }
-                                } catch (e) {
-                                  // Ignore errors
-                                }
-                              }
-                              
-                              if (isRootCall) {
+                                // If we can't determine parent, assume it's root
                                 if (!rootCallBlocks.has(procName)) {
                                   rootCallBlocks.set(procName, []);
                                 }
                                 rootCallBlocks.get(procName).push(callBlock);
                               }
                             } catch (e) {
-                              // If we can't determine parent, assume it's root
-                              if (!rootCallBlocks.has(procName)) {
-                                rootCallBlocks.set(procName, []);
-                              }
-                              rootCallBlocks.get(procName).push(callBlock);
+                              // Ignore errors
                             }
-                          } catch (e) {
-                            // Ignore errors
+                          });
+                          // CRITICAL: Protect main code block calls from being removed
+                          // If any call blocks are in main code blocks, we should NOT remove them
+                          if (mainCodeBlockCalls.length > 0 || protectedCallBlocks.size > 0) {
                           }
-                        });
-                        // CRITICAL: Protect main code block calls from being removed
-                        // If any call blocks are in main code blocks, we should NOT remove them
-                        if (mainCodeBlockCalls.length > 0 || protectedCallBlocks.size > 0) {
-                        }
-                        
-                        // For root-level call blocks, if there are multiple for the same procedure, keep only one
-                        // BUT: Be careful not to remove main code blocks (variables_set with VAR="path")
-                        // because they are part of the user's saved pattern
-                        rootCallBlocks.forEach((blocks, procName) => {
-                          if (blocks.length > 1) {
-                            // Check if these are inside main code blocks (variables_set with VAR="path")
-                            // Use the mainCodeBlockCalls array we built earlier
-                            const blocksInMainCode = blocks.filter(callBlock => mainCodeBlockCalls.includes(callBlock));
-                            if (blocksInMainCode.length === blocks.length) {
-                              // All call blocks are inside main code blocks - keep all of them
-                            } else if (blocksInMainCode.length > 0) {
-                              // Some are main code blocks, some are not - keep all main code blocks, remove only non-main duplicates
-                              // Remove only non-main code block calls
-                              for (let i = 0; i < blocks.length; i++) {
-                                if (!blocksInMainCode.includes(blocks[i])) {
+
+                          // For root-level call blocks, if there are multiple for the same procedure, keep only one
+                          // BUT: Be careful not to remove main code blocks (variables_set with VAR="path")
+                          // because they are part of the user's saved pattern
+                          rootCallBlocks.forEach((blocks, procName) => {
+                            if (blocks.length > 1) {
+                              // Check if these are inside main code blocks (variables_set with VAR="path")
+                              // Use the mainCodeBlockCalls array we built earlier
+                              const blocksInMainCode = blocks.filter(callBlock => mainCodeBlockCalls.includes(callBlock));
+                              if (blocksInMainCode.length === blocks.length) {
+                                // All call blocks are inside main code blocks - keep all of them
+                              } else if (blocksInMainCode.length > 0) {
+                                // Some are main code blocks, some are not - keep all main code blocks, remove only non-main duplicates
+                                // Remove only non-main code block calls
+                                for (let i = 0; i < blocks.length; i++) {
+                                  if (!blocksInMainCode.includes(blocks[i])) {
+                                    try {
+                                      // CRITICAL: Check if this call block is protected
+                                      if (protectedBlockIds.has(blocks[i].id) || protectedCallBlocks.has(blocks[i].id)) {
+                                        continue; // Don't remove protected call blocks
+                                      }
+
+                                      // CRITICAL: Also check if parent is protected
+                                      try {
+                                        const parentBlock = blocks[i].getParent();
+                                        if (parentBlock && protectedBlockIds.has(parentBlock.id)) {
+                                          continue; // Don't remove blocks with protected parents
+                                        }
+                                      } catch (e) {
+                                        // Ignore errors
+                                      }
+
+                                      // CRITICAL: Double-check that this is not a main code block before disposing
+                                      const parentBlock = blocks[i].getParent();
+                                      if (parentBlock && parentBlock.type === 'variables_set') {
+                                        const varField = parentBlock.getField('VAR');
+                                        const varModel = varField ? varField.getVariable() : null;
+                                        const varName = varModel ? varModel.name : parentBlock.getFieldValue('VAR');
+                                        if (varName === 'path') {
+                                          protectedCallBlocks.add(blocks[i].id); // Add to protected set
+                                          protectedBlockIds.add(blocks[i].id); // Also add to protected block IDs
+                                          continue; // Don't remove call blocks from main code blocks
+                                        }
+                                      }
+                                      if (!blocks[i].isDisposed()) {
+                                        blocks[i].dispose(false);
+                                      }
+                                    } catch (e) {
+                                    }
+                                  }
+                                }
+                              } else {
+                                // No main code blocks - remove duplicates as usual
+                                // BUT: Double-check that we're not removing main code blocks
+                                // Keep the first one, remove the rest - but check each one first
+                                for (let i = 1; i < blocks.length; i++) {
                                   try {
                                     // CRITICAL: Check if this call block is protected
                                     if (protectedBlockIds.has(blocks[i].id) || protectedCallBlocks.has(blocks[i].id)) {
                                       continue; // Don't remove protected call blocks
                                     }
-                                    
+
                                     // CRITICAL: Also check if parent is protected
                                     try {
                                       const parentBlock = blocks[i].getParent();
@@ -1813,8 +1857,8 @@ const PatternCreateEdit = () => {
                                     } catch (e) {
                                       // Ignore errors
                                     }
-                                    
-                                    // CRITICAL: Double-check that this is not a main code block before disposing
+
+                                    // CRITICAL: Check if this call block is part of a main code block before disposing
                                     const parentBlock = blocks[i].getParent();
                                     if (parentBlock && parentBlock.type === 'variables_set') {
                                       const varField = parentBlock.getField('VAR');
@@ -1833,134 +1877,94 @@ const PatternCreateEdit = () => {
                                   }
                                 }
                               }
+                            }
+                          });
+
+                          // CRITICAL: If we have main code block calls, make sure they are NOT removed
+                          // Even if they appear in rootCallBlocks with empty name
+                          if (mainCodeBlockCalls.length > 0) {
+                            // Ensure none of the main code block calls are disposed
+                            mainCodeBlockCalls.forEach(callBlock => {
+                              if (callBlock.isDisposed()) {
+                              }
+                            });
+                          }
+
+                          // After cleanup, check main code blocks again
+                          const remainingBlocks = workspaceRef.current.getAllBlocks(false);
+                          const remainingMainCodeBlocks = remainingBlocks.filter(block => {
+                            try {
+                              // CRITICAL: Check if this is the actual main code block (variables_set with VAR="path" and procedures_callreturn inside)
+                              if (block.type !== 'variables_set') return false;
+
+                              const varField = block.getField('VAR');
+                              const varModel = varField ? varField.getVariable() : null;
+                              const varName = varModel ? varModel.name : block.getFieldValue('VAR');
+
+                              // Only count as main code block if:
+                              // 1. VAR="path" AND
+                              // 2. Has procedures_callreturn inside (not just any path variable)
+                              // AND
+                              // 3. Is in the protected set (to ensure it's the actual main code block, not just any path variable)
+                              if (varName === 'path') {
+                                const valueConnection = block.getInput('VALUE')?.connection?.targetBlock();
+                                if (valueConnection) {
+                                  const valueType = valueConnection.type;
+                                  if (valueType === 'procedures_callreturn' || valueType === 'procedures_callnoreturn') {
+                                    // This is the actual main code block
+                                    // Also verify it's in the protected set (from immediately protected)
+                                    // CRITICAL: If the block is in protectedBlockIdsImmediate, it's definitely a main code block
+                                    if (protectedBlockIdsImmediate.has(block.id)) {
+                                      return true;
+                                    }
+                                    // Also check if the call block inside is protected
+                                    if (protectedBlockIdsImmediate.has(valueConnection.id)) {
+                                      return true;
+                                    }
+                                  }
+                                }
+                              }
+                              return false;
+                            } catch (e) {
+                              return false;
+                            }
+                          });
+
+                          // CRITICAL: Check if any protected blocks were disposed
+                          const protectedBlocksStillExist = remainingBlocks.filter(block => protectedBlockIds.has(block.id));
+                          const missingProtectedBlocks = Array.from(protectedBlockIds).filter(id => {
+                            return !remainingBlocks.some(block => block.id === id);
+                          });
+
+                          if (missingProtectedBlocks.length > 0) {
+                            // Check what types of blocks were disposed
+                            const missingBlockTypes = missingProtectedBlocks.map(id => {
+                              // Try to find the block type from the protected set
+                              const block = allBlocks.find(b => b.id === id);
+                              return block ? block.type : 'unknown';
+                            });
+                            // Only show error if main code blocks themselves were disposed
+                            // Get main code block IDs from mainCodeBlocksBeforeCleanup (which were checked before procedure cleanup)
+                            const mainCodeBlockIdsFromBeforeCleanup = expectedMainCodeBlockIds;
+                            const missingMainCodeBlocks = missingProtectedBlocks.filter(id => mainCodeBlockIdsFromBeforeCleanup.includes(id));
+
+                            // Also check if remaining main code blocks match the expected ones
+                            const remainingMainCodeBlockIds = remainingMainCodeBlocks.map(b => b.id);
+                            const foundMainCodeBlocks = mainCodeBlockIdsFromBeforeCleanup.filter(id => remainingMainCodeBlockIds.includes(id));
+
+                            if (missingMainCodeBlocks.length > 0 || foundMainCodeBlocks.length === 0) {
                             } else {
-                              // No main code blocks - remove duplicates as usual
-                              // BUT: Double-check that we're not removing main code blocks
-                              // Keep the first one, remove the rest - but check each one first
-                              for (let i = 1; i < blocks.length; i++) {
-                                try {
-                                  // CRITICAL: Check if this call block is protected
-                                  if (protectedBlockIds.has(blocks[i].id) || protectedCallBlocks.has(blocks[i].id)) {
-                                    continue; // Don't remove protected call blocks
-                                  }
-                                  
-                                  // CRITICAL: Also check if parent is protected
-                                  try {
-                                    const parentBlock = blocks[i].getParent();
-                                    if (parentBlock && protectedBlockIds.has(parentBlock.id)) {
-                                      continue; // Don't remove blocks with protected parents
-                                    }
-                                  } catch (e) {
-                                    // Ignore errors
-                                  }
-                                  
-                                  // CRITICAL: Check if this call block is part of a main code block before disposing
-                                  const parentBlock = blocks[i].getParent();
-                                  if (parentBlock && parentBlock.type === 'variables_set') {
-                                    const varField = parentBlock.getField('VAR');
-                                    const varModel = varField ? varField.getVariable() : null;
-                                    const varName = varModel ? varModel.name : parentBlock.getFieldValue('VAR');
-                                    if (varName === 'path') {
-                                      protectedCallBlocks.add(blocks[i].id); // Add to protected set
-                                      protectedBlockIds.add(blocks[i].id); // Also add to protected block IDs
-                                      continue; // Don't remove call blocks from main code blocks
-                                    }
-                                  }
-                                  if (!blocks[i].isDisposed()) {
-                                    blocks[i].dispose(false);
-                                  }
-                                } catch (e) {
-                                }
-                              }
+                              // Main code blocks are still there, missing blocks are likely child blocks
                             }
                           }
-                        });
-                        
-                        // CRITICAL: If we have main code block calls, make sure they are NOT removed
-                        // Even if they appear in rootCallBlocks with empty name
-                        if (mainCodeBlockCalls.length > 0) {
-                          // Ensure none of the main code block calls are disposed
-                          mainCodeBlockCalls.forEach(callBlock => {
-                            if (callBlock.isDisposed()) {
-                            }
-                          });
+                        } catch (e) {
                         }
-                        
-                        // After cleanup, check main code blocks again
-                        const remainingBlocks = workspaceRef.current.getAllBlocks(false);
-                        const remainingMainCodeBlocks = remainingBlocks.filter(block => {
-                          try {
-                            // CRITICAL: Check if this is the actual main code block (variables_set with VAR="path" and procedures_callreturn inside)
-                            if (block.type !== 'variables_set') return false;
-                            
-                            const varField = block.getField('VAR');
-                            const varModel = varField ? varField.getVariable() : null;
-                            const varName = varModel ? varModel.name : block.getFieldValue('VAR');
-                            
-                            // Only count as main code block if:
-                            // 1. VAR="path" AND
-                            // 2. Has procedures_callreturn inside (not just any path variable)
-                            // AND
-                            // 3. Is in the protected set (to ensure it's the actual main code block, not just any path variable)
-                            if (varName === 'path') {
-                              const valueConnection = block.getInput('VALUE')?.connection?.targetBlock();
-                              if (valueConnection) {
-                                const valueType = valueConnection.type;
-                                if (valueType === 'procedures_callreturn' || valueType === 'procedures_callnoreturn') {
-                                  // This is the actual main code block
-                                  // Also verify it's in the protected set (from immediately protected)
-                                  // CRITICAL: If the block is in protectedBlockIdsImmediate, it's definitely a main code block
-                                  if (protectedBlockIdsImmediate.has(block.id)) {
-                                    return true;
-                                  }
-                                  // Also check if the call block inside is protected
-                                  if (protectedBlockIdsImmediate.has(valueConnection.id)) {
-                                    return true;
-                                  }
-                                }
-                              }
-                            }
-                            return false;
-                          } catch (e) {
-                            return false;
-                          }
-                        });
-                        
-                        // CRITICAL: Check if any protected blocks were disposed
-                        const protectedBlocksStillExist = remainingBlocks.filter(block => protectedBlockIds.has(block.id));
-                        const missingProtectedBlocks = Array.from(protectedBlockIds).filter(id => {
-                          return !remainingBlocks.some(block => block.id === id);
-                        });
-                        
-                        if (missingProtectedBlocks.length > 0) {
-                          // Check what types of blocks were disposed
-                          const missingBlockTypes = missingProtectedBlocks.map(id => {
-                            // Try to find the block type from the protected set
-                            const block = allBlocks.find(b => b.id === id);
-                            return block ? block.type : 'unknown';
-                          });
-                          // Only show error if main code blocks themselves were disposed
-                          // Get main code block IDs from mainCodeBlocksBeforeCleanup (which were checked before procedure cleanup)
-                          const mainCodeBlockIdsFromBeforeCleanup = expectedMainCodeBlockIds;
-                          const missingMainCodeBlocks = missingProtectedBlocks.filter(id => mainCodeBlockIdsFromBeforeCleanup.includes(id));
-                          
-                          // Also check if remaining main code blocks match the expected ones
-                          const remainingMainCodeBlockIds = remainingMainCodeBlocks.map(b => b.id);
-                          const foundMainCodeBlocks = mainCodeBlockIdsFromBeforeCleanup.filter(id => remainingMainCodeBlockIds.includes(id));
-                          
-                          if (missingMainCodeBlocks.length > 0 || foundMainCodeBlocks.length === 0) {
-                          } else {
-                            // Main code blocks are still there, missing blocks are likely child blocks
-                          }
-                        }
-                      } catch (e) {
-                      }
                       }, 600); // เพิ่ม buffer ให้การลบ unnamed definitions ช้าลง ไม่ดึง call blocks ตามไปด้วย
                     } // End of if (!isLoadingFromPreviousStepRef.current)
-                    
-                  // XML already loaded above, no need to load again
-                  // Reset flag after loading
-                  isLoadingFromPreviousStepRef.current = false;
+
+                    // XML already loaded above, no need to load again
+                    // Reset flag after loading
+                    isLoadingFromPreviousStepRef.current = false;
                   } catch (stepXmlErr) {
                     throw stepXmlErr; // Re-throw เพื่อให้ catch block จัดการ
                   }
@@ -1989,7 +1993,7 @@ const PatternCreateEdit = () => {
                     return false;
                   }
                 });
-                
+
                 // Get expected IDs from mainCodeBlocksBeforeCleanup (which are the actual main code blocks)
                 const expectedMainCodeBlockIds = mainCodeBlocksBeforeCleanup.map(b => b.id);
                 // Clean up ONLY invalid/duplicate procedure definitions after loading XML
@@ -2000,14 +2004,14 @@ const PatternCreateEdit = () => {
                 //    - These are valid procedures that the user created
                 const definitionBlocks = workspaceRef.current.getBlocksByType('procedures_defreturn', false)
                   .concat(workspaceRef.current.getBlocksByType('procedures_defnoreturn', false));
-                
+
                 // Group by exact procedure name (not base name) to find true duplicates
                 const nameToBlocks = new Map(); // exactName -> array of blocks
-                
+
                 definitionBlocks.forEach(defBlock => {
                   try {
                     const name = defBlock.getFieldValue('NAME');
-                    
+
                     // Remove blocks with invalid names
                     if (!name || name === 'unnamed' || name === 'undefined' || name.trim() === '') {
                       if (!defBlock.isDisposed()) {
@@ -2015,7 +2019,7 @@ const PatternCreateEdit = () => {
                       }
                       return;
                     }
-                    
+
                     // Group by exact name (not base name)
                     if (!nameToBlocks.has(name)) {
                       nameToBlocks.set(name, []);
@@ -2024,7 +2028,7 @@ const PatternCreateEdit = () => {
                   } catch (e) {
                   }
                 });
-                
+
                 // For each exact name, keep only the first one if there are duplicates
                 // This removes true duplicates (same exact name) but keeps numbered variants (DFS, DFS2, DFS3)
                 nameToBlocks.forEach((blocks, exactName) => {
@@ -2032,7 +2036,7 @@ const PatternCreateEdit = () => {
                     // Only one procedure with this exact name, keep it
                     return;
                   }
-                  
+
                   // Multiple procedures with the same exact name - keep the first one, remove the rest
                   for (let i = 1; i < blocks.length; i++) {
                     const toRemove = blocks[i];
@@ -2044,7 +2048,7 @@ const PatternCreateEdit = () => {
                     }
                   }
                 });
-                
+
                 const remainingBlocks = workspaceRef.current.getBlocksByType('procedures_defreturn', false)
                   .concat(workspaceRef.current.getBlocksByType('procedures_defnoreturn', false));
 
@@ -2103,7 +2107,7 @@ const PatternCreateEdit = () => {
       const existingBlocks = workspaceRef.current.getAllBlocks(false);
       if (!starterXmlLoadedRef.current || existingBlocks.length === 0) {
         workspaceRef.current.clear();
-        
+
         // Clear variable map เพื่อป้องกัน variable ID conflict
         const variableMap = workspaceRef.current.getVariableMap();
         if (variableMap) {
@@ -2116,7 +2120,7 @@ const PatternCreateEdit = () => {
           });
         }
       }
-      
+
       if (hasStarterXml && !starterXmlLoadedRef.current) {
         setTimeout(() => {
           // Check effectKey again before loading
@@ -2125,14 +2129,14 @@ const PatternCreateEdit = () => {
           }
           try {
             if (!workspaceRef.current) return;
-            
+
             // Helper function: Remove variable IDs from XML to prevent conflicts
             const removeVariableIdsFromXml = (xmlString) => {
               if (!xmlString) return xmlString;
               // Remove all variable id attributes from XML
               return xmlString.replace(/varid="[^"]*"/g, '');
             };
-            
+
             // Clear variable map อีกครั้งก่อนโหลด (เพื่อป้องกัน variable ID conflict)
             const variableMapBeforeLoad = workspaceRef.current.getVariableMap();
             if (variableMapBeforeLoad) {
@@ -2144,7 +2148,7 @@ const PatternCreateEdit = () => {
                 }
               });
             }
-            
+
             // Remove variable IDs from starter XML to prevent conflicts
             const cleanedStarterXml = removeVariableIdsFromXml(starter_xml);
             const xml = Blockly.utils.xml.textToDom(cleanedStarterXml);
@@ -2156,6 +2160,7 @@ const PatternCreateEdit = () => {
         }, 150);
       } else if (!hasStarterXml) {
         starterXmlLoadedRef.current = false;
+        setBlocklyProcessing(false);
       }
 
       // Mark first load as completed แม้จะไม่มี XML ก็ตาม
@@ -2232,7 +2237,7 @@ const PatternCreateEdit = () => {
         workspaceRef.current = workspace;
         // CRITICAL: Prevent auto-creation of procedure definitions when placing call blocks
         let isCreatingCallBlock = false;
-        
+
         // Helper function to clean up ALL unwanted procedure definitions
         const cleanupDuplicateProcedures = () => {
           if (skipCleanupRef.current) {
@@ -2249,14 +2254,14 @@ const PatternCreateEdit = () => {
           try {
             const definitionBlocks = workspace.getBlocksByType('procedures_defreturn', false)
               .concat(workspace.getBlocksByType('procedures_defnoreturn', false));
-            
+
             if (definitionBlocks.length === 0) {
               return;
             }
-            
+
             const callBlocks = workspace.getBlocksByType('procedures_callreturn', false)
               .concat(workspace.getBlocksByType('procedures_callnoreturn', false));
-            
+
             // Helper: ช่วยผูกชื่อให้ call ที่ยังไม่ตั้งชื่อ
             const fixUnnamedCallBlocks = () => {
               // เลือก def ที่ดีที่สุด: ชื่อไม่ว่าง และมีพารามิเตอร์มากสุด
@@ -2329,7 +2334,7 @@ const PatternCreateEdit = () => {
               fixUnnamedCallBlocks();
               return;
             }
-            
+
             // ⬇️ เพิ่มส่วนนี้: Protect call blocks from being disposed
             const protectedCallBlockIds = new Set();
             callBlocks.forEach(callBlock => {
@@ -2348,7 +2353,7 @@ const PatternCreateEdit = () => {
                 }
               } catch (e) { }
             });
-            
+
             const hasCallers = (name) => {
               try {
                 const callers = Blockly.Procedures.getCallers(name || '', workspace) || [];
@@ -2357,14 +2362,14 @@ const PatternCreateEdit = () => {
                 return false;
               }
             };
-            
+
             // Group by procedure name and remove invalid/duplicate ones
             const validProcedures = new Map();
-            
+
             definitionBlocks.forEach(defBlock => {
               try {
                 const name = defBlock.getFieldValue('NAME');
-                
+
                 // ⬇️ แก้ไข: Remove ONLY unnamed/undefined blocks immediately
                 if (!name || name === 'unnamed' || name === 'undefined' || name.trim() === '') {
                   // ⬇️ เพิ่ม: Check if removing this will break call blocks
@@ -2384,7 +2389,7 @@ const PatternCreateEdit = () => {
                   }
                   return;
                 }
-                
+
                 // Keep track of valid procedures (first occurrence of each name)
                 if (!validProcedures.has(name)) {
                   validProcedures.set(name, defBlock);
@@ -2412,7 +2417,7 @@ const PatternCreateEdit = () => {
         };
         // Expose cleanup so loader can call once XML injection finishes
         cleanupDuplicateProceduresRef.current = cleanupDuplicateProcedures;
-        
+
         workspace.addChangeListener((event) => {
           // Skip all change handling while XML is being programmatically loaded
           if (isXmlLoadingRef.current) {
@@ -2483,9 +2488,9 @@ const PatternCreateEdit = () => {
           }
 
           // Clean up duplicate procedures on any change (skip while creating call blocks)
-          if (event.type === Blockly.Events.BLOCK_CREATE || 
-              event.type === Blockly.Events.BLOCK_CHANGE ||
-              event.type === Blockly.Events.BLOCK_DELETE) {
+          if (event.type === Blockly.Events.BLOCK_CREATE ||
+            event.type === Blockly.Events.BLOCK_CHANGE ||
+            event.type === Blockly.Events.BLOCK_DELETE) {
             if (skipCleanupRef.current || isCreatingCallBlock) {
               return;
             }
@@ -2513,7 +2518,7 @@ const PatternCreateEdit = () => {
                     if (mut && mut.childNodes) {
                       return Array.from(mut.childNodes).filter(n => n.nodeName === 'arg').length;
                     }
-                  } catch (e) {}
+                  } catch (e) { }
                   return 0;
                 };
                 return cnt(b) - cnt(a);
@@ -2534,18 +2539,18 @@ const PatternCreateEdit = () => {
               }
               return;
             }
-            
+
             // ล้าง timeout เก่าถ้ามี (debouncing)
             if (cleanupTimeoutRef.current) {
               clearTimeout(cleanupTimeoutRef.current);
             }
-            
+
             // Debounce cleanup - รอให้ events เงียบ 300ms แทน 1500ms
             cleanupTimeoutRef.current = setTimeout(() => {
               // ตรวจสอบอีกครั้งว่ายังมี events ใหม่ไหม
               const currentCallBlocks = workspace.getBlocksByType('procedures_callreturn', false)
                 .concat(workspace.getBlocksByType('procedures_callnoreturn', false));
-              
+
               // ตรวจสอบว่าทุก call block มีชื่อแล้ว
               const allNamed = currentCallBlocks.every(cb => {
                 try {
@@ -2553,16 +2558,16 @@ const PatternCreateEdit = () => {
                   return name && name !== 'unnamed' && name !== 'undefined' && name.trim();
                 } catch (e) { return false; }
               });
-              
+
               // ทำ cleanup เฉพาะเมื่อทุกอย่างพร้อม หรือถ้าไม่มี call blocks เลย
               if (allNamed || currentCallBlocks.length === 0) {
                 cleanupDuplicateProcedures();
               }
-              
+
               cleanupTimeoutRef.current = null;
             }, 300); // ลดจาก 1500ms เป็น 300ms
           }
-          
+
           // Track when call blocks are being created
           if (event.type === Blockly.Events.BLOCK_CREATE) {
             const block = workspace.getBlockById(event.blockId);
@@ -2570,48 +2575,48 @@ const PatternCreateEdit = () => {
               isCreatingCallBlock = true;
               skipCleanupRef.current = true;
               // CRITICAL: Fix call block name immediately (no delay) to prevent cleanup from deleting it
-                try {
-                  const nameField = block.getField('NAME');
-                  if (nameField) {
-                    const currentName = nameField.getValue();
-                    
-                    // Get valid procedure names
-                    const definitionBlocks = workspace.getBlocksByType('procedures_defreturn', false)
-                      .concat(workspace.getBlocksByType('procedures_defnoreturn', false));
-                    
-                    const validProcedureNames = new Set();
-                    definitionBlocks.forEach(defBlock => {
-                      try {
-                        const name = defBlock.getFieldValue('NAME');
-                        if (name && name !== 'unnamed' && name !== 'undefined' && name.trim() !== '') {
-                          validProcedureNames.add(name);
+              try {
+                const nameField = block.getField('NAME');
+                if (nameField) {
+                  const currentName = nameField.getValue();
+
+                  // Get valid procedure names
+                  const definitionBlocks = workspace.getBlocksByType('procedures_defreturn', false)
+                    .concat(workspace.getBlocksByType('procedures_defnoreturn', false));
+
+                  const validProcedureNames = new Set();
+                  definitionBlocks.forEach(defBlock => {
+                    try {
+                      const name = defBlock.getFieldValue('NAME');
+                      if (name && name !== 'unnamed' && name !== 'undefined' && name.trim() !== '') {
+                        validProcedureNames.add(name);
                         lastProcedureNameRef.current = name;
-                        }
+                      }
                     } catch (e) { }
-                    });
-                    
-                    // If call block has empty/invalid name, fix it immediately
-                    if (!currentName || currentName === 'unnamed' || currentName === 'undefined' || currentName.trim() === '') {
-                      if (validProcedureNames.size > 0) {
-                        const firstValidName = Array.from(validProcedureNames)[0];
-                        nameField.setValue(firstValidName);
+                  });
+
+                  // If call block has empty/invalid name, fix it immediately
+                  if (!currentName || currentName === 'unnamed' || currentName === 'undefined' || currentName.trim() === '') {
+                    if (validProcedureNames.size > 0) {
+                      const firstValidName = Array.from(validProcedureNames)[0];
+                      nameField.setValue(firstValidName);
                     } else if (lastProcedureNameRef.current) {
                       nameField.setValue(lastProcedureNameRef.current);
                     } else {
                       nameField.setValue(defaultProcedureName);
-                      }
-                    } else if (!validProcedureNames.has(currentName)) {
-                      // Name exists but procedure doesn't - use first valid name
-                      if (validProcedureNames.size > 0) {
-                        const firstValidName = Array.from(validProcedureNames)[0];
-                        nameField.setValue(firstValidName);
+                    }
+                  } else if (!validProcedureNames.has(currentName)) {
+                    // Name exists but procedure doesn't - use first valid name
+                    if (validProcedureNames.size > 0) {
+                      const firstValidName = Array.from(validProcedureNames)[0];
+                      nameField.setValue(firstValidName);
                     } else if (lastProcedureNameRef.current) {
                       nameField.setValue(lastProcedureNameRef.current);
                     } else {
                       nameField.setValue(defaultProcedureName);
                     }
                   }
-                  
+
                   // Sync parameters/varids on call block with its definition if available
                   try {
                     const matchedDef = definitionBlocks.find(def => {
@@ -2644,26 +2649,26 @@ const PatternCreateEdit = () => {
                       if (params.length && paramIds && params.length === paramIds.length) {
                         block.setProcedureParameters(params, paramIds, true);
                         if (block.render) block.render();
-                          }
-                        }
+                      }
+                    }
                   } catch (e) { }
-                  }
-                } catch (e) {
                 }
+              } catch (e) {
+              }
               // ให้เวลานานขึ้นก่อนเปิด cleanup อีกครั้ง
               setTimeout(() => {
                 isCreatingCallBlock = false;
-              skipCleanupRef.current = false;
+                skipCleanupRef.current = false;
               }, 3500);
             }
           }
-          
+
           // If a definition block is created while we're creating a call block, delete it
           if (event.type === Blockly.Events.BLOCK_CREATE) {
             const block = workspace.getBlockById(event.blockId);
             if (block && (block.type === 'procedures_defreturn' || block.type === 'procedures_defnoreturn')) {
-                setTimeout(() => {
-                  try {
+              setTimeout(() => {
+                try {
                   const defName = block.getFieldValue('NAME');
                   const allDefs = workspace.getBlocksByType('procedures_defreturn', false)
                     .concat(workspace.getBlocksByType('procedures_defnoreturn', false));
@@ -2728,16 +2733,16 @@ const PatternCreateEdit = () => {
                         try { if (!block.isDisposed()) block.dispose(false); } catch (e) { }
                       }
                     }
-                    }
+                  }
                 } catch (e) { }
               }, 100);
             }
           }
         });
-        
+
         // Reset lastLoadedXmlRef when workspace is reinitialized to allow first load
         lastLoadedXmlRef.current = null;
-        
+
         // Set blocklyLoaded AFTER workspace is ready to trigger XML loading
         // Use setTimeout to ensure workspace is fully initialized
         // Increased delay to 300ms to ensure workspace is fully ready before loading XML
@@ -2794,7 +2799,7 @@ const PatternCreateEdit = () => {
       }
 
       stepsRef.current = currentSteps;
-      
+
       // Then update state (asynchronous)
       setSteps(currentSteps);
 
@@ -2809,6 +2814,10 @@ const PatternCreateEdit = () => {
   }, [currentStepIndex]);
 
   const handleNextStep = async () => {
+    if (currentStepIndex >= 2) {
+      alert('จำกัดจำนวน Step สูงสุดที่ 3 ขั้นตอน');
+      return;
+    }
     const saved = await saveCurrentStep();
     if (!saved) { alert('ไม่สามารถบันทึก step ปัจจุบันได้'); return; }
     await new Promise(r => setTimeout(r, 50));
@@ -2843,7 +2852,7 @@ const PatternCreateEdit = () => {
     await new Promise(resolve => setTimeout(resolve, 200));
 
     // Get final steps from ref (most up-to-date)
-    const finalSteps = stepsRef.current.length > 0 ? stepsRef.current : steps;
+    const finalSteps = (stepsRef.current.length > 0 ? stepsRef.current : steps).slice(0, 3);
 
     if (finalSteps.length === 0) {
       alert('กรุณาเพิ่มอย่างน้อย 1 step');
@@ -2946,14 +2955,14 @@ const PatternCreateEdit = () => {
     );
   }
 
-    if (loading) {
-      return (
-        <div className="flex items-center justify-center min-h-screen">
-          <Loader className="mx-auto" />
-        </div>
-      );
-    }
-  
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader className="mx-auto" />
+      </div>
+    );
+  }
+
 
   if (error) {
     return (
@@ -2975,109 +2984,110 @@ const PatternCreateEdit = () => {
           subtitle={levelData?.level_name || 'Loading...'}
           backPath={`/admin/levels/${levelId ? `edit/${levelId}` : ''}`}
           rightContent={
-             <Button
-                onClick={handleFinish}
-                disabled={saving || !patternName.trim()}
-                className="ml-2 bg-blue-600 hover:bg-blue-500 text-white shadow-lg border-0 min-w-[140px] font-bold tracking-wide"
-                size="default"
-              >
-                {saving ? 'กำลังบันทึก...' : (isEditMode ? 'บันทึกการแก้ไข' : 'สิ้นสุดและบันทึก')}
-              </Button>
+            <Button
+              onClick={handleFinish}
+              disabled={saving || !patternName.trim()}
+              className="ml-2 bg-blue-600 hover:bg-blue-500 text-white shadow-lg border-0 min-w-[140px] font-bold tracking-wide"
+              size="default"
+            >
+              {saving ? 'กำลังบันทึก...' : (isEditMode ? 'บันทึกการแก้ไข' : 'สิ้นสุดและบันทึก')}
+            </Button>
           }
         />
 
         <div className="grid grid-cols-12 gap-6 h-[calc(100vh-140px)]">
-           {/* Left Sidebar: Tools & Properties */}
-           <div className="col-span-12 lg:col-span-4 xl:col-span-3 flex flex-col gap-4 overflow-hidden h-full">
-               <Tabs defaultValue="settings" className="flex flex-col h-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
-                   <div className="px-4 pt-4 bg-white border-b border-gray-100">
-                     <TabsList className="w-full p-1 bg-white border border-gray-200 rounded-lg">
-                        <TabsTrigger value="settings" className="flex-1 data-[state=active]:bg-white data-[state=active]:text-blue-600 text-xs uppercase font-bold tracking-wider py-2 shadow-sm">
-                           <Settings className="w-3 h-3 mr-2" /> Settings
-                        </TabsTrigger>
-                        <TabsTrigger value="steps" className="flex-1 data-[state=active]:bg-white data-[state=active]:text-blue-600 text-xs uppercase font-bold tracking-wider py-2 shadow-sm">
-                           <ListOrdered className="w-3 h-3 mr-2" /> Steps
-                        </TabsTrigger>
-                     </TabsList>
-                   </div>
-
-                   <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar bg-gray-50/50">
-                      <TabsContent value="settings" className="space-y-6 mt-0">
-                         <PatternInfoForm
-                            patternName={patternName}
-                            setPatternName={setPatternName}
-                            patternDescription={patternDescription}
-                            setPatternDescription={setPatternDescription}
-                            weaponId={weaponId}
-                            setWeaponId={setWeaponId}
-                            bigO={bigO}
-                            setBigO={setBigO}
-                            isEditMode={isEditMode}
-                            patternLoaded={patternLoaded}
-                          />
-                      </TabsContent>
-
-                      <TabsContent value="steps" className="space-y-6 mt-0">
-                         <div className="bg-white rounded-lg shadow p-6">
-                           <h2 className="text-xl font-bold mb-4">
-                             Step {currentStepIndex + 1}
-                           </h2>
-                           <div className="text-sm text-gray-600 mb-4">
-                             Step ที่บันทึกแล้ว: {steps.length}
-                           </div>
-                           <div className="text-sm text-gray-500 mb-4">
-                             คำใบ้ (Hints) จะถูกจัดการจากตาราง Level Hints แทน
-                           </div>
-                           <div className="flex gap-2">
-                             <Button
-                               onClick={handlePreviousStep}
-                               disabled={currentStepIndex === 0}
-                               variant="outline"
-                               className="flex-1"
-                             >
-                               ← ก่อนหน้า
-                             </Button>
-                             <Button
-                               onClick={handleNextStep}
-                               variant="outline"
-                               className="flex-1"
-                             >
-                               ถัดไป →
-                             </Button>
-                           </div>
-                         </div>
-                      </TabsContent>
-                   </div>
-               </Tabs>
-           </div>
-
-           {/* Right: Blockly Workspace */}
-           <div className="col-span-12 lg:col-span-8 xl:col-span-9 flex flex-col h-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden relative">
-              <div className="h-14 bg-gray-50 border-b border-gray-200 flex items-center justify-between px-4">
-                  <span className="text-xs font-bold text-black uppercase tracking-wider">Blockly Workspace</span>
-                  <div className="text-xs text-gray-500">
-                    Step {currentStepIndex + 1} of {steps.length || 1}
-                  </div>
+          {/* Left Sidebar: Tools & Properties */}
+          <div className="col-span-12 lg:col-span-4 xl:col-span-3 flex flex-col gap-4 overflow-hidden h-full">
+            <Tabs defaultValue="settings" className="flex flex-col h-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
+              <div className="px-4 pt-4 bg-white border-b border-gray-100">
+                <TabsList className="w-full p-1 bg-white border border-gray-200 rounded-lg">
+                  <TabsTrigger value="settings" className="flex-1 data-[state=active]:bg-white data-[state=active]:text-blue-600 text-xs uppercase font-bold tracking-wider py-2 shadow-sm">
+                    <Settings className="w-3 h-3 mr-2" /> Settings
+                  </TabsTrigger>
+                  <TabsTrigger value="steps" className="flex-1 data-[state=active]:bg-white data-[state=active]:text-blue-600 text-xs uppercase font-bold tracking-wider py-2 shadow-sm">
+                    <ListOrdered className="w-3 h-3 mr-2" /> Steps
+                  </TabsTrigger>
+                </TabsList>
               </div>
-              <div className="flex-1 relative">
-                {blocklyProcessing ? (
-                  <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
-                    <div className="text-center">
-                      <Loader className="mx-auto mb-4" size="lg" />
-                      <div className="text-lg text-gray-600">กำลังเตรียม workspace...</div>
-                      <div className="text-sm text-gray-400 mt-2">กำลังจัดการบล็อก function และลบบล็อกที่ซ้ำซ้อน</div>
+
+              <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar bg-gray-50/50">
+                <TabsContent value="settings" className="space-y-6 mt-0">
+                  <PatternInfoForm
+                    patternName={patternName}
+                    setPatternName={setPatternName}
+                    patternDescription={patternDescription}
+                    setPatternDescription={setPatternDescription}
+                    weaponId={weaponId}
+                    setWeaponId={setWeaponId}
+                    bigO={bigO}
+                    setBigO={setBigO}
+                    isEditMode={isEditMode}
+                    patternLoaded={patternLoaded}
+                  />
+                </TabsContent>
+
+                <TabsContent value="steps" className="space-y-6 mt-0">
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <h2 className="text-xl font-bold mb-4">
+                      Step {currentStepIndex + 1}
+                    </h2>
+                    <div className="text-sm text-gray-600 mb-4">
+                      Step ที่บันทึกแล้ว: {steps.length}
+                    </div>
+                    <div className="text-sm text-gray-500 mb-4">
+                      คำใบ้ (Hints) จะถูกจัดการจากตาราง Level Hints แทน
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={handlePreviousStep}
+                        disabled={currentStepIndex === 0}
+                        variant="outline"
+                        className="flex-1"
+                      >
+                        ← ก่อนหน้า
+                      </Button>
+                      <Button
+                        onClick={handleNextStep}
+                        disabled={currentStepIndex >= 2}
+                        variant="outline"
+                        className="flex-1"
+                      >
+                        ถัดไป →
+                      </Button>
                     </div>
                   </div>
-                ) : null}
-                <div className={blocklyProcessing ? 'opacity-0 pointer-events-none' : 'opacity-100'}>
-                  <PatternBlocklyWorkspace
-                    ref={blocklyRef}
-                    currentStepIndex={currentStepIndex}
-                    blocklyLoaded={blocklyLoaded}
-                  />
-                </div>
+                </TabsContent>
               </div>
-           </div>
+            </Tabs>
+          </div>
+
+          {/* Right: Blockly Workspace */}
+          <div className="col-span-12 lg:col-span-8 xl:col-span-9 flex flex-col h-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden relative">
+            <div className="h-14 bg-gray-50 border-b border-gray-200 flex items-center justify-between px-4">
+              <span className="text-xs font-bold text-black uppercase tracking-wider">Blockly Workspace</span>
+              <div className="text-xs text-gray-500">
+                Step {currentStepIndex + 1} of {steps.length || 1}
+              </div>
+            </div>
+            <div className="flex-1 relative">
+              {blocklyProcessing ? (
+                <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
+                  <div className="text-center">
+                    <Loader className="mx-auto mb-4" size="lg" />
+                    <div className="text-lg text-gray-600">กำลังเตรียม workspace...</div>
+                    <div className="text-sm text-gray-400 mt-2">กำลังจัดการบล็อก function และลบบล็อกที่ซ้ำซ้อน</div>
+                  </div>
+                </div>
+              ) : null}
+              <div className={blocklyProcessing ? 'opacity-0 pointer-events-none' : 'opacity-100'}>
+                <PatternBlocklyWorkspace
+                  ref={blocklyRef}
+                  currentStepIndex={currentStepIndex}
+                  blocklyLoaded={blocklyLoaded}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

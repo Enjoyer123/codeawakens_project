@@ -15,7 +15,8 @@ export {
   setupCoinChange,
   setupAntDp,
   setupNQueen,
-  drawQueenOnBoard
+  drawQueenOnBoard,
+  drawCinematicMonster
 } from './phaser/phaserSetup';
 export { setupTrainSchedule, updateTrainScheduleVisuals } from './phaser/trainSchedulePhaser';
 export { setupRopePartition, updateRopePartitionVisuals } from './phaser/ropePartitionPhaser';
@@ -24,7 +25,9 @@ export { setupEmeiMountain, highlightPeak, highlightCableCar, showEmeiFinalResul
 export {
   updatePersonDisplay,
   updateTreasureDisplay,
+  collectTreasureVisual,
   rescuePersonAtPosition,
+  rescuePersonVisual,
   collectCoinByPlayer,
   showCoinCollectionEffect,
   haveCoinAtPosition
@@ -64,3 +67,7 @@ export {
   startBattle,
   updateMonsters
 } from './phaserGame/phaserGameBattle';
+
+export {
+  playCombatSequence
+} from './phaserGame/phaserGameCombatAnimation';

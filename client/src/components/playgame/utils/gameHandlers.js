@@ -144,7 +144,8 @@ export async function handleVictory({
   currentLevel,
   setShowProgressModal,
   hintOpenCount,
-  matchedPattern = null
+  matchedPattern = null,
+  userBigO = null // Receive userBigO
 }) {
   if (isCompleted) return;
 
@@ -159,7 +160,20 @@ export async function handleVictory({
 
   // Calculate score
   const patternTypeId = matchedPattern?.pattern_type_id || null;
-  const score = calculateFinalScore(false, patternTypeId, hintOpenCount);
+
+  // Get target Big O from hintData explicitly first, then pattern or level
+  const targetBigO = hintData?.bestPatternBigO || matchedPattern?.big_o || matchedPattern?.bigO || currentLevel?.big_o || currentLevel?.bigO || null;
+
+  console.log('🏆 [handleVictory] Score Calc Debug:', {
+    userBigO,
+    targetBigO,
+    explicitHintBigO: hintData?.bestPatternBigO,
+    patternTypeId,
+    matchedPatternBigO: matchedPattern?.big_o,
+    currentLevelBigO: currentLevel?.big_o
+  });
+
+  const score = calculateFinalScore(false, patternTypeId, hintOpenCount, userBigO, targetBigO);
   setFinalScore(score);
 
   // Calculate time spent

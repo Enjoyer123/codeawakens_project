@@ -19,7 +19,8 @@ import {
   getWeaponData,
   toggleDebugMode,
   getRescuedPeople,
-  displayPlayerWeapon
+  displayPlayerWeapon,
+  getCollectedTreasures
 } from '../../gameutils/utils/gameUtils';
 import {
   isInCombat
@@ -40,6 +41,8 @@ import { useCodeExecution } from './hooks/useCodeExecution';
 import { useLevelLoader } from './hooks/useLevelLoader';
 import { usePatternAnalysis } from './hooks/usePatternAnalysis';
 import { useTextCodeValidation } from './hooks/useTextCodeValidation';
+import { getUserByClerkId } from '../../services/profileService';
+import { fetchAllLevels } from '../../services/levelService';
 
 // Import utils
 import { calculateFinalScore } from './utils/scoreUtils';
@@ -223,6 +226,8 @@ const GameCore = ({
 
   // Person rescue state
   const [rescuedPeople, setRescuedPeople] = useState([]);
+  // Treasure collection state
+  const [collectedTreasures, setCollectedTreasures] = useState([]);
 
   // Level-based hints (from DB) state for Need Hint button
   const [levelHintIndex, setLevelHintIndex] = useState(0);
@@ -273,6 +278,10 @@ const GameCore = ({
     const interval = setInterval(() => {
       const currentRescued = getRescuedPeople();
       setRescuedPeople(currentRescued);
+
+      // Also sync collected treasures
+      const currentTreasures = getCollectedTreasures();
+      setCollectedTreasures(currentTreasures);
     }, 500);
     return () => clearInterval(interval);
   }, []);
@@ -292,6 +301,44 @@ const GameCore = ({
   useEffect(() => {
     console.log("🔍 blocklyJavaScriptReady state changed:", blocklyJavaScriptReady);
   }, [blocklyJavaScriptReady]);
+
+  // History system state
+  const [userProgress, setUserProgress] = useState([]);
+  const [allLevelsData, setAllLevelsData] = useState([]);
+
+  // Fetch user progress and all levels on mount
+  // Fetch user progress and all levels
+  const fetchHistoryData = React.useCallback(async () => {
+    if (!getToken) return;
+    try {
+      const [profileData, levelsData] = await Promise.all([
+        getUserByClerkId(getToken),
+        fetchAllLevels(getToken, 1, 100) // Large limit to get all levels
+      ]);
+
+      if (profileData?.user_progress) {
+        setUserProgress(profileData.user_progress);
+      }
+
+      if (levelsData?.levels) {
+        setAllLevelsData(levelsData.levels);
+      }
+      console.log('🔄 History data refreshed');
+    } catch (err) {
+      console.error("Error fetching history data:", err);
+    }
+  }, [getToken]);
+
+  // Initial fetch
+  useEffect(() => {
+    fetchHistoryData();
+  }, [fetchHistoryData]);
+
+  const handleCloseProgressModal = () => {
+    setShowProgressModal(false);
+    // Refresh history data when modal closes (after save)
+    fetchHistoryData();
+  };
 
   // Set blocklyJavaScriptReady when blocklyLoaded becomes true
   useEffect(() => {
@@ -436,14 +483,25 @@ const GameCore = ({
   }, [currentLevel, getToken]);
 
   // Pattern analysis and weapon display - using hook
+  console.log("🛠️ [GameCore] Calling usePatternAnalysis", {
+    blocklyLoaded,
+    hasWorkspace: !!workspaceRef.current,
+    goodPatternsCount: goodPatterns?.length
+  });
+
   usePatternAnalysis({
     blocklyLoaded,
     workspaceRef,
     goodPatterns,
     setHintData,
+    setCurrentHint, // <- Added
     setCurrentWeaponData,
     setPatternFeedback,
-    setPartialWeaponKey
+    setPartialWeaponKey,
+    highlightBlocks, // <- Added
+    clearHighlights, // <- Added
+    hintOpen,        // <- Added
+    hintData         // <- Added
   });
 
   // Initialize Blockly and Phaser when ready
@@ -485,13 +543,18 @@ const GameCore = ({
       patternId,
       currentLevel,
       setShowProgressModal,
+      setShowProgressModal,
       hintOpenCount,
-      matchedPattern
+      matchedPattern,
+      userBigO // Pass userBigO state
     });
   };
 
   // Rest of the component implementation...
   // (This is a large component, so I'll continue with the key parts)
+
+  // Test result state
+  const [testCaseResult, setTestCaseResult] = useState(null);
 
   // Initialize Phaser game
   const { initPhaserGame } = usePhaserGame({
@@ -566,7 +629,10 @@ const GameCore = ({
     canMoveForward,
     nearPit,
     atGoal,
-    setHintData // Pass setHintData to allow visualization updates from execution
+    setHintData, // Pass setHintData to allow visualization updates from execution
+    setTestCaseResult, // Pass setTestCaseResult to update UI with test results
+    userBigO, // Pass userBigO for scoring
+    hintData // Pass hintData for pattern matching info in scoring
   });
 
   // Handle restart game - using utils
@@ -583,6 +649,7 @@ const GameCore = ({
       clearGameOverScreen,
       updatePlayerWeaponDisplay
     });
+    setTestCaseResult(null); // Clear test results on restart
   };
 
   // Game action and condition functions are now provided by custom hooks (useGameActions, useGameConditions)
@@ -592,34 +659,168 @@ const GameCore = ({
     if (!currentLevel) return;
     const isRopePartition = currentLevel.gameType === 'rope_partition' || (currentLevel.appliedData && currentLevel.appliedData.type === 'BACKTRACKING_ROPE_PARTITION');
 
+
     if (isRopePartition) {
-      // Rope Partition API Bridge
+      // Rope Partition API Bridge (Tree Version)
       if (typeof globalThis !== 'undefined') {
-        console.log('[Rope Bridge] Initializing Rope Partition API');
-        globalThis.__ropePartition_api = {
-          updateCuts: (cuts) => {
-            console.log('[Rope Bridge] updateCuts called with:', cuts);
-            // cuts is array of segment lengths e.g. [1, 2, 7]
-            // We need to pass this to hintData so phaser can render it
-            setHintData(prev => ({
-              ...prev,
-              current: cuts ? [...cuts] : []
-            }));
+        console.log('[Rope Bridge] Initializing Rope Partition API (Tree)');
+
+        // Setup shared state for the run
+        let treeNodes = [];
+        globalThis.ropeStack = []; // Stack to track recursion path ids
+
+        // Helper to update React State safely
+        const updateTreeState = () => {
+          setHintData(prev => ({
+            ...prev,
+            nodes: [...treeNodes]
+          }));
+        };
+
+        // Stack Helper
+        const getRopeParent = () => {
+          if (globalThis.ropeStack.length === 0) return -1;
+          return globalThis.ropeStack[globalThis.ropeStack.length - 1];
+        };
+
+        // 1. Init
+        globalThis.initRopeTree = async () => {
+          try {
+            if (globalThis.__isVisualRun === false) return; // Skip for background tests
+            console.log('[Rope API] Init Tree');
+            treeNodes = [];
+            globalThis.ropeStack = [];
+            setHintData(prev => ({ ...prev, nodes: [], result: null }));
+            // Wait a bit for clear to happen
+            await new Promise(r => setTimeout(r, 50));
+          } catch (e) {
+            console.error('[Rope API] Init Error:', e);
           }
         };
-        // Initialize state
-        setHintData({ current: [], status: 'Adding cuts...' });
+
+        // 1.5 Stack Operations (Wrappers)
+        globalThis.pushRopeNode = async (cut, sum) => {
+          const parentId = getRopeParent();
+          const depth = globalThis.ropeStack.length;
+
+          if (depth > 50) {
+            console.warn('[Rope API] Depth Limit Exceeded (50)');
+            return -1;
+          }
+
+          // Force Number types for visual consistency
+          const numCut = Number(cut);
+          const numSum = Number(sum);
+          console.log('[Rope API] Push Node:', { parentId, cut: numCut, sum: numSum, depth });
+
+          const id = await globalThis.addRopeNode(parentId, numCut, numSum, depth);
+          globalThis.ropeStack.push(id);
+          return id;
+        };
+
+        globalThis.popRopeNode = async () => {
+          try {
+            if (globalThis.__isVisualRun === false) return; // Skip for background tests
+            if (globalThis.ropeStack.length > 0) globalThis.ropeStack.pop();
+            await new Promise(r => setTimeout(r, 20));
+          } catch (e) {
+            console.error('[Rope API] Pop Error:', e);
+          }
+        };
+
+        // 2. Add Node
+        globalThis.addRopeNode = async (parentId, cut, sum, depth) => {
+          try {
+            if (globalThis.__isVisualRun === false) return 9999; // Skip for background tests
+
+            const id = treeNodes.length;
+            const newNode = {
+              id,
+              parentId,
+              cut,
+              sum,
+              depth,
+              status: 'visiting' // visiting, success, pruned, normal
+            };
+            treeNodes.push(newNode);
+            updateTreeState();
+
+            await new Promise(r => setTimeout(r, 100)); // Animation delay
+            return id;
+          } catch (e) {
+            console.error('[Rope API] Add Node Error:', e);
+            return -1;
+          }
+        };
+
+        // 3. Update Status
+        globalThis.updateRopeNodeStatus = async (nodeId, status, sum) => {
+          try {
+            if (globalThis.__isVisualRun === false) return; // Skip for background tests
+
+            const node = treeNodes.find(n => n.id === nodeId);
+            if (node) {
+              node.status = status;
+              updateTreeState();
+              await new Promise(r => setTimeout(r, 50));
+            }
+          } catch (e) {
+            console.error('[Rope API] Update Status Error:', e);
+          }
+        };
+
+        // 4. Report Result
+        globalThis.reportRopeResult = (ans, path) => {
+          console.log('[Rope API] Result:', ans, path);
+          setHintData(prev => ({
+            ...prev,
+            result: ans,
+            minSolution: path
+          }));
+        };
+
+        // 5. Getters
+        // 5. Getters
+        globalThis.getRopeCuts = () => {
+          // Look in payload first (standard), then direct properties (fallback)
+          const data = currentLevel?.appliedData?.payload || currentLevel?.customData || currentLevel?.appliedData || {};
+          const cuts = data.cuts || data.lengths || [2, 3, 5];
+          console.log('[Rope DEBUG] getRopeCuts raw:', cuts);
+          if (Array.isArray(cuts) && cuts.length > 0) {
+            const validCuts = cuts.map(c => Number(c));
+            if (validCuts.every(c => !Number.isNaN(c))) return validCuts;
+          }
+          return [2, 3, 5];
+        };
+
+        globalThis.getRopeTarget = () => {
+          const data = currentLevel?.appliedData?.payload || currentLevel?.customData || currentLevel?.appliedData || {};
+          // Support both ropeLength (new) and total (old)
+          let target = Number(data.ropeLength || data.total);
+          if (Number.isNaN(target) || target <= 0) {
+            // Fallback if NaN or invalid
+            console.warn('[Rope API] Invalid target, using default 10. Data:', data);
+            target = 10;
+          }
+          console.log('[Rope DEBUG] getRopeTarget:', target);
+          return target;
+        };
       }
     } else {
       // Cleanup
       if (typeof globalThis !== 'undefined') {
-        if (globalThis.__ropePartition_api) delete globalThis.__ropePartition_api;
+        // cleanup globals
+        ['initRopeTree', 'addRopeNode', 'updateRopeNodeStatus', 'reportRopeResult', 'getRopeCuts', 'getRopeTarget'].forEach(fn => {
+          if (globalThis[fn]) delete globalThis[fn];
+        });
       }
     }
 
     return () => {
-      if (typeof globalThis !== 'undefined' && globalThis.__ropePartition_api) {
-        delete globalThis.__ropePartition_api;
+      if (typeof globalThis !== 'undefined') {
+        ['initRopeTree', 'addRopeNode', 'updateRopeNodeStatus', 'reportRopeResult', 'getRopeCuts', 'getRopeTarget'].forEach(fn => {
+          if (globalThis[fn]) delete globalThis[fn];
+        });
       }
     };
   }, [currentLevel]);
@@ -715,6 +916,8 @@ const GameCore = ({
             hintOpen={hintOpen}
             onToggleHint={() => setHintOpen(false)}
             hintOpenCount={hintOpenCount}
+            userProgress={userProgress}
+            allLevels={allLevelsData}
             levelHints={Array.isArray(currentLevel?.hints) ? currentLevel.hints : []}
             activeLevelHint={activeLevelHint}
             onNeedHintClick={() => {
@@ -748,6 +951,7 @@ const GameCore = ({
             inCombatMode={inCombatMode}
             playerCoins={getCurrentGameState().playerCoins || []}
             rescuedPeople={rescuedPeople}
+            collectedTreasures={collectedTreasures}
             workspaceRef={workspaceRef}
             userBigO={userBigO}
             onUserBigOChange={setUserBigO}
@@ -816,7 +1020,7 @@ const GameCore = ({
                           loadPrimExampleBlocks(workspaceRef.current);
                         }
                       }}
-                      className="px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white text-sm rounded"
+                      className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded"
                       title="โหลด Prim example blocks (ชั่วคราว - สำหรับทดสอบ)"
                     >
                       📦 โหลด Prim
@@ -827,7 +1031,7 @@ const GameCore = ({
                           loadKruskalExampleBlocks(workspaceRef.current);
                         }
                       }}
-                      className="px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white text-sm rounded"
+                      className="px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white text-sm rounded"
                       title="โหลด Kruskal example blocks (ชั่วคราว - สำหรับทดสอบ)"
                     >
                       📦 โหลด Kruskal
@@ -838,10 +1042,10 @@ const GameCore = ({
                           loadKnapsackExampleBlocks(workspaceRef.current);
                         }
                       }}
-                      className="px-3 py-1 bg-pink-600 hover:bg-pink-700 text-white text-sm rounded"
-                      title="โหลด Knapsack example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                      className="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white text-sm rounded"
+                      title="🎒 โหลด Knapsack"
                     >
-                      📦 โหลด Knapsack
+                      🎒 โหลด Knapsack
                     </button>
                     <button
                       onClick={() => {
@@ -849,10 +1053,10 @@ const GameCore = ({
                           loadTrainScheduleExampleBlocks(workspaceRef.current);
                         }
                       }}
-                      className="px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white text-sm rounded"
-                      title="โหลด Train Schedule Blocks"
+                      className="px-3 py-1 bg-pink-700 hover:bg-pink-800 text-white text-sm rounded"
+                      title="🚂 โหลด Train Schedule"
                     >
-                      📦 โหลด Train Schedule
+                      🚂 โหลด Train Schedule
                     </button>
                     <button
                       onClick={() => {
@@ -860,10 +1064,10 @@ const GameCore = ({
                           loadDynamicKnapsackExampleBlocks(workspaceRef.current);
                         }
                       }}
-                      className="px-3 py-1 bg-pink-700 hover:bg-pink-800 text-white text-sm rounded"
-                      title="โหลด Dynamic Knapsack (DP) example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                      className="px-3 py-1 bg-yellow-700 hover:bg-yellow-800 text-white text-sm rounded"
+                      title="🎒 โหลด Knapsack (DP)"
                     >
-                      📦 โหลด Dynamic Knap
+                      🎒 โหลด Knapsack (DP)
                     </button>
                     <button
                       onClick={() => {
@@ -871,10 +1075,10 @@ const GameCore = ({
                           loadSubsetSumExampleBlocks(workspaceRef.current);
                         }
                       }}
-                      className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded"
-                      title="โหลด Subset Sum example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                      className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded"
+                      title="⚔️ โหลด Subset Sum"
                     >
-                      ➕ โหลด Subset Sum
+                      ⚔️ โหลด Subset Sum
                     </button>
                     <button
                       onClick={() => {
@@ -882,10 +1086,10 @@ const GameCore = ({
                           loadDynamicSubsetSumExampleBlocks(workspaceRef.current);
                         }
                       }}
-                      className="px-3 py-1 bg-purple-700 hover:bg-purple-800 text-white text-sm rounded"
-                      title="โหลด Dynamic Subset Sum (DP) example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                      className="px-3 py-1 bg-red-700 hover:bg-red-800 text-white text-sm rounded"
+                      title="⚔️ โหลด Subset Sum (DP)"
                     >
-                      ➕ โหลด Dynamic Subset
+                      ⚔️ โหลด Subset Sum (DP)
                     </button>
                     <button
                       onClick={() => {
@@ -993,6 +1197,7 @@ const GameCore = ({
                 blocklyJavaScriptReady={blocklyJavaScriptReady}
                 textCode={textCode}
                 handleTextCodeChange={handleTextCodeChangeWithState}
+                testCaseResult={testCaseResult}
               />
             </div>
           </div>
@@ -1004,7 +1209,7 @@ const GameCore = ({
       {!isPreview && (
         <ProgressModal
           isOpen={showProgressModal}
-          onClose={() => setShowProgressModal(false)}
+          onClose={handleCloseProgressModal}
           gameResult={gameResult}
           levelData={currentLevel}
           attempts={attempts}
@@ -1014,6 +1219,8 @@ const GameCore = ({
           finalScore={finalScore}
           hp_remaining={playerHpState}
           getToken={getToken}
+          userBigO={userBigO}
+          targetBigO={hintData?.bestPatternBigO || hintData?.bestPattern?.big_o || hintData?.bestPattern?.bigO}
         />
       )}
     </GameWithGuide>

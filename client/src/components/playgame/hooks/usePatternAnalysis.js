@@ -1,14 +1,11 @@
-/**
- * Hook for pattern analysis and weapon display
- */
-
 import { useEffect, useRef } from 'react';
 import * as Blockly from "blockly/core";
 import {
   getCurrentGameState,
   setCurrentGameState,
   getWeaponData,
-  displayPlayerWeapon
+  displayPlayerWeapon,
+  displayPlayerEffect
 } from '../../../gameutils/utils/gameUtils';
 import {
   getNextBlockHint,
@@ -34,7 +31,6 @@ export function usePatternAnalysis({
   hintOpen,
   hintData
 }) {
-  
   /* 
    * Store latest values in refs to avoid useEffect dependency cycles 
    * This is a common pattern to fix "Maximum update depth exceeded" when 
@@ -80,14 +76,14 @@ export function usePatternAnalysis({
     setPartialWeaponKey,
     hintData
   ]);
-  
+
   // Update currentHint when hintData.hint changes
   // Use a ref to store setCurrentHint to avoid dependency issues
   const setCurrentHintRef = useRef(setCurrentHint);
   useEffect(() => {
     setCurrentHintRef.current = setCurrentHint;
   }, [setCurrentHint]);
-  
+
   useEffect(() => {
     const hintValue = hintData?.hint;
     if (hintValue && typeof hintValue === 'string' && hintValue.trim() !== '') {
@@ -124,8 +120,8 @@ export function usePatternAnalysis({
 
       const allBlocks = workspace.getAllBlocks(false);
       const currentBlockCount = allBlocks.length;
-      // console.log("🔍 [usePatternAnalysis] currentBlockCount:", currentBlockCount);
-      
+      console.log("🔍 [usePatternAnalysis] currentBlockCount:", currentBlockCount);
+
       if (currentBlockCount === 0) {
         // No blocks → แสดง default weapon
         const currentState = getCurrentGameState();
@@ -133,7 +129,7 @@ export function usePatternAnalysis({
         const defaultWeaponData = getWeaponData(defaultWeaponKey);
         setCurrentWeaponData(defaultWeaponData);
         setCurrentGameState({ weaponKey: defaultWeaponKey, weaponData: defaultWeaponData });
-        
+
         const currentScene = currentState.currentScene;
         if (currentScene && currentScene.add && currentScene.player) {
           try {
@@ -141,12 +137,23 @@ export function usePatternAnalysis({
           } catch (error) {
             console.warn("Error displaying default weapon:", error);
           }
+
+          // Debug: Log goodPatterns to check for BigO
+          if (goodPatterns && goodPatterns.length > 0) {
+            console.log("🔍 [usePatternAnalysis] goodPatterns check:", goodPatterns.map(p => ({
+              id: p.pattern_id,
+              name: p.name,
+              type_id: p.pattern_type_id,
+              bigO: p.bigO,
+              big_o: p.big_o
+            })));
+          }
         }
-        
+
         // Update hintData even when no blocks
         // We use a simplified check to avoid sending identical data repeatedly
         if (!goodPatterns || goodPatterns.length === 0) {
-           const newHintData = {
+          const newHintData = {
             hint: "วาง blocks เพื่อเริ่มต้น",
             showHint: true,
             currentStep: 0,
@@ -184,7 +191,7 @@ export function usePatternAnalysis({
       // CRITICAL: ถ้า percentage = 100% ให้ตรวจสอบ part3 โดยตรง
       let threePartsMatch = findBestThreePartsMatch(workspace, goodPatterns);
       // console.log("🔍 Three parts match (initial):", threePartsMatch);
-      
+
       // ถ้า percentage = 100% แต่ matchedParts ไม่ใช่ 3 ให้ตรวจสอบ part3 อีกครั้ง
       if (patternPercentage.percentage === 100 && patternPercentage.bestPattern && threePartsMatch.matchedParts !== 3) {
         // console.log("🔍 Percentage is 100% but matchedParts is not 3, rechecking part3...");
@@ -192,7 +199,7 @@ export function usePatternAnalysis({
         if (patternXml) {
           const recheckResult = checkThreePartsMatch(workspace, patternXml);
           // console.log("🔍 Recheck result:", recheckResult);
-          
+
           if (recheckResult.matchedParts === 3) {
             threePartsMatch = {
               bestPattern: patternPercentage.bestPattern,
@@ -219,6 +226,7 @@ export function usePatternAnalysis({
         totalBlocks: patternPercentage.totalBlocks,
         showPatternProgress: true,
         bestPattern: patternPercentage.bestPattern, // เพิ่ม bestPattern เพื่อแสดงรูปอาวุธ
+        bestPatternBigO: patternPercentage.bestPattern?.bigO || patternPercentage.bestPattern?.big_o, // Explicitly pass Big O
         // Three parts match data
         threePartsMatch: {
           matchedParts: threePartsMatch.matchedParts,
@@ -230,9 +238,35 @@ export function usePatternAnalysis({
         currentBlockCount
       };
 
+      // --- New Logic: Display Part-based Effects (Cumulative) ---
+      try {
+        const currentPart = threePartsMatch.matchedParts; // 0, 1, 2, or 3
+        const currentScene = getCurrentGameState().currentScene;
+
+        if (currentPart > 0 && threePartsMatch.bestPattern && currentScene) {
+          // เคลียร์เอฟเฟกต์ทั้งหมดก่อนเริ่มลูป (เพื่อความสะอาด)
+          displayPlayerEffect(null, currentScene);
+
+          // ลูปแสดงเอฟเฟกต์ของทุกพาร์ทที่ผ่านแล้ว
+          for (let i = 0; i < currentPart; i++) {
+            const effect = threePartsMatch.bestPattern.hints?.[i]?.effect;
+            if (effect) {
+              // ใช้ keepExisting = true เพื่อให้แสดงรวมกัน
+              displayPlayerEffect(effect, currentScene, true);
+            }
+          }
+        } else if (currentPart === 0 && currentScene) {
+          // ถ้าไม่ตรงเลย ให้ล้างเอฟเฟกต์ออก
+          displayPlayerEffect(null, currentScene);
+        }
+      } catch (effectError) {
+        console.error("❌ [usePatternAnalysis] Error in effect logic:", effectError);
+      }
+      // ----------------------------------------------------------
+
       // console.log("🔍 [usePatternAnalysis] Setting hintData with hint:", updatedHintInfo.hint);
       setHintData(updatedHintInfo);
-      
+
       // Also update currentHint directly
       if (setCurrentHintRef.current && updatedHintInfo.hint && typeof updatedHintInfo.hint === 'string' && updatedHintInfo.hint.trim() !== '') {
         // console.log("🔍 [usePatternAnalysis] ✅ Also updating currentHint with:", updatedHintInfo.hint);
@@ -257,7 +291,7 @@ export function usePatternAnalysis({
         // Exact match → แสดง weapon ของ pattern
         const matchedPattern = patternPercentage.bestPattern;
         const weaponKey = matchedPattern.weaponKey || matchedPattern.weapon?.weapon_key || null;
-        
+
         if (weaponKey) {
           const weaponData = getWeaponData(weaponKey);
           setCurrentWeaponData(weaponData);
@@ -284,15 +318,15 @@ export function usePatternAnalysis({
         const defaultWeaponData = getWeaponData(defaultWeaponKey);
 
         // ถ้ามี partial match ให้เก็บ weaponKey สำหรับแสดงใน UI
-        const partialWeaponKey = patternPercentage.percentage > 0 && patternPercentage.bestPattern 
+        const partialWeaponKey = patternPercentage.percentage > 0 && patternPercentage.bestPattern
           ? (patternPercentage.bestPattern.weaponKey || patternPercentage.bestPattern.weapon?.weapon_key || null)
           : null;
-        
+
         setPartialWeaponKey(partialWeaponKey);
         setCurrentWeaponData(defaultWeaponData);
         setPatternFeedback(
-          patternPercentage.percentage > 0 
-            ? `⚠️ ไม่ตรง Pattern ใดๆ (${patternPercentage.percentage}%)` 
+          patternPercentage.percentage > 0
+            ? `⚠️ ไม่ตรง Pattern ใดๆ (${patternPercentage.percentage}%)`
             : "วาง blocks เพื่อดูผลลัพธ์"
         );
         setCurrentGameState({ weaponKey: defaultWeaponKey, weaponData: defaultWeaponData });
@@ -309,16 +343,18 @@ export function usePatternAnalysis({
     };
 
     workspace.addChangeListener(analyzePattern);
-    
+
     // We want to run analysis immediately when:
     // 1. Workspace is loaded (mount)
     // 2. hintOpen toggles (to update highlights)
     // 3. But we DON'T want to re-attach the listener constantly for other prop changes
-    analyzePattern(); 
+    analyzePattern();
 
     return () => {
-      if (workspace.removeChangeListener) workspace.removeChangeListener(analyzePattern);
+      if (workspace && workspace.removeChangeListener) {
+        workspace.removeChangeListener(analyzePattern);
+      }
     };
-  }, [blocklyLoaded, workspaceRef.current, hintOpen]); // Reduced dependencies to just stable ones + hintOpen trigger
+  }, [blocklyLoaded, workspaceRef.current, hintOpen, goodPatterns]); // Added goodPatterns to dependencies
 }
 

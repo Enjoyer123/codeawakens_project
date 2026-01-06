@@ -279,7 +279,7 @@ exports.saveUserProgress = async (req, res) => {
     const newStatus = status || (is_correct ? 'completed' : 'in_progress');
     const newBestScore = best_score || 0;
     const newTotalScore = newBestScore + (pattern_bonus_score || 0);
-    const existingTotalScore = existingProgress 
+    const existingTotalScore = existingProgress
       ? existingProgress.best_score + (existingProgress.pattern_bonus_score || 0)
       : 0;
 
@@ -288,30 +288,30 @@ exports.saveUserProgress = async (req, res) => {
     if (existingProgress) {
       // Determine if we should update the progress
       const existingStatus = existingProgress.status;
-      
+
       // Status update logic:
       // 1. If changing from in_progress to completed → always update
       // 2. If already completed and new is also completed → update (if score is better or equal)
       // 3. If already completed and new is in_progress → keep completed (don't downgrade)
       // 4. If in_progress and new is in_progress → update (if score is better or equal)
-      const shouldUpdateStatus = 
+      const shouldUpdateStatus =
         // Always update if changing from in_progress to completed
         (existingStatus === 'in_progress' && newStatus === 'completed') ||
         // Update if both are completed and new score is better or equal
         (existingStatus === 'completed' && newStatus === 'completed' && newTotalScore >= existingTotalScore) ||
         // Update if both are in_progress and new score is better or equal
         (existingStatus === 'in_progress' && newStatus === 'in_progress' && newTotalScore >= existingTotalScore);
-      
+
       // If already completed and new attempt is in_progress, keep completed status
-      const finalStatus = (existingStatus === 'completed' && newStatus === 'in_progress') 
-        ? existingStatus 
+      const finalStatus = (existingStatus === 'completed' && newStatus === 'in_progress')
+        ? existingStatus
         : (shouldUpdateStatus ? newStatus : existingStatus);
 
       // Score update logic:
       // 1. If changing from in_progress to completed → always update
       // 2. If new score is better or equal → update
       // 3. If already completed and new is in_progress → don't update score
-      const shouldUpdateScore = 
+      const shouldUpdateScore =
         // Always update if changing from in_progress to completed
         (existingStatus === 'in_progress' && newStatus === 'completed') ||
         // Update if new score is better or equal (and not downgrading from completed to in_progress)
@@ -320,8 +320,8 @@ exports.saveUserProgress = async (req, res) => {
       // Prepare update data
       const updateData = {
         last_attempt: now,
-        attempts_count: attempts_count !== undefined 
-          ? attempts_count 
+        attempts_count: attempts_count !== undefined
+          ? attempts_count
           : existingProgress.attempts_count + 1,
       };
 

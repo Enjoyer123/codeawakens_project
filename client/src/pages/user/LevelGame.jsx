@@ -45,6 +45,10 @@ import { loadPrimExampleBlocks } from '../../gameutils/utils/blockly/loadPrimExa
 import { loadDynamicAntDpExampleBlocks } from '../../gameutils/utils/blockly/loadDynamicAntDpExample';
 import { loadTrainScheduleExampleBlocks } from '../../gameutils/utils/blockly/loadTrainScheduleExample';
 
+// Services
+import { fetchAllLevels } from '../../services/levelService';
+import { getUserByClerkId } from '../../services/profileService';
+
 // Import components
 import GameArea from '../../components/playgame/GameArea';
 import BlocklyArea from '../../components/playgame/BlocklyArea';
@@ -55,6 +59,35 @@ const LevelGame = () => {
   const { levelId } = useParams();
   const navigate = useNavigate();
   const { getToken } = useAuth();
+
+  // History data state
+  const [userProgress, setUserProgress] = useState([]);
+  const [allLevelsData, setAllLevelsData] = useState([]);
+
+  // Fetch history data
+  const fetchHistoryData = React.useCallback(async () => {
+    if (!getToken) return;
+    try {
+      const [profileData, levelsData] = await Promise.all([
+        getUserByClerkId(getToken),
+        fetchAllLevels(getToken, 1, 100)
+      ]);
+
+      if (profileData?.user_progress) {
+        setUserProgress(profileData.user_progress);
+      }
+
+      if (levelsData?.levels) {
+        setAllLevelsData(levelsData.levels);
+      }
+    } catch (err) {
+      console.error("Error fetching history data:", err);
+    }
+  }, [getToken]);
+
+  useEffect(() => {
+    fetchHistoryData();
+  }, [fetchHistoryData]);
 
   // Suppress Blockly deprecation warnings globally for this component
   useEffect(() => {
@@ -635,7 +668,9 @@ const LevelGame = () => {
     canMoveForward,
     nearPit,
     atGoal,
-    setTestCaseResult
+    setTestCaseResult,
+    userBigO, // Pass userBigO state
+    hintData  // Pass hintData for pattern matching info in scoring
   });
 
   const handleBackToMapSelection = () => {
@@ -767,6 +802,8 @@ const LevelGame = () => {
               showScore={true}
               userBigO={userBigO}
               onUserBigOChange={setUserBigO}
+              userProgress={userProgress}
+              allLevels={allLevelsData}
             />
           </div>
         </div>
