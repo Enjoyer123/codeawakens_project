@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { saveUserProgress, checkAndAwardRewards } from '../../services/profileService';
 
-const ProgressModal = ({ isOpen, onClose, gameResult, levelData, attempts, timeSpent, blocklyXml, textCodeContent, finalScore, hp_remaining, userBigO, getToken }) => {
+const ProgressModal = ({ isOpen, onClose, gameResult, levelData, attempts, timeSpent, blocklyXml, textCodeContent, finalScore, hp_remaining, userBigO, targetBigO, getToken }) => {
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState(null); // 'success', 'error', null
   const [saveError, setSaveError] = useState(null);
@@ -26,17 +26,28 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, attempts, timeS
 
   // บันทึกข้อมูลเมื่อ modal เปิด
   useEffect(() => {
+    // Check if we have necessary data to save
     if (isOpen && getToken && (levelData?.level_id || levelData?.id)) {
       const saveProgress = async () => {
+        // Prevent duplicate saves if already saving or finished
+        if (saving || saveStatus === 'success') return;
+
+        console.log('📝 Saving user progress...', {
+          levelId: levelData?.level_id || levelData?.id,
+          result: gameResult,
+          score: finalScore
+        });
+
         setSaving(true);
         setSaveStatus(null);
         setSaveError(null);
 
         try {
+          // Prepare data payload
           const progressData = {
             level_id: levelData?.level_id || levelData?.id,
             status: gameResult === 'victory' ? 'completed' : 'in_progress',
-            attempts_count: attempts || 0,
+            attempts_count: attempts || 1, // Ensure at least 1 attempt
             blockly_code: blocklyXml || null,
             text_code: levelData?.textcode ? textCodeContent : null,
             execution_time: timeSpent || 0,
@@ -48,7 +59,10 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, attempts, timeS
             user_big_o: userBigO || null,
           };
 
-          await saveUserProgress(getToken, progressData);
+          console.log('📦 Progress Payload:', progressData);
+
+          const result = await saveUserProgress(getToken, progressData);
+          console.log('✅ Save success:', result);
           setSaveStatus('success');
 
           // Check and award rewards if player completed the level
@@ -57,7 +71,7 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, attempts, timeS
             try {
               // Calculate total score (best_score + pattern_bonus_score)
               const totalScore = finalScore?.totalScore ?? (progressData.best_score + progressData.pattern_bonus_score);
-              
+
               const rewardResult = await checkAndAwardRewards(
                 getToken,
                 levelData?.level_id || levelData?.id,
@@ -68,13 +82,12 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, attempts, timeS
               }
             } catch (error) {
               console.error('Error checking rewards:', error);
-              // Don't show error to user, just log it
             } finally {
               setCheckingRewards(false);
             }
           }
         } catch (error) {
-          console.error('Error saving user progress:', error);
+          console.error('❌ Error saving user progress:', error);
           setSaveStatus('error');
           setSaveError(error.message || 'Failed to save progress');
         } finally {
@@ -83,9 +96,15 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, attempts, timeS
       };
 
       saveProgress();
+    } else if (isOpen) {
+      console.warn('⚠️ Cannot save progress: Missing data', {
+        hasToken: !!getToken,
+        hasLevelData: !!levelData,
+        levelId: levelData?.level_id || levelData?.id
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]); // เรียกเมื่อ modal เปิดเท่านั้น เพื่อป้องกันการบันทึกซ้ำ
+  }, [isOpen, levelData, getToken, gameResult]); // Added dependencies to ensure reliable saving
 
   if (!isOpen) return null;
 
@@ -133,12 +152,39 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, attempts, timeS
           <div className="bg-white p-4 rounded">
             <h3 className="font-bold text-gray-800 mb-2">Score Details</h3>
             <div className="text-gray-600">
-              <p>Stars: {'⭐'.repeat(userProgressData.stars_earned)}</p>
-              <p>Score: {userProgressData.best_score}</p>
-              <p>Pattern Bonus: {userProgressData.pattern_bonus_score}</p>
-              <p>Total Score: {finalScore?.totalScore ?? (userProgressData.best_score + userProgressData.pattern_bonus_score)}</p>
+              <p className="mb-2">Stars: {'⭐'.repeat(userProgressData.stars_earned)}</p>
+              <div className="space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span>Base Completion:</span>
+                  <span className="font-mono">60</span>
+                </div>
+                {userProgressData.pattern_bonus_score > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Pattern Tier Bonus:</span>
+                    <span className="font-mono">+{userProgressData.pattern_bonus_score}</span>
+                  </div>
+                )}
+                {finalScore?.testCaseBonus > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Test Case Bonus:</span>
+                    <span className="font-mono">+{Math.round(finalScore.testCaseBonus)}</span>
+                  </div>
+                )}
+                {finalScore?.bigOPenalty > 0 && (
+                  <div className="flex justify-between text-red-600 font-bold">
+                    <span>Big O Penalty:</span>
+                    <span className="font-mono">-{finalScore.bigOPenalty}</span>
+                  </div>
+                )}
+                <div className="border-t border-gray-200 mt-2 pt-2 flex justify-between font-bold text-lg text-slate-900">
+                  <span>Total Score:</span>
+                  <span className="text-blue-600">{finalScore?.totalScore ?? userProgressData.best_score}</span>
+                </div>
+              </div>
             </div>
           </div>
+
+
 
           {/* Attempt Details */}
           <div className="bg-white p-4 rounded">
@@ -159,25 +205,25 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, attempts, timeS
             <div className="text-gray-600">
               <p>Text Mode: {levelData?.textcode ? 'Yes' : 'No'}</p>
               <p>HP Remaining: {userProgressData.hp_remaining}</p>
-              
+
               {/* Blockly XML Preview */}
               <div className="mt-2">
                 <p className="font-bold">Blockly XML:</p>
                 <div className="bg-gray-950 text-gray-100 p-2 rounded mt-1 text-xs font-mono overflow-x-auto max-h-32 overflow-y-auto">
                   {userProgressData.blockly_code ? (
-                    userProgressData.blockly_code.length > 100 
+                    userProgressData.blockly_code.length > 100
                       ? userProgressData.blockly_code.substring(0, 1000)
                       : userProgressData.blockly_code
                   ) : 'No Blockly code available'}
                 </div>
               </div>
-              
+
               {/* Text Code Preview (if available) */}
               {levelData?.textcode && userProgressData.text_code && (
                 <div className="mt-2">
                   <p className="font-bold">Text Code:</p>
                   <div className="bg-gray-950 text-gray-100 p-2 rounded mt-1 text-xs font-mono overflow-x-auto max-h-32 overflow-y-auto">
-                    {userProgressData.text_code.length > 100 
+                    {userProgressData.text_code.length > 100
                       ? userProgressData.text_code.substring(0, 1000)
                       : userProgressData.text_code}
                   </div>

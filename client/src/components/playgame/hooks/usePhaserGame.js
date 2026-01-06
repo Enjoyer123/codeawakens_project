@@ -27,7 +27,8 @@ import {
   setupEmeiMountain,
   drawPlayer,
   updateMonsters,
-  clearGameOverScreen
+  clearGameOverScreen,
+  drawCinematicMonster
 } from '../../../gameutils/utils/phaserGame';
 import { createCharacterAnims } from '../../../anims/PlayerAnims';
 import { createVampireAnims } from '../../../anims/EnemyAnims';
@@ -74,6 +75,10 @@ export function usePhaserGame({
     }
 
     class GameScene extends Phaser.Scene {
+      constructor() {
+        super({ key: 'GameScene' });
+      }
+
       preload() {
         const backgroundPath = currentLevel?.background_image;
         console.log('Loading background image from:', backgroundPath);
@@ -106,12 +111,30 @@ export function usePhaserGame({
 
         this.load.image('weapon_stick', `${API_BASE_URL}/uploads/weapons/stick_idle_1.png`);
 
-        // Load weapon effects
-        this.load.image('effect_stick-1', `${API_BASE_URL}/uploads/weapons_effect/stick_attack_1.png`);
+        // Load aura effects
+        for (let i = 1; i <= 4; i++) {
+          this.load.image(`aura_1_${i}`, `/aura/aura_1_${i}.png`);
+        }
       }
 
       create() {
         console.log("Phaser scene create() called");
+
+        // Create aura animation
+        if (this.textures.exists('aura_1_1')) {
+          this.anims.create({
+            key: 'aura_1',
+            frames: [
+              { key: 'aura_1_1' },
+              { key: 'aura_1_2' },
+              { key: 'aura_1_3' },
+              { key: 'aura_1_4' }
+            ],
+            frameRate: 8,
+            repeat: -1
+          });
+          console.log("✅ Aura animation created");
+        }
         console.log("Scene.add available:", !!this.add);
         console.log("Scene.add.graphics available:", !!this.add?.graphics);
         console.log("Scene.sys available:", !!this.sys);
@@ -277,6 +300,7 @@ export function usePhaserGame({
             return;
           }
 
+
           drawPlayer(this);
 
           // ตรวจสอบอีกครั้งก่อน setupMonsters
@@ -291,6 +315,7 @@ export function usePhaserGame({
           }
 
           setupMonsters(this);
+          drawCinematicMonster(this); // Added after setupMonsters to ensure it stays in the scene.monsters array
           setupObstacles(this);
           setupCoins(this);
           setupPeople(this);

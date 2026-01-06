@@ -8,7 +8,10 @@ import KnapsackStateTable from './KnapsackStateTable';
 import SubsetSumStateTable from './SubsetSumStateTable';
 import CoinChangeStateTable from './CoinChangeStateTable';
 import AntDpStateTable from './AntDpStateTable';
+import CoinPeopleStateTable from './CoinPeopleStateTable';
 import { getCurrentGameState } from '../../gameutils/utils/gameUtils';
+import { History } from 'lucide-react';
+import HistoryModal from './HistoryModal';
 import {
   Dialog,
   DialogContent,
@@ -41,13 +44,17 @@ const GameArea = ({
   inCombatMode,
   playerCoins = [],
   rescuedPeople = [],
+  collectedTreasures = [],
   workspaceRef,
   userBigO,
   onUserBigOChange,
+  userProgress,
+  allLevels,
 }) => {
   const { getToken } = useAuth();
   const [viewerData, setViewerData] = useState(null);
   const [viewerLoading, setViewerLoading] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const currentBlockCount = hintData?.currentBlockCount || 0;
 
   // ใช้ bestPattern.count ถ้ามี หรือใช้ totalBlocks เป็น fallback
@@ -70,6 +77,39 @@ const GameArea = ({
     needHintDisabled,
     hasActiveLevelHint: !!activeLevelHint,
   });
+
+  // --- Logic: ค้นหารูปอาวุธระดับดีที่สุดของด่านนี้ ---
+  const allPatterns = [...(levelData?.goodPatterns || []), ...(levelData?.patterns || [])];
+  const idealPattern = allPatterns.find(p => p.pattern_type_id === 1) ||
+    allPatterns.find(p => p.pattern_type_id === 2);
+
+  const currentBestPattern = hintData?.bestPattern;
+  let weaponProgress = 0;
+
+  if (idealPattern) {
+    const isMatchingIdeal = currentBestPattern?.pattern_id === idealPattern.pattern_id ||
+      currentBestPattern?.name === idealPattern.name;
+
+    if (isMatchingIdeal) {
+      weaponProgress = hintData.patternPercentage || 0;
+    } else if (currentBestPattern?.pattern_type_id === 2 && idealPattern.pattern_type_id === 1) {
+      // ด่านมีระดับดี (Gold) แต่เราเขียนระดับกลาง (Silver) ให้ค้างที่ 66% ตามที่ตกลงกัน
+      weaponProgress = 66;
+    } else {
+      // กรณีอื่นๆ เช่น ยังเขียนไม่ถึง หรือเขียนคนละตัว
+      weaponProgress = 0;
+    }
+  }
+
+  // Helper to get weapon image path
+  const getWeaponImage = (pattern) => {
+    if (!pattern) return null;
+    const key = pattern.weaponKey || pattern.weapon?.weapon_key || 'stick';
+    // ลองหาหลายๆ path: uploads, weapons (local), หรือ default stick
+    return `${API_BASE_URL}/uploads/weapons/${key}_idle_1.png`;
+  };
+
+  const weaponImgSrc = getWeaponImage(idealPattern);
 
   const closeDetail = () => setViewerData(null);
 
@@ -138,6 +178,13 @@ const GameArea = ({
         <CoinChangeStateTable currentLevel={levelData} />
         {/* Applied Dynamic (Ant) DP Table */}
         <AntDpStateTable currentLevel={levelData} />
+        {/* Coin & People Status Card (Like Dijkstra) */}
+        <CoinPeopleStateTable
+          levelData={levelData}
+          playerCoins={playerCoins}
+          rescuedPeople={rescuedPeople}
+          collectedTreasures={collectedTreasures}
+        />
       </div>
 
       {/* Compact Bottom UI Bar */}
@@ -214,11 +261,74 @@ const GameArea = ({
             </button>
           </div>
 
+          {/* History Button */}
+          <div className="flex-shrink-0 bg-black/30 rounded-lg p-3 border border-gray-700/50">
+            <button
+              onClick={() => setHistoryOpen(true)}
+              className="w-10 h-10 p-2 rounded-full transition-all duration-300 transform hover:scale-110 active:scale-95 bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/30 flex items-center justify-center opacity-100 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.5)] cursor-pointer"
+              title="History"
+            >
+              <History className="w-full h-full text-blue-400" />
+            </button>
+          </div>
+
           {/* Pattern Match */}
           <div className="flex-1 bg-black/30 rounded-lg p-3 border border-gray-700/50">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Pattern Match</span>
-              <span className="text-[10px] text-gray-500">{hintData?.matchedBlocks || 0}/{hintData?.totalBlocks || 0}</span>
+              <div className="flex items-center gap-4">
+                <span className="text-[10px] text-gray-500">{hintData?.matchedBlocks || 0}/{hintData?.totalBlocks || 0}</span>
+
+                {/* Best Weapon Icon Display */}
+                {idealPattern && (
+                  <div className="flex items-center gap-1.5 bg-green-500/10 rounded-md px-1.5 py-0.5 border border-green-500/20">
+                    <div className="relative w-8 h-8 bg-black/40 rounded border border-gray-700/50 overflow-hidden flex items-center justify-center">
+                      {/* Background (Locked/Dimmed) */}
+                      <img
+                        src={weaponImgSrc}
+                        alt="Weapon"
+                        className="absolute w-6 h-6 object-contain brightness-50 grayscale"
+                        onError={(e) => {
+                          // Fallback 1: ลอง path ทั่วไป
+                          if (!e.target.src.includes('_idle_1')) {
+                            const key = idealPattern.weaponKey || idealPattern.weapon?.weapon_key || 'stick';
+                            e.target.src = `/weapons/${key}.png`;
+                          } else {
+                            e.target.style.display = 'none';
+                          }
+                        }}
+                      />
+                      {/* Foreground (Progress Fill) */}
+                      <div
+                        className="absolute inset-0 overflow-hidden flex items-center justify-center pointer-events-none"
+                        style={{
+                          clipPath: `inset(${100 - weaponProgress}% 0 0 0)`
+                        }}
+                      >
+                        <img
+                          src={weaponImgSrc}
+                          alt="Weapon Progress"
+                          className="w-6 h-6 object-contain"
+                          onError={(e) => {
+                            if (!e.target.src.includes('_idle_1')) {
+                              const key = idealPattern.weaponKey || idealPattern.weapon?.weapon_key || 'stick';
+                              e.target.src = `/weapons/${key}.png`;
+                            } else {
+                              e.target.style.display = 'none';
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[9px] text-green-400 font-bold leading-none">
+                        {idealPattern.pattern_type_id === 1 ? '⭐ GOLD' : '🥈 SILVER'}
+                      </span>
+                      <span className="text-[10px] text-white font-mono leading-none mt-0.5">{weaponProgress}%</span>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {hintData && hintData.showPatternProgress ? (
@@ -353,6 +463,14 @@ const GameArea = ({
           </div>
         </DialogContent>
       </Dialog>
+
+      <HistoryModal
+        isOpen={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        userProgress={userProgress}
+        levels={allLevels}
+        currentLevelId={levelData?.level_id || levelData?.id}
+      />
     </div>
 
   );

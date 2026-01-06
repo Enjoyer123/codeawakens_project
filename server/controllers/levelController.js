@@ -209,7 +209,58 @@ exports.getLevelById = async (req, res) => {
       return res.status(404).json({ message: "Level not found" });
     }
 
-    res.json(level);
+    // Calculate dynamic unlock
+    let isUnlocked = level.is_unlocked;
+    const clerkUserId = req.user?.id;
+
+    // If level is not statically unlocked and we have a user, check dynamic requirements
+    if (!isUnlocked && clerkUserId) {
+      const user = await prisma.user.findUnique({
+        where: { clerk_user_id: clerkUserId },
+        select: { user_id: true, pre_score: true, role: true }
+      });
+
+      if (user) {
+        // Admin bypass in backend
+        if (user.role === 'admin') {
+          isUnlocked = true;
+        } else {
+          // Check prerequisite level
+          let isPrereqMet = false;
+          if (level.required_level_id) {
+            const progress = await prisma.userProgress.findUnique({
+              where: {
+                user_id_level_id: {
+                  user_id: user.user_id,
+                  level_id: level.required_level_id,
+                },
+              },
+            });
+            if (progress && (progress.status === 'completed' || progress.is_correct)) {
+              isPrereqMet = true;
+            }
+          }
+
+          // Check pre-score
+          const userPreScore = user.pre_score || 0;
+          const isScoreMet = (level.require_pre_score !== null && level.require_pre_score !== undefined)
+            ? userPreScore >= level.require_pre_score
+            : false;
+
+          if (isPrereqMet || isScoreMet) {
+            isUnlocked = true;
+          }
+        }
+      }
+    } else if (!clerkUserId && level.require_pre_score) {
+      // If not logged in and requires pre-score, block it even if DB says unlocked (security)
+      isUnlocked = false;
+    }
+
+    res.json({
+      ...level,
+      is_unlocked: isUnlocked
+    });
   } catch (error) {
     console.error("Error fetching level:", error);
     res.status(500).json({ message: "Error fetching level", error: error.message });
@@ -247,6 +298,8 @@ exports.createLevel = async (req, res) => {
       starter_xml,
       block_ids,
       victory_condition_ids,
+      require_pre_score,
+      required_for_post_test,
     } = req.body;
 
     // Get user from request (set by authCheck middleware)
@@ -273,8 +326,8 @@ exports.createLevel = async (req, res) => {
     if (!background_image || background_image.trim() === '') missingFields.push('background_image');
 
     if (missingFields.length > 0) {
-      return res.status(400).json({ 
-        message: `Missing required fields: ${missingFields.join(', ')}` 
+      return res.status(400).json({
+        message: `Missing required fields: ${missingFields.join(', ')}`
       });
     }
 
@@ -368,6 +421,8 @@ exports.createLevel = async (req, res) => {
         difficulty,
         is_unlocked: is_unlocked === true || is_unlocked === 'true',
         required_level_id: required_level_id ? parseInt(required_level_id) : null,
+        require_pre_score: require_pre_score ? parseInt(require_pre_score) : null,
+        required_for_post_test: required_for_post_test === true || required_for_post_test === 'true',
         textcode: textcode === true || textcode === 'true',
         background_image,
         start_node_id: start_node_id !== null && start_node_id !== undefined ? parseInt(start_node_id) : null,
@@ -475,6 +530,8 @@ exports.updateLevel = async (req, res) => {
       starter_xml,
       block_ids,
       victory_condition_ids,
+      require_pre_score,
+      required_for_post_test,
     } = req.body;
 
     const existingLevel = await prisma.level.findUnique({
@@ -528,6 +585,12 @@ exports.updateLevel = async (req, res) => {
         }
         updateData.required_level_id = parseInt(required_level_id);
       }
+    }
+    if (require_pre_score !== undefined) {
+      updateData.require_pre_score = require_pre_score ? parseInt(require_pre_score) : null;
+    }
+    if (required_for_post_test !== undefined) {
+      updateData.required_for_post_test = required_for_post_test === true || required_for_post_test === 'true';
     }
     if (textcode !== undefined) updateData.textcode = textcode === true || textcode === 'true';
     if (background_image !== undefined) updateData.background_image = background_image;
@@ -694,9 +757,9 @@ exports.unlockLevel = async (req, res) => {
     });
   } catch (error) {
     console.error("Error unlocking level:", error);
-    res.status(500).json({ 
-      message: "Error unlocking level", 
-      error: error.message 
+    res.status(500).json({
+      message: "Error unlocking level",
+      error: error.message
     });
   }
 };

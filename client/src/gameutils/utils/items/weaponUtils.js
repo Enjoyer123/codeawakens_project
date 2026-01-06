@@ -8,6 +8,8 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000
 // Global weapon variables
 let weaponsData = null; // เก็บข้อมูลอาวุธจาก API
 let playerWeaponSprite = null;
+let playerEffectGraphics = null; // สำหรับวาด circle
+let playerEffectSprite = null;   // สำหรับแสดง aura (sprite)
 
 // Export weaponsData for external access
 export function getWeaponsData() {
@@ -168,15 +170,15 @@ export function displayPlayerWeapon(weaponKey, scene) {
   // Main texture loading logic
   if (!scene.textures.exists(textureKey)) {
     console.log(`🔍 Loading weapon texture: ${textureKey}`);
-    
+
     // ใช้รูปแบบใหม่: /uploads/weapons/{weaponkey}_idle_1.png (ใช้ idle frame 1 อย่างเดียว)
     const weaponImageUrl = `${API_BASE_URL}/uploads/weapons/${weaponKey}_idle_1.png`;
     console.log(`🔍 Loading weapon from: ${weaponImageUrl}`);
-    
+
     // ใช้ Phaser's load.image แทนการสร้าง Image element เองเพื่อหลีกเลี่ยง CORS issues
     if (scene.load && typeof scene.load.image === 'function') {
       console.log(`🔍 Using Phaser load.image to load texture ${textureKey}`);
-      
+
       // ตรวจสอบว่า scene.load.list มีอยู่หรือไม่
       if (!scene.load.list) {
         console.warn(`⚠️ scene.load.list is null, cannot load weapon texture`);
@@ -196,9 +198,9 @@ export function displayPlayerWeapon(weaponKey, scene) {
         }
         return;
       }
-      
+
       scene.load.image(textureKey, weaponImageUrl);
-      
+
       scene.load.once(`filecomplete-image-${textureKey}`, () => {
         console.log(`✅ Texture ${textureKey} loaded via Phaser`);
         // รอให้ texture พร้อม
@@ -210,7 +212,7 @@ export function displayPlayerWeapon(weaponKey, scene) {
           }
         }, 50);
       });
-      
+
       scene.load.once('loaderror', (file) => {
         if (file.key === textureKey) {
           console.error(`❌ Failed to load weapon image via Phaser: ${weaponImageUrl}`);
@@ -230,7 +232,7 @@ export function displayPlayerWeapon(weaponKey, scene) {
           }
         }
       });
-      
+
       scene.load.start();
     } else {
       console.warn(`⚠️ Phaser load.image not available, texture may not load`);
@@ -243,6 +245,142 @@ export function displayPlayerWeapon(weaponKey, scene) {
   setCurrentGameState({
     hasGoodWeapon: true,
     weaponKey: weaponKey
+  });
+}
+
+/**
+ * แสดงเอฟเฟกต์พิเศษสำหรับแต่ละ Part (เช่น circle_1, aura_1)
+ */
+export function displayPlayerEffect(effectKey, scene, keepExisting = false) {
+  if (!scene || !scene.player) return;
+
+  // ลบเอฟเฟกต์เก่าออกก่อน (ถ้าไม่ได้สั่งให้เก็บไว้)
+  if (!keepExisting) {
+    clearPlayerEffects();
+  }
+
+  if (!effectKey) return;
+
+  console.log(`✨ Displaying effect: ${effectKey} (keep: ${keepExisting})`);
+
+  if (effectKey.startsWith('circle_')) {
+    // วาดวงเวทย์ (Magic Circle)
+    const index = parseInt(effectKey.split('_')[1]) || 1;
+    drawMagicCircle(scene, index);
+  } else if (effectKey.startsWith('aura_')) {
+    // แสดง Aura
+    const index = parseInt(effectKey.split('_')[1]) || 1;
+    showPlayerAura(scene, index);
+  }
+}
+
+function clearPlayerEffects() {
+  if (playerEffectGraphics) {
+    playerEffectGraphics.destroy();
+    playerEffectGraphics = null;
+  }
+  if (playerEffectSprite) {
+    playerEffectSprite.destroy();
+    playerEffectSprite = null;
+  }
+}
+
+function drawMagicCircle(scene, index) {
+  const player = scene.player;
+
+  // เคลียร์อันเก่าของประเภทเดียวกันออกก่อนเพื่อไม่ให้ซ้อนกันเอง
+  if (playerEffectGraphics) {
+    playerEffectGraphics.destroy();
+    playerEffectGraphics = null;
+  }
+
+  const graphics = scene.add.graphics();
+  graphics.setDepth(player.depth - 1); // อยู่ใต้เท้า
+
+  // วาดด้วย cyan/blue glow
+  const color = 0x00ffff;
+  const alpha = 0.6;
+  const radius = 40;
+
+  // วาดวงกลมชั้นนอก (แบบจางๆ)
+  graphics.lineStyle(2, color, alpha);
+  graphics.strokeCircle(0, 0, radius);
+
+  // วาดสัญลักษณ์ข้างใน (จำลองตาม index)
+  graphics.lineStyle(1, color, alpha * 0.5);
+  graphics.strokeCircle(0, 0, radius - 5);
+
+  if (index > 0) {
+    // วาดเส้นกากบาท หรือสามเหลี่ยมข้างในให้ดูเหมือนวงเวทย์
+    for (let i = 0; i < 4; i++) {
+      const angle = (i * Math.PI) / 2;
+      graphics.lineBetween(
+        Math.cos(angle) * (radius - 10), Math.sin(angle) * (radius - 10),
+        Math.cos(angle + Math.PI) * (radius - 10), Math.sin(angle + Math.PI) * (radius - 10)
+      );
+    }
+  }
+
+  playerEffectGraphics = graphics;
+
+  // ให้วงเวทย์หมุนช้าๆ
+  scene.tweens.add({
+    targets: graphics,
+    angle: 360,
+    duration: 5000,
+    repeat: -1
+  });
+
+  // อัปเดตตำแหน่งตามผู้เล่น
+  const updatePos = () => {
+    if (playerEffectGraphics && player) {
+      playerEffectGraphics.setPosition(player.x, player.y + 15);
+    }
+  };
+  scene.events.on('update', updatePos);
+  playerEffectGraphics.once('destroy', () => {
+    scene.events.off('update', updatePos);
+  });
+}
+
+function showPlayerAura(scene, index) {
+  const player = scene.player;
+  const animKey = `aura_${index}`;
+
+  console.log(`🔥 [weaponUtils] showPlayerAura using sprite: ${animKey}`);
+
+  // เคลียร์สไปรท์เก่าออกก่อน
+  if (playerEffectSprite) {
+    playerEffectSprite.destroy();
+    playerEffectSprite = null;
+  }
+
+  // Create aura sprite
+  // We use the first frame as the initial texture
+  const aura = scene.add.sprite(player.x, player.y, `${animKey}_1`);
+  aura.setDepth(player.depth - 1);
+  aura.setScale(1.5); // ปรับขนาดให้พอดีกับตัวละคร (จากเดิม 2.5)
+  aura.setAlpha(0.8);
+
+  // เล่น Animation
+  if (scene.anims.exists(animKey)) {
+    aura.play(animKey);
+  } else {
+    console.warn(`⚠️ Animation ${animKey} not found!`);
+  }
+
+  playerEffectSprite = aura;
+
+  // อัปเดตตำแหน่งตามผู้เล่น
+  const updatePos = () => {
+    if (playerEffectSprite && !playerEffectSprite.isDestroyed && player) {
+      playerEffectSprite.setPosition(player.x, player.y);
+    }
+  };
+  scene.events.on('update', updatePos);
+
+  aura.once('destroy', () => {
+    scene.events.off('update', updatePos);
   });
 }
 

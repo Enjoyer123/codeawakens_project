@@ -11,8 +11,13 @@ export const fetchTestsByType = async (getToken, type) => {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to fetch tests');
+      const errorData = await response.json();
+      const error = new Error(errorData.message || 'Failed to fetch tests');
+      error.response = {
+        status: response.status,
+        data: errorData
+      };
+      throw error;
     }
 
     return await response.json();
@@ -49,10 +54,10 @@ export const submitTest = async (getToken, type, answers) => {
 export const fetchAllTests = async (getToken, type = '') => {
   try {
     const token = await getToken();
-    const url = type 
+    const url = type
       ? `${API_BASE_URL}/api/tests/admin/all?type=${type}`
       : `${API_BASE_URL}/api/tests/admin/all`;
-      
+
     const response = await fetch(url, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -80,8 +85,8 @@ export const createTest = async (getToken, testData) => {
     });
 
     if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.message || 'Failed to create test');
+      const err = await response.json();
+      throw new Error(err.message || 'Failed to create test');
     }
     return await response.json();
   } catch (error) {
@@ -102,8 +107,8 @@ export const updateTest = async (getToken, id, testData) => {
     });
 
     if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.message || 'Failed to update test');
+      const err = await response.json();
+      throw new Error(err.message || 'Failed to update test');
     }
     return await response.json();
   } catch (error) {
@@ -163,8 +168,8 @@ export const uploadTestImage = async (getToken, file) => {
     });
 
     if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.message || 'Failed to upload image');
+      const err = await response.json();
+      throw new Error(err.message || 'Failed to upload image');
     }
     return await response.json();
   } catch (error) {

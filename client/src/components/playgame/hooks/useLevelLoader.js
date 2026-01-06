@@ -3,7 +3,9 @@
  */
 
 import { useEffect } from 'react';
+import { useAuth } from "@clerk/clerk-react";
 import { fetchLevelById } from '../../../services/levelService';
+import { getUserByClerkId } from '../../../services/profileService';
 import {
   setLevelData,
   setCurrentGameState,
@@ -90,7 +92,10 @@ export function useLevelLoader({
         }
 
         // ตรวจสอบว่าด่านถูกปลดล็อคหรือไม่ (สำหรับผู้เล่นปกติ, ไม่ใช่ preview)
-        if (!isPreview && levelResponse.is_unlocked === false) {
+        const { user } = await getUserByClerkId(getToken);
+        const isAdmin = user?.role === 'admin';
+
+        if (!isPreview && !isAdmin && levelResponse.is_unlocked === false) {
           throw new Error('ด่านนี้ยังไม่ถูกปลดล็อค กรุณารอให้ admin ทดสอบด่านก่อน');
         }
 
@@ -150,7 +155,8 @@ export function useLevelLoader({
                     : []
                 }
                 : {},
-              xmlCheck: hint.xmlCheck
+              xmlCheck: hint.xmlCheck,
+              effect: hint.effect // Ensure effect is conserved
             }));
           }
           if (typeof rawHints === 'object') {
@@ -277,10 +283,16 @@ export function useLevelLoader({
           );
 
         // In preview mode, use all patterns (including is_available = false)
-        // In normal mode, only use patterns with is_available = true
+        // In normal mode, only use patterns with is_available = true (Official Logic)
         const goodPatterns = isPreview
           ? allPatterns
           : allPatterns.filter(p => p.is_available === true);
+
+        console.log(`🔍 [useLevelLoader] Pattern Visibility:`, {
+          isPreview,
+          count: goodPatterns.length,
+          allCount: allPatterns.length
+        });
 
         const backgroundPath = levelResponse.background_image
           ? (levelResponse.background_image.startsWith('http')
@@ -422,4 +434,3 @@ export function useLevelLoader({
     loadLevel();
   }, [levelId, getToken]);
 }
-

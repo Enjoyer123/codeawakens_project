@@ -116,6 +116,24 @@ function defineDictionaryGenerators() {
     return `await dsuUnion(${parent}, ${rank}, ${rootU}, ${rootV});\n`;
   };
 
+  // Override controls_forEach to use 'for (let item of list)' for safety
+  javascriptGenerator.forBlock["controls_forEach"] = function (block) {
+    const variable = javascriptGenerator.nameDB_.getName(
+      block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
+    const list = javascriptGenerator.valueToCode(block, 'LIST',
+      javascriptGenerator.ORDER_ASSIGNMENT) || '[]';
+    const branch = javascriptGenerator.statementToCode(block, 'DO');
+
+    return `
+    const __list = ${list};
+    if (Array.isArray(__list)) {
+      for (let ${variable} of __list) {
+        ${branch}
+      }
+    }
+    \n`;
+  };
+
   console.log('✅ Dictionary generators registered:', Object.keys(javascriptGenerator.forBlock).filter(k => k.startsWith('dict_') || k.startsWith('dsu_')));
 }
 
@@ -764,6 +782,37 @@ export function defineAllGenerators() {
     return `await ${functionName}(${argument});\n`;
   };
 
+  // Override procedures_callreturn to await the async function result
+  javascriptGenerator.forBlock["procedures_callreturn"] = function (block) {
+    const funcName = javascriptGenerator.nameDB_.getName(
+      block.getFieldValue('NAME'),
+      Blockly.Names.NameType.PROCEDURE
+    );
+    const args = [];
+    const variables = block.getVars();
+    for (let i = 0; i < variables.length; i++) {
+      args[i] = javascriptGenerator.valueToCode(block, 'ARG' + i,
+        javascriptGenerator.ORDER_NONE) || 'null';
+    }
+    const code = `await ${funcName}(${args.join(', ')})`;
+    return [code, javascriptGenerator.ORDER_FUNCTION_CALL];
+  };
+
+  // Override procedures_callnoreturn to await the async function completion
+  javascriptGenerator.forBlock["procedures_callnoreturn"] = function (block) {
+    const funcName = javascriptGenerator.nameDB_.getName(
+      block.getFieldValue('NAME'),
+      Blockly.Names.NameType.PROCEDURE
+    );
+    const args = [];
+    const variables = block.getVars();
+    for (let i = 0; i < variables.length; i++) {
+      args[i] = javascriptGenerator.valueToCode(block, 'ARG' + i,
+        javascriptGenerator.ORDER_NONE) || 'null';
+    }
+    return `await ${funcName}(${args.join(', ')});\n`;
+  };
+
   // Override procedures_defreturn to generate async function
   // This is needed because we use await inside the function
   javascriptGenerator.forBlock["procedures_defreturn"] = function (block) {
@@ -1075,12 +1124,24 @@ export function defineAllGenerators() {
       }
     }
 
-    // Get arguments
+    // Get arguments - Improved robust handling
     const args = [];
     if (block.arguments_ && block.arguments_.length > 0) {
       for (let i = 0; i < block.arguments_.length; i++) {
         const argCode = javascriptGenerator.valueToCode(block, 'ARG' + i, javascriptGenerator.ORDER_NONE) || 'null';
         args.push(argCode);
+      }
+    } else {
+      // Fallback: Scan for ARG0, ARG1, ... until not found
+      // This handles cases where block.arguments_ is empty/missing but inputs exist (common in some deserialization edge cases)
+      let i = 0;
+      while (block.getInput('ARG' + i)) {
+        const argCode = javascriptGenerator.valueToCode(block, 'ARG' + i, javascriptGenerator.ORDER_NONE) || 'null';
+        args.push(argCode);
+        i++;
+      }
+      if (i > 0) {
+        console.log(`[blocklyGenerators] ⚠️ Fallback argument scanning found ${i} args for ${procedureName}`);
       }
     }
 

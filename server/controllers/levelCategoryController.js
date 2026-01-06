@@ -28,7 +28,10 @@ exports.getAllLevelCategories = async (req, res) => {
         levels: {
           select: {
             level_id: true,
+            level_name: true,
             is_unlocked: true,
+            required_level_id: true,
+            require_pre_score: true,
           },
         },
         category_items: {
@@ -44,11 +47,66 @@ exports.getAllLevelCategories = async (req, res) => {
       take: limit,
     });
 
-    // Add level_count to each category (count only unlocked levels)
-    const categoriesWithCount = levelCategories.map(category => ({
-      ...category,
-      level_count: category.levels ? category.levels.filter(level => level.is_unlocked === true).length : 0,
-    }));
+    // Calculate dynamic unlocks
+    const clerkUserId = req.user?.id;
+    let completedLevelIds = new Set();
+    let userPreScore = 0;
+
+    if (clerkUserId) {
+      const user = await prisma.user.findUnique({
+        where: { clerk_user_id: clerkUserId },
+        select: { user_id: true, pre_score: true }
+      });
+
+      if (user) {
+        userPreScore = user.pre_score || 0;
+        const progress = await prisma.userProgress.findMany({
+          where: {
+            user_id: user.user_id,
+            OR: [
+              { status: 'completed' },
+              { is_correct: true } // Handle cases where status might not be updated but is_correct is true
+            ]
+          },
+          select: { level_id: true }
+        });
+        completedLevelIds = new Set(progress.map(p => p.level_id));
+      }
+    }
+
+    // Add level_count to each category and compute dynamic is_unlocked
+    const categoriesWithCount = levelCategories.map(category => {
+      const processedLevels = category.levels ? category.levels.map(level => {
+        const isStaticUnlocked = level.is_unlocked;
+        // Check if required level is completed (if a requirement exists)
+        const isPrereqMet = level.required_level_id
+          ? completedLevelIds.has(level.required_level_id)
+          : false;
+
+        // Check if pre-score requirement is met
+        const isScoreMet = (level.require_pre_score !== null && level.require_pre_score !== undefined)
+          ? userPreScore >= level.require_pre_score
+          : false;
+
+        // Level is unlocked if:
+        // 1. It is statically unlocked (default open) AND no score requirement overrides it
+        // 2. OR Prerequisites are met
+        // 3. OR Pre-score requirement is met (bypass)
+        // Note: If require_pre_score is set, we ignore the static is_unlocked from DB to enforce the check
+        const isUnlocked = (isStaticUnlocked && !level.require_pre_score) || isPrereqMet || isScoreMet;
+
+        return {
+          ...level,
+          is_unlocked: isUnlocked
+        };
+      }) : [];
+
+      return {
+        ...category,
+        levels: processedLevels,
+        level_count: processedLevels.filter(level => level.is_unlocked === true).length,
+      };
+    });
 
     res.json({
       levelCategories: categoriesWithCount,
@@ -85,6 +143,8 @@ exports.getLevelCategoryById = async (req, res) => {
             start_node_id: true,
             goal_type: true,
             is_unlocked: true,
+            required_level_id: true,
+            require_pre_score: true,
           },
           orderBy: {
             level_id: 'asc',
@@ -102,7 +162,59 @@ exports.getLevelCategoryById = async (req, res) => {
       return res.status(404).json({ message: "Level category not found" });
     }
 
-    res.json({ levelCategory });
+    // Calculate dynamic unlocks (Same logic as getAllLevelCategories)
+    const clerkUserId = req.user?.id;
+    let completedLevelIds = new Set();
+    let userPreScore = 0;
+
+    if (clerkUserId) {
+      const user = await prisma.user.findUnique({
+        where: { clerk_user_id: clerkUserId },
+        select: { user_id: true, pre_score: true }
+      });
+
+      if (user) {
+        userPreScore = user.pre_score || 0;
+        const progress = await prisma.userProgress.findMany({
+          where: {
+            user_id: user.user_id,
+            OR: [
+              { status: 'completed' },
+              { is_correct: true }
+            ]
+          },
+          select: { level_id: true }
+        });
+        completedLevelIds = new Set(progress.map(p => p.level_id));
+      }
+    }
+
+    // Process levels to set dynamic is_unlocked
+    const processedLevels = levelCategory.levels ? levelCategory.levels.map(level => {
+      const isStaticUnlocked = level.is_unlocked;
+      const isPrereqMet = level.required_level_id
+        ? completedLevelIds.has(level.required_level_id)
+        : false;
+
+      const isScoreMet = (level.require_pre_score !== null && level.require_pre_score !== undefined)
+        ? userPreScore >= level.require_pre_score
+        : false;
+
+      const isUnlocked = (isStaticUnlocked && !level.require_pre_score) || isPrereqMet || isScoreMet;
+
+      return {
+        ...level,
+        is_unlocked: isUnlocked
+      };
+    }) : [];
+
+    // Return category with processed levels
+    res.json({
+      levelCategory: {
+        ...levelCategory,
+        levels: processedLevels
+      }
+    });
   } catch (error) {
     console.error("Error fetching level category:", error);
     res.status(500).json({ message: "Error fetching level category", error: error.message });
@@ -170,11 +282,11 @@ exports.createLevelCategory = async (req, res) => {
         item_enable: item_enable === true || item_enable === 'true' || item_enable === false,
         difficulty_order: parseInt(difficulty_order),
         color_code: trimmedColorCode,
-        block_key: block_key || null,
+        block_key: (block_key && block_key !== 'null' && block_key !== '') ? block_key : null,
         category_items: categoryItemsData.length > 0
           ? {
-              create: categoryItemsData,
-            }
+            create: categoryItemsData,
+          }
           : undefined,
       },
       include: {
@@ -260,11 +372,11 @@ exports.updateLevelCategory = async (req, res) => {
         item_enable: item_enable === true || item_enable === 'true',
         difficulty_order: parseInt(difficulty_order),
         color_code: color_code.trim(),
-        block_key: block_key || null,
+        block_key: (block_key && block_key !== 'null' && block_key !== '') ? block_key : null,
         category_items: categoryItemsData.length > 0
           ? {
-              create: categoryItemsData,
-            }
+            create: categoryItemsData,
+          }
           : undefined,
       },
       include: {
@@ -318,7 +430,7 @@ exports.deleteLevelCategory = async (req, res) => {
 
     // Prevent deletion if level category is used in levels
     if (levelCategory.levels && levelCategory.levels.length > 0) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: `Cannot delete level category: This category is being used in ${levelCategory.levels.length} level(s). Please remove or reassign all levels from this category before deleting.`,
         levels_count: levelCategory.levels.length,
         level_ids: levelCategory.levels.map(l => l.level_id)
@@ -340,7 +452,7 @@ exports.deleteLevelCategory = async (req, res) => {
     console.error("Error stack:", error.stack);
     console.error("Error code:", error.code);
     console.error("Error meta:", error.meta);
-    
+
     // Provide more detailed error message
     let errorMessage = "Error deleting level category";
     if (error.code === 'P2003') {
@@ -350,9 +462,9 @@ exports.deleteLevelCategory = async (req, res) => {
     } else if (error.message) {
       errorMessage = error.message;
     }
-    
-    res.status(500).json({ 
-      message: errorMessage, 
+
+    res.status(500).json({
+      message: errorMessage,
       error: error.message,
       code: error.code,
       meta: error.meta

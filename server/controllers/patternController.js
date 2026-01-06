@@ -62,7 +62,7 @@ function extractBlockKeysFromXml(xmlPattern) {
  */
 function getRequiredBlocksForCategory(categoryName) {
   if (!categoryName) return null;
-  
+
   const normalizedName = categoryName.toLowerCase().trim();
   return CATEGORY_BLOCK_REQUIREMENTS[normalizedName] || null;
 }
@@ -77,32 +77,34 @@ function getRequiredBlocksFromCategory(category) {
   }
 
   const blockKey = category.block_key;
+  let blocks = [];
 
-  // If it's an array, return directly
+  // If it's an array, copy it
   if (Array.isArray(blockKey)) {
-    return blockKey.length > 0 ? blockKey : null;
+    blocks = [...blockKey];
   }
-
   // If it's an object, extract all values and flatten
-  if (typeof blockKey === 'object') {
-    const allBlocks = [];
+  else if (typeof blockKey === 'object') {
     Object.values(blockKey).forEach(value => {
       if (Array.isArray(value)) {
-        allBlocks.push(...value);
+        blocks.push(...value);
       } else if (typeof value === 'string') {
-        allBlocks.push(value);
+        blocks.push(value);
       }
     });
-    return allBlocks.length > 0 ? allBlocks : null;
+  }
+  // If it's a string, treat as comma-separated
+  else if (typeof blockKey === 'string') {
+    if (blockKey === 'null' || blockKey === 'undefined') return null;
+    blocks = blockKey.split(',');
   }
 
-  // If it's a string, treat as comma-separated or single value
-  if (typeof blockKey === 'string') {
-    const blocks = blockKey.split(',').map(b => b.trim()).filter(b => b.length > 0);
-    return blocks.length > 0 ? blocks : null;
-  }
+  // Filter out garbage values
+  const validBlocks = blocks
+    .map(b => (typeof b === 'string' ? b.trim() : ''))
+    .filter(b => b !== '' && b.toLowerCase() !== 'null' && b.toLowerCase() !== 'undefined');
 
-  return null;
+  return validBlocks.length > 0 ? validBlocks : null;
 }
 
 /**
@@ -137,26 +139,27 @@ async function evaluatePatternType(levelId, xmlPattern, blockKeywords = null) {
 
     // Priority 1: Get required blocks from category.block_key (new method)
     let requiredBlocks = getRequiredBlocksFromCategory(category);
-    
+
     if (requiredBlocks && requiredBlocks.length > 0) {
       console.log(`  - Required blocks from category.block_key: ${requiredBlocks.join(', ')}`);
     } else {
       // Priority 2: Fallback to system mapping (backward compatibility)
-      requiredBlocks = getRequiredBlocksForCategory(categoryName);
-      if (requiredBlocks && requiredBlocks.length > 0) {
-        console.log(`  - Required blocks from system mapping: ${requiredBlocks.join(', ')}`);
-      }
+      // FIX: Removing this fallback because CATEGORY_BLOCK_REQUIREMENTS is not defined, causes Error -> returns 2 (Medium)
+      // requiredBlocks = getRequiredBlocksForCategory(categoryName);
+      // if (requiredBlocks && requiredBlocks.length > 0) {
+      //   console.log(`  - Required blocks from system mapping: ${requiredBlocks.join(', ')}`);
+      // }
     }
-    
+
     if (requiredBlocks && requiredBlocks.length > 0) {
       // ตรวจสอบว่ามีการใช้ required blocks ครบทุกตัวหรือไม่
       const hasAllRequiredBlocks = requiredBlocks.every(block => blockKeys.includes(block));
       const hasSomeRequiredBlocks = requiredBlocks.some(block => blockKeys.includes(block));
-      
+
       console.log(`  - Required blocks: ${requiredBlocks.join(', ')}`);
       console.log(`  - Has all required blocks: ${hasAllRequiredBlocks}`);
       console.log(`  - Has some required blocks: ${hasSomeRequiredBlocks}`);
-      
+
       // ถ้าใช้ครบทุกตัว = pattern_type_id = 1 (ดี)
       // ถ้าใช้บางตัว = pattern_type_id = 2 (กลาง)
       // ถ้าไม่ใช้เลย = pattern_type_id = 2 (กลาง)
@@ -175,9 +178,10 @@ async function evaluatePatternType(levelId, xmlPattern, blockKeywords = null) {
       return patternTypeId;
     }
 
-    // Default: ถ้าไม่มี mapping และไม่มี blockKeywords ให้เป็นระดับกลาง
-    console.log(`  - No block requirements found for category "${categoryName}", defaulting to pattern_type_id: 2`);
-    return 2;
+    // Default: ถ้าไม่มี mapping และไม่มี blockKeywords
+    // พิจารณาตามที่คุณสั่ง: หากด่านไม่มีการจำกัดบล็อก (block_key) ให้ถือว่าเป็นระดับดี (1) ทันทีที่แอดมินเพิ่มรูปแบบ
+    console.log(`  - No block requirements found for category "${categoryName}", auto-assigning to pattern_type_id: 1 (Good Level)`);
+    return 1;
   } catch (error) {
     console.error("Error evaluating pattern type:", error);
     // Default to pattern_type_id = 2 (กลาง) on error
@@ -191,8 +195,8 @@ exports.createPattern = async (req, res) => {
     const { level_id, pattern_type_id, weapon_id, pattern_name, description, xmlpattern, hints, block_keywords, bigO } = req.body;
 
     if (!level_id || !pattern_name) {
-      return res.status(400).json({ 
-        message: "Missing required fields: level_id, pattern_name" 
+      return res.status(400).json({
+        message: "Missing required fields: level_id, pattern_name"
       });
     }
 
@@ -214,8 +218,8 @@ exports.createPattern = async (req, res) => {
       evaluatedPatternTypeId = await evaluatePatternType(level_id, xmlpattern, block_keywords);
       console.log(`✅ Auto-evaluated pattern_type_id: ${evaluatedPatternTypeId}`);
     } else if (!pattern_type_id) {
-      return res.status(400).json({ 
-        message: "Missing required field: pattern_type_id (or provide xmlpattern for auto-evaluation)" 
+      return res.status(400).json({
+        message: "Missing required field: pattern_type_id (or provide xmlpattern for auto-evaluation)"
       });
     }
 
@@ -267,9 +271,9 @@ exports.createPattern = async (req, res) => {
     });
   } catch (error) {
     console.error("Error creating pattern:", error);
-    res.status(500).json({ 
-      message: "Error creating pattern", 
-      error: error.message 
+    res.status(500).json({
+      message: "Error creating pattern",
+      error: error.message
     });
   }
 };
@@ -329,9 +333,9 @@ exports.getAllPatterns = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching patterns:", error);
-    res.status(500).json({ 
-      message: "Error fetching patterns", 
-      error: error.message 
+    res.status(500).json({
+      message: "Error fetching patterns",
+      error: error.message
     });
   }
 };
@@ -357,9 +361,9 @@ exports.getPatternById = async (req, res) => {
     res.json(pattern);
   } catch (error) {
     console.error("Error fetching pattern:", error);
-    res.status(500).json({ 
-      message: "Error fetching pattern", 
-      error: error.message 
+    res.status(500).json({
+      message: "Error fetching pattern",
+      error: error.message
     });
   }
 };
@@ -378,8 +382,21 @@ exports.updatePattern = async (req, res) => {
       return res.status(404).json({ message: "Pattern not found" });
     }
 
+    // Verify level ID
+    const levelId = existingPattern.level_id;
+
+    // Evaluate pattern_type_id automatically if not provided or null
+    let evaluatedPatternTypeId = pattern_type_id;
+    if (!pattern_type_id) {
+      const xmlToEvaluate = xmlpattern !== undefined ? xmlpattern : existingPattern.xmlpattern;
+      if (xmlToEvaluate) {
+        evaluatedPatternTypeId = await evaluatePatternType(levelId, xmlToEvaluate);
+        console.log(`✅ [updatePattern] Auto-reevaluated pattern_type_id: ${evaluatedPatternTypeId}`);
+      }
+    }
+
     const updateData = {};
-    if (pattern_type_id) updateData.pattern_type_id = parseInt(pattern_type_id);
+    if (evaluatedPatternTypeId) updateData.pattern_type_id = parseInt(evaluatedPatternTypeId);
     if (weapon_id !== undefined) updateData.weapon_id = weapon_id ? parseInt(weapon_id) : null;
     if (pattern_name) updateData.pattern_name = pattern_name;
     if (description !== undefined) updateData.description = description;
@@ -407,9 +424,9 @@ exports.updatePattern = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating pattern:", error);
-    res.status(500).json({ 
-      message: "Error updating pattern", 
-      error: error.message 
+    res.status(500).json({
+      message: "Error updating pattern",
+      error: error.message
     });
   }
 };
@@ -436,9 +453,9 @@ exports.deletePattern = async (req, res) => {
     });
   } catch (error) {
     console.error("Error deleting pattern:", error);
-    res.status(500).json({ 
-      message: "Error deleting pattern", 
-      error: error.message 
+    res.status(500).json({
+      message: "Error deleting pattern",
+      error: error.message
     });
   }
 };
@@ -455,9 +472,9 @@ exports.getPatternTypes = async (req, res) => {
     res.json(patternTypes);
   } catch (error) {
     console.error("Error fetching pattern types:", error);
-    res.status(500).json({ 
-      message: "Error fetching pattern types", 
-      error: error.message 
+    res.status(500).json({
+      message: "Error fetching pattern types",
+      error: error.message
     });
   }
 };
@@ -488,9 +505,9 @@ exports.unlockPattern = async (req, res) => {
     });
   } catch (error) {
     console.error("Error unlocking pattern:", error);
-    res.status(500).json({ 
-      message: "Error unlocking pattern", 
-      error: error.message 
+    res.status(500).json({
+      message: "Error unlocking pattern",
+      error: error.message
     });
   }
 };

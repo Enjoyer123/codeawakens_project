@@ -63,6 +63,24 @@ export function updateTreasureDisplay(scene) {
   });
 }
 
+// Function to visually collect treasure (direct update)
+export function collectTreasureVisual(scene, nodeId) {
+  if (!scene.treasures) return;
+
+  const treasure = scene.treasures.find(t => t.getData('nodeId') === nodeId);
+  if (treasure) {
+    console.log(`💎 Visual update: Hiding treasure at node ${nodeId}`);
+    treasure.setVisible(false);
+    if (treasure.nameLabel) treasure.nameLabel.setVisible(false);
+    if (treasure.glowEffect) treasure.glowEffect.setVisible(false);
+
+    // Play collection effect similar to coins
+    showCoinCollectionEffect(scene, treasure.x, treasure.y, 100); // Assume 100 points for treasure for visual effect
+  } else {
+    console.warn(`⚠️ Visual update: Treasure at node ${nodeId} not found in scene`);
+  }
+}
+
 // Function to rescue person at position
 export function rescuePersonAtPosition(scene, playerX, playerY) {
   if (!scene.people) return false;
@@ -109,6 +127,65 @@ export function rescuePersonAtPosition(scene, playerX, playerY) {
   }
 
   return false;
+}
+
+// Function to visually rescue person (direct update)
+export function rescuePersonVisual(scene, nodeId) {
+  if (!scene.people) return;
+
+  const person = scene.people.find(p => p.getData('nodeId') === nodeId);
+  if (person) {
+    console.log(`🆘 Visual update: Rescuing person at node ${nodeId}`);
+
+    // Show rescue effect
+    const rescueEffect = person.getData('rescueEffect');
+    if (rescueEffect) {
+      rescueEffect.setVisible(true);
+      scene.tweens.add({
+        targets: rescueEffect,
+        scaleX: 2,
+        scaleY: 2,
+        alpha: 0,
+        duration: 500,
+        ease: "Power2",
+        onComplete: () => {
+          rescueEffect.setVisible(false);
+          rescueEffect.setScale(1);
+          rescueEffect.setAlpha(1);
+        }
+      });
+    }
+
+    // Hide person
+    person.setVisible(false);
+    if (person.nameLabel) {
+      person.nameLabel.setVisible(false);
+    }
+
+    // Play collection effect (using green text)
+    const personName = person.getData('personName') || 'Person';
+    const effect = scene.add.text(person.x, person.y, `Saved ${personName}!`, {
+      fontSize: '14px',
+      color: '#00ff00',
+      fontStyle: 'bold',
+      stroke: '#000000',
+      strokeThickness: 2
+    });
+    effect.setOrigin(0.5);
+    effect.setDepth(20);
+
+    scene.tweens.add({
+      targets: effect,
+      y: person.y - 40,
+      alpha: 0,
+      duration: 1500,
+      ease: 'Power2.easeOut',
+      onComplete: () => effect.destroy()
+    });
+
+  } else {
+    console.warn(`⚠️ Visual update: Person at node ${nodeId} not found in scene`);
+  }
 }
 
 export function collectCoinByPlayer(scene, playerX, playerY) {

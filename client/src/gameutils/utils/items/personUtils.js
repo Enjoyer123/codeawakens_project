@@ -43,8 +43,8 @@ export async function rescuePerson() {
 
   // อัปเดต UI
   if (currentState.currentScene) {
-    const { updatePersonDisplay } = await import('../phaser/phaserCollection');
-    updatePersonDisplay(currentState.currentScene);
+    const { rescuePersonVisual } = await import('../phaser/phaserCollection');
+    rescuePersonVisual(currentState.currentScene, currentNodeId);
   }
 
   return true;
@@ -58,6 +58,9 @@ export async function rescuePersonAtNode(nodeId) {
     return false;
   }
 
+  // Ensure nodeId is a number
+  const targetNodeId = Number(nodeId);
+
   const levelData = currentState.levelData;
 
   if (!levelData || !levelData.people) {
@@ -65,31 +68,31 @@ export async function rescuePersonAtNode(nodeId) {
     return false;
   }
 
-  const person = levelData.people.find(p => p.nodeId === nodeId);
+  const person = levelData.people.find(p => p.nodeId === targetNodeId);
   if (!person) {
-    console.log(`No person at node ${nodeId}`);
+    console.log(`No person at node ${targetNodeId} (input: ${nodeId})`);
     return false;
   }
 
   if (person.rescued) {
-    console.log(`Person at node ${nodeId} already rescued`);
+    console.log(`Person at node ${targetNodeId} already rescued`);
     return false;
   }
 
   // ช่วยคนสำเร็จ
   person.rescued = true;
   rescuedPeople.push({
-    nodeId: nodeId,
+    nodeId: targetNodeId,
     personName: person.personName,
     rescuedAt: Date.now()
   });
 
-  console.log(`✅ ช่วย ${person.personName} ที่ node ${nodeId} สำเร็จ!`);
+  console.log(`✅ ช่วย ${person.personName} ที่ node ${targetNodeId} สำเร็จ!`);
 
   // อัปเดต UI
   if (currentState.currentScene) {
-    const { updatePersonDisplay } = await import('../phaser/phaserCollection');
-    updatePersonDisplay(currentState.currentScene);
+    const { rescuePersonVisual } = await import('../phaser/phaserCollection');
+    rescuePersonVisual(currentState.currentScene, targetNodeId);
   }
 
   return true;

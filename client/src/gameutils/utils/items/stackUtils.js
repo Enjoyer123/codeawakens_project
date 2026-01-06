@@ -74,8 +74,8 @@ export function collectTreasure(nodeId) {
 
     // อัปเดตการแสดงผลสมบัติ
     if (currentState.currentScene) {
-      import('../phaser/phaserCollection').then(({ updateTreasureDisplay }) => {
-        updateTreasureDisplay(currentState.currentScene);
+      import('../phaser/phaserCollection').then(({ collectTreasureVisual }) => {
+        collectTreasureVisual(currentState.currentScene, nodeId);
       });
     }
 
@@ -86,6 +86,15 @@ export function collectTreasure(nodeId) {
     console.log(`No treasure found at node ${nodeId}`);
   }
   return false;
+}
+
+// ฟังก์ชันดึงรายการสมบัติที่เก็บแล้ว
+export function getCollectedTreasures() {
+  const currentState = getCurrentGameState();
+  if (!currentState.levelData || !currentState.levelData.treasures) {
+    return [];
+  }
+  return currentState.levelData.treasures.filter(t => t.collected);
 }
 
 // ฟังก์ชันตรวจสอบว่าสมบัติถูกเก็บแล้วหรือไม่

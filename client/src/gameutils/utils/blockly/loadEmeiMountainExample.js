@@ -280,7 +280,7 @@ const emeiDijkstraXml = `<xml xmlns="https://developers.google.com/blockly/xml">
     <value name="ARG1"><block type="variables_get"><field name="VAR">edges</field></block></value>
     <value name="ARG2"><block type="variables_get"><field name="VAR">start</field></block></value>
     <value name="ARG3"><block type="variables_get"><field name="VAR">end</field></block></value>
-    <value name="ARG4"><block type="variables_get"><field name="VAR">tourists</field></block></value>
+    <value name="ARG4"><block type="math_number"><field name="NUM">20</field></block></value>
   </block>
 </xml>`;
 
@@ -568,7 +568,7 @@ const emeiPrimXml = `<xml xmlns="https://developers.google.com/blockly/xml">
     <value name="ARG1"><block type="variables_get"><field name="VAR">edges</field></block></value>
     <value name="ARG2"><block type="variables_get"><field name="VAR">start</field></block></value>
     <value name="ARG3"><block type="variables_get"><field name="VAR">end</field></block></value>
-    <value name="ARG4"><block type="variables_get"><field name="VAR">tourists</field></block></value>
+    <value name="ARG4"><block type="math_number"><field name="NUM">20</field></block></value>
   </block>
 </xml>`;
 
