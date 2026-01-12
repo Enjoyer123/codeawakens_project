@@ -22,28 +22,27 @@ import { useGameConditions } from '../../components/playgame/hooks/useGameCondit
 import { handleRestartGame as handleRestartGameUtil } from '../../components/playgame/utils/gameHandlers';
 import { updatePlayerWeaponDisplay } from '../../gameutils/utils/gameUtils';
 import { useLevelLoader } from '../../components/playgame/hooks/useLevelLoader';
-import { useBlocklySetup } from '../../components/playgame/hooks/useBlocklySetup';
+import { useBlocklySetup } from '../../components/playgame/hooks/blocklysetup/useBlocklySetup';
 import { usePhaserGame } from '../../components/playgame/hooks/usePhaserGame';
-import { useCodeExecution } from '../../components/playgame/hooks/useCodeExecution';
+import { useCodeExecution } from '../../components/playgame/hooks/execution/useCodeExecution';
 import { useTextCodeValidation } from '../../components/playgame/hooks/useTextCodeValidation';
 import { usePatternAnalysis } from '../../components/playgame/hooks/usePatternAnalysis';
-import { useVisualGuide } from './hooks/useVisualGuide';
 import { isInCombat } from '../../gameutils/utils/combatSystem';
 import { clearGameOverScreen, showGameOver } from '../../gameutils/utils/phaserGame';
 import { createToolboxConfig } from '../../gameutils/utils/blocklyUtils';
-import { loadDfsExampleBlocks } from '../../gameutils/utils/blockly/loadDfsExample';
-import { loadBfsExampleBlocks } from '../../gameutils/utils/blockly/loadBfsExample';
-import { loadKnapsackExampleBlocks } from '../../gameutils/utils/blockly/loadKnapsackExample';
-import { loadDynamicKnapsackExampleBlocks } from '../../gameutils/utils/blockly/loadDynamicKnapsackExample';
-import { loadSubsetSumExampleBlocks } from '../../gameutils/utils/blockly/loadSubsetSumExample';
-import { loadDynamicSubsetSumExampleBlocks } from '../../gameutils/utils/blockly/loadDynamicSubsetSumExample';
-import { loadCoinChangeExampleBlocks } from '../../gameutils/utils/blockly/loadCoinChangeExample';
-import { loadDynamicCoinChangeExampleBlocks } from '../../gameutils/utils/blockly/loadDynamicCoinChangeExample';
-import { loadGreedyCoinChangeExampleBlocks } from '../../gameutils/utils/blockly/loadGreedyCoinChangeExample';
-import { loadDijkstraExampleBlocks } from '../../gameutils/utils/blockly/loadDijkstraExample';
-import { loadPrimExampleBlocks } from '../../gameutils/utils/blockly/loadPrimExample';
-import { loadDynamicAntDpExampleBlocks } from '../../gameutils/utils/blockly/loadDynamicAntDpExample';
-import { loadTrainScheduleExampleBlocks } from '../../gameutils/utils/blockly/loadTrainScheduleExample';
+import { loadDfsExampleBlocks } from '../../gameutils/utils/blockly/example/loadDfsExample';
+import { loadBfsExampleBlocks } from '../../gameutils/utils/blockly/example/loadBfsExample';
+import { loadKnapsackExampleBlocks } from '../../gameutils/utils/blockly/example/loadKnapsackExample';
+import { loadDynamicKnapsackExampleBlocks } from '../../gameutils/utils/blockly/example/loadDynamicKnapsackExample';
+import { loadSubsetSumExampleBlocks } from '../../gameutils/utils/blockly/example/loadSubsetSumExample';
+import { loadDynamicSubsetSumExampleBlocks } from '../../gameutils/utils/blockly/example/loadDynamicSubsetSumExample';
+import { loadCoinChangeExampleBlocks } from '../../gameutils/utils/blockly/example/loadCoinChangeExample';
+import { loadDynamicCoinChangeExampleBlocks } from '../../gameutils/utils/blockly/example/loadDynamicCoinChangeExample';
+import { loadGreedyCoinChangeExampleBlocks } from '../../gameutils/utils/blockly/example/loadGreedyCoinChangeExample';
+import { loadDijkstraExampleBlocks } from '../../gameutils/utils/blockly/example/loadDijkstraExample';
+import { loadPrimExampleBlocks } from '../../gameutils/utils/blockly/example/loadPrimExample';
+import { loadDynamicAntDpExampleBlocks } from '../../gameutils/utils/blockly/example/loadDynamicAntDpExample';
+import { loadTrainScheduleExampleBlocks } from '../../gameutils/utils/blockly/example/loadTrainScheduleExample';
 
 // Services
 import { fetchAllLevels } from '../../services/levelService';
@@ -303,9 +302,6 @@ const LevelGame = () => {
       setBlocklyJavaScriptReady(true);
     }
   }, [blocklyLoaded, blocklyJavaScriptReady]);
-
-  // Visual Guide System - use hook
-  const { highlightBlocks, clearHighlights } = useVisualGuide(workspaceRef);
 
   // Use text code validation hook
   const { handleTextCodeChange } = useTextCodeValidation({

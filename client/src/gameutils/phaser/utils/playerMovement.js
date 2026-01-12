@@ -5,9 +5,9 @@ import { updatePlayerArrow } from '../../utils/phaserGame/phaserGameArrow';
 // Core movement function with collision detection
 export async function moveForwardWithCollisionDetection(player) {
     const currentNodeId = player.currentNodeIndex;
-    
+
     const targetNodeId = player.scene.pathSystem.getTargetNodeInDirection(
-        currentNodeId, 
+        currentNodeId,
         player.directionIndex
     );
 
@@ -17,17 +17,17 @@ export async function moveForwardWithCollisionDetection(player) {
 
     const currentNode = player.scene.pathSystem.getNodeById(currentNodeId);
     const targetNode = player.scene.pathSystem.getNodeById(targetNodeId);
-    
+
     if (!currentNode || !targetNode) {
         return false;
     }
 
     const moveResult = await player.scene.pathSystem.movePlayerWithCollisionDetection(
-        player.scene, 
-        currentNode, 
+        player.scene,
+        currentNode,
         targetNode
     );
-    
+
     if (moveResult.hitObstacle) {
         player.scene.events.emit('pitCollision', {
             collided: true,
@@ -40,11 +40,11 @@ export async function moveForwardWithCollisionDetection(player) {
 
     if (moveResult.success) {
         player.currentNodeIndex = targetNodeId;
-        
+
         if (player.scene.pathSystem.isGoalNode(targetNodeId)) {
             player.scene.events.emit('goalReached');
         }
-        
+
         return true;
     }
 
@@ -73,13 +73,13 @@ export async function moveToNode(player, nodeId) {
     // Calculate direction from current node to target node
     const currentNodeId = player.currentNodeIndex;
     const currentNode = levelData.nodes.find(node => node.id === currentNodeId);
-    
+
     let directionIndex = null;
     if (currentNode && currentNodeId !== nodeId) {
         // Calculate direction based on node positions, not player position
         const dx = targetNode.x - currentNode.x;
         const dy = targetNode.y - currentNode.y;
-        
+
         // Determine direction index based on movement
         // 0 = right, 1 = down, 2 = left, 3 = up
         if (Math.abs(dx) > Math.abs(dy)) {
@@ -112,7 +112,7 @@ export async function moveToPosition(player, x, y, directionIndex = null) {
     if (directionIndex === null) {
         const dx = x - player.x;
         const dy = y - player.y;
-        
+
         // Determine direction index based on movement
         // 0 = right, 1 = down, 2 = left, 3 = up
         if (Math.abs(dx) > Math.abs(dy)) {
@@ -123,20 +123,20 @@ export async function moveToPosition(player, x, y, directionIndex = null) {
             directionIndex = dy > 0 ? 1 : 3; // down : up
         }
     }
-    
+
     // Update player direction in both player sprite and gameState
     // Ensure directions array exists
     if (!player.directions) {
         player.directions = ['right', 'down', 'left', 'up'];
     }
-    
+
     // Update directionIndex BEFORE calling playWalk
     player.directionIndex = directionIndex;
     setCurrentGameState({ direction: directionIndex });
-    
+
     // Debug: Log direction to verify it's correct
     console.log('moveToPosition - directionIndex:', directionIndex, 'direction:', player.directions[directionIndex]);
-    
+
     // Play walk animation with correct direction (directionIndex is already set)
     playWalk(player);
 
@@ -195,4 +195,20 @@ export function canMoveForward(player) {
 
 export function getCurrentDirectionSymbol(player) {
     return player.scene.pathSystem.getDirectionSymbol(player.directionIndex);
+}
+
+// Rotate player to new direction
+export function rotatePlayer(scene, newDirection) {
+    if (!scene || !scene.player) return;
+
+    // Update player direction in Phaser sprite
+    scene.player.directionIndex = newDirection;
+
+    // Update global game state
+    setCurrentGameState({ direction: newDirection });
+
+    // Update visual arrow
+    updatePlayerArrow(scene, null, null, newDirection);
+
+    console.log("rotatePlayer: Rotated to", newDirection);
 }

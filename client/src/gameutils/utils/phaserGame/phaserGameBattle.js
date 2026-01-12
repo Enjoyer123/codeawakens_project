@@ -240,7 +240,7 @@ export function updateMonsters(scene, delta, isRunning, setPlayerHp, setIsGameOv
 
       checkPlayerInRange(monster.sprite);
 
-      // After moving, check distance again and trigger battle only if close enough
+      // After moving, check distance again and trigger battle only if close enough AND game is running
       const distAfterMove = Phaser.Math.Distance.Between(
         monster.sprite.x,
         monster.sprite.y,
@@ -249,7 +249,8 @@ export function updateMonsters(scene, delta, isRunning, setPlayerHp, setIsGameOv
       );
 
       const attackRange = monster.data.attackRange || 30;
-      if (distAfterMove <= attackRange && !monster.data.inBattle) {
+      // ⭐ Only attack if game is running (not paused)
+      if (distAfterMove <= attackRange && !monster.data.inBattle && isRunning) {
         // startBattle will handle damage and game over logic; don't await here to keep update loop responsive
         startBattle(scene, monster, setPlayerHp, setIsGameOver, setCurrentHint, false).catch(err => {
           console.error('Error starting battle:', err);
@@ -272,8 +273,8 @@ export function updateMonsters(scene, delta, isRunning, setPlayerHp, setIsGameOv
       );
 
       if (distToTarget < 5) {
-            monster.data.currentPatrolIndex = (monster.data.currentPatrolIndex + 1) % monster.data.patrol.length;
-            return;  // Added return to prevent extra movement after reaching target
+        monster.data.currentPatrolIndex = (monster.data.currentPatrolIndex + 1) % monster.data.patrol.length;
+        return;  // Added return to prevent extra movement after reaching target
       } else {
         const angle = Phaser.Math.Angle.Between(
           monster.sprite.x,

@@ -184,16 +184,21 @@ setTimeout(() => {
 }, 100);
 
 // Re-export from sub-modules
-export { ensureDefaultBlocks } from './blockly/blocklyDefault';
+export { ensureDefaultBlocks } from './blockly/core/blocklyDefault';
 export {
   ensureCommonVariables,
   initializeImprovedVariableHandling
-} from './blockly/blocklyVariable';
-export { ensureStandardBlocks } from './blockly/blocklyStandardBlocks';
-export { defineAllBlocks } from './blockly/blocklyBlocks';
-export { defineListBlocks } from './blockly/blocklyList';
-export { createToolboxConfig } from './blockly/blocklyToolbox';
-export { initBlockly } from './blockly/blocklyInit';
+} from './blockly/data/blocklyVariable';
+export { ensureStandardBlocks } from './blockly/core/blocklyStandardBlocks';
+export { defineLogicBlocks } from './blockly/logic/blocklyLogic';
+export { defineLogicOperatorsBlocks } from './blockly/logic/blocklyLogicOperators';
+export { defineMovementBlocks } from './blockly/movement/blocklyMovement';
+export { defineLoopBlocks } from './blockly/loop/blocklyLoop';
+export { defineMathBlocks } from './blockly/math/blocklyMath';
+export { defineAllBlocks } from './blockly/core/blocklyBlocks';
+export { defineListBlocks } from './blockly/data/blocklyList';
+export { createToolboxConfig } from './blockly/core/blocklyToolbox';
+export { initBlockly } from './blockly/core/blocklyInit';
 
 // Re-export helper functions
 export {
@@ -258,7 +263,7 @@ export {
   startCoinChangeSelectionTrackingWrapper as startCoinChangeSelectionTracking,
   trackCoinChangeDecisionWrapper as trackCoinChangeDecision,
   showCoinChangeFinalSolutionWrapper as showCoinChangeFinalSolution
-} from './blockly/blocklyHelpers';
+} from './blockly/core/blocklyHelpers';
 
 // Re-export DFS visual feedback functions
 export {
@@ -272,8 +277,11 @@ export {
   highlightEdge,
   markNodeAsVisited,
   showCurrentPath,
-  showMSTEdges
-} from './blockly/blocklyDfsVisual';
+  showMSTEdges,
+  highlightKruskalEdge,
+  showKruskalRoot,
+  clearKruskalVisuals
+} from './blockly/graph/blocklyDfsVisual';
 
 // Re-export Dijkstra state management functions
 export {
@@ -281,7 +289,7 @@ export {
   updateDijkstraPQ,
   updateMSTWeight,
   resetDijkstraState
-} from './blockly/dijkstraStateManager';
+} from './blockly/graph/dijkstraStateManager';
 // Re-export Emei Mountain visual functions
 export {
   highlightPeak,
