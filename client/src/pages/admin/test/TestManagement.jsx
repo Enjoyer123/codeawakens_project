@@ -9,13 +9,12 @@ import {
   uploadTestImage
 } from '../../../services/testService';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, Plus, Check, X, Upload, Image as ImageIcon } from 'lucide-react';
+import { Plus, X, Upload, Image as ImageIcon } from 'lucide-react';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import SearchInput from '@/components/admin/formFields/SearchInput';
 import ErrorAlert from '@/components/shared/alert/ErrorAlert';
-import { LoadingState, EmptyState } from '@/components/admin/tableStates/DataTableStates';
+import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -23,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getImageUrl } from '@/utils/imageUtils';
+import TestTable from '@/components/admin/test/TestTable';
 
 const TestManagement = () => {
   const { getToken } = useAuth();
@@ -260,8 +260,8 @@ const TestManagement = () => {
       
         <div className="mt-4">
             <SearchInput
-                value={searchQuery}
-                onChange={setSearchQuery}
+                defaultValue={searchQuery}
+                onSearch={setSearchQuery}
                 placeholder="Search questions..."
             />
         </div>
@@ -269,66 +269,11 @@ const TestManagement = () => {
         <TabsContent value={activeTab} className="mt-4">
              <div className="bg-white rounded-lg shadow overflow-hidden">
                 {loading ? <LoadingState /> : filteredTests.length === 0 ? <EmptyState message="No questions found." /> : (
-                 <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Order/ID</th>
-                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Image</th>
-                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Question</th>
-                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Choices</th>
-                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Active</th>
-                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                          {filteredTests.map((test) => (
-                              <tr key={test.test_id} className="hover:bg-gray-50">
-                                  <td className="px-6 py-4 text-sm text-gray-500">#{test.test_id}</td>
-                                  <td className="px-6 py-4">
-                                      {test.test_image ? (
-                                          <img 
-                                              src={getImageUrl(test.test_image)} 
-                                              alt="Question" 
-                                              className="h-12 w-12 object-contain rounded bg-gray-50 border"
-                                          />
-                                      ) : (
-                                          <span className="text-xs text-gray-400">-</span>
-                                      )}
-                                  </td>
-                                  <td className="px-6 py-4">
-                                      <div className="text-sm font-medium text-gray-900">{test.question}</div>
-                                      {test.description && <div className="text-xs text-gray-500">{test.description}</div>}
-                                  </td>
-                                  <td className="px-6 py-4 text-sm text-gray-500">
-                                      <ul className="list-disc pl-4 space-y-1">
-                                          {test.choices.map(c => (
-                                              <li key={c.test_choice_id} className={c.is_correct ? "text-green-600 font-medium" : ""}>
-                                                  {c.choice_text}
-                                              </li>
-                                          ))}
-                                      </ul>
-                                  </td>
-                                  <td className="px-6 py-4">
-                                      <Badge variant={test.is_active ? 'default' : 'secondary'}>
-                                          {test.is_active ? 'Active' : 'Inactive'}
-                                      </Badge>
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <div className="flex items-center gap-2">
-                                      <Button variant="outline" size="sm" onClick={() => handleOpenDialog(test)}>
-                                        <Edit className="h-4 w-4" />
-                                      </Button>
-                                      <Button variant="outline" size="sm" onClick={() => handleDeleteClick(test)} className="text-red-600 hover:bg-red-50">
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  </td>
-                              </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                 </div>
+                 <TestTable 
+                    tests={filteredTests}
+                    onEdit={handleOpenDialog}
+                    onDelete={handleDeleteClick}
+                 />
                 )}
              </div>
         </TabsContent>

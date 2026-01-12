@@ -18,7 +18,6 @@ import PhaserMapEditor from '../../../components/admin/level/PhaserMapEditor';
 import LevelInfoForm from '../../../components/admin/level/LevelInfoForm';
 import BlockSelector from '../../../components/admin/level/BlockSelector';
 import VictoryConditionSelector from '../../../components/admin/level/VictoryConditionSelector';
-import JSONDataEditor from '../../../components/admin/level/JSONDataEditor';
 import BackgroundImageUpload from '../../../components/admin/level/BackgroundImageUpload';
 import LevelElementsToolbar from '../../../components/admin/level/LevelElementsToolbar';
 import PatternListDialog from '../../../components/admin/pattern/PatternListDialog';
