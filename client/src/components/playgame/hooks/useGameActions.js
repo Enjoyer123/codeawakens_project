@@ -1,12 +1,13 @@
 // Custom hook for game action functions (moveForward, turnLeft, turnRight, hit)
 import Phaser from 'phaser';
 import { getCurrentGameState, setCurrentGameState, getPlayerHp } from '../../../gameutils/utils/gameUtils';
-import { 
-  movePlayerWithCollisionDetection, 
-  createPitFallEffect, 
-  showGameOver, 
-  updatePlayer, 
-  updatePlayerArrow 
+import {
+  movePlayerWithCollisionDetection,
+  createPitFallEffect,
+  showGameOver,
+  updatePlayer,
+  updatePlayerArrow,
+  rotatePlayer
 } from '../../../gameutils/utils/phaserGame';
 import { hitEnemyWithDamage } from '../../../gameutils/phaser/utils/playerCombat';
 import { getWeaponData } from '../../../gameutils/utils/gameUtils';
@@ -46,7 +47,7 @@ export const useGameActions = ({
    */
   const moveForward = async () => {
     const currentState = getCurrentGameState();
-    
+
     // เช็ค HP <= 0 หรือ isGameOver - ห้ามเดินต่อ
     const playerHP = getPlayerHp();
     if (currentState.goalReached || currentState.moveCount >= currentState.maxMoves || currentState.isGameOver || playerHP <= 0) {
@@ -132,7 +133,7 @@ export const useGameActions = ({
           });
           setIsGameOver(true);
           setGameState("gameOver");
-          
+
           if (!isPreview) {
             setShowProgressModal(true);
 
@@ -153,7 +154,7 @@ export const useGameActions = ({
       if (moveResult.hpDepleted) {
         console.log("❌ Movement stopped: Player HP depleted during movement (not in combat mode)");
         const currentState = getCurrentGameState();
-        
+
         // ตั้ง isGameOver ถ้ายังไม่ได้ตั้ง
         if (!currentState.isGameOver) {
           setCurrentGameState({
@@ -161,12 +162,12 @@ export const useGameActions = ({
           });
           setIsGameOver(true);
           setGameState("gameOver");
-          
+
           if (!isPreview) {
             setTimeout(() => {
               showGameOver(getCurrentGameState().currentScene);
               setShowProgressModal(true);
-              
+
               if (gameStartTime?.current) {
                 const endTime = Date.now();
                 setTimeSpent(Math.floor((endTime - gameStartTime.current) / 1000));
@@ -175,7 +176,7 @@ export const useGameActions = ({
             }, 500);
           }
         }
-        
+
         return false;
       }
 
@@ -183,22 +184,22 @@ export const useGameActions = ({
         // เช็ค HP อีกครั้งหลังจากเคลื่อนที่สำเร็จ (เฉพาะเมื่อไม่ได้อยู่ใน combat mode)
         const playerHP = getPlayerHp();
         const currentState = getCurrentGameState();
-        
+
         if (playerHP <= 0 || currentState.isGameOver) {
           console.log("❌ Movement completed but HP is 0 or game over");
-          
+
           if (!currentState.isGameOver) {
             setCurrentGameState({
               isGameOver: true
             });
             setIsGameOver(true);
             setGameState("gameOver");
-            
+
             if (!isPreview) {
               setTimeout(() => {
                 showGameOver(getCurrentGameState().currentScene);
                 setShowProgressModal(true);
-                
+
                 if (gameStartTime?.current) {
                   const endTime = Date.now();
                   setTimeSpent(Math.floor((endTime - gameStartTime.current) / 1000));
@@ -207,10 +208,10 @@ export const useGameActions = ({
               }, 500);
             }
           }
-          
+
           return false;
         }
-        
+
         const goalReached = targetNode.id === currentLevel.goalNodeId;
         console.log('moveForward goalReached check:', goalReached, 'targetNode.id:', targetNode.id, 'goalNodeId:', currentLevel.goalNodeId);
         setCurrentGameState({
@@ -322,16 +323,16 @@ export const useGameActions = ({
 
     await new Promise((resolve) => setTimeout(resolve, 300));
     const newDirection = (currentState.direction + 3) % 4;
-    setCurrentGameState({ direction: newDirection });
     setPlayerDirection(newDirection);
 
     console.log("Turning left - new direction:", newDirection);
 
-    // อัพเดท player direction ใน Phaser
+    // อัพเดท player direction ใน Phaser ผ่าน rotatePlayer
     if (getCurrentGameState().currentScene) {
-      console.log("Updating player arrow in Phaser");
-      updatePlayerArrow(getCurrentGameState().currentScene, null, null, newDirection);
+      rotatePlayer(getCurrentGameState().currentScene, newDirection);
     } else {
+      // Fallback update logic if no scene
+      setCurrentGameState({ direction: newDirection });
       console.log("No current scene available for arrow update");
     }
   };
@@ -347,16 +348,16 @@ export const useGameActions = ({
 
     await new Promise((resolve) => setTimeout(resolve, 300));
     const newDirection = (currentState.direction + 1) % 4;
-    setCurrentGameState({ direction: newDirection });
     setPlayerDirection(newDirection);
 
     console.log("Turning right - new direction:", newDirection);
 
-    // อัพเดท player direction ใน Phaser
+    // อัพเดท player direction ใน Phaser ผ่าน rotatePlayer
     if (getCurrentGameState().currentScene) {
-      console.log("Updating player arrow in Phaser");
-      updatePlayerArrow(getCurrentGameState().currentScene, null, null, newDirection);
+      rotatePlayer(getCurrentGameState().currentScene, newDirection);
     } else {
+      // Fallback update logic if no scene
+      setCurrentGameState({ direction: newDirection });
       console.log("No current scene available for arrow update");
     }
   };

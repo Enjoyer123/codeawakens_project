@@ -40,6 +40,10 @@ export {
 } from './phaserGame/phaserGamePlayer';
 
 export {
+  rotatePlayer
+} from '../phaser/utils/playerMovement';
+
+export {
   updatePlayerArrow
 } from './phaserGame/phaserGameArrow';
 

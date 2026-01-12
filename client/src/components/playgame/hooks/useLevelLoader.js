@@ -14,7 +14,14 @@ import {
   getWeaponData,
   getWeaponsData
 } from '../../../gameutils/utils/gameUtils';
+
 import { ensureDefaultBlocks } from '../../../gameutils/utils/blocklyUtils';
+import {
+  safeParse,
+  normalizeNodes,
+  normalizeEdges,
+  normalizePatternHints
+} from '../../../gameutils/utils/levelParser';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 
@@ -99,71 +106,9 @@ export function useLevelLoader({
           throw new Error('ด่านนี้ยังไม่ถูกปลดล็อค กรุณารอให้ admin ทดสอบด่านก่อน');
         }
 
-        // Helper functions for data normalization
-        const safeParse = (data, defaultValue = []) => {
-          if (data === null || data === undefined) return defaultValue;
-          // If data is already an object (parsed by Prisma), return it
-          if (typeof data === 'object' && !Array.isArray(data)) {
-            return data;
-          }
-          if (typeof data === 'string') {
-            try {
-              return JSON.parse(data);
-            } catch {
-              return defaultValue;
-            }
-          }
-          return Array.isArray(data) ? data : defaultValue;
-        };
-
-        const normalizeNodes = (nodes) => {
-          if (!nodes) return [];
-          if (typeof nodes === 'string') {
-            try {
-              nodes = JSON.parse(nodes);
-            } catch {
-              return [];
-            }
-          }
-          return Array.isArray(nodes) ? nodes : [];
-        };
-
-        const normalizeEdges = (edges) => {
-          if (!edges) return [];
-          if (typeof edges === 'string') {
-            try {
-              edges = JSON.parse(edges);
-            } catch {
-              return [];
-            }
-          }
-          return Array.isArray(edges) ? edges : [];
-        };
-
-        const normalizePatternHints = (rawHints) => {
-          if (Array.isArray(rawHints)) {
-            return rawHints.map((hint) => ({
-              step: hint.step || 0,
-              content: hint.content || {},
-              trigger: hint.trigger || 'onXmlMatch',
-              hintType: hint.hintType || 'guidance',
-              difficulty: hint.difficulty || 'basic',
-              visualGuide: hint.visualGuide
-                ? {
-                  highlightBlocks: Array.isArray(hint.visualGuide.highlightBlocks)
-                    ? hint.visualGuide.highlightBlocks
-                    : []
-                }
-                : {},
-              xmlCheck: hint.xmlCheck,
-              effect: hint.effect // Ensure effect is conserved
-            }));
-          }
-          if (typeof rawHints === 'object') {
-            return [rawHints];
-          }
-          return [];
-        };
+        if (!isPreview && !isAdmin && levelResponse.is_unlocked === false) {
+          throw new Error('ด่านนี้ยังไม่ถูกปลดล็อค กรุณารอให้ admin ทดสอบด่านก่อน');
+        }
 
         const victoryConditions = (levelResponse.level_victory_conditions || [])
           .map((vc) => ({

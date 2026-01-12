@@ -36,8 +36,8 @@ import GameWithGuide from './GameWithGuide';
 import { useGameActions } from './hooks/useGameActions';
 import { useGameConditions } from './hooks/useGameConditions';
 import { usePhaserGame } from './hooks/usePhaserGame';
-import { useBlocklySetup } from './hooks/useBlocklySetup';
-import { useCodeExecution } from './hooks/useCodeExecution';
+import { useBlocklySetup } from './hooks/blocklysetup/useBlocklySetup';
+import { useCodeExecution } from './hooks/execution/useCodeExecution';
 import { useLevelLoader } from './hooks/useLevelLoader';
 import { usePatternAnalysis } from './hooks/usePatternAnalysis';
 import { useTextCodeValidation } from './hooks/useTextCodeValidation';
@@ -48,23 +48,23 @@ import { fetchAllLevels } from '../../services/levelService';
 import { calculateFinalScore } from './utils/scoreUtils';
 import { highlightBlocks as highlightBlocksUtil, clearHighlights as clearHighlightsUtil } from './utils/visualGuide';
 import { handleRestartGame as handleRestartGameUtil, handleVictory as handleVictoryUtil } from './utils/gameHandlers';
-import { loadDfsExampleBlocks } from '../../gameutils/utils/blockly/loadDfsExample';
-import { loadBfsExampleBlocks } from '../../gameutils/utils/blockly/loadBfsExample';
-import { loadDijkstraExampleBlocks } from '../../gameutils/utils/blockly/loadDijkstraExample';
-import { loadPrimExampleBlocks } from '../../gameutils/utils/blockly/loadPrimExample';
-import { loadKnapsackExampleBlocks } from '../../gameutils/utils/blockly/loadKnapsackExample';
-import { loadDynamicKnapsackExampleBlocks } from '../../gameutils/utils/blockly/loadDynamicKnapsackExample';
-import { loadKruskalExampleBlocks } from '../../gameutils/utils/blockly/loadKruskalExample';
-import { loadSubsetSumExampleBlocks } from '../../gameutils/utils/blockly/loadSubsetSumExample';
-import { loadDynamicSubsetSumExampleBlocks } from '../../gameutils/utils/blockly/loadDynamicSubsetSumExample';
-import { loadCoinChangeExampleBlocks } from '../../gameutils/utils/blockly/loadCoinChangeExample';
-import { loadDynamicCoinChangeExampleBlocks } from '../../gameutils/utils/blockly/loadDynamicCoinChangeExample';
-import { loadGreedyCoinChangeExampleBlocks } from '../../gameutils/utils/blockly/loadGreedyCoinChangeExample';
-import { loadNQueenExampleBlocks } from '../../gameutils/utils/blockly/loadNQueenExample';
-import { loadDynamicAntDpExampleBlocks } from '../../gameutils/utils/blockly/loadDynamicAntDpExample';
-import { loadTrainScheduleExampleBlocks } from '../../gameutils/utils/blockly/loadTrainScheduleExample';
-import { loadRopePartitionExampleBlocks } from '../../gameutils/utils/blockly/loadRopePartitionExample';
-import { loadEmeiMountainExample } from '../../gameutils/utils/blockly/loadEmeiMountainExample';
+import { loadDfsExampleBlocks } from '../../gameutils/utils/blockly/example/loadDfsExample';
+import { loadBfsExampleBlocks } from '../../gameutils/utils/blockly/example/loadBfsExample';
+import { loadDijkstraExampleBlocks } from '../../gameutils/utils/blockly/example/loadDijkstraExample';
+import { loadPrimExampleBlocks } from '../../gameutils/utils/blockly/example/loadPrimExample';
+import { loadKnapsackExampleBlocks } from '../../gameutils/utils/blockly/example/loadKnapsackExample';
+import { loadDynamicKnapsackExampleBlocks } from '../../gameutils/utils/blockly/example/loadDynamicKnapsackExample';
+import { loadKruskalExampleBlocks } from '../../gameutils/utils/blockly/example/loadKruskalExample';
+import { loadSubsetSumExampleBlocks } from '../../gameutils/utils/blockly/example/loadSubsetSumExample';
+import { loadDynamicSubsetSumExampleBlocks } from '../../gameutils/utils/blockly/example/loadDynamicSubsetSumExample';
+import { loadCoinChangeExampleBlocks } from '../../gameutils/utils/blockly/example/loadCoinChangeExample';
+import { loadDynamicCoinChangeExampleBlocks } from '../../gameutils/utils/blockly/example/loadDynamicCoinChangeExample';
+import { loadGreedyCoinChangeExampleBlocks } from '../../gameutils/utils/blockly/example/loadGreedyCoinChangeExample';
+import { loadNQueenExampleBlocks } from '../../gameutils/utils/blockly/example/loadNQueenExample';
+import { loadDynamicAntDpExampleBlocks } from '../../gameutils/utils/blockly/example/loadDynamicAntDpExample';
+import { loadTrainScheduleExampleBlocks } from '../../gameutils/utils/blockly/example/loadTrainScheduleExample';
+import { loadRopePartitionExampleBlocks } from '../../gameutils/utils/blockly/example/loadRopePartitionExample';
+import { loadEmeiMountainExample } from '../../gameutils/utils/blockly/example/loadEmeiMountainExample';
 
 /**
  * GameCore Component
@@ -110,49 +110,14 @@ const GameCore = ({
     };
   }, []);
 
-  // Inject global CSS for Blockly highlights
-  useEffect(() => {
-    try {
-      const styleId = 'blockly-highlight-global-styles';
-      if (document.getElementById(styleId)) return;
-      const style = document.createElement('style');
-      style.id = styleId;
-      style.innerHTML = `
-  .blockly-highlight-border {
-    filter: drop-shadow(0 0 6px rgba(0, 255, 0, 0.8)) !important;
-    transition: all 150ms ease-in-out !important;
-  }
-  .blockly-highlight-border .blocklyPath,
-  .blockly-highlight-border path {
-    stroke: #00ff00 !important;
-    stroke-width: 2px !important;
-    stroke-linejoin: round !important;
-  }
-  .blockly-highlight-border .blocklyOutline,
-  .blockly-highlight-border .blocklyPath {
-    stroke: #00ff00 !important;
-  }
-  .blockly-highlight-border .blocklyText,
-  .blockly-highlight-border text {
-    fill: #ffffff !important;
-  }
-  .blockly-highlight-border rect,
-  .blockly-highlight-border .blocklyPath {
-    opacity: 1 !important;
-  }
-`;
 
-      document.head.appendChild(style);
-    } catch (e) {
-      console.warn('Could not inject global blockly highlight styles:', e);
-    }
-  }, []);
 
   const gameRef = useRef(null);
   const blocklyRef = useRef(null);
   const workspaceRef = useRef(null);
   const phaserGameRef = useRef(null);
   const highlightOverlaysRef = useRef({});
+
 
   const [gameState, setGameState] = useState("loading");
   const [currentHint, setCurrentHint] = useState("กำลังโหลดข้อมูลด่าน...");
@@ -362,8 +327,7 @@ const GameCore = ({
     }
   }, [codeValidation, currentLevel?.textcode]);
 
-  // Visual Guide System
-  const [highlightedBlocks, setHighlightedBlocks] = useState([]);
+
 
   // Text code validation - using hook
   const { handleTextCodeChange } = useTextCodeValidation({
@@ -400,19 +364,7 @@ const GameCore = ({
     currentLevel
   });
 
-  // Visual Guide Functions - using utils
-  const highlightBlocks = (blockTypes) => {
-    if (!workspaceRef.current || !blockTypes || blockTypes.length === 0) {
-      setHighlightedBlocks([]);
-      return;
-    }
-    highlightBlocksUtil(workspaceRef.current, blockTypes, highlightOverlaysRef, setHighlightedBlocks);
-  };
 
-  const clearHighlights = () => {
-    if (!workspaceRef.current) return;
-    clearHighlightsUtil(workspaceRef.current, highlightOverlaysRef, setHighlightedBlocks);
-  };
 
   // Load level data - using hook
   useLevelLoader({
@@ -498,8 +450,7 @@ const GameCore = ({
     setCurrentWeaponData,
     setPatternFeedback,
     setPartialWeaponKey,
-    highlightBlocks, // <- Added
-    clearHighlights, // <- Added
+
     hintOpen,        // <- Added
     hintData         // <- Added
   });

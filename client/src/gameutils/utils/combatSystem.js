@@ -7,7 +7,7 @@ export {
   endCombat,
   isInCombat,
   executePlayerAttack
-} from './combat/combatCore';
+} from './combat/core/combatCore';
 
 export {
   attackEnemy,
@@ -18,14 +18,14 @@ export {
 export {
   calculateAttackDamage,
   calculatePlayerDamage
-} from './combat/combatDamage';
+} from './combat/core/combatDamage';
 
 export {
   reducePlayerHP,
   showAttackResult,
   showCombatMessage,
   showEnemyDefeat
-} from './combat/combatHelpers';
+} from './combat/ui/combatHelpers';
 
 export {
   preloadAllWeaponEffects,
@@ -33,13 +33,13 @@ export {
   checkImageExistsSafe,
   validateTextureState,
   checkImageExists
-} from './combat/combatPreload';
+} from './combat/assets/combatPreload';
 
 export {
   showCombatUI,
   hideCombatUI,
   updateCombatUI
-} from './combat/combatUI';
+} from './combat/ui/combatUI';
 
 export {
   canExecuteCommand,
@@ -49,4 +49,4 @@ export {
   isGamePaused,
   isCombatResolved,
   getCombatResult
-} from './combat/combatUtils';
+} from './combat/core/combatUtils';

@@ -3,12 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { directions } from '../../gameutils/utils/gameUtils';
 import { fetchLevelById } from '../../services/levelService';
-import DijkstraStateTable from './DijkstraStateTable';
-import KnapsackStateTable from './KnapsackStateTable';
-import SubsetSumStateTable from './SubsetSumStateTable';
-import CoinChangeStateTable from './CoinChangeStateTable';
-import AntDpStateTable from './AntDpStateTable';
-import CoinPeopleStateTable from './CoinPeopleStateTable';
+import GameStateVisualization from './GameStateVisualization';
 import { getCurrentGameState } from '../../gameutils/utils/gameUtils';
 import { History } from 'lucide-react';
 import HistoryModal from './HistoryModal';
@@ -168,18 +163,8 @@ const GameArea = ({
           className="w-full h-full"
           style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
         />
-        {/* Dijkstra State Table - แสดงเฉพาะในด่าน Shortest Path */}
-        <DijkstraStateTable currentLevel={levelData} />
-        {/* Knapsack DP/Memo Table */}
-        <KnapsackStateTable currentLevel={levelData} />
-        {/* Subset Sum DP Table */}
-        <SubsetSumStateTable currentLevel={levelData} />
-        {/* Coin Change DP/Backtrack Table */}
-        <CoinChangeStateTable currentLevel={levelData} />
-        {/* Applied Dynamic (Ant) DP Table */}
-        <AntDpStateTable currentLevel={levelData} />
-        {/* Coin & People Status Card (Like Dijkstra) */}
-        <CoinPeopleStateTable
+        {/* Game State Visualization (Unified) */}
+        <GameStateVisualization
           levelData={levelData}
           playerCoins={playerCoins}
           rescuedPeople={rescuedPeople}
