@@ -509,8 +509,6 @@ const LevelGame = () => {
     setCurrentWeaponData,
     setPatternFeedback,
     setPartialWeaponKey,
-    highlightBlocks,
-    clearHighlights,
     hintOpen,
     hintData
   });

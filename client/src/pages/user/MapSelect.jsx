@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 
 import { fetchAllLevelCategories } from '../../services/levelCategoryService';
+import CategoryCard from '../../components/user/CategoryCard';
 
 const MapSelect = () => {
   const { getToken } = useAuth();
@@ -19,8 +19,6 @@ const MapSelect = () => {
         setLoading(true);
 
         const data = await fetchAllLevelCategories(getToken);
-
-        console.log("API RAW:", data);
 
         const categoriesFix = Array.isArray(data?.levelCategories)
           ? data.levelCategories
@@ -46,10 +44,8 @@ const MapSelect = () => {
     navigate(`/user/mapselect/${categoryId}`);
   };
 
-  const getCategoryCount = (categoryId) => {
+  const getCategoryCount = (category) => {
     // หาจำนวนด่านจากข้อมูลที่ได้รับจาก API
-    const category = categories.find(cat => cat.category_id === categoryId);
-    if (!category) return 0;
     
     // ตรวจสอบว่ามี levels array หรือไม่
     if (Array.isArray(category.levels)) {
@@ -64,20 +60,6 @@ const MapSelect = () => {
     }
     
     return 0;
-  };
-
-  const getCategoryColor = (difficulty_order) => {
-    const colors = {
-      1: "bg-gray-800 hover:bg-gray-900",
-      2: "bg-gray-800 hover:bg-gray-900",
-      3: "bg-gray-800 hover:bg-gray-900",
-      4: "bg-gray-800 hover:bg-gray-900",
-      5: "bg-gray-800 hover:bg-gray-900",
-      6: "bg-gray-800 hover:bg-gray-900",
-      7: "bg-gray-800 hover:bg-gray-900",
-      8: "bg-gray-800 hover:bg-gray-900"
-    };
-    return colors[difficulty_order] || "bg-gray-800 hover:bg-gray-900";
   };
 
   return (
@@ -112,35 +94,15 @@ const MapSelect = () => {
         {!loading && !error && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-6xl mx-auto">
             {categories.map((category) => {
-              const count = getCategoryCount(category.category_id);
-              const colorClass = getCategoryColor(category.difficulty_order);
+              const count = getCategoryCount(category);
 
               return (
-                <div
+                <CategoryCard
                   key={category.category_id}
-                  onClick={() => handleCategorySelect(category.category_id)}
-                  className={`${colorClass} text-white rounded-xl p-8 cursor-pointer transform transition-all duration-200 hover:scale-105 hover:shadow-lg`}
-                >
-                  {/* Category Icon */}
-                  <div className="text-center mb-4">
-                    <h3 className="text-xl font-semibold mb-2">{category.category_name}</h3>
-                  </div>
-
-                  {/* Category Description */}
-                  {/* <p className="text-white/90 text-sm mb-4 text-center leading-relaxed">
-                    {category.description || 'ไม่มีคำอธิบาย'}
-                  </p> */}
-
-                  {/* Level Count */}
-                  <div className="text-center">
-                    <div className="bg-white/20 rounded-full px-4 py-2 inline-block">
-                      <span className="text-sm font-medium">
-                        {count} ด่าน
-                      </span>
-                    </div>
-                  </div>
-
-                </div>
+                  category={category}
+                  count={count}
+                  onClick={handleCategorySelect}
+                />
               );
             })}
           </div>
