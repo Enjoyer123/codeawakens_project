@@ -1,14 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { saveUserProgress, checkAndAwardRewards } from '../../services/profileService';
+import React, { useEffect } from 'react';
+import { useProgressSaver } from './hooks/useProgressSaver';
 
 const ProgressModal = ({ isOpen, onClose, gameResult, levelData, attempts, timeSpent, blocklyXml, textCodeContent, finalScore, hp_remaining, userBigO, targetBigO, getToken }) => {
-  const [saving, setSaving] = useState(false);
-  const [saveStatus, setSaveStatus] = useState(null); // 'success', 'error', null
-  const [saveError, setSaveError] = useState(null);
-  const [awardedRewards, setAwardedRewards] = useState([]);
-  const [checkingRewards, setCheckingRewards] = useState(false);
+  
+  const {
+    saving,
+    saveStatus,
+    saveError,
+    awardedRewards,
+    checkingRewards,
+    saveProgress
+  } = useProgressSaver(getToken);
 
-  // ข้อมูลที่จะบันทึกลง database
+  // Data to display/save
   const userProgressData = {
     level_id: levelData?.level_id || levelData?.id,
     status: gameResult === 'victory' ? 'completed' : 'in_progress',
@@ -24,93 +28,29 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, attempts, timeS
     user_big_o: userBigO || null,
   };
 
-  // บันทึกข้อมูลเมื่อ modal เปิด
+  // Trigger save when modal opens
   useEffect(() => {
-    // Check if we have necessary data to save
-    if (isOpen && getToken && (levelData?.level_id || levelData?.id)) {
-      const saveProgress = async () => {
-        // Prevent duplicate saves if already saving or finished
-        if (saving || saveStatus === 'success') return;
-
-        console.log('📝 Saving user progress...', {
-          levelId: levelData?.level_id || levelData?.id,
-          result: gameResult,
-          score: finalScore
-        });
-
-        setSaving(true);
-        setSaveStatus(null);
-        setSaveError(null);
-
-        try {
-          // Prepare data payload
-          const progressData = {
-            level_id: levelData?.level_id || levelData?.id,
-            status: gameResult === 'victory' ? 'completed' : 'in_progress',
-            attempts_count: attempts || 1, // Ensure at least 1 attempt
-            blockly_code: blocklyXml || null,
-            text_code: levelData?.textcode ? textCodeContent : null,
-            execution_time: timeSpent || 0,
-            best_score: finalScore?.totalScore ?? (gameResult === 'victory' ? 60 : 0),
-            pattern_bonus_score: finalScore?.pattern_bonus_score || 0,
-            is_correct: gameResult === 'victory',
-            stars_earned: finalScore?.stars ?? (gameResult === 'victory' ? 3 : 0),
-            hp_remaining: hp_remaining ?? 0,
-            user_big_o: userBigO || null,
-          };
-
-          console.log('📦 Progress Payload:', progressData);
-
-          const result = await saveUserProgress(getToken, progressData);
-          console.log('✅ Save success:', result);
-          setSaveStatus('success');
-
-          // Check and award rewards if player completed the level
-          if (gameResult === 'victory') {
-            setCheckingRewards(true);
-            try {
-              // Calculate total score (best_score + pattern_bonus_score)
-              const totalScore = finalScore?.totalScore ?? (progressData.best_score + progressData.pattern_bonus_score);
-
-              const rewardResult = await checkAndAwardRewards(
-                getToken,
-                levelData?.level_id || levelData?.id,
-                totalScore
-              );
-              if (rewardResult.awardedRewards && rewardResult.awardedRewards.length > 0) {
-                setAwardedRewards(rewardResult.awardedRewards);
-              }
-            } catch (error) {
-              console.error('Error checking rewards:', error);
-            } finally {
-              setCheckingRewards(false);
-            }
-          }
-        } catch (error) {
-          console.error('❌ Error saving user progress:', error);
-          setSaveStatus('error');
-          setSaveError(error.message || 'Failed to save progress');
-        } finally {
-          setSaving(false);
-        }
-      };
-
-      saveProgress();
-    } else if (isOpen) {
-      console.warn('⚠️ Cannot save progress: Missing data', {
-        hasToken: !!getToken,
-        hasLevelData: !!levelData,
-        levelId: levelData?.level_id || levelData?.id
+    if (isOpen && getToken && (levelData?.level_id || levelData?.id) && !saveStatus && !saving) {
+      saveProgress({
+        levelData,
+        gameResult,
+        attempts,
+        timeSpent,
+        blocklyXml,
+        textCodeContent,
+        finalScore,
+        hp_remaining,
+        userBigO
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, levelData, getToken, gameResult]); // Added dependencies to ensure reliable saving
+  }, [isOpen, levelData, getToken, gameResult]); 
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-      {/* Subtle backdrop with blur to match GuidePopup and LevelDetailViewer */}
+      {/* Subtle backdrop with blur */}
       <div className="absolute inset-0 bg-black-900/5 backdrop-blur-sm transition-opacity duration-300" onClick={onClose} />
 
       <div className="relative bg-black p-6 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto transform transition-all duration-300">
@@ -183,8 +123,6 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, attempts, timeS
               </div>
             </div>
           </div>
-
-
 
           {/* Attempt Details */}
           <div className="bg-white p-4 rounded">

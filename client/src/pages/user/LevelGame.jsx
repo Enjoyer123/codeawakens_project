@@ -27,7 +27,6 @@ import { usePhaserGame } from '../../components/playgame/hooks/usePhaserGame';
 import { useCodeExecution } from '../../components/playgame/hooks/useCodeExecution';
 import { useTextCodeValidation } from '../../components/playgame/hooks/useTextCodeValidation';
 import { usePatternAnalysis } from '../../components/playgame/hooks/usePatternAnalysis';
-import { useVisualGuide } from './hooks/useVisualGuide';
 import { isInCombat } from '../../gameutils/utils/combatSystem';
 import { clearGameOverScreen, showGameOver } from '../../gameutils/utils/phaserGame';
 import { createToolboxConfig } from '../../gameutils/utils/blocklyUtils';
@@ -304,8 +303,6 @@ const LevelGame = () => {
     }
   }, [blocklyLoaded, blocklyJavaScriptReady]);
 
-  // Visual Guide System - use hook
-  const { highlightBlocks, clearHighlights } = useVisualGuide(workspaceRef);
 
   // Use text code validation hook
   const { handleTextCodeChange } = useTextCodeValidation({
@@ -513,8 +510,6 @@ const LevelGame = () => {
     setCurrentWeaponData,
     setPatternFeedback,
     setPartialWeaponKey,
-    highlightBlocks,
-    clearHighlights,
     hintOpen,
     hintData
   });

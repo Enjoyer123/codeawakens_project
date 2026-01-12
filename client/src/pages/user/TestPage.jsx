@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { LoadingState } from '@/components/admin/tableStates/DataTableStates';
+import { LoadingState } from '@/components/shared/DataTableStates';
 import useUserStore from '../../store/useUserStore';
 import TestResultCard from '../../components/test/TestResultCard';
 import { getImageUrl } from '@/utils/imageUtils';

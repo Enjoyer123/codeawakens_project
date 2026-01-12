@@ -7,16 +7,14 @@ import {
   updateVictoryCondition,
   deleteVictoryCondition,
 } from '../../../services/victoryConditionService';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2 } from 'lucide-react';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import SearchInput from '@/components/admin/formFields/SearchInput';
 import ErrorAlert from '@/components/shared/alert/ErrorAlert';
 import PaginationControls from '@/components/shared/pagination/PaginationControls';
-import { LoadingState, EmptyState } from '@/components/admin/tableStates/DataTableStates';
+import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import VictoryConditionFormDialog from '@/components/admin/addEditDialog/VictoryConditionFormDialog';
+import VictoryConditionTable from '@/components/admin/victoryCondition/VictoryConditionTable';
 import { usePagination } from '@/hooks/usePagination';
 import { createDeleteErrorMessage } from '@/utils/errorHandler';
 
@@ -203,11 +201,7 @@ const VictoryConditionManagement = () => {
   const getDeleteDescription = (type) =>
     `คุณแน่ใจหรือไม่ว่าต้องการลบเงื่อนไขชัยชนะ "${type}"? ` +
     'การกระทำนี้ไม่สามารถยกเลิกได้';
-
-  const tableHeaderClassName =
-    'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
-  const tableCellClassName = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900';
-  const actionsCellClassName = 'px-6 py-4 whitespace-nowrap text-sm font-medium';
+    
   const searchPlaceholder =
     'ค้นหาเงื่อนไขชัยชนะ (type, description, check)...';
 
@@ -226,8 +220,8 @@ const VictoryConditionManagement = () => {
         <ErrorAlert message={deleteError} />
 
         <SearchInput
-          value={searchQuery}
-          onChange={handleSearchChange}
+          defaultValue={searchQuery}
+          onSearch={handleSearchChange}
           placeholder={searchPlaceholder}
         />
 
@@ -241,69 +235,11 @@ const VictoryConditionManagement = () => {
             />
           ) : (
             <>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className={tableHeaderClassName}>
-                        Victory Condition ID
-                      </th>
-                      <th className={tableHeaderClassName}>Type</th>
-                      <th className={tableHeaderClassName}>Description</th>
-                      <th className={tableHeaderClassName}>Check</th>
-                      <th className={tableHeaderClassName}>Available</th>
-                      <th className={tableHeaderClassName}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {victoryConditions.map((victoryCondition) => (
-                      <tr
-                        key={victoryCondition.victory_condition_id}
-                        className="hover:bg-gray-50"
-                      >
-                        <td className={tableCellClassName}>
-                          {victoryCondition.victory_condition_id}
-                        </td>
-                        <td className={`${tableCellClassName} font-medium`}>
-                          {victoryCondition.type}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-900">
-                          {victoryCondition.description}
-                        </td>
-                        <td className={`${tableCellClassName} text-gray-500`}>
-                          {victoryCondition.check}
-                        </td>
-                        <td className={tableCellClassName}>
-                          <Badge
-                            variant={victoryCondition.is_available ? 'default' : 'secondary'}
-                          >
-                            {victoryCondition.is_available ? 'Available' : 'Unavailable'}
-                          </Badge>
-                        </td>
-                        <td className={actionsCellClassName}>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleOpenVictoryConditionDialog(victoryCondition)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDeleteClick(victoryCondition)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <VictoryConditionTable
+                victoryConditions={victoryConditions}
+                onEdit={handleOpenVictoryConditionDialog}
+                onDelete={handleDeleteClick}
+              />
               <PaginationControls
                 currentPage={page}
                 totalPages={pagination.totalPages}

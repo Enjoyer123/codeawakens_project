@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { EmptyState } from '@/components/admin/tableStates/DataTableStates';
+import { EmptyState } from '@/components/shared/DataTableStates';
 
 
 const UserTestResultModal = ({ open, onOpenChange, user, testHistory }) => {

@@ -18,7 +18,7 @@ import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import SearchInput from '@/components/admin/formFields/SearchInput';
 import ErrorAlert from '@/components/shared/alert/ErrorAlert';
 import PaginationControls from '@/components/shared/pagination/PaginationControls';
-import { LoadingState, EmptyState } from '@/components/admin/tableStates/DataTableStates';
+import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import RewardImageDialog from '../../../components/admin/reward/RewardImageDialog';
 import RewardFormDialog from '@/components/admin/addEditDialog/RewardFormDialog';
 import { usePagination } from '@/hooks/usePagination';
@@ -323,8 +323,8 @@ const RewardManagement = () => {
         <ErrorAlert message={deleteError} />
 
         <SearchInput
-          value={searchQuery}
-          onChange={handleSearchChange}
+          defaultValue={searchQuery}
+          onSearch={handleSearchChange}
           placeholder={searchPlaceholder}
         />
 
