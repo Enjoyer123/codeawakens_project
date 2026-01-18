@@ -934,7 +934,7 @@ const GameCore = ({
                   </h2>
                 </div>
                 {/* Temporary buttons to load example blocks - Remove after development */}
-                {workspaceRef.current && (
+                {workspaceRef.current && isPreview && (
                   <div className="flex flex-wrap gap-2 justify-end mb-2">
                     <button
                       onClick={() => setShowLoadXmlModal(true)}
