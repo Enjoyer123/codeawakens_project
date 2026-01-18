@@ -10,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import NotificationBell from './NotificationBell';
 import {
   Tooltip,
   TooltipContent,
@@ -45,16 +46,16 @@ function Navbar({ navItems = [], isLoading = false, isGamePage = false }) {
         }
       }
     };
-    
+
     if (isLoaded && isSignedIn) {
-       loadUserProfile();
+      loadUserProfile();
     }
   }, [isSignedIn, isLoaded, getToken]);
 
   // Collapsed state for game page
   if (isGamePage && !isOpen) {
     return (
-      <button 
+      <button
         onClick={() => setIsOpen(true)}
         className="fixed top-2 left-2 z-50 p-2 bg-gray-800 text-white rounded-md shadow-lg hover:bg-gray-700 transition-colors"
         title="Open User Menu"
@@ -78,7 +79,7 @@ function Navbar({ navItems = [], isLoading = false, isGamePage = false }) {
   return (
     <nav className="bg-gray-800 text-white shadow-lg relative">
       {isGamePage && (
-        <button 
+        <button
           onClick={() => setIsOpen(false)}
           className="absolute top-4 left-2 z-50 p-1 text-gray-400 hover:text-white"
           title="Collapse Menu"
@@ -88,7 +89,7 @@ function Navbar({ navItems = [], isLoading = false, isGamePage = false }) {
       )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <div 
+          <div
             className={`text-xl font-bold cursor-pointer hover:text-gray-300 transition-colors ${isGamePage ? 'ml-8' : ''}`}
             onClick={() => navigate("/")}
           >
@@ -129,43 +130,46 @@ function Navbar({ navItems = [], isLoading = false, isGamePage = false }) {
                 </SignUpButton>
               </div>
             ) : (
-              <TooltipProvider>
-                <DropdownMenu>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <DropdownMenuTrigger asChild>
-                        <button className="rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage 
-                              src={getAvatarSrc()}
-                              alt={user?.fullName || user?.emailAddresses[0]?.emailAddress || "User"}
-                            />
-                            <AvatarFallback>
-                              {user?.fullName?.[0] || user?.emailAddresses[0]?.emailAddress?.[0] || "U"}
-                            </AvatarFallback>
-                          </Avatar>
-                        </button>
-                      </DropdownMenuTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Open settings</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem onClick={() => navigate('/user/profile')}>
-                      Profile
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => {
-                        signOut();
-                        navigate('/');
-                      }}
-                    >
-                      Logout
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TooltipProvider>
+              <div className="flex items-center space-x-4">
+                <TooltipProvider>
+                  <NotificationBell />
+                  <DropdownMenu>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuTrigger asChild>
+                          <button className="rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
+                            <Avatar className="h-10 w-10">
+                              <AvatarImage
+                                src={getAvatarSrc()}
+                                alt={user?.fullName || user?.emailAddresses[0]?.emailAddress || "User"}
+                              />
+                              <AvatarFallback>
+                                {user?.fullName?.[0] || user?.emailAddresses[0]?.emailAddress?.[0] || "U"}
+                              </AvatarFallback>
+                            </Avatar>
+                          </button>
+                        </DropdownMenuTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Open settings</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuItem onClick={() => navigate('/user/profile')}>
+                        Profile
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          signOut();
+                          navigate('/');
+                        }}
+                      >
+                        Logout
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TooltipProvider>
+              </div>
             )}
           </div>
         </div>

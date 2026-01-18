@@ -108,44 +108,6 @@ const LevelGame = () => {
     };
   }, []);
 
-  // Inject global CSS for Blockly highlights to ensure it's visible (some Blockly DOMs are outside React root)
-  useEffect(() => {
-    try {
-      const styleId = 'blockly-highlight-global-styles';
-      if (document.getElementById(styleId)) return;
-      const style = document.createElement('style');
-      style.id = styleId;
-      style.innerHTML = `
-  .blockly-highlight-border {
-    filter: drop-shadow(0 0 6px rgba(0, 255, 0, 0.8)) !important;
-    transition: all 150ms ease-in-out !important;
-  }
-  .blockly-highlight-border .blocklyPath,
-  .blockly-highlight-border path {
-    stroke: #00ff00 !important;
-    stroke-width: 2px !important;
-    stroke-linejoin: round !important;
-  }
-  .blockly-highlight-border .blocklyOutline,
-  .blockly-highlight-border .blocklyPath {
-    stroke: #00ff00 !important;
-  }
-  .blockly-highlight-border .blocklyText,
-  .blockly-highlight-border text {
-    fill: #ffffff !important;
-  }
-  .blockly-highlight-border rect,
-  .blockly-highlight-border .blocklyPath {
-    opacity: 1 !important;
-  }
-`;
-
-      document.head.appendChild(style);
-    } catch (e) {
-      console.warn('Could not inject global blockly highlight styles:', e);
-    }
-  }, []);
-
   const gameRef = useRef(null);
   const blocklyRef = useRef(null);
   const workspaceRef = useRef(null);

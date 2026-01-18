@@ -16,6 +16,7 @@ const levelCategoryRouter = require("./routes/LevelCategoryRoute");
 const patternRouter = require("./routes/PatternRoute");
 const testCaseRouter = require("./routes/testCaseRoutes");
 const testRouter = require("./routes/testRoutes");
+const notificationRouter = require("./routes/NotificationRoute");
 const path = require("path");
 const { clerkMiddleware } = require("@clerk/express");
 
@@ -43,6 +44,7 @@ app.use("/api", levelCategoryRouter);
 app.use("/api", patternRouter);
 app.use("/api/test-cases", testCaseRouter);
 app.use("/api/tests", testRouter);
+app.use("/api", notificationRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello World - Server is running!");

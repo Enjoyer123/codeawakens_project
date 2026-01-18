@@ -23,6 +23,7 @@ import LevelCategoryManagement from "../pages/admin/levelCategory/LevelCategoryM
 import TestCaseManagement from "../pages/admin/level/TestCaseManagement";
 import LevelGuideManagement from "../pages/admin/level/LevelGuideManagement";
 import TestManagement from "../pages/admin/test/TestManagement";
+import NotificationManagement from "../pages/admin/notification/NotificationManagement";
 import NavLayout from "../layouts/NavLayout";
 import RequirePreTest from "../components/shared/RequirePreTest";
 
@@ -79,6 +80,7 @@ const AppRoutes = () => {
         <Route path="admin/rewards" element={<RewardManagement />} />
         <Route path="admin/blocks" element={<BlockManagement />} />
         <Route path="admin/victory-conditions" element={<VictoryConditionManagement />} />
+        <Route path="admin/notifications" element={<NotificationManagement />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

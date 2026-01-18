@@ -3,7 +3,6 @@ import { useAuth } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
 import {
   fetchAllBlocks,
-  createBlock,
   updateBlock,
   deleteBlock,
 } from '../../../services/blockService';
@@ -101,20 +100,10 @@ const BlockManagement = () => {
         is_available: block.is_available,
         syntax_example: block.syntax_example || '',
       });
-    } else {
-      setEditingBlock(null);
-      setBlockForm({
-        block_key: '',
-        block_name: '',
-        description: '',
-        category: 'movement',
-        blockly_type: '',
-        is_available: true,
-        syntax_example: '',
-      });
+      setSaveError(null);
+      setBlockDialogOpen(true);
     }
-    setSaveError(null);
-    setBlockDialogOpen(true);
+    // If block is null (add mode), do nothing as we only allow edit
   }, []);
 
   const handleCloseBlockDialog = useCallback(() => {
@@ -134,7 +123,7 @@ const BlockManagement = () => {
 
   const handleSaveBlock = useCallback(async () => {
     setSaveError(null);
-    
+
     const formData = {
       ...blockForm,
       block_key: blockForm.block_key.trim(),
@@ -147,12 +136,11 @@ const BlockManagement = () => {
     try {
       if (editingBlock) {
         await updateBlock(getToken, editingBlock.block_id, formData);
-      } else {
-        await createBlock(getToken, formData);
+        handleCloseBlockDialog();
+        await loadBlocks();
+        return { success: true };
       }
-      handleCloseBlockDialog();
-      await loadBlocks();
-      return { success: true };
+      return { success: false, error: 'Create block is not allowed' };
     } catch (err) {
       const errorMessage = 'ไม่สามารถบันทึก block ได้: ' + (err.message || 'Unknown error');
       setSaveError(errorMessage);
@@ -194,7 +182,7 @@ const BlockManagement = () => {
     }
   }, [deleting]);
 
-  const getDeleteDescription = (blockName) => 
+  const getDeleteDescription = (blockName) =>
     `คุณแน่ใจหรือไม่ว่าต้องการลบบล็อก "${blockName}"? การกระทำนี้ไม่สามารถยกเลิกได้`;
 
   return (
@@ -203,8 +191,7 @@ const BlockManagement = () => {
         <AdminPageHeader
           title="Block Management"
           subtitle="จัดการบล็อก"
-          onAddClick={() => handleOpenBlockDialog()}
-          addButtonText="เพิ่มบล็อก"
+        // Removed onAddClick and addButtonText to disable adding blocks
         />
 
         <ErrorAlert message={error} />
@@ -221,7 +208,7 @@ const BlockManagement = () => {
           {loading ? (
             <LoadingState message="Loading blocks..." />
           ) : blocks.length === 0 ? (
-            <EmptyState 
+            <EmptyState
               message="ไม่พบข้อมูลบล็อก"
               searchQuery={searchQuery}
             />
