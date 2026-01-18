@@ -6,7 +6,6 @@ const requireAdmin = require("../middleware/requireAdmin");
 const {
   getAllBlocks,
   getBlockById,
-  createBlock,
   updateBlock,
   deleteBlock,
 } = require("../controllers/blockController");
@@ -14,7 +13,6 @@ const {
 // Block CRUD routes
 router.get("/blocks", authCheck, requireAdmin, getAllBlocks);
 router.get("/blocks/:blockId", authCheck, requireAdmin, getBlockById);
-router.post("/blocks", authCheck, requireAdmin, createBlock);
 router.put("/blocks/:blockId", authCheck, requireAdmin, updateBlock);
 router.delete("/blocks/:blockId", authCheck, requireAdmin, deleteBlock);
 

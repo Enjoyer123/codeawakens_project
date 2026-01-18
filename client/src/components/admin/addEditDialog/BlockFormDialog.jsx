@@ -72,6 +72,7 @@ const BlockFormDialog = ({
             onChange={(e) => handleChange('block_key', e.target.value)}
             placeholder="เช่น move_forward"
             required
+            disabled={!!editingBlock}
           />
           <FormInput
             label="Block Name"

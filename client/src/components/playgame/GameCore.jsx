@@ -31,6 +31,7 @@ import { clearGameOverScreen, showGameOver, showVictory } from '../../gameutils/
 import GameArea from './GameArea';
 import BlocklyArea from './BlocklyArea';
 import GameWithGuide from './GameWithGuide';
+import LoadXmlModal from './LoadXmlModal';
 
 // Import custom hooks
 import { useGameActions } from './hooks/useGameActions';
@@ -144,6 +145,9 @@ const GameCore = ({
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Load XML Modal state
+  const [showLoadXmlModal, setShowLoadXmlModal] = useState(false);
 
   // Game state
   const [playerNodeId, setPlayerNodeId] = useState(0);
@@ -931,203 +935,164 @@ const GameCore = ({
                 </div>
                 {/* Temporary buttons to load example blocks - Remove after development */}
                 {workspaceRef.current && (
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2 justify-end mb-2">
                     <button
-                      onClick={() => {
-                        if (workspaceRef.current) {
-                          loadDfsExampleBlocks(workspaceRef.current);
-                        }
-                      }}
-                      className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded"
-                      title="โหลด DFS example blocks (ชั่วคราว - สำหรับทดสอบ)"
+                      onClick={() => setShowLoadXmlModal(true)}
+                      className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded shadow-sm hover:shadow-md transition-all flex items-center gap-2"
+                      title="โหลดตัวอย่าง XML"
                     >
-                      📦 โหลด DFS
+                      📂 โหลด XML
                     </button>
-                    <button
-                      onClick={() => {
-                        if (workspaceRef.current) {
-                          loadBfsExampleBlocks(workspaceRef.current);
+                    <LoadXmlModal
+                      isOpen={showLoadXmlModal}
+                      onClose={() => setShowLoadXmlModal(false)}
+                      options={[
+                        {
+                          label: 'DFS',
+                          title: 'โหลด DFS example blocks',
+                          description: 'Depth First Search',
+                          icon: '📦',
+                          className: 'bg-blue-600/20 border-blue-500/50 hover:bg-blue-600/30 text-blue-200',
+                          onClick: () => workspaceRef.current && loadDfsExampleBlocks(workspaceRef.current)
+                        },
+                        {
+                          label: 'BFS',
+                          title: 'โหลด BFS example blocks',
+                          description: 'Breadth First Search',
+                          icon: '📦',
+                          className: 'bg-green-600/20 border-green-500/50 hover:bg-green-600/30 text-green-200',
+                          onClick: () => workspaceRef.current && loadBfsExampleBlocks(workspaceRef.current)
+                        },
+                        {
+                          label: 'Dijkstra',
+                          title: 'โหลด Dijkstra example blocks',
+                          description: 'Shortest Path Algorithm',
+                          icon: '📦',
+                          className: 'bg-purple-600/20 border-purple-500/50 hover:bg-purple-600/30 text-purple-200',
+                          onClick: () => workspaceRef.current && loadDijkstraExampleBlocks(workspaceRef.current)
+                        },
+                        {
+                          label: 'Prim',
+                          title: 'โหลด Prim example blocks',
+                          description: 'Minimum Spanning Tree',
+                          icon: '📦',
+                          className: 'bg-blue-500/20 border-blue-400/50 hover:bg-blue-500/30 text-blue-200',
+                          onClick: () => workspaceRef.current && loadPrimExampleBlocks(workspaceRef.current)
+                        },
+                        {
+                          label: 'Kruskal',
+                          title: 'โหลด Kruskal example blocks',
+                          description: 'Minimum Spanning Tree',
+                          icon: '📦',
+                          className: 'bg-orange-600/20 border-orange-500/50 hover:bg-orange-600/30 text-orange-200',
+                          onClick: () => workspaceRef.current && loadKruskalExampleBlocks(workspaceRef.current)
+                        },
+                        {
+                          label: 'Knapsack',
+                          title: 'โหลด Knapsack',
+                          description: 'Normal Knapsack Algorithm',
+                          icon: '🎒',
+                          className: 'bg-yellow-600/20 border-yellow-500/50 hover:bg-yellow-600/30 text-yellow-200',
+                          onClick: () => workspaceRef.current && loadKnapsackExampleBlocks(workspaceRef.current)
+                        },
+                        {
+                          label: 'Knapsack (DP)',
+                          title: 'โหลด Knapsack (DP)',
+                          description: 'Dynamic Programming',
+                          icon: '🎒',
+                          className: 'bg-yellow-700/20 border-yellow-600/50 hover:bg-yellow-700/30 text-yellow-200',
+                          onClick: () => workspaceRef.current && loadDynamicKnapsackExampleBlocks(workspaceRef.current)
+                        },
+                        {
+                          label: 'Train Schedule',
+                          title: 'โหลด Train Schedule',
+                          description: 'Scheduling Algorithm',
+                          icon: '🚂',
+                          className: 'bg-pink-700/20 border-pink-600/50 hover:bg-pink-700/30 text-pink-200',
+                          onClick: () => workspaceRef.current && loadTrainScheduleExampleBlocks(workspaceRef.current)
+                        },
+                        {
+                          label: 'Subset Sum',
+                          title: 'โหลด Subset Sum',
+                          description: 'Backtracking',
+                          icon: '⚔️',
+                          className: 'bg-red-600/20 border-red-500/50 hover:bg-red-600/30 text-red-200',
+                          onClick: () => workspaceRef.current && loadSubsetSumExampleBlocks(workspaceRef.current)
+                        },
+                        {
+                          label: 'Subset Sum (DP)',
+                          title: 'โหลด Subset Sum (DP)',
+                          description: 'Dynamic Programming',
+                          icon: '⚔️',
+                          className: 'bg-red-700/20 border-red-600/50 hover:bg-red-700/30 text-red-200',
+                          onClick: () => workspaceRef.current && loadDynamicSubsetSumExampleBlocks(workspaceRef.current)
+                        },
+                        {
+                          label: 'Coin Change',
+                          title: 'โหลด Coin Change',
+                          description: 'Normal Algorithm',
+                          icon: '🪙',
+                          className: 'bg-indigo-600/20 border-indigo-500/50 hover:bg-indigo-600/30 text-indigo-200',
+                          onClick: () => workspaceRef.current && loadCoinChangeExampleBlocks(workspaceRef.current)
+                        },
+                        {
+                          label: 'Coin Change (DP)',
+                          title: 'โหลด Dynamic Coin Change (DP)',
+                          description: 'Dynamic Programming',
+                          icon: '🪙',
+                          className: 'bg-indigo-700/20 border-indigo-600/50 hover:bg-indigo-700/30 text-indigo-200',
+                          onClick: () => workspaceRef.current && loadDynamicCoinChangeExampleBlocks(workspaceRef.current)
+                        },
+                        {
+                          label: 'Coin Change (Greedy)',
+                          title: 'โหลด Greedy Coin Change',
+                          description: 'Greedy Algorithm',
+                          icon: '🪙',
+                          className: 'bg-indigo-800/20 border-indigo-700/50 hover:bg-indigo-800/30 text-indigo-200',
+                          onClick: () => workspaceRef.current && loadGreedyCoinChangeExampleBlocks(workspaceRef.current)
+                        },
+                        {
+                          label: 'N-Queen',
+                          title: 'โหลด N-Queen',
+                          description: 'Backtracking',
+                          icon: '👑',
+                          className: 'bg-teal-600/20 border-teal-500/50 hover:bg-teal-600/30 text-teal-200',
+                          onClick: () => workspaceRef.current && loadNQueenExampleBlocks(workspaceRef.current)
+                        },
+                        {
+                          label: 'Ant DP (Short)',
+                          title: 'โหลด Ant DP (แบบสั้น)',
+                          description: 'Dynamic Programming',
+                          icon: '🐜',
+                          className: 'bg-emerald-700/20 border-emerald-600/50 hover:bg-emerald-700/30 text-emerald-200',
+                          onClick: () => workspaceRef.current && loadDynamicAntDpExampleBlocks(workspaceRef.current)
+                        },
+                        {
+                          label: 'Rope Partition',
+                          title: 'โหลด Rope Partition',
+                          description: 'Backtracking',
+                          icon: '🪢',
+                          className: 'bg-cyan-600/20 border-cyan-500/50 hover:bg-cyan-600/30 text-cyan-200',
+                          onClick: () => workspaceRef.current && loadRopePartitionExampleBlocks(workspaceRef.current)
+                        },
+                        {
+                          label: 'Dijkstra (Emei)',
+                          title: 'โหลด Dijkstra Max-Cap (ง้อไบ๊)',
+                          description: 'Emei Mountain Variant',
+                          icon: '⛰️',
+                          className: 'bg-indigo-600/20 border-indigo-500/50 hover:bg-indigo-600/30 text-indigo-200',
+                          onClick: () => workspaceRef.current && loadEmeiMountainExample(workspaceRef.current, 'dijkstra')
+                        },
+                        {
+                          label: 'Prim (Emei)',
+                          title: 'โหลด Prim Max-Cap (ง้อไบ๊)',
+                          description: 'Emei Mountain Variant',
+                          icon: '⛰️',
+                          className: 'bg-pink-600/20 border-pink-500/50 hover:bg-pink-600/30 text-pink-200',
+                          onClick: () => workspaceRef.current && loadEmeiMountainExample(workspaceRef.current, 'prim')
                         }
-                      }}
-                      className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded"
-                      title="โหลด BFS example blocks (ชั่วคราว - สำหรับทดสอบ)"
-                    >
-                      📦 โหลด BFS
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (workspaceRef.current) {
-                          loadDijkstraExampleBlocks(workspaceRef.current);
-                        }
-                      }}
-                      className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded"
-                      title="โหลด Dijkstra example blocks (ชั่วคราว - สำหรับทดสอบ)"
-                    >
-                      📦 โหลด Dijkstra
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (workspaceRef.current) {
-                          loadPrimExampleBlocks(workspaceRef.current);
-                        }
-                      }}
-                      className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded"
-                      title="โหลด Prim example blocks (ชั่วคราว - สำหรับทดสอบ)"
-                    >
-                      📦 โหลด Prim
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (workspaceRef.current) {
-                          loadKruskalExampleBlocks(workspaceRef.current);
-                        }
-                      }}
-                      className="px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white text-sm rounded"
-                      title="โหลด Kruskal example blocks (ชั่วคราว - สำหรับทดสอบ)"
-                    >
-                      📦 โหลด Kruskal
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (workspaceRef.current) {
-                          loadKnapsackExampleBlocks(workspaceRef.current);
-                        }
-                      }}
-                      className="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white text-sm rounded"
-                      title="🎒 โหลด Knapsack"
-                    >
-                      🎒 โหลด Knapsack
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (workspaceRef.current) {
-                          loadTrainScheduleExampleBlocks(workspaceRef.current);
-                        }
-                      }}
-                      className="px-3 py-1 bg-pink-700 hover:bg-pink-800 text-white text-sm rounded"
-                      title="🚂 โหลด Train Schedule"
-                    >
-                      🚂 โหลด Train Schedule
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (workspaceRef.current) {
-                          loadDynamicKnapsackExampleBlocks(workspaceRef.current);
-                        }
-                      }}
-                      className="px-3 py-1 bg-yellow-700 hover:bg-yellow-800 text-white text-sm rounded"
-                      title="🎒 โหลด Knapsack (DP)"
-                    >
-                      🎒 โหลด Knapsack (DP)
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (workspaceRef.current) {
-                          loadSubsetSumExampleBlocks(workspaceRef.current);
-                        }
-                      }}
-                      className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded"
-                      title="⚔️ โหลด Subset Sum"
-                    >
-                      ⚔️ โหลด Subset Sum
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (workspaceRef.current) {
-                          loadDynamicSubsetSumExampleBlocks(workspaceRef.current);
-                        }
-                      }}
-                      className="px-3 py-1 bg-red-700 hover:bg-red-800 text-white text-sm rounded"
-                      title="⚔️ โหลด Subset Sum (DP)"
-                    >
-                      ⚔️ โหลด Subset Sum (DP)
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (workspaceRef.current) {
-                          loadCoinChangeExampleBlocks(workspaceRef.current);
-                        }
-                      }}
-                      className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded"
-                      title="โหลด Coin Change example blocks (ชั่วคราว - สำหรับทดสอบ)"
-                    >
-                      🪙 โหลด Coin Change
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (workspaceRef.current) {
-                          loadDynamicCoinChangeExampleBlocks(workspaceRef.current);
-                        }
-                      }}
-                      className="px-3 py-1 bg-indigo-700 hover:bg-indigo-800 text-white text-sm rounded"
-                      title="โหลด Dynamic Coin Change (DP) example blocks (ชั่วคราว - สำหรับทดสอบ)"
-                    >
-                      🪙 โหลด Dynamic Coin
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (workspaceRef.current) {
-                          loadGreedyCoinChangeExampleBlocks(workspaceRef.current);
-                        }
-                      }}
-                      className="px-3 py-1 bg-indigo-800 hover:bg-indigo-900 text-white text-sm rounded"
-                      title="โหลด Greedy Coin Change example blocks (ชั่วคราว - สำหรับทดสอบ)"
-                    >
-                      🪙 โหลด Coin Greedy
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (workspaceRef.current) {
-                          loadNQueenExampleBlocks(workspaceRef.current);
-                        }
-                      }}
-                      className="px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white text-sm rounded"
-                      title="โหลด N-Queen example blocks (ชั่วคราว - สำหรับทดสอบ)"
-                    >
-                      👑 โหลด N-Queen
-                    </button>
-
-                    {/* Ant DP (Applied Dynamic) */}
-                    <button
-                      onClick={() => {
-                        if (workspaceRef.current) {
-                          loadDynamicAntDpExampleBlocks(workspaceRef.current);
-                        }
-                      }}
-                      className="px-3 py-1 bg-emerald-700 hover:bg-emerald-800 text-white text-sm rounded"
-                      title="โหลด Ant DP example blocks (แบบสั้น - สำหรับโชว์ตาราง)"
-                    >
-                      🐜 โหลด Ant (สั้น)
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        if (workspaceRef.current) {
-                          loadRopePartitionExampleBlocks(workspaceRef.current);
-                        }
-                      }}
-                      className="px-3 py-1 bg-cyan-600 hover:bg-cyan-700 text-white text-sm rounded"
-                      title="โหลด Rope Partition (Backtracking)"
-                    >
-                      🪢 โหลด Rope Partition
-                    </button>
-
-                    <>
-                      <button
-                        onClick={() => workspaceRef.current && loadEmeiMountainExample(workspaceRef.current, 'dijkstra')}
-                        className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded shadow-md"
-                        title="โหลด Dijkstra Max-Cap (ง้อไบ๊)"
-                      >
-                        📦 โหลด Dijkstra (ง้อไบ๊)
-                      </button>
-                      <button
-                        onClick={() => workspaceRef.current && loadEmeiMountainExample(workspaceRef.current, 'prim')}
-                        className="px-3 py-1 bg-pink-600 hover:bg-pink-700 text-white text-sm rounded shadow-md"
-                        title="โหลด Prim Max-Cap (ง้อไบ๊)"
-                      >
-                        📦 โหลด Prim (ง้อไบ๊)
-                      </button>
-                    </>
+                      ]}
+                    />
                   </div>
                 )}
               </div>

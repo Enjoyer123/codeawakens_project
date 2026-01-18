@@ -67,70 +67,7 @@ exports.getBlockById = async (req, res) => {
   }
 };
 
-// Create block
-exports.createBlock = async (req, res) => {
-  try {
-    const {
-      block_key,
-      block_name,
-      description,
-      category,
-      blockly_type,
-      is_available,
-      syntax_example,
-    } = req.body;
-
-    if (!block_key || !block_name || !category) {
-      return res.status(400).json({
-        message: "Missing required fields: block_key, block_name, category"
-      });
-    }
-
-    const trimmedBlockKey = block_key.trim();
-    console.log("Block req.body:", req.body);
-    console.log("Trimmed block_key:", trimmedBlockKey);
-
-    // Check if block_key already exists
-    const existingBlock = await prisma.block.findUnique({
-      where: { block_key: trimmedBlockKey },
-    });
-
-    if (existingBlock) {
-      console.log("Existing block found:", existingBlock);
-      return res.status(409).json({ 
-        message: `A block with this block_key "${trimmedBlockKey}" already exists (Block ID: ${existingBlock.block_id}, Block Name: ${existingBlock.block_name}).` 
-      });
-    }
-
-    const block = await prisma.block.create({
-      data: {
-        block_key: trimmedBlockKey,
-        block_name: block_name.trim(),
-        description: description ? description.trim() : null,
-        category,
-        blockly_type: blockly_type ? blockly_type.trim() : null,
-        is_available: is_available === true || is_available === 'true' || is_available === undefined,
-        syntax_example: syntax_example ? syntax_example.trim() : null,
-      },
-    });
-    console.log("Block created:", block);
-    res.status(201).json({
-      message: "Block created successfully",
-      block,
-    });
-  } catch (error) {
-    console.error("Error creating block:", error);
-    console.error("Error stack:", error.stack);
-    console.error("Error code:", error.code);
-    console.error("Error meta:", error.meta);
-    if (error.code === 'P2002') {
-      return res.status(409).json({ message: "A block with this block_key already exists." });
-    } else if (error.code === 'P2011') {
-      return res.status(400).json({ message: "Null constraint violation. Check required fields." });
-    }
-    res.status(500).json({ message: "Error creating block", error: error.message });
-  }
-};
+// Create block function removed as it is no longer allowed
 
 // Update block
 exports.updateBlock = async (req, res) => {
@@ -166,10 +103,10 @@ exports.updateBlock = async (req, res) => {
       const blockWithSameKey = await prisma.block.findUnique({
         where: { block_key: trimmedBlockKey },
       });
-      
+
       if (blockWithSameKey && blockWithSameKey.block_id !== parseInt(blockId)) {
-        return res.status(409).json({ 
-          message: "A block with this block_key already exists." 
+        return res.status(409).json({
+          message: "A block with this block_key already exists."
         });
       }
     }
@@ -235,8 +172,8 @@ exports.deleteBlock = async (req, res) => {
     if (block.level_blocks && block.level_blocks.length > 0) {
       const levelIds = block.level_blocks.map(lb => lb.level_id);
       const uniqueLevelIds = [...new Set(levelIds)];
-      
-      return res.status(400).json({ 
+
+      return res.status(400).json({
         message: `Cannot delete block: This block is being used in ${block.level_blocks.length} level block(s) across ${uniqueLevelIds.length} level(s). Please remove the block from all levels before deleting.`,
         level_blocks_count: block.level_blocks.length,
         levels_count: uniqueLevelIds.length,
@@ -259,7 +196,7 @@ exports.deleteBlock = async (req, res) => {
     console.error("Error stack:", error.stack);
     console.error("Error code:", error.code);
     console.error("Error meta:", error.meta);
-    
+
     // Provide more detailed error message
     let errorMessage = "Error deleting block";
     if (error.code === 'P2003') {
@@ -269,9 +206,9 @@ exports.deleteBlock = async (req, res) => {
     } else if (error.message) {
       errorMessage = error.message;
     }
-    
-    res.status(500).json({ 
-      message: errorMessage, 
+
+    res.status(500).json({
+      message: errorMessage,
       error: error.message,
       code: error.code,
       meta: error.meta
