@@ -1,136 +1,146 @@
 // Blockly Variable Handling
 import * as Blockly from "blockly/core";
 
-// Function to safely create/update variable field
+// ==========================================
+// 🔧 CONSTANTS & CONFIGURATION
+// ==========================================
+const COMMON_VARIABLES = ['i', 'j', 'k', 'coin', 'item', 'index', 'count', 'value'];
+const DEFAULT_VAR_NAME = 'variable';
+
+// ==========================================
+// 🛠️ CORE UTILITIES
+// ==========================================
+
+/**
+ * Safely ensures a variable exists in the workspace.
+ * Critical: Prevents "variable not found" errors when using custom blocks.
+ * @param {Blockly.Block} block - The source block asking for the variable.
+ * @param {string} fieldName - The name of the field containing the variable name.
+ * @param {string} defaultName - Fallback name if field is empty.
+ * @returns {Blockly.VariableModel|null} The created or existing variable.
+ */
 function ensureVariableExists(block, fieldName, defaultName) {
-  if (!block || !block.workspace) return;
-  
-  // CRITICAL: Don't create variables when block is in flyout (toolbox)
-  // Blocks in flyout are just templates and shouldn't create workspace variables
+  if (!block || !block.workspace) return null;
+
+  // 🛡️ SAFETY CHECK: Flyout Protection
+  // Blocks in the toolbox (flyout) are just templates.
+  // We MUST NOT create real variables for them, otherwise the workspace
+  // will be flooded with ghost variables every time the toolbox opens.
   if (block.isInFlyout) {
     return null;
   }
-  
+
   const field = block.getField(fieldName);
-  if (!field) return;
-  
+  if (!field) return null;
+
   const varName = field.getValue() || defaultName;
   const workspace = block.workspace;
-  
+
   // Check if variable exists, create if not
   const variableMap = workspace.getVariableMap();
   let variable = variableMap.getVariable(varName);
+
   if (!variable) {
-    console.log(`Creating variable: ${varName}`);
+    // console.log(`[Variable Safety] Creating missing variable: "${varName}"`);
     try {
       variable = variableMap.createVariable(varName);
-      console.log('Variable created successfully:', variable);
     } catch (error) {
-      console.error('Error creating variable:', error);
+      console.error('[Variable Safety] Error creating variable:', error);
       return null;
     }
   }
-  
-  // Update field value to ensure consistency
+
+  // Update field value to ensure consistency (sync ID/Name)
   if (field.getValue() !== varName) {
     try {
-    field.setValue(varName);
+      field.setValue(varName);
     } catch (error) {
-      console.error('Error setting field value:', error);
+      console.warn('[Variable Safety] Error syncing field value:', error);
     }
   }
-  
+
   return variable;
 }
 
-// Simple FieldVariable handling - always use prompt
-function improveFieldVariableHandling() {
-  if (!Blockly.FieldVariable) return;
-  
-  // Override doClassValidation_ to prevent auto-creation of variables when blocks are in flyout
-  const originalDoClassValidation = Blockly.FieldVariable.prototype.doClassValidation_;
-  if (originalDoClassValidation) {
-    Blockly.FieldVariable.prototype.doClassValidation_ = function(newValue) {
-      // Check if block is in flyout (toolbox)
-      if (this.sourceBlock_ && this.sourceBlock_.isInFlyout) {
-        // If in flyout, don't auto-create variables, just return the value as-is
-        return newValue;
-      }
-      // For blocks in workspace, use original validation (which may create variables)
-      return originalDoClassValidation.call(this, newValue);
-    };
-  }
-  
-  // Override showEditor to always use prompt
-  Blockly.FieldVariable.prototype.showEditor_ = function() {
-    console.log('FieldVariable showEditor_ called');
-    
-    const currentValue = this.getValue() || 'variable';
-    console.log('Current value:', currentValue);
-    
-    const newName = prompt("ใส่ชื่อตัวแปร:", currentValue);
-    console.log('User entered:', newName);
-    
-    if (newName !== null && newName !== currentValue && newName.trim() !== '') {
-      const cleanValue = newName.trim();
-      console.log('Setting variable to:', cleanValue);
-      
-      try {
-        // Ensure variable exists in workspace
-        if (this.sourceBlock_ && this.sourceBlock_.workspace) {
-          const workspace = this.sourceBlock_.workspace;
-          let variable = workspace.getVariable(cleanValue);
-          
-          if (!variable) {
-            console.log('Creating new variable:', cleanValue);
-            variable = workspace.createVariable(cleanValue);
-          }
-          
-          // Set the value using the variable ID
-          this.setValue(variable.getId());
-          console.log('Variable set successfully');
-        } else {
-          // Fallback: set value directly
-          this.setValue(cleanValue);
-        }
-      } catch (error) {
-        console.error('Error setting variable:', error);
-        // Try direct setValue as fallback
-        try {
-          this.setValue(cleanValue);
-        } catch (fallbackError) {
-          console.error('Fallback setValue also failed:', fallbackError);
-        }
-      }
-    }
-  };
-}
-
-// Function to ensure common variables exist in workspace
+/**
+ * Helper to force checking and creation of common variables.
+ * Used at game start to reduce friction for students.
+ * @param {Blockly.Workspace} workspace 
+ */
 export function ensureCommonVariables(workspace) {
   if (!workspace) return;
-  
-  const commonVariables = ['i', 'j', 'k', 'coin', 'item', 'index', 'count', 'value'];
-  
+
   const variableMap = workspace.getVariableMap();
-  commonVariables.forEach(varName => {
+  COMMON_VARIABLES.forEach(varName => {
     const variable = variableMap.getVariable(varName);
     if (!variable) {
-      console.log(`Creating common variable: ${varName}`);
+      // console.log(`[Init] Pre-creating common variable: "${varName}"`);
       variableMap.createVariable(varName);
     }
   });
 }
 
-// ===== INITIALIZATION FUNCTION =====
-export function initializeImprovedVariableHandling() {
-  // Apply improved FieldVariable handling
-  improveFieldVariableHandling();
-  
-  // Ensure common variables exist
-  console.log("Improved variable handling initialized");
+// ==========================================
+// 🎨 UI IMPROVEMENTS (MONKEY PATCHES)
+// ==========================================
+
+/**
+ * Applied patches to Blockly.FieldVariable to improve UX.
+ * 1. Force use of "Prompt" instead of complex variable modal.
+ * 2. Prevent auto-creation logic when in Flyout.
+ */
+function improveFieldVariableHandling() {
+  if (!Blockly.FieldVariable) return;
+
+  // 1. Override validation to respect Flyout context
+  const originalDoClassValidation = Blockly.FieldVariable.prototype.doClassValidation_;
+  if (originalDoClassValidation) {
+    Blockly.FieldVariable.prototype.doClassValidation_ = function (newValue) {
+      // If in flyout, skip validation to prevent side effects
+      if (this.sourceBlock_ && this.sourceBlock_.isInFlyout) {
+        return newValue;
+      }
+      return originalDoClassValidation.call(this, newValue);
+    };
+  }
+
+  // 2. Override Editor to use simple Prompt
+  // This simplifies the UI for younger students (no "Rename", "Delete" complexity)
+  Blockly.FieldVariable.prototype.showEditor_ = function () {
+    const currentValue = this.getValue() || DEFAULT_VAR_NAME;
+    const newName = prompt("ตั้งชื่อตัวแปรใหม่:", currentValue); // Localized prompt
+
+    if (newName !== null && newName.trim() !== '' && newName !== currentValue) {
+      const cleanValue = newName.trim();
+
+      try {
+        if (this.sourceBlock_ && this.sourceBlock_.workspace) {
+          const workspace = this.sourceBlock_.workspace;
+          let variable = workspace.getVariable(cleanValue);
+
+          if (!variable) {
+            variable = workspace.createVariable(cleanValue);
+          }
+          this.setValue(variable.getId());
+        } else {
+          this.setValue(cleanValue);
+        }
+      } catch (error) {
+        console.error('[Variable Prompt] Error setting variable:', error);
+        // Fallback
+        try { this.setValue(cleanValue); } catch (e) { /* Ignore */ }
+      }
+    }
+  };
 }
 
-// Export for use in block definitions
+// ==========================================
+// 🚀 INITIALIZATION
+// ==========================================
+export function initializeImprovedVariableHandling() {
+  improveFieldVariableHandling();
+  console.log("[Blockly] Improved Variable Handling Initialized");
+}
+
 export { ensureVariableExists };
 

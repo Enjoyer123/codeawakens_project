@@ -22,6 +22,17 @@ import { defineProcedureCallGenerators } from '../procedure/procedureCallGenerat
 /**
  * Define all Blockly generators by calling all category-specific generator functions
  */
+// List of generators that MUST be preserved/restored (Nuclear Force)
+const CRITICAL_FORCE_GENERATORS = [
+  "math_max",
+  "variables_get",
+  "math_arithmetic",
+  "procedures_defreturn"
+];
+
+/**
+ * Define all Blockly generators by calling all category-specific generator functions
+ */
 export function defineAllGenerators() {
   console.log('[defineAllGenerators] Starting generator definition...');
 
@@ -31,6 +42,9 @@ export function defineAllGenerators() {
       originalGenerators[type] = javascriptGenerator.forBlock[type];
     }
   };
+
+  // 1. Save critical generators before potential overrides
+  CRITICAL_FORCE_GENERATORS.forEach(saveGen);
 
   // Call all generator definition functions
   defineDictionaryGenerators();
@@ -48,22 +62,17 @@ export function defineAllGenerators() {
   defineProcedureDefGenerators();
   defineProcedureCallGenerators();
 
-  // Save critical generators for nuclear force re-application
-  saveGen("math_max");
-  saveGen("variables_get");
-  saveGen("math_arithmetic");
-  saveGen("procedures_defreturn");
-
   // Verify that our generator was set
   console.log('[defineAllGenerators] procedures_defreturn generator set:', typeof javascriptGenerator.forBlock["procedures_defreturn"]);
 
   // NUCLEAR FORCE: Re-apply our custom generators at the VERY END
   // We REMOVE "lists_setIndex" from here because we WANT our custom 0-based override to stay!
-  const criticals = ["math_max", "variables_get", "math_arithmetic", "procedures_defreturn"];
-  criticals.forEach(type => {
+  CRITICAL_FORCE_GENERATORS.forEach(type => {
     if (originalGenerators[type]) {
       javascriptGenerator.forBlock[type] = originalGenerators[type];
       console.log(`[defineAllGenerators] 🚀 Nuclear Force Champion: ${type}`);
+    } else {
+      console.warn(`[defineAllGenerators] ⚠️ Could not restore critical generator: ${type} (Not found in original)`);
     }
   });
 
