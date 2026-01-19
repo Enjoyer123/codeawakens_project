@@ -1,31 +1,32 @@
 // Blockly Initialization
 import * as Blockly from "blockly/core";
+//define blocks
 import { defineAllBlocks } from './blocklyBlocks';
 import { defineListBlocks } from '../data/blocklyList';
+import { ensureStandardBlocks } from './blocklyStandard/blocklyStandardBlocks';
+
+//define toolbox config
 import { createToolboxConfig } from './blocklyToolbox';
+
+//define generators Block to JavaScript
 import { defineAllGenerators } from './blocklyGenerators';
-console.log('blocklyInit.js loaded - reloading generators v3');
-import { ensureStandardBlocks } from './blocklyStandardBlocks';
+
+
 
 // Helper function to completely override procedure blocks
 function overrideProcedureBlocks() {
   ['procedures_defreturn', 'procedures_defnoreturn'].forEach(blockType => {
     if (!Blockly.Blocks[blockType]) {
-      console.warn(`${blockType} not found`);
       return;
     }
 
-    console.log(`Overriding ${blockType}...`);
-
     // Store original methods
     const originalInit = Blockly.Blocks[blockType].init;
-    const originalRenameProcedure = Blockly.Blocks[blockType].renameProcedure;
 
     // Override init to set default name
     if (originalInit) {
       Blockly.Blocks[blockType].init = function () {
         originalInit.call(this);
-
         // Set default name immediately
         const nameField = this.getField('NAME');
         if (nameField && !nameField.getValue()) {
@@ -36,7 +37,6 @@ function overrideProcedureBlocks() {
 
     // COMPLETELY replace renameProcedure - don't call original at all
     Blockly.Blocks[blockType].renameProcedure = function (oldName, newName) {
-      console.log(`${blockType}.renameProcedure:`, { oldName, newName });
 
       // Just do nothing - this prevents all errors
       // The block will keep its current name
@@ -45,7 +45,6 @@ function overrideProcedureBlocks() {
 
     // COMPLETELY replace loadExtraState - don't call original at all  
     Blockly.Blocks[blockType].loadExtraState = function (state) {
-      console.log(`${blockType}.loadExtraState:`, state);
 
       try {
         // Get safe name
@@ -60,7 +59,6 @@ function overrideProcedureBlocks() {
           params = state.params;
         }
 
-        console.log(`${blockType}.loadExtraState: using name="${name}", params=`, params);
 
         // Set name field directly
         const nameField = this.getField('NAME');
@@ -83,7 +81,6 @@ function overrideProcedureBlocks() {
       }
     };
 
-    console.log(`${blockType} overridden successfully`);
   });
 }
 
@@ -92,7 +89,6 @@ export function initBlockly(containerRef, enabledBlocks) {
   if (!containerRef.current) return null;
 
   try {
-    console.log('=== Starting Blockly initialization ===');
 
     // Override standard blocks first
     ensureStandardBlocks();
@@ -101,7 +97,6 @@ export function initBlockly(containerRef, enabledBlocks) {
     defineAllGenerators();
 
     // Override procedure blocks BEFORE creating workspace
-    console.log('Overriding procedure blocks...');
     overrideProcedureBlocks();
 
     const toolbox = createToolboxConfig(enabledBlocks);
@@ -139,14 +134,11 @@ export function initBlockly(containerRef, enabledBlocks) {
       },
     };
 
-    console.log('Creating workspace...');
     const workspace = Blockly.inject(containerRef.current, workspaceConfig);
 
     // Override again after workspace creation
-    console.log('Overriding procedure blocks again after workspace creation...');
     overrideProcedureBlocks();
 
-    console.log('=== Blockly initialization complete ===');
 
     return workspace;
   } catch (error) {

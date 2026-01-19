@@ -189,7 +189,7 @@ export {
   ensureCommonVariables,
   initializeImprovedVariableHandling
 } from './blockly/data/blocklyVariable';
-export { ensureStandardBlocks } from './blockly/core/blocklyStandardBlocks';
+export { ensureStandardBlocks } from './blockly/core/blocklyStandard/blocklyStandardBlocks';
 export { defineLogicBlocks } from './blockly/logic/blocklyLogic';
 export { defineLogicOperatorsBlocks } from './blockly/logic/blocklyLogicOperators';
 export { defineMovementBlocks } from './blockly/movement/blocklyMovement';
