@@ -1,5 +1,5 @@
 // Collision detection functions
-import { getCurrentScene, getLevelData, directions, getCurrentGameState } from '../game/gameState';
+import { getCurrentScene, getLevelData, directions, getCurrentGameState } from '../../utils/game/gameState';
 
 export function checkObstacleCollisionWithRadius(scene, x, y, radius) {
   if (!scene.obstacles) {
@@ -102,9 +102,9 @@ export function checkMovementCollision(scene, fromNode, toNode) {
 export function canMoveForward() {
   const levelData = getLevelData();
   const currentState = getCurrentGameState();
-  
+
   if (!levelData) return false;
-  
+
   const currentNode = levelData.nodes.find((n) => n.id === currentState.currentNodeId);
   if (!currentNode) return false;
 

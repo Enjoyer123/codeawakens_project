@@ -3,7 +3,7 @@
 
 import Phaser from "phaser";
 import { getCurrentGameState } from '../../gameUtils';
-import { getGraphNeighborsWithWeight } from '../core/blocklyHelpers';
+import { getGraphNeighborsWithWeight } from '../core/helpers/graphLogic';
 
 // Visual feedback state
 let dfsVisualState = {

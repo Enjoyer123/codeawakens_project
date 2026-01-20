@@ -498,7 +498,6 @@ const GameCore = ({
       patternId,
       currentLevel,
       setShowProgressModal,
-      setShowProgressModal,
       hintOpenCount,
       matchedPattern,
       userBigO // Pass userBigO state
