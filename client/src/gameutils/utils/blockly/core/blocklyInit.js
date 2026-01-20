@@ -2,7 +2,7 @@
 import * as Blockly from "blockly/core";
 //define blocks
 import { defineAllBlocks } from './blocklyBlocks';
-import { defineListBlocks } from '../data/blocklyList';
+// import { defineListBlocks } from '../data/blocklyList';
 import { ensureStandardBlocks } from './blocklyStandard/blocklyStandardBlocks';
 
 //define toolbox config

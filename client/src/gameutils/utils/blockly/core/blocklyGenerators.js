@@ -2,7 +2,6 @@
 // This file imports and calls all category-specific generator modules
 import * as Blockly from "blockly/core";
 import { javascriptGenerator } from "blockly/javascript";
-import { getCurrentGameState } from '../../gameUtils';
 
 // Import all generator modules
 import { defineDictionaryGenerators, defineDataGenerators } from '../data/blocklyDataGenerators';
