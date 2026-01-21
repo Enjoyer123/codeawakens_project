@@ -1,13 +1,13 @@
 import {
     getCurrentGameState,
     setCurrentGameState
-} from '../../../../../gameutils/utils/gameUtils';
+} from '../../../../../gameutils/shared/game';
 import { calculateFinalScore } from '../../../utils/scoreUtils';
-import { flushKnapsackStepsNow, waitForKnapsackPlaybackDone } from '../../../../../gameutils/utils/blockly/algorithms/knapsack/knapsackStateManager';
-import { flushSubsetSumStepsNow, waitForSubsetSumPlaybackDone } from '../../../../../gameutils/utils/blockly/algorithms/subset_sum/subsetSumStateManager';
-import { flushCoinChangeStepsNow, waitForCoinChangePlaybackDone } from '../../../../../gameutils/utils/blockly/algorithms/coin_change/coinChangeStateManager';
-import { flushAntDpStepsNow, waitForAntDpPlaybackDone, waitForAntDpVisualIdle } from '../../../../../gameutils/utils/blockly/algorithms/ant_dp/antDpStateManager';
-import { showAntDpFinalPath } from '../../../../../gameutils/utils/blocklyUtils';
+import { flushKnapsackStepsNow, waitForKnapsackPlaybackDone } from '../../../../../gameutils/blockly/algorithms/knapsack/knapsackStateManager';
+import { flushSubsetSumStepsNow, waitForSubsetSumPlaybackDone } from '../../../../../gameutils/blockly/algorithms/subset_sum/subsetSumStateManager';
+import { flushCoinChangeStepsNow, waitForCoinChangePlaybackDone } from '../../../../../gameutils/blockly/algorithms/coin_change/coinChangeStateManager';
+import { flushAntDpStepsNow, waitForAntDpPlaybackDone, waitForAntDpVisualIdle } from '../../../../../gameutils/blockly/algorithms/ant_dp/antDpStateManager';
+import { showAntDpFinalPath } from '../../../../../gameutils/blockly';
 
 /**
  * Ensures all algorithm visualization tables (Knapsack, etc.) are finalized/flushed

@@ -1,11 +1,10 @@
 import Phaser from "phaser";
 import {
-    setCurrentScene,
-    getCurrentGameState,
-    setCurrentGameState,
+
     getWeaponData,
     displayPlayerWeapon
-} from '../../utils/gameUtils';
+} from '../../shared/items';
+import { getCurrentGameState, setCurrentGameState, setCurrentScene } from '../../shared/game';
 import {
     drawLevel,
     setupObstacles,
@@ -24,10 +23,10 @@ import {
     drawPlayer,
     updateMonsters,
     drawCinematicMonster
-} from '../../utils/phaserGame';
+} from '..';
 import { createCharacterAnims } from '../../../anims/PlayerAnims';
 import { createVampireAnims } from '../../../anims/EnemyAnims';
-import { preloadAllWeaponEffects } from '../../utils/combatSystem';
+import { preloadAllWeaponEffects } from '../../shared/combat';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 

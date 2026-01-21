@@ -1,18 +1,20 @@
 import { useEffect, useRef } from 'react';
 import * as Blockly from "blockly/core";
 import {
-  getCurrentGameState,
-  setCurrentGameState,
+
   getWeaponData,
   displayPlayerWeapon,
   displayPlayerEffect
-} from '../../../gameutils/utils/gameUtils';
+} from '../../../gameutils/shared/items';
+
+import { getCurrentGameState, setCurrentGameState } from '../../../gameutils/shared/game';
+
 import {
   getNextBlockHint,
   checkPatternMatch,
   calculatePatternMatchPercentage
-} from '../../../gameutils/utils/hintSystem';
-import { findBestThreePartsMatch, checkThreePartsMatch } from '../../../gameutils/utils/hint/hintThreeParts';
+} from '../../../gameutils/shared/hint';
+import { findBestThreePartsMatch, checkThreePartsMatch } from '../../../gameutils/shared/hint';
 
 /**
  * Hook for pattern analysis

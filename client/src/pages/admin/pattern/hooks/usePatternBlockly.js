@@ -7,7 +7,7 @@ import {
     ensureStandardBlocks,
     ensureCommonVariables,
     initializeImprovedVariableHandling
-} from '../../../../gameutils/utils/blocklyUtils';
+} from '../../../../gameutils/blockly';
 
 export const usePatternBlockly = (params) => {
     const {

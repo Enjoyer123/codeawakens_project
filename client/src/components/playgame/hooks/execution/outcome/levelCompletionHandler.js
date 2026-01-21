@@ -3,12 +3,12 @@ import {
     generateVictoryHint,
     getCurrentGameState,
     getPlayerHp
-} from '../../../../../gameutils/utils/gameUtils';
+} from '../../../../../gameutils/shared/game';
 import {
     showGameOver,
     showVictory,
     playCombatSequence
-} from '../../../../../gameutils/utils/phaserGame';
+} from '../../../../../gameutils/phaser';
 import {
     finalizeTablesBeforeVictory,
     calculateLevelScore

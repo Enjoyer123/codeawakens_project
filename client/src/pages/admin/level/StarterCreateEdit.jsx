@@ -10,7 +10,7 @@ import {
   ensureStandardBlocks,
   ensureCommonVariables,
   initializeImprovedVariableHandling
-} from '../../../gameutils/utils/blocklyUtils';
+} from '../../../gameutils/blockly';
 import { fetchLevelById, updateLevel } from '../../../services/levelService';
 import { Button } from '@/components/ui/button';
 import { Loader } from '@/components/ui/loader';

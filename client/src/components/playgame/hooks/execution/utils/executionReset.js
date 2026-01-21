@@ -2,27 +2,35 @@ import {
     getCurrentGameState,
     setCurrentGameState,
     resetPlayerHp,
+    getPlayerHp,
+
+} from '../../../../../gameutils/shared/game';
+
+import {
     clearPlayerCoins,
     clearRescuedPeople,
     resetAllPeople,
     clearStack,
-    getPlayerHp,
-    getStack // imported but maybe not used in reset directly, strictly checking usage
-} from '../../../../../gameutils/utils/gameUtils';
-import { updatePlayer } from '../../../../../gameutils/utils/phaserGame';
-import { resetEnemy } from '../../../../../gameutils/phaser/utils/enemyUtils';
+
+    getStack // imported but maybe not used in reset directly, strictly checking usage}
+} from '../../../../../gameutils/shared/items';
+
+import { updatePlayer } from '../../../../../gameutils/phaser';
+import { resetEnemy } from '../../../../../gameutils/phaser';
 import {
     updateTreasureDisplay,
-} from '../../../../../gameutils/utils/phaser/phaserCollection';
+} from '../../../../../gameutils/phaser';
 import {
     resetKnapsackItemsVisual,
     resetSubsetSumWarriorsVisual,
     clearDfsVisuals,
-    highlightPeak,
-    highlightCableCar,
+
     resetDijkstraState,
-    showEmeiFinalResult
-} from '../../../../../gameutils/utils/blocklyUtils';
+
+} from '../../../../../gameutils/blockly';
+
+import { highlightPeak, highlightCableCar, showEmeiFinalResult } from '../../../../../gameutils/phaser';
+
 
 export const setupEmeiApi = (currentLevel) => {
     // Setup Cable Car API bridge for visual feedback
@@ -102,7 +110,7 @@ export const resetGameExecutionState = async ({
     // อัปเดตการแสดงผลสมบัติหลังจาก reset
     if (getCurrentGameState().currentScene) {
         // NOTE: Dynamic import was in original, but here we can import directly or keep dynamic if circular dependency feared. 
-        // Original: import('../../../../gameutils/utils/phaser/phaserCollection').then(({ updateTreasureDisplay }) => { updateTreasureDisplay(...) });
+        // Original: import('../../../../gameutils/phaser/setup/phaserCollection').then(({ updateTreasureDisplay }) => { updateTreasureDisplay(...) });
         // We imported updateTreasureDisplay at top level, so we use it directly.
         try {
             updateTreasureDisplay(getCurrentGameState().currentScene);

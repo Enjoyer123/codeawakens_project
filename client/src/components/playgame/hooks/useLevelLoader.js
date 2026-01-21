@@ -7,21 +7,22 @@ import { useAuth } from "@clerk/clerk-react";
 import { fetchLevelById } from '../../../services/levelService';
 import { getUserByClerkId } from '../../../services/profileService';
 import {
-  setLevelData,
-  setCurrentGameState,
-  resetPlayerHp,
+
   loadWeaponsData,
   getWeaponData,
   getWeaponsData
-} from '../../../gameutils/utils/gameUtils';
+} from '../../../gameutils/shared/items';
 
-import { ensureDefaultBlocks } from '../../../gameutils/utils/blocklyUtils';
+import { ensureDefaultBlocks } from '../../../gameutils/blockly';
 import {
   safeParse,
   normalizeNodes,
   normalizeEdges,
-  normalizePatternHints
-} from '../../../gameutils/utils/levelParser';
+  normalizePatternHints,
+  setLevelData,
+  setCurrentGameState,
+  resetPlayerHp,
+} from '../../../gameutils/shared/game';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 

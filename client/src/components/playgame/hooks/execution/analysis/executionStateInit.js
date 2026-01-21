@@ -22,22 +22,22 @@ import {
 
 import {
     startCoinChangeSelectionTracking,
-} from '../../../../../gameutils/utils/blockly/algorithms/coin_change/blocklyCoinChangeVisual';
+} from '../../../../../gameutils/blockly/algorithms/coin_change/blocklyCoinChangeVisual';
 
-import { startSubsetSumTrackingVisual } from '../../../../../gameutils/utils/blockly/core/blocklyHelpers';
+import { startSubsetSumTrackingVisual } from '../../../../../gameutils/blockly/core/blocklyHelpers';
 
 import {
     startKnapsackSelectionTracking,
-} from '../../../../../gameutils/utils/blockly/algorithms/knapsack/blocklyKnapsackVisual';
+} from '../../../../../gameutils/blockly/algorithms/knapsack/blocklyKnapsackVisual';
 
 
-import { resetCoinChangeTableState } from '../../../../../gameutils/utils/blockly/algorithms/coin_change/coinChangeStateManager';
-import { resetKnapsackTableState } from '../../../../../gameutils/utils/blockly/algorithms/knapsack/knapsackStateManager';
-import { resetSubsetSumTableState } from '../../../../../gameutils/utils/blockly/algorithms/subset_sum/subsetSumStateManager';
+import { resetCoinChangeTableState } from '../../../../../gameutils/blockly/algorithms/coin_change/coinChangeStateManager';
+import { resetKnapsackTableState } from '../../../../../gameutils/blockly/algorithms/knapsack/knapsackStateManager';
+import { resetSubsetSumTableState } from '../../../../../gameutils/blockly/algorithms/subset_sum/subsetSumStateManager';
 
 import {
     resetAntDpTableState
-} from '../../../../../gameutils/utils/blockly/algorithms/ant_dp/antDpStateManager';
+} from '../../../../../gameutils/blockly/algorithms/ant_dp/antDpStateManager';
 
 
 /**

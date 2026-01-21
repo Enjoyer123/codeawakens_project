@@ -6,13 +6,17 @@ import {
   getCurrentGameState,
   setCurrentGameState,
   resetPlayerHp,
+
+} from '../../../gameutils/shared/game';
+
+import {
   clearPlayerCoins,
   clearRescuedPeople,
   resetAllPeople,
   clearStack
-} from '../../../gameutils/utils/gameUtils';
-import { updatePlayer, showGameOver, showVictory, clearGameOverScreen } from '../../../gameutils/utils/phaserGame';
-import { resetEnemy } from '../../../gameutils/phaser/utils/enemyUtils';
+} from '../../../gameutils/shared/items';
+import { updatePlayer, showGameOver, showVictory, clearGameOverScreen } from '../../../gameutils/phaser';
+import { resetEnemy } from '../../../gameutils/phaser';
 import { calculateFinalScore } from './scoreUtils';
 
 /**

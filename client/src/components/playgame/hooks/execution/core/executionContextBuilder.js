@@ -14,40 +14,42 @@ import {
     startSubsetSumTrackingVisual, showSubsetSumFinalSolutionVisual, resetSubsetSumTrackingVisual,
     addWarriorToSelectionVisual, resetCoinChangeVisualDisplay,
     resetCoinChangeSelectionTracking, startCoinChangeSelectionTracking, trackCoinChangeDecision, showCoinChangeFinalSolution,
-    highlightPeak, highlightCableCar, showEmeiFinalResult
-} from '../../../../../gameutils/utils/blocklyUtils';
+
+} from '../../../../../gameutils/blockly';
+
+import { highlightPeak, highlightCableCar, showEmeiFinalResult } from '../../../../../gameutils/phaser';
 
 import {
     highlightKruskalEdge, showKruskalRoot, clearKruskalVisuals
-} from '../../../../../gameutils/utils/blockly/graph/blocklyDfsVisual';
+} from '../../../../../gameutils/blockly/graph/blocklyDfsVisual';
 
 import {
     updateSubsetSumCellVisual
-} from '../../../../../gameutils/utils/blockly/algorithms/subset_sum/subsetSumStateManager';
+} from '../../../../../gameutils/blockly/algorithms/subset_sum/subsetSumStateManager';
 
 import {
     updateCoinChangeCellVisual
-} from '../../../../../gameutils/utils/blockly/algorithms/coin_change/coinChangeStateManager';
+} from '../../../../../gameutils/blockly/algorithms/coin_change/coinChangeStateManager';
 
 import {
     updateAntDpCellVisual
-} from '../../../../../gameutils/utils/blockly/algorithms/ant_dp/antDpStateManager';
+} from '../../../../../gameutils/blockly/algorithms/ant_dp/antDpStateManager';
 
 import {
     getPlayerCoins, addCoinToPlayer, clearPlayerCoins as clearPlayerCoinsUtil,
     swapPlayerCoins, comparePlayerCoins, getPlayerCoinValue, getPlayerCoinCount,
     arePlayerCoinsSorted, allPeopleRescued
-} from '../../../../../gameutils/utils/gameUtils';
+} from '../../../../../gameutils/shared/items';
 
 import {
     getStack, pushToStack, popFromStack, isStackEmpty, getStackCount,
     hasTreasureAtNode, collectTreasure, isTreasureCollected, clearStack
-} from '../../../../../gameutils/utils/gameUtils';
+} from '../../../../../gameutils/shared/items';
 
 import {
     getCurrentGameState,
     setCurrentGameState
-} from '../../../../../gameutils/utils/gameUtils';
+} from '../../../../../gameutils/shared/game';
 
 
 /**

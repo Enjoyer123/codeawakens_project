@@ -13,9 +13,9 @@ import {
   ensureStandardBlocks,
   ensureCommonVariables,
   initializeImprovedVariableHandling
-} from '../../../../gameutils/utils/blocklyUtils';
-import { defineAllGenerators } from '../../../../gameutils/utils/blockly/core/blocklyGenerators';
-import { registerRopePartitionBlocks } from '../../../../gameutils/utils/blockly/algorithms/special/blocklyRopePartition';
+} from '../../../../gameutils/blockly';
+import { defineAllGenerators } from '../../../../gameutils/blockly/core/blocklyGenerators';
+import { registerRopePartitionBlocks } from '../../../../gameutils/blockly/algorithms/special/blocklyRopePartition';
 
 // Import refactored modules
 import { overrideProcedureBlocks } from './procedureOverrides';
