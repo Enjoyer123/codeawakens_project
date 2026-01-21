@@ -3,7 +3,7 @@
  */
 
 import { useEffect } from 'react';
-import { validateTextCode } from '../../../gameutils/utils/hintSystem';
+import { validateTextCode } from '../../../gameutils/shared/hint';
 
 /**
  * Hook for text code validation

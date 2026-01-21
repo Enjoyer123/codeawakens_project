@@ -1,6 +1,6 @@
 import * as Blockly from "blockly/core";
 import { javascriptGenerator } from "blockly/javascript";
-import { defineAllGenerators } from '../../../../../gameutils/utils/blockly/core/blocklyGenerators';
+import { defineAllGenerators } from '../../../../../gameutils/blockly/core/blocklyGenerators';
 
 export const setupCustomGenerator = (currentLevel) => {
     // CRITICAL: Check what generator is currently set (likely default Blockly generator)

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getCurrentGameState } from '../../../../gameutils/utils/gameUtils';
+import { getCurrentGameState } from '../../../../gameutils/shared/game';
 
 export const useDijkstraTable = (currentLevel) => {
     const [visited, setVisited] = useState([]);

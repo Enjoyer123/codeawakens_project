@@ -1,6 +1,6 @@
 // Custom hook for game action functions (moveForward, turnLeft, turnRight, hit)
 import Phaser from 'phaser';
-import { getCurrentGameState, setCurrentGameState, getPlayerHp } from '../../../gameutils/utils/gameUtils';
+import { getCurrentGameState, setCurrentGameState, getPlayerHp } from '../../../gameutils/shared/game';
 import {
   movePlayerWithCollisionDetection,
   createPitFallEffect,
@@ -8,10 +8,10 @@ import {
   updatePlayer,
   updatePlayerArrow,
   rotatePlayer
-} from '../../../gameutils/utils/phaserGame';
-import { hitEnemyWithDamage } from '../../../gameutils/phaser/utils/playerCombat';
-import { getWeaponData } from '../../../gameutils/utils/gameUtils';
-import { showEffectWeaponFixed } from '../../../gameutils/utils/combatSystem';
+} from '../../../gameutils/phaser';
+import { hitEnemyWithDamage } from '../../../gameutils/phaser/player/playerCombat';
+import { getWeaponData } from '../../../gameutils/shared/items';
+import { showEffectWeaponFixed } from '../../../gameutils/shared/combat';
 
 /**
  * Custom hook for game action functions

@@ -1,4 +1,4 @@
-import { checkTestCases } from '../../../../../gameutils/utils/testcase/testRunner';
+import { checkTestCases } from '../../../../../gameutils/shared/testcase';
 import {
     trackCoinChangeDecision,
     showKnapsackFinalSelection,
@@ -9,9 +9,9 @@ import {
     getGraphNeighbors,
     getGraphNeighborsWithWeight,
     findMinIndex, findMaxIndex, getAllEdges, sortEdgesByWeight, dsuFind, dsuUnion,
-} from '../../../../../gameutils/utils/blocklyUtils';
-import { getGraphNeighbors as getGraphNeighborsNoVisual, getGraphNeighborsWithWeight as getGraphNeighborsWithWeightNoVisual } from '../../../../../gameutils/utils/blockly/core/blocklyHelpers';
-import { getCurrentGameState, setCurrentGameState } from '../../../../../gameutils/utils/game/gameState'
+} from '../../../../../gameutils/blockly';
+import { getGraphNeighbors as getGraphNeighborsNoVisual, getGraphNeighborsWithWeight as getGraphNeighborsWithWeightNoVisual } from '../../../../../gameutils/blockly/core/blocklyHelpers';
+import { getCurrentGameState, setCurrentGameState } from '../../../../../gameutils/shared/game'
 /**
  * Builds the game functions context specifically for test case execution.
  * Most visual functions are replaced with no-ops.

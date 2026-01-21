@@ -1,7 +1,7 @@
 // src/components/playegame/GameCore.jsx
 // Core game component that can be reused for both normal play and preview mode
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { updateTrainScheduleVisuals, updateRopePartitionVisuals } from '../../gameutils/utils/phaserGame';
+import { updateTrainScheduleVisuals, updateRopePartitionVisuals } from '../../gameutils/phaser';
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import ProgressModal from '../../pages/user/ProgressModal';
@@ -15,17 +15,20 @@ window.Blockly = Blockly;
 
 // Import utilities and data
 import {
-  getCurrentGameState,
-  getWeaponData,
-  toggleDebugMode,
+getWeaponData,
+  
   getRescuedPeople,
   displayPlayerWeapon,
   getCollectedTreasures
-} from '../../gameutils/utils/gameUtils';
+} from '../../gameutils/shared/items';
+import {
+    getCurrentGameState,
+  toggleDebugMode,
+} from '../../gameutils/shared/game';
 import {
   isInCombat
-} from '../../gameutils/utils/combatSystem';
-import { clearGameOverScreen, showGameOver, showVictory } from '../../gameutils/utils/phaserGame';
+} from '../../gameutils/shared/combat';
+import { clearGameOverScreen, showGameOver, showVictory } from '../../gameutils/phaser';
 
 // Import components
 import GameArea from './GameArea';
@@ -49,23 +52,23 @@ import { fetchAllLevels } from '../../services/levelService';
 import { calculateFinalScore } from './utils/scoreUtils';
 import { highlightBlocks as highlightBlocksUtil, clearHighlights as clearHighlightsUtil } from './utils/visualGuide';
 import { handleRestartGame as handleRestartGameUtil, handleVictory as handleVictoryUtil } from './utils/gameHandlers';
-import { loadDfsExampleBlocks } from '../../gameutils/utils/blockly/example/loadDfsExample';
-import { loadBfsExampleBlocks } from '../../gameutils/utils/blockly/example/loadBfsExample';
-import { loadDijkstraExampleBlocks } from '../../gameutils/utils/blockly/example/loadDijkstraExample';
-import { loadPrimExampleBlocks } from '../../gameutils/utils/blockly/example/loadPrimExample';
-import { loadKnapsackExampleBlocks } from '../../gameutils/utils/blockly/example/loadKnapsackExample';
-import { loadDynamicKnapsackExampleBlocks } from '../../gameutils/utils/blockly/example/loadDynamicKnapsackExample';
-import { loadKruskalExampleBlocks } from '../../gameutils/utils/blockly/example/loadKruskalExample';
-import { loadSubsetSumExampleBlocks } from '../../gameutils/utils/blockly/example/loadSubsetSumExample';
-import { loadDynamicSubsetSumExampleBlocks } from '../../gameutils/utils/blockly/example/loadDynamicSubsetSumExample';
-import { loadCoinChangeExampleBlocks } from '../../gameutils/utils/blockly/example/loadCoinChangeExample';
-import { loadDynamicCoinChangeExampleBlocks } from '../../gameutils/utils/blockly/example/loadDynamicCoinChangeExample';
-import { loadGreedyCoinChangeExampleBlocks } from '../../gameutils/utils/blockly/example/loadGreedyCoinChangeExample';
-import { loadNQueenExampleBlocks } from '../../gameutils/utils/blockly/example/loadNQueenExample';
-import { loadDynamicAntDpExampleBlocks } from '../../gameutils/utils/blockly/example/loadDynamicAntDpExample';
-import { loadTrainScheduleExampleBlocks } from '../../gameutils/utils/blockly/example/loadTrainScheduleExample';
-import { loadRopePartitionExampleBlocks } from '../../gameutils/utils/blockly/example/loadRopePartitionExample';
-import { loadEmeiMountainExample } from '../../gameutils/utils/blockly/example/loadEmeiMountainExample';
+import { loadDfsExampleBlocks } from '../../gameutils/blockly/example/loadDfsExample';
+import { loadBfsExampleBlocks } from '../../gameutils/blockly/example/loadBfsExample';
+import { loadDijkstraExampleBlocks } from '../../gameutils/blockly/example/loadDijkstraExample';
+import { loadPrimExampleBlocks } from '../../gameutils/blockly/example/loadPrimExample';
+import { loadKnapsackExampleBlocks } from '../../gameutils/blockly/example/loadKnapsackExample';
+import { loadDynamicKnapsackExampleBlocks } from '../../gameutils/blockly/example/loadDynamicKnapsackExample';
+import { loadKruskalExampleBlocks } from '../../gameutils/blockly/example/loadKruskalExample';
+import { loadSubsetSumExampleBlocks } from '../../gameutils/blockly/example/loadSubsetSumExample';
+import { loadDynamicSubsetSumExampleBlocks } from '../../gameutils/blockly/example/loadDynamicSubsetSumExample';
+import { loadCoinChangeExampleBlocks } from '../../gameutils/blockly/example/loadCoinChangeExample';
+import { loadDynamicCoinChangeExampleBlocks } from '../../gameutils/blockly/example/loadDynamicCoinChangeExample';
+import { loadGreedyCoinChangeExampleBlocks } from '../../gameutils/blockly/example/loadGreedyCoinChangeExample';
+import { loadNQueenExampleBlocks } from '../../gameutils/blockly/example/loadNQueenExample';
+import { loadDynamicAntDpExampleBlocks } from '../../gameutils/blockly/example/loadDynamicAntDpExample';
+import { loadTrainScheduleExampleBlocks } from '../../gameutils/blockly/example/loadTrainScheduleExample';
+import { loadRopePartitionExampleBlocks } from '../../gameutils/blockly/example/loadRopePartitionExample';
+import { loadEmeiMountainExample } from '../../gameutils/blockly/example/loadEmeiMountainExample';
 
 /**
  * GameCore Component

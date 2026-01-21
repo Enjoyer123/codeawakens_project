@@ -1,79 +1,26 @@
-﻿/**
- * Hook for code execution logic
- */
-
-// Removed unused imports: useState, useRef
-import * as Blockly from "blockly/core";
-import { javascriptGenerator } from "blockly/javascript";
 import {
-    instrumentNQueenVisuals, // Keep strictly for now if specific usage found, else remove
     applyAntDpPatches
 } from './analysis/executionInstrumentation';
 import { initializeLevelState } from './analysis/executionStateInit';
-import {
-    finalizeTablesBeforeVictory,
-    calculateLevelScore
-} from './outcome/executionScoring';
-import { playVictorySequence } from './outcome/executionAnimations';
+
 import { generateAndInstrumentCode } from './analysis/executionCodeGeneration';
 import { detectResultVariableName } from './analysis/executionVariableDetection';
 import { prepareExecutableCode, installRuntimeInterceptors } from './core/executionCodePreparation';
 import { cleanupGlobalOverrides, normalizeExecutionResult, handlePostExecutionVisuals } from './outcome/executionResultProcessing';
 import { executeUserCode } from './core/executionRunner';
-import { defineAllGenerators } from '../../../../gameutils/utils/blockly/core/blocklyGenerators';
 import {
     getCurrentGameState,
-    setCurrentGameState,
-    resetPlayerHp,
-    clearPlayerCoins,
-    clearRescuedPeople,
-    resetAllPeople,
-    clearStack,
     getPlayerHp
-} from '../../../../gameutils/utils/gameUtils';
-import { updatePlayer, showGameOver, showVictory, playCombatSequence } from '../../../../gameutils/utils/phaserGame';
-import { resetEnemy } from '../../../../gameutils/phaser/utils/enemyUtils';
-import { updatePersonDisplay, updateTreasureDisplay, collectTreasureVisual, rescuePersonVisual } from '../../../../gameutils/utils/phaser/phaserCollection';
-import { checkVictoryConditions, generateVictoryHint } from '../../../../gameutils/utils/gameUtils';
-import { calculateFinalScore } from '../../utils/scoreUtils';
-import { extractFunctionName } from '../../../../gameutils/utils/testcase/codeParser';
-import { checkTestCases } from '../../../../gameutils/utils/testcase/testRunner';
-import { getGraphNeighbors as getGraphNeighborsNoVisual, getGraphNeighborsWithWeight as getGraphNeighborsWithWeightNoVisual } from '../../../../gameutils/utils/blockly/core/blocklyHelpers';
-import { resetKnapsackTableState, flushKnapsackStepsNow, waitForKnapsackPlaybackDone } from '../../../../gameutils/utils/blockly/algorithms/knapsack/knapsackStateManager';
-import { resetSubsetSumTableState, flushSubsetSumStepsNow, waitForSubsetSumPlaybackDone, updateSubsetSumCellVisual } from '../../../../gameutils/utils/blockly/algorithms/subset_sum/subsetSumStateManager';
-import { resetCoinChangeTableState, flushCoinChangeStepsNow, waitForCoinChangePlaybackDone, updateCoinChangeCellVisual } from '../../../../gameutils/utils/blockly/algorithms/coin_change/coinChangeStateManager';
-import { resetAntDpTableState, flushAntDpStepsNow, waitForAntDpPlaybackDone, waitForAntDpVisualIdle, updateAntDpCellVisual } from '../../../../gameutils/utils/blockly/algorithms/ant_dp/antDpStateManager';
+} from '../../../../gameutils/shared/game';
+
+import { extractFunctionName } from '../../../../gameutils/shared/testcase';
+
 
 import {
-    collectCoin, haveCoin, getCoinCount, getCoinValue, swapCoins, compareCoins, isSorted,
-    rescuePersonAtNode, hasPerson, personRescued, getPersonCount, moveToNode, moveAlongPath,
-    getCurrentNode, getGraphNeighbors, getGraphNeighborsWithWeight, getNodeValue,
-    getGraphNeighborsWithVisual, getGraphNeighborsWithVisualSync, getGraphNeighborsWithWeightWithVisualSync,
-    markVisitedWithVisual, showPathUpdateWithVisual, clearDfsVisuals, showMSTEdges,
-    findMinIndex, findMaxIndex, getAllEdges, sortEdgesByWeight, dsuFind, dsuUnion, showMSTEdgesFromList,
-    updateDijkstraVisited, updateDijkstraPQ, updateMSTWeight, resetDijkstraState,
-    pushNode, popNode, keepItem, hasTreasure, treasureCollected, stackEmpty, stackCount,
-    selectKnapsackItemVisual, unselectKnapsackItemVisual, resetKnapsackItemsVisual,
-    knapsackMaxWithVisual, antMaxWithVisual, showAntDpFinalPath,
-    resetKnapsackSelectionTracking, startKnapsackSelectionTracking, showKnapsackFinalSelection,
-    addWarriorToSide1Visual, addWarriorToSide2Visual, resetSubsetSumWarriorsVisual,
-    startSubsetSumTrackingVisual, showSubsetSumFinalSolutionVisual, resetSubsetSumTrackingVisual,
-    addWarriorToSelectionVisual, resetCoinChangeVisualDisplay,
-    resetCoinChangeSelectionTracking, startCoinChangeSelectionTracking, trackCoinChangeDecision, showCoinChangeFinalSolution,
-    highlightPeak, highlightCableCar, showEmeiFinalResult
-} from '../../../../gameutils/utils/blocklyUtils';
-import {
-    highlightKruskalEdge, showKruskalRoot, clearKruskalVisuals
-} from '../../../../gameutils/utils/blockly/graph/blocklyDfsVisual';
-import {
-    getPlayerCoins, addCoinToPlayer, clearPlayerCoins as clearPlayerCoinsUtil,
-    swapPlayerCoins, comparePlayerCoins, getPlayerCoinValue, getPlayerCoinCount,
-    arePlayerCoinsSorted, allPeopleRescued
-} from '../../../../gameutils/utils/gameUtils';
-import {
-    getStack, pushToStack, popFromStack, isStackEmpty, getStackCount,
-    hasTreasureAtNode, collectTreasure, isTreasureCollected
-} from '../../../../gameutils/utils/gameUtils';
+    moveToNode, moveAlongPath,
+
+} from '../../../../gameutils/blockly';
+
 
 import { buildExecutionContext } from './core/executionContextBuilder';
 import * as TestHandler from './core/testExecutionHandler';
@@ -143,18 +90,18 @@ export function useCodeExecution({
                 scene: !!getCurrentGameState().currentScene,
                 isReactLevel
             });
-            setCurrentHint("❌ ระบบยังไม่พร้อม");
+            setCurrentHint("? ???????????????");
             return;
         }
 
-        // เช็ค code validation สำหรับด่านที่มี textcode: true
+        // ???? code validation ??????????????? textcode: true
         if (currentLevel?.textcode && !blocklyJavaScriptReady) {
-            setCurrentHint("❌ ระบบแปลงโค้ดยังไม่พร้อมใช้งาน กรุณารอสักครู่");
+            setCurrentHint("? ????????????????????????????? ??????????????");
             return;
         }
 
         if (currentLevel?.textcode && !codeValidation.isValid) {
-            setCurrentHint(`❌ ${codeValidation.message}`);
+            setCurrentHint(`? ${codeValidation.message}`);
             return;
         }
 
@@ -163,7 +110,7 @@ export function useCodeExecution({
         setIsCompleted(false);
         setIsGameOver(false);
         setIsGameOver(false);
-        setCurrentHint("🏃 กำลังเรียกใช้โปรแกรม...");
+        setCurrentHint("?? ????????????????????...");
 
         try {
             // Clear previous test results
@@ -190,7 +137,7 @@ export function useCodeExecution({
             let code = await generateAndInstrumentCode(workspaceRef, currentLevel);
 
             if (!code.trim()) {
-                setCurrentHint("❌ ไม่มี blocks! ลาก blocks มาจาก toolbox");
+                setCurrentHint("? ????? blocks! ??? blocks ????? toolbox");
                 setGameState("ready");
                 setIsRunning(false);
                 return;
@@ -200,13 +147,13 @@ export function useCodeExecution({
 
             // Debug: Log full generated code for N-Queen
             if (currentLevel?.nqueenData && code.includes('async function solve')) {
-                console.log('🔍 [N-Queen Debug] Full generated code:');
+                console.log('?? [N-Queen Debug] Full generated code:');
                 console.log(code);
 
                 // Extract solve function
                 const solveFuncMatch = code.match(/async function solve\d*\([^)]*\)\s*\{[\s\S]*?\n\}/);
                 if (solveFuncMatch) {
-                    console.log('🔍 [N-Queen Debug] Solve function:');
+                    console.log('?? [N-Queen Debug] Solve function:');
                     console.log(solveFuncMatch[0]);
                 }
             }
@@ -216,9 +163,9 @@ export function useCodeExecution({
             console.log("Current game state:", getCurrentGameState());
             console.log("Knapsack data:", currentLevel?.knapsackData);
 
-            // รอให้ผู้เล่นกลับไปตำแหน่งแรกก่อน แล้วค่อยรันโค้ด
-            setCurrentHint("🔄 กำลังเตรียมเกม...");
-            await new Promise(resolve => setTimeout(resolve, 1000)); // รอ 1 วินาที
+            // ???????????????????????????????? ???????????????
+            setCurrentHint("?? ??????????????...");
+            await new Promise(resolve => setTimeout(resolve, 1000)); // ?? 1 ??????
 
             // Capture return value and analyze flags EARLY (before AsyncFunction creation)
             let {
@@ -233,7 +180,7 @@ export function useCodeExecution({
                 isRopePartition
             } = detectResultVariableName(code, currentLevel);
 
-            console.log('🔍 [useCodeExecution] Variable Analysis Result:', { varName, isCoinChange, isEmei, isTrainSchedule });
+            console.log('?? [useCodeExecution] Variable Analysis Result:', { varName, isCoinChange, isEmei, isTrainSchedule });
 
             let testCaseResult = null;
 
@@ -345,8 +292,8 @@ export function useCodeExecution({
                 // Double-check variable name by looking at actual code before creating wrapper
                 // Try multiple patterns to find the actual variable assignment
                 if (isCoinChange) {
-                    console.log('🔍 Searching for variable assignment in Coin Change code...');
-                    console.log('🔍 Code preview (last 800 chars):', code.substring(Math.max(0, code.length - 800)));
+                    console.log('?? Searching for variable assignment in Coin Change code...');
+                    console.log('?? Code preview (last 800 chars):', code.substring(Math.max(0, code.length - 800)));
 
                     // Try multiple patterns - Blockly generates: variable = (await coinChange(...));
                     // Note: Blockly variables_set generator uses: variable = value;\n (no 'var' keyword)
@@ -363,27 +310,27 @@ export function useCodeExecution({
                         const match = code.match(pattern);
                         if (match && match[1]) {
                             foundVarName = match[1];
-                            console.log(`🔍 Found variable name using pattern ${i + 1}:`, foundVarName);
-                            console.log('🔍 Matched line:', code.substring(Math.max(0, code.indexOf(match[0]) - 50), code.indexOf(match[0]) + match[0].length + 50));
+                            console.log(`?? Found variable name using pattern ${i + 1}:`, foundVarName);
+                            console.log('?? Matched line:', code.substring(Math.max(0, code.indexOf(match[0]) - 50), code.indexOf(match[0]) + match[0].length + 50));
                             break;
                         }
                     }
 
                     if (foundVarName) {
                         if (foundVarName !== varName) {
-                            console.warn('⚠️ Variable name mismatch! Extracted:', varName, 'but code uses:', foundVarName);
+                            console.warn('?? Variable name mismatch! Extracted:', varName, 'but code uses:', foundVarName);
                             varName = foundVarName;
-                            console.log('🔍 Updated variable name to:', varName);
+                            console.log('?? Updated variable name to:', varName);
                         } else {
-                            console.log('✅ Confirmed variable name from code:', varName);
+                            console.log('? Confirmed variable name from code:', varName);
                         }
                     } else {
-                        console.error('❌ Could not find variable assignment in code!');
-                        console.log('🔍 Current varName:', varName);
-                        console.log('🔍 Last 1000 chars of code:', code.substring(Math.max(0, code.length - 1000)));
+                        console.error('? Could not find variable assignment in code!');
+                        console.log('?? Current varName:', varName);
+                        console.log('?? Last 1000 chars of code:', code.substring(Math.max(0, code.length - 1000)));
                         // Force use 'result' as it's the most common in Coin Change example XML
                         if (varName !== 'result') {
-                            console.warn('⚠️ Forcing varName to "result" as fallback');
+                            console.warn('?? Forcing varName to "result" as fallback');
                             varName = 'result';
                         }
                     }
@@ -404,8 +351,8 @@ export function useCodeExecution({
                     isRopePartition
                 }, currentLevel, initCodes);
 
-                console.log('🔍 [Debug Data] appliedData:', currentLevel?.appliedData);
-                console.log('🔍 [Debug Data] payload trains:', currentLevel?.appliedData?.payload?.trains);
+                console.log('?? [Debug Data] appliedData:', currentLevel?.appliedData);
+                console.log('?? [Debug Data] payload trains:', currentLevel?.appliedData?.payload?.trains);
 
 
 
@@ -455,11 +402,11 @@ export function useCodeExecution({
                 console.log("Final state after execution:", finalState);
 
                 // Extract function name from code
-                console.log("🔍 ===== EXTRACTING FUNCTION NAME =====");
-                console.log("🔍 Full code length:", code.length);
-                console.log("🔍 Full code:", code);
-                console.log("🔍 Code snippet (first 500 chars):", code.substring(0, 500));
-                console.log("🔍 Code snippet (last 500 chars):", code.substring(Math.max(0, code.length - 500)));
+                console.log("?? ===== EXTRACTING FUNCTION NAME =====");
+                console.log("?? Full code length:", code.length);
+                console.log("?? Full code:", code);
+                console.log("?? Code snippet (first 500 chars):", code.substring(0, 500));
+                console.log("?? Code snippet (last 500 chars):", code.substring(Math.max(0, code.length - 500)));
 
                 // DEBUG: Recursive N-Queen check and fix logic REMOVED.
                 // This logic was causing errors for iterative algorithms (Train Schedule) by enforcing recursion rules.
@@ -471,11 +418,11 @@ export function useCodeExecution({
                 code = applyAntDpPatches(code, isAntDp, initCodes);
 
                 const functionName = extractFunctionName(code);
-                console.log("🔍 Extracted function name:", functionName);
-                console.log("🔍 =====================================");
+                console.log("?? Extracted function name:", functionName);
+                console.log("?? =====================================");
 
                 // Check test cases if available
-                console.log("🔍 Checking test cases condition:", {
+                console.log("?? Checking test cases condition:", {
                     hasTestCases: !!currentLevel?.test_cases,
                     testCasesLength: currentLevel?.test_cases?.length || 0,
                     hasFunctionName: !!functionName,
@@ -525,7 +472,7 @@ export function useCodeExecution({
 
             } catch (error) {
                 setGameState("ready");
-                console.log("🔍 EXECUTION ERROR - Checking victory conditions anyway");
+                console.log("?? EXECUTION ERROR - Checking victory conditions anyway");
 
                 // Handle level completion even on error
                 const { levelCompleted } = await handleLevelCompletion({
@@ -559,11 +506,11 @@ export function useCodeExecution({
                     // If not completed, show the actual error message
                     console.error("Execution error:", error);
                     if (error.message.includes("infinite loop") || error.message.includes("timeout")) {
-                        setCurrentHint("❌ เกิด infinite loop - โค้ดรันไม่หยุด กรุณาเพิ่มเงื่อนไขหยุดการทำงาน");
+                        setCurrentHint("? ???? infinite loop - ?????????????? ??????????????????????????????");
                     } else if (error.message.includes("undefined")) {
-                        setCurrentHint("❌ ตัวแปรไม่ได้ถูกกำหนดค่า - กรุณาใช้ block 'ตั้งค่า' เพื่อกำหนดค่าตัวแปร");
+                        setCurrentHint("? ??????????????????????? - ???????? block '???????' ???????????????????");
                     } else {
-                        setCurrentHint(`💥 ${error.message}`);
+                        setCurrentHint(`?? ${error.message}`);
                     }
                     setIsRunning(false);
                 }

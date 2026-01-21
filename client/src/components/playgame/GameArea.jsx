@@ -1,10 +1,10 @@
 // src/components/GameArea.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
-import { directions } from '../../gameutils/utils/gameUtils';
+import { directions } from '../../gameutils/shared/game';
 import { fetchLevelById } from '../../services/levelService';
 import GameStateVisualization from './GameStateVisualization';
-import { getCurrentGameState } from '../../gameutils/utils/gameUtils';
+import { getCurrentGameState } from '../../gameutils/shared/game';
 import { History } from 'lucide-react';
 import HistoryModal from './HistoryModal';
 import {

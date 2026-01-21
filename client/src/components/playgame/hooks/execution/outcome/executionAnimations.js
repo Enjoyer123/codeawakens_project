@@ -1,4 +1,4 @@
-import { showVictory, playCombatSequence } from '../../../../../gameutils/utils/phaserGame';
+import { showVictory, playCombatSequence } from '../../../../../gameutils/phaser';
 
 /**
  * Handles the complete victory animation sequence including:

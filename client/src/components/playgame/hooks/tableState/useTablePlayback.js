@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { getCurrentGameState, setCurrentGameState } from '../../../../gameutils/utils/gameUtils';
+import { getCurrentGameState, setCurrentGameState } from '../../../../gameutils/shared/game';
 
 /**
  * useTablePlayback
