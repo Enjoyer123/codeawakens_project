@@ -1,7 +1,8 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, Image as ImageIcon } from 'lucide-react';
+import { getImageUrl } from '@/utils/imageUtils';
 
 const blockCategories = [
   { value: 'movement', label: 'Movement' },
@@ -40,6 +41,7 @@ const BlockTable = ({ blocks, onEdit, onDelete }) => {
             <th className={tableHeaderClassName}>Block ID</th>
             <th className={tableHeaderClassName}>Block Key</th>
             <th className={tableHeaderClassName}>Block Name</th>
+            <th className={tableHeaderClassName}>Image</th>
             <th className={tableHeaderClassName}>Category</th>
             <th className={tableHeaderClassName}>Blockly Type</th>
             <th className={tableHeaderClassName}>Available</th>
@@ -55,6 +57,19 @@ const BlockTable = ({ blocks, onEdit, onDelete }) => {
               </td>
               <td className="px-6 py-4 text-sm text-gray-900">
                 {block.block_name}
+              </td>
+              <td className={tableCellClassName}>
+                {block.block_image ? (
+                  <img 
+                    src={getImageUrl(block.block_image)} 
+                    alt={block.block_name} 
+                    className="h-10 w-10 object-cover rounded border"
+                  />
+                ) : (
+                  <div className="h-10 w-10 flex items-center justify-center border-2 border-dashed rounded text-gray-300">
+                    <ImageIcon className="h-5 w-5" />
+                  </div>
+                )}
               </td>
               <td className={tableCellClassName}>
                 <Badge className={getCategoryBadgeColor(block.category)}>

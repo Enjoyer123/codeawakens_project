@@ -180,9 +180,9 @@ const TestPage = () => {
                         }
                                     `}
                     >
-                      <div className="flex items-center">
+                      <div className="flex items-start">
                         <div className={`
-                                            w-4 h-4 rounded-full border mr-3 flex items-center justify-center
+                                            w-4 h-4 rounded-full border mr-3 flex items-center justify-center flex-shrink-0 mt-1
                                             ${answers[test.test_id] === choice.test_choice_id
                             ? 'border-primary bg-primary'
                             : 'border-gray-400'
@@ -192,7 +192,16 @@ const TestPage = () => {
                             <div className="w-2 h-2 bg-white rounded-full" />
                           )}
                         </div>
-                        <span>{choice.choice_text}</span>
+                        <div className="flex flex-col gap-2 flex-1">
+                          {choice.choice_image && (
+                            <img 
+                              src={getImageUrl(choice.choice_image)} 
+                              alt="Choice" 
+                              className="max-h-32 w-auto object-contain rounded border self-start"
+                            />
+                          )}
+                          <span>{choice.choice_text}</span>
+                        </div>
                       </div>
                     </div>
                   ))}

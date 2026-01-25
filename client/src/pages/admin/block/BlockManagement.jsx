@@ -5,6 +5,7 @@ import {
   fetchAllBlocks,
   updateBlock,
   deleteBlock,
+  uploadBlockImage,
 } from '../../../services/blockService';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
@@ -16,6 +17,7 @@ import BlockFormDialog from '@/components/admin/addEditDialog/BlockFormDialog';
 import { usePagination } from '@/hooks/usePagination';
 import { createDeleteErrorMessage } from '@/utils/errorHandler';
 import BlockTable from '@/components/admin/block/BlockTable';
+import { getImageUrl } from '@/utils/imageUtils';
 
 const BlockManagement = () => {
   const navigate = useNavigate();
@@ -51,6 +53,10 @@ const BlockManagement = () => {
   const [blockToDelete, setBlockToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
+
+  // Image states
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
   const loadBlocks = useCallback(async () => {
     try {
@@ -100,6 +106,8 @@ const BlockManagement = () => {
         is_available: block.is_available,
         syntax_example: block.syntax_example || '',
       });
+      setSelectedImage(null);
+      setImagePreview(getImageUrl(block.block_image));
       setSaveError(null);
       setBlockDialogOpen(true);
     }
@@ -119,7 +127,27 @@ const BlockManagement = () => {
       is_available: true,
       syntax_example: '',
     });
+    setSelectedImage(null);
+    setImagePreview(null);
   }, []);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleImageRemove = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    setBlockForm({ ...blockForm, block_image: '' });
+  };
 
   const handleSaveBlock = useCallback(async () => {
     setSaveError(null);
@@ -135,7 +163,19 @@ const BlockManagement = () => {
 
     try {
       if (editingBlock) {
-        await updateBlock(getToken, editingBlock.block_id, formData);
+        // Upload image if selected
+        let imagePath = blockForm.block_image;
+        if (selectedImage) {
+          const uploadResult = await uploadBlockImage(getToken, selectedImage);
+          imagePath = uploadResult.path;
+        }
+
+        const dataToSave = {
+          ...formData,
+          block_image: imagePath
+        };
+
+        await updateBlock(getToken, editingBlock.block_id, dataToSave);
         handleCloseBlockDialog();
         await loadBlocks();
         return { success: true };
@@ -146,7 +186,7 @@ const BlockManagement = () => {
       setSaveError(errorMessage);
       return { success: false, error: errorMessage };
     }
-  }, [blockForm, editingBlock, getToken, handleCloseBlockDialog, loadBlocks]);
+  }, [blockForm, editingBlock, getToken, handleCloseBlockDialog, loadBlocks, selectedImage]);
 
   const handleDeleteClick = useCallback((block) => {
     setBlockToDelete(block);
@@ -237,6 +277,10 @@ const BlockManagement = () => {
           formData={blockForm}
           onFormChange={setBlockForm}
           onSave={handleSaveBlock}
+          selectedImage={selectedImage}
+          imagePreview={imagePreview}
+          onImageChange={handleImageChange}
+          onImageRemove={handleImageRemove}
         />
 
         <DeleteConfirmDialog

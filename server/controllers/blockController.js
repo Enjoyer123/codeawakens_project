@@ -81,6 +81,7 @@ exports.updateBlock = async (req, res) => {
       blockly_type,
       is_available,
       syntax_example,
+      block_image,
     } = req.body;
 
     if (!block_key || !block_name || !category) {
@@ -121,6 +122,7 @@ exports.updateBlock = async (req, res) => {
         blockly_type: blockly_type ? blockly_type.trim() : null,
         is_available: is_available === true || is_available === 'true',
         syntax_example: syntax_example ? syntax_example.trim() : null,
+        block_image: block_image || null,
       },
     });
 
@@ -215,4 +217,25 @@ exports.deleteBlock = async (req, res) => {
     });
   }
 };
+
+exports.uploadBlockImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const filePath = `/uploads/blocks/${req.file.filename}`;
+
+    res.json({
+      message: "Block image uploaded successfully",
+      path: filePath,
+      filename: req.file.filename
+    });
+
+  } catch (error) {
+    console.error("Error uploading block image:", error);
+    res.status(500).json({ message: "Upload failed", error: error.message });
+  }
+};
+
 

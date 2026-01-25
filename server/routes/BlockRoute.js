@@ -8,13 +8,16 @@ const {
   getBlockById,
   updateBlock,
   deleteBlock,
+  uploadBlockImage,
 } = require("../controllers/blockController");
+const { blockUploadMiddleware } = require("../middleware/blockUpload");
 
 // Block CRUD routes
 router.get("/blocks", authCheck, requireAdmin, getAllBlocks);
 router.get("/blocks/:blockId", authCheck, requireAdmin, getBlockById);
 router.put("/blocks/:blockId", authCheck, requireAdmin, updateBlock);
 router.delete("/blocks/:blockId", authCheck, requireAdmin, deleteBlock);
+router.post("/blocks/upload-image", authCheck, requireAdmin, blockUploadMiddleware.single("image"), uploadBlockImage);
 
 module.exports = router;
 

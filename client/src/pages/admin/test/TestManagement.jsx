@@ -6,7 +6,8 @@ import {
   updateTest,
   deleteTest,
   deleteTestChoice,
-  uploadTestImage
+  uploadTestImage,
+  uploadChoiceImage
 } from '../../../services/testService';
 import { Button } from '@/components/ui/button';
 import { Plus, X, Upload, Image as ImageIcon } from 'lucide-react';
@@ -58,6 +59,10 @@ const TestManagement = () => {
   const [testToDelete, setTestToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Choice Image States
+  const [choiceImages, setChoiceImages] = useState({}); // { index: File }
+  const [choiceImagePreviews, setChoiceImagePreviews] = useState({}); // { index: previewUrl }
+
   const loadTests = useCallback(async () => {
     try {
       setLoading(true);
@@ -94,9 +99,13 @@ const TestManagement = () => {
         choices: test.choices.map(c => ({
             test_choice_id: c.test_choice_id,
             choice_text: c.choice_text,
-            is_correct: c.is_correct
+            is_correct: c.is_correct,
+            choice_image: c.choice_image || ''
         }))
       });
+      // Clear choice image states
+      setChoiceImages({});
+      setChoiceImagePreviews({});
     } else {
       setEditingTest(null);
       setFormData({
@@ -106,12 +115,14 @@ const TestManagement = () => {
         is_active: true,
         test_image: '',
         choices: [
-            { choice_text: '', is_correct: true },
-            { choice_text: '', is_correct: false },
-            { choice_text: '', is_correct: false },
-            { choice_text: '', is_correct: false },
+            { choice_text: '', is_correct: true, choice_image: '' },
+            { choice_text: '', is_correct: false, choice_image: '' },
+            { choice_text: '', is_correct: false, choice_image: '' },
+            { choice_text: '', is_correct: false, choice_image: '' },
         ]
       });
+      setChoiceImages({});
+      setChoiceImagePreviews({});
     }
     setSelectedImage(null);
     setImagePreview(getImageUrl(test?.test_image));
@@ -138,6 +149,36 @@ const TestManagement = () => {
     setFormData(prev => ({ ...prev, test_image: '' }));
   };
 
+  const handleChoiceImageChange = (index, e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setChoiceImages(prev => ({ ...prev, [index]: file }));
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setChoiceImagePreviews(prev => ({ ...prev, [index]: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeChoiceImage = (index) => {
+    // Remove from selected files
+    const newImages = { ...choiceImages };
+    delete newImages[index];
+    setChoiceImages(newImages);
+
+    // Remove from previews
+    const newPreviews = { ...choiceImagePreviews };
+    delete newPreviews[index];
+    setChoiceImagePreviews(newPreviews);
+
+    // Remove from formData
+    const newChoices = [...formData.choices];
+    newChoices[index] = { ...newChoices[index], choice_image: '' };
+    setFormData({ ...formData, choices: newChoices });
+  };
+
   const handleSave = async () => {
       if (!formData.question.trim()) {
           setSaveError("Question is required");
@@ -158,9 +199,23 @@ const TestManagement = () => {
              imagePath = uploadResult.path;
           }
 
+          // Upload choice images
+          const choicesWithImages = await Promise.all(formData.choices.map(async (choice, idx) => {
+            let choiceImagePath = choice.choice_image;
+            if (choiceImages[idx]) {
+              const uploadResult = await uploadChoiceImage(getToken, choiceImages[idx]);
+              choiceImagePath = uploadResult.path;
+            }
+            return {
+              ...choice,
+              choice_image: choiceImagePath
+            };
+          }));
+
           const dataToSave = {
               ...formData,
-              test_image: imagePath
+              test_image: imagePath,
+              choices: choicesWithImages
           };
 
           if (editingTest) {
@@ -237,7 +292,7 @@ const TestManagement = () => {
   const addChoice = () => {
       setFormData({
           ...formData,
-          choices: [...formData.choices, { choice_text: '', is_correct: false }]
+          choices: [...formData.choices, { choice_text: '', is_correct: false, choice_image: '' }]
       });
   };
 
@@ -369,38 +424,72 @@ const TestManagement = () => {
                   </div>
                   
 
+               // Choice rendering section - replace lines 427-458
                  <div className="space-y-3 mt-4">
                      <Label>Choices (Select correct answer)</Label>
                      {formData.choices.map((choice, idx) => (
-                         <div key={idx} className="flex items-center gap-2">
-                             <div className="pt-2">
-                                <input 
-                                    type="radio"
-                                    name="correct_choice"
-                                    checked={choice.is_correct}
-                                    onChange={() => updateChoice(idx, 'is_correct', true)}
-                                    className="h-4 w-4 cursor-pointer"
-                                />
+                         <div key={idx} className="flex flex-col gap-2 p-3 border rounded-md bg-gray-50/50">
+                             <div className="flex items-center gap-2">
+                              <div className="pt-2">
+                                 <input 
+                                     type="radio"
+                                     name="correct_choice"
+                                     checked={choice.is_correct}
+                                     onChange={() => updateChoice(idx, 'is_correct', true)}
+                                     className="h-4 w-4 cursor-pointer"
+                                 />
+                              </div>
+                              <Input 
+                                 value={choice.choice_text}
+                                 onChange={(e) => updateChoice(idx, 'choice_text', e.target.value)}
+                                 placeholder={`Choice ${idx + 1}`}
+                                 className="flex-1"
+                              />
+                              
+                              <label className="cursor-pointer p-2 hover:bg-gray-200 rounded-full transition-colors" title="Add Image">
+                                 <ImageIcon className="h-4 w-4 text-gray-500" />
+                                 <input 
+                                     type="file" 
+                                     className="hidden" 
+                                     accept="image/*"
+                                     onChange={(e) => handleChoiceImageChange(idx, e)}
+                                 />
+                              </label>
+                              
+                              <Button 
+                                 variant="ghost" 
+                                 size="sm" 
+                                 onClick={() => removeChoice(idx)}
+                                 disabled={formData.choices.length <= 2}
+                                 className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                              >
+                                  <X className="h-4 w-4" />
+                              </Button>
                              </div>
-                             <Input 
-                                value={choice.choice_text}
-                                onChange={(e) => updateChoice(idx, 'choice_text', e.target.value)}
-                                placeholder={`Choice ${idx + 1}`}
-                             />
-                             <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={() => removeChoice(idx)}
-                                disabled={formData.choices.length <= 2}
-                             >
-                                 <X className="h-4 w-4 text-gray-500" />
-                             </Button>
-                         </div>
+
+                             {(choiceImagePreviews[idx] || choice.choice_image) && (
+                                 <div className="ml-8 relative w-20 h-20 group">
+                                     <img 
+                                        src={choiceImagePreviews[idx] || getImageUrl(choice.choice_image)} 
+                                        alt={`Choice ${idx + 1}`} 
+                                        className="w-full h-full object-cover rounded border bg-white"
+                                     />
+                                     <button
+                                         onClick={() => removeChoiceImage(idx)}
+                                         className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                                         title="Remove Image"
+                                     >
+                                         <X size={12} />
+                                     </button>
+                                 </div>
+                             )}
+                          </div>
                      ))}
                      <Button variant="outline" size="sm" onClick={addChoice} className="mt-2">
                          <Plus className="h-4 w-4 mr-2" /> Add Choice
                      </Button>
                  </div>
+
              </div>
 
              <DialogFooter>
