@@ -239,7 +239,7 @@ const PatternCreateEdit = () => {
         <AdminPageHeader
           title={isEditMode ? "แก้ไขรูปแบบคำตอบ" : "เพิ่มรูปแบบคำตอบ"}
           subtitle={levelData?.level_name || 'Loading...'}
-          backPath={`/admin/levels/${levelId ? `edit/${levelId}` : ''}`}
+          backPath="/admin/levels"
           rightContent={
             <Button
               onClick={handleFinish}

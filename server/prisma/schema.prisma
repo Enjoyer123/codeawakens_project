@@ -273,6 +273,7 @@ model TestChoice {
   test_id        Int
   choice_text    String      @db.Text
   is_correct     Boolean     @default(false)
+  choice_image   String?     // Path to choice image
   created_at     DateTime    @default(now())
   updated_at     DateTime    @updatedAt
   
@@ -367,6 +368,7 @@ model Block {
   blockly_type   String?
   is_available   Boolean       @default(true)
   syntax_example String?
+  block_image    String?       // Path to block image
   created_at     DateTime      @default(now())
   updated_at     DateTime      @updatedAt
   level_blocks   LevelBlock[]

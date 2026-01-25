@@ -65,6 +65,8 @@ export const fetchAllTests = async (getToken, type = '') => {
       },
     });
 
+    console.log("as", response);
+
     if (!response.ok) throw new Error('Failed to fetch tests');
     return await response.json();
   } catch (error) {
@@ -170,6 +172,30 @@ export const uploadTestImage = async (getToken, file) => {
     if (!response.ok) {
       const err = await response.json();
       throw new Error(err.message || 'Failed to upload image');
+    }
+    return await response.json();
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const uploadChoiceImage = async (getToken, file) => {
+  try {
+    const token = await getToken();
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const response = await fetch(`${API_BASE_URL}/api/tests/upload-choice-image`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.message || 'Failed to upload choice image');
     }
     return await response.json();
   } catch (error) {

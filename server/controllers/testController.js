@@ -85,6 +85,7 @@ exports.getTestsByType = async (req, res) => {
         test_choice_id: choice.test_choice_id,
         test_id: choice.test_id,
         choice_text: choice.choice_text,
+        choice_image: choice.choice_image,
         // OMIT is_correct
       }));
 
@@ -294,7 +295,8 @@ exports.createTest = async (req, res) => {
         choices: {
           create: choices.map(c => ({
             choice_text: c.choice_text,
-            is_correct: c.is_correct || false
+            is_correct: c.is_correct || false,
+            choice_image: c.choice_image || null
           }))
         }
       },
@@ -358,7 +360,8 @@ exports.updateTest = async (req, res) => {
               where: { test_choice_id: c.test_choice_id },
               data: {
                 choice_text: c.choice_text,
-                is_correct: c.is_correct
+                is_correct: c.is_correct,
+                choice_image: c.choice_image
               }
             });
           } else {
@@ -367,7 +370,8 @@ exports.updateTest = async (req, res) => {
               data: {
                 test_id: parseInt(id),
                 choice_text: c.choice_text,
-                is_correct: c.is_correct || false
+                is_correct: c.is_correct || false,
+                choice_image: c.choice_image || null
               }
             });
           }
@@ -446,6 +450,26 @@ exports.uploadTestImage = async (req, res) => {
 
   } catch (error) {
     console.error("Error uploading test image:", error);
+    res.status(500).json({ message: "Upload failed", error: error.message });
+  }
+};
+
+exports.uploadChoiceImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const filePath = `/uploads/test_choices/${req.file.filename}`;
+
+    res.json({
+      message: "Choice image uploaded successfully",
+      path: filePath,
+      filename: req.file.filename
+    });
+
+  } catch (error) {
+    console.error("Error uploading choice image:", error);
     res.status(500).json({ message: "Upload failed", error: error.message });
   }
 };

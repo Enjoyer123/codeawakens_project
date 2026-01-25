@@ -48,27 +48,16 @@ import { useTextCodeValidation } from './hooks/useTextCodeValidation';
 import { getUserByClerkId } from '../../services/profileService';
 import { fetchAllLevels } from '../../services/levelService';
 
+
 // Import utils
 import { calculateFinalScore } from './utils/scoreUtils';
 import { highlightBlocks as highlightBlocksUtil, clearHighlights as clearHighlightsUtil } from './utils/visualGuide';
 import { handleRestartGame as handleRestartGameUtil, handleVictory as handleVictoryUtil } from './utils/gameHandlers';
-import { loadDfsExampleBlocks } from '../../gameutils/blockly/example/loadDfsExample';
-import { loadBfsExampleBlocks } from '../../gameutils/blockly/example/loadBfsExample';
-import { loadDijkstraExampleBlocks } from '../../gameutils/blockly/example/loadDijkstraExample';
-import { loadPrimExampleBlocks } from '../../gameutils/blockly/example/loadPrimExample';
-import { loadKnapsackExampleBlocks } from '../../gameutils/blockly/example/loadKnapsackExample';
-import { loadDynamicKnapsackExampleBlocks } from '../../gameutils/blockly/example/loadDynamicKnapsackExample';
-import { loadKruskalExampleBlocks } from '../../gameutils/blockly/example/loadKruskalExample';
-import { loadSubsetSumExampleBlocks } from '../../gameutils/blockly/example/loadSubsetSumExample';
-import { loadDynamicSubsetSumExampleBlocks } from '../../gameutils/blockly/example/loadDynamicSubsetSumExample';
-import { loadCoinChangeExampleBlocks } from '../../gameutils/blockly/example/loadCoinChangeExample';
-import { loadDynamicCoinChangeExampleBlocks } from '../../gameutils/blockly/example/loadDynamicCoinChangeExample';
-import { loadGreedyCoinChangeExampleBlocks } from '../../gameutils/blockly/example/loadGreedyCoinChangeExample';
-import { loadNQueenExampleBlocks } from '../../gameutils/blockly/example/loadNQueenExample';
-import { loadDynamicAntDpExampleBlocks } from '../../gameutils/blockly/example/loadDynamicAntDpExample';
-import { loadTrainScheduleExampleBlocks } from '../../gameutils/blockly/example/loadTrainScheduleExample';
-import { loadRopePartitionExampleBlocks } from '../../gameutils/blockly/example/loadRopePartitionExample';
-import { loadEmeiMountainExample } from '../../gameutils/blockly/example/loadEmeiMountainExample';
+// Import example loaders configuration
+import { EXAMPLE_LOADERS } from './constants/exampleLoaders';
+// Import API bridges
+import { setupRopePartitionBridge } from './utils/apiBridges/ropePartitionBridge';
+import { updateTrainScheduleVisualsIfNeeded, updateRopePartitionVisualsIfNeeded } from './utils/apiBridges/visualUpdates';
 
 /**
  * GameCore Component
@@ -611,196 +600,28 @@ const GameCore = ({
 
   // Game action and condition functions are now provided by custom hooks (useGameActions, useGameConditions)
 
+  // ============================================================================
+  // EFFECTS - API Bridges
+  // ============================================================================
+
   // Rope Partition Visual API Bridge
   useEffect(() => {
     if (!currentLevel) return;
-    const isRopePartition = currentLevel.gameType === 'rope_partition' || (currentLevel.appliedData && currentLevel.appliedData.type === 'BACKTRACKING_ROPE_PARTITION');
-
+    
+    const isRopePartition = currentLevel.gameType === 'rope_partition' || 
+                            (currentLevel.appliedData && currentLevel.appliedData.type === 'BACKTRACKING_ROPE_PARTITION');
 
     if (isRopePartition) {
-      // Rope Partition API Bridge (Tree Version)
-      if (typeof globalThis !== 'undefined') {
-        console.log('[Rope Bridge] Initializing Rope Partition API (Tree)');
-
-        // Setup shared state for the run
-        let treeNodes = [];
-        globalThis.ropeStack = []; // Stack to track recursion path ids
-
-        // Helper to update React State safely
-        const updateTreeState = () => {
-          setHintData(prev => ({
-            ...prev,
-            nodes: [...treeNodes]
-          }));
-        };
-
-        // Stack Helper
-        const getRopeParent = () => {
-          if (globalThis.ropeStack.length === 0) return -1;
-          return globalThis.ropeStack[globalThis.ropeStack.length - 1];
-        };
-
-        // 1. Init
-        globalThis.initRopeTree = async () => {
-          try {
-            if (globalThis.__isVisualRun === false) return; // Skip for background tests
-            console.log('[Rope API] Init Tree');
-            treeNodes = [];
-            globalThis.ropeStack = [];
-            setHintData(prev => ({ ...prev, nodes: [], result: null }));
-            // Wait a bit for clear to happen
-            await new Promise(r => setTimeout(r, 50));
-          } catch (e) {
-            console.error('[Rope API] Init Error:', e);
-          }
-        };
-
-        // 1.5 Stack Operations (Wrappers)
-        globalThis.pushRopeNode = async (cut, sum) => {
-          const parentId = getRopeParent();
-          const depth = globalThis.ropeStack.length;
-
-          if (depth > 50) {
-            console.warn('[Rope API] Depth Limit Exceeded (50)');
-            return -1;
-          }
-
-          // Force Number types for visual consistency
-          const numCut = Number(cut);
-          const numSum = Number(sum);
-          console.log('[Rope API] Push Node:', { parentId, cut: numCut, sum: numSum, depth });
-
-          const id = await globalThis.addRopeNode(parentId, numCut, numSum, depth);
-          globalThis.ropeStack.push(id);
-          return id;
-        };
-
-        globalThis.popRopeNode = async () => {
-          try {
-            if (globalThis.__isVisualRun === false) return; // Skip for background tests
-            if (globalThis.ropeStack.length > 0) globalThis.ropeStack.pop();
-            await new Promise(r => setTimeout(r, 20));
-          } catch (e) {
-            console.error('[Rope API] Pop Error:', e);
-          }
-        };
-
-        // 2. Add Node
-        globalThis.addRopeNode = async (parentId, cut, sum, depth) => {
-          try {
-            if (globalThis.__isVisualRun === false) return 9999; // Skip for background tests
-
-            const id = treeNodes.length;
-            const newNode = {
-              id,
-              parentId,
-              cut,
-              sum,
-              depth,
-              status: 'visiting' // visiting, success, pruned, normal
-            };
-            treeNodes.push(newNode);
-            updateTreeState();
-
-            await new Promise(r => setTimeout(r, 100)); // Animation delay
-            return id;
-          } catch (e) {
-            console.error('[Rope API] Add Node Error:', e);
-            return -1;
-          }
-        };
-
-        // 3. Update Status
-        globalThis.updateRopeNodeStatus = async (nodeId, status, sum) => {
-          try {
-            if (globalThis.__isVisualRun === false) return; // Skip for background tests
-
-            const node = treeNodes.find(n => n.id === nodeId);
-            if (node) {
-              node.status = status;
-              updateTreeState();
-              await new Promise(r => setTimeout(r, 50));
-            }
-          } catch (e) {
-            console.error('[Rope API] Update Status Error:', e);
-          }
-        };
-
-        // 4. Report Result
-        globalThis.reportRopeResult = (ans, path) => {
-          console.log('[Rope API] Result:', ans, path);
-          setHintData(prev => ({
-            ...prev,
-            result: ans,
-            minSolution: path
-          }));
-        };
-
-        // 5. Getters
-        // 5. Getters
-        globalThis.getRopeCuts = () => {
-          // Look in payload first (standard), then direct properties (fallback)
-          const data = currentLevel?.appliedData?.payload || currentLevel?.customData || currentLevel?.appliedData || {};
-          const cuts = data.cuts || data.lengths || [2, 3, 5];
-          console.log('[Rope DEBUG] getRopeCuts raw:', cuts);
-          if (Array.isArray(cuts) && cuts.length > 0) {
-            const validCuts = cuts.map(c => Number(c));
-            if (validCuts.every(c => !Number.isNaN(c))) return validCuts;
-          }
-          return [2, 3, 5];
-        };
-
-        globalThis.getRopeTarget = () => {
-          const data = currentLevel?.appliedData?.payload || currentLevel?.customData || currentLevel?.appliedData || {};
-          // Support both ropeLength (new) and total (old)
-          let target = Number(data.ropeLength || data.total);
-          if (Number.isNaN(target) || target <= 0) {
-            // Fallback if NaN or invalid
-            console.warn('[Rope API] Invalid target, using default 10. Data:', data);
-            target = 10;
-          }
-          console.log('[Rope DEBUG] getRopeTarget:', target);
-          return target;
-        };
-      }
-    } else {
-      // Cleanup
-      if (typeof globalThis !== 'undefined') {
-        // cleanup globals
-        ['initRopeTree', 'addRopeNode', 'updateRopeNodeStatus', 'reportRopeResult', 'getRopeCuts', 'getRopeTarget'].forEach(fn => {
-          if (globalThis[fn]) delete globalThis[fn];
-        });
-      }
+      return setupRopePartitionBridge(currentLevel, setHintData);
     }
-
-    return () => {
-      if (typeof globalThis !== 'undefined') {
-        ['initRopeTree', 'addRopeNode', 'updateRopeNodeStatus', 'reportRopeResult', 'getRopeCuts', 'getRopeTarget'].forEach(fn => {
-          if (globalThis[fn]) delete globalThis[fn];
-        });
-      }
-    };
   }, [currentLevel]);
 
 
-  useEffect(() => {
-    // Train Schedule Visuals
-    if (currentLevel?.gameType === 'train_schedule' && hintData?.assignments) {
-      const scene = getCurrentGameState().currentScene;
-      if (scene) {
-        console.log('[GameCore] Triggering Train Schedule Visuals from Core', hintData.assignments);
-        updateTrainScheduleVisuals(scene, hintData.assignments);
-      }
-    }
 
-    // Rope Partition Visuals
-    if ((currentLevel?.gameType === 'rope_partition' || currentLevel?.appliedData?.type === 'BACKTRACKING_ROPE_PARTITION') && hintData) {
-      const scene = getCurrentGameState().currentScene;
-      if (scene) {
-        // Passing the whole hintData as it contains the rich state object (current, total, status, etc)
-        updateRopePartitionVisuals(scene, hintData);
-      }
-    }
+  // Visual updates for Train Schedule and Rope Partition
+  useEffect(() => {
+    updateTrainScheduleVisualsIfNeeded(currentLevel, hintData);
+    updateRopePartitionVisualsIfNeeded(currentLevel, hintData);
   }, [currentLevel, hintData, hintData?.assignments]);
 
   // Update player weapon display
@@ -948,152 +769,10 @@ const GameCore = ({
                     <LoadXmlModal
                       isOpen={showLoadXmlModal}
                       onClose={() => setShowLoadXmlModal(false)}
-                      options={[
-                        {
-                          label: 'DFS',
-                          title: 'โหลด DFS example blocks',
-                          description: 'Depth First Search',
-                          icon: '📦',
-                          className: 'bg-blue-600/20 border-blue-500/50 hover:bg-blue-600/30 text-blue-200',
-                          onClick: () => workspaceRef.current && loadDfsExampleBlocks(workspaceRef.current)
-                        },
-                        {
-                          label: 'BFS',
-                          title: 'โหลด BFS example blocks',
-                          description: 'Breadth First Search',
-                          icon: '📦',
-                          className: 'bg-green-600/20 border-green-500/50 hover:bg-green-600/30 text-green-200',
-                          onClick: () => workspaceRef.current && loadBfsExampleBlocks(workspaceRef.current)
-                        },
-                        {
-                          label: 'Dijkstra',
-                          title: 'โหลด Dijkstra example blocks',
-                          description: 'Shortest Path Algorithm',
-                          icon: '📦',
-                          className: 'bg-purple-600/20 border-purple-500/50 hover:bg-purple-600/30 text-purple-200',
-                          onClick: () => workspaceRef.current && loadDijkstraExampleBlocks(workspaceRef.current)
-                        },
-                        {
-                          label: 'Prim',
-                          title: 'โหลด Prim example blocks',
-                          description: 'Minimum Spanning Tree',
-                          icon: '📦',
-                          className: 'bg-blue-500/20 border-blue-400/50 hover:bg-blue-500/30 text-blue-200',
-                          onClick: () => workspaceRef.current && loadPrimExampleBlocks(workspaceRef.current)
-                        },
-                        {
-                          label: 'Kruskal',
-                          title: 'โหลด Kruskal example blocks',
-                          description: 'Minimum Spanning Tree',
-                          icon: '📦',
-                          className: 'bg-orange-600/20 border-orange-500/50 hover:bg-orange-600/30 text-orange-200',
-                          onClick: () => workspaceRef.current && loadKruskalExampleBlocks(workspaceRef.current)
-                        },
-                        {
-                          label: 'Knapsack',
-                          title: 'โหลด Knapsack',
-                          description: 'Normal Knapsack Algorithm',
-                          icon: '🎒',
-                          className: 'bg-yellow-600/20 border-yellow-500/50 hover:bg-yellow-600/30 text-yellow-200',
-                          onClick: () => workspaceRef.current && loadKnapsackExampleBlocks(workspaceRef.current)
-                        },
-                        {
-                          label: 'Knapsack (DP)',
-                          title: 'โหลด Knapsack (DP)',
-                          description: 'Dynamic Programming',
-                          icon: '🎒',
-                          className: 'bg-yellow-700/20 border-yellow-600/50 hover:bg-yellow-700/30 text-yellow-200',
-                          onClick: () => workspaceRef.current && loadDynamicKnapsackExampleBlocks(workspaceRef.current)
-                        },
-                        {
-                          label: 'Train Schedule',
-                          title: 'โหลด Train Schedule',
-                          description: 'Scheduling Algorithm',
-                          icon: '🚂',
-                          className: 'bg-pink-700/20 border-pink-600/50 hover:bg-pink-700/30 text-pink-200',
-                          onClick: () => workspaceRef.current && loadTrainScheduleExampleBlocks(workspaceRef.current)
-                        },
-                        {
-                          label: 'Subset Sum',
-                          title: 'โหลด Subset Sum',
-                          description: 'Backtracking',
-                          icon: '⚔️',
-                          className: 'bg-red-600/20 border-red-500/50 hover:bg-red-600/30 text-red-200',
-                          onClick: () => workspaceRef.current && loadSubsetSumExampleBlocks(workspaceRef.current)
-                        },
-                        {
-                          label: 'Subset Sum (DP)',
-                          title: 'โหลด Subset Sum (DP)',
-                          description: 'Dynamic Programming',
-                          icon: '⚔️',
-                          className: 'bg-red-700/20 border-red-600/50 hover:bg-red-700/30 text-red-200',
-                          onClick: () => workspaceRef.current && loadDynamicSubsetSumExampleBlocks(workspaceRef.current)
-                        },
-                        {
-                          label: 'Coin Change',
-                          title: 'โหลด Coin Change',
-                          description: 'Normal Algorithm',
-                          icon: '🪙',
-                          className: 'bg-indigo-600/20 border-indigo-500/50 hover:bg-indigo-600/30 text-indigo-200',
-                          onClick: () => workspaceRef.current && loadCoinChangeExampleBlocks(workspaceRef.current)
-                        },
-                        {
-                          label: 'Coin Change (DP)',
-                          title: 'โหลด Dynamic Coin Change (DP)',
-                          description: 'Dynamic Programming',
-                          icon: '🪙',
-                          className: 'bg-indigo-700/20 border-indigo-600/50 hover:bg-indigo-700/30 text-indigo-200',
-                          onClick: () => workspaceRef.current && loadDynamicCoinChangeExampleBlocks(workspaceRef.current)
-                        },
-                        {
-                          label: 'Coin Change (Greedy)',
-                          title: 'โหลด Greedy Coin Change',
-                          description: 'Greedy Algorithm',
-                          icon: '🪙',
-                          className: 'bg-indigo-800/20 border-indigo-700/50 hover:bg-indigo-800/30 text-indigo-200',
-                          onClick: () => workspaceRef.current && loadGreedyCoinChangeExampleBlocks(workspaceRef.current)
-                        },
-                        {
-                          label: 'N-Queen',
-                          title: 'โหลด N-Queen',
-                          description: 'Backtracking',
-                          icon: '👑',
-                          className: 'bg-teal-600/20 border-teal-500/50 hover:bg-teal-600/30 text-teal-200',
-                          onClick: () => workspaceRef.current && loadNQueenExampleBlocks(workspaceRef.current)
-                        },
-                        {
-                          label: 'Ant DP (Short)',
-                          title: 'โหลด Ant DP (แบบสั้น)',
-                          description: 'Dynamic Programming',
-                          icon: '🐜',
-                          className: 'bg-emerald-700/20 border-emerald-600/50 hover:bg-emerald-700/30 text-emerald-200',
-                          onClick: () => workspaceRef.current && loadDynamicAntDpExampleBlocks(workspaceRef.current)
-                        },
-                        {
-                          label: 'Rope Partition',
-                          title: 'โหลด Rope Partition',
-                          description: 'Backtracking',
-                          icon: '🪢',
-                          className: 'bg-cyan-600/20 border-cyan-500/50 hover:bg-cyan-600/30 text-cyan-200',
-                          onClick: () => workspaceRef.current && loadRopePartitionExampleBlocks(workspaceRef.current)
-                        },
-                        {
-                          label: 'Dijkstra (Emei)',
-                          title: 'โหลด Dijkstra Max-Cap (ง้อไบ๊)',
-                          description: 'Emei Mountain Variant',
-                          icon: '⛰️',
-                          className: 'bg-indigo-600/20 border-indigo-500/50 hover:bg-indigo-600/30 text-indigo-200',
-                          onClick: () => workspaceRef.current && loadEmeiMountainExample(workspaceRef.current, 'dijkstra')
-                        },
-                        {
-                          label: 'Prim (Emei)',
-                          title: 'โหลด Prim Max-Cap (ง้อไบ๊)',
-                          description: 'Emei Mountain Variant',
-                          icon: '⛰️',
-                          className: 'bg-pink-600/20 border-pink-500/50 hover:bg-pink-600/30 text-pink-200',
-                          onClick: () => workspaceRef.current && loadEmeiMountainExample(workspaceRef.current, 'prim')
-                        }
-                      ]}
+                      options={EXAMPLE_LOADERS.map(loader => ({
+                        ...loader,
+                        onClick: () => workspaceRef.current && loader.loader(workspaceRef.current)
+                      }))}
                     />
                   </div>
                 )}

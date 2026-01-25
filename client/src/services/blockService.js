@@ -8,7 +8,7 @@ export const fetchAllBlocks = async (getToken, page = 1, limit = 10, search = ''
       page: page.toString(),
       limit: limit.toString(),
     });
-    
+
     if (search.trim()) {
       params.append('search', search);
     }
@@ -133,6 +133,30 @@ export const getBlockById = async (getToken, blockId) => {
     return data;
   } catch (error) {
     console.error('Error fetching block:', error);
+    throw error;
+  }
+};
+
+export const uploadBlockImage = async (getToken, file) => {
+  try {
+    const token = await getToken();
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const response = await fetch(`${API_BASE_URL}/api/blocks/upload-image`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.message || 'Failed to upload block image');
+    }
+    return await response.json();
+  } catch (error) {
     throw error;
   }
 };
