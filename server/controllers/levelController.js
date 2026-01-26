@@ -421,7 +421,7 @@ exports.createLevel = async (req, res) => {
         difficulty,
         is_unlocked: is_unlocked === true || is_unlocked === 'true',
         required_level_id: required_level_id ? parseInt(required_level_id) : null,
-        require_pre_score: require_pre_score ? parseInt(require_pre_score) : null,
+        require_pre_score: (require_pre_score !== undefined && require_pre_score !== null && require_pre_score !== '') ? parseInt(require_pre_score) : 0,
         required_for_post_test: required_for_post_test === true || required_for_post_test === 'true',
         textcode: textcode === true || textcode === 'true',
         background_image,
@@ -587,7 +587,7 @@ exports.updateLevel = async (req, res) => {
       }
     }
     if (require_pre_score !== undefined) {
-      updateData.require_pre_score = require_pre_score ? parseInt(require_pre_score) : null;
+      updateData.require_pre_score = (require_pre_score !== null && require_pre_score !== '') ? parseInt(require_pre_score) : 0;
     }
     if (required_for_post_test !== undefined) {
       updateData.required_for_post_test = required_for_post_test === true || required_for_post_test === 'true';

@@ -87,6 +87,17 @@ const LevelInfoForm = ({ formData, categories, prerequisiteLevels, isEditing, le
           </select>
         </div>
 
+        <div>
+          <label className="text-sm font-medium">Require Pre-Score (Default: 0)</label>
+          <Input
+            type="number"
+            min="0"
+            value={formData.require_pre_score}
+            onChange={(e) => handleChange('require_pre_score', parseInt(e.target.value) || 0)}
+            placeholder="Score required to unlock"
+          />
+        </div>
+
         <div className="flex items-center gap-4">
           <label className="flex items-center gap-2">
             <input
@@ -95,6 +106,14 @@ const LevelInfoForm = ({ formData, categories, prerequisiteLevels, isEditing, le
               onChange={(e) => handleChange('is_unlocked', e.target.checked)}
             />
             <span className="text-sm font-medium">Unlocked</span>
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={formData.required_for_post_test}
+              onChange={(e) => handleChange('required_for_post_test', e.target.checked)}
+            />
+            <span className="text-sm font-medium">Required for Post-Test</span>
           </label>
           <label className="flex items-center gap-2">
             <input

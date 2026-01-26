@@ -11,8 +11,8 @@ if (!PUBLISHABLE_KEY) {
   throw new Error('Missing Publishable Key')
 }
 
-// Disable console.log to reduce noise
-console.log = () => {};
+// // Disable console.log to reduce noise
+// console.log = () => {};
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

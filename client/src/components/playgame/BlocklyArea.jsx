@@ -5,6 +5,7 @@ import BlocklyWorkspaceTab from './editor/BlocklyWorkspaceTab';
 import CodeEditorTab from './editor/CodeEditorTab';
 import TestResultsTab from './editor/TestResultsTab';
 import GameControls from './editor/GameControls';
+import HistoryModal from './HistoryModal';
 
 const BlocklyArea = ({
   blocklyRef,
@@ -20,9 +21,12 @@ const BlocklyArea = ({
   blocklyJavaScriptReady,
   textCode,
   handleTextCodeChange,
-  testCaseResult
+  testCaseResult,
+  userProgress,
+  allLevels
 }) => {
   const [activeTab, setActiveTab] = useState("blocks");
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   // Auto-switch to test tab when results arrive
   React.useEffect(() => {
@@ -97,6 +101,15 @@ const BlocklyArea = ({
         currentLevel={currentLevel}
         onDebugToggle={onDebugToggle}
         debugMode={debugMode}
+        onHistoryClick={() => setHistoryOpen(true)}
+      />
+
+      <HistoryModal
+        isOpen={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        userProgress={userProgress}
+        levels={allLevels}
+        currentLevelId={currentLevel?.level_id || currentLevel?.id}
       />
     </div>
   );
