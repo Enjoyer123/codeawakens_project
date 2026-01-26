@@ -1,0 +1,185 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { useAuth } from '@clerk/clerk-react';
+import { fetchAllLevelCategories } from '../../services/levelCategoryService';
+
+const MapCoordinatePicker = ({ 
+  data = null, 
+  idKey = 'category_id', 
+  nameKey = 'name', 
+  imageSrc = '/map.jpg' 
+}) => {
+  const { getToken } = useAuth();
+  const [internalCategories, setInternalCategories] = useState([]); // Renamed from categories
+  const [selectedItem, setSelectedItem] = useState(null); // Renamed from selectedCategory
+  const [placements, setPlacements] = useState({}); 
+  const [loading, setLoading] = useState(true);
+  const mapRef = useRef(null);
+
+  // Use props data if provided, otherwise use fetched data
+  const items = data || internalCategories;
+
+  useEffect(() => {
+    // Only fetch if no external data provided
+    if (data) {
+        setLoading(false);
+        return;
+    }
+
+    const loadCategories = async () => {
+      try {
+        const res = await fetchAllLevelCategories(getToken);
+        const cats = Array.isArray(res?.levelCategories) ? res.levelCategories : [];
+        setInternalCategories(cats);
+      } catch (err) {
+        console.error('Error loading categories:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadCategories();
+  }, [getToken, data]);
+
+  const handleMapClick = (e) => {
+    if (!selectedItem || !mapRef.current) return;
+
+    const rect = mapRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const width = rect.width;
+    const height = rect.height;
+
+    const leftPercent = (x / width) * 100;
+    const topPercent = (y / height) * 100;
+
+    const itemId = selectedItem[idKey];
+
+    setPlacements(prev => ({
+      ...prev,
+      [itemId]: {
+        top: parseFloat(topPercent.toFixed(2)),
+        left: parseFloat(leftPercent.toFixed(2))
+      }
+    }));
+  };
+
+  const handleCopyJson = () => {
+    const jsonStr = JSON.stringify(placements, null, 2);
+    navigator.clipboard.writeText(jsonStr);
+    alert('Copied to clipboard!');
+  };
+
+  const handleClear = () => {
+      if(confirm('Clear all placements?')) {
+          setPlacements({});
+      }
+  }
+
+  return (
+    <div className="flex h-[calc(100vh-100px)] border-t border-gray-200 text-gray-800">
+      {/* Sidebar: List */}
+      <div className="w-1/4 p-4 overflow-y-auto border-r border-gray-200 bg-gray-50">
+        <h2 className="text-xl font-bold mb-4">Select Item</h2>
+        {loading ? (
+          <div>Loading...</div>
+        ) : (
+          <div className="space-y-2">
+            {items.map(item => {
+              const itemId = item[idKey];
+              const itemName = item[nameKey] || item['level_name'] || item['category_name']; // Fallback for names
+              const isPlaced = placements[itemId];
+              const isSelected = selectedItem && selectedItem[idKey] === itemId;
+
+              return (
+                <div
+                    key={itemId}
+                    onClick={() => setSelectedItem(item)}
+                    className={`p-3 rounded cursor-pointer transition-colors ${
+                    isSelected
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'bg-white hover:bg-gray-100 border border-gray-200'
+                    }`}
+                >
+                    <div className="font-semibold">{itemName}</div>
+                    <div className="text-xs opacity-75">
+                    {isPlaced ? '✅ Placed' : '⚪ Not placed'}
+                    </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Main Area: Map */}
+      <div className="flex-1 bg-gray-800 p-8 flex items-center justify-center relative overflow-auto">
+        <div className="relative shadow-2xl inline-block">
+            {/* Map Image */}
+            <img
+                ref={mapRef}
+                src={imageSrc}
+                alt="Map"
+                className="max-w-none cursor-crosshair"
+                style={{ height: '800px' }} 
+                onClick={handleMapClick}
+            />
+            {/* Markers */}
+            {Object.entries(placements).map(([itemId, pos]) => {
+                const item = items.find(i => i[idKey].toString() === itemId);
+                const itemName = item ? (item[nameKey] || item['level_name'] || item['category_name']) : itemId;
+                const isSelected = selectedItem && selectedItem[idKey].toString() === itemId;
+                
+                return (
+                    <div
+                        key={itemId}
+                        className="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none"
+                        style={{ top: `${pos.top}%`, left: `${pos.left}%` }}
+                    >
+                        {/* Circle Marker */}
+                        <div className={`w-6 h-6 rounded-full border-2 ${isSelected ? 'bg-yellow-400 border-yellow-600 z-50 scale-125' : 'bg-red-500 border-white shadow-sm'}`}></div>
+                        {/* Label */}
+                        <span className={`mt-1 text-xs font-bold px-2 py-0.5 rounded shadow-sm whitespace-nowrap ${isSelected ? 'bg-yellow-100 text-yellow-900 border border-yellow-300' : 'bg-white/90 text-gray-800'}`}>
+                            {itemName}
+                        </span>
+                    </div>
+                );
+            })}
+        </div>
+      </div>
+
+      {/* Right Panel: Output */}
+      <div className="w-1/4 p-4 bg-gray-50 border-l border-gray-200 flex flex-col">
+        <h2 className="text-xl font-bold mb-4">Coordinates Output</h2>
+        <div className="flex-1 bg-white border border-gray-300 rounded p-2 overflow-auto font-mono text-xs mb-4">
+          <pre>{JSON.stringify(placements, null, 2)}</pre>
+        </div>
+        <div className="flex gap-2">
+            <button
+            onClick={handleCopyJson}
+            className="flex-1 bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 font-bold"
+            >
+            Copy JSON
+            </button>
+            <button
+            onClick={handleClear}
+            className="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 font-bold"
+            >
+            Clear
+            </button>
+
+        </div>
+        <div className="mt-4 text-sm text-gray-600">
+            <p><strong>Instructions:</strong></p>
+            <ol className="list-decimal ml-4 space-y-1 mt-2">
+                <li>Select a item from the left sidebar.</li>
+                <li>Click on the map to place the marker.</li>
+                <li>Verify the red dot and label.</li>
+                <li>Copy the JSON when finished.</li>
+            </ol>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default MapCoordinatePicker;

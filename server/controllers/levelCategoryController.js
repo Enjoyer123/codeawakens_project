@@ -1,13 +1,10 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-// Get all level categories with pagination
+// Get all level categories without pagination
 exports.getAllLevelCategories = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
     const search = req.query.search || '';
-    const skip = (page - 1) * limit;
 
     let where = {};
     if (search.trim()) {
@@ -19,8 +16,6 @@ exports.getAllLevelCategories = async (req, res) => {
         ],
       };
     }
-
-    const total = await prisma.levelCategory.count({ where });
 
     const levelCategories = await prisma.levelCategory.findMany({
       where,
@@ -43,8 +38,6 @@ exports.getAllLevelCategories = async (req, res) => {
       orderBy: {
         difficulty_order: "asc",
       },
-      skip,
-      take: limit,
     });
 
     // Calculate dynamic unlocks
@@ -110,12 +103,6 @@ exports.getAllLevelCategories = async (req, res) => {
 
     res.json({
       levelCategories: categoriesWithCount,
-      pagination: {
-        total,
-        totalPages: Math.ceil(total / limit),
-        page,
-        limit,
-      },
     });
   } catch (error) {
     console.error("Error fetching level categories:", error);

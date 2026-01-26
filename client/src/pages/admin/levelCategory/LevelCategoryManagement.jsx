@@ -59,8 +59,6 @@ const LevelCategoryManagement = () => {
       setError(null);
       const data = await fetchAllLevelCategories(
         getToken,
-        page,
-        rowsPerPage,
         searchQuery
       );
       setLevelCategories(data.levelCategories || []);

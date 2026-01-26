@@ -5,7 +5,6 @@ import { directions } from '../../gameutils/shared/game';
 import { fetchLevelById } from '../../services/levelService';
 import GameStateVisualization from './GameStateVisualization';
 import { getCurrentGameState } from '../../gameutils/shared/game';
-import HistoryModal from './HistoryModal';
 import {
   Dialog,
   DialogContent,
@@ -18,7 +17,6 @@ import {
 import StatusPanel from './ui/StatusPanel';
 import BlockCountPanel from './ui/BlockCountPanel';
 import HintButton from './ui/HintButton';
-import HistoryButton from './ui/HistoryButton';
 import PatternMatchPanel from './ui/PatternMatchPanel';
 import BigOSelector from './ui/BigOSelector';
 
@@ -56,7 +54,6 @@ const GameArea = ({
   const { getToken } = useAuth();
   const [viewerData, setViewerData] = useState(null);
   const [viewerLoading, setViewerLoading] = useState(false);
-  const [historyOpen, setHistoryOpen] = useState(false);
   const currentBlockCount = hintData?.currentBlockCount || 0;
 
   // ใช้ bestPattern.count ถ้ามี หรือใช้ totalBlocks เป็น fallback
@@ -201,9 +198,6 @@ const GameArea = ({
             needHintDisabled={needHintDisabled} 
           />
 
-          {/* History Button */}
-          <HistoryButton onClick={() => setHistoryOpen(true)} />
-
           {/* Pattern Match */}
           <PatternMatchPanel 
             hintData={hintData} 
@@ -222,7 +216,6 @@ const GameArea = ({
         </div>
       </div>
 
-      {/* Popup Hint Dialog */}
       <Dialog
         open={hintOpen && !!activeLevelHint}
         onOpenChange={(isOpen) => {
@@ -272,14 +265,6 @@ const GameArea = ({
           </div>
         </DialogContent>
       </Dialog>
-
-      <HistoryModal
-        isOpen={historyOpen}
-        onClose={() => setHistoryOpen(false)}
-        userProgress={userProgress}
-        levels={allLevels}
-        currentLevelId={levelData?.level_id || levelData?.id}
-      />
     </div>
 
   );

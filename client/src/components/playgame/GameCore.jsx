@@ -694,8 +694,6 @@ const GameCore = ({
             hintOpen={hintOpen}
             onToggleHint={() => setHintOpen(false)}
             hintOpenCount={hintOpenCount}
-            userProgress={userProgress}
-            allLevels={allLevelsData}
             levelHints={Array.isArray(currentLevel?.hints) ? currentLevel.hints : []}
             activeLevelHint={activeLevelHint}
             onNeedHintClick={() => {
@@ -795,6 +793,8 @@ const GameCore = ({
                 textCode={textCode}
                 handleTextCodeChange={handleTextCodeChangeWithState}
                 testCaseResult={testCaseResult}
+                userProgress={userProgress}
+                allLevels={allLevelsData}
               />
             </div>
           </div>

@@ -1,14 +1,11 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 
-// Fetch all level categories with pagination
-export const fetchAllLevelCategories = async (getToken, page = 1, limit = 10, search = '') => {
+// Fetch all level categories without pagination
+export const fetchAllLevelCategories = async (getToken, search = '') => {
   try {
     const token = await getToken();
-    const params = new URLSearchParams({
-      page: page.toString(),
-      limit: limit.toString(),
-    });
-    
+    const params = new URLSearchParams();
+
     if (search.trim()) {
       params.append('search', search);
     }
@@ -26,6 +23,7 @@ export const fetchAllLevelCategories = async (getToken, page = 1, limit = 10, se
     }
 
     const data = await response.json();
+    console.log('🔍 [fetchAllLevelCategories] data:', data);
     return data;
   } catch (error) {
     console.error('Error fetching level categories:', error);
