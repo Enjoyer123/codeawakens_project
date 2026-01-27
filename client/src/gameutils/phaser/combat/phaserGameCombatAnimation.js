@@ -125,14 +125,31 @@ export function playCombatSequence(scene, isWin, onComplete) {
     updateWeaponPos();
 
     // Spawn Cinematic Monster
-    const monster = scene.add.sprite(width - 100, centerY, 'vampire');
+    // Determine texture and animation based on the first monster in levelData if available
+    let textureKey = 'vampire';
+    let idleAnim = 'vampire-idle';
+
+    if (scene.levelData.monsters && scene.levelData.monsters.length > 0) {
+        const monsterData = scene.levelData.monsters[0];
+        const monsterType = monsterData.type || 'enemy';
+
+        if (monsterType === 'vampire_1') {
+            textureKey = 'Vampire_1';
+            idleAnim = 'vampire_1-idle_down';
+        } else if (monsterType === 'enemy') {
+            textureKey = 'vampire';
+            idleAnim = 'vampire-idle';
+        }
+    }
+
+    const monster = scene.add.sprite(width - 100, centerY, textureKey);
     monster.setScale(scale);
     monster.setData('defaultScale', scale);
     monster.setDepth(100);
     monster.setFlipX(true); // Face left
-    // Ensure monster has animation (assuming 'vampire-idle' exists, maybe no walk anim yet)
-    if (monster.anims && scene.anims.exists('vampire-idle')) {
-        monster.play('vampire-idle');
+    // Ensure monster has animation
+    if (monster.anims && scene.anims.exists(idleAnim)) {
+        monster.play(idleAnim);
     }
 
     // 2. Walk to Center

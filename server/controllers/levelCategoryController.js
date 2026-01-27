@@ -40,25 +40,27 @@ exports.getAllLevelCategories = async (req, res) => {
       },
     });
 
-    // Calculate dynamic unlocks
+    // Data for dynamic unlocks and visibility
     const clerkUserId = req.user?.id;
     let completedLevelIds = new Set();
     let userPreScore = 0;
+    let isAdmin = false;
 
     if (clerkUserId) {
       const user = await prisma.user.findUnique({
         where: { clerk_user_id: clerkUserId },
-        select: { user_id: true, pre_score: true }
+        select: { user_id: true, pre_score: true, role: true }
       });
 
       if (user) {
+        isAdmin = user.role === 'admin';
         userPreScore = user.pre_score || 0;
         const progress = await prisma.userProgress.findMany({
           where: {
             user_id: user.user_id,
             OR: [
               { status: 'completed' },
-              { is_correct: true } // Handle cases where status might not be updated but is_correct is true
+              { is_correct: true }
             ]
           },
           select: { level_id: true }
@@ -69,30 +71,38 @@ exports.getAllLevelCategories = async (req, res) => {
 
     // Add level_count to each category and compute dynamic is_unlocked
     const categoriesWithCount = levelCategories.map(category => {
-      const processedLevels = category.levels ? category.levels.map(level => {
-        const isStaticUnlocked = level.is_unlocked;
-        // Check if required level is completed (if a requirement exists)
-        const isPrereqMet = level.required_level_id
-          ? completedLevelIds.has(level.required_level_id)
-          : false;
+      const processedLevels = category.levels ? category.levels
+        .filter(level => level.is_unlocked || isAdmin) // Only show published OR show all for admin
+        .map(level => {
+          // Level visibility is determined by static is_unlocked (Published status)
+          const isPublished = level.is_unlocked;
 
-        // Check if pre-score requirement is met
-        const isScoreMet = (level.require_pre_score !== null && level.require_pre_score !== undefined)
-          ? userPreScore >= level.require_pre_score
-          : false;
+          // Admin bypasses locking
+          if (isAdmin) {
+            return {
+              ...level,
+              is_unlocked: isPublished,
+              is_locked: false
+            };
+          }
 
-        // Level is unlocked if:
-        // 1. It is statically unlocked (default open) AND no score requirement overrides it
-        // 2. OR Prerequisites are met
-        // 3. OR Pre-score requirement is met (bypass)
-        // Note: If require_pre_score is set, we ignore the static is_unlocked from DB to enforce the check
-        const isUnlocked = (isStaticUnlocked && !level.require_pre_score) || isPrereqMet || isScoreMet;
+          // Level functional locking is determined by prerequisites and scores
+          const isPrereqMet = level.required_level_id
+            ? completedLevelIds.has(level.required_level_id)
+            : true;
 
-        return {
-          ...level,
-          is_unlocked: isUnlocked
-        };
-      }) : [];
+          const isScoreMet = (level.require_pre_score !== null && level.require_pre_score !== undefined && level.require_pre_score > 0)
+            ? userPreScore >= level.require_pre_score
+            : true;
+
+          const isLocked = !isPrereqMet || !isScoreMet;
+
+          return {
+            ...level,
+            is_unlocked: isPublished,
+            is_locked: isLocked
+          };
+        }) : [];
 
       return {
         ...category,
@@ -149,18 +159,20 @@ exports.getLevelCategoryById = async (req, res) => {
       return res.status(404).json({ message: "Level category not found" });
     }
 
-    // Calculate dynamic unlocks (Same logic as getAllLevelCategories)
+    // Calculate dynamic unlocks
     const clerkUserId = req.user?.id;
     let completedLevelIds = new Set();
     let userPreScore = 0;
+    let isAdmin = false;
 
     if (clerkUserId) {
       const user = await prisma.user.findUnique({
         where: { clerk_user_id: clerkUserId },
-        select: { user_id: true, pre_score: true }
+        select: { user_id: true, pre_score: true, role: true }
       });
 
       if (user) {
+        isAdmin = user.role === 'admin';
         userPreScore = user.pre_score || 0;
         const progress = await prisma.userProgress.findMany({
           where: {
@@ -177,23 +189,35 @@ exports.getLevelCategoryById = async (req, res) => {
     }
 
     // Process levels to set dynamic is_unlocked
-    const processedLevels = levelCategory.levels ? levelCategory.levels.map(level => {
-      const isStaticUnlocked = level.is_unlocked;
-      const isPrereqMet = level.required_level_id
-        ? completedLevelIds.has(level.required_level_id)
-        : false;
+    const processedLevels = levelCategory.levels ? levelCategory.levels
+      .filter(level => level.is_unlocked || isAdmin)
+      .map(level => {
+        const isPublished = level.is_unlocked;
 
-      const isScoreMet = (level.require_pre_score !== null && level.require_pre_score !== undefined)
-        ? userPreScore >= level.require_pre_score
-        : false;
+        if (isAdmin) {
+          return {
+            ...level,
+            is_unlocked: isPublished,
+            is_locked: false
+          };
+        }
 
-      const isUnlocked = (isStaticUnlocked && !level.require_pre_score) || isPrereqMet || isScoreMet;
+        const isPrereqMet = level.required_level_id
+          ? completedLevelIds.has(level.required_level_id)
+          : true;
 
-      return {
-        ...level,
-        is_unlocked: isUnlocked
-      };
-    }) : [];
+        const isScoreMet = (level.require_pre_score !== null && level.require_pre_score !== undefined && level.require_pre_score > 0)
+          ? userPreScore >= level.require_pre_score
+          : true;
+
+        const isLocked = !isPrereqMet || !isScoreMet;
+
+        return {
+          ...level,
+          is_unlocked: isPublished,
+          is_locked: isLocked
+        };
+      }) : [];
 
     // Return category with processed levels
     res.json({

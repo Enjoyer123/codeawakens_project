@@ -209,24 +209,31 @@ exports.getLevelById = async (req, res) => {
       return res.status(404).json({ message: "Level not found" });
     }
 
-    // Calculate dynamic unlock
-    let isUnlocked = level.is_unlocked;
+    // Calculate dynamic lock state
+    let isPublished = level.is_unlocked;
+    let isLocked = false;
     const clerkUserId = req.user?.id;
 
-    // If level is not statically unlocked and we have a user, check dynamic requirements
-    if (!isUnlocked && clerkUserId) {
+    if (clerkUserId) {
       const user = await prisma.user.findUnique({
         where: { clerk_user_id: clerkUserId },
         select: { user_id: true, pre_score: true, role: true }
       });
 
       if (user) {
-        // Admin bypass in backend
-        if (user.role === 'admin') {
-          isUnlocked = true;
+        const isAdmin = user.role === 'admin';
+
+        // Security check: If level is not published, only admin can see it
+        if (!isPublished && !isAdmin) {
+          return res.status(403).json({ message: "This level is not published yet." });
+        }
+
+        // Admin bypass for locking
+        if (isAdmin) {
+          isLocked = false;
         } else {
           // Check prerequisite level
-          let isPrereqMet = false;
+          let isPrereqMet = true;
           if (level.required_level_id) {
             const progress = await prisma.userProgress.findUnique({
               where: {
@@ -236,30 +243,32 @@ exports.getLevelById = async (req, res) => {
                 },
               },
             });
-            if (progress && (progress.status === 'completed' || progress.is_correct)) {
-              isPrereqMet = true;
-            }
+            isPrereqMet = (progress && (progress.status === 'completed' || progress.is_correct));
           }
 
           // Check pre-score
           const userPreScore = user.pre_score || 0;
-          const isScoreMet = (level.require_pre_score !== null && level.require_pre_score !== undefined)
+          const isScoreMet = (level.require_pre_score !== null && level.require_pre_score !== undefined && level.require_pre_score > 0)
             ? userPreScore >= level.require_pre_score
-            : false;
+            : true;
 
-          if (isPrereqMet || isScoreMet) {
-            isUnlocked = true;
-          }
+          isLocked = !isPrereqMet || !isScoreMet;
         }
       }
-    } else if (!clerkUserId && level.require_pre_score) {
-      // If not logged in and requires pre-score, block it even if DB says unlocked (security)
-      isUnlocked = false;
+    } else {
+      // Not logged in
+      if (!isPublished) {
+        return res.status(403).json({ message: "This level is not published yet." });
+      }
+      if (level.require_pre_score && level.require_pre_score > 0) {
+        isLocked = true;
+      }
     }
 
     res.json({
       ...level,
-      is_unlocked: isUnlocked
+      is_unlocked: isPublished,
+      is_locked: isLocked
     });
   } catch (error) {
     console.error("Error fetching level:", error);
