@@ -52,25 +52,25 @@ export const useCategoryData = (getToken, categoryId, reloadKey) => {
 
         if (!isActive) return;
         setCategoryInfo(categoryData);
-        
-        // Filter only unlocked levels
-        const unlockedLevels = derivedLevels.filter(level => level.is_unlocked === true);
+
+        // Use all levels returned by server (server handles visibility and locking)
+        const unlockedLevels = derivedLevels;
 
         // Manual Injection for Greedy Category (Legacy Logic)
         if (categoryData.category_name === 'Greedy' || categoryId === '4' || categoryData.category_id === 4) {
-           // check if specifically not already there
-           if (!unlockedLevels.find(l => l.level_id === 'train-schedule')) {
-             unlockedLevels.push({
-               level_id: 'train-schedule',
-               level_name: 'Train Scheduling (Interval Partitioning)',
-               difficulty: 'ปานกลาง',
-               is_unlocked: true,
-               description: 'Manage train platforms using Greedy Algorithm',
-               goal_node_id: 'Optimize Platforms',
-               monsters: [],
-               category_id: 4 // Ensure it matches
-             });
-           }
+          // check if specifically not already there
+          if (!unlockedLevels.find(l => l.level_id === 'train-schedule')) {
+            unlockedLevels.push({
+              level_id: 'train-schedule',
+              level_name: 'Train Scheduling (Interval Partitioning)',
+              difficulty: 'ปานกลาง',
+              is_unlocked: true,
+              description: 'Manage train platforms using Greedy Algorithm',
+              goal_node_id: 'Optimize Platforms',
+              monsters: [],
+              category_id: 4 // Ensure it matches
+            });
+          }
         }
 
         console.log('🔍 CategoryLevels - Levels loaded:', unlockedLevels.length);

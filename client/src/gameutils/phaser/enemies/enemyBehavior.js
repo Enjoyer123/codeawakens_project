@@ -1,21 +1,34 @@
+import { initiateCombat, isInCombat } from '../../shared/combat/core/combatCore';
+import { defendFromEnemy } from '../player/playerCombat';
+
+// Helper to get direction string from angle (in radians)
+function getDirectionFromAngle(angle) {
+    let deg = Phaser.Math.RadToDeg(angle);
+    // Phaser 3 uses WrapDegrees (-180 to 180)
+    deg = Phaser.Math.Angle.WrapDegrees(deg);
+
+    if (deg >= 45 && deg < 135) return 'down';
+    if (deg >= -45 && deg < 45) return 'right';
+    if (deg >= -135 && deg < -45) return 'up';
+    return 'left';
+}
+
 export function checkPlayerInRange(enemy) {
-    // ตรวจสอบว่าศัตรูตายแล้วหรือไม่
-    if (enemy.isDefeated || enemy.data?.defeated) return;
+    // ตรวจสอบว่าศัตรูตายแล้วหรือไม่ หรืออยู่ในระหว่างการต่อสู้อย่างเป็นทางการ
+    if (enemy.isDefeated || enemy.data?.defeated || enemy.data?.inBattle) return;
 
     const scene = enemy.scene;
     if (scene.isPaused || scene.gameOverTriggered) {
         return;
     }
 
-    if (!scene.players) return;
+    if (!scene.player) return;
 
-    const player = scene.players;
+    const player = scene.player;
     const distance = Phaser.Math.Distance.Between(enemy.x, enemy.y, player.x, player.y);
 
     // ตรวจสอบว่าเข้าใกล้ศัตรูหรือไม่
     if (distance <= enemy.detectionRange) {
-        const { initiateCombat, isInCombat } = require('../../utils/combatSystem');
-
         // **เริ่ม combat mode เฉพาะครั้งแรก**
         if (!isInCombat()) {
             console.log("🎯 Initiating combat mode!");
@@ -32,11 +45,11 @@ export function checkPlayerInRange(enemy) {
 export function canAttack(enemy) {
     const now = Date.now();
     const cooldownPassed = (now - enemy.lastAttackTime) >= enemy.attackCooldownTime;
-    
+
     if (!cooldownPassed) {
         console.log(`⏰ Enemy cooldown: ${enemy.attackCooldownTime - (now - enemy.lastAttackTime)}ms remaining`);
     }
-    
+
     return cooldownPassed;
 }
 
@@ -55,8 +68,20 @@ export function attackPlayer(enemy, player) {
     console.log("⚔️ Enemy attacking player!");
 
     // **เล่น attack animation ก่อน**
-    if (enemy.anims && enemy.anims.currentAnim) {
-        enemy.anims.play('vampire-attack', true);
+    if (enemy.anims) {
+        if (enemy.getData('hasDirectionalAnims')) {
+            const angle = Phaser.Math.Angle.Between(enemy.x, enemy.y, player.x, player.y);
+            const dir = getDirectionFromAngle(angle);
+            const prefix = enemy.getData('animPrefix');
+            const animKey = `${prefix}-attack-${dir}`;
+            if (scene.anims.exists(animKey)) {
+                enemy.anims.play(animKey, true);
+            } else {
+                enemy.anims.play(enemy.getData('attackAnim') || 'vampire-attack', true);
+            }
+        } else {
+            enemy.anims.play(enemy.getData('attackAnim') || 'vampire-attack', true);
+        }
     }
 
     playAttackAnimation(enemy);
@@ -68,7 +93,6 @@ export function attackPlayer(enemy, player) {
         if (scene.isPaused || scene.gameOverTriggered) return;
 
         // ใช้ระบบป้องกันใหม่
-        const { defendFromEnemy } = require('./playerCombat');
         const actualDamage = defendFromEnemy(player, enemy.attackDamage);
 
         console.log(`💥 Damage dealt: ${actualDamage}`);
@@ -89,7 +113,19 @@ export function attackPlayer(enemy, player) {
         // **กลับไป idle animation หลังโจมตีเสร็จ**
         scene.time.delayedCall(200, () => {
             if (enemy.anims && !enemy.isDefeated) {
-                enemy.anims.play('vampire-idle', true);
+                if (enemy.getData('hasDirectionalAnims')) {
+                    const angle = Phaser.Math.Angle.Between(enemy.x, enemy.y, player.x, player.y);
+                    const dir = getDirectionFromAngle(angle);
+                    const prefix = enemy.getData('animPrefix');
+                    const animKey = `${prefix}-idle_${dir}`;
+                    if (scene.anims.exists(animKey)) {
+                        enemy.anims.play(animKey, true);
+                    } else {
+                        enemy.anims.play(enemy.getData('idleAnim') || 'vampire-idle', true);
+                    }
+                } else {
+                    enemy.anims.play(enemy.getData('idleAnim') || 'vampire-idle', true);
+                }
             }
         });
     });

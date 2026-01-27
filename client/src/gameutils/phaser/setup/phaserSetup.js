@@ -2,6 +2,9 @@
 import Phaser from "phaser";
 import { playIdle } from '../player/playerAnimation';
 import { updatePlayerArrow } from '../effects/phaserGameArrow';
+import { showGameOver } from '../effects/phaserGameEffects';
+import { getCurrentGameState, setCurrentGameState, getPlayerHp } from '../../shared/game';
+import { getWeaponData } from '../../shared/items';
 
 // Game functions (outside of scene)
 export function drawLevel(scene) {
@@ -429,10 +432,40 @@ export function setupMonsters(scene) {
 
       if (!startPos) return;
 
-      // Create vampire sprite instead of circle
-      const monsterSprite = scene.add.sprite(startPos.x, startPos.y, 'vampire');
-      monsterSprite.setScale(1.8); // Restored to standard size
+      // Determine texture and initial animation based on monster type
+      const monsterType = monsterData.type || 'enemy';
+      let textureKey = 'vampire'; // Default for Goblin
+      let idleAnim = 'vampire-idle';
+      let moveAnim = 'vampire-movement';
+      let attackAnim = 'vampire-attack';
+      let animPrefix = 'vampire';
+      let hasDirectionalAnims = false;
+
+      if (monsterType === 'vampire_1') {
+        textureKey = 'Vampire_1';
+        idleAnim = 'vampire_1-idle_down';
+        moveAnim = 'vampire_1-walk_down';
+        attackAnim = 'vampire_1-attack-down';
+        animPrefix = 'vampire_1';
+        hasDirectionalAnims = true;
+      } else if (monsterType === 'enemy') {
+        textureKey = 'vampire';
+        idleAnim = 'vampire-idle';
+        moveAnim = 'vampire-movement';
+        attackAnim = 'vampire-attack';
+        animPrefix = 'vampire';
+        hasDirectionalAnims = false;
+      }
+
+      // Create monster sprite with correct texture
+      const monsterSprite = scene.add.sprite(startPos.x, startPos.y, textureKey);
+      monsterSprite.setScale(1.8);
       monsterSprite.setData('defaultScale', 1.8);
+      monsterSprite.setData('idleAnim', idleAnim);
+      monsterSprite.setData('moveAnim', moveAnim);
+      monsterSprite.setData('attackAnim', attackAnim);
+      monsterSprite.setData('animPrefix', animPrefix);
+      monsterSprite.setData('hasDirectionalAnims', hasDirectionalAnims);
       monsterSprite.setDepth(8);
 
       // Create glow effect - larger to match bigger sprite
@@ -477,9 +510,13 @@ export function setupMonsters(scene) {
         },
       };
 
-      // Play idle animation
+      // Play idle animation (with safety check)
       if (monsterSprite.anims) {
-        monsterSprite.anims.play('vampire-idle', true);
+        if (scene.anims.exists(idleAnim)) {
+          monsterSprite.anims.play(idleAnim, true);
+        } else {
+          console.warn(`⚠️ Animation ${idleAnim} not found, skipping playback`);
+        }
       }
 
       scene.monsters.push(monster);
@@ -556,6 +593,72 @@ export function drawPlayer(scene) {
     setTimeout(() => {
       updatePlayerArrow(scene, playerX, playerY, 0);
     }, 100);
+
+    // ✅ Add takeDamage method to player sprite for combat handling
+    scene.player.takeDamage = (damage, forceKill = false) => {
+      const currentState = getCurrentGameState();
+      if (currentState.isGameOver || currentState.goalReached) return;
+
+      const currentHP = getPlayerHp();
+
+      // Calculate minimum HP allowed based on weapon defense
+      // If forceKill is true (e.g. falling in pit, fleeing battle), allow dropping to 0
+      let minHP = 0;
+      if (!forceKill) {
+        const weapon = getWeaponData(currentState.weaponKey);
+        // Use combat_power or power or default to 10. Stick usually has power: 10, combat_power: 0.
+        // We want Stick to give 10 minHP.
+        minHP = weapon ? (weapon.combat_power || weapon.power || 10) : 10;
+      }
+
+      // Calculate newHP: It reduces by damage, but cannot go below minHP (unless forceKill)
+      let newHP = currentHP - damage;
+
+      if (!forceKill) {
+        newHP = Math.max(minHP, newHP);
+      } else {
+        newHP = Math.max(0, newHP);
+      }
+
+      console.log(`💥 Player takes ${damage} damage. HP: ${currentHP} -> ${newHP} (MinHP: ${minHP}, ForceKill: ${forceKill})`);
+
+      // Update global state
+      setCurrentGameState({ playerHP: newHP });
+
+      // Update UI (if React setters/callbacks are available)
+      if (typeof scene.externalHandlers.setPlayerHp === 'function') {
+        scene.externalHandlers.setPlayerHp(newHP);
+      }
+      if (window.setPlayerHp) {
+        window.setPlayerHp(newHP);
+      }
+
+      // Visual feedback
+      scene.tweens.add({
+        targets: [scene.player],
+        tint: 0xff0000,
+        duration: 100,
+        yoyo: true,
+        repeat: 1,
+        onComplete: () => {
+          if (scene.player) scene.player.clearTint();
+        }
+      });
+
+      // Check Game Over
+      if (newHP <= 0) {
+        console.log("💀 Player HP reached 0. Triggering Game Over.");
+        setCurrentGameState({ isGameOver: true });
+        if (typeof scene.externalHandlers.setIsGameOver === 'function') {
+          scene.externalHandlers.setIsGameOver(true);
+        }
+        if (window.setIsGameOver) {
+          window.setIsGameOver(true);
+        }
+
+        showGameOver(scene);
+      }
+    };
   } catch (error) {
     console.error('❌ Error creating player:', error);
   }
@@ -587,15 +690,33 @@ export function drawCinematicMonster(scene) {
   console.log('🎬 Drawing Cinematic Monster at', monsterX, monsterY);
 
   try {
-    const monster = scene.add.sprite(monsterX, monsterY, 'vampire');
-    monster.setScale(1.8); // Restored to standard size
+    // Determine texture and animation based on the first monster in levelData if available
+    let textureKey = 'vampire';
+    let idleAnim = 'vampire-idle';
+
+    if (scene.levelData.monsters && scene.levelData.monsters.length > 0) {
+      const monsterData = scene.levelData.monsters[0];
+      const monsterType = monsterData.type || 'enemy';
+
+      if (monsterType === 'vampire_1') {
+        textureKey = 'Vampire_1';
+        idleAnim = 'vampire_1-idle_down';
+      } else if (monsterType === 'enemy') {
+        textureKey = 'vampire';
+        idleAnim = 'vampire-idle';
+      }
+    }
+
+    const monster = scene.add.sprite(monsterX, monsterY, textureKey);
+    monster.setScale(1.8);
     monster.setData('defaultScale', 1.8);
+    monster.setData('idleAnim', idleAnim);
     monster.setDepth(8);
-    monster.setFlipX(true); // Face left towards player
+    monster.setFlipX(true);
 
     // Play idle animation
-    if (monster.anims && scene.anims.exists('vampire-idle')) {
-      monster.play('vampire-idle');
+    if (monster.anims && scene.anims.exists(idleAnim)) {
+      monster.play(idleAnim);
     }
 
     // Add to scene.monsters so it gets cleaned up properly

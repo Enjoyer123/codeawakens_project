@@ -15,15 +15,20 @@ export const usePhaserMapInteractions = ({
   editingObstacleIndexRef,
   onFormDataChange,
   onSelectedNodeChange,
+  onAddMonsterRequest,
   redrawPhaser
 }) => {
+  const onAddMonsterRequestRef = useRef(onAddMonsterRequest);
+
+  // Update ref when prop changes
+  onAddMonsterRequestRef.current = onAddMonsterRequest;
 
   // Phaser helper functions
   const findNodeAt = (x, y) => {
     const threshold = 20;
     const nodes = formDataRef.current.nodes;
-    return nodes.find(node => 
-      Math.abs(node.x - x) < threshold && 
+    return nodes.find(node =>
+      Math.abs(node.x - x) < threshold &&
       Math.abs(node.y - y) < threshold
     );
   };
@@ -39,7 +44,7 @@ export const usePhaserMapInteractions = ({
         const maxX = Math.max(...obstacle.points.map(p => p.x));
         const minY = Math.min(...obstacle.points.map(p => p.y));
         const maxY = Math.max(...obstacle.points.map(p => p.y));
-        
+
         if (x >= minX && x <= maxX && y >= minY && y <= maxY) {
           return { obstacle, index: i };
         }
@@ -58,16 +63,16 @@ export const usePhaserMapInteractions = ({
   const isItemEnabled = (itemName) => {
     const selectedCategory = selectedCategoryRef.current;
     if (!selectedCategory?.item_enable) return false;
-    
+
     // ใช้ category_items ถ้ามี (ตารางใหม่)
     if (selectedCategory?.category_items && Array.isArray(selectedCategory.category_items)) {
       return selectedCategory.category_items.some(ci => ci.item_type === itemName);
     }
-    
+
     // Fallback ไปใช้ item (backward compatibility)
     let itemData = selectedCategory?.item;
     if (!itemData) return false;
-    
+
     // ถ้าเป็น string ให้ parse JSON
     if (typeof itemData === 'string') {
       try {
@@ -76,7 +81,7 @@ export const usePhaserMapInteractions = ({
         return false;
       }
     }
-    
+
     // แปลงเป็น array
     const enabledItems = Array.isArray(itemData) ? itemData : [itemData];
     return enabledItems.includes(itemName);
@@ -87,12 +92,12 @@ export const usePhaserMapInteractions = ({
     const mode = currentModeRef.current;
     const currentFormData = formDataRef.current;
     const currentSelectedNode = selectedNodeRef.current;
-    
-    
+
+
     if (mode === 'node') {
       // Add new node
-      const newNodeId = currentFormData.nodes.length > 0 
-        ? Math.max(...currentFormData.nodes.map(n => n.id)) + 1 
+      const newNodeId = currentFormData.nodes.length > 0
+        ? Math.max(...currentFormData.nodes.map(n => n.id)) + 1
         : 0;
       const newNode = {
         id: newNodeId,
@@ -106,50 +111,50 @@ export const usePhaserMapInteractions = ({
     } else if (mode === 'edge') {
       // Handle edge creation
       if (!clickedNode) return;
-      
+
       if (!currentSelectedNode) {
         // First node selection
         onSelectedNodeChange(clickedNode);
       } else {
         // Second node selection - create edge
         if (currentSelectedNode.id !== clickedNode.id) {
-          const edgeExists = currentFormData.edges.some(e => 
-            (e.from === currentSelectedNode.id && e.to === clickedNode.id) || 
+          const edgeExists = currentFormData.edges.some(e =>
+            (e.from === currentSelectedNode.id && e.to === clickedNode.id) ||
             (e.from === clickedNode.id && e.to === currentSelectedNode.id)
           );
-          
+
           if (!edgeExists) {
             // ตรวจสอบว่า category เป็น Shortest Path หรือ Minimum Spanning Tree
             // ใช้ selectedCategoryRef.current แทน selectedCategory เพื่อให้ได้ค่าล่าสุด
             const currentCategory = selectedCategoryRef.current;
             const categoryName = (currentCategory?.category_name || '').toLowerCase();
-            const isWeightedGraph = categoryName.includes('shortest path') || 
-                                   categoryName.includes('minimum spanning tree') ||
-                                   categoryName.includes('dijkstra') ||
-                                   categoryName.includes('prim') ||
-                                   categoryName.includes('kruskal');
-            
+            const isWeightedGraph = categoryName.includes('shortest path') ||
+              categoryName.includes('minimum spanning tree') ||
+              categoryName.includes('dijkstra') ||
+              categoryName.includes('prim') ||
+              categoryName.includes('kruskal');
+
             // ใช้ edgeWeightRef.current แทน edgeWeight เพื่อให้ได้ค่าล่าสุด
             const currentEdgeWeightFromRef = edgeWeightRef.current;
-            const edgeWeightNum = typeof currentEdgeWeightFromRef === 'number' 
-              ? currentEdgeWeightFromRef 
+            const edgeWeightNum = typeof currentEdgeWeightFromRef === 'number'
+              ? currentEdgeWeightFromRef
               : parseInt(currentEdgeWeightFromRef, 10);
             const currentEdgeWeight = (!isNaN(edgeWeightNum) && edgeWeightNum > 0) ? edgeWeightNum : 1;
-            
+
             const newEdge = {
               from: currentSelectedNode.id,
               to: clickedNode.id,
             };
-            
+
             // เพิ่ม value field ถ้าเป็น weighted graph
             if (isWeightedGraph) {
               newEdge.value = currentEdgeWeight;
             }
-            
+
             if (process.env.NODE_ENV === 'development') {
               console.log('Creating edge:', newEdge, 'isWeightedGraph:', isWeightedGraph, 'categoryName:', categoryName, 'currentCategory:', currentCategory);
             }
-            
+
             onFormDataChange({
               ...currentFormData,
               edges: [...currentFormData.edges, newEdge],
@@ -164,14 +169,14 @@ export const usePhaserMapInteractions = ({
         alert('Coin ไม่ได้ถูก enable ใน category นี้');
         return;
       }
-      const newCoinId = (currentFormData.coin_positions?.length || 0) > 0 
-        ? Math.max(...currentFormData.coin_positions.map(c => c.id || 0)) + 1 
+      const newCoinId = (currentFormData.coin_positions?.length || 0) > 0
+        ? Math.max(...currentFormData.coin_positions.map(c => c.id || 0)) + 1
         : 1;
       // ใช้ coinValueRef.current แทน coinValue เพื่อให้ได้ค่าล่าสุด (เพราะ handlePhaserClick ถูกเรียกจาก closure)
       const currentCoinValueFromRef = coinValueRef.current;
       // แปลง coinValue เป็น number และตรวจสอบว่าเป็น valid number
-      const coinValueNum = typeof currentCoinValueFromRef === 'number' 
-        ? currentCoinValueFromRef 
+      const coinValueNum = typeof currentCoinValueFromRef === 'number'
+        ? currentCoinValueFromRef
         : parseInt(currentCoinValueFromRef, 10);
       const currentCoinValue = (!isNaN(coinValueNum) && coinValueNum > 0) ? coinValueNum : 10;
       const newCoin = {
@@ -195,8 +200,8 @@ export const usePhaserMapInteractions = ({
         alert('กรุณาคลิกที่ Node เพื่อเพิ่ม People');
         return;
       }
-      const newPeopleId = (currentFormData.people?.length || 0) > 0 
-        ? Math.max(...currentFormData.people.map(p => p.id || 0)) + 1 
+      const newPeopleId = (currentFormData.people?.length || 0) > 0
+        ? Math.max(...currentFormData.people.map(p => p.id || 0)) + 1
         : 1;
       const newPeople = {
         x: Math.round(clickedNode.x),
@@ -220,8 +225,8 @@ export const usePhaserMapInteractions = ({
         alert('กรุณาคลิกที่ Node เพื่อเพิ่ม Treasure');
         return;
       }
-      const newTreasureId = (currentFormData.treasures?.length || 0) > 0 
-        ? Math.max(...currentFormData.treasures.map(t => t.id || 0)) + 1 
+      const newTreasureId = (currentFormData.treasures?.length || 0) > 0
+        ? Math.max(...currentFormData.treasures.map(t => t.id || 0)) + 1
         : 1;
       const newTreasure = {
         id: newTreasureId,
@@ -248,31 +253,35 @@ export const usePhaserMapInteractions = ({
         goal_node_id: clickedNode.id,
       });
     } else if (mode === 'monster') {
-      // Add monster at clicked position
-      const newMonsterId = currentFormData.monsters.length > 0 
-        ? Math.max(...currentFormData.monsters.map(m => m.id)) + 1 
+      // If we have a request callback (e.g. to show a choice dialog), use it
+      if (typeof onAddMonsterRequestRef.current === 'function') {
+        onAddMonsterRequestRef.current(x, y, clickedNode);
+        return;
+      }
+
+      // Add monster at clicked position (Fallback/Default behavior)
+      const newMonsterId = currentFormData.monsters.length > 0
+        ? Math.max(...currentFormData.monsters.map(m => m.id)) + 1
         : 1;
-      
-      // คำนวณ patrol path เป็นสี่เหลี่ยมรอบตำแหน่งที่วาง
-      // ใช้ขนาด patrol area: width 40px, height 45px (จากตัวอย่าง)
+
       const patrolWidth = 40;
       const patrolHeight = 45;
       const centerX = Math.round(x);
       const centerY = Math.round(y);
-      
-      // คำนวณ 4 มุมของสี่เหลี่ยม (เริ่มจาก top-left, วนตามเข็มนาฬิกา)
+
       const patrol = [
-        { x: centerX - patrolWidth / 2, y: centerY - patrolHeight / 2 }, // top-left
-        { x: centerX + patrolWidth / 2, y: centerY - patrolHeight / 2 }, // top-right
-        { x: centerX + patrolWidth / 2, y: centerY + patrolHeight / 2 }, // bottom-right
-        { x: centerX - patrolWidth / 2, y: centerY + patrolHeight / 2 }  // bottom-left
+        { x: centerX - patrolWidth / 2, y: centerY - patrolHeight / 2 },
+        { x: centerX + patrolWidth / 2, y: centerY - patrolHeight / 2 },
+        { x: centerX + patrolWidth / 2, y: centerY + patrolHeight / 2 },
+        { x: centerX - patrolWidth / 2, y: centerY + patrolHeight / 2 }
       ];
-      
+
       const newMonster = {
         id: newMonsterId,
         name: '👹 Goblin',
         hp: 3,
         damage: 100,
+        type: 'enemy', // Default type
         x: centerX,
         y: centerY,
         startNode: clickedNode ? clickedNode.id : null,
@@ -317,10 +326,10 @@ export const usePhaserMapInteractions = ({
         }
         return;
       }
-      
+
       // Delete coin, people, treasure if clicked
       // ลบ coin
-      const coinAt = (currentFormData.coin_positions || []).findIndex(c => 
+      const coinAt = (currentFormData.coin_positions || []).findIndex(c =>
         Math.abs(c.x - x) < 20 && Math.abs(c.y - y) < 20
       );
       if (coinAt !== -1) {
@@ -334,7 +343,7 @@ export const usePhaserMapInteractions = ({
       }
 
       // ลบ people (คลิกที่ตำแหน่ง)
-      const peopleAt = (currentFormData.people || []).findIndex(p => 
+      const peopleAt = (currentFormData.people || []).findIndex(p =>
         Math.abs(p.x - x) < 20 && Math.abs(p.y - y) < 20
       );
       if (peopleAt !== -1) {
@@ -348,7 +357,7 @@ export const usePhaserMapInteractions = ({
       }
 
       // ลบ treasure (คลิกที่ตำแหน่ง)
-      const treasureAt = (currentFormData.treasures || []).findIndex(t => 
+      const treasureAt = (currentFormData.treasures || []).findIndex(t =>
         Math.abs(t.x - x) < 20 && Math.abs(t.y - y) < 20
       );
       if (treasureAt !== -1) {
@@ -364,9 +373,9 @@ export const usePhaserMapInteractions = ({
       // ตรวจสอบการลบ Monster
       // ลบ monster (คลิกที่ตำแหน่ง)
       const monsterAt = (currentFormData.monsters || []).findIndex(m => {
-         const mX = m.x || (m.startNode ? currentFormData.nodes.find(n => n.id === m.startNode)?.x : 0);
-         const mY = m.y || (m.startNode ? currentFormData.nodes.find(n => n.id === m.startNode)?.y : 0);
-         return Math.abs(mX - x) < 20 && Math.abs(mY - y) < 20;
+        const mX = m.x || (m.startNode ? currentFormData.nodes.find(n => n.id === m.startNode)?.x : 0);
+        const mY = m.y || (m.startNode ? currentFormData.nodes.find(n => n.id === m.startNode)?.y : 0);
+        return Math.abs(mX - x) < 20 && Math.abs(mY - y) < 20;
       });
 
       if (monsterAt !== -1) {
@@ -378,14 +387,14 @@ export const usePhaserMapInteractions = ({
         }
         return;
       }
-      
+
       // Delete node if clicked
       if (clickedNode) {
         if (confirm(`ลบ Node ${clickedNode.id}?`)) {
           onFormDataChange({
             ...currentFormData,
             nodes: currentFormData.nodes.filter(n => n.id !== clickedNode.id),
-            edges: currentFormData.edges.filter(e => 
+            edges: currentFormData.edges.filter(e =>
               e.from !== clickedNode.id && e.to !== clickedNode.id
             ),
             start_node_id: currentFormData.start_node_id === clickedNode.id ? null : currentFormData.start_node_id,
@@ -399,17 +408,17 @@ export const usePhaserMapInteractions = ({
       }
     }
   }, [
-    formDataRef, 
-    selectedNodeRef, 
-    currentModeRef, 
-    onFormDataChange, 
-    onSelectedNodeChange, 
-    coinValueRef, 
-    selectedCategoryRef, 
-    edgeWeightRef, 
-    isDraggingObstacleRef, 
-    obstacleDragStartRef, 
-    obstacleDragEndRef, 
+    formDataRef,
+    selectedNodeRef,
+    currentModeRef,
+    onFormDataChange,
+    onSelectedNodeChange,
+    coinValueRef,
+    selectedCategoryRef,
+    edgeWeightRef,
+    isDraggingObstacleRef,
+    obstacleDragStartRef,
+    obstacleDragEndRef,
     editingObstacleIndexRef
   ]);
 
@@ -417,21 +426,21 @@ export const usePhaserMapInteractions = ({
     // Make scene interactive - create a zone that covers the entire scene
     const zone = scene.add.zone(canvasSize.width / 2, canvasSize.height / 2, canvasSize.width, canvasSize.height);
     zone.setInteractive();
-    
+
     // Pointer events
     zone.on('pointerdown', (pointer) => {
       handlePhaserClick(pointer.x, pointer.y);
     });
-    
+
     scene.input.on('pointermove', (pointer) => {
       const mode = currentModeRef.current;
-      
+
       // Handle obstacle dragging
       if (mode === 'obstacle' && isDraggingObstacleRef.current && obstacleDragStartRef.current) {
         obstacleDragEndRef.current = { x: Math.round(pointer.x), y: Math.round(pointer.y) };
         redrawPhaser(); // Redraw to show preview
       }
-      
+
       // Handle cursor changes
       if (mode === 'delete') {
         const node = findNodeAt(pointer.x, pointer.y);
@@ -447,25 +456,25 @@ export const usePhaserMapInteractions = ({
         scene.input.setDefaultCursor('default');
       }
     });
-    
+
     scene.input.on('pointerup', (pointer) => {
       const mode = currentModeRef.current;
-      
+
       // Finish obstacle dragging
       if (mode === 'obstacle' && isDraggingObstacleRef.current && obstacleDragStartRef.current && obstacleDragEndRef.current) {
         const start = obstacleDragStartRef.current;
         const end = obstacleDragEndRef.current;
-        
+
         // Calculate rectangle bounds
         const minX = Math.min(start.x, end.x);
         const maxX = Math.max(start.x, end.x);
         const minY = Math.min(start.y, end.y);
         const maxY = Math.max(start.y, end.y);
-        
+
         // Only create/update if rectangle is large enough
         if (Math.abs(maxX - minX) > 10 && Math.abs(maxY - minY) > 10) {
           const currentFormData = formDataRef.current;
-          
+
           if (editingObstacleIndexRef.current !== null) {
             // Update existing obstacle
             const updatedObstacles = [...currentFormData.obstacles];
@@ -480,17 +489,17 @@ export const usePhaserMapInteractions = ({
                 { x: minX, y: maxY }  // bottom-left
               ]
             };
-            
+
             onFormDataChange({
               ...currentFormData,
               obstacles: updatedObstacles,
             });
           } else {
             // Create new obstacle
-            const newObstacleId = currentFormData.obstacles.length > 0 
-              ? Math.max(...currentFormData.obstacles.map(o => o.id || 0)) + 1 
+            const newObstacleId = currentFormData.obstacles.length > 0
+              ? Math.max(...currentFormData.obstacles.map(o => o.id || 0)) + 1
               : 1;
-            
+
             // Create rectangle with 4 points (clockwise from top-left)
             const newObstacle = {
               id: newObstacleId,
@@ -502,14 +511,14 @@ export const usePhaserMapInteractions = ({
                 { x: minX, y: maxY }  // bottom-left
               ]
             };
-            
+
             onFormDataChange({
               ...currentFormData,
               obstacles: [...currentFormData.obstacles, newObstacle],
             });
           }
         }
-        
+
         // Reset drag state
         isDraggingObstacleRef.current = false;
         obstacleDragStartRef.current = null;

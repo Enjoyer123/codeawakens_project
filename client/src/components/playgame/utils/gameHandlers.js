@@ -93,7 +93,7 @@ export function handleRestartGame({
       monster.data.inBattle = false;
       monster.data.isChasing = false;
       monster.data.lastAttackTime = null;
-      monster.data.hp = 3;
+      monster.data.hp = monster.data.maxHp || 3;
 
       // Use new utility function to reset enemy
       resetEnemy(monster.sprite, monster.sprite.x, monster.sprite.y);
@@ -102,7 +102,8 @@ export function handleRestartGame({
         monster.glow.setFillStyle(0xff0000, 0.2);
       }
       if (monster.sprite.anims) {
-        monster.sprite.anims.play('vampire-idle', true);
+        const idleAnim = monster.sprite.getData('idleAnim') || 'vampire-idle';
+        monster.sprite.anims.play(idleAnim, true);
       }
     });
   }

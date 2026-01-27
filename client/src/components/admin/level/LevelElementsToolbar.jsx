@@ -5,7 +5,7 @@ import { ITEM_TYPES } from '@/constants/itemTypes';
 
 import { useLevelElements } from './hooks/useLevelElements';
 
-const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, onAddMonster, onAddObstacle, selectedCategory, coinValue, onCoinValueChange, edgeWeight, onEdgeWeightChange }) => {
+const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, onAddMonster, onAddObstacle, selectedCategory, selectedMonsterType, onMonsterTypeChange, coinValue, onCoinValueChange, edgeWeight, onEdgeWeightChange }) => {
   const { isItemTypeEnabled, isWeightedGraphCategory } = useLevelElements(selectedCategory);
 
   const handleAddCoin = () => {
@@ -24,13 +24,13 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold">Level Elements</h2>
         <Button
-            variant={currentMode === 'delete' ? 'destructive' : 'outline'}
-            size="sm"
-            onClick={() => onSetMode('delete')}
-            className={`text-xs ${currentMode === 'delete' ? 'bg-red-600 hover:bg-red-700' : 'text-red-500 hover:text-red-600 border-red-200 hover:bg-red-50'}`}
-          >
-            <Trash2 className="h-3 w-3 mr-2" />
-            Delete Mode
+          variant={currentMode === 'delete' ? 'destructive' : 'outline'}
+          size="sm"
+          onClick={() => onSetMode('delete')}
+          className={`text-xs ${currentMode === 'delete' ? 'bg-red-600 hover:bg-red-700' : 'text-red-500 hover:text-red-600 border-red-200 hover:bg-red-50'}`}
+        >
+          <Trash2 className="h-3 w-3 mr-2" />
+          Delete Mode
         </Button>
       </div>
 
@@ -55,7 +55,7 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
             Edge
           </Button>
         </div>
-        
+
         {/* Edge Weight Input Sub-section - แสดงเมื่อเป็น Shortest Path หรือ Minimum Spanning Tree */}
         {isWeightedGraphCategory() && currentMode === 'edge' && (
           <div className="bg-gray-50 p-2 rounded-md border border-gray-100 animate-in fade-in slide-in-from-top-1 duration-200">
@@ -99,7 +99,7 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
             onClick={() => onSetMode('goal')}
             className={`w-full justify-start ${currentMode === 'goal' ? 'bg-amber-500 hover:bg-amber-600' : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 hover:text-amber-800'}`}
           >
-             <span className="mr-2">🎯</span>
+            <span className="mr-2">🎯</span>
             Goal
           </Button>
         </div>
@@ -108,23 +108,52 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
       {/* Group 3: Enemies & Obstacles */}
       <div className="space-y-2">
         <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Enemies & Obstacles</h3>
-        <div className="grid grid-cols-2 gap-2">
-           <Button
-            variant={currentMode === 'monster' ? 'default' : 'outline'}
-            onClick={onAddMonster}
-            className="w-full justify-start"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Monster
-          </Button>
-          <Button
-            variant={currentMode === 'obstacle' ? 'default' : 'outline'}
-            onClick={onAddObstacle}
-            className="w-full justify-start"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Obstacle
-          </Button>
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              variant={currentMode === 'monster' ? 'default' : 'outline'}
+              onClick={onAddMonster}
+              className="w-full justify-start"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Monster
+            </Button>
+            <Button
+              variant={currentMode === 'obstacle' ? 'default' : 'outline'}
+              onClick={onAddObstacle}
+              className="w-full justify-start"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Obstacle
+            </Button>
+          </div>
+
+          {/* Monster Type Selector - แสดงเมื่ออยู่ในโหมด monster */}
+          {currentMode === 'monster' && (
+            <div className="bg-gray-50 p-2 rounded-md border border-gray-100 animate-in fade-in slide-in-from-top-1 duration-200">
+              <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">
+                Monster Type
+              </label>
+              <div className="flex flex-col gap-1">
+                <Button
+                  variant={selectedMonsterType === 'enemy' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => typeof onMonsterTypeChange === 'function' && onMonsterTypeChange('enemy')}
+                  className={`justify-start h-7 text-[10px] py-1 px-2 ${selectedMonsterType === 'enemy' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'text-gray-600'}`}
+                >
+                  <span className="mr-2">👹</span> Goblin
+                </Button>
+                <Button
+                  variant={selectedMonsterType === 'vampire_1' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => typeof onMonsterTypeChange === 'function' && onMonsterTypeChange('vampire_1')}
+                  className={`justify-start h-7 text-[10px] py-1 px-2 ${selectedMonsterType === 'vampire_1' ? 'bg-purple-100 text-purple-700 hover:bg-purple-200' : 'text-gray-600'}`}
+                >
+                  <span className="mr-2">🧛</span> Vampire
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -133,7 +162,7 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
         <div className="space-y-2">
           <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Items</h3>
           <div className="space-y-3">
-             <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {isItemTypeEnabled(ITEM_TYPES.COIN_POSITIONS) && (
                 <Button
                   variant={currentMode === 'coin' ? 'default' : 'outline'}
@@ -165,36 +194,36 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
                 </Button>
               )}
             </div>
-            
+
             {/* Coin Value Input Sub-section */}
             {isItemTypeEnabled(ITEM_TYPES.COIN_POSITIONS) && currentMode === 'coin' && (
-               <div className="bg-gray-50 p-2 rounded-md border border-gray-100 animate-in fade-in slide-in-from-top-1 duration-200">
-                  <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">
-                    Coin Value
-                  </label>
-                  <div className="flex items-center gap-2">
-                     <Coins className="w-3 h-3 text-yellow-500" />
-                     <Input
-                        type="number"
-                        min="1"
-                        value={coinValue || 10}
-                        onChange={(e) => {
-                          const newValue = e.target.value === '' ? 10 : parseInt(e.target.value, 10);
-                          const finalValue = isNaN(newValue) ? 10 : newValue;
-                          onCoinValueChange(finalValue);
-                        }}
-                        className="h-7 text-sm py-1"
-                        placeholder="10"
-                        autoFocus
-                     />
-                  </div>
-               </div>
+              <div className="bg-gray-50 p-2 rounded-md border border-gray-100 animate-in fade-in slide-in-from-top-1 duration-200">
+                <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">
+                  Coin Value
+                </label>
+                <div className="flex items-center gap-2">
+                  <Coins className="w-3 h-3 text-yellow-500" />
+                  <Input
+                    type="number"
+                    min="1"
+                    value={coinValue || 10}
+                    onChange={(e) => {
+                      const newValue = e.target.value === '' ? 10 : parseInt(e.target.value, 10);
+                      const finalValue = isNaN(newValue) ? 10 : newValue;
+                      onCoinValueChange(finalValue);
+                    }}
+                    className="h-7 text-sm py-1"
+                    placeholder="10"
+                    autoFocus
+                  />
+                </div>
+              </div>
             )}
           </div>
         </div>
       )}
 
-    
+
     </div>
   );
 };

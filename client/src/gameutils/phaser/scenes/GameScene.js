@@ -26,6 +26,7 @@ import {
 } from '..';
 import { createCharacterAnims } from '../../../anims/PlayerAnims';
 import { createVampireAnims } from '../../../anims/EnemyAnims';
+import { createVampire_1Anims } from '../../../anims/Vampire_1Anims';
 import { preloadAllWeaponEffects } from '../../shared/combat';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
@@ -79,6 +80,7 @@ export class GameScene extends Phaser.Scene {
         // Load sprites
         this.load.atlas('player', '/characters/player.png', '/characters/player.json');
         this.load.atlas('vampire', '/enemies/vampire.png', '/enemies/vampire.json');
+        this.load.atlas('Vampire_1', '/enemies/Vampire1.png', '/enemies/Vampire1.json');
         this.load.image('weapon_stick', `${API_BASE_URL}/uploads/weapons/stick_idle_1.png`);
 
         // Load aura effects
@@ -117,6 +119,7 @@ export class GameScene extends Phaser.Scene {
         // Create animations
         createCharacterAnims(this.anims);
         createVampireAnims(this.anims);
+        createVampire_1Anims(this.anims);
 
         // Helper for safe setup
         const safeSetupGame = (retryCount = 0, maxRetries = 20) => {
