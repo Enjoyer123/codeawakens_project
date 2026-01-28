@@ -338,7 +338,7 @@ export function usePatternAnalysis({
             ? `⚠️ ไม่ตรง Pattern ใดๆ (${patternPercentage.percentage}%)`
             : "วาง blocks เพื่อดูผลลัพธ์"
         );
-        setCurrentGameState({ weaponKey: defaultWeaponKey, weaponData: defaultWeaponData });
+        setCurrentGameState({ weaponKey: defaultWeaponKey, weaponData: defaultWeaponData, patternTypeId: 0 });
 
         const currentScene = currentState.currentScene;
         if (currentScene && currentScene.add && currentScene.player) {
@@ -366,4 +366,3 @@ export function usePatternAnalysis({
     };
   }, [blocklyLoaded, workspaceRef.current, hintOpen, goodPatterns]); // Added goodPatterns to dependencies
 }
-

@@ -43,8 +43,8 @@ function calculateFinalScore(isGameOver, patternTypeId, hintOpens = 0, userBigO 
     if (totalScore > 100) totalScore = 100;
 
     let stars = 1;
-    if (totalScore >= 90) stars = 3;
-    else if (totalScore >= 50) stars = 2;
+    if (totalScore > 80) stars = 3;
+    else if (totalScore > 60) stars = 2;
     else if (totalScore >= 1) stars = 1;
 
     return { totalScore, stars, pattern_bonus_score, bigOPenalty, testCaseBonus: safeTestCaseBonus };
