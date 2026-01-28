@@ -163,10 +163,7 @@ export const calculateLevelScore = (
 
     // Determine Pattern Type ID
     let patternTypeId = finalState.patternTypeId;
-    if (!patternTypeId && goodPatterns && goodPatterns.length > 0) {
-        const bestPattern = goodPatterns.find(p => p.pattern_type_id);
-        if (bestPattern) patternTypeId = bestPattern.pattern_type_id;
-    }
+
     if (!patternTypeId) patternTypeId = 0;
 
     // Determine Target Big O

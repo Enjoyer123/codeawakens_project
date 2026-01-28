@@ -130,7 +130,7 @@ export function usePatternAnalysis({
         const defaultWeaponKey = currentState.levelData?.defaultWeaponKey || "stick";
         const defaultWeaponData = getWeaponData(defaultWeaponKey);
         setCurrentWeaponData(defaultWeaponData);
-        setCurrentGameState({ weaponKey: defaultWeaponKey, weaponData: defaultWeaponData });
+        setCurrentGameState({ weaponKey: defaultWeaponKey, weaponData: defaultWeaponData, patternTypeId: 0 });
 
         const currentScene = currentState.currentScene;
         if (currentScene && currentScene.add && currentScene.player) {
