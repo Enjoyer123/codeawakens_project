@@ -736,13 +736,14 @@ const GameCore = ({
         </div>
 
         {/* Blockly Area - 35% ของหน้าจอ */}
-        <div
+       <div
           className="w-[50%] border-l border-black flex flex-col backdrop-blur-sm overflow-hidden"
           style={{
-            backgroundImage: "url('/paper.png')",
-            backgroundSize: "cover",
+            backgroundImage: "url('/blocklyBg.png')",
+            backgroundSize: "100% 100%", 
             backgroundPosition: "center",
-            backgroundRepeat: "no-repeat"
+            backgroundRepeat: "no-repeat",
+            imageRendering: "pixelated" 
           }}
         >
           <div className="flex flex-col h-full px-4 py-4 md:px-20">

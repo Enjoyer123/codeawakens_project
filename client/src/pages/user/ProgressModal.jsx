@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react';
 import { useProgressSaver } from './hooks/useProgressSaver';
+import { useNavigate } from 'react-router-dom';
 
 const ProgressModal = ({ isOpen, onClose, gameResult, levelData, attempts, timeSpent, blocklyXml, textCodeContent, finalScore, hp_remaining, userBigO, targetBigO, getToken }) => {
+  const navigate = useNavigate();
   
   const {
     saving,
@@ -46,172 +48,258 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, attempts, timeS
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, levelData, getToken, gameResult]); 
 
+  const handleClose = () => {
+    onClose();
+    navigate('/user/mapselect');
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-      {/* Subtle backdrop with blur */}
-      <div className="absolute inset-0 bg-black-900/5 backdrop-blur-sm transition-opacity duration-300" onClick={onClose} />
+  <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+  
+  {/* 1. Backdrop */}
+  <div 
+    className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300" 
+    onClick={handleClose} 
+  />
 
-      <div className="relative bg-black p-6 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto transform transition-all duration-300">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-white">
-            {gameResult === 'victory' ? 'Victory Progress' : 'Game Over'}
-          </h2>
-          <div className="flex items-center gap-2">
-            {saving && (
-              <span className="text-yellow-400 text-sm">กำลังบันทึก...</span>
-            )}
-            {saveStatus === 'success' && (
-              <span className="text-green-400 text-sm">✓ บันทึกสำเร็จ</span>
-            )}
-            {saveStatus === 'error' && (
-              <span className="text-red-400 text-sm">✗ บันทึกไม่สำเร็จ</span>
-            )}
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-white"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
+  {/* 2. Pixel Card Wrapper */}
+  <div className="relative w-full max-w-2xl mx-auto shadow-2xl transform transition-all duration-300">
+    
+    {/* --- Layer ล่าง: กรอบรูป (Background) --- */}
+    <img 
+      src="/scoreccl1.png" 
+      alt="Score Board"
+      className="w-full h-auto block select-none"
+      style={{ imageRendering: 'pixelated' }} 
+    />
 
+    {/* --- Layer บน: เนื้อหา --- */}
+    <div className="absolute inset-0 flex flex-col px-[8%] pt-[6%] pb-[8%]">
+      
+      {/* === A. Header Section === */}
+      <div className="flex justify-between items-start h-[10%] shrink-0">
+        <h2 
+            className="text-[#2d1b0e] font-bold drop-shadow-sm uppercase"
+            style={{ 
+                fontFamily: '"Press Start 2P", monospace',
+                fontSize: 'clamp(12px, 2.5vw, 24px)'
+            }}
+        >
+          {gameResult === 'victory' ? 'VICTORY' : 'GAME OVER'}
+        </h2>
+        
+        <button onClick={handleClose} className="text-[#5d4037] hover:text-red-600 hover:scale-110 transition-transform font-bold text-xl">
+          ✕
+        </button>
+      </div>
+
+      {/* === B. Scrollable Content (Score & Details) === */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
         <div className="space-y-4">
-          {/* Level Info & Status */}
-          <div className="bg-white p-4 rounded">
-            <h3 className="font-bold text-gray-800 mb-2">Level Progress</h3>
-            <div className="text-gray-600">
-              <p>Level ID: {userProgressData.level_id}</p>
-              <p>Status: {userProgressData.status}</p>
-              <p>Correct Solution: {userProgressData.is_correct ? 'Yes' : 'No'}</p>
-            </div>
+      
+          {/* ⭐ STAR SECTION ⭐ */}
+          <div className="flex justify-center py-2">
+            {console.log("stars_earned",userProgressData.stars_earned)}
+            <img 
+                // ✅ Logic: ถ้าไม่ชนะ = star0 | ถ้าชนะ = star + เลขดาว (1,2,3)
+                src={gameResult !== 'victory' ? '/star0.png' : `/star${userProgressData.stars_earned || 0}.png`}
+                alt="Rank Stars"
+                className="h-20 sm:h-30 object-contain drop-shadow-md animate-bounce-slow"
+                style={{ imageRendering: 'pixelated' }}
+            />
           </div>
 
-          {/* Score Details */}
-          <div className="bg-white p-4 rounded">
-            <h3 className="font-bold text-gray-800 mb-2">Score Details</h3>
-            <div className="text-gray-600">
-              <p className="mb-2">Stars: {'⭐'.repeat(userProgressData.stars_earned)}</p>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span>Base Completion:</span>
-                  <span className="font-mono">60</span>
-                </div>
-                {userProgressData.pattern_bonus_score > 0 && (
-                  <div className="flex justify-between text-green-600">
-                    <span>Pattern Tier Bonus:</span>
-                    <span className="font-mono">+{userProgressData.pattern_bonus_score}</span>
-                  </div>
-                )}
-                {finalScore?.testCaseBonus > 0 && (
-                  <div className="flex justify-between text-green-600">
-                    <span>Test Case Bonus:</span>
-                    <span className="font-mono">+{Math.round(finalScore.testCaseBonus)}</span>
-                  </div>
-                )}
-                {finalScore?.bigOPenalty > 0 && (
-                  <div className="flex justify-between text-red-600 font-bold">
-                    <span>Big O Penalty:</span>
-                    <span className="font-mono">-{finalScore.bigOPenalty}</span>
-                  </div>
-                )}
-                <div className="border-t border-gray-200 mt-2 pt-2 flex justify-between font-bold text-lg text-slate-900">
-                  <span>Total Score:</span>
-                  <span className="text-blue-600">{finalScore?.totalScore ?? userProgressData.best_score}</span>
-                </div>
-              </div>
+        
+          {/* Score Details Box */}
+<div 
+  className="bg-[#fdf6e3]/90 p-4 mx-2 my-8" // ลบ border/rounded เดิมออก, ใส่ mx-1 กันเงาขาด
+  style={{
+    // สร้างขอบ Pixel ด้วย Box Shadow (เทคนิค NES Style)
+    boxShadow: `
+      -3px 0 0 0 #8d6e63,  /* ขอบซ้าย */
+       3px 0 0 0 #8d6e63,  /* ขอบขวา */
+       0 -3px 0 0 #8d6e63, /* ขอบบน */
+       0 3px 0 0 #8d6e63   /* ขอบล่าง */
+    `,
+    imageRendering: 'pixelated'
+  }}
+>
+    <h3 className="font-bold text-[#5d4037] mb-2 font-pixel text-xs sm:text-sm uppercase tracking-wider">
+        Score Breakdown
+    </h3>
+    {/* ... (เนื้อหาข้างในเหมือนเดิม) ... */}
+    <div className="space-y-1 text-xs sm:text-sm font-mono text-[#5d4037]">
+        {/* ... */}
+        <div className="flex justify-between">
+            <span>Base Completion:</span>
+            <span>60</span>
+        </div>
+        {userProgressData.pattern_bonus_score > 0 && (
+            <div className="flex justify-between text-green-700">
+            <span>Pattern Bonus:</span>
+            <span>+{userProgressData.pattern_bonus_score}</span>
             </div>
-          </div>
-
-          {/* Attempt Details */}
-          <div className="bg-white p-4 rounded">
-            <h3 className="font-bold text-gray-800 mb-2">Attempt Information</h3>
-            <div className="text-gray-600">
-              <p>Attempts: {userProgressData.attempts_count}</p>
-              <p>Execution Time: {userProgressData.execution_time}s</p>
-              <p>Last Attempt: {new Date().toLocaleString()}</p>
-              {userProgressData.is_correct && (
-                <p>Completed: {new Date().toLocaleString()}</p>
-              )}
+        )}
+        {finalScore?.testCaseBonus > 0 && (
+            <div className="flex justify-between text-green-700">
+            <span>Test Case Bonus:</span>
+            <span>+{Math.round(finalScore.testCaseBonus)}</span>
             </div>
-          </div>
-
-          {/* Code Details */}
-          <div className="bg-white p-4 rounded">
-            <h3 className="font-bold text-gray-800 mb-2">Code Information</h3>
-            <div className="text-gray-600">
-              <p>Text Mode: {levelData?.textcode ? 'Yes' : 'No'}</p>
-              <p>HP Remaining: {userProgressData.hp_remaining}</p>
-
-              {/* Blockly XML Preview */}
-              <div className="mt-2">
-                <p className="font-bold">Blockly XML:</p>
-                <div className="bg-gray-950 text-gray-100 p-2 rounded mt-1 text-xs font-mono overflow-x-auto max-h-32 overflow-y-auto">
-                  {userProgressData.blockly_code ? (
-                    userProgressData.blockly_code.length > 100
-                      ? userProgressData.blockly_code.substring(0, 1000)
-                      : userProgressData.blockly_code
-                  ) : 'No Blockly code available'}
-                </div>
-              </div>
-
-              {/* Text Code Preview (if available) */}
-              {levelData?.textcode && userProgressData.text_code && (
-                <div className="mt-2">
-                  <p className="font-bold">Text Code:</p>
-                  <div className="bg-gray-950 text-gray-100 p-2 rounded mt-1 text-xs font-mono overflow-x-auto max-h-32 overflow-y-auto">
-                    {userProgressData.text_code.length > 100
-                      ? userProgressData.text_code.substring(0, 1000)
-                      : userProgressData.text_code}
-                  </div>
-                </div>
-              )}
+        )}
+        {finalScore?.bigOPenalty > 0 && (
+            <div className="flex justify-between text-red-600 font-bold">
+            <span>Big O Penalty:</span>
+            <span>-{finalScore.bigOPenalty}</span>
             </div>
-          </div>
+        )}
+        <div className="border-t-2 border-[#8d6e63]/50 mt-2 pt-2 flex justify-between font-bold text-base text-[#2d1b0e]">
+            <span>Total Score:</span>
+            <span className="text-blue-700">{finalScore?.totalScore ?? userProgressData.best_score}</span>
+        </div>
+    </div>
+</div>
+
 
           {/* Rewards Section */}
           {checkingRewards && (
-            <div className="bg-yellow-900/50 border border-yellow-500 p-4 rounded">
-              <p className="text-yellow-300 text-sm">กำลังตรวจสอบรางวัล...</p>
+            <div className="bg-yellow-100/80 border-2 border-yellow-500 p-3 rounded text-center">
+              <p className="text-yellow-800 text-xs animate-pulse">Checking Rewards...</p>
             </div>
           )}
+          
+          {/* Rewards Section */}
+         {awardedRewards.length > 0 && (
+           <div className="mt-6">
+              <h3 className="font-bold text-[#5d4037] mb-2 text-sm text-center font-pixel uppercase">
+               
+              </h3>
+              
+              {/* Container: แถบ 5 ช่อง (ใช้ reward.png เป็นพื้นหลัง) */}
+              <div 
+                className="relative w-full max-w-[450px] mx-auto aspect-[5/1] grid grid-cols-5"
+                style={{
+                   backgroundImage: "url('/reward.png')",
+                   backgroundSize: '100% 100%', // ยืดเต็มกรอบ
+                   imageRendering: 'pixelated',
+                   backgroundRepeat: 'no-repeat'
+                }}
+              >
+                {/* Loop สร้าง 5 ช่อง (Fixed 5 Slots) */}
+                {Array.from({ length: 5 }).map((_, index) => {
+                  const userReward = awardedRewards[index];
+                  const item = userReward?.reward;
+                  // Logic from InventoryTab: use frame5 or frame1
+                  const itemImage = item?.frame5 || item?.frame1;
+                  const imageUrl = itemImage ? (
+                    itemImage.startsWith('http') ? itemImage : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'}${itemImage}`
+                  ) : null;
 
-          {awardedRewards.length > 0 && (
-            <div className="bg-green-900/50 border border-green-500 p-4 rounded">
-              <h3 className="font-bold text-green-400 mb-2">🎉 คุณได้รับรางวัล!</h3>
-              <div className="space-y-2">
-                {awardedRewards.map((userReward) => (
-                  <div key={userReward.user_reward_id} className="text-green-300 text-sm">
-                    <p className="font-semibold">✨ {userReward.reward?.reward_name || 'รางวัล'}</p>
-                    {userReward.reward?.description && (
-                      <p className="text-green-400 text-xs ml-2">{userReward.reward.description}</p>
-                    )}
-                  </div>
-                ))}
+                  return (
+                    <div key={index} className="relative w-full h-full flex items-center justify-center p-0.5">
+                      
+                      {userReward ? (
+                        <div 
+                          className="w-full h-full flex items-center justify-center group relative bg-cover bg-center bg-no-repeat"
+                          style={{
+                             backgroundImage: "url('/reward1cell.png')",
+                             imageRendering: 'pixelated'
+                          }}
+                        >
+                           {imageUrl ? (
+                               <img 
+                                   src={imageUrl} 
+                                   alt={item?.reward_name || 'Reward'} 
+                                   className="w-full h-full object-contain drop-shadow-sm group-hover:scale-110 transition-transform"
+                                   style={{ imageRendering: 'pixelated' }}
+                                   title={item?.reward_name}
+                               />
+                           ) : (
+                               <span className="text-[#5d4037] font-bold text-[8px] sm:text-[10px] leading-tight text-center drop-shadow-sm px-1 break-words line-clamp-2">
+                                  {item?.reward_name || 'Item'}
+                               </span>
+                           )}
+                        </div>
+                      ) : (
+                        <div className="w-full h-full" />
+                      )}
+
+                    </div>
+                  );
+                })}
               </div>
-            </div>
+          </div>
           )}
 
-          {/* Error Message */}
-          {saveStatus === 'error' && saveError && (
-            <div className="bg-red-900/50 border border-red-500 p-4 rounded">
-              <h3 className="font-bold text-red-400 mb-2">Error Saving Progress</h3>
-              <p className="text-red-300 text-sm">{saveError}</p>
-            </div>
-          )}
-        </div>
 
-        <div className="mt-6 flex justify-end">
-          <button
-            onClick={onClose}
-            className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded"
-          >
-            Close
-          </button>
         </div>
       </div>
+
+      {/* === C. Footer Buttons (AGAIN / NEXT) === */}
+      <div className="flex justify-center gap-4 shrink-0 pb-12 items-end">
+          
+        {/* ปุ่ม AGAIN */}
+        <button 
+          // ✅ ปรับขนาด: w-5/12 (กว้างเกือบครึ่ง) และ max-w จำกัดไม่ให้ใหญ่เกิน
+          className="group relative w-5/12 max-w-[220px] transition-transform hover:scale-105 active:translate-y-1"
+        >
+            {/* 1. รูปหลัก (Base) */}
+            <img 
+              src="/button.png" 
+              alt="Button Normal" 
+              className="block w-full h-auto" 
+              style={{ imageRendering: 'pixelated' }}
+            />
+            
+            {/* 2. รูป Hover (Overlay) */}
+            <img 
+              src="/buttonhover.png" 
+              alt="Button Hover" 
+              className="absolute inset-0 w-full h-full opacity-0 group-hover:opacity-100 transition-opacity duration-100"
+              style={{ imageRendering: 'pixelated' }}
+            />
+
+            {/* 3. Text */}
+            <span className="absolute inset-0 flex items-center justify-center pb-1 text-[#fdf6e3] group-hover:text-white font-bold text-sm sm:text-lg drop-shadow-md font-pixel uppercase">
+               AGAIN 
+            </span>
+        </button>
+
+        {/* ปุ่ม NEXT (แสดงเฉพาะตอนชนะ) */}
+        {gameResult === 'victory' && (
+          <button 
+              onClick={() => { /* ใส่ฟังก์ชันไปด่านถัดไป */ }}
+              className="group relative w-5/12 max-w-[220px] transition-transform hover:scale-105 active:translate-y-1"
+          >
+              {/* 1. รูปหลัก */}
+              <img 
+                  src="/button.png" 
+                  alt="Button Normal" 
+                  className="block w-full h-auto"
+                  style={{ imageRendering: 'pixelated' }}
+              />
+
+              {/* 2. รูป Hover */}
+              <img 
+                 src="/buttonhover.png" 
+                 alt="Button Hover" 
+                 className="absolute inset-0 w-full h-full opacity-0 group-hover:opacity-100 transition-opacity duration-100"
+                 style={{ imageRendering: 'pixelated' }}
+              />
+
+              {/* 3. Text */}
+              <span className="absolute inset-0 flex items-center justify-center pb-1 text-[#fdf6e3] group-hover:text-white font-bold text-sm sm:text-lg drop-shadow-md font-pixel uppercase">
+                  NEXT
+              </span>
+          </button>
+        )}
+
+      </div>
+
     </div>
+  </div>
+</div>
   );
 };
 
