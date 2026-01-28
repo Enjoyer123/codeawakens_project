@@ -163,23 +163,25 @@ export const calculateLevelScore = (
 
     // Determine Pattern Type ID
     let patternTypeId = finalState.patternTypeId;
-
     if (!patternTypeId) patternTypeId = 0;
 
-    // Determine Target Big O
-    let targetBigO = hintData?.bestPatternBigO || hintData?.bestPattern?.big_o || hintData?.bestPattern?.bigO;
+    // Determine Target Big O (Only if pattern is matched)
+    let targetBigO = null;
+    if (patternTypeId > 0) {
+        targetBigO = hintData?.bestPatternBigO || hintData?.bestPattern?.big_o || hintData?.bestPattern?.bigO;
 
-    // Fallback 1: Try to find in goodPatterns using patternTypeId
-    if (!targetBigO && patternTypeId && goodPatterns) {
-        const matchedP = goodPatterns.find(p => p.pattern_type_id === patternTypeId);
-        if (matchedP) {
-            targetBigO = matchedP.bigO || matchedP.big_o;
+        // Fallback 1: Try to find in goodPatterns using patternTypeId
+        if (!targetBigO && patternTypeId && goodPatterns) {
+            const matchedP = goodPatterns.find(p => p.pattern_type_id === patternTypeId);
+            if (matchedP) {
+                targetBigO = matchedP.bigO || matchedP.big_o;
+            }
         }
-    }
 
-    // Fallback 2: Try currentLevel directly
-    if (!targetBigO && currentLevel) {
-        targetBigO = currentLevel.big_o || currentLevel.bigO;
+        // Fallback 2: Try currentLevel directly
+        if (!targetBigO && currentLevel) {
+            targetBigO = currentLevel.big_o || currentLevel.bigO;
+        }
     }
 
     // Calculate Final Score

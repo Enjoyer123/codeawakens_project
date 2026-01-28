@@ -273,16 +273,35 @@ const handleSuccess = async ({
 
     // In preview mode, unlock pattern and level
     if (isPreview) {
-        // Use patternId from props (the pattern being tested)
+        // [New Logic] Only unlock the *specific* pattern we are previewing if the user
+        // ACTUALLY used that pattern to win.
+        const matchedPattern = hintData?.bestPattern;
+
         if (patternId && onUnlockPattern) {
-            await onUnlockPattern(patternId);
-        } else if (onUnlockPattern) {
-            // Fallback: find matched pattern if patternId not provided
-            const matchedPattern = goodPatterns.find(p => p.pattern_id === patternId) || goodPatterns[0];
-            if (matchedPattern) {
-                await onUnlockPattern(matchedPattern.pattern_id);
+            // Check if the USED pattern matches the PREVIEWED pattern AND is a 100% match
+            const isExactMatch = matchedPattern &&
+                String(matchedPattern.pattern_id) === String(patternId) &&
+                hintData?.patternPercentage === 100;
+
+            console.log(`🔐 [Preview] Unlock Check:`, {
+                previewPatternId: patternId,
+                matchedPatternId: matchedPattern?.pattern_id,
+                matchedPatternName: matchedPattern?.name,
+                percentage: hintData?.patternPercentage,
+                isExactMatch
+            });
+
+            if (isExactMatch) {
+                await onUnlockPattern(patternId);
+                console.log(`🔓 [Preview] Unlocked pattern ${patternId} because it was successfully used (100% match).`);
+            } else {
+                console.log(`🔒 [Preview] Did NOT unlock pattern ${patternId}. Match failed or < 100%.`);
             }
+        } else if (onUnlockPattern && matchedPattern && hintData?.patternPercentage === 100) {
+            // Fallback: If no specific patternId was passed pattern (100% match only)
+            await onUnlockPattern(matchedPattern.pattern_id);
         }
+
         if (onUnlockLevel && currentLevel) {
             await onUnlockLevel(currentLevel.level_id);
         }
