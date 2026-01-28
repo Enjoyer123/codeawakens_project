@@ -26,7 +26,7 @@ exports.getAllLevelCategories = async (req, res) => {
             level_name: true,
             is_unlocked: true,
             required_level_id: true,
-            require_pre_score: true,
+            required_skill_level: true,
           },
         },
         category_items: {
@@ -46,15 +46,16 @@ exports.getAllLevelCategories = async (req, res) => {
     let userPreScore = 0;
     let isAdmin = false;
 
+    let user = null;
     if (clerkUserId) {
-      const user = await prisma.user.findUnique({
+      user = await prisma.user.findUnique({
         where: { clerk_user_id: clerkUserId },
-        select: { user_id: true, pre_score: true, role: true }
+        select: { user_id: true, skill_level: true, role: true }
       });
 
       if (user) {
         isAdmin = user.role === 'admin';
-        userPreScore = user.pre_score || 0;
+        // userPreScore = user.pre_score || 0;
         const progress = await prisma.userProgress.findMany({
           where: {
             user_id: user.user_id,
@@ -91,11 +92,24 @@ exports.getAllLevelCategories = async (req, res) => {
             ? completedLevelIds.has(level.required_level_id)
             : true;
 
-          const isScoreMet = (level.require_pre_score !== null && level.require_pre_score !== undefined && level.require_pre_score > 0)
-            ? userPreScore >= level.require_pre_score
-            : true;
+          // Check skill level requirement
+          let isSkillMet = true;
+          if (level.required_skill_level && user && user.skill_level) {
+            const skillRank = {
+              'Zone_A': 1,
+              'Zone_B': 2,
+              'Zone_C': 3
+            };
+            const userRank = skillRank[user.skill_level] || 0;
+            const requiredRank = skillRank[level.required_skill_level] || 0;
+            isSkillMet = userRank >= requiredRank;
+          } else if (level.required_skill_level && (!user || !user.skill_level)) {
+            isSkillMet = false;
+          }
 
-          const isLocked = !isPrereqMet || !isScoreMet;
+          // Unlock if EITHER condition is met (Prereq OR Skill)
+          // isLocked is true only if BOTH are false
+          const isLocked = !(isPrereqMet || isSkillMet);
 
           return {
             ...level,
@@ -141,7 +155,7 @@ exports.getLevelCategoryById = async (req, res) => {
             goal_type: true,
             is_unlocked: true,
             required_level_id: true,
-            require_pre_score: true,
+            required_skill_level: true,
           },
           orderBy: {
             level_id: 'asc',
@@ -165,15 +179,16 @@ exports.getLevelCategoryById = async (req, res) => {
     let userPreScore = 0;
     let isAdmin = false;
 
+    let user = null;
     if (clerkUserId) {
-      const user = await prisma.user.findUnique({
+      user = await prisma.user.findUnique({
         where: { clerk_user_id: clerkUserId },
-        select: { user_id: true, pre_score: true, role: true }
+        select: { user_id: true, skill_level: true, role: true }
       });
 
       if (user) {
         isAdmin = user.role === 'admin';
-        userPreScore = user.pre_score || 0;
+        // userPreScore = user.pre_score || 0;
         const progress = await prisma.userProgress.findMany({
           where: {
             user_id: user.user_id,
@@ -206,11 +221,24 @@ exports.getLevelCategoryById = async (req, res) => {
           ? completedLevelIds.has(level.required_level_id)
           : true;
 
-        const isScoreMet = (level.require_pre_score !== null && level.require_pre_score !== undefined && level.require_pre_score > 0)
-          ? userPreScore >= level.require_pre_score
-          : true;
+        // Check skill level requirement
+        let isSkillMet = true;
+        if (level.required_skill_level && user && user.skill_level) {
+          const skillRank = {
+            'Zone_A': 1,
+            'Zone_B': 2,
+            'Zone_C': 3
+          };
+          const userRank = skillRank[user.skill_level] || 0;
+          const requiredRank = skillRank[level.required_skill_level] || 0;
+          isSkillMet = userRank >= requiredRank;
+        } else if (level.required_skill_level && (!user || !user.skill_level)) {
+          isSkillMet = false;
+        }
 
-        const isLocked = !isPrereqMet || !isScoreMet;
+        // Unlock if EITHER condition is met (Prereq OR Skill)
+        // isLocked is true only if BOTH are false
+        const isLocked = !(isPrereqMet || isSkillMet);
 
         return {
           ...level,

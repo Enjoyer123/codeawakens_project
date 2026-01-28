@@ -153,18 +153,25 @@ export function usePatternAnalysis({
         }
 
         // Update hintData even when no blocks
-        // We use a simplified check to avoid sending identical data repeatedly
-        if (!goodPatterns || goodPatterns.length === 0) {
-          const newHintData = {
-            hint: "วาง blocks เพื่อเริ่มต้น",
-            showHint: true,
-            currentStep: 0,
-            totalSteps: 0,
-            progress: 0
-          };
-          // Simple equality check to avoid infinite loops if setHintData triggers a re-render
-          // (Though here we are reading from ref, so next run won't trigger unless workspace changes)
-          setHintData(newHintData);
+        // Force reset hintData to 0 progress so the UI bar clears
+        const newHintData = {
+          hint: "วาง blocks เพื่อเริ่มต้น",
+          showHint: true,
+          currentStep: 0,
+          totalSteps: 0,
+          progress: 0, // Reset progress bar
+          patternPercentage: 0,
+          showPatternProgress: true,
+          threePartsMatch: { matchedParts: 0, part1Match: false, part2Match: false, part3Match: false }
+        };
+        setHintData(newHintData);
+        if (setCurrentHintRef.current) {
+          setCurrentHintRef.current(newHintData.hint);
+        }
+
+        // Also clear any lingering effects
+        if (currentScene) {
+          try { displayPlayerEffect(null, currentScene); } catch (e) { }
         }
         return;
       }

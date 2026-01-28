@@ -15,14 +15,14 @@ window.Blockly = Blockly;
 
 // Import utilities and data
 import {
-getWeaponData,
-  
+  getWeaponData,
+
   getRescuedPeople,
   displayPlayerWeapon,
   getCollectedTreasures
 } from '../../gameutils/shared/items';
 import {
-    getCurrentGameState,
+  getCurrentGameState,
   toggleDebugMode,
 } from '../../gameutils/shared/game';
 import {
@@ -58,6 +58,7 @@ import { EXAMPLE_LOADERS } from './constants/exampleLoaders';
 // Import API bridges
 import { setupRopePartitionBridge } from './utils/apiBridges/ropePartitionBridge';
 import { updateTrainScheduleVisualsIfNeeded, updateRopePartitionVisualsIfNeeded } from './utils/apiBridges/visualUpdates';
+import ExecutionErrorModal from './ExecutionErrorModal';
 
 /**
  * GameCore Component
@@ -541,7 +542,7 @@ const GameCore = ({
   });
 
   // Code execution
-  const { runCode } = useCodeExecution({
+  const { runCode, executionError, clearExecutionError } = useCodeExecution({
     workspaceRef,
     currentLevel,
     setPlayerNodeId,
@@ -607,9 +608,9 @@ const GameCore = ({
   // Rope Partition Visual API Bridge
   useEffect(() => {
     if (!currentLevel) return;
-    
-    const isRopePartition = currentLevel.gameType === 'rope_partition' || 
-                            (currentLevel.appliedData && currentLevel.appliedData.type === 'BACKTRACKING_ROPE_PARTITION');
+
+    const isRopePartition = currentLevel.gameType === 'rope_partition' ||
+      (currentLevel.appliedData && currentLevel.appliedData.type === 'BACKTRACKING_ROPE_PARTITION');
 
     if (isRopePartition) {
       return setupRopePartitionBridge(currentLevel, setHintData);
@@ -820,6 +821,12 @@ const GameCore = ({
           targetBigO={hintData?.bestPatternBigO || hintData?.bestPattern?.big_o || hintData?.bestPattern?.bigO}
         />
       )}
+
+      <ExecutionErrorModal
+        open={!!executionError}
+        error={executionError}
+        onClose={clearExecutionError}
+      />
     </GameWithGuide>
   );
 };

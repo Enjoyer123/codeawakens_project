@@ -554,8 +554,20 @@ export function drawPlayer(scene) {
       playerY = startNode.y;
     }
 
-    // Create player sprite instead of circle
-    scene.player = scene.add.sprite(playerX, playerY, 'player');
+    // Determine character texture and animation properties
+    const characterType = scene.levelData.character || 'player';
+    let textureKey = 'player';
+    let animPrefix = 'player';
+    let hasDirectionalAnims = false;
+
+    if (characterType === 'slime') {
+      textureKey = 'slime_1'; // Asset key for Slime
+      animPrefix = 'slime';
+      hasDirectionalAnims = true; // Slime has specific left/right anims
+    }
+
+    // Create player sprite
+    scene.player = scene.add.sprite(playerX, playerY, textureKey);
     const playerScale = 1.8; // Restored to standard size
     scene.player.setScale(playerScale);
     scene.player.setData('defaultScale', 1.8);
@@ -568,6 +580,10 @@ export function drawPlayer(scene) {
     scene.player.mapConfig = { tileSize: 32 }; // Default tile size
     scene.player.mapImage = null; // Will be set if needed
     scene.player.hasNodes = hasNodes; // เพิ่ม flag เพื่อระบุว่ามี nodes หรือไม่
+
+    // Custom properties for animation handling
+    scene.player.animPrefix = animPrefix;
+    scene.player.hasDirectionalAnims = hasDirectionalAnims;
 
     // Create player arrow for direction indication - larger to match bigger sprite
     scene.playerArrow = scene.add.triangle(

@@ -1,5 +1,6 @@
 import React from 'react';
 import * as Blockly from 'blockly/core';
+import { javascriptGenerator } from 'blockly/javascript';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
 import { Code, Layout } from 'lucide-react';
 import BlocklyHistoryView from './BlocklyHistoryView';
@@ -85,10 +86,11 @@ const HistoryViewer = ({
                                     <pre className="font-mono text-sm text-green-300 whitespace-pre-wrap leading-relaxed opacity-80">
                                         {(() => {
                                             try {
+
                                                 const headless = new Blockly.Workspace();
                                                 const xml = Blockly.utils.xml.textToDom(currentProgress.blockly_code);
                                                 Blockly.Xml.domToWorkspace(xml, headless);
-                                                const code = Blockly.JavaScript.workspaceToCode(headless);
+                                                const code = javascriptGenerator.workspaceToCode(headless);
                                                 headless.dispose();
                                                 return code || "// (No code generated)";
                                             } catch (e) {

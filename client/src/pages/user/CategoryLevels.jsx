@@ -9,18 +9,16 @@ import MapCoordinatePicker from '../../components/tools/MapCoordinatePicker';
 const LEVEL_POSITIONS = {
   '1': { top: 28.44, left: 30.27 },
   '2': { top: 28.44, left: 25.27 },
-  "4": {
-    "top": 36.82,
-    "left": 47.58
-  },
+  "4": { top: 36.82, left: 47.58 },
   '5': { top: 35.69, left: 64.92 },
   "6": { top: 56.69, left: 64.92 },
   "7": { top: 52.69, left: 56.27 },
   "8": { top: 67.56, left: 28.63 },
-  "10": {
-    "top": 39.57,
-    "left": 51.38
-  }
+  "10": { top: 39.57, left: 51.38 },
+  "22": { top: 35.45, left: 49.88 },
+  "23": { top: 37.07, left: 57.12 },
+  "24": { top: 38.45, left: 65.07 },
+  "27": { top: 40.45, left: 65.07 },
 };
 
 const CategoryLevels = () => {
