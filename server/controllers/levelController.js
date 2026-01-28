@@ -217,7 +217,7 @@ exports.getLevelById = async (req, res) => {
     if (clerkUserId) {
       const user = await prisma.user.findUnique({
         where: { clerk_user_id: clerkUserId },
-        select: { user_id: true, pre_score: true, role: true }
+        select: { user_id: true, skill_level: true, role: true }
       });
 
       if (user) {
@@ -232,8 +232,10 @@ exports.getLevelById = async (req, res) => {
         if (isAdmin) {
           isLocked = false;
         } else {
-          // Check prerequisite level
-          let isPrereqMet = true;
+          // Define unlocking criteria
+          const unlockConditions = [];
+
+          // Condition 1: Prerequisite Level
           if (level.required_level_id) {
             const progress = await prisma.userProgress.findUnique({
               where: {
@@ -243,16 +245,35 @@ exports.getLevelById = async (req, res) => {
                 },
               },
             });
-            isPrereqMet = (progress && (progress.status === 'completed' || progress.is_correct));
+            const isPrereqMet = (progress && (progress.status === 'completed' || progress.is_correct));
+            unlockConditions.push(isPrereqMet);
           }
 
-          // Check pre-score
-          const userPreScore = user.pre_score || 0;
-          const isScoreMet = (level.require_pre_score !== null && level.require_pre_score !== undefined && level.require_pre_score > 0)
-            ? userPreScore >= level.require_pre_score
-            : true;
+          // Condition 2: Skill Level
+          if (level.required_skill_level) {
+            let isSkillMet = false;
+            if (user.skill_level) {
+              const skillRank = {
+                'Zone_A': 1,
+                'Zone_B': 2,
+                'Zone_C': 3
+              };
+              const userRank = skillRank[user.skill_level] || 0;
+              const requiredRank = skillRank[level.required_skill_level] || 0;
+              isSkillMet = userRank >= requiredRank;
+            }
+            unlockConditions.push(isSkillMet);
+          }
 
-          isLocked = !isPrereqMet || !isScoreMet;
+          // Final Lock Decision
+          // If NO requirements (unlockConditions empty), it is UNLOCKED.
+          // If HAS requirements, it is UNLOCKED if AT LEAST ONE condition is met (OR logic).
+          if (unlockConditions.length > 0) {
+            const anyConditionMet = unlockConditions.some(met => met === true);
+            isLocked = !anyConditionMet;
+          } else {
+            isLocked = false;
+          }
         }
       }
     } else {
@@ -260,7 +281,7 @@ exports.getLevelById = async (req, res) => {
       if (!isPublished) {
         return res.status(403).json({ message: "This level is not published yet." });
       }
-      if (level.require_pre_score && level.require_pre_score > 0) {
+      if (level.required_skill_level) {
         isLocked = true;
       }
     }
@@ -307,8 +328,9 @@ exports.createLevel = async (req, res) => {
       starter_xml,
       block_ids,
       victory_condition_ids,
-      require_pre_score,
+      required_skill_level,
       required_for_post_test,
+      character,
     } = req.body;
 
     // Get user from request (set by authCheck middleware)
@@ -430,13 +452,14 @@ exports.createLevel = async (req, res) => {
         difficulty,
         is_unlocked: is_unlocked === true || is_unlocked === 'true',
         required_level_id: required_level_id ? parseInt(required_level_id) : null,
-        require_pre_score: (require_pre_score !== undefined && require_pre_score !== null && require_pre_score !== '') ? parseInt(require_pre_score) : 0,
+        required_skill_level: required_skill_level || null,
         required_for_post_test: required_for_post_test === true || required_for_post_test === 'true',
         textcode: textcode === true || textcode === 'true',
         background_image,
         start_node_id: start_node_id !== null && start_node_id !== undefined ? parseInt(start_node_id) : null,
         goal_node_id: goal_node_id !== null && goal_node_id !== undefined ? parseInt(goal_node_id) : null,
         goal_type: goal_type || null,
+        character: character || null,
         nodes: parseJsonField(nodes),
         edges: parseJsonField(edges),
         monsters: parseJsonField(monsters),
@@ -539,8 +562,9 @@ exports.updateLevel = async (req, res) => {
       starter_xml,
       block_ids,
       victory_condition_ids,
-      require_pre_score,
+      required_skill_level,
       required_for_post_test,
+      character,
     } = req.body;
 
     const existingLevel = await prisma.level.findUnique({
@@ -595,8 +619,8 @@ exports.updateLevel = async (req, res) => {
         updateData.required_level_id = parseInt(required_level_id);
       }
     }
-    if (require_pre_score !== undefined) {
-      updateData.require_pre_score = (require_pre_score !== null && require_pre_score !== '') ? parseInt(require_pre_score) : 0;
+    if (required_skill_level !== undefined) {
+      updateData.required_skill_level = required_skill_level || null;
     }
     if (required_for_post_test !== undefined) {
       updateData.required_for_post_test = required_for_post_test === true || required_for_post_test === 'true';
@@ -606,6 +630,7 @@ exports.updateLevel = async (req, res) => {
     if (start_node_id !== undefined) updateData.start_node_id = start_node_id !== null ? parseInt(start_node_id) : null;
     if (goal_node_id !== undefined) updateData.goal_node_id = goal_node_id !== null ? parseInt(goal_node_id) : null;
     if (goal_type !== undefined) updateData.goal_type = goal_type || null;
+    if (character !== undefined) updateData.character = character;
     if (nodes !== undefined) updateData.nodes = parseJsonField(nodes);
     if (edges !== undefined) updateData.edges = parseJsonField(edges);
     if (monsters !== undefined) updateData.monsters = parseJsonField(monsters);

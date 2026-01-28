@@ -64,15 +64,48 @@ exports.getTestsByType = async (req, res) => {
     }
 
     // 1. Fetch questions and choices
-    const tests = await prisma.test.findMany({
-      where: {
-        test_type: testType,
-        is_active: true,
-      },
-      include: {
-        choices: true, // Fetch all choices
-      },
-    });
+    // 1. Fetch questions and choices
+    let tests = [];
+
+    if (testType === 'PreTest') {
+      // For PreTest, select 5 random questions from each part (1, 2, 3)
+      const parts = [1, 2, 3];
+      const QUESTIONS_PER_PART = 5;
+
+      for (const part of parts) {
+        // Fetch ALL questions for this part (assuming reasonable dataset size)
+        // Optimization: In production with huge data, use raw SQL for random or fetch IDs only first.
+        const partTests = await prisma.test.findMany({
+          where: {
+            test_type: 'PreTest',
+            part: part,
+            is_active: true,
+          },
+          include: {
+            choices: true,
+          },
+        });
+
+        // Shuffle and take top 5
+        const shuffledPartTests = shuffleArray([...partTests]);
+        const selectedPartTests = shuffledPartTests.slice(0, QUESTIONS_PER_PART);
+
+        tests = [...tests, ...selectedPartTests];
+      }
+    } else {
+      // For PostTest (or others), use default logic (fetch all active)
+      // Or should PostTest also be randomized? Current logic was "fetch all".
+      // Maintaining "fetch all" for PostTest as per current behavior unless specified.
+      tests = await prisma.test.findMany({
+        where: {
+          test_type: testType,
+          is_active: true,
+        },
+        include: {
+          choices: true,
+        },
+      });
+    }
 
     if (!tests || tests.length === 0) {
       return res.json([]);
@@ -158,6 +191,12 @@ exports.submitTest = async (req, res) => {
     // 1. Fetch correct answers from DB
     // We need to verify each submitted answer
     let score = 0;
+
+    // Scores per part
+    let scoreP1 = 0;
+    let scoreP2 = 0;
+    let scoreP3 = 0;
+
     const totalQuestions = answers.length;
 
     // Use transaction to ensure data integrity
@@ -188,6 +227,12 @@ exports.submitTest = async (req, res) => {
 
         if (isCorrect) {
           score++;
+
+          if (testType === 'PreTest') {
+            if (test.part === 1) scoreP1++;
+            else if (test.part === 2) scoreP2++;
+            else if (test.part === 3) scoreP3++;
+          }
         }
 
         // Prepare for upsert/create
@@ -217,9 +262,41 @@ exports.submitTest = async (req, res) => {
 
       await Promise.all(userTestCreates);
 
+      // Determine Skill Level (Zone) based on Part Scores
+      let skillLevel = null;
+      if (testType === 'PreTest') {
+        // Logic:
+        // Part 1 (Basic) < 3 -> Zone_A (Novice)
+        // Part 2 (Logic) < 3 -> Zone_B (Coder)
+        // Part 3 (Advanced) < 3 -> Zone_C (Developer)
+        // Passed All -> Zone_C (Master) - treating Master as Zone_C for unlocking purposes
+
+        if (scoreP1 < 3) {
+          skillLevel = 'Zone_A';
+        } else {
+          // Passed Part 1
+          if (scoreP2 < 3) {
+            skillLevel = 'Zone_B';
+          } else {
+            // Passed Part 2
+            if (scoreP3 < 3) {
+              skillLevel = 'Zone_C';
+            } else {
+              // Passed Part 3
+              skillLevel = 'Zone_C'; // Master
+            }
+          }
+        }
+
+        console.log(`Scoring: P1=${scoreP1}, P2=${scoreP2}, P3=${scoreP3} => Skill: ${skillLevel}`);
+      }
+
       // Update User Score
       const updateData = {};
-      if (testType === 'PreTest') updateData.pre_score = score;
+      if (testType === 'PreTest') {
+        updateData.pre_score = score;
+        if (skillLevel) updateData.skill_level = skillLevel;
+      }
       if (testType === 'PostTest') updateData.post_score = score;
 
       await prisma.user.update({
@@ -227,14 +304,20 @@ exports.submitTest = async (req, res) => {
         data: updateData
       });
 
-      return score;
+      return { score, skillLevel, scoreP1, scoreP2, scoreP3 };
     });
 
     res.json({
       success: true,
-      score: result,
+      score: result.score,
+      skillLevel: result.skillLevel,
+      details: {
+        p1: result.scoreP1,
+        p2: result.scoreP2,
+        p3: result.scoreP3
+      },
       total: totalQuestions,
-      percentage: (result / totalQuestions) * 100
+      percentage: (result.score / totalQuestions) * 100
     });
 
   } catch (error) {
@@ -277,7 +360,7 @@ exports.getAllTests = async (req, res) => {
 
 exports.createTest = async (req, res) => {
   try {
-    const { test_type, question, description, test_image, choices } = req.body;
+    const { test_type, question, description, test_image, choices, part } = req.body;
 
     if (!test_type || !question || !choices || !Array.isArray(choices)) {
       return res.status(400).json({ message: "Missing required fields" });
@@ -289,6 +372,7 @@ exports.createTest = async (req, res) => {
     const newTest = await prisma.test.create({
       data: {
         test_type, // 'PreTest' or 'PostTest'
+        part: part ? parseInt(part) : null,
         question,
         description,
         test_image,
@@ -315,7 +399,7 @@ exports.createTest = async (req, res) => {
 exports.updateTest = async (req, res) => {
   try {
     const { id } = req.params;
-    const { test_type, question, description, test_image, choices, is_active } = req.body;
+    const { test_type, question, description, test_image, choices, is_active, part } = req.body;
 
     // Transaction to update test and replace choices
     const updatedTest = await prisma.$transaction(async (prisma) => {
@@ -324,6 +408,7 @@ exports.updateTest = async (req, res) => {
         where: { test_id: parseInt(id) },
         data: {
           test_type,
+          part: part ? parseInt(part) : null,
           question,
           description,
           test_image,

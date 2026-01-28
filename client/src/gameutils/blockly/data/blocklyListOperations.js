@@ -161,7 +161,7 @@ export function defineListOperationsBlocks() {
         .appendField("🔍 หา index ของค่าน้อยที่สุดใน");
       this.appendValueInput("EXCLUDE")
         .setCheck("Array")
-        .setAlign(Blockly.ALIGN_RIGHT)
+
         .appendField("ยกเว้น (Boolean Array)");
       this.appendDummyInput()
         .appendField("(สำหรับ Priority Queue)");
@@ -179,7 +179,7 @@ export function defineListOperationsBlocks() {
         .appendField("🔍 หา index ของค่ามากที่สุดใน");
       this.appendValueInput("EXCLUDE")
         .setCheck("Array")
-        .setAlign(Blockly.ALIGN_RIGHT)
+
         .appendField("ยกเว้น (Boolean Array)");
       this.appendDummyInput()
         .appendField("(สำหรับ Priority Queue)");

@@ -92,14 +92,34 @@ export function playCombatSequence(scene, isWin, onComplete) {
 
 
     // Spawn Cinematic Player
-    const player = scene.add.sprite(100, centerY, 'player');
+    const characterType = scene.levelData.character || 'player';
+    let playerTexture = 'player';
+    let animPrefix = 'player';
+    let moveAnim = 'walk-side';
+    let standAnim = 'stand-side';
+    let attackAnim = 'actack-side';
+    let deathAnim = 'die';
+
+    if (characterType === 'slime') {
+        playerTexture = 'slime_1';
+        animPrefix = 'slime'; // Note: actual keys use slime_1 prefix often
+        moveAnim = 'slime_1-walk_right';
+        standAnim = 'slime_1-idle_right'; // Assuming idle exists now
+        attackAnim = 'slime_1-attack_right';
+        deathAnim = 'slime_1-death_right';
+    }
+
+    const player = scene.add.sprite(100, centerY, playerTexture);
+    // Store anim props for later use in this file
+    player.customAnims = { move: moveAnim, stand: standAnim, attack: attackAnim, death: deathAnim };
+
     const scale = 1.8; // Restored to standard size for consistency
     player.setScale(scale);
     player.setData('defaultScale', scale);
     player.setDepth(100);
     // Ensure player has animation
-    if (player.anims && scene.anims.exists('walk-side')) {
-        player.play('walk-side');
+    if (player.anims && scene.anims.exists(moveAnim)) {
+        player.play(moveAnim);
     }
 
     // --- Cinematic Weapon Setup ---
@@ -178,8 +198,8 @@ export function playCombatSequence(scene, isWin, onComplete) {
         onUpdate: updateWeaponPos, // Force weapon to follow player frame-by-frame
         onComplete: () => {
             console.log('⚔️ Player walk complete');
-            if (player.anims && scene.anims.exists('stand-side')) {
-                player.play('stand-side');
+            if (player.anims && player.customAnims && scene.anims.exists(player.customAnims.stand)) {
+                player.play(player.customAnims.stand);
             } else {
                 player.setFrame(0);
             }
@@ -230,7 +250,7 @@ function performCombatAction(scene, player, monster, isWin, onComplete) {
             if (isWin) {
                 // --- PLAYER WINS ---
                 // 1. Player Attack Animation
-                const attackAnimKey = 'actack-side';
+                const attackAnimKey = player.customAnims ? player.customAnims.attack : 'actack-side';
                 if (player.anims && scene.anims.exists(attackAnimKey)) {
                     player.play(attackAnimKey);
                 } else {
@@ -294,8 +314,8 @@ function performCombatAction(scene, player, monster, isWin, onComplete) {
                                     yoyo: true,
                                     repeat: 2,
                                     onComplete: () => {
-                                        if (player.anims && scene.anims.exists('stand-side')) {
-                                            player.play('stand-side');
+                                        if (player.anims && player.customAnims && scene.anims.exists(player.customAnims.stand)) {
+                                            player.play(player.customAnims.stand);
                                         }
                                         safeComplete();
                                     }
@@ -323,8 +343,9 @@ function performCombatAction(scene, player, monster, isWin, onComplete) {
 
                             if (currentAttack >= attackCount) {
                                 scene.time.delayedCall(200, () => {
-                                    if (player.anims && scene.anims.exists('die')) {
-                                        player.play('die');
+                                    const deathAnimKey = player.customAnims ? player.customAnims.death : 'die';
+                                    if (player.anims && scene.anims.exists(deathAnimKey)) {
+                                        player.play(deathAnimKey);
                                     } else {
                                         player.setAlpha(0.5);
                                         player.setAngle(90);

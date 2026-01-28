@@ -8,7 +8,7 @@ const LevelInfoForm = ({ formData, categories, prerequisiteLevels, isEditing, le
   return (
     <div className="bg-white rounded-lg shadow-md p-4">
       <h2 className="text-xl font-bold mb-4">Level Information</h2>
-      
+
       <div className="space-y-4">
         <div>
           <label className="text-sm font-medium">TITLE *</label>
@@ -66,6 +66,16 @@ const LevelInfoForm = ({ formData, categories, prerequisiteLevels, isEditing, le
               <option value="hard">Hard</option>
               <option value="expert">Expert</option>
             </select>
+
+            <label className="text-sm font-medium">Character Type</label>
+            <select
+              value={formData.character || 'player'}
+              onChange={(e) => handleChange('character', e.target.value)}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+            >
+              <option value="player">Player (Default)</option>
+              <option value="slime">Slime</option>
+            </select>
           </div>
         </div>
 
@@ -88,14 +98,16 @@ const LevelInfoForm = ({ formData, categories, prerequisiteLevels, isEditing, le
         </div>
 
         <div>
-          <label className="text-sm font-medium">Require Pre-Score (Default: 0)</label>
-          <Input
-            type="number"
-            min="0"
-            value={formData.require_pre_score}
-            onChange={(e) => handleChange('require_pre_score', parseInt(e.target.value) || 0)}
-            placeholder="Score required to unlock"
-          />
+          <label className="text-sm font-medium">Required Skill Level</label>
+          <select
+            value={formData.required_skill_level || ''}
+            onChange={(e) => handleChange('required_skill_level', e.target.value || null)}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+          >
+            <option value="Zone_A">Zone A</option>
+            <option value="Zone_B">Zone B</option>
+            <option value="Zone_C">Zone C</option>
+          </select>
         </div>
 
         <div className="flex items-center gap-4">

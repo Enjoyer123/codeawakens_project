@@ -22,6 +22,7 @@ model User {
   role                  UserRole           @default(user)
   pre_score             Int?
   post_score            Int?
+  skill_level           SkillLevel?
   created_levels        Level[]            @relation("LevelCreator")
   created_notifications Notification[]     @relation("NotificationCreator")
   user_notifications    UserNotification[]
@@ -108,13 +109,14 @@ model Level {
   difficulty               String
   is_unlocked              Boolean                 @default(false)
   required_level_id        Int?
-  require_pre_score        Int?
+  required_skill_level     SkillLevel?
   required_for_post_test   Boolean                 @default(false)
   textcode                 Boolean
   background_image         String
   start_node_id            Int?
   goal_node_id             Int?
   goal_type                String?
+  character                String?       // Character type for this level (e.g. 'warrior', 'mage')
   nodes                    Json?
   edges                    Json?
   monsters                 Json?
@@ -261,6 +263,7 @@ model Test {
   is_active     Boolean    @default(true)
   created_at    DateTime   @default(now())
   updated_at    DateTime   @updatedAt
+  part          Int?       // Part 1, 2, 3 of the pretest
   
   choices       TestChoice[]
   user_tests    UserTest[]
@@ -505,4 +508,10 @@ enum ComparisonType {
   array_equals
   number_equals
   boolean_equals
+}
+
+enum SkillLevel {
+  Zone_A
+  Zone_B
+  Zone_C
 }

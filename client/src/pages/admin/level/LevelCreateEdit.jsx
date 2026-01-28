@@ -71,7 +71,7 @@ const LevelCreateEdit = () => {
     difficulty: 'easy',
     is_unlocked: false,
     required_level_id: '',
-    require_pre_score: 0,
+    required_skill_level: null,
     required_for_post_test: false,
     textcode: false,
     background_image: '',
@@ -160,13 +160,14 @@ const LevelCreateEdit = () => {
         difficulty: level.difficulty,
         is_unlocked: level.is_unlocked,
         required_level_id: level.required_level_id ? level.required_level_id.toString() : '',
-        require_pre_score: level.require_pre_score !== undefined && level.require_pre_score !== null ? level.require_pre_score : 0,
+        required_skill_level: level.required_skill_level || null,
         required_for_post_test: level.required_for_post_test || false,
         textcode: level.textcode,
         background_image: level.background_image,
         start_node_id: level.start_node_id,
         goal_node_id: level.goal_node_id,
         goal_type: level.goal_type || '',
+        character: level.character || 'player', // Default to player
         nodes,
         edges,
         monsters,
@@ -245,11 +246,21 @@ const LevelCreateEdit = () => {
   };
 
   const handleMonsterPlacementRequest = (x, y, clickedNode) => {
+    // 🛑 Enforce Node-only placement
+    if (!clickedNode) {
+      alert('⚠️ Monster must be placed on a node (ตำแหน่งนี้ไม่ใช่ Node)');
+      return;
+    }
+
+    // ✅ Snap to Node Position
+    // Use clickedNode.x/y instead of raw x/y to ensure perfect alignment
+    const snapPos = { x: clickedNode.x, y: clickedNode.y, clickedNode };
+
     // แทนที่จะเปิด Dialog ตลอดเวลา ให้ใช้ selectedMonsterType ที่เลือกไว้จาก Toolbar เลย
-    setMonsterPlacementPos({ x, y, clickedNode });
+    setMonsterPlacementPos(snapPos);
 
     // ถ้าผู้ใช้ต้องการความเร็ว ให้วางมอนสเตอร์ทันทีที่คลิก โดยใช้ประเภทที่เลือกไว้
-    confirmMonsterPlacement(selectedMonsterType, { x, y, clickedNode });
+    confirmMonsterPlacement(selectedMonsterType, snapPos);
   };
 
   const confirmMonsterPlacement = (type, forcedPos = null) => {
@@ -396,13 +407,14 @@ const LevelCreateEdit = () => {
         difficulty: formData.difficulty,
         is_unlocked: formData.is_unlocked,
         required_level_id: formData.required_level_id ? parseInt(formData.required_level_id) : null,
-        require_pre_score: parseInt(formData.require_pre_score) || 0,
+        required_skill_level: formData.required_skill_level || null,
         required_for_post_test: formData.required_for_post_test,
         textcode: formData.textcode,
         background_image: backgroundImagePath,
         start_node_id: formData.start_node_id !== null && formData.start_node_id !== undefined ? formData.start_node_id : null,
         goal_node_id: formData.goal_node_id !== null && formData.goal_node_id !== undefined ? formData.goal_node_id : null,
         goal_type: formData.goal_type || null,
+        character: formData.character || 'player',
         nodes: formData.nodes.length > 0 ? JSON.stringify(formData.nodes) : null,
         edges: formData.edges.length > 0 ? JSON.stringify(formData.edges) : null,
         monsters: formData.monsters.length > 0 ? JSON.stringify(formData.monsters) : null,

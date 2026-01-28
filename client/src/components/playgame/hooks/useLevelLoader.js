@@ -253,6 +253,7 @@ export function useLevelLoader({
           level_name: levelResponse.level_name,
           description: levelResponse.description,
           difficulty: levelResponse.difficulty,
+          character: levelResponse.character || 'player',
           background_image: backgroundPath,
           startNodeId: levelResponse.start_node_id,
           goalNodeId: levelResponse.goal_node_id,

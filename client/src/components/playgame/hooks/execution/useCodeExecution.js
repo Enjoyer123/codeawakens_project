@@ -12,6 +12,8 @@ import {
     getCurrentGameState,
     getPlayerHp
 } from '../../../../gameutils/shared/game';
+import { useState } from 'react';
+import { validateWorkspace, mapRuntimeErrorToMessage } from '../../../../gameutils/shared/codeValidator';
 
 import { extractFunctionName } from '../../../../gameutils/shared/testcase';
 
@@ -73,6 +75,8 @@ export function useCodeExecution({
     userBigO, // Added for Big O scoring
     hintData  // Added for Big O scoring
 }) {
+    const [executionError, setExecutionError] = useState(null);
+
     const runCode = async () => {
         console.log("runCode function called!");
         console.log("workspaceRef.current:", !!workspaceRef.current);
@@ -83,6 +87,22 @@ export function useCodeExecution({
         const isRopePartition = currentLevel?.gameType === 'rope_partition' || currentLevel?.appliedData?.type === 'BACKTRACKING_ROPE_PARTITION';
         const isReactLevel = currentLevel?.gameType === 'train_schedule' ||
             currentLevel?.appliedData?.type === 'GREEDY_TRAIN_SCHEDULE' || isRopePartition;
+
+        if (currentLevel?.textcode && !blocklyJavaScriptReady) {
+            // ... (keep textcode checks)
+        }
+
+        // --- NEW: Block Validation ---
+        if (!currentLevel?.textcode && workspaceRef.current) {
+            const validation = validateWorkspace(workspaceRef.current);
+            if (!validation.isValid) {
+                setExecutionError({
+                    title: "พบข้อผิดพลาดในบล็อกคำสั่ง",
+                    message: validation.error
+                });
+                return;
+            }
+        }
 
         if (!workspaceRef.current || (!getCurrentGameState().currentScene && !isReactLevel)) {
             console.log("System not ready - early return", {
@@ -393,8 +413,20 @@ export function useCodeExecution({
                     await handlePostExecutionVisuals(functionReturnValue, isNQueen);
                 } catch (returnError) {
                     console.warn("Could not capture return value:", returnError);
+
+                    // CRITICAL FIX: If it's a timeout or infinite loop, we MUST re-throw it
+                    // so the outer catch block can show the error popup to the user.
+                    // Otherwise, the game quietly fails or continues in a broken state.
+                    if (returnError.message && (
+                        returnError.message.includes("timeout") ||
+                        returnError.message.includes("infinite loop") ||
+                        returnError.message.includes("Too many executions")
+                    )) {
+                        throw returnError;
+                    }
+
                     functionReturnValue = undefined;
-                    console.log("Function execution completed");
+                    console.log("Function execution completed (with error swallowed)");
                     console.log("Function return value (fallback):", functionReturnValue);
                 }
 
@@ -505,13 +537,20 @@ export function useCodeExecution({
                 if (!levelCompleted) {
                     // If not completed, show the actual error message
                     console.error("Execution error:", error);
+                    const friendlyMessage = mapRuntimeErrorToMessage(error);
+
                     if (error.message.includes("infinite loop") || error.message.includes("timeout")) {
-                        setCurrentHint("? ???? infinite loop - ?????????????? ??????????????????????????????");
-                    } else if (error.message.includes("undefined")) {
-                        setCurrentHint("? ??????????????????????? - ???????? block '???????' ???????????????????");
+                        setCurrentHint("? พบ Infinite Loop - โปรแกรมทำงานนานเกินไป");
                     } else {
-                        setCurrentHint(`?? ${error.message}`);
+                        setCurrentHint(`?? ${friendlyMessage}`);
                     }
+
+                    // Show Popup
+                    setExecutionError({
+                        title: "เกิดข้อผิดพลาดขณะทำงาน",
+                        message: friendlyMessage
+                    });
+
                     setIsRunning(false);
                 }
             }
@@ -521,5 +560,9 @@ export function useCodeExecution({
         }
     };
 
-    return { runCode };
+    return {
+        runCode,
+        executionError,
+        clearExecutionError: () => setExecutionError(null)
+    };
 }

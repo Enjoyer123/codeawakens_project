@@ -27,6 +27,7 @@ import {
 import { createCharacterAnims } from '../../../anims/PlayerAnims';
 import { createVampireAnims } from '../../../anims/EnemyAnims';
 import { createVampire_1Anims } from '../../../anims/Vampire_1Anims';
+import { createSlime1Anims } from '../../../anims/Slime_1Anims';
 import { preloadAllWeaponEffects } from '../../shared/combat';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
@@ -81,6 +82,9 @@ export class GameScene extends Phaser.Scene {
         this.load.atlas('player', '/characters/player.png', '/characters/player.json');
         this.load.atlas('vampire', '/enemies/vampire.png', '/enemies/vampire.json');
         this.load.atlas('Vampire_1', '/enemies/Vampire1.png', '/enemies/Vampire1.json');
+        // Load Slime sprites (using slime_1 key to match animation configs)
+        this.load.atlas('slime_1', '/characters/Slime1.png', '/characters/Slime1.json');
+
         this.load.image('weapon_stick', `${API_BASE_URL}/uploads/weapons/stick_idle_1.png`);
 
         // Load aura effects
@@ -120,6 +124,23 @@ export class GameScene extends Phaser.Scene {
         createCharacterAnims(this.anims);
         createVampireAnims(this.anims);
         createVampire_1Anims(this.anims);
+        createSlime1Anims(this.anims);
+
+        // Debug: Verify Slime animations
+        const testKey = 'slime_1-walk_right';
+        console.log(`🐛 Debug Animation Check: ${testKey} exists?`, this.anims.exists(testKey));
+        if (this.anims.exists(testKey)) {
+            const anim = this.anims.get(testKey);
+            console.log(`🐛 Animation ${testKey} has ${anim.frames.length} frames.`);
+        } else {
+            console.error(`❌ Animation ${testKey} FAILED to create!`);
+            // Check if texture exists
+            console.log(`🐛 Texture 'slime_1' exists?`, this.textures.exists('slime_1'));
+            if (this.textures.exists('slime_1')) {
+                const frames = this.textures.get('slime_1').getFrameNames();
+                console.log(`🐛 Texture 'slime_1' has ${frames.length} frames. First few:`, frames.slice(0, 10));
+            }
+        }
 
         // Helper for safe setup
         const safeSetupGame = (retryCount = 0, maxRetries = 20) => {
