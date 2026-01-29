@@ -17,6 +17,7 @@ import {
 import StatusPanel from './ui/StatusPanel';
 import BlockCountPanel from './ui/BlockCountPanel';
 import HintButton from './ui/HintButton';
+import GuideButton from './ui/GuideButton';
 import PatternMatchPanel from './ui/PatternMatchPanel';
 import BigOSelector from './ui/BigOSelector';
 
@@ -50,6 +51,8 @@ const GameArea = ({
   onUserBigOChange,
   userProgress,
   allLevels,
+  onOpenGuide,
+  hasGuides,
 }) => {
   const { getToken } = useAuth();
   const [viewerData, setViewerData] = useState(null);
@@ -179,38 +182,44 @@ const GameArea = ({
       {/* Compact Bottom UI Bar */}
       <div className="flex-shrink-0 bg-stone-900/95 backdrop-blur-md border-t border-gray-700/50 shadow-2xl z-30">
         <div className="flex items-center gap-4 p-3 text-gray-200">
-          
+
           {/* STATUS: HP & Weapon */}
-          <StatusPanel 
-            playerHpState={playerHpState} 
-            currentWeaponData={currentWeaponData} 
+          <StatusPanel
+            playerHpState={playerHpState}
+            currentWeaponData={currentWeaponData}
           />
 
           {/* Block Count */}
-          <BlockCountPanel 
-            currentBlockCount={currentBlockCount} 
-            patternBlockCount={patternBlockCount} 
+          <BlockCountPanel
+            currentBlockCount={currentBlockCount}
+            patternBlockCount={patternBlockCount}
           />
 
           {/* Hint Button */}
-          <HintButton 
-            onNeedHintClick={onNeedHintClick} 
-            needHintDisabled={needHintDisabled} 
+          <HintButton
+            onNeedHintClick={onNeedHintClick}
+            needHintDisabled={needHintDisabled}
+          />
+
+          {/* Guide Button */}
+          <GuideButton
+            onOpenGuide={onOpenGuide}
+            disabled={!hasGuides}
           />
 
           {/* Pattern Match */}
-          <PatternMatchPanel 
-            hintData={hintData} 
-            idealPattern={idealPattern} 
-            weaponProgress={weaponProgress} 
-            weaponImgSrc={weaponImgSrc} 
+          <PatternMatchPanel
+            hintData={hintData}
+            idealPattern={idealPattern}
+            weaponProgress={weaponProgress}
+            weaponImgSrc={weaponImgSrc}
           />
 
           {/* Big O Complexity */}
-          <BigOSelector 
-            userBigO={userBigO} 
-            onUserBigOChange={onUserBigOChange} 
-            hintData={hintData} 
+          <BigOSelector
+            userBigO={userBigO}
+            onUserBigOChange={onUserBigOChange}
+            hintData={hintData}
           />
 
         </div>

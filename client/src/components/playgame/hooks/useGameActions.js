@@ -94,8 +94,8 @@ export const useGameActions = ({
       let angleDiff = Math.abs(angle - dirAngle);
       if (angleDiff > Math.PI) angleDiff = 2 * Math.PI - angleDiff;
 
-      // ถ้ามุมต่างกันไม่เกิน 90 องศา (π/2) ถือว่าเป็นทิศทางเดียวกัน
-      if (angleDiff < Math.PI / 2) {
+      // ถ้ามุมต่างกันไม่เกิน 60 องศา (π/3) ถือว่าเป็นทิศทางเดียวกัน
+      if (angleDiff < Math.PI / 3) {
         targetNode = node;
         break;
       }
@@ -116,7 +116,8 @@ export const useGameActions = ({
       const moveResult = await movePlayerWithCollisionDetection(
         getCurrentGameState().currentScene,
         currentNode,
-        targetNode
+        targetNode,
+        currentState.direction
       );
 
       if (moveResult.hitObstacle) {

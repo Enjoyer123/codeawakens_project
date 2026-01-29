@@ -89,6 +89,7 @@ const PatternInfoForm = ({
             <option value="factorial">O(n!) - factorial</option>
           </select>
         </div>
+
       </div>
     </div>
   );

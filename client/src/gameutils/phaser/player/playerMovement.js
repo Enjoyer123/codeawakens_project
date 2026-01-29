@@ -211,5 +211,8 @@ export function rotatePlayer(scene, newDirection) {
     // Update visual arrow
     updatePlayerArrow(scene, null, null, newDirection);
 
+    // Update visual sprite (animation & flip)
+    playIdle(scene.player);
+
     console.log("rotatePlayer: Rotated to", newDirection);
 }
