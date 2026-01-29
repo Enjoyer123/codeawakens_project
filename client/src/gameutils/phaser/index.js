@@ -18,9 +18,8 @@ export {
     setupCoinChange,
     setupAntDp,
     setupNQueen,
-    drawQueenOnBoard,
     drawCinematicMonster
-} from './setup/phaserSetup';
+} from './setup/index.js';
 
 export { setupTrainSchedule, updateTrainScheduleVisuals } from './setup/trainSchedulePhaser';
 export { setupRopePartition, updateRopePartitionVisuals } from './setup/ropePartitionPhaser';

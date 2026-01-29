@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
 import { useProgressSaver } from './hooks/useProgressSaver';
 import { useNavigate } from 'react-router-dom';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
-const ProgressModal = ({ isOpen, onClose, gameResult, levelData, attempts, timeSpent, blocklyXml, textCodeContent, finalScore, hp_remaining, userBigO, targetBigO, getToken }) => {
+const ProgressModal = ({ isOpen, onClose, gameResult, levelData, blocklyXml, textCodeContent, finalScore, hp_remaining, getToken }) => {
   const navigate = useNavigate();
   
   const {
@@ -18,16 +19,13 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, attempts, timeS
   const userProgressData = {
     level_id: levelData?.level_id || levelData?.id,
     status: gameResult === 'victory' ? 'completed' : 'in_progress',
-    attempts_count: attempts || 0,
     blockly_code: blocklyXml || null,
     text_code: levelData?.textcode ? textCodeContent : null,
-    execution_time: timeSpent || 0,
     best_score: finalScore?.totalScore ?? (gameResult === 'victory' ? 60 : 0),
     pattern_bonus_score: finalScore?.pattern_bonus_score || 0,
     is_correct: gameResult === 'victory',
     stars_earned: finalScore?.stars ?? (gameResult === 'victory' ? 3 : 0),
     hp_remaining: hp_remaining ?? 0,
-    user_big_o: userBigO || null,
   };
 
   // Trigger save when modal opens
@@ -36,13 +34,10 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, attempts, timeS
       saveProgress({
         levelData,
         gameResult,
-        attempts,
-        timeSpent,
         blocklyXml,
         textCodeContent,
         finalScore,
-        hp_remaining,
-        userBigO
+        hp_remaining
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -53,19 +48,15 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, attempts, timeS
     navigate('/user/mapselect');
   };
 
-  if (!isOpen) return null;
-
   return (
-  <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-  
-  {/* 1. Backdrop */}
-  <div 
-    className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300" 
-    onClick={handleClose} 
-  />
-
-  {/* 2. Pixel Card Wrapper */}
-  <div className="relative w-full max-w-2xl mx-auto shadow-2xl transform transition-all duration-300">
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent 
+        className="max-w-2xl p-0 bg-transparent border-0 shadow-none overflow-visible"
+        // Prevent default close button from showing
+        hideCloseButton
+      >
+        {/* Pixel Card Wrapper */}
+        <div className="relative w-full shadow-2xl transform transition-all duration-300">
     
     {/* --- Layer ล่าง: กรอบรูป (Background) --- */}
     <img 
@@ -297,9 +288,10 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, attempts, timeS
 
       </div>
 
-    </div>
-  </div>
-</div>
+        </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
