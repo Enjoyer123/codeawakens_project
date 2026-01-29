@@ -45,6 +45,7 @@ import { useCodeExecution } from './hooks/execution/useCodeExecution';
 import { useLevelLoader } from './hooks/useLevelLoader';
 import { usePatternAnalysis } from './hooks/usePatternAnalysis';
 import { useTextCodeValidation } from './hooks/useTextCodeValidation';
+import { useGuideSystem } from '../../hooks/useGuideSystem';
 import { getUserByClerkId } from '../../services/profileService';
 import { fetchAllLevels } from '../../services/levelService';
 
@@ -647,6 +648,10 @@ const GameCore = ({
     toggleDebugMode();
   };
 
+  // Guide system state (Called unconditionally for React Hook rules)
+  // Handles null currentLevel internally
+  const { showGuide, guides, closeGuide, openGuide, hasGuides } = useGuideSystem(currentLevel);
+
   if (loading) {
     return <div className="flex items-center justify-center h-screen">Loading level...</div>;
   }
@@ -654,6 +659,11 @@ const GameCore = ({
   if (error) {
     return <div className="flex items-center justify-center h-screen text-red-500">Error: {error}</div>;
   }
+
+  // Guide system state
+  // (Moved to top level)
+
+  // Initialize Blockly and Phaser when ready
 
   return (
     <GameWithGuide
@@ -672,6 +682,11 @@ const GameCore = ({
       inCombatMode={inCombatMode}
       blocklyJavaScriptReady={blocklyJavaScriptReady}
       showScore={true}
+
+      // Guide props
+      showGuide={showGuide}
+      guides={guides}
+      closeGuide={closeGuide}
     >
       <div className={`flex ${isPreview ? 'h-full' : 'h-screen'} bg-gray-900`}>
         {/* Game Area - 65% ของหน้าจอ */}
@@ -707,22 +722,26 @@ const GameCore = ({
               console.log('🔔 [GameCore] Need Hint clicked (preview)', {
                 levelHintsLength: baseHints.length,
                 levelHintIndex,
-                needHintDisabled:
-                  !baseHints || baseHints.length === 0 || levelHintIndex >= baseHints.length
               });
 
-              if (!baseHints || baseHints.length === 0 || levelHintIndex >= baseHints.length) return;
+              if (!baseHints || baseHints.length === 0) return;
 
-              const nextHint = baseHints[levelHintIndex];
+              // Logic change: Loop back to start if we reached the end
+              let targetIndex = levelHintIndex;
+              if (targetIndex >= baseHints.length) {
+                targetIndex = 0;
+              }
+
+              const nextHint = baseHints[targetIndex];
               console.log('🔔 [GameCore] Next level hint selected:', nextHint);
               setActiveLevelHint(nextHint);
-              setLevelHintIndex(levelHintIndex + 1);
+              // Set next index (if we just showed 0, next is 1)
+              setLevelHintIndex(targetIndex + 1);
               setHintOpen(true);
             }}
             needHintDisabled={
               !Array.isArray(currentLevel?.hints) ||
-              currentLevel.hints.filter(h => h.is_active !== false).length === 0 ||
-              levelHintIndex >= currentLevel.hints.filter(h => h.is_active !== false).length
+              currentLevel.hints.filter(h => h.is_active !== false).length === 0
             }
             finalScore={finalScore}
             inCombatMode={inCombatMode}
@@ -732,18 +751,20 @@ const GameCore = ({
             workspaceRef={workspaceRef}
             userBigO={userBigO}
             onUserBigOChange={setUserBigO}
+            onOpenGuide={openGuide}
+            hasGuides={hasGuides}
           />
         </div>
 
         {/* Blockly Area - 35% ของหน้าจอ */}
-       <div
+        <div
           className="w-[50%] border-l border-black flex flex-col backdrop-blur-sm overflow-hidden"
           style={{
             backgroundImage: "url('/blocklyBg.png')",
-            backgroundSize: "100% 100%", 
+            backgroundSize: "100% 100%",
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",
-            imageRendering: "pixelated" 
+            imageRendering: "pixelated"
           }}
         >
           <div className="flex flex-col h-full px-4 py-4 md:px-20">

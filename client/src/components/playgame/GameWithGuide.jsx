@@ -2,8 +2,7 @@ import React from 'react';
 import GuidePopup from './GuidePopup';
 import { useGuideSystem } from '../../hooks/useGuideSystem';
 
-const GameWithGuide = ({ levelData, children, levelName }) => {
-  const { showGuide, guides, closeGuide } = useGuideSystem(levelData);
+const GameWithGuide = ({ levelData, children, levelName, showGuide, guides, closeGuide }) => {
 
   return (
     <div className="relative h-full">

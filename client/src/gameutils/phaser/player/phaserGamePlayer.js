@@ -94,7 +94,7 @@ export function updatePlayer(scene, nodeId, direction) {
 }
 
 // New function for movement with real-time collision detection
-export function movePlayerWithCollisionDetection(scene, fromNode, toNode) {
+export function movePlayerWithCollisionDetection(scene, fromNode, toNode, forcedDirection) {
   return new Promise((resolve) => {
     const startX = fromNode.x;
     const startY = fromNode.y;
@@ -112,12 +112,18 @@ export function movePlayerWithCollisionDetection(scene, fromNode, toNode) {
     // 0 = right, 1 = down, 2 = left, 3 = up
     let directionIndex = scene.player.directionIndex || 0;
 
-    if (Math.abs(dx) > Math.abs(dy)) {
-      // Horizontal movement
-      directionIndex = dx > 0 ? 0 : 2; // right : left
+    if (forcedDirection !== undefined) {
+      // Use the pre-calculated/forced direction if provided (e.g. from useGameActions)
+      directionIndex = forcedDirection;
     } else {
-      // Vertical movement
-      directionIndex = dy > 0 ? 1 : 3; // down : up
+      // Auto-calculate based on major axis
+      if (Math.abs(dx) > Math.abs(dy)) {
+        // Horizontal movement
+        directionIndex = dx > 0 ? 0 : 2; // right : left
+      } else {
+        // Vertical movement
+        directionIndex = dy > 0 ? 1 : 3; // down : up
+      }
     }
 
     // Update player direction in both player sprite and gameState

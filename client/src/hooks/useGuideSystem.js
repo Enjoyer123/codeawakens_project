@@ -23,10 +23,17 @@ export const useGuideSystem = (levelData) => {
     setShowGuide(false);
   };
 
+  const openGuide = () => {
+    if (guides.length > 0) {
+      setShowGuide(true);
+    }
+  };
+
   return {
     showGuide,
     guides,
     closeGuide,
+    openGuide,
     hasGuides: guides.length > 0
   };
 };
