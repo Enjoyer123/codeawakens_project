@@ -13,7 +13,8 @@ const PatternInfoForm = ({
   bigO,
   setBigO,
   isEditMode,
-  patternLoaded
+  patternLoaded,
+  disabled = false
 }) => {
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -27,6 +28,7 @@ const PatternInfoForm = ({
             value={patternName || ''}
             onChange={(e) => setPatternName(e.target.value)}
             placeholder="เช่น: ใช้ loop เพื่อเก็บเหรียญ"
+            disabled={disabled}
           />
           {isEditMode && !patternName && !patternLoaded && (
             <p className="text-xs text-gray-500 mt-1">กำลังโหลดข้อมูล...</p>
@@ -44,6 +46,7 @@ const PatternInfoForm = ({
             onChange={(e) => setPatternDescription(e.target.value)}
             placeholder="อธิบายรูปแบบคำตอบ..."
             rows={3}
+            disabled={disabled}
           />
         </div>
 
@@ -62,6 +65,7 @@ const PatternInfoForm = ({
             value={weaponId || ''}
             onChange={(e) => setWeaponId(e.target.value)}
             placeholder="ID อาวุธ"
+            disabled={disabled}
           />
         </div>
 
@@ -72,6 +76,7 @@ const PatternInfoForm = ({
             className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
             value={bigO || ''}
             onChange={(e) => setBigO(e.target.value || '')}
+            disabled={disabled}
           >
             <option value="">-- ไม่ระบุ --</option>
             <option value="constant">O(1) - constant</option>

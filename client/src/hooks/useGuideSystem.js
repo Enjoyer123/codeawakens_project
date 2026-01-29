@@ -10,7 +10,7 @@ export const useGuideSystem = (levelData) => {
       const activeGuides = levelData.guides
         .filter(guide => guide.is_active)
         .sort((a, b) => a.display_order - b.display_order);
-      
+
       setGuides(activeGuides);
       setShowGuide(true);
     } else {

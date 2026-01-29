@@ -657,7 +657,7 @@ const GameCore = ({
 
   return (
     <GameWithGuide
-      currentLevel={currentLevel}
+      levelData={currentLevel}
       currentHint={currentHint}
       hintData={hintData}
       hintOpen={hintOpen}
