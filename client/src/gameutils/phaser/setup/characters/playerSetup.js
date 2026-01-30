@@ -32,7 +32,7 @@ export function drawPlayer(scene) {
         if (!hasNodes || !startNode) {
             // ตำแหน่งมุมล่างซ้าย (ห่างจากขอบ 100px, 100px)
             playerX = 100;
-            playerY = (scene.scale && scene.scale.height) ? scene.scale.height - 100 : 600;
+            playerY = (scene.scale && scene.scale.height) ? scene.scale.height - 75 : 600;
             console.log('⚠️ No nodes found, displaying player at bottom-left corner:', playerX, playerY);
         } else {
             playerX = startNode.x;
@@ -49,13 +49,18 @@ export function drawPlayer(scene) {
             textureKey = 'slime_1'; // Asset key for Slime
             animPrefix = 'slime';
             hasDirectionalAnims = true; // Slime has specific left/right anims
+        } else if (characterType === 'main_1') {
+            textureKey = 'main_1';
+            animPrefix = 'main';
+            hasDirectionalAnims = true;
         }
 
         // Create player sprite
         scene.player = scene.add.sprite(playerX, playerY, textureKey);
-        const playerScale = 1.8; // Restored to standard size
+        const playerScale = 2.2; // Restored to standard size
         scene.player.setScale(playerScale);
-        scene.player.setData('defaultScale', 1.8);
+        scene.player.setData('defaultScale', 2.2);
+        scene.player.setOrigin(0.5, 0.75); // Move visual up so feet align with node
         scene.player.setDepth(8);
 
         // Set player properties for new utility functions
@@ -188,7 +193,7 @@ export function drawCinematicMonster(scene) {
     // Match the specific height used in drawPlayer fallback (bottom-left)
     // drawPlayer uses: scene.scale.height - 100
     // So we use same Y for alignment
-    const monsterY = height - 100;
+    const monsterY = height - 75;
     const monsterX = width - 100;
 
     console.log('🎬 Drawing Cinematic Monster at', monsterX, monsterY);
@@ -214,6 +219,7 @@ export function drawCinematicMonster(scene) {
         const monster = scene.add.sprite(monsterX, monsterY, textureKey);
         monster.setScale(1.8);
         monster.setData('defaultScale', 1.8);
+        monster.setOrigin(0.5, 0.75);
         monster.setData('idleAnim', idleAnim);
         monster.setDepth(8);
         monster.setFlipX(true);

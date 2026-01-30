@@ -84,9 +84,9 @@ export function setupPeople(scene) {
         const personX = personData.x;
         const personY = personData.y + 10;
 
-        // Create person sprite as green rectangle (เล็กลงจาก 30x30 เป็น 20x20)
-        const person = scene.add.rectangle(personX, personY, 20, 20, 0x00ff00);
-        person.setStrokeStyle(2, 0xffffff);
+        // Create person sprite as slime image
+        const person = scene.add.image(personX, personY, 'bot_slime1');
+        person.setScale(1.5);
         person.setDepth(10);
 
         // Add person data
@@ -138,14 +138,9 @@ export function setupTreasures(scene) {
         const treasureX = treasureData.x;
         const treasureY = treasureData.y;
 
-        // Create treasure sprite as diamond shape
-        const treasure = scene.add.polygon(treasureX, treasureY, [
-            0, -15,  // top
-            10, 0,   // right
-            0, 15,   // bottom
-            -10, 0   // left
-        ], 0xffd700, 1);
-        treasure.setStrokeStyle(3, 0xffaa00);
+        // Create treasure sprite as crown image
+        const treasure = scene.add.image(treasureX, treasureY, 'crown-1');
+        treasure.setScale(1.2);
         treasure.setDepth(8);
 
         // Add treasure data

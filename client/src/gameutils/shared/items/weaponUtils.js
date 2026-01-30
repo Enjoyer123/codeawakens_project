@@ -7,7 +7,7 @@ import { API_BASE_URL } from '../../../config/apiConfig';
 
 // Global weapon variables
 let weaponsData = null; // เก็บข้อมูลอาวุธจาก API
-let playerWeaponSprite = null;
+let playerWeaponContainer = null; // Container for the weapon ring
 let playerEffectGraphics = null; // สำหรับวาด circle
 let playerEffectSprite = null;   // สำหรับแสดง aura (sprite)
 
@@ -81,11 +81,11 @@ export async function loadWeaponsData(getToken) {
 }
 
 export function getWeaponData(weaponKey) {
-  console.log("🔍 getWeaponData called with:", weaponKey);
-  console.log("🔍 weaponsData available:", !!weaponsData);
+  // console.log("🔍 getWeaponData called with:", weaponKey);
+  // console.log("🔍 weaponsData available:", !!weaponsData);
 
   if (!weaponsData) {
-    console.warn("Weapons data not loaded yet, returning default");
+    // console.warn("Weapons data not loaded yet, returning default");
     // Return default weapon structure if API data not loaded yet
     return {
       name: "🏭 ไม้เท้าเก่า",
@@ -100,7 +100,7 @@ export function getWeaponData(weaponKey) {
   }
 
   const weaponData = weaponsData[weaponKey] || weaponsData["stick"];
-  console.log("🔍 getWeaponData result:", weaponData);
+  // console.log("🔍 getWeaponData result:", weaponData);
   return weaponData;
 }
 
@@ -123,12 +123,74 @@ export function calculateDamage(monsterDamage, weaponData) {
   }
 }
 
+/**
+ * Creates a ring of weapons around a target.
+ * @param {Phaser.Scene} scene 
+ * @param {number} x Center X
+ * @param {number} y Center Y
+ * @param {string} weaponKey 
+ * @param {object} options { count, radius, scale }
+ */
+export function createWeaponRing(scene, x, y, weaponKey, options = {}) {
+  const count = options.count || 6; // Number of weapons
+  const radius = options.radius || 45;
+  const scale = options.scale || 0.4;
+  const textureKey = `weapon_${weaponKey}`;
+
+  if (!scene.textures.exists(textureKey)) {
+    console.warn(`Weapon texture '${textureKey}' missing for ring.`);
+    return null;
+  }
+
+  const container = scene.add.container(x, y);
+  const weapons = [];
+
+  for (let i = 0; i < count; i++) {
+    const angle = (i / count) * Math.PI * 2;
+    const wx = Math.cos(angle) * radius;
+    const wy = Math.sin(angle) * radius;
+
+    // Create sprite relative to container center (0,0)
+    const sprite = scene.add.image(wx, wy, textureKey);
+    sprite.setScale(scale);
+
+    // Point outward by default
+    sprite.setRotation(angle + Math.PI / 2);
+
+    container.add(sprite);
+    weapons.push(sprite);
+  }
+
+  container.setData('weapons', weapons);
+  container.setData('radius', radius);
+
+  // Add continuous rotation to the container
+  scene.tweens.add({
+    targets: container,
+    angle: 360,
+    duration: 8000,
+    repeat: -1,
+    ease: 'Linear'
+  });
+
+  return container;
+}
+
 export function displayPlayerWeapon(weaponKey, scene) {
   console.log("displayPlayerWeapon called", weaponKey);
 
   // Initial scene validation
   if (!scene || !scene.player) {
     console.warn("Scene or player not ready");
+    return;
+  }
+
+  // Hide default weapon (stick) or empty key
+  if (!weaponKey || weaponKey === 'stick') {
+    if (playerWeaponContainer) {
+      playerWeaponContainer.destroy();
+      playerWeaponContainer = null;
+    }
     return;
   }
 
@@ -141,18 +203,20 @@ export function displayPlayerWeapon(weaponKey, scene) {
     }
 
     try {
-      // ลบ sprite เก่าก่อน
-      if (playerWeaponSprite) {
-        playerWeaponSprite.destroy();
-        playerWeaponSprite = null;
+      // ลบ sprite/container เก่าก่อน
+      if (playerWeaponContainer) {
+        playerWeaponContainer.destroy();
+        playerWeaponContainer = null;
       }
 
-      playerWeaponSprite = scene.add.image(0, 0, textureKey);
-      playerWeaponSprite.setScale(1.5);
-      playerWeaponSprite.setDepth(scene.player.depth + 1);
-      updateWeaponPosition(scene);
+      // Create new Weapon Ring
+      playerWeaponContainer = createWeaponRing(scene, scene.player.x, scene.player.y, weaponKey);
 
-      console.log(`✅ Weapon sprite created: ${weaponKey}`);
+      if (playerWeaponContainer) {
+        playerWeaponContainer.setDepth(scene.player.depth + 1);
+        updateWeaponPosition(scene); // Sync position immediately
+        console.log(`✅ Weapon Ring created: ${weaponKey}`);
+      }
 
       // โหลด effect ของอาวุธนี้ด้วย
       if (scene.sys && !scene.sys.isDestroyed) {
@@ -167,78 +231,23 @@ export function displayPlayerWeapon(weaponKey, scene) {
     }
   };
 
-  // Main texture loading logic
+  // Main texture loading logic (unchanged)
   if (!scene.textures.exists(textureKey)) {
     console.log(`🔍 Loading weapon texture: ${textureKey}`);
-
-    // ใช้รูปแบบใหม่: /uploads/weapons/{weaponkey}_idle_1.png (ใช้ idle frame 1 อย่างเดียว)
     const weaponImageUrl = `${API_BASE_URL}/uploads/weapons/${weaponKey}_idle_1.png`;
-    console.log(`🔍 Loading weapon from: ${weaponImageUrl}`);
 
-    // ใช้ Phaser's load.image แทนการสร้าง Image element เองเพื่อหลีกเลี่ยง CORS issues
     if (scene.load && typeof scene.load.image === 'function') {
-      console.log(`🔍 Using Phaser load.image to load texture ${textureKey}`);
-
-      // ตรวจสอบว่า scene.load.list มีอยู่หรือไม่
-      if (!scene.load.list) {
-        console.warn(`⚠️ scene.load.list is null, cannot load weapon texture`);
-        // Fallback to default weapon
-        const defaultWeaponKey = 'stick';
-        const defaultTextureKey = `weapon_${defaultWeaponKey}`;
-        if (scene.textures.exists(defaultTextureKey)) {
-          if (playerWeaponSprite) {
-            playerWeaponSprite.destroy();
-            playerWeaponSprite = null;
-          }
-          playerWeaponSprite = scene.add.image(0, 0, defaultTextureKey);
-          playerWeaponSprite.setScale(1.5);
-          playerWeaponSprite.setDepth(scene.player.depth + 1);
-          updateWeaponPosition(scene);
-          console.log(`✅ Using default weapon: ${defaultTextureKey}`);
-        }
-        return;
-      }
+      if (!scene.load.list) return; // Scene not ready
 
       scene.load.image(textureKey, weaponImageUrl);
-
       scene.load.once(`filecomplete-image-${textureKey}`, () => {
-        console.log(`✅ Texture ${textureKey} loaded via Phaser`);
-        // รอให้ texture พร้อม
         setTimeout(() => {
-          if (scene.textures.exists(textureKey)) {
-            createAndAttach();
-          } else {
-            console.warn(`⚠️ Texture ${textureKey} not found after loading`);
-          }
+          if (scene.textures.exists(textureKey)) createAndAttach();
         }, 50);
       });
-
-      scene.load.once('loaderror', (file) => {
-        if (file.key === textureKey) {
-          console.error(`❌ Failed to load weapon image via Phaser: ${weaponImageUrl}`);
-          // Fallback to default weapon
-          const defaultWeaponKey = 'stick';
-          const defaultTextureKey = `weapon_${defaultWeaponKey}`;
-          if (scene.textures.exists(defaultTextureKey)) {
-            if (playerWeaponSprite) {
-              playerWeaponSprite.destroy();
-              playerWeaponSprite = null;
-            }
-            playerWeaponSprite = scene.add.image(0, 0, defaultTextureKey);
-            playerWeaponSprite.setScale(1.5);
-            playerWeaponSprite.setDepth(scene.player.depth + 1);
-            updateWeaponPosition(scene);
-            console.log(`✅ Using default weapon: ${defaultTextureKey}`);
-          }
-        }
-      });
-
       scene.load.start();
-    } else {
-      console.warn(`⚠️ Phaser load.image not available, texture may not load`);
     }
   } else {
-    console.log(`✅ Texture ${textureKey} already exists, using existing texture`);
     createAndAttach();
   }
 
@@ -246,6 +255,89 @@ export function displayPlayerWeapon(weaponKey, scene) {
     hasGoodWeapon: true,
     weaponKey: weaponKey
   });
+}
+
+/**
+ * Triggers the attack animation for the weapon ring.
+ * @param {Phaser.Scene} scene 
+ * @param {string} weaponType 'melee' or 'magic'
+ * @param {Phaser.GameObjects.Container} targetContainer Optional container to animate (defaults to player's)
+ */
+export function animateWeaponAttack(scene, weaponType, targetContainer = null) {
+  const container = targetContainer || playerWeaponContainer;
+  if (!container || !container.active) return;
+
+  const weapons = container.getData('weapons');
+  if (!weapons) return;
+
+  if (weaponType === 'magic') {
+    // MAGIC ATTACK: Expand and Pulse
+    const originalRadius = container.getData('radius') || 45;
+    const expandRadius = originalRadius * 1.5;
+
+    // Expand
+    scene.tweens.add({
+      targets: weapons,
+      x: (target, key, value, index, total) => {
+        const angle = (index / total) * Math.PI * 2;
+        return Math.cos(angle) * expandRadius;
+      },
+      y: (target, key, value, index, total) => {
+        const angle = (index / total) * Math.PI * 2;
+        return Math.sin(angle) * expandRadius;
+      },
+      scaleX: 0.6,
+      scaleY: 0.6,
+      duration: 300,
+      yoyo: true,
+      ease: 'Back.out',
+      onComplete: () => {
+        // Reset positions explicitly to be safe
+        // handled by yoyo roughly, but logic above uses function so yoyo works on 'value'
+      }
+    });
+
+    // Spin faster during cast
+    scene.tweens.add({
+      targets: container,
+      angle: container.angle + 180,
+      duration: 600,
+      ease: 'Cubic.out'
+    });
+
+  } else {
+    // MELEE ATTACK: Slash/Point Inward
+    // All swords point their tips towards the center (or down relative to their rotation)
+
+    scene.tweens.add({
+      targets: weapons,
+      angle: '+=100', // Slash rotation
+      duration: 150,
+      yoyo: true,
+      ease: 'Power2',
+      onComplete: () => {
+        // Return to normal orbit
+      }
+    });
+
+    // Slight radius contraction for impact
+    const originalRadius = container.getData('radius') || 45;
+    const contractRadius = originalRadius * 0.8;
+
+    scene.tweens.add({
+      targets: weapons,
+      x: (target, key, value, index, total) => {
+        const angle = (index / total) * Math.PI * 2;
+        return Math.cos(angle) * contractRadius;
+      },
+      y: (target, key, value, index, total) => {
+        const angle = (index / total) * Math.PI * 2;
+        return Math.sin(angle) * contractRadius;
+      },
+      duration: 100,
+      yoyo: true
+    });
+  }
 }
 
 /**
@@ -297,8 +389,10 @@ function drawMagicCircle(scene, index) {
   const graphics = scene.add.graphics();
   graphics.setDepth(player.depth - 1); // อยู่ใต้เท้า
 
-  // วาดด้วย cyan/blue glow
-  const color = 0x00ffff;
+  // Determine color based on index
+  // circle_1 (index=1) = Cyan (0x00ffff)
+  // circle_2 (index=2) = Gold/Orange (0xffaa00)
+  const color = (index === 2) ? 0xffaa00 : 0x00ffff;
   const alpha = 0.6;
   const radius = 40;
 
@@ -385,33 +479,15 @@ function showPlayerAura(scene, index) {
 }
 
 export function updateWeaponPosition(scene) {
-  if (!playerWeaponSprite || !scene.player) return;
+  if (!playerWeaponContainer || !scene.player) return;
 
   const player = scene.player;
-  const currentState = getCurrentGameState();
-  const direction = currentState.direction || 0;
-
-  // ประกาศตัวแปร offset ก่อน
-  let offsetX = 0;
-  let offsetY = 0;
-
-  switch (direction) {
-    case 0: offsetX = 20; break;  // right
-    case 1: offsetY = 20; break;  // down
-    case 2: offsetX = -20; break; // left
-    case 3: offsetY = -20; break; // up
-  }
-
-  // หรือใช้ offset แบบ fix ที่คุณอยากได้
-  offsetX = -2; // ซ้าย 15px
-  // เพิ่มขึ้น 3px จากของเดิม เพื่อชดเชยการขยายตัวละคร
-  offsetY = 19;  // ลง 19px (เดิม 16)
-
-  playerWeaponSprite.setPosition(player.x + offsetX, player.y + offsetY);
+  // Center on player
+  playerWeaponContainer.setPosition(player.x, player.y);
 }
 
 export function getPlayerWeaponSprite() {
-  return playerWeaponSprite;
+  return playerWeaponContainer;
 }
 
 export function updatePlayerWeaponDisplay() {
@@ -420,7 +496,7 @@ export function updatePlayerWeaponDisplay() {
   const scene = currentState.currentScene || getCurrentScene();
 
   // If a scene is available and a weapon sprite exists, update its position
-  if (scene && playerWeaponSprite) {
+  if (scene && playerWeaponContainer) {
     try {
       updateWeaponPosition(scene);
     } catch (err) {

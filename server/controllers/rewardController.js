@@ -135,15 +135,11 @@ exports.createReward = async (req, res) => {
       required_score,
       is_automatic,
       frame1,
-      frame2,
-      frame3,
-      frame4,
-      frame5,
     } = req.body;
 
     if (!level_id || !reward_type || !reward_name || required_score === undefined) {
-      return res.status(400).json({ 
-        message: "Missing required fields: level_id, reward_type, reward_name, required_score" 
+      return res.status(400).json({
+        message: "Missing required fields: level_id, reward_type, reward_name, required_score"
       });
     }
 
@@ -166,8 +162,8 @@ exports.createReward = async (req, res) => {
     let parsedRewardData = null;
     if (reward_data) {
       try {
-        parsedRewardData = typeof reward_data === 'string' 
-          ? JSON.parse(reward_data) 
+        parsedRewardData = typeof reward_data === 'string'
+          ? JSON.parse(reward_data)
           : reward_data;
       } catch (parseError) {
         return res.status(400).json({ message: "Invalid reward_data JSON format" });
@@ -184,10 +180,6 @@ exports.createReward = async (req, res) => {
         required_score: parseInt(required_score),
         is_automatic: is_automatic === true || is_automatic === 'true',
         frame1: frame1 || null,
-        frame2: frame2 || null,
-        frame3: frame3 || null,
-        frame4: frame4 || null,
-        frame5: frame5 || null,
       },
       include: {
         level: {
@@ -227,10 +219,6 @@ exports.updateReward = async (req, res) => {
       required_score,
       is_automatic,
       frame1,
-      frame2,
-      frame3,
-      frame4,
-      frame5,
     } = req.body;
 
     const existingReward = await prisma.reward.findUnique({
@@ -263,8 +251,8 @@ exports.updateReward = async (req, res) => {
     if (description !== undefined) updateData.description = description;
     if (reward_data !== undefined) {
       try {
-        updateData.reward_data = typeof reward_data === 'string' 
-          ? JSON.parse(reward_data) 
+        updateData.reward_data = typeof reward_data === 'string'
+          ? JSON.parse(reward_data)
           : reward_data;
       } catch (parseError) {
         return res.status(400).json({ message: "Invalid reward_data JSON format" });
@@ -273,10 +261,6 @@ exports.updateReward = async (req, res) => {
     if (required_score !== undefined) updateData.required_score = parseInt(required_score);
     if (is_automatic !== undefined) updateData.is_automatic = is_automatic === true || is_automatic === 'true';
     if (frame1 !== undefined) updateData.frame1 = frame1 || null;
-    if (frame2 !== undefined) updateData.frame2 = frame2 || null;
-    if (frame3 !== undefined) updateData.frame3 = frame3 || null;
-    if (frame4 !== undefined) updateData.frame4 = frame4 || null;
-    if (frame5 !== undefined) updateData.frame5 = frame5 || null;
 
     const reward = await prisma.reward.update({
       where: { reward_id: parseInt(rewardId) },
@@ -320,16 +304,13 @@ exports.deleteReward = async (req, res) => {
     }
 
     // Delete associated frame images
-    const frames = [reward.frame1, reward.frame2, reward.frame3, reward.frame4, reward.frame5];
-    for (const frame of frames) {
-      if (frame) {
-        const filePath = path.join(__dirname, "..", frame);
-        if (fs.existsSync(filePath)) {
-          try {
-            fs.unlinkSync(filePath);
-          } catch (err) {
-            console.error(`Error deleting file ${filePath}:`, err);
-          }
+    if (reward.frame1) {
+      const filePath = path.join(__dirname, "..", reward.frame1);
+      if (fs.existsSync(filePath)) {
+        try {
+          fs.unlinkSync(filePath);
+        } catch (err) {
+          console.error(`Error deleting file ${filePath}:`, err);
         }
       }
     }
@@ -357,7 +338,7 @@ exports.uploadRewardFrame = async (req, res) => {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
-    if (!frame_number || !['1', '2', '3', '4', '5'].includes(frame_number)) {
+    if (!frame_number || frame_number !== '1') {
       // Delete uploaded file if invalid frame number
       if (req.file.path) {
         try {
@@ -366,7 +347,7 @@ exports.uploadRewardFrame = async (req, res) => {
           console.error("Error deleting file:", err);
         }
       }
-      return res.status(400).json({ message: "Invalid frame_number. Must be 1-5" });
+      return res.status(400).json({ message: "Invalid frame_number. Must be 1" });
     }
 
     const reward = await prisma.reward.findUnique({
@@ -390,12 +371,12 @@ exports.uploadRewardFrame = async (req, res) => {
     const timestamp = Date.now();
     const randomSuffix = Math.round(Math.random() * 1e6);
     const correctFilename = `reward-${rewardId}-frame${frame_number}-${timestamp}-${randomSuffix}${ext}`;
-    
+
     // Move/rename file to correct name
     const tempPath = req.file.path;
     const rewardsDir = path.join(__dirname, "..", "uploads", "rewards");
     const correctPath = path.join(rewardsDir, correctFilename);
-    
+
     try {
       fs.renameSync(tempPath, correctPath);
       console.log(`Renamed file from ${tempPath} to ${correctPath}`);
@@ -409,9 +390,9 @@ exports.uploadRewardFrame = async (req, res) => {
           console.error("Error deleting temp file:", err);
         }
       }
-      return res.status(500).json({ 
-        message: "Error renaming file", 
-        error: renameError.message 
+      return res.status(500).json({
+        message: "Error renaming file",
+        error: renameError.message
       });
     }
 
@@ -478,8 +459,8 @@ exports.deleteRewardFrame = async (req, res) => {
     const { rewardId } = req.params;
     const { frame_number } = req.body;
 
-    if (!frame_number || !['1', '2', '3', '4', '5'].includes(frame_number)) {
-      return res.status(400).json({ message: "Invalid frame_number. Must be 1-5" });
+    if (!frame_number || frame_number !== '1') {
+      return res.status(400).json({ message: "Invalid frame_number. Must be 1" });
     }
 
     const reward = await prisma.reward.findUnique({

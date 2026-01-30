@@ -468,7 +468,7 @@ const dijkstraExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
         </value>
         <value name="ARG2">
           <block type="math_number" id="goal_num">
-            <field name="NUM">7</field>
+            <field name="NUM">6</field>
           </block>
         </value>
       </block>
@@ -498,22 +498,22 @@ export function loadDijkstraExampleBlocks(workspace) {
 
   try {
     console.log('📦 Loading Dijkstra example blocks into workspace...');
-    
+
     // Clear workspace first
     workspace.clear();
-    
+
     // Wait a bit for workspace to be ready
     setTimeout(() => {
       try {
         // Parse XML
         const xmlDom = Blockly.utils.xml.textToDom(dijkstraExampleXml);
-        
+
         // Load into workspace
         Blockly.Xml.domToWorkspace(xmlDom, workspace);
-        
+
         // Ensure variables exist
         const variableNames = [
-          'PQ', 'visited', 'dist', 'node', 'neighbor', 'neighbor_data', 'weight', 
+          'PQ', 'visited', 'dist', 'node', 'neighbor', 'neighbor_data', 'weight',
           'new_dist', 'min_index', 'graph', 'start', 'goal', 'map', 'path', 'result',
           'distance_start', 'distance_neighbor', 'pq_item', 'current_path', 'new_path'
         ];
@@ -538,7 +538,7 @@ export function loadDijkstraExampleBlocks(workspace) {
             console.debug(`Variable ${varName} already exists or error creating:`, e);
           }
         });
-        
+
         console.log('✅ Dijkstra example blocks loaded successfully');
       } catch (error) {
         console.error('❌ Error loading Dijkstra example blocks:', error);

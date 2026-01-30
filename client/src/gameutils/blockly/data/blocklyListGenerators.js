@@ -115,7 +115,15 @@ export function defineListGenerators() {
   javascriptGenerator.forBlock["lists_contains"] = function (block) {
     const item = javascriptGenerator.valueToCode(block, 'ITEM', javascriptGenerator.ORDER_EQUALITY) || 'null';
     const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
-    return [`${list}.includes(${item})`, javascriptGenerator.ORDER_EQUALITY];
+    return [`(function() {
+      const _l = ${list};
+      const _i = ${item};
+      const _res = _l.includes(_i);
+      if (_l === visited) {
+         console.log('[DEBUG-VISITED-CHECK] Is ' + _i + ' in visited? ' + _res);
+      }
+      return _res;
+    })()`, javascriptGenerator.ORDER_EQUALITY];
   };
 
   javascriptGenerator.forBlock["lists_concat"] = function (block) {

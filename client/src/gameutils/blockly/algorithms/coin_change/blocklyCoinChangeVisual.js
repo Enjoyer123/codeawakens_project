@@ -121,43 +121,73 @@ export async function addWarriorToSelection(warriorIndex) {
     return;
   }
 
-  // Copy the circle and number text
-  const copiedCircle = scene.add.circle(copyX, copyY, 30, 0x0066ff, 1); // Blue
-  copiedCircle.setStrokeStyle(3, 0x0044cc);
-  copiedCircle.setDepth(7);
+  // Create character sprite based on power
+  let characterSprite;
+  const power = warrior.power;
 
-  const copiedNumberText = scene.add.text(copyX, copyY, warrior.number.toString(), {
+  if (power === 1) {
+    characterSprite = scene.add.image(copyX, copyY, 'bot_slime1');
+    characterSprite.setScale(1.6);
+  } else if (power === 5) {
+    characterSprite = scene.add.image(copyX, copyY, 'org1');
+    characterSprite.setScale(1.6);
+  } else if (power === 10) {
+    characterSprite = scene.add.image(copyX, copyY, 'org2');
+    characterSprite.setScale(1.6);
+  } else if (power === 25) {
+    characterSprite = scene.add.image(copyX, copyY, 'org3');
+    characterSprite.setScale(1.6);
+  } else {
+    // Fallback
+    characterSprite = scene.add.text(copyX, copyY, '?', { fontSize: '24px', color: '#000', fontStyle: 'bold' }).setOrigin(0.5);
+  }
+
+  if (characterSprite.setDepth) characterSprite.setDepth(8);
+
+  // Power Text (Value) - positioned above sprite
+  const powerText = scene.add.text(copyX, copyY - 40, power.toString(), {
     fontSize: '20px',
     color: '#ffffff',
-    fontStyle: 'bold'
+    fontStyle: 'bold',
+    stroke: '#000000',
+    strokeThickness: 3
   });
-  copiedNumberText.setOrigin(0.5, 0.5);
-  copiedNumberText.setDepth(8);
-
-  // Copy the power square and text (smaller size for box)
-  const copiedPowerSquare = scene.add.rectangle(copyX, copyY - 45, 40, 40);
-  copiedPowerSquare.setFillStyle(0xffffff, 0);
-  copiedPowerSquare.setStrokeStyle(2, 0x000000, 0.8);
-  copiedPowerSquare.setDepth(7);
-
-  const copiedPowerText = scene.add.text(copyX, copyY - 45, warrior.power.toString(), {
-    fontSize: '16px',
-    color: '#000000',
-    fontStyle: 'bold'
-  });
-  copiedPowerText.setOrigin(0.5, 0.5);
-  copiedPowerText.setDepth(8);
+  powerText.setOrigin(0.5, 0.5);
+  powerText.setDepth(9);
 
   // Animate: start from original position and move to box
-  copiedCircle.setPosition(warrior.x, warrior.y + 60); // Start at original circle position
-  copiedNumberText.setPosition(warrior.x, warrior.y + 60);
-  copiedPowerSquare.setPosition(warrior.x, warrior.y);
-  copiedPowerText.setPosition(warrior.x, warrior.y);
+  // We assume original Y (warrior.y) is the top text position, and warrior.y+60 was the sprite position
+  // In `coinChangeVisuals.js`, spriteY = warriorY + 60.
+  // So we start from there.
+
+  const startY = warrior.y; // The stored 'y' in warrior object is the sprite Y position (see coinChangeVisuals update)
+
+  characterSprite.setPosition(warrior.x, startY);
+  powerText.setPosition(warrior.x, startY - 40); // Offset to match target relative pos? Wait.
+  // In `coinChangeVisuals.js`: 
+  // spriteY = warriorY + 60. 
+  // powerText Y = warriorY.
+  // gap is 60.
+
+  // Here we want target copyY for sprite.
+  // target Text Y = copyY - 40.
+
+  // Start positions:
+  // warrior.x, warrior.y is the SPRITE position (updated in previous step's logic? No, let's check).
+  // In `coinChangeVisuals.js` Step 3055:
+  // y: spriteY (which is warriorY+60)
+  // So warrior.y IS the sprite position.
+
+  // Text was at warriorY = spriteY - 60.
+  // So Start Text Y = warrior.y - 60.
+
+  characterSprite.setPosition(warrior.x, warrior.y);
+  powerText.setPosition(warrior.x, warrior.y - 60);
 
   // Animate movement
   await new Promise((resolve) => {
     scene.tweens.add({
-      targets: [copiedCircle, copiedNumberText],
+      targets: [characterSprite],
       x: copyX,
       y: copyY,
       duration: 500,
@@ -166,9 +196,9 @@ export async function addWarriorToSelection(warriorIndex) {
     });
 
     scene.tweens.add({
-      targets: [copiedPowerSquare, copiedPowerText],
+      targets: [powerText],
       x: copyX,
-      y: copyY - 45,
+      y: copyY - 40, // Keep offset
       duration: 500,
       ease: 'Power2'
     });
@@ -179,10 +209,10 @@ export async function addWarriorToSelection(warriorIndex) {
     index: warriorIndex,
     power: warrior.power,
     copyId: copyId,
-    circle: copiedCircle,
-    numberText: copiedNumberText,
-    powerSquare: copiedPowerSquare,
-    powerText: copiedPowerText
+    circle: null,
+    numberText: null,
+    powerSquare: characterSprite, // Map sprite here for cleanup compatibility
+    powerText: powerText
   });
 
   console.log(`✅ Added warrior ${warriorIndex} (power: ${warrior.power}) to selection box`);

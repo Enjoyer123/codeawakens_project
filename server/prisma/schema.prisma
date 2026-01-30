@@ -41,6 +41,7 @@ model LevelCategory {
   difficulty_order Int
   color_code       String
   block_key        Json?
+  background_image String?
   levels           Level[]
   category_items   LevelCategoryItem[]
 
@@ -244,10 +245,6 @@ model Reward {
   required_score Int
   is_automatic   Boolean      @default(false)
   frame1         String?
-  frame2         String?
-  frame3         String?
-  frame4         String?
-  frame5         String?
   level          Level        @relation(fields: [level_id], references: [level_id])
   user_rewards   UserReward[]
 

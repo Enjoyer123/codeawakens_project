@@ -1,10 +1,11 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, Image as ImageIcon } from 'lucide-react';
+import { getImageUrl } from '@/utils/imageUtils';
 import { ITEM_TYPE_SHORT_LABELS } from '@/constants/itemTypes';
 
-const LevelCategoryTable = ({ levelCategories, onEdit, onDelete }) => {
+const LevelCategoryTable = ({ levelCategories, onEdit, onDelete, onManageImages }) => {
   const tableHeaderClassName =
     'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
   const tableCellClassName = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900';
@@ -73,6 +74,18 @@ const LevelCategoryTable = ({ levelCategories, onEdit, onDelete }) => {
                   </span>
                 </div>
               </td>
+              {/* New Background column */}
+              <td className={tableCellClassName}>
+                {category.background_image ? (
+                  <img
+                    src={getImageUrl(category.background_image)}
+                    alt="Bg"
+                    className="w-8 h-8 object-cover rounded border"
+                  />
+                ) : (
+                  <span className="text-sm text-gray-400">ไม่มี</span>
+                )}
+              </td>
               <td className={tableCellClassName}>
                 {category.block_key ? (
                   <div className="max-w-xs">
@@ -80,10 +93,10 @@ const LevelCategoryTable = ({ levelCategories, onEdit, onDelete }) => {
                       {Array.isArray(category.block_key)
                         ? `${category.block_key.length} items`
                         : typeof category.block_key === 'object'
-                        ? Object.keys(category.block_key).length > 0
-                          ? `${Object.keys(category.block_key).length} keys`
-                          : 'Empty'
-                        : 'Set'}
+                          ? Object.keys(category.block_key).length > 0
+                            ? `${Object.keys(category.block_key).length} keys`
+                            : 'Empty'
+                          : 'Set'}
                     </Badge>
                     <p className="text-xs text-gray-500 mt-1 truncate">
                       {JSON.stringify(category.block_key).substring(0, 50)}
@@ -96,20 +109,31 @@ const LevelCategoryTable = ({ levelCategories, onEdit, onDelete }) => {
               </td>
               <td className={actionsCellClassName}>
                 <div className="flex items-center gap-2">
+                  {/* New Image action button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onManageImages && onManageImages(category)}
+                  >
+                    <ImageIcon className="h-4 w-4 mr-2" />
+                    รูปภาพ
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => onEdit(category)}
                   >
-                    <Edit className="h-4 w-4" />
+                    <Edit className="h-4 w-4 mr-2" />
+                    แก้ไข
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => onDelete(category)}
-                    className="text-red-600 hover:text-red-700"
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    ลบ
                   </Button>
                 </div>
               </td>

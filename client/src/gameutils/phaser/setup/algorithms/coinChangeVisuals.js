@@ -34,91 +34,111 @@ export function setupCoinChange(scene) {
     const warriorX = warriorStartX + (index * warriorSpacing);
     const warriorNumber = index + 1; // 1, 2, 3, 4
 
-    // Square à¸”à¹‰à¸²à¸™à¸šà¸™ (dotted outline) - à¹à¸ªà¸”à¸‡à¸žà¸¥à¸±à¸‡
-    // à¹ƒà¸Šà¹‰ rectangle à¸—à¸µà¹ˆà¸¡à¸µ fill à¹‚à¸›à¸£à¹ˆà¸‡à¹ƒà¸ªà¹à¸¥à¸° stroke à¹à¸—à¸™ (à¹€à¸žà¸·à¹ˆà¸­à¸„à¸§à¸²à¸¡à¸‡à¹ˆà¸²à¸¢)
-    const powerSquare = scene.add.rectangle(warriorX, warriorY, 50, 50);
-    powerSquare.setFillStyle(0xffffff, 0); // fill à¹‚à¸›à¸£à¹ˆà¸‡à¹ƒà¸ª
-    powerSquare.setStrokeStyle(2, 0x000000, 0.8); // stroke à¸ªà¸µà¸”à¸³ (à¹ƒà¸Šà¹‰ alpha à¸•à¹ˆà¸³à¹€à¸žà¸·à¹ˆà¸­à¸”à¸¹à¹€à¸«à¸¡à¸·à¸­à¸™ dotted)
-    powerSquare.setDepth(7);
+    // Determine character sprite based on power
+    let characterSprite;
 
-    // Text à¹à¸ªà¸”à¸‡à¸žà¸¥à¸±à¸‡à¹ƒà¸™ square
-    const powerText = scene.add.text(warriorX, warriorY, power.toString(), {
-      fontSize: '20px',
-      color: '#000000',
-      fontStyle: 'bold'
+    // Target position: Replace the circle position (warriorY + 60)
+    const spriteY = warriorY + 60;
+    const textY = warriorY; // Above the sprite
+
+    // 1 = Slime (Static from bot folder)
+    if (power === 1) {
+      characterSprite = scene.add.image(warriorX, spriteY, 'bot_slime1');
+      characterSprite.setScale(1.6);
+    }
+    // 5 = Org1
+    else if (power === 5) {
+      characterSprite = scene.add.image(warriorX, spriteY, 'org1');
+      characterSprite.setScale(1.6);
+    }
+    // 10 = Org2
+    else if (power === 10) {
+      characterSprite = scene.add.image(warriorX, spriteY, 'org2');
+      characterSprite.setScale(1.6);
+    }
+    // 25 = Org3
+    else if (power === 25) {
+      characterSprite = scene.add.image(warriorX, spriteY, 'org3');
+      characterSprite.setScale(1.6);
+    }
+    // Fallback for others
+    else {
+      const fallbackText = scene.add.text(warriorX, spriteY, '?', { fontSize: '24px', color: '#000', fontStyle: 'bold' }).setOrigin(0.5);
+      characterSprite = fallbackText;
+    }
+
+    if (characterSprite.setDepth) characterSprite.setDepth(8);
+
+    // Keep reference
+    const powerSquare = characterSprite;
+
+    // Text showing power value (1, 5, 10, 25)
+    // Positioned above the sprite
+    const powerText = scene.add.text(warriorX, textY, power.toString(), {
+      fontSize: '24px',
+      color: '#ffffff',
+      fontStyle: 'bold',
+      stroke: '#000000',
+      strokeThickness: 4
     });
     powerText.setOrigin(0.5, 0.5);
-    powerText.setDepth(8);
+    powerText.setDepth(9);
 
-    // Blue circle à¸”à¹‰à¸²à¸™à¸¥à¹ˆà¸²à¸‡ (solid outline) - à¹à¸ªà¸”à¸‡à¸«à¸¡à¸²à¸¢à¹€à¸¥à¸‚
-    const warriorCircle = scene.add.circle(warriorX, warriorY + 60, 30, 0x0066ff, 1); // à¸ªà¸µà¸Ÿà¹‰à¸²
-    warriorCircle.setStrokeStyle(3, 0x0044cc); // à¹€à¸ªà¹‰à¸™à¸‚à¸­à¸šà¸ªà¸µà¸Ÿà¹‰à¸²à¹€à¸‚à¹‰à¸¡
-    warriorCircle.setDepth(7);
-
-    // Text à¹à¸ªà¸”à¸‡à¸«à¸¡à¸²à¸¢à¹€à¸¥à¸‚à¹ƒà¸™ circle
-    const numberText = scene.add.text(warriorX, warriorY + 60, warriorNumber.toString(), {
-      fontSize: '20px',
-      color: '#ffffff',
-      fontStyle: 'bold'
-    });
-    numberText.setOrigin(0.5, 0.5);
-    numberText.setDepth(8);
+    // Removed: Blue circle and index number (1, 2, 3, 4) as requested
 
     scene.coinChange.warriors.push({
       power: power,
       index: index,
       number: warriorNumber,
-      powerSquare: powerSquare,
+      powerSquare: powerSquare, // Now the sprite
       powerText: powerText,
-      circle: warriorCircle,
-      numberText: numberText,
+      circle: null, // Removed
+      numberText: null, // Removed
       x: warriorX,
-      y: warriorY,
+      y: spriteY,
       originalX: warriorX,
-      originalY: warriorY
+      originalY: spriteY
     });
   });
 
-  // Setup monster (à¸¡à¸­à¸™à¸ªà¹€à¸•à¸­à¸£à¹Œ) - à¸”à¹‰à¸²à¸™à¸‚à¸§à¸²
-  const monsterX = 900; // à¸‚à¸¢à¸±à¸šà¹„à¸›à¸—à¸²à¸‡à¸‚à¸§à¸²
+  // Setup monster (Target Amount) - displayed on the right
+  const monsterX = 900;
   const monsterY = 150;
 
-  // Square à¸”à¹‰à¸²à¸™à¸šà¸™ (dotted outline) - à¹à¸ªà¸”à¸‡à¸žà¸¥à¸±à¸‡
-  // à¹ƒà¸Šà¹‰ rectangle à¸—à¸µà¹ˆà¸¡à¸µ fill à¹‚à¸›à¸£à¹ˆà¸‡à¹ƒà¸ªà¹à¸¥à¸° stroke à¹à¸—à¸™ (à¹€à¸žà¸·à¹ˆà¸­à¸„à¸§à¸²à¸¡à¸‡à¹ˆà¸²à¸¢)
-  const monsterPowerSquare = scene.add.rectangle(monsterX, monsterY, 50, 50);
-  monsterPowerSquare.setFillStyle(0xffffff, 0); // fill à¹‚à¸›à¸£à¹ˆà¸‡à¹ƒà¸ª
-  monsterPowerSquare.setStrokeStyle(2, 0x000000, 0.8); // stroke à¸ªà¸µà¸”à¸³ (à¹ƒà¸Šà¹‰ alpha à¸•à¹ˆà¸³à¹€à¸žà¸·à¹ˆà¸­à¸”à¸¹à¹€à¸«à¸¡à¸·à¸­à¸™ dotted)
-  monsterPowerSquare.setDepth(7);
+  // Use Human Sprite instead of red circle
+  const monsterSprite = scene.add.image(monsterX, monsterY + 60, 'bot_humen1');
+  monsterSprite.setScale(2.2);
+  monsterSprite.setDepth(7);
 
-  // Text à¹à¸ªà¸”à¸‡à¸žà¸¥à¸±à¸‡à¹ƒà¸™ square
+  // Power Text (formerly "Monster Power") - positioned above sprite
   const monsterPowerText = scene.add.text(monsterX, monsterY, monsterPower.toString(), {
-    fontSize: '20px',
+    fontSize: '24px',
     color: '#000000',
     fontStyle: 'bold'
   });
   monsterPowerText.setOrigin(0.5, 0.5);
   monsterPowerText.setDepth(8);
 
-  // Red circle à¸”à¹‰à¸²à¸™à¸¥à¹ˆà¸²à¸‡ (solid outline, filled light red) - à¹à¸ªà¸”à¸‡à¸„à¸³à¸§à¹ˆà¸² "Monster"
-  const monsterCircle = scene.add.circle(monsterX, monsterY + 60, 40, 0xff6666, 1); // à¸ªà¸µà¹à¸”à¸‡à¸­à¹ˆà¸­à¸™
-  monsterCircle.setStrokeStyle(3, 0xff0000); // à¹€à¸ªà¹‰à¸™à¸‚à¸­à¸šà¸ªà¸µà¹à¸”à¸‡à¹€à¸‚à¹‰à¸¡
-  monsterCircle.setDepth(7);
+  // Removed: Power Square (box around text) if desired, or keep it?
+  // User asked to replace "circle". I'll keep the power text.
+  // Previous code had a "dotted square" for power. I'll remove it for cleaner look if I follow the "warrior" pattern.
+  // The warriors has text with stroke. I'll do the same here for consistency.
 
-  // Text à¹à¸ªà¸”à¸‡à¸„à¸³à¸§à¹ˆà¸² "Monster" à¹ƒà¸™ circle
-  const monsterLabelText = scene.add.text(monsterX, monsterY + 60, 'Monster', {
-    fontSize: '14px',
+  monsterPowerText.setStyle({
+    fontSize: '24px',
     color: '#ffffff',
-    fontStyle: 'bold'
+    fontStyle: 'bold',
+    stroke: '#000000',
+    strokeThickness: 4
   });
-  monsterLabelText.setOrigin(0.5, 0.5);
-  monsterLabelText.setDepth(8);
 
   scene.coinChange.monster = {
     power: monsterPower,
-    powerSquare: monsterPowerSquare,
+    powerSquare: null, // Removed
     powerText: monsterPowerText,
-    circle: monsterCircle,
-    labelText: monsterLabelText,
+    circle: null, // Removed
+    labelText: null, // Removed "Monster" text
+    sprite: monsterSprite, // Added reference
     x: monsterX,
     y: monsterY
   };
@@ -129,13 +149,13 @@ export function setupCoinChange(scene) {
   const boxWidth = 400;
   const boxHeight = 200;
 
-  const selectedBox = scene.add.graphics();
-  selectedBox.lineStyle(4, 0x000000, 1);
-  selectedBox.strokeRoundedRect(boxX - boxWidth / 2, boxY - boxHeight / 2, boxWidth, boxHeight, 10);
-  selectedBox.setDepth(5);
+  // const selectedBox = scene.add.graphics();
+  // selectedBox.lineStyle(4, 0x000000, 1);
+  // selectedBox.strokeRoundedRect(boxX - boxWidth / 2, boxY - boxHeight / 2, boxWidth, boxHeight, 10);
+  // selectedBox.setDepth(5);
 
   scene.coinChange.selectedBox = {
-    graphics: selectedBox,
+    graphics: null, // selectedBox,
     x: boxX,
     y: boxY,
     width: boxWidth,

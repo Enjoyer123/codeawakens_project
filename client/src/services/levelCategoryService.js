@@ -135,3 +135,56 @@ export const getLevelCategoryById = async (getToken, categoryId) => {
   }
 };
 
+// Upload category background
+export const uploadCategoryBackground = async (getToken, categoryId, imageFile) => {
+  try {
+    const token = await getToken();
+    const formData = new FormData();
+    formData.append('image', imageFile);
+
+    const response = await fetch(`${API_BASE_URL}/api/level-categories/${categoryId}/background`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        // Content-Type is set automatically for FormData
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Failed to upload background' }));
+      throw new Error(errorData.message || 'Failed to upload background');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error uploading background:', error);
+    throw error;
+  }
+};
+
+// Delete category background
+export const deleteCategoryBackground = async (getToken, categoryId) => {
+  try {
+    const token = await getToken();
+    const response = await fetch(`${API_BASE_URL}/api/level-categories/${categoryId}/background`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Failed to delete background' }));
+      throw new Error(errorData.message || 'Failed to delete background');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error deleting background:', error);
+    throw error;
+  }
+};

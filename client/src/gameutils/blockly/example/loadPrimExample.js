@@ -10,19 +10,19 @@ export function loadPrimExampleBlocks(workspace) {
 
   try {
     console.log('📦 Loading Prim example blocks into workspace...');
-    
+
     // Clear workspace first
     workspace.clear();
-    
+
     // Wait a bit for workspace to be ready
     setTimeout(() => {
       try {
         // Parse XML
         const xmlDom = Blockly.utils.xml.textToDom(primExampleXml);
-        
+
         // Load into workspace
         Blockly.Xml.domToWorkspace(xmlDom, workspace);
-        
+
         // Ensure variables exist
         const variableNames = ['graph', 'start', 'all_nodes', 'distance', 'parent', 'PQ', 'visited', 'MST_weight', 'min_index', 'pq_item', 'dist', 'node', 'neighbor_data', 'neighbor', 'weight', 'result', 'map', 'parent_node', 'parent_neighbors', 'neighbor_data_parent', 'edge_weight'];
         variableNames.forEach(varName => {
@@ -46,7 +46,7 @@ export function loadPrimExampleBlocks(workspace) {
             console.debug(`Variable ${varName} already exists or error creating:`, e);
           }
         });
-        
+
         console.log('✅ Prim example blocks loaded successfully');
       } catch (error) {
         console.error('❌ Error loading Prim example blocks:', error);
@@ -103,17 +103,12 @@ const primExampleXml = `<?xml version="1.0" encoding="UTF-8"?>
                   </block>
                 </value>
                 <next>
-                  <!-- Initialize visited = [start] -->
+                  <!-- Initialize visited = [] -->
                   <block type="variables_set" id="init_visited">
                     <field name="VAR">visited</field>
                     <value name="VALUE">
                       <block type="lists_create_with" id="visited_list">
-                        <mutation items="1"></mutation>
-                        <value name="ADD0">
-                          <block type="variables_get" id="start_var_visited">
-                            <field name="VAR">start</field>
-                          </block>
-                        </value>
+                        <mutation items="0"></mutation>
                       </block>
                     </value>
                     <next>
@@ -136,6 +131,7 @@ const primExampleXml = `<?xml version="1.0" encoding="UTF-8"?>
                             </value>
                             <statement name="DO">
                               <block type="controls_if" id="check_start_node">
+                                <mutation else="1"></mutation>
                                 <value name="IF0">
                                   <block type="logic_compare" id="node_equals_start">
                                     <value name="A">
@@ -171,7 +167,7 @@ const primExampleXml = `<?xml version="1.0" encoding="UTF-8"?>
                                     </value>
                                   </block>
                                 </statement>
-                                <next>
+                                <statement name="ELSE">
                                   <!-- distance[node] = 999 -->
                                   <block type="dict_set" id="set_distance_999">
                                     <value name="DICT">
@@ -190,7 +186,7 @@ const primExampleXml = `<?xml version="1.0" encoding="UTF-8"?>
                                       </block>
                                     </value>
                                   </block>
-                                </next>
+                                </statement>
                               </block>
                             </statement>
                             <next>
@@ -328,158 +324,39 @@ const primExampleXml = `<?xml version="1.0" encoding="UTF-8"?>
                                                               <!-- Continue (empty block) - skip to next iteration -->
                                                             </statement>
                                                             <next>
-                                                              <!-- add node to visited -->
-                                                              <block type="lists_add_item" id="add_to_visited">
-                                                                <value name="LIST">
-                                                                  <block type="variables_get" id="visited_var_add">
-                                                                    <field name="VAR">visited</field>
-                                                                  </block>
-                                                                </value>
-                                                                <value name="ITEM">
-                                                                  <block type="variables_get" id="node_var_add">
-                                                                    <field name="VAR">node</field>
-                                                                  </block>
-                                                                </value>
-                                                                <next>
-                                                                  <!-- Calculate MST_weight: dist is already the weight of edge from parent[node] to node -->
-                                                                  <!-- Only add MST_weight if node is not start (has parent) -->
-                                                                  <block type="controls_if" id="check_has_parent">
-                                                                    <value name="IF0">
-                                                                      <block type="dict_has_key" id="has_parent">
-                                                                        <value name="DICT">
-                                                                          <block type="variables_get" id="parent_var_check">
-                                                                            <field name="VAR">parent</field>
+                                                              <!-- MST_weight = MST_weight + dist -->
+                                                                  <block type="variables_set" id="update_mst_weight">
+                                                                    <field name="VAR">MST_weight</field>
+                                                                    <value name="VALUE">
+                                                                      <block type="math_arithmetic" id="add_mst_weight">
+                                                                        <field name="OP">ADD</field>
+                                                                        <value name="A">
+                                                                          <block type="variables_get" id="mst_weight_var">
+                                                                            <field name="VAR">MST_weight</field>
                                                                           </block>
                                                                         </value>
-                                                                        <value name="KEY">
-                                                                          <block type="variables_get" id="node_var_check_parent">
-                                                                            <field name="VAR">node</field>
+                                                                        <value name="B">
+                                                                          <block type="variables_get" id="dist_var_add">
+                                                                            <field name="VAR">dist</field>
                                                                           </block>
                                                                         </value>
                                                                       </block>
                                                                     </value>
-                                                                    <statement name="DO0">
-                                                                      <!-- Get parent node -->
-                                                                      <block type="variables_set" id="set_parent_node">
-                                                                        <field name="VAR">parent_node</field>
-                                                                        <value name="VALUE">
-                                                                          <block type="dict_get" id="get_parent_node">
-                                                                            <value name="DICT">
-                                                                              <block type="variables_get" id="parent_var_get">
-                                                                                <field name="VAR">parent</field>
-                                                                              </block>
-                                                                            </value>
-                                                                            <value name="KEY">
-                                                                              <block type="variables_get" id="node_var_get_parent">
-                                                                                <field name="VAR">node</field>
-                                                                              </block>
-                                                                            </value>
+                                                                    <next>
+                                                                      <!-- add node to visited -->
+                                                                      <block type="lists_add_item" id="add_to_visited">
+                                                                        <value name="LIST">
+                                                                          <block type="variables_get" id="visited_var_add">
+                                                                            <field name="VAR">visited</field>
+                                                                          </block>
+                                                                        </value>
+                                                                        <value name="ITEM">
+                                                                          <block type="variables_get" id="node_var_add">
+                                                                            <field name="VAR">node</field>
                                                                           </block>
                                                                         </value>
                                                                         <next>
-                                                                          <!-- Get neighbors of parent_node to find edge weight -->
-                                                                          <block type="variables_set" id="set_parent_neighbors">
-                                                                            <field name="VAR">parent_neighbors</field>
-                                                                            <value name="VALUE">
-                                                                              <block type="graph_get_neighbors_with_weight" id="get_parent_neighbors">
-                                                                                <value name="GRAPH">
-                                                                                  <block type="variables_get" id="graph_var_parent">
-                                                                                    <field name="VAR">graph</field>
-                                                                                  </block>
-                                                                                </value>
-                                                                                <value name="NODE">
-                                                                                  <block type="variables_get" id="parent_node_var">
-                                                                                    <field name="VAR">parent_node</field>
-                                                                                  </block>
-                                                                                </value>
-                                                                              </block>
-                                                                            </value>
-                                                                            <next>
-                                                                              <!-- Find edge weight from parent_node to node -->
-                                                                              <block type="for_each_in_list" id="find_edge_weight">
-                                                                                <field name="VAR">neighbor_data_parent</field>
-                                                                                <value name="LIST">
-                                                                                  <block type="variables_get" id="parent_neighbors_var">
-                                                                                    <field name="VAR">parent_neighbors</field>
-                                                                                  </block>
-                                                                                </value>
-                                                                                <statement name="DO">
-                                                                                  <block type="controls_if" id="check_neighbor_match">
-                                                                                    <value name="IF0">
-                                                                                      <block type="logic_compare" id="neighbor_equals_node">
-                                                                                        <value name="A">
-                                                                                          <block type="lists_get_at_index" id="get_neighbor_from_data">
-                                                                                            <value name="LIST">
-                                                                                              <block type="variables_get" id="neighbor_data_parent_var">
-                                                                                                <field name="VAR">neighbor_data_parent</field>
-                                                                                              </block>
-                                                                                            </value>
-                                                                                            <value name="INDEX">
-                                                                                              <block type="math_number" id="neighbor_index_0">
-                                                                                                <field name="NUM">0</field>
-                                                                                              </block>
-                                                                                            </value>
-                                                                                          </block>
-                                                                                        </value>
-                                                                                        <field name="OP">EQ</field>
-                                                                                        <value name="B">
-                                                                                          <block type="variables_get" id="node_var_match">
-                                                                                            <field name="VAR">node</field>
-                                                                                          </block>
-                                                                                        </value>
-                                                                                      </block>
-                                                                                    </value>
-                                                                                    <statement name="DO0">
-                                                                                      <!-- edge_weight = neighbor_data_parent[1] -->
-                                                                                      <block type="variables_set" id="set_edge_weight">
-                                                                                        <field name="VAR">edge_weight</field>
-                                                                                        <value name="VALUE">
-                                                                                          <block type="lists_get_at_index" id="get_edge_weight">
-                                                                                            <value name="LIST">
-                                                                                              <block type="variables_get" id="neighbor_data_parent_var2">
-                                                                                                <field name="VAR">neighbor_data_parent</field>
-                                                                                              </block>
-                                                                                            </value>
-                                                                                            <value name="INDEX">
-                                                                                              <block type="math_number" id="weight_index_1">
-                                                                                                <field name="NUM">1</field>
-                                                                                              </block>
-                                                                                            </value>
-                                                                                          </block>
-                                                                                        </value>
-                                                                                        <next>
-                                                                                          <!-- MST_weight = MST_weight + edge_weight -->
-                                                                                          <block type="variables_set" id="update_mst_weight">
-                                                                                            <field name="VAR">MST_weight</field>
-                                                                                            <value name="VALUE">
-                                                                                              <block type="math_arithmetic" id="add_mst_weight">
-                                                                                                <field name="OP">ADD</field>
-                                                                                                <value name="A">
-                                                                                                  <block type="variables_get" id="mst_weight_var">
-                                                                                                    <field name="VAR">MST_weight</field>
-                                                                                                  </block>
-                                                                                                </value>
-                                                                                                <value name="B">
-                                                                                                  <block type="variables_get" id="edge_weight_var">
-                                                                                                    <field name="VAR">edge_weight</field>
-                                                                                                  </block>
-                                                                                                </value>
-                                                                                              </block>
-                                                                                            </value>
-                                                                                          </block>
-                                                                                        </next>
-                                                                                      </block>
-                                                                                    </statement>
-                                                                                  </block>
-                                                                                </statement>
-                                                                              </block>
-                                                                            </next>
-                                                                          </block>
-                                                                        </next>
-                                                                      </block>
-                                                                    </statement>
-                                                                    <next>
-                                                                      <!-- for neighbor, weight in graph[node] -->
+                                                                          <!-- for neighbor, weight in graph[node] -->
                                                                           <block type="for_each_in_list" id="for_each_neighbor">
                                                                             <field name="VAR">neighbor_data</field>
                                                                             <value name="LIST">

@@ -68,7 +68,7 @@ export function updatePlayer(scene, nodeId, direction) {
 
     // Reset player appearance (in case it was affected by pit fall)
     scene.player.alpha = 1;
-    scene.player.setScale(1.8);
+    scene.player.setScale(2.2);
   } else if (!hasNodes && scene.player) {
     // ถ้าไม่มี nodes แต่มีการเรียก updatePlayer ให้ทำแค่ update direction และ animation
     // เพื่อให้ผู้เล่นเห็นการเปลี่ยนแปลงตัวละคร (สำหรับด่านที่ไม่มี nodes เช่น Backtrack)

@@ -6,6 +6,8 @@ import {
   createLevelCategory,
   updateLevelCategory,
   deleteLevelCategory,
+  uploadCategoryBackground,
+  deleteCategoryBackground,
 } from '../../../services/levelCategoryService';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
@@ -14,9 +16,11 @@ import ErrorAlert from '@/components/shared/alert/ErrorAlert';
 import PaginationControls from '@/components/shared/pagination/PaginationControls';
 import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import LevelCategoryFormDialog from '@/components/admin/addEditDialog/LevelCategoryFormDialog';
+import LevelCategoryImageDialog from '@/components/admin/levelCategory/LevelCategoryImageDialog';
 import { usePagination } from '@/hooks/usePagination';
 import { createDeleteErrorMessage } from '@/utils/errorHandler';
 import LevelCategoryTable from '@/components/admin/levelCategory/LevelCategoryTable';
+import { getImageUrl } from '@/utils/imageUtils';
 
 const LevelCategoryManagement = () => {
   const navigate = useNavigate();
@@ -52,6 +56,13 @@ const LevelCategoryManagement = () => {
   const [levelCategoryToDelete, setLevelCategoryToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
+
+  // Image management states
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [deletingImage, setDeletingImage] = useState(false);
+  const [imageError, setImageError] = useState(null);
 
   const loadLevelCategories = useCallback(async () => {
     try {
@@ -151,6 +162,7 @@ const LevelCategoryManagement = () => {
       difficulty_order: 1,
       color_code: '#4CAF50',
       block_key: null,
+      background_image: null,
     });
   }, []);
 
@@ -161,7 +173,7 @@ const LevelCategoryManagement = () => {
     let blockKeyValue = null;
     if (levelCategoryForm.block_key && levelCategoryForm.block_key.trim()) {
       const trimmedValue = levelCategoryForm.block_key.trim();
-      
+
       // Try to parse as JSON first
       try {
         blockKeyValue = JSON.parse(trimmedValue);
@@ -172,7 +184,7 @@ const LevelCategoryManagement = () => {
           .split(',')
           .map(item => item.trim())
           .filter(item => item.length > 0);
-        
+
         if (items.length > 0) {
           blockKeyValue = items;
         } else {
@@ -269,6 +281,70 @@ const LevelCategoryManagement = () => {
     `คุณแน่ใจหรือไม่ว่าต้องการลบหมวดหมู่ "${categoryName}"? ` +
     'การกระทำนี้ไม่สามารถยกเลิกได้';
 
+  // Image Management Handlers
+  const handleOpenImageDialog = useCallback((category) => {
+    setSelectedCategory(category);
+    setImageError(null);
+    setImageDialogOpen(true);
+  }, []);
+
+  const handleImageDialogChange = useCallback((open) => {
+    setImageDialogOpen(open);
+    if (!open) {
+      setSelectedCategory(null);
+      setUploadingImage(false);
+      setDeletingImage(false);
+      setImageError(null);
+    }
+  }, []);
+
+  const handleUploadImage = useCallback(async (imageFile) => {
+    if (!selectedCategory || !imageFile) {
+      setImageError('กรุณาเลือกไฟล์รูปภาพ');
+      return;
+    }
+
+    try {
+      setUploadingImage(true);
+      setImageError(null);
+      await uploadCategoryBackground(getToken, selectedCategory.category_id, imageFile);
+      await loadLevelCategories(); // Refresh list to update thumbnail
+
+      // Update selected category state as well
+      const data = await fetchAllLevelCategories(getToken, searchQuery);
+      const updatedCategory = data.levelCategories?.find(c => c.category_id === selectedCategory.category_id);
+      if (updatedCategory) {
+        setSelectedCategory(updatedCategory);
+      }
+    } catch (err) {
+      setImageError('ไม่สามารถอัปโหลดรูปภาพได้: ' + (err.message || 'Unknown error'));
+    } finally {
+      setUploadingImage(false);
+    }
+  }, [selectedCategory, getToken, loadLevelCategories, searchQuery]);
+
+  const handleDeleteImage = useCallback(async () => {
+    if (!selectedCategory) return;
+
+    try {
+      setDeletingImage(true);
+      setImageError(null);
+      await deleteCategoryBackground(getToken, selectedCategory.category_id);
+      await loadLevelCategories(); // Refresh list
+
+      // Update selected category state
+      const data = await fetchAllLevelCategories(getToken, searchQuery);
+      const updatedCategory = data.levelCategories?.find(c => c.category_id === selectedCategory.category_id);
+      if (updatedCategory) {
+        setSelectedCategory(updatedCategory);
+      }
+    } catch (err) {
+      setImageError('ไม่สามารถลบรูปภาพได้: ' + (err.message || 'Unknown error'));
+    } finally {
+      setDeletingImage(false);
+    }
+  }, [selectedCategory, getToken, loadLevelCategories, searchQuery]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -281,6 +357,7 @@ const LevelCategoryManagement = () => {
 
         <ErrorAlert message={error} />
         <ErrorAlert message={saveError} />
+        <ErrorAlert message={imageError} />
         <ErrorAlert message={deleteError} />
 
         <SearchInput
@@ -303,6 +380,7 @@ const LevelCategoryManagement = () => {
                 levelCategories={levelCategories}
                 onEdit={handleOpenLevelCategoryDialog}
                 onDelete={handleDeleteClick}
+                onManageImages={handleOpenImageDialog}
               />
               <PaginationControls
                 currentPage={page}
@@ -322,6 +400,17 @@ const LevelCategoryManagement = () => {
           formData={levelCategoryForm}
           onFormChange={setLevelCategoryForm}
           onSave={handleSaveLevelCategory}
+        />
+
+        <LevelCategoryImageDialog
+          open={imageDialogOpen}
+          onOpenChange={handleImageDialogChange}
+          selectedCategory={selectedCategory}
+          uploading={uploadingImage}
+          deleting={deletingImage}
+          onUpload={handleUploadImage}
+          onDelete={handleDeleteImage}
+          getImageUrl={getImageUrl}
         />
 
         <DeleteConfirmDialog

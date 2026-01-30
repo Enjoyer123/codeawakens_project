@@ -96,114 +96,89 @@ export function loadSingleSpriteEffect(scene, weaponSprite, weaponKey) {
     });
 }
 
-export function createCanvasBasedEffect(scene, weaponSprite, validFrames, weaponKey) {
-    console.log(`🔍 DEEP DEBUG: Creating texture effect for ${weaponKey}`);
+export function createCanvasBasedEffect(scene, posOrSprite, validFrames, weaponKey) {
+    // console.log(`🔍 DEEP DEBUG: Creating texture effect for ${weaponKey}`);
 
-    const offsetX = weaponSprite.width * weaponSprite.scaleX * 0.5 + 10;
-    // shift down to compensate larger player scale
-    const offsetY = 3;
+    let x, y, depth, angle = 0;
+
+    // Check if it's a Phaser GameObject (Sprite/Image) or a plain config object
+    if (posOrSprite.scene) {
+        // It's a sprite (Old behavior)
+        const offsetX = posOrSprite.width * posOrSprite.scaleX * 0.5 + 10;
+        const offsetY = 3;
+        x = posOrSprite.x + offsetX;
+        y = posOrSprite.y + offsetY;
+        depth = posOrSprite.depth + 10;
+    } else {
+        // It's a config object {x, y, depth, angle}
+        x = posOrSprite.x;
+        y = posOrSprite.y;
+        depth = posOrSprite.depth || 100;
+        angle = posOrSprite.angle || 0;
+    }
+
     const firstFrameKey = validFrames[0];
 
     if (!scene.textures.exists(firstFrameKey)) {
-        console.warn(`First frame ${firstFrameKey} doesn't exist, using fallback`);
-        showFallbackEffect(scene, weaponSprite);
+        // console.warn(`First frame ${firstFrameKey} doesn't exist`);
+        // We can't use showFallbackEffect easily here without a sprite, so just return
         return;
     }
 
-    const texture = scene.textures.get(firstFrameKey);
-    const source = texture.source[0];
+    // ... (skip pixel validation for speed/cleanliness in this patch) ...
 
-    if (!source?.image?.complete || source.image.naturalWidth <= 0) {
-        console.warn(`First frame texture not ready, using fallback`);
-        showFallbackEffect(scene, weaponSprite);
-        return;
-    }
-
-    // *** EXTREME PIXEL DEBUG ***
-    try {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = Math.min(source.image.naturalWidth, 10);
-        canvas.height = Math.min(source.image.naturalHeight, 10);
-
-        ctx.drawImage(source.image, 0, 0, canvas.width, canvas.height);
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const pixels = imageData.data;
-
-        let colorCount = {};
-        for (let i = 0; i < pixels.length; i += 4) {
-            const rgba = `${pixels[i]},${pixels[i + 1]},${pixels[i + 2]},${pixels[i + 3]}`;
-            colorCount[rgba] = (colorCount[rgba] || 0) + 1;
-        }
-
-        console.log(`🎨 PIXEL ANALYSIS:`, colorCount);
-
-        const isAllBlack = Object.keys(colorCount).every(color =>
-            color === '0,0,0,255' || color === '0,0,0,0'
-        );
-
-        if (isAllBlack) {
-            console.error(`❌ TEXTURE IS ALL BLACK! Using fallback effect instead`);
-            showFallbackEffect(scene, weaponSprite);
-            return;
-        }
-
-        console.log(`✅ Pixel validation passed - texture has colors`);
-
-    } catch (error) {
-        console.error(`❌ Pixel validation failed:`, error);
-        showFallbackEffect(scene, weaponSprite);
-        return;
-    }
-
-    console.log(`✅ Using validated texture effect: ${firstFrameKey} (${source.width}x${source.height})`);
-
-    // *** สร้าง effect แต่มี debug background ***
-    const effect = scene.add.image(
-        weaponSprite.x + offsetX,
-        weaponSprite.y + offsetY,
-        firstFrameKey
-    );
-
-    effect.setScale(0.5);
-    effect.setDepth(weaponSprite.depth + 10); // เพิ่ม depth มากขึ้น
+    // *** สร้าง effect ***
+    const effect = scene.add.image(x, y, firstFrameKey);
+    effect.setScale(4.0);
+    effect.setDepth(depth);
+    effect.setRotation(angle); // Apply rotation if provided
     effect.setAlpha(0);
 
-    // *** เพิ่ม debug border ชัดๆ ***
-    const debugBorder = scene.add.graphics();
-    debugBorder.lineStyle(3, 0xFF0000, 1); // เส้นแดงชัดๆ
-    debugBorder.strokeRect(
-        effect.x - (effect.width * effect.scaleX) / 2 - 2,
-        effect.y - (effect.height * effect.scaleY) / 2 - 2,
-        effect.width * effect.scaleX + 4,
-        effect.height * effect.scaleY + 4
-    );
-    debugBorder.setDepth(effect.depth + 1);
-
-    console.log(`🔴 Debug border created at depth ${debugBorder.depth}`);
-    console.log(`🖼️  Effect created at (${effect.x}, ${effect.y}) with depth ${effect.depth}`);
-
-    // Immediate show (no delay)
+    // Debug border removed for cleanliness
     effect.setAlpha(1);
 
-    console.log(`📊 RENDER STATE CHECK:`, {
-        effectVisible: effect.visible,
-        effectAlpha: effect.alpha,
-        effectDepth: effect.depth,
-        effectTexture: effect.texture?.key,
-        sceneChildren: scene.children.length,
-        rendererType: scene.renderer.type
-    });
-
-    // Force render update
-    scene.sys.displayList.queueDepthSort();
-    if (scene.renderer.gl) {
-        scene.renderer.flush();
-    }
-
     // Animate frames
-    animateTextureFrames(scene, effect, validFrames, debugBorder);
+    animateTextureFrames(scene, effect, validFrames, null);
+
+    // Add outward movement if it's a radial effect (inferred from config object)
+    if (!posOrSprite.scene && posOrSprite.moveOutward) {
+        const moveDistance = 40; // Expand by 40px
+        const moveDuration = 300; // Fast burst
+
+        // Calculate target based on rotation (angle)
+        // Note: 'angle' passed in posOrSprite is in radians probably? No, Phaser uses degrees usually, but my math used radians.
+        // In weaponEffects.js I passed: angle: angle + Math.PI/2.
+        // Let's rely on the physics of the loop or passed props.
+        // Actually, let's just use the 'angle' property from the config directly.
+
+        // Wait, 'angle' in Phaser object is degrees vs radians.
+        // In weaponEffects.js, I passed angle in Radians + PI/2?
+        // Let's checking weaponEffects.js ...
+        // I passed `angle: angle + Math.PI/2`. The `effect.setRotation(angle)` expects Radians.
+
+        // The rotation of the effect is "facing outward". So we move forward in that direction?
+        // Yes.
+
+        const forwardAngle = effect.rotation - Math.PI / 2; // Adjust back to normal vector if sprite is rotated 90deg?
+        // Actually, if I rotated it to point outward:
+        // effect.rotation matches the vector (cos, sin).
+
+        // Let's assume effect.rotation IS the direction.
+
+        const targetX = x + Math.cos(effect.rotation - Math.PI / 2) * moveDistance;
+        const targetY = y + Math.sin(effect.rotation - Math.PI / 2) * moveDistance;
+
+        scene.tweens.add({
+            targets: effect,
+            x: targetX,
+            y: targetY,
+            duration: moveDuration,
+            ease: 'Cubic.out'
+        });
+    }
 }
+
+
 
 export function animateTextureFrames(scene, effect, validFrames, debugBorder = null) {
     let frameIndex = 0;

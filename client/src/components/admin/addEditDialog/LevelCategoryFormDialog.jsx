@@ -25,12 +25,12 @@ const LevelCategoryFormDialog = ({
   // Parse item from formData
   const getSelectedItems = () => {
     if (!formData.item) return [];
-    
+
     // ถ้าเป็น array อยู่แล้ว return เลย
     if (Array.isArray(formData.item)) {
       return formData.item;
     }
-    
+
     // ถ้าเป็น string ให้ parse JSON
     if (typeof formData.item === 'string') {
       try {
@@ -40,7 +40,7 @@ const LevelCategoryFormDialog = ({
         return [];
       }
     }
-    
+
     // ถ้าเป็น object เดียว
     return [formData.item];
   };
@@ -60,9 +60,9 @@ const LevelCategoryFormDialog = ({
     const newSelectedItems = selectedItems.includes(itemValue)
       ? selectedItems.filter(item => item !== itemValue)
       : [...selectedItems, itemValue];
-    
+
     setSelectedItems(newSelectedItems);
-    
+
     // Update formData.item
     handleChange('item', newSelectedItems.length > 0 ? newSelectedItems : null);
   };
@@ -81,7 +81,7 @@ const LevelCategoryFormDialog = ({
     if (!formData.color_code?.trim()) {
       return { success: false, error: 'กรุณากรอก Color Code' };
     }
-    
+
     // Validate item if item_enable is true
     if (formData.item_enable && (!selectedItems || selectedItems.length === 0)) {
       return { success: false, error: 'กรุณาเลือก item อย่างน้อย 1 รายการเมื่อเปิดใช้งาน Item Enable' };
@@ -157,7 +157,7 @@ const LevelCategoryFormDialog = ({
             checked={formData.item_enable}
             onChange={(e) => handleChange('item_enable', e.target.checked)}
           />
-          
+
           {formData.item_enable && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -189,7 +189,7 @@ const LevelCategoryFormDialog = ({
               </p>
             </div>
           )}
-          
+
           <div>
             <FormInput
               label="Block Key"
@@ -200,6 +200,12 @@ const LevelCategoryFormDialog = ({
             />
             <p className="text-xs text-gray-500 mt-1">
               สามารถกรอกแบบ comma-separated (เช่น: move_forward,hit) หรือ JSON format (เช่น: ["move_forward", "turn_left"])
+            </p>
+          </div>
+
+          <div className="bg-blue-50 p-3 rounded-md border border-blue-100">
+            <p className="text-sm text-blue-800">
+              <span className="font-semibold">หมายเหตุ:</span> สามารถอัปโหลดรูปภาพพื้นหลัง (Background Image) ได้หลังจากสร้างหมวดหมู่แล้ว โดยกดปุ่ม "รูปภาพ" ในตาราง
             </p>
           </div>
         </div>
