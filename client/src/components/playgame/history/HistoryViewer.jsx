@@ -17,13 +17,13 @@ const HistoryViewer = ({
 }) => {
     if (!selectedLevelId) {
         return (
-            <div className="flex-1 flex flex-col items-center justify-center text-gray-500 p-8 text-center bg-stone-900">
+            <div className="flex-1 flex flex-col items-center justify-center text-[#2d1b0e]/50 p-8 text-center bg-[#d4b896]/20">
                 {currentLevelId ? (
                     <>
-                        <div className="w-16 h-16 bg-gray-800/50 rounded-full flex items-center justify-center mb-4">
+                        <div className="w-16 h-16 bg-[#8b6f47]/10 rounded-full flex items-center justify-center mb-4">
                             <Code className="w-8 h-8 opacity-20" />
                         </div>
-                        <p className="text-lg font-bold mb-1">ยังไม่มีประวัติในด่านนี้</p>
+                        <p className="text-lg font-bold mb-1 text-[#2d1b0e]">ยังไม่มีประวัติในด่านนี้</p>
                         <p className="text-sm opacity-60">คุณต้องผ่านด่านนี้ให้สำเร็จก่อนจึงจะมีประวัติบันทึกไว้</p>
                     </>
                 ) : (
@@ -34,25 +34,23 @@ const HistoryViewer = ({
     }
 
     return (
-        <div className="flex-1 flex flex-col bg-stone-900 overflow-hidden">
+        <div className="flex-1 flex flex-col bg-transparent overflow-hidden">
             <Tabs value={displayMode} onValueChange={onDisplayModeChange} className="flex-1 flex flex-col h-full">
-                <div className="h-14 border-b border-gray-700 flex items-center justify-between px-6 bg-stone-950/30 flex-shrink-0">
+                <div className="h-14 border-b border-[#8b6f47]/30 flex items-center justify-between px-6 bg-[#d4b896]/20 flex-shrink-0">
                     <div className="flex items-center gap-4">
-                        <TabsList className="grid w-full grid-cols-2 bg-gray-800 border-gray-700 h-9">
-                            <TabsTrigger value="blockly" className="flex items-center gap-2 px-6 py-2 data-[state=active]:bg-blue-600 transition-all rounded-md">
-                                <Layout className="w-4 h-4" /> Blockly
+                        <TabsList className="grid grid-cols-2 bg-[#8b6f47]/20 border-[#8b6f47]/40 h-full w-full">
+                            <TabsTrigger value="blockly" className="flex items-center justify-center gap-1.5 px-3 py-1.5 data-[state=active]:bg-[#8b6f47] data-[state=active]:text-white transition-all rounded-md text-[#2d1b0e] text-sm">
+                                <Layout className="w-3.5 h-3.5" /> Blockly
                             </TabsTrigger>
-                            <TabsTrigger value="text" className="flex items-center gap-2 px-6 py-2 data-[state=active]:bg-blue-600 transition-all rounded-md">
-                                <Code className="w-4 h-4" /> Text Code
+                            <TabsTrigger value="text" className="flex items-center justify-center gap-1.5 px-3 py-1.5 data-[state=active]:bg-[#8b6f47] data-[state=active]:text-white transition-all rounded-md text-[#2d1b0e] text-sm">
+                                <Code className="w-3.5 h-3.5" /> Text Code
                             </TabsTrigger>
                         </TabsList>
                     </div>
-                    <div className="text-xs text-blue-400 font-mono italic">
-                        * Read-only mode
-                    </div>
+
                 </div>
 
-                <div className="flex-1 relative overflow-hidden bg-stone-950/20">
+                <div className="flex-1 relative overflow-hidden bg-[#d4b896]/10">
                     <TabsContent value="blockly" className="absolute inset-0 m-0 w-full h-full data-[state=active]:flex flex-col">
                         {currentProgress?.blockly_code ? (
                             <BlocklyHistoryView
@@ -64,7 +62,7 @@ const HistoryViewer = ({
                                 workspaceRef={workspaceRef}
                             />
                         ) : (
-                            <div className="flex-1 flex items-center justify-center text-gray-500 bg-stone-900">
+                            <div className="flex-1 flex items-center justify-center text-[#2d1b0e]/50 bg-[#d4b896]/20">
                                 ไม่มีข้อมูล Blockly ในด่านนี้
                             </div>
                         )}
@@ -72,18 +70,15 @@ const HistoryViewer = ({
 
                     <TabsContent value="text" className="absolute inset-0 m-0 w-full h-full data-[state=active]:flex flex-col overflow-auto p-6">
                         {currentProgress?.text_code ? (
-                            <div className="flex-1 min-h-0 bg-black/40 rounded-xl border border-gray-700 p-6 overflow-auto custom-scrollbar">
-                                <pre className="font-mono text-sm text-blue-300 whitespace-pre-wrap leading-relaxed">
+                            <div className="flex-1 min-h-0 bg-[#2d1b0e]/10 rounded-xl border border-[#8b6f47]/30 p-6 overflow-auto">
+                                <pre className="font-mono text-sm text-[#2d1b0e] whitespace-pre-wrap leading-relaxed">
                                     {currentProgress.text_code}
                                 </pre>
                             </div>
                         ) : currentProgress?.blockly_code ? (
-                            <div className="flex-1 min-h-0 bg-black/40 rounded-xl border border-gray-700 p-6 flex flex-col">
-                                <div className="text-xs text-gray-500 mb-4 px-2 py-1 bg-gray-800/50 rounded inline-block w-fit">
-                                    Generated from Blockly
-                                </div>
-                                <div className="flex-1 overflow-auto custom-scrollbar">
-                                    <pre className="font-mono text-sm text-green-300 whitespace-pre-wrap leading-relaxed opacity-80">
+                            <div className="flex-1 min-h-0 bg-[#2d1b0e]/10 rounded-xl border border-[#8b6f47]/30 p-6 flex flex-col">
+                                <div className="flex-1 overflow-auto">
+                                    <pre className="font-mono text-sm text-black whitespace-pre-wrap leading-relaxed">
                                         {(() => {
                                             try {
 
@@ -101,7 +96,7 @@ const HistoryViewer = ({
                                 </div>
                             </div>
                         ) : (
-                            <div className="flex-1 flex items-center justify-center text-gray-500 italic bg-stone-900 border border-gray-800 rounded-xl">
+                            <div className="flex-1 flex items-center justify-center text-[#2d1b0e]/50 italic bg-[#d4b896]/20 border border-[#8b6f47]/20 rounded-xl">
                                 ไม่มีข้อมูล Text Code ในด่านนี้
                             </div>
                         )}

@@ -16,6 +16,13 @@ import { fetchLevelById } from '../../../services/levelService';
 import LevelHintImageDialog from '../../../components/admin/level/LevelHintImageDialog';
 import { getImageUrl } from '@/utils/imageUtils';
 import LevelHintTable from '@/components/admin/level/LevelHintTable';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 const LevelHintManagement = () => {
   const { getToken } = useAuth();
@@ -80,9 +87,9 @@ const LevelHintManagement = () => {
       const allHints = data || [];
       const filtered = searchQuery
         ? allHints.filter(h =>
-            (h.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (h.description || '').toLowerCase().includes(searchQuery.toLowerCase())
-          )
+          (h.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (h.description || '').toLowerCase().includes(searchQuery.toLowerCase())
+        )
         : allHints;
 
       const total = filtered.length;
@@ -312,7 +319,7 @@ const LevelHintManagement = () => {
         <AdminPageHeader
           title={`Hints for Level: ${level?.level_name || levelId}`}
           subtitle="จัดการ Hint ของด่านนี้ (ใช้แสดงระหว่างเล่น)"
-          backPath="/admin/levels"
+          backPath={`/admin/levels/${numericLevelId}/edit`}
           onAddClick={() => handleOpenHintDialog()}
           addButtonText="เพิ่ม Hint"
         />
@@ -357,73 +364,73 @@ const LevelHintManagement = () => {
         </div>
 
         {/* Simple Hint Form Dialog (ใช้ Dialog ของ browser แทนเพื่อความเร็ว) */}
-        {hintDialogOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 space-y-4">
-              <h2 className="text-lg font-semibold">
+        <Dialog open={hintDialogOpen} onOpenChange={setHintDialogOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>
                 {editingHint ? 'แก้ไข Hint' : 'เพิ่ม Hint ใหม่'}
-              </h2>
-              <div className="space-y-3">
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium mb-1">Title</label>
+                <input
+                  type="text"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                  value={hintForm.title}
+                  onChange={e => setHintForm({ ...hintForm, title: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Description</label>
+                <textarea
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                  rows={3}
+                  value={hintForm.description}
+                  onChange={e => setHintForm({ ...hintForm, description: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Title</label>
+                  <label className="block text-sm font-medium mb-1">Display Order</label>
                   <input
-                    type="text"
+                    type="number"
                     className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                    value={hintForm.title}
-                    onChange={e => setHintForm({ ...hintForm, title: e.target.value })}
+                    value={hintForm.display_order}
+                    onChange={e =>
+                      setHintForm({ ...hintForm, display_order: e.target.value })
+                    }
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Description</label>
-                  <textarea
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                    rows={3}
-                    value={hintForm.description}
-                    onChange={e => setHintForm({ ...hintForm, description: e.target.value })}
+                <div className="flex items-center gap-2 mt-6">
+                  <input
+                    id="hint-active"
+                    type="checkbox"
+                    checked={hintForm.is_active}
+                    onChange={e =>
+                      setHintForm({ ...hintForm, is_active: e.target.checked })
+                    }
                   />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Display Order</label>
-                    <input
-                      type="number"
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                      value={hintForm.display_order}
-                      onChange={e =>
-                        setHintForm({ ...hintForm, display_order: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center gap-2 mt-6">
-                    <input
-                      id="hint-active"
-                      type="checkbox"
-                      checked={hintForm.is_active}
-                      onChange={e =>
-                        setHintForm({ ...hintForm, is_active: e.target.checked })
-                      }
-                    />
-                    <label htmlFor="hint-active" className="text-sm">
-                      Active
-                    </label>
-                  </div>
-                </div>
-                <div className="text-xs text-gray-400 mt-2">
-                  * อัปโหลดรูปสำหรับ Hint จะเพิ่มในขั้นถัดไป (ตอนนี้รองรับข้อความก่อน)
+                  <label htmlFor="hint-active" className="text-sm">
+                    Active
+                  </label>
                 </div>
               </div>
-              <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={handleCloseHintDialog}>
-                  ยกเลิก
-                </Button>
-                <Button onClick={handleSaveHint}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  บันทึก
-                </Button>
+              <div className="text-xs text-gray-400 mt-2">
+                * อัปโหลดรูปสำหรับ Hint จะเพิ่มในขั้นถัดไป (ตอนนี้รองรับข้อความก่อน)
               </div>
             </div>
-          </div>
-        )}
+            <DialogFooter>
+              <Button variant="outline" onClick={handleCloseHintDialog}>
+                ยกเลิก
+              </Button>
+              <Button onClick={handleSaveHint}>
+                <Plus className="h-4 w-4 mr-2" />
+                บันทึก
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <DeleteConfirmDialog
           open={deleteDialogOpen}

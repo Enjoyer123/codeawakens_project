@@ -18,15 +18,15 @@ export function defineTrainScheduleBlocks() {
     blocks['sort_trains'] = {
       init: function () {
         this.appendDummyInput()
-          .appendField("เรียงลำดับรถไฟตาม")
+          .appendField("Sort Trains by")
           .appendField(new Blockly.FieldDropdown([
-            ["เวลามาถึง (Arrive)", "arrive"],
-            ["เวลาออก (Depart)", "depart"]
+            ["Arrival Time", "arrive"],
+            ["Departure Time", "depart"]
           ]), "KEY")
-          .appendField("แบบ")
+          .appendField("Order")
           .appendField(new Blockly.FieldDropdown([
-            ["น้อยไปมาก (ASC)", "ASC"],
-            ["มากไปน้อย (DESC)", "DESC"]
+            ["Ascending (ASC)", "ASC"],
+            ["Descending (DESC)", "DESC"]
           ]), "ORDER");
         this.setPreviousStatement(true, null);
         this.setNextStatement(true, null);
@@ -59,11 +59,11 @@ export function defineTrainScheduleBlocks() {
       init: function () {
         this.appendValueInput("TRAIN")
           .setCheck(null)
-          .appendField("ข้อมูลรถไฟ");
+          .appendField("Train Info");
         this.appendDummyInput()
           .appendField(new Blockly.FieldDropdown([
-            ["เวลามาถึง (Arrive)", "arrive"],
-            ["เวลาออก (Depart)", "depart"]
+            ["Arrival Time", "arrive"],
+            ["Departure Time", "depart"]
           ]), "KEY");
         this.setOutput(true, "Number");
         this.setColour(160);
@@ -85,10 +85,10 @@ export function defineTrainScheduleBlocks() {
       init: function () {
         this.appendValueInput("TRAIN")
           .setCheck(null)
-          .appendField("กำหนดให้");
+          .appendField("Assign Train");
         this.appendValueInput("PLATFORM")
           .setCheck("Number")
-          .appendField("อยู่ชานชาลาที่");
+          .appendField("to Platform");
         this.setPreviousStatement(true, null);
         this.setNextStatement(true, null);
         this.setColour(160);

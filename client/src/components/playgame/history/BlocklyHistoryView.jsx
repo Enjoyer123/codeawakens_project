@@ -17,6 +17,21 @@ const BlocklyHistoryView = ({ blocklyRef, blocklyCode, isOpen, displayMode, sele
                     workspaceRef.current.dispose();
                 }
 
+                // Create custom light brown theme
+                const customTheme = Blockly.Theme.defineTheme('lightBrown', {
+                    'base': Blockly.Themes.Classic,
+                    'componentStyles': {
+                        'workspaceBackgroundColour': '#E1D09F',
+                        'toolboxBackgroundColour': '#d4b896',
+                        'toolboxForegroundColour': '#2d1b0e',
+                        'flyoutBackgroundColour': '#e8d4bc',
+                        'flyoutForegroundColour': '#2d1b0e',
+                        'flyoutOpacity': 0.95,
+                        'scrollbarColour': '#8b6f47',
+                        'scrollbarOpacity': 0.6
+                    }
+                });
+
                 // Inject Blockly
                 currentWorkspace = Blockly.inject(blocklyRef.current, {
                     readOnly: true,
@@ -34,7 +49,7 @@ const BlocklyHistoryView = ({ blocklyRef, blocklyCode, isOpen, displayMode, sele
                         minScale: 0.3,
                         scaleSpeed: 1.2
                     },
-                    theme: 'dark'
+                    theme: customTheme
                 });
 
                 workspaceRef.current = currentWorkspace;

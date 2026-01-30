@@ -6,7 +6,7 @@ export function defineVariableBlocks() {
   Blockly.Blocks["var_math"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("🧮 คำนวณ")
+        .appendField("🧮 Calculate")
         .appendField(new Blockly.FieldVariable("i"), "VAR")
         .appendField(new Blockly.FieldDropdown([
           ["+", "ADD"],
@@ -16,7 +16,7 @@ export function defineVariableBlocks() {
         ]), "OP");
       this.appendValueInput("VALUE")
         .setCheck("Number")
-        .appendField("กับ");
+        .appendField("with");
       this.setOutput(true, "Number");
       this.setColour(230);
       this.setTooltip("การคำนวณทางคณิตศาสตร์");
@@ -43,7 +43,7 @@ export function defineVariableBlocks() {
   Blockly.Blocks["get_var_value"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("📊 ค่าของ")
+        .appendField("📊 Value of")
         .appendField(new Blockly.FieldVariable("i"), "VAR");
       this.setOutput(true, "Number");
       this.setColour(330);

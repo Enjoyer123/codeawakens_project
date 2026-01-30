@@ -6,7 +6,7 @@ export function defineDictionaryBlocks() {
   Blockly.Blocks["dict_create"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("📚 สร้าง dictionary ว่าง");
+        .appendField("📚 Create Empty Dictionary");
       this.setOutput(true, null);
       this.setColour(230);
       this.setTooltip("สร้าง dictionary/object ใหม่ที่ว่างเปล่า");
@@ -18,7 +18,7 @@ export function defineDictionaryBlocks() {
     init: function () {
       this.appendValueInput("DICT")
         .setCheck(null)
-        .appendField("📝 ตั้งค่า");
+        .appendField("📝 Set");
       this.appendValueInput("KEY")
         .setCheck(["String", "Number"])
         .appendField("key");
@@ -26,7 +26,7 @@ export function defineDictionaryBlocks() {
         .setCheck(null)
         .appendField("=");
       this.appendDummyInput()
-        .appendField("ใน dictionary");
+        .appendField("in Dictionary");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(230);
@@ -39,12 +39,12 @@ export function defineDictionaryBlocks() {
     init: function () {
       this.appendValueInput("DICT")
         .setCheck(null)
-        .appendField("📖 ดึงค่า");
+        .appendField("📖 Get Value");
       this.appendValueInput("KEY")
         .setCheck(["String", "Number"])
         .appendField("key");
       this.appendDummyInput()
-        .appendField("จาก dictionary");
+        .appendField("from Dictionary");
       this.setOutput(true, null);
       this.setColour(230);
       this.setTooltip("ดึง value จาก dictionary ด้วย key ที่ระบุ");
@@ -56,10 +56,10 @@ export function defineDictionaryBlocks() {
     init: function () {
       this.appendValueInput("DICT")
         .setCheck(null)
-        .appendField("🔍 dictionary มี key");
+        .appendField("🔍 Dictionary Has Key");
       this.appendValueInput("KEY")
         .setCheck(["String", "Number"])
-        .appendField("หรือไม่");
+        .appendField("?");
       this.setOutput(true, "Boolean");
       this.setColour(230);
       this.setTooltip("เช็คว่า dictionary มี key ที่ระบุหรือไม่");

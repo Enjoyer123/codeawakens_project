@@ -24,7 +24,7 @@ export function defineStackBlocks() {
 
   Blockly.Blocks["keep_item"] = {
     init: function () {
-      this.appendDummyInput().appendField("💎 เก็บสมบัติ");
+      this.appendDummyInput().appendField("💎 Collect Treasure");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(300);
@@ -34,7 +34,7 @@ export function defineStackBlocks() {
 
   Blockly.Blocks["has_treasure"] = {
     init: function () {
-      this.appendDummyInput().appendField("💎 มีสมบัติ");
+      this.appendDummyInput().appendField("💎 Has Treasure");
       this.setOutput(true, "Boolean");
       this.setColour(300);
       this.setTooltip("ตรวจสอบว่ามีสมบัติที่ node นี้หรือไม่");
@@ -43,7 +43,7 @@ export function defineStackBlocks() {
 
   Blockly.Blocks["treasure_collected"] = {
     init: function () {
-      this.appendDummyInput().appendField("✅ เก็บสมบัติแล้ว");
+      this.appendDummyInput().appendField("✅ Treasure Collected");
       this.setOutput(true, "Boolean");
       this.setColour(300);
       this.setTooltip("ตรวจสอบว่าสมบัติถูกเก็บแล้วหรือไม่");
@@ -52,7 +52,7 @@ export function defineStackBlocks() {
 
   Blockly.Blocks["stack_empty"] = {
     init: function () {
-      this.appendDummyInput().appendField("📚 Stack ว่าง");
+      this.appendDummyInput().appendField("📚 Stack Empty");
       this.setOutput(true, "Boolean");
       this.setColour(300);
       this.setTooltip("ตรวจสอบว่า stack ว่างหรือไม่");
@@ -61,7 +61,7 @@ export function defineStackBlocks() {
 
   Blockly.Blocks["stack_count"] = {
     init: function () {
-      this.appendDummyInput().appendField("🔢 จำนวนใน Stack");
+      this.appendDummyInput().appendField("🔢 Count in Stack");
       this.setOutput(true, "Number");
       this.setColour(300);
       this.setTooltip("จำนวน node ที่เก็บใน stack");

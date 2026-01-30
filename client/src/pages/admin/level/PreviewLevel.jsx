@@ -6,8 +6,9 @@ import { useAuth } from '@clerk/clerk-react';
 import GameCore from '../../../components/playgame/GameCore';
 import { fetchLevelById } from '../../../services/levelService';
 import { unlockPattern, unlockLevel } from '../../../services/patternService';
+import PageLoader from '../../../components/shared/Loading/PageLoader';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+import { API_BASE_URL } from '../../../config/apiConfig';
 
 const PreviewLevel = () => {
   const { levelId, patternId } = useParams();
@@ -22,7 +23,7 @@ const PreviewLevel = () => {
     const loadData = async () => {
       try {
         setLoading(true);
-        
+
         // Load level data
         const levelData = await fetchLevelById(getToken, levelId);
         setLevel(levelData);
@@ -69,7 +70,7 @@ const PreviewLevel = () => {
       const token = await getToken();
       await unlockLevel(unlockLevelId, token);
       console.log('Level unlocked successfully');
-      
+
       // Show success message and navigate back
       alert('ด่านและรูปแบบคำตอบถูกปลดล็อคแล้ว!');
       navigate(`/admin/levels/${unlockLevelId}/edit`);
@@ -80,14 +81,7 @@ const PreviewLevel = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="text-xl font-bold text-white mb-2">กำลังโหลด...</div>
-          <div className="text-gray-400">Preparing preview mode</div>
-        </div>
-      </div>
-    );
+    return <PageLoader message="Preparing preview mode..." />;
   }
 
   if (error) {

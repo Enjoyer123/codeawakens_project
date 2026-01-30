@@ -6,7 +6,7 @@ export function definePersonBlocks() {
     init: function () {
       this.appendValueInput("NODE_ID")
         .setCheck("Number")
-        .appendField("🆘 ช่วยคนที่ node");
+        .appendField("🆘 Rescue Person at Node");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(160);
@@ -17,7 +17,7 @@ export function definePersonBlocks() {
   Blockly.Blocks["has_person"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("👤 มีคนที่ node นี้");
+        .appendField("👤 Has Person at Node");
       this.setOutput(true, "Boolean");
       this.setColour(210);
       this.setTooltip("ตรวจสอบว่ามีคนที่ node นี้หรือไม่");
@@ -27,7 +27,7 @@ export function definePersonBlocks() {
   Blockly.Blocks["person_rescued"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("✅ คนถูกช่วยแล้ว");
+        .appendField("✅ Person Rescued");
       this.setOutput(true, "Boolean");
       this.setColour(210);
       this.setTooltip("ตรวจสอบว่าคนที่ node นี้ถูกช่วยแล้วหรือไม่");
@@ -37,7 +37,7 @@ export function definePersonBlocks() {
   Blockly.Blocks["person_count"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("📊 จำนวนคนที่ช่วยแล้ว");
+        .appendField("📊 Rescued Count");
       this.setOutput(true, "Number");
       this.setColour(230);
       this.setTooltip("นับจำนวนคนที่ช่วยแล้ว");
@@ -47,7 +47,7 @@ export function definePersonBlocks() {
   Blockly.Blocks["all_people_rescued"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("🎉 ช่วยคนทั้งหมดแล้ว");
+        .appendField("🎉 All People Rescued");
       this.setOutput(true, "Boolean");
       this.setColour(210);
       this.setTooltip("ตรวจสอบว่าช่วยคนทั้งหมดแล้วหรือไม่");
@@ -57,9 +57,9 @@ export function definePersonBlocks() {
   Blockly.Blocks["for_each_person"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("🔄 สำหรับแต่ละคน");
+        .appendField("🔄 For Each Person");
       this.appendStatementInput("DO")
-        .appendField("ทำ");
+        .appendField("Do");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(120);

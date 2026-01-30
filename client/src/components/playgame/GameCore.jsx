@@ -9,7 +9,7 @@ import * as Blockly from "blockly/core";
 import "blockly/blocks";
 import "blockly/javascript";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+import { API_BASE_URL } from '../../config/apiConfig';
 
 window.Blockly = Blockly;
 
@@ -60,6 +60,7 @@ import { EXAMPLE_LOADERS } from './constants/exampleLoaders';
 import { setupRopePartitionBridge } from './utils/apiBridges/ropePartitionBridge';
 import { updateTrainScheduleVisualsIfNeeded, updateRopePartitionVisualsIfNeeded } from './utils/apiBridges/visualUpdates';
 import ExecutionErrorModal from './ExecutionErrorModal';
+import PageLoader from '../../components/shared/Loading/PageLoader';
 
 /**
  * GameCore Component
@@ -115,7 +116,7 @@ const GameCore = ({
 
 
   const [gameState, setGameState] = useState("loading");
-  const [currentHint, setCurrentHint] = useState("กำลังโหลดข้อมูลด่าน...");
+  const [currentHint, setCurrentHint] = useState("Loading level data...");
   const [blocklyLoaded, setBlocklyLoaded] = useState(false);
 
   // Debug: Log blocklyLoaded changes
@@ -653,7 +654,7 @@ const GameCore = ({
   const { showGuide, guides, closeGuide, openGuide, hasGuides } = useGuideSystem(currentLevel);
 
   if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading level...</div>;
+    return <PageLoader message="Loading level..." />;
   }
 
   if (error) {
@@ -668,20 +669,6 @@ const GameCore = ({
   return (
     <GameWithGuide
       levelData={currentLevel}
-      currentHint={currentHint}
-      hintData={hintData}
-      hintOpen={hintOpen}
-      setHintOpen={setHintOpen}
-      onHintClose={() => {
-        console.log('🔔 Hint closed');
-      }}
-      hintOpenCount={hintOpenCount}
-      playerCoins={getCurrentGameState().playerCoins || []}
-      rescuedPeople={rescuedPeople}
-      finalScore={finalScore}
-      inCombatMode={inCombatMode}
-      blocklyJavaScriptReady={blocklyJavaScriptReady}
-      showScore={true}
 
       // Guide props
       showGuide={showGuide}

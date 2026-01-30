@@ -1,4 +1,5 @@
 import React, { forwardRef } from 'react';
+import ContentLoader from '@/components/shared/Loading/ContentLoader';
 
 const PatternBlocklyWorkspace = forwardRef(({ currentStepIndex, blocklyLoaded, title }, ref) => {
   return (
@@ -10,11 +11,7 @@ const PatternBlocklyWorkspace = forwardRef(({ currentStepIndex, blocklyLoaded, t
       )}
 
       {!blocklyLoaded && (
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <div className="text-lg mb-2">⏳ กำลังโหลด Blockly...</div>
-          </div>
-        </div>
+        <ContentLoader message="Loading Blockly..." height="h-96" />
       )}
 
       <div

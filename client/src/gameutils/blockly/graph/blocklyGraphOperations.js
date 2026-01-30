@@ -7,10 +7,10 @@ export function defineGraphOperationsBlocks() {
     init: function () {
       this.appendValueInput("GRAPH")
         .setCheck(null)
-        .appendField("🗺️ ดึง neighbors ของ node");
+        .appendField("🗺️ Get Neighbors of Node");
       this.appendValueInput("NODE")
         .setCheck("Number")
-        .appendField("จาก graph");
+        .appendField("from Graph");
       this.setOutput(true, "Array");
       this.setColour(200);
       this.setTooltip("ดึง neighbors ของ node จาก graph");
@@ -22,7 +22,7 @@ export function defineGraphOperationsBlocks() {
     init: function () {
       this.appendValueInput("NODE")
         .setCheck("Number")
-        .appendField("📊 ค่า node");
+        .appendField("📊 Node Value");
       this.setOutput(true, "Number");
       this.setColour(200);
       this.setTooltip("อ่านค่า node");
@@ -33,7 +33,7 @@ export function defineGraphOperationsBlocks() {
   Blockly.Blocks["graph_get_current_node"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("📍 เลข node ปัจจุบัน");
+        .appendField("📍 Current Node ID");
       this.setOutput(true, "Number");
       this.setColour(200);
       this.setTooltip("แสดงเลข node ที่ตัวละครอยู่ปัจจุบัน");
@@ -45,10 +45,10 @@ export function defineGraphOperationsBlocks() {
     init: function () {
       this.appendValueInput("GRAPH")
         .setCheck(null)
-        .appendField("🗺️ ดึง neighbors พร้อม weight ของ node");
+        .appendField("🗺️ Get Neighbors with Weight of Node");
       this.appendValueInput("NODE")
         .setCheck("Number")
-        .appendField("จาก graph");
+        .appendField("from Graph");
       this.setOutput(true, "Array");
       this.setColour(200);
       this.setTooltip("ดึง neighbors ของ node พร้อม weight (return array of [neighbor, weight])");
@@ -60,7 +60,7 @@ export function defineGraphOperationsBlocks() {
     init: function () {
       this.appendValueInput("GRAPH")
         .setCheck(null)
-        .appendField("🔗 ดึง edges ทั้งหมดจาก graph");
+        .appendField("🔗 Get All Edges from Graph");
       this.setOutput(true, "Array");
       this.setColour(200);
       this.setTooltip("ดึง edges ทั้งหมดจาก graph (return array of [u, v, weight])");

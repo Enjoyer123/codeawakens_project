@@ -67,47 +67,41 @@ const LevelInfoForm = ({ formData, categories, prerequisiteLevels, isEditing, le
               <option value="expert">Expert</option>
             </select>
 
-            <label className="text-sm font-medium">Character Type</label>
+          </div>
+
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-medium">Required Level (Map Require)</label>
             <select
-              value={formData.character || 'player'}
-              onChange={(e) => handleChange('character', e.target.value)}
+              value={formData.required_level_id}
+              onChange={(e) => handleChange('required_level_id', e.target.value)}
               className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
             >
-              <option value="player">Player (Default)</option>
-              <option value="slime">Slime</option>
+              <option value="">None (Unlocked by default)</option>
+              {prerequisiteLevels
+                .filter(l => !isEditing || l.level_id !== parseInt(levelId))
+                .map((level) => (
+                  <option key={level.level_id} value={level.level_id}>
+                    {level.level_name}
+                  </option>
+                ))}
             </select>
           </div>
-        </div>
 
-        <div>
-          <label className="text-sm font-medium">Required Level (Map Require)</label>
-          <select
-            value={formData.required_level_id}
-            onChange={(e) => handleChange('required_level_id', e.target.value)}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-          >
-            <option value="">None (Unlocked by default)</option>
-            {prerequisiteLevels
-              .filter(l => !isEditing || l.level_id !== parseInt(levelId))
-              .map((level) => (
-                <option key={level.level_id} value={level.level_id}>
-                  {level.level_name}
-                </option>
-              ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="text-sm font-medium">Required Skill Level</label>
-          <select
-            value={formData.required_skill_level || ''}
-            onChange={(e) => handleChange('required_skill_level', e.target.value || null)}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-          >
-            <option value="Zone_A">Zone A</option>
-            <option value="Zone_B">Zone B</option>
-            <option value="Zone_C">Zone C</option>
-          </select>
+          <div>
+            <label className="text-sm font-medium">Required Skill Level</label>
+            <select
+              value={formData.required_skill_level || ''}
+              onChange={(e) => handleChange('required_skill_level', e.target.value || null)}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+            >
+              <option value="Zone_A">Zone A</option>
+              <option value="Zone_B">Zone B</option>
+              <option value="Zone_C">Zone C</option>
+            </select>
+          </div>
         </div>
 
         <div className="flex items-center gap-4">

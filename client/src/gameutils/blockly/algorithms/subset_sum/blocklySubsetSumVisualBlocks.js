@@ -7,7 +7,7 @@ export function defineSubsetSumVisualBlocks() {
     init: function () {
       this.appendValueInput("WARRIOR_INDEX")
         .setCheck("Number")
-        .appendField("➕ เพิ่มนักรบเข้าฝั่ง 1");
+        .appendField("➕ Add Warrior to Side 1");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(260);
@@ -20,7 +20,7 @@ export function defineSubsetSumVisualBlocks() {
     init: function () {
       this.appendValueInput("WARRIOR_INDEX")
         .setCheck("Number")
-        .appendField("➕ เพิ่มนักรบเข้าฝั่ง 2");
+        .appendField("➕ Add Warrior to Side 2");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(260);

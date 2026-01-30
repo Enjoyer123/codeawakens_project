@@ -7,7 +7,7 @@ export function defineKnapsackVisualBlocks() {
     init: function () {
       this.appendValueInput("ITEM_INDEX")
         .setCheck("Number")
-        .appendField("📦 เลือกสมบัติ");
+        .appendField("📦 Select Item");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(260);
@@ -20,7 +20,7 @@ export function defineKnapsackVisualBlocks() {
     init: function () {
       this.appendValueInput("ITEM_INDEX")
         .setCheck("Number")
-        .appendField("❌ ไม่เลือกสมบัติ");
+        .appendField("❌ Unselect Item");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(260);

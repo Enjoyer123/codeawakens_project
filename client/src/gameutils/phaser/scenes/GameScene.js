@@ -30,7 +30,7 @@ import { createVampire_1Anims } from '../../../anims/Vampire_1Anims';
 import { createSlime1Anims } from '../../../anims/Slime_1Anims';
 import { preloadAllWeaponEffects } from '../../shared/combat';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+import { API_BASE_URL } from '../../../config/apiConfig';
 
 export class GameScene extends Phaser.Scene {
     constructor() {

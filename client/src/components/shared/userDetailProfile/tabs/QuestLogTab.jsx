@@ -1,69 +1,46 @@
-
+import { useNavigate } from 'react-router-dom';
 import { cn } from "@/lib/utils";
 
-const QuestLogTab = ({ userDetails }) => {
+const QuestLogTab = ({ userDetails, onHover }) => {
+  const navigate = useNavigate();
+
   return (
-    <div className="space-y-4">
+    <div className="h-full flex flex-col p-2">
+      <h3 className="text-center font-bold text-[#5C4033] mb-2 uppercase tracking-widest text-sm">Adventure Log</h3>
       {userDetails.user_progress.length === 0 ? (
-        <div className="text-center py-20 text-slate-500">
-          <p className="text-xl font-bold">NO QUESTS FOUND</p>
-          <p>Go forth and adventure!</p>
+        <div className="text-center py-10 text-slate-500 text-sm italic">
+          No adventures yet.
         </div>
       ) : (
-        <div className="grid gap-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto profile-custom-scrollbar space-y-2 px-2 pb-2">
           {userDetails.user_progress.map((progress) => (
+
             <div
               key={progress.progress_id}
-              className="bg-white border border-slate-200 p-4 rounded-lg flex flex-col sm:flex-row gap-4 justify-between items-center hover:border-slate-300 transition-colors shadow-sm"
+              onClick={() => navigate(`/user/mapselection/${progress.level_id}`)}
+              className="p-4 rounded cursor-pointer relative group hover:scale-[1.02] active:scale-95 transition-transform"
+              style={{
+                backgroundImage: "url('/profile-lisst.png')",
+                backgroundSize: '100% 100%',
+                imageRendering: 'pixelated'
+              }}
             >
-              <div className="flex items-center gap-4">
-                <div
-                  className={cn(
-                    "w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl border-2",
-                    progress.status === "completed"
-                      ? "bg-green-50 border-green-500 text-green-600"
-                      : "bg-slate-50 border-slate-300 text-slate-400"
-                  )}
-                >
-                  {progress.status === "completed" ? "✓" : "!"}
+              <div className="flex items-center justify-between gap-2">
+                <div className="font-bold text-[#5C4033] text-sm">
+                  Level {progress.level_id}
                 </div>
-                <div>
-                  <h4 className="font-bold text-slate-800">
-                    Level ID: {progress.level_id}
-                  </h4>
-                  <p className="text-xs text-slate-500 uppercase">
-                    {progress.status}
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-6 text-center">
-                <div>
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">
-                    Stars
-                  </p>
-                  <p className="font-bold text-yellow-500">
-                    {progress.stars_earned} ⭐
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">
-                    Score
-                  </p>
-                  <p className="font-bold text-blue-500">
-                    {progress.best_score}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">
-                    Tries
-                  </p>
-                  <p className="font-bold text-slate-600">
-                    {progress.attempts_count}
-                  </p>
+                <div className="flex items-center justify-center">
+                  <img
+                    src={progress.status === 'completed' ? `/star${progress.stars_earned || 0}.png` : '/star0.png'}
+                    alt={`${progress.stars_earned || 0} Stars`}
+                    className="h-6 object-contain drop-shadow-sm"
+                    style={{ imageRendering: 'pixelated' }}
+                  />
                 </div>
               </div>
             </div>
+
+
           ))}
         </div>
       )}

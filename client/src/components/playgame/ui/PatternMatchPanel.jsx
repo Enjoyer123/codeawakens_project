@@ -7,7 +7,7 @@
 
 import React from 'react';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+import { API_BASE_URL } from '../../../config/apiConfig';
 
 /**
  * PatternMatchPanel - Displays pattern matching information and weapon progress
@@ -86,9 +86,8 @@ const PatternMatchPanel = ({ hintData, idealPattern, weaponProgress, weaponImgSr
         <div className="space-y-2">
           <div className="w-full h-1.5 bg-gray-700 rounded-full overflow-hidden">
             <div
-              className={`h-full transition-all duration-300 ${
-                (hintData.patternPercentage || 0) === 100 ? 'bg-green-500' : 'bg-blue-500'
-              }`}
+              className={`h-full transition-all duration-300 ${(hintData.patternPercentage || 0) === 100 ? 'bg-green-500' : 'bg-blue-500'
+                }`}
               style={{ width: `${hintData.patternPercentage || 0}%` }}
             ></div>
           </div>
@@ -113,26 +112,23 @@ const PatternMatchPanel = ({ hintData, idealPattern, weaponProgress, weaponImgSr
                 </span>
               </div>
               <div className="flex gap-1">
-                <div 
-                  className={`flex-1 h-1.5 rounded ${
-                    hintData.threePartsMatch.part1Match ? 'bg-green-500' : 'bg-gray-700'
-                  }`} 
+                <div
+                  className={`flex-1 h-1.5 rounded ${hintData.threePartsMatch.part1Match ? 'bg-green-500' : 'bg-gray-700'
+                    }`}
                   title="Part 1: Initialization"
                 ></div>
-                <div 
-                  className={`flex-1 h-1.5 rounded ${
-                    hintData.threePartsMatch.part2Match
+                <div
+                  className={`flex-1 h-1.5 rounded ${hintData.threePartsMatch.part2Match
                       ? 'bg-green-500'
                       : hintData.threePartsMatch.part1Match ? 'bg-yellow-500' : 'bg-gray-700'
-                  }`} 
+                    }`}
                   title="Part 2: While Loop"
                 ></div>
-                <div 
-                  className={`flex-1 h-1.5 rounded ${
-                    hintData.threePartsMatch.part3Match
+                <div
+                  className={`flex-1 h-1.5 rounded ${hintData.threePartsMatch.part3Match
                       ? 'bg-green-500'
                       : hintData.threePartsMatch.part2Match ? 'bg-yellow-500' : 'bg-gray-700'
-                  }`} 
+                    }`}
                   title="Part 3: Neighbor Loop"
                 ></div>
               </div>

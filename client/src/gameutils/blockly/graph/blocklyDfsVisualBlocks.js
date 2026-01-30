@@ -7,10 +7,10 @@ export function defineDfsVisualBlocks() {
     init: function () {
       this.appendValueInput("GRAPH")
         .setCheck(null)
-        .appendField("🗺️ ดึง neighbors ของ node (แสดงผล)");
+        .appendField("🗺️ Get Neighbors of Node (Visual)");
       this.appendValueInput("NODE")
         .setCheck("Number")
-        .appendField("จาก graph");
+        .appendField("from Graph");
       this.setOutput(true, "Array");
       this.setColour(200);
       this.setTooltip("ดึง neighbors ของ node จาก graph พร้อมแสดง visual feedback");
@@ -22,9 +22,9 @@ export function defineDfsVisualBlocks() {
     init: function () {
       this.appendValueInput("NODE")
         .setCheck("Number")
-        .appendField("✅ ทำเครื่องหมาย node");
+        .appendField("✅ Mark Node");
       this.appendDummyInput()
-        .appendField("ว่า visited (แสดงผล)");
+        .appendField("as Visited (Visual)");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(200);
@@ -37,7 +37,7 @@ export function defineDfsVisualBlocks() {
     init: function () {
       this.appendValueInput("PATH")
         .setCheck("Array")
-        .appendField("📊 แสดง path (แสดงผล)");
+        .appendField("📊 Show Path (Visual)");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(200);

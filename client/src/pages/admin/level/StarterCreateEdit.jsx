@@ -5,11 +5,11 @@ import * as Blockly from 'blockly/core';
 import 'blockly/blocks';
 import 'blockly/javascript';
 
-import { 
-  syncProcedureParameters, 
-  removeVariableIdsFromXml, 
-//   getParamCount, // Unused here, used in hook
-//   rebindCallers  // Unused here, used in hook
+import {
+  syncProcedureParameters,
+  removeVariableIdsFromXml,
+  //   getParamCount, // Unused here, used in hook
+  //   rebindCallers  // Unused here, used in hook
 } from '../../../components/admin/level/utils/blocklyProcedureUtils';
 
 import { useBlocklyCleanup } from '../../../components/admin/level/hooks/useBlocklyCleanup';
@@ -20,10 +20,12 @@ import { delay, nextFrame, waitForCondition } from '../../../components/admin/le
 import { useLevel, useUpdateLevel } from '../../../services/hooks/useLevel';
 import { Button } from '@/components/ui/button';
 import { Loader } from '@/components/ui/loader';
+import PageLoader from '@/components/shared/Loading/PageLoader';
+import ContentLoader from '@/components/shared/Loading/ContentLoader';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import PatternBlocklyWorkspace from '@/components/admin/pattern/PatternBlocklyWorkspace';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+import { API_BASE_URL } from '../../../config/apiConfig';
 
 const StarterCreateEdit = () => {
   const { levelId } = useParams();
@@ -34,16 +36,16 @@ const StarterCreateEdit = () => {
   const isFirstXmlLoad = useRef(true);
   const isXmlLoadingRef = useRef(false);
   const skipCleanupRef = useRef(false);
-  const starterXmlLoadedRef = useRef(false); 
+  const starterXmlLoadedRef = useRef(false);
 
   // Local state for blockly initialization
   const [enabledBlocks, setEnabledBlocks] = useState({});
   const [blocklyProcessing, setBlocklyProcessing] = useState(true);
 
   // TanStack Query Hooks
-  const { 
-    data: levelData, 
-    isLoading: loading, 
+  const {
+    data: levelData,
+    isLoading: loading,
     error,
     isError
   } = useLevel(levelId);
@@ -51,10 +53,10 @@ const StarterCreateEdit = () => {
   const updateLevelMutation = useUpdateLevel();
 
   // Blockly Workspace Hook
-  const { 
-      workspaceRef, 
-      blocklyLoaded, 
-      error: blocklyInitError 
+  const {
+    workspaceRef,
+    blocklyLoaded,
+    error: blocklyInitError
   } = useBlocklyWorkspace({
     blocklyRef,
     enabledBlocks
@@ -127,21 +129,21 @@ const StarterCreateEdit = () => {
           await nextFrame();
           await delay(0);
           await nextFrame();
-          
+
           await delay(800);
 
           // Retry loop
           for (let attempt = 0; attempt <= maxRetries; attempt++) {
             const isLastAttempt = attempt === maxRetries;
-            
+
             // Re-check workspace
             if (!workspaceRef.current) {
-               if (!isLastAttempt) {
-                 await delay(500);
-                 continue;
-               } else {
-                 throw new Error("Workspace not ready");
-               }
+              if (!isLastAttempt) {
+                await delay(500);
+                continue;
+              } else {
+                throw new Error("Workspace not ready");
+              }
             }
 
             // Verify toolbox
@@ -162,10 +164,10 @@ const StarterCreateEdit = () => {
             isXmlLoadingRef.current = true;
 
             await delay(300);
-            
+
             if (!workspaceRef.current) {
-                if (!isLastAttempt) { await delay(500); continue; }
-                throw new Error("Workspace gone during prep");
+              if (!isLastAttempt) { await delay(500); continue; }
+              throw new Error("Workspace gone during prep");
             }
 
             // Check if blocks already exist (prevent duplicate load on retry 0)
@@ -179,21 +181,21 @@ const StarterCreateEdit = () => {
 
             // Load XML
             try {
-                Blockly.Xml.domToWorkspace(xml, workspaceRef.current);
+              Blockly.Xml.domToWorkspace(xml, workspaceRef.current);
             } catch (loadErr) {
-                if (!isLastAttempt) {
-                    await delay(500);
-                    continue;
-                }
-                throw loadErr;
+              if (!isLastAttempt) {
+                await delay(500);
+                continue;
+              }
+              throw loadErr;
             }
 
             // Verify blocks loaded
             await delay(200);
-            
+
             if (!workspaceRef.current) {
-                if (!isLastAttempt) { await delay(500); continue; }
-                throw new Error("Workspace gone after load");
+              if (!isLastAttempt) { await delay(500); continue; }
+              throw new Error("Workspace gone after load");
             }
 
             const loadedBlocks = workspaceRef.current.getAllBlocks(false);
@@ -211,66 +213,66 @@ const StarterCreateEdit = () => {
 
             // Blocks loaded successfully. Fix procedure calls.
             await delay(50);
-            
+
             try {
-                  const definitionBlocks = workspaceRef.current.getBlocksByType('procedures_defreturn', false)
-                    .concat(workspaceRef.current.getBlocksByType('procedures_defnoreturn', false));
-                  
-                  const callBlocks = workspaceRef.current.getBlocksByType('procedures_callreturn', false)
-                    .concat(workspaceRef.current.getBlocksByType('procedures_callnoreturn', false));
-                  
-                  const validProcedureNames = new Set();
-                  definitionBlocks.forEach(defBlock => {
-                    try {
-                      const name = defBlock.getFieldValue('NAME');
-                      if (name && name !== 'unnamed' && name !== 'undefined' && name.trim() !== '') {
-                        validProcedureNames.add(name);
-                      }
-                    } catch (e) { }
-                  });
-                  
-                  // Fix call blocks
-                  callBlocks.forEach(callBlock => {
-                    try {
-                      const nameField = callBlock.getField('NAME');
-                      if (nameField) {
-                        const currentName = nameField.getValue();
-                        if (!validProcedureNames.has(currentName)) {
-                          if (validProcedureNames.size > 0) {
-                            const firstValidName = Array.from(validProcedureNames)[0];
-                            nameField.setValue(firstValidName);
-                            // Sync
-                            const matchedDef = definitionBlocks.find(def => {
-                              try { return def.getFieldValue('NAME') === firstValidName; } catch (e) { return false; }
-                            });
-                            if (matchedDef && callBlock.setProcedureParameters) {
-                              syncProcedureParameters(callBlock, matchedDef, workspaceRef.current);
-                            }
-                            if (callBlock.render) callBlock.render();
-                          }
-                        }
-                      }
-                    } catch (e) { }
-                  });
-                  
-                  // Remove bad definitions
-                  definitionBlocks.forEach(defBlock => {
-                    try {
-                      const defName = defBlock.getFieldValue('NAME');
-                      if (defName && !validProcedureNames.has(defName)) {
-                        const isNumberedVariant = Array.from(validProcedureNames).some(validName => {
-                          const baseName = validName.replace(/\d+$/, '');
-                          const defBaseName = defName.replace(/\d+$/, '');
-                          return baseName === defBaseName && defName !== validName;
+              const definitionBlocks = workspaceRef.current.getBlocksByType('procedures_defreturn', false)
+                .concat(workspaceRef.current.getBlocksByType('procedures_defnoreturn', false));
+
+              const callBlocks = workspaceRef.current.getBlocksByType('procedures_callreturn', false)
+                .concat(workspaceRef.current.getBlocksByType('procedures_callnoreturn', false));
+
+              const validProcedureNames = new Set();
+              definitionBlocks.forEach(defBlock => {
+                try {
+                  const name = defBlock.getFieldValue('NAME');
+                  if (name && name !== 'unnamed' && name !== 'undefined' && name.trim() !== '') {
+                    validProcedureNames.add(name);
+                  }
+                } catch (e) { }
+              });
+
+              // Fix call blocks
+              callBlocks.forEach(callBlock => {
+                try {
+                  const nameField = callBlock.getField('NAME');
+                  if (nameField) {
+                    const currentName = nameField.getValue();
+                    if (!validProcedureNames.has(currentName)) {
+                      if (validProcedureNames.size > 0) {
+                        const firstValidName = Array.from(validProcedureNames)[0];
+                        nameField.setValue(firstValidName);
+                        // Sync
+                        const matchedDef = definitionBlocks.find(def => {
+                          try { return def.getFieldValue('NAME') === firstValidName; } catch (e) { return false; }
                         });
-                        if (isNumberedVariant && !defBlock.isDisposed()) {
-                          defBlock.dispose(false);
+                        if (matchedDef && callBlock.setProcedureParameters) {
+                          syncProcedureParameters(callBlock, matchedDef, workspaceRef.current);
                         }
+                        if (callBlock.render) callBlock.render();
                       }
-                    } catch (e) { }
-                  });
+                    }
+                  }
+                } catch (e) { }
+              });
+
+              // Remove bad definitions
+              definitionBlocks.forEach(defBlock => {
+                try {
+                  const defName = defBlock.getFieldValue('NAME');
+                  if (defName && !validProcedureNames.has(defName)) {
+                    const isNumberedVariant = Array.from(validProcedureNames).some(validName => {
+                      const baseName = validName.replace(/\d+$/, '');
+                      const defBaseName = defName.replace(/\d+$/, '');
+                      return baseName === defBaseName && defName !== validName;
+                    });
+                    if (isNumberedVariant && !defBlock.isDisposed()) {
+                      defBlock.dispose(false);
+                    }
+                  }
+                } catch (e) { }
+              });
             } catch (fixErr) {
-                // Ignore fixing errors
+              // Ignore fixing errors
             }
 
             // Success! Finish up.
@@ -282,25 +284,25 @@ const StarterCreateEdit = () => {
             if (cleanupDuplicateProcedures) {
               cleanupDuplicateProcedures();
             }
-            
+
             await delay(400);
             setBlocklyProcessing(false);
             return; // Exit function successfully
           }
-          
+
           // Loop finished = retries exhausted
           throw new Error("Max retries reached");
 
         } catch (err) {
-            console.error("XML Load failed:", err);
-            starterXmlLoadedRef.current = false;
-            skipCleanupRef.current = false;
-            isXmlLoadingRef.current = false;
-            isFirstXmlLoad.current = false;
-            setBlocklyProcessing(false);
+          console.error("XML Load failed:", err);
+          starterXmlLoadedRef.current = false;
+          skipCleanupRef.current = false;
+          isXmlLoadingRef.current = false;
+          isFirstXmlLoad.current = false;
+          setBlocklyProcessing(false);
         }
       };
-      
+
       // Start loading
       loadXmlWithRetry();
     } else {
@@ -326,9 +328,9 @@ const StarterCreateEdit = () => {
       };
 
       // Use updating mutation instead of direct API call
-      await updateLevelMutation.mutateAsync({ 
-          levelId: levelId, 
-          levelData: updateData 
+      await updateLevelMutation.mutateAsync({
+        levelId: levelId,
+        levelData: updateData
       });
 
       alert('บันทึก Starter XML สำเร็จ');
@@ -340,11 +342,7 @@ const StarterCreateEdit = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="text-lg mb-2">⏳ กำลังโหลด...</div>
-        </div>
-      </div>
+      <PageLoader message="Loading starter blocks..." />
     );
   }
 
@@ -367,7 +365,7 @@ const StarterCreateEdit = () => {
         <AdminPageHeader
           title="เพิ่ม Starter Blocks"
           subtitle={levelData?.level_name || 'Loading...'}
-          backPath={`/admin/levels`}
+          backPath={`/admin/levels/${levelId}/edit`}
           rightContent={
             <Button
               onClick={handleSave}
@@ -388,12 +386,12 @@ const StarterCreateEdit = () => {
             </div>
             <div className="flex-1 relative">
               {blocklyProcessing ? (
-                <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
-                  <div className="text-center">
-                    <Loader className="mx-auto mb-4" size="lg" />
-                    <div className="text-lg text-gray-600">กำลังเตรียม workspace...</div>
-                    <div className="text-sm text-gray-400 mt-2">กำลังจัดการบล็อก function และลบบล็อกที่ซ้ำซ้อน</div>
-                  </div>
+                <div className="absolute inset-0 z-10 bg-white flex flex-col items-center justify-center">
+                  <ContentLoader
+                    message="Preparing workspace..."
+                    height="h-auto"
+                    className="w-full"
+                  />
                 </div>
               ) : null}
               <div className={blocklyProcessing ? 'opacity-0 pointer-events-none' : 'opacity-100'}>

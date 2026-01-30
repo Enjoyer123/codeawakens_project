@@ -5,14 +5,6 @@ import { directions } from '../../gameutils/shared/game';
 import { fetchLevelById } from '../../services/levelService';
 import GameStateVisualization from './GameStateVisualization';
 import { getCurrentGameState } from '../../gameutils/shared/game';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "../ui/dialog";
-
 // UI Components
 import StatusPanel from './ui/StatusPanel';
 import BlockCountPanel from './ui/BlockCountPanel';
@@ -20,8 +12,9 @@ import HintButton from './ui/HintButton';
 import GuideButton from './ui/GuideButton';
 import PatternMatchPanel from './ui/PatternMatchPanel';
 import BigOSelector from './ui/BigOSelector';
+import HintPopup from './HintPopup';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+import { API_BASE_URL } from '../../config/apiConfig';
 
 const GameArea = ({
   gameRef,
@@ -225,55 +218,12 @@ const GameArea = ({
         </div>
       </div>
 
-      <Dialog
-        open={hintOpen && !!activeLevelHint}
-        onOpenChange={(isOpen) => {
-          if (!isOpen && onToggleHint) {
-            onToggleHint();
-          }
-        }}
-      >
-        <DialogContent className="bg-[url('/paper.png')] bg-cover bg-center bg-no-repeat border border-yellow-700/80 max-w-4xl w-[96%] max-h-[85vh] overflow-y-auto p-8 shadow-2xl">
-          <DialogHeader className="mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs uppercase tracking-wider text-yellow-900 font-bold bg-yellow-400/20 px-2 py-0.5 rounded">
-                Hint
-              </span>
-            </div>
-            <DialogTitle className="text-lg font-bold text-stone-900">
-              {activeLevelHint?.title}
-            </DialogTitle>
-            {activeLevelHint?.description && (
-              <DialogDescription className="text-sm text-stone-800 font-medium leading-relaxed text-left">
-                {activeLevelHint.description}
-              </DialogDescription>
-            )}
-          </DialogHeader>
-
-          <div className="space-y-4">
-            {activeLevelHint?.hint_images && activeLevelHint.hint_images.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {activeLevelHint.hint_images.map(img => (
-                  <div
-                    key={img.hint_image_id}
-                    className="w-full h-60 md:h-72 bg-black/60 border border-yellow-700/50 rounded-xl flex items-center justify-center overflow-hidden"
-                  >
-                    <img
-                      src={`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'}${img.path_file}`}
-                      alt=""
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="mt-4 text-[10px] text-yellow-400/80 text-right">
-              กดปุ่ม "Need Hint" อีกครั้งเพื่อดู Hint ถัดไป (ถ้ามี)
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <HintPopup
+        hints={levelHints}
+        isOpen={hintOpen && levelHints && levelHints.length > 0}
+        onClose={onToggleHint}
+        initialHintIndex={hintOpenCount}
+      />
     </div>
 
   );

@@ -6,11 +6,11 @@ export function defineLogicBlocks() {
     init: function () {
       this.appendValueInput("CONDITION")
         .setCheck("Boolean")
-        .appendField("🔀 ถ้า");
+        .appendField("🔀 If");
       this.appendStatementInput("IF_DO")
-        .appendField("แล้ว");
+        .appendField("Do");
       this.appendStatementInput("ELSE_DO")
-        .appendField("ไม่งั้น");
+        .appendField("Else");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(210);
@@ -22,9 +22,9 @@ export function defineLogicBlocks() {
     init: function () {
       this.appendValueInput("CONDITION")
         .setCheck("Boolean")
-        .appendField("❓ ถ้า");
+        .appendField("❓ If");
       this.appendStatementInput("DO")
-        .appendField("แล้ว");
+        .appendField("Do");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(210);
@@ -36,9 +36,9 @@ export function defineLogicBlocks() {
     init: function () {
       this.appendValueInput("CONDITION")
         .setCheck("Boolean")
-        .appendField("🔀 ถ้า");
+        .appendField("🔀 If");
       this.appendDummyInput()
-        .appendField("แล้วออกจากฟังก์ชัน");
+        .appendField("Return");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(210);
@@ -71,8 +71,8 @@ export function defineLogicBlocks() {
     init: function () {
       this.appendDummyInput()
         .appendField(new Blockly.FieldDropdown([
-          ["จริง", "TRUE"],
-          ["เท็จ", "FALSE"]
+          ["True", "TRUE"],
+          ["False", "FALSE"]
         ]), "BOOL");
       this.setOutput(true, "Boolean");
       this.setColour(210);
@@ -94,7 +94,7 @@ export function defineLogicBlocks() {
     init: function () {
       this.appendValueInput("BOOL")
         .setCheck("Boolean")
-        .appendField("ไม่ใช่");
+        .appendField("Not");
       this.setOutput(true, "Boolean");
       this.setColour(210);
       this.setTooltip("กลับค่าจริง/เท็จ");
@@ -107,8 +107,8 @@ export function defineLogicBlocks() {
         .setCheck("Boolean");
       this.appendDummyInput()
         .appendField(new Blockly.FieldDropdown([
-          ["และ", "AND"],
-          ["หรือ", "OR"]
+          ["And", "AND"],
+          ["Or", "OR"]
         ]), "OP");
       this.appendValueInput("B")
         .setCheck("Boolean");
@@ -120,7 +120,7 @@ export function defineLogicBlocks() {
 
   Blockly.Blocks["found_monster"] = {
     init: function () {
-      this.appendDummyInput().appendField("👹 เจอ Monster");
+      this.appendDummyInput().appendField("👹 Found Monster");
       this.setOutput(true, "Boolean");
       this.setColour(330);
       this.setTooltip("ตรวจสอบว่าเจอ Monster หรือไม่");
@@ -129,7 +129,7 @@ export function defineLogicBlocks() {
 
   Blockly.Blocks["can_move_forward"] = {
     init: function () {
-      this.appendDummyInput().appendField("🚶 เดินต่อได้");
+      this.appendDummyInput().appendField("🚶 Can Move Forward");
       this.setOutput(true, "Boolean");
       this.setColour(330);
       this.setTooltip("ตรวจสอบว่าเดินไปข้างหน้าได้หรือไม่");
@@ -138,7 +138,7 @@ export function defineLogicBlocks() {
 
   Blockly.Blocks["near_pit"] = {
     init: function () {
-      this.appendDummyInput().appendField("🕳️ ใกล้หลุม");
+      this.appendDummyInput().appendField("🕳️ Near Pit");
       this.setOutput(true, "Boolean");
       this.setColour(330);
       this.setTooltip("ตรวจสอบว่าใกล้หลุมหรือไม่");
@@ -147,7 +147,7 @@ export function defineLogicBlocks() {
 
   Blockly.Blocks["at_goal"] = {
     init: function () {
-      this.appendDummyInput().appendField("🎯 ถึงเป้าหมาย");
+      this.appendDummyInput().appendField("🎯 At Goal");
       this.setOutput(true, "Boolean");
       this.setColour(330);
       this.setTooltip("ตรวจสอบว่าถึงเป้าหมายแล้วหรือไม่");
@@ -158,7 +158,7 @@ export function defineLogicBlocks() {
     init: function () {
       this.appendValueInput("A")
         .setCheck("Number")
-        .appendField("เปรียบเทียบ");
+        .appendField("Compare");
       this.appendDummyInput()
         .appendField(new Blockly.FieldDropdown([
           ["=", "EQ"],

@@ -1,16 +1,13 @@
-import { Loader } from '@/components/ui/loader';
+import ContentLoader from './Loading/ContentLoader';
 
 export const LoadingState = ({ message = 'Loading...' }) => {
   return (
-    <div className="p-8 text-center">
-      <Loader className="mx-auto mb-4" />
-      <div className="text-lg text-gray-600">{message}</div>
-    </div>
+    <ContentLoader message={message} />
   );
 };
 
-export const EmptyState = ({ 
-  message = 'ไม่พบข้อมูล', 
+export const EmptyState = ({
+  message = 'ไม่พบข้อมูล',
   searchQuery,
   searchMessage = 'ลองค้นหาด้วยคำอื่น'
 }) => {

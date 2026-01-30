@@ -3,7 +3,7 @@ import Phaser from 'phaser';
 import { preloadWeaponEffectSafe as preloadWeaponEffect } from '../../shared/combat';
 import { getCurrentGameState, setCurrentGameState, getCurrentScene } from '../game/gameState';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+import { API_BASE_URL } from '../../../config/apiConfig';
 
 // Global weapon variables
 let weaponsData = null; // เก็บข้อมูลอาวุธจาก API

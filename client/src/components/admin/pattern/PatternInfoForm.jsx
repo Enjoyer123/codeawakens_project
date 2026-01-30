@@ -31,7 +31,7 @@ const PatternInfoForm = ({
             disabled={disabled}
           />
           {isEditMode && !patternName && !patternLoaded && (
-            <p className="text-xs text-gray-500 mt-1">กำลังโหลดข้อมูล...</p>
+            <p className="text-xs text-gray-500 mt-1">Loading data...</p>
           )}
           {isEditMode && patternLoaded && (
             <p className="text-xs text-green-500 mt-1">✅ ข้อมูลถูกโหลดแล้ว (patternName: {patternName || 'ว่าง'})</p>

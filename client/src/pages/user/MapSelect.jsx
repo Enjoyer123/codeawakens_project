@@ -5,6 +5,7 @@ import { useAuth } from '@clerk/clerk-react';
 import { fetchAllLevelCategories } from '../../services/levelCategoryService';
 import CategoryCard from '../../components/user/CategoryCard';
 import MapCoordinatePicker from '../../components/tools/MapCoordinatePicker';
+import PageLoader from '../../components/shared/Loading/PageLoader';
 
 const CATEGORY_POSITIONS = [
   { id: 1, top: 20.44, left: 73.3 },
@@ -41,7 +42,7 @@ const MapSelect = () => {
         const categoriesFix = Array.isArray(data?.levelCategories)
           ? data.levelCategories
           : [];
-        
+
         setCategories(categoriesFix);
         setError(null);
 
@@ -64,26 +65,26 @@ const MapSelect = () => {
 
   const getCategoryCount = (category) => {
     // หาจำนวนด่านจากข้อมูลที่ได้รับจาก API
-    
+
     // ตรวจสอบว่ามี levels array หรือไม่
     if (Array.isArray(category.levels)) {
       // นับเฉพาะด่านที่ unlock แล้ว
       return category.levels.filter(level => level.is_unlocked === true).length;
     }
-    
+
     // ถ้ามี level_count ให้ใช้
     if (category.level_count !== undefined && category.level_count !== null) {
       const count = parseInt(category.level_count);
       return isNaN(count) ? 0 : count;
     }
-    
+
     return 0;
   };
 
   if (showDevTool) {
     return (
       <div className="min-h-screen bg-white relative">
-        <button 
+        <button
           onClick={() => setShowDevTool(false)}
           className="fixed top-4 right-4 z-50 bg-red-600 text-white px-4 py-2 rounded shadow-lg font-bold hover:bg-red-700 transition"
         >
@@ -96,7 +97,7 @@ const MapSelect = () => {
 
   return (
     <div className="min-h-screen w-full bg-gray-900 relative overflow-hidden flex flex-col justify-center lg:h-screen lg:w-full lg:block">
-      <button 
+      <button
         onClick={() => setShowDevTool(true)}
         className="fixed bottom-4 right-4 z-50 bg-gray-800 text-white px-3 py-1 text-xs rounded shadow hover:bg-gray-700 transition opacity-50 hover:opacity-100"
       >
@@ -106,61 +107,59 @@ const MapSelect = () => {
       {/* Map Container */}
       {!loading && !error && (
         <div className="relative w-full max-w-5xl mx-auto shadow-2xl lg:shadow-none lg:max-w-none lg:mx-0 lg:w-full lg:h-full">
-            <img 
-              src="/map.jpg" 
-              alt="World Map" 
-              className="w-full h-auto object-contain lg:w-full lg:h-full lg:object-fill block"
-            />
-            
-            {/* Category Nodes */}
-            {categories.map((category) => {
-              const position = CATEGORY_POSITIONS.find(p => p.id === category.category_id);
-              const count = getCategoryCount(category);
-              
-              if (!position) return null;
+          <img
+            src="/map.jpg"
+            alt="World Map"
+            className="w-full h-auto object-contain lg:w-full lg:h-full lg:object-fill block"
+          />
 
-              return (
-                <div
-                  key={category.category_id}
-                  onClick={() => handleCategorySelect(category.category_id)}
-                  className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group"
-                  style={{ left: `${position.left}%`, top: `${position.top}%` }}
-                >
-                  {/* Node Circle (Pill shape for Name) */}
-                  <div className="px-2 py-1 md:px-4 md:py-2 min-w-[2rem] min-h-[2rem] md:min-w-[3rem] md:min-h-[3rem] bg-white border-2 md:border-4 border-blue-500 rounded-full shadow-lg flex items-center justify-center transition-transform transform group-hover:scale-110 group-active:scale-95 group-hover:border-yellow-400 z-10 relative">
-                    <span className="text-blue-800 font-bold text-[10px] md:text-sm lg:text-base whitespace-nowrap">
-                      {category.category_name}
-                    </span>
-                    
-                    {/* Unlocked/Count Indicator */}
-                    <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 bg-red-500 text-white text-[8px] md:text-xs font-bold px-1.5 py-0.5 rounded-full shadow border-2 border-white min-w-[16px] text-center">
-                       {count}
-                    </div>
+          {/* Category Nodes */}
+          {categories.map((category) => {
+            const position = CATEGORY_POSITIONS.find(p => p.id === category.category_id);
+            const count = getCategoryCount(category);
+
+            if (!position) return null;
+
+            return (
+              <div
+                key={category.category_id}
+                onClick={() => handleCategorySelect(category.category_id)}
+                className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group"
+                style={{ left: `${position.left}%`, top: `${position.top}%` }}
+              >
+                {/* Node Circle (Pill shape for Name) */}
+                <div className="px-2 py-1 md:px-4 md:py-2 min-w-[2rem] min-h-[2rem] md:min-w-[3rem] md:min-h-[3rem] bg-white border-2 md:border-4 border-blue-500 rounded-full shadow-lg flex items-center justify-center transition-transform transform group-hover:scale-110 group-active:scale-95 group-hover:border-yellow-400 z-10 relative">
+                  <span className="text-blue-800 font-bold text-[10px] md:text-sm lg:text-base whitespace-nowrap">
+                    {category.category_name}
+                  </span>
+
+                  {/* Unlocked/Count Indicator */}
+                  <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 bg-red-500 text-white text-[8px] md:text-xs font-bold px-1.5 py-0.5 rounded-full shadow border-2 border-white min-w-[16px] text-center">
+                    {count}
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            );
+          })}
         </div>
       )}
 
       {/* Fallback for categories without positions */}
       {!loading && !error && categories.some(c => !CATEGORY_POSITIONS.find(p => p.id === c.category_id)) && (
-          <div className="p-4 bg-gray-100/90 backdrop-blur-sm grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
-              <div className="col-span-full text-sm text-gray-600 font-bold mb-2 uppercase tracking-wider">Other Categories</div>
-              {categories.filter(c => !CATEGORY_POSITIONS.find(p => p.id === c.category_id)).map(category => (
-                  <div key={category.category_id} onClick={() => handleCategorySelect(category.category_id)} className="bg-white p-3 rounded shadow cursor-pointer hover:bg-gray-50 flex items-center gap-2 border border-gray-200">
-                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold">{category.category_id}</div>
-                        <div className="text-sm truncate font-medium">{category.name}</div>
-                  </div>
-              ))}
-          </div>
+        <div className="p-4 bg-gray-100/90 backdrop-blur-sm grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
+          <div className="col-span-full text-sm text-gray-600 font-bold mb-2 uppercase tracking-wider">Other Categories</div>
+          {categories.filter(c => !CATEGORY_POSITIONS.find(p => p.id === c.category_id)).map(category => (
+            <div key={category.category_id} onClick={() => handleCategorySelect(category.category_id)} className="bg-white p-3 rounded shadow cursor-pointer hover:bg-gray-50 flex items-center gap-2 border border-gray-200">
+              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold">{category.category_id}</div>
+              <div className="text-sm truncate font-medium">{category.name}</div>
+            </div>
+          ))}
+        </div>
       )}
 
       {/* Loading State */}
       {loading && (
-        <div className="w-full h-screen flex items-center justify-center bg-gray-100">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-800"></div>
-        </div>
+        <PageLoader message="Loading map..." />
       )}
 
       {/* Error State */}
