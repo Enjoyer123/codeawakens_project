@@ -3,7 +3,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import useUserStore from '../../store/useUserStore';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+import PageLoader from '../../components/shared/Loading/PageLoader';
+
+import { API_BASE_URL } from '../../config/apiConfig';
 
 const AuthCallback = () => {
   const { isSignedIn, isLoaded, getToken } = useAuth();
@@ -26,14 +28,14 @@ const AuthCallback = () => {
                 },
               }
             );
-            
+
             if (!response.ok) {
               throw new Error('Failed to check profile');
             }
-            
+
             const data = await response.json();
             setRole(data.role);
-            
+
             if (data.loggedIn) {
               if (data.hasProfile) {
                 if (data.role === 'admin') {
@@ -62,12 +64,7 @@ const AuthCallback = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">กำลังเข้าสู่ระบบ...</p>
-        </div>
-      </div>
+      <PageLoader message="กำลังเข้าสู่ระบบ..." />
     );
   }
 

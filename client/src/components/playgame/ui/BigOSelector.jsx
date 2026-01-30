@@ -32,11 +32,10 @@ const BigOSelector = ({ userBigO, onUserBigOChange, hintData }) => {
           }
         }}
         disabled={isDisabled}
-        className={`w-full px-2 py-1.5 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-stone-500 focus:border-stone-500 ${
-          !isDisabled
+        className={`w-full px-2 py-1.5 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-stone-500 focus:border-stone-500 ${!isDisabled
             ? 'bg-stone-800 border-stone-600 text-stone-300 cursor-pointer'
             : 'bg-stone-900 border-stone-700 text-stone-500 cursor-not-allowed opacity-60'
-        }`}
+          }`}
       >
         {BIG_O_OPTIONS.map((option) => (
           <option key={option.value} value={option.value}>

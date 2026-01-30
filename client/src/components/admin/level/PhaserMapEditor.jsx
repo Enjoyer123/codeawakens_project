@@ -2,6 +2,7 @@ import { useRef, useEffect, useCallback } from 'react';
 import { usePhaserGameInit } from './hooks/usePhaserGameInit';
 import { usePhaserMapRenderer } from './hooks/usePhaserMapRenderer';
 import { usePhaserMapInteractions } from './hooks/usePhaserMapInteractions';
+import ContentLoader from '@/components/shared/Loading/ContentLoader';
 
 const PhaserMapEditor = ({
   canvasSize,
@@ -154,11 +155,8 @@ const PhaserMapEditor = ({
   return (
     <div className="relative border-2 border-gray-300 rounded-lg bg-black overflow-hidden">
       {!phaserLoaded && typeof window !== 'undefined' && !window.Phaser ? (
-        <div className="w-full flex items-center justify-center text-white" style={{ height: `${canvasSize.height}px` }}>
-          <div className="text-center">
-            <div className="text-lg mb-2">⏳ กำลังโหลด Level Editor...</div>
-            <div className="text-sm text-gray-400">กรุณารอสักครู่</div>
-          </div>
+        <div className="w-full flex items-center justify-center bg-gray-900" style={{ height: `${canvasSize.height}px` }}>
+          <ContentLoader message="Loading Level Editor..." height="h-full" />
         </div>
       ) : (
         <div

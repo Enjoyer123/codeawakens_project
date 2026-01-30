@@ -35,7 +35,7 @@ export function createToolboxConfig(enabledBlocks) {
   if (movementBlocks.length > 0) {
     categories.push({
       kind: "category",
-      name: "🚀 การเคลื่อนที่",
+      name: "🚀 Movement",
       categorystyle: "logic_category",
       contents: movementBlocks,
     });
@@ -63,7 +63,7 @@ export function createToolboxConfig(enabledBlocks) {
   if (logicBlocks.length > 0) {
     categories.push({
       kind: "category",
-      name: "🧠 ตรรกะ",
+      name: "🧠 Logic",
       categorystyle: "procedure_category",
       contents: logicBlocks,
     });
@@ -83,7 +83,7 @@ export function createToolboxConfig(enabledBlocks) {
   if (conditionBlocks.length > 0) {
     categories.push({
       kind: "category",
-      name: "❓ เงื่อนไข",
+      name: "❓ Conditions",
       categorystyle: "math_category",
       contents: conditionBlocks,
     });
@@ -105,7 +105,7 @@ export function createToolboxConfig(enabledBlocks) {
   if (loopBlocks.length > 0) {
     categories.push({
       kind: "category",
-      name: "🔄 ลูป",
+      name: "🔄 Loops",
       categorystyle: "loop_category",
       contents: loopBlocks,
     });
@@ -121,7 +121,7 @@ export function createToolboxConfig(enabledBlocks) {
   if (coinBlocks.length > 0) {
     categories.push({
       kind: "category",
-      name: "🪙 เหรียญ",
+      name: "🪙 Coins",
       categorystyle: "text_category",
       contents: coinBlocks,
     });
@@ -143,7 +143,7 @@ export function createToolboxConfig(enabledBlocks) {
   if (coinSortingBlocks.length > 0) {
     categories.push({
       kind: "category",
-      name: "🔄 เรียงเหรียญ",
+      name: "🔄 Sort Coins",
       categorystyle: "list_category",
       contents: coinSortingBlocks,
     });
@@ -173,7 +173,7 @@ export function createToolboxConfig(enabledBlocks) {
   if (mathBlocks.length > 0) {
     categories.push({
       kind: "category",
-      name: "🧮 คณิตศาสตร์",
+      name: "🧮 Math",
       categorystyle: "math_category",
       contents: mathBlocks,
     });
@@ -191,7 +191,7 @@ export function createToolboxConfig(enabledBlocks) {
   if (personRescueBlocks.length > 0) {
     categories.push({
       kind: "category",
-      name: "🆘 ช่วยคน",
+      name: "🆘 Rescue",
       categorystyle: "text_category",
       contents: personRescueBlocks,
     });
@@ -247,7 +247,7 @@ export function createToolboxConfig(enabledBlocks) {
   if (listBlocks.length > 0) {
     categories.push({
       kind: "category",
-      name: "🗂️ ลิสต์",
+      name: "🗂️ Lists",
       categorystyle: "list_category",
       contents: listBlocks,
     });
@@ -277,7 +277,7 @@ export function createToolboxConfig(enabledBlocks) {
   if (enabledBlocks["procedures_defreturn"] || enabledBlocks["procedures_defnoreturn"]) {
     categories.push({
       kind: "category",
-      name: "🔧 ฟังก์ชัน",
+      name: "🔧 Functions",
       categorystyle: "procedure_category",
       custom: "PROCEDURE", // Blockly will manage procedure blocks and call blocks automatically
     });
@@ -287,7 +287,7 @@ export function createToolboxConfig(enabledBlocks) {
     if (enabledBlocks["procedures_defreturn"]) {
       categories.push({
         kind: "category",
-        name: "↩️ คืนค่า",
+        name: "↩️ Return",
         categorystyle: "procedure_category",
         contents: [{ kind: "block", type: "procedures_return" }]
       });
@@ -306,7 +306,7 @@ export function createToolboxConfig(enabledBlocks) {
   if (customFunctionBlocks.length > 0) {
     categories.push({
       kind: "category",
-      name: "🔧 ฟังก์ชันกำหนดเอง",
+      name: "🔧 Custom Functions",
       categorystyle: "procedure_category",
       contents: customFunctionBlocks
     });
@@ -316,7 +316,7 @@ export function createToolboxConfig(enabledBlocks) {
   if (enabledBlocks["move_to_node"]) {
     categories.push({
       kind: "category",
-      name: "🚀 การเคลื่อนที่ขั้นสูง",
+      name: "🚀 Advanced Movement",
       categorystyle: "procedure_category",
       contents: [{ kind: "block", type: "move_to_node" }]
     });
@@ -379,7 +379,7 @@ export function createToolboxConfig(enabledBlocks) {
     console.log("✅ Adding Variables category - variable blocks enabled");
     categories.push({
       kind: "category",
-      name: "ตัวแปร",
+      name: "Variables",
       categorystyle: "variable_category",
       custom: "VARIABLE"
     });

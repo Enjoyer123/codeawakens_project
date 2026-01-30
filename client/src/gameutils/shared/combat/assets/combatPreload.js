@@ -1,4 +1,6 @@
 // Combat Weapon Effects Preload
+import { API_BASE_URL } from '../../../../config/apiConfig';
+
 export async function preloadAllWeaponEffects(scene) {
   // ตรวจสอบว่า scene มีอยู่จริง
   if (!scene || !scene.load) {
@@ -47,7 +49,7 @@ export async function preloadWeaponEffectSafe(scene, weaponKey, effectType = '')
 
   // ใช้รูปแบบใหม่: {weaponkey}_attack_frame.png
   const typeFile = effectType || 'attack'; // default เป็น 'attack' สำหรับ effect
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+  // const API_BASE_URL = ... (Removed)
 
   // ตรวจสอบไฟล์ที่มีจริง
   for (let i = 1; i <= 20; i++) { // เพิ่มจำนวนสูงสุดเป็น 20

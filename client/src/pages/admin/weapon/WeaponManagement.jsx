@@ -214,7 +214,7 @@ const WeaponManagement = () => {
         frame: imageForm.frame,
         weapon_key: selectedWeapon.weapon_key,
       });
-      
+
       await loadWeapons();
 
       const data = await fetchAllWeapons(getToken, page, rowsPerPage, searchQuery);

@@ -26,7 +26,7 @@ export function ensureStandardBlocks() {
             .appendField(new Blockly.FieldVariable("item"), "VAR");
           this.setOutput(true, null);
           this.setColour(330);
-          this.setTooltip("Get variable value");
+          this.setTooltip("ค่าของตัวแปร");
         }
       };
 
@@ -48,9 +48,9 @@ export function ensureStandardBlocks() {
       init: function () {
         // Use FieldVariable which handles variable selection properly
         this.appendDummyInput()
-          .appendField('ตั้งค่า')
+          .appendField('Set')
           .appendField(new Blockly.FieldVariable('item'), 'VAR')
-          .appendField('เป็น');
+          .appendField('to');
         this.appendValueInput('VALUE')
           .setCheck(null);
         this.setPreviousStatement(true, null);
@@ -86,9 +86,9 @@ export function ensureStandardBlocks() {
     Blockly.Blocks['math_change'] = {
       init: function () {
         this.appendDummyInput()
-          .appendField('เปลี่ยน')
+          .appendField('Change')
           .appendField(new Blockly.FieldVariable('item'), 'VAR')
-          .appendField('โดย');
+          .appendField('by');
         this.appendValueInput('DELTA')
           .setCheck('Number');
         this.setPreviousStatement(true, null);
@@ -120,11 +120,11 @@ export function ensureStandardBlocks() {
     Blockly.Blocks['lists_isEmpty'] = {
       init: function () {
         this.appendDummyInput()
-          .appendField('ลิสต์');
+          .appendField('List');
         this.appendValueInput('VALUE')
           .setCheck('Array');
         this.appendDummyInput()
-          .appendField('ว่างหรือไม่');
+          .appendField('Is Empty');
         this.setOutput(true, 'Boolean');
         this.setColour(260);
         this.setTooltip('เช็คว่า list ว่างหรือไม่');
@@ -163,7 +163,7 @@ export function ensureStandardBlocks() {
             .setCheck("Number");
           this.setOutput(true, "Number");
           this.setColour(230);
-          this.setTooltip("Basic arithmetic operations");
+          this.setTooltip("การคำนวณพื้นฐาน");
         }
       };
 

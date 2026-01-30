@@ -8,12 +8,12 @@ export function defineListOperationsBlocks() {
     init: function () {
       this.appendValueInput("LIST")
         .setCheck("Array")
-        .appendField("📝 เพิ่ม");
+        .appendField("📝 Add");
       this.appendValueInput("ITEM")
         .setCheck(null)
-        .appendField("เข้า");
+        .appendField("to");
       this.appendDummyInput()
-        .appendField("ลิสต์");
+        .appendField("List");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(260);
@@ -26,7 +26,7 @@ export function defineListOperationsBlocks() {
     init: function () {
       this.appendValueInput("LIST")
         .setCheck("Array")
-        .appendField("🗑️ ลบตัวสุดท้ายจาก");
+        .appendField("🗑️ Remove Last from List");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(260);
@@ -39,7 +39,7 @@ export function defineListOperationsBlocks() {
     init: function () {
       this.appendValueInput("LIST")
         .setCheck("Array")
-        .appendField("📤 ดึงและลบตัวสุดท้ายจาก");
+        .appendField("📤 Pop Last from List");
       this.setOutput(true, null);
       this.setColour(260);
       this.setTooltip("ดึง item สุดท้ายออกจาก list และลบออก (pop with return)");
@@ -51,7 +51,7 @@ export function defineListOperationsBlocks() {
     init: function () {
       this.appendValueInput("LIST")
         .setCheck("Array")
-        .appendField("📖 ดึงตัวสุดท้ายจาก");
+        .appendField("📖 Get Last from List");
       this.setOutput(true, null);
       this.setColour(260);
       this.setTooltip("ดึง item สุดท้ายจาก list");
@@ -63,7 +63,7 @@ export function defineListOperationsBlocks() {
     init: function () {
       this.appendValueInput("LIST")
         .setCheck("Array")
-        .appendField("📤 ดึงและลบตัวแรกจาก");
+        .appendField("📤 Pop First from List");
       this.setOutput(true, null);
       this.setColour(260);
       this.setTooltip("ดึง item แรกออกจาก list และลบออก (shift with return - สำหรับ queue)");
@@ -75,7 +75,7 @@ export function defineListOperationsBlocks() {
     init: function () {
       this.appendValueInput("LIST")
         .setCheck("Array")
-        .appendField("📖 ดึงตัวแรกจาก");
+        .appendField("📖 Get First from List");
       this.setOutput(true, null);
       this.setColour(260);
       this.setTooltip("ดึง item แรกจาก list");
@@ -87,10 +87,10 @@ export function defineListOperationsBlocks() {
     init: function () {
       this.appendValueInput("ITEM")
         .setCheck(null)
-        .appendField("🔍 มี");
+        .appendField("🔍 Contains");
       this.appendValueInput("LIST")
         .setCheck("Array")
-        .appendField("อยู่ใน");
+        .appendField("in List");
       this.setOutput(true, "Boolean");
       this.setColour(260);
       this.setTooltip("เช็คว่า item อยู่ใน list หรือไม่");
@@ -102,10 +102,10 @@ export function defineListOperationsBlocks() {
     init: function () {
       this.appendValueInput("LIST1")
         .setCheck("Array")
-        .appendField("🔗 รวม");
+        .appendField("🔗 Concat List");
       this.appendValueInput("LIST2")
         .setCheck("Array")
-        .appendField("กับ");
+        .appendField("with List");
       this.setOutput(true, "Array");
       this.setColour(260);
       this.setTooltip("รวม list สองตัวเข้าด้วยกัน");
@@ -116,14 +116,14 @@ export function defineListOperationsBlocks() {
   Blockly.Blocks["for_each_in_list"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("🔄 สำหรับแต่ละ")
+        .appendField("🔄 For Each")
         .appendField(new Blockly.FieldVariable("item"), "VAR")
-        .appendField("ใน");
+        .appendField("in List");
       this.appendValueInput("LIST")
         .setCheck("Array");
       this.appendStatementInput("DO")
         .setCheck(null)
-        .appendField("ทำ");
+        .appendField("Do");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(120);
@@ -158,13 +158,13 @@ export function defineListOperationsBlocks() {
     init: function () {
       this.appendValueInput("LIST")
         .setCheck("Array")
-        .appendField("🔍 หา index ของค่าน้อยที่สุดใน");
+        .appendField("🔍 Find Index of Min Value in List");
       this.appendValueInput("EXCLUDE")
         .setCheck("Array")
 
-        .appendField("ยกเว้น (Boolean Array)");
+        .appendField("Exclude (Boolean Array)");
       this.appendDummyInput()
-        .appendField("(สำหรับ Priority Queue)");
+        .appendField("(for Priority Queue)");
       this.setOutput(true, "Number");
       this.setColour(260);
       this.setTooltip("หา index ของ item ที่มีค่าน้อยที่สุดใน list (สำหรับ Priority Queue)");
@@ -176,13 +176,13 @@ export function defineListOperationsBlocks() {
     init: function () {
       this.appendValueInput("LIST")
         .setCheck("Array")
-        .appendField("🔍 หา index ของค่ามากที่สุดใน");
+        .appendField("🔍 Find Index of Max Value in List");
       this.appendValueInput("EXCLUDE")
         .setCheck("Array")
 
-        .appendField("ยกเว้น (Boolean Array)");
+        .appendField("Exclude (Boolean Array)");
       this.appendDummyInput()
-        .appendField("(สำหรับ Priority Queue)");
+        .appendField("(for Priority Queue)");
       this.setOutput(true, "Number");
       this.setColour(260);
       this.setTooltip("หา index ของ item ที่มีค่ามากที่สุดใน list (สำหรับ Max-Capacity Priority Queue)");
@@ -194,10 +194,10 @@ export function defineListOperationsBlocks() {
     init: function () {
       this.appendValueInput("LIST")
         .setCheck("Array")
-        .appendField("📖 ดึง item ที่ index");
+        .appendField("📖 Get Item at Index");
       this.appendValueInput("INDEX")
         .setCheck("Number")
-        .appendField("จาก");
+        .appendField("from List");
       this.setOutput(true, null);
       this.setColour(260);
       this.setTooltip("ดึง item จาก list ที่ index ที่กำหนด");
@@ -209,10 +209,10 @@ export function defineListOperationsBlocks() {
     init: function () {
       this.appendValueInput("LIST")
         .setCheck("Array")
-        .appendField("🗑️ ลบ item ที่ index");
+        .appendField("🗑️ Remove Item at Index");
       this.appendValueInput("INDEX")
         .setCheck("Number")
-        .appendField("จาก");
+        .appendField("from List");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(260);
@@ -225,9 +225,9 @@ export function defineListOperationsBlocks() {
     init: function () {
       this.appendValueInput("LIST")
         .setCheck("Array")
-        .appendField("📊 เรียง");
+        .appendField("📊 Sort");
       this.appendDummyInput()
-        .appendField("ตาม weight (น้อยไปมาก)");
+        .appendField("by Weight (Ascending)");
       this.setOutput(true, "Array");
       this.setColour(260);
       this.setTooltip("เรียง list ของ edges ตาม weight จากน้อยไปมาก (สำหรับ Kruskal)");

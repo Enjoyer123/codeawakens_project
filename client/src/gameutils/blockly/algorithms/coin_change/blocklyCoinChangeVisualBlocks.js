@@ -7,7 +7,7 @@ export function defineCoinChangeVisualBlocks() {
     init: function () {
       this.appendValueInput("WARRIOR_INDEX")
         .setCheck("Number")
-        .appendField("⚔️ เพิ่มนักรบเข้าไปในกรอบเลือก");
+        .appendField("⚔️ Add Warrior to Selection");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(260);

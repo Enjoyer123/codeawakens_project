@@ -5,7 +5,7 @@ import { ITEM_TYPES } from '@/constants/itemTypes';
 
 import { useLevelElements } from './hooks/useLevelElements';
 
-const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, onAddMonster, onAddObstacle, selectedCategory, selectedMonsterType, onMonsterTypeChange, coinValue, onCoinValueChange, edgeWeight, onEdgeWeightChange }) => {
+const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, onAddMonster, onAddObstacle, selectedCategory, selectedMonsterType, onMonsterTypeChange, coinValue, onCoinValueChange, edgeWeight, onEdgeWeightChange, onFormDataChange }) => {
   const { isItemTypeEnabled, isWeightedGraphCategory } = useLevelElements(selectedCategory);
 
   const handleAddCoin = () => {
@@ -106,54 +106,71 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
       </div>
 
       {/* Group 3: Enemies & Obstacles */}
-      <div className="space-y-2">
-        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Enemies & Obstacles</h3>
-        <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              variant={currentMode === 'monster' ? 'default' : 'outline'}
-              onClick={onAddMonster}
-              className="w-full justify-start"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Monster
-            </Button>
-            <Button
-              variant={currentMode === 'obstacle' ? 'default' : 'outline'}
-              onClick={onAddObstacle}
-              className="w-full justify-start"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Obstacle
-            </Button>
-          </div>
+      <div className="space-y-4">
+        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Characters & Enemies</h3>
 
-          {/* Monster Type Selector - แสดงเมื่ออยู่ในโหมด monster */}
-          {currentMode === 'monster' && (
-            <div className="bg-gray-50 p-2 rounded-md border border-gray-100 animate-in fade-in slide-in-from-top-1 duration-200">
-              <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">
-                Monster Type
-              </label>
-              <div className="flex flex-col gap-1">
-                <Button
-                  variant={selectedMonsterType === 'enemy' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => typeof onMonsterTypeChange === 'function' && onMonsterTypeChange('enemy')}
-                  className={`justify-start h-7 text-[10px] py-1 px-2 ${selectedMonsterType === 'enemy' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'text-gray-600'}`}
-                >
-                  <span className="mr-2">👹</span> Goblin
-                </Button>
-                <Button
-                  variant={selectedMonsterType === 'vampire_1' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => typeof onMonsterTypeChange === 'function' && onMonsterTypeChange('vampire_1')}
-                  className={`justify-start h-7 text-[10px] py-1 px-2 ${selectedMonsterType === 'vampire_1' ? 'bg-purple-100 text-purple-700 hover:bg-purple-200' : 'text-gray-600'}`}
-                >
-                  <span className="mr-2">🧛</span> Vampire
-                </Button>
-              </div>
+        {/* Character Selection */}
+        <div className="space-y-2">
+          <label className="text-[10px] font-bold text-gray-500 uppercase">Player Character</label>
+          <select
+            value={formData.character || 'player'}
+            onChange={(e) => onFormDataChange({ ...formData, character: e.target.value })}
+            className="w-full text-xs h-8 border border-gray-200 rounded-md px-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          >
+            <option value="player">Player (Default)</option>
+            <option value="slime">Slime</option>
+          </select>
+        </div>
+
+        <div className="space-y-3 pt-2 border-t border-gray-100">
+          <label className="text-[10px] font-bold text-gray-500 uppercase">Enemies & Obstacles</label>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant={currentMode === 'monster' ? 'default' : 'outline'}
+                onClick={onAddMonster}
+                className="w-full justify-start"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Monster
+              </Button>
+              <Button
+                variant={currentMode === 'obstacle' ? 'default' : 'outline'}
+                onClick={onAddObstacle}
+                className="w-full justify-start"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Obstacle
+              </Button>
             </div>
-          )}
+
+            {/* Monster Type Selector - แสดงเมื่ออยู่ในโหมด monster */}
+            {currentMode === 'monster' && (
+              <div className="bg-gray-50 p-2 rounded-md border border-gray-100 animate-in fade-in slide-in-from-top-1 duration-200">
+                <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">
+                  Monster Type
+                </label>
+                <div className="flex flex-col gap-1">
+                  <Button
+                    variant={selectedMonsterType === 'enemy' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => typeof onMonsterTypeChange === 'function' && onMonsterTypeChange('enemy')}
+                    className={`justify-start h-7 text-[10px] py-1 px-2 ${selectedMonsterType === 'enemy' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'text-gray-600'}`}
+                  >
+                    <span className="mr-2">👹</span> Goblin
+                  </Button>
+                  <Button
+                    variant={selectedMonsterType === 'vampire_1' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => typeof onMonsterTypeChange === 'function' && onMonsterTypeChange('vampire_1')}
+                    className={`justify-start h-7 text-[10px] py-1 px-2 ${selectedMonsterType === 'vampire_1' ? 'bg-purple-100 text-purple-700 hover:bg-purple-200' : 'text-gray-600'}`}
+                  >
+                    <span className="mr-2">🧛</span> Vampire
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

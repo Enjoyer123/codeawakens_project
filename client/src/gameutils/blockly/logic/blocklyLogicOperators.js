@@ -7,10 +7,10 @@ export function defineLogicOperatorsBlocks() {
     init: function () {
       this.appendValueInput("ITEM")
         .setCheck(null)
-        .appendField("❌ ไม่มี");
+        .appendField("❌ Not");
       this.appendValueInput("LIST")
         .setCheck("Array")
-        .appendField("อยู่ใน");
+        .appendField("in");
       this.setOutput(true, "Boolean");
       this.setColour(210);
       this.setTooltip("เช็คว่า item ไม่อยู่ใน list");

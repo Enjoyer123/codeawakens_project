@@ -13,21 +13,12 @@ const UserDetailsModal = ({ open, onOpenChange, userId, userName, allowEdit = fa
     
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-auto flex flex-col p-0">
-        <DialogHeader 
-          className="relative p-4 flex flex-row items-center justify-between bg-cover bg-center"
-          
-        >
-       
-          <DialogTitle className="relative z-10 text-xl font-bold uppercase flex items-center gap-2">
-            <span>{userName || 'Checking...'}</span>
-          </DialogTitle>
-         
-        </DialogHeader>
+        
         
         <div className="flex-1 relative">
            
 
-           <div className="relative z-10 p-6">
+           <div className="relative z-10 p-8">
             {userId ? (
               <UserDetailsContent
                 userId={userId}
@@ -42,14 +33,7 @@ const UserDetailsModal = ({ open, onOpenChange, userId, userName, allowEdit = fa
           </div>
         </div>
 
-        <DialogFooter className="p-4">
-          <Button 
-            onClick={() => onOpenChange(false)}
-            className="bg-red-900 hover:bg-red-800 text-red-100 border-2 border-red-950 font-bold uppercase"
-          >
-            Close
-          </Button>
-        </DialogFooter>
+     
       </DialogContent>
     </Dialog>
   );

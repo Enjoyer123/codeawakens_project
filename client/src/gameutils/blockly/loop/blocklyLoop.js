@@ -6,10 +6,10 @@ export function defineLoopBlocks() {
   Blockly.Blocks["repeat"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("🔄 ทำซ้ำ")
+        .appendField("🔄 Repeat")
         .appendField(new Blockly.FieldNumber(3, 1, 10), "TIMES")
-        .appendField("ครั้ง");
-      this.appendStatementInput("DO").appendField("ทำ");
+        .appendField("times");
+      this.appendStatementInput("DO").appendField("Do");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(120);
@@ -21,9 +21,9 @@ export function defineLoopBlocks() {
     init: function () {
       this.appendValueInput("CONDITION")
         .setCheck("Boolean")
-        .appendField("🔁 ทำซ้ำจนกว่า");
+        .appendField("🔁 Repeat While");
       this.appendStatementInput("DO")
-        .appendField("จะเป็นเท็จ ทำ");
+        .appendField("Do");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(120);
@@ -34,15 +34,15 @@ export function defineLoopBlocks() {
   Blockly.Blocks["for_index"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("🔢 สำหรับ")
+        .appendField("🔢 For")
         .appendField(new Blockly.FieldVariable("i"), "VAR")
-        .appendField("จาก")
+        .appendField("from")
         .appendField(new Blockly.FieldNumber(1, 0), "FROM")
-        .appendField("ถึง")
+        .appendField("to")
         .appendField(new Blockly.FieldNumber(5, 0), "TO");
       this.appendStatementInput("DO")
         .setCheck(null)
-        .appendField("ทำ");
+        .appendField("Do");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(120);
@@ -75,18 +75,18 @@ export function defineLoopBlocks() {
   Blockly.Blocks["for_loop_dynamic"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("🔢 สำหรับ")
+        .appendField("🔢 For")
         .appendField(new Blockly.FieldVariable("i"), "VAR")
-        .appendField("จาก");
+        .appendField("from");
       this.appendValueInput("FROM")
         .setCheck("Number");
       this.appendDummyInput()
-        .appendField("ถึง");
+        .appendField("to");
       this.appendValueInput("TO")
         .setCheck("Number");
       this.appendStatementInput("DO")
         .setCheck(null)
-        .appendField("ทำ");
+        .appendField("Do");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(120);

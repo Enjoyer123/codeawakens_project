@@ -4,11 +4,19 @@ import useUserStore from '../store/useUserStore';
 import { useAuth } from '@clerk/clerk-react';
 import { useEffect, useState } from 'react';
 import { fetchUserProfile } from '../services/profileService';
+import PageLoader from '../components/shared/Loading/PageLoader';
 
 const NavbarWrapper = () => {
   const { role, setRole, setScores } = useUserStore();
   const { isSignedIn, isLoaded, getToken } = useAuth();
-  const [roleLoading, setRoleLoading] = useState(true);
+  // If we are signed in but role is missing, we are loading. 
+  // If not loaded yet, we treat as loading (or let isLoaded handle it).
+  // But strictly for roleLoading:
+  const [roleLoading, setRoleLoading] = useState(() => {
+    if (!isLoaded) return true;
+    if (isSignedIn && role === null) return true;
+    return false;
+  });
   const { pathname } = useLocation();
 
   useEffect(() => {
@@ -44,7 +52,7 @@ const NavbarWrapper = () => {
 
   // ถ้ายังโหลดอยู่ ให้ส่ง navItems ว่าง
   if (isLoading) {
-    return <Navbar navItems={[]} isLoading={isLoading} />;
+    return <PageLoader message="Initializing..." />;
   }
 
   let navItems = [];

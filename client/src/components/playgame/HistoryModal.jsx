@@ -2,11 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
     Dialog,
     DialogContent,
-    DialogHeader,
-    DialogTitle,
     DialogDescription,
 } from "../ui/dialog";
-import { History } from 'lucide-react';
 import HistorySidebar from './history/HistorySidebar';
 import HistoryViewer from './history/HistoryViewer';
 
@@ -55,48 +52,49 @@ const HistoryModal = ({ isOpen, onClose, userProgress, levels, currentLevelId })
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-6xl h-[80vh] flex flex-col p-0 overflow-hidden bg-stone-900 border-gray-700 text-white">
-                <DialogHeader className="px-6 py-4 border-b border-gray-700 bg-stone-950 flex flex-row items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-600/20 rounded-lg">
-                            <History className="w-5 h-5 text-blue-400" />
-                        </div>
-                        <div>
-                            <DialogTitle className="text-xl font-bold text-white uppercase tracking-tight">
-                                {currentLevelId && completedLevels.length > 0
-                                    ? `Code History: ${completedLevels[0].levelName}`
-                                    : 'Code History'
-                                }
-                            </DialogTitle>
-                            {currentLevelId && (
-                                <div className="text-[10px] text-gray-500 font-mono mt-0.5">
-                                    แสดงประวัติเฉพาะด่านปัจจุบันเท่านั้น
-                                </div>
-                            )}
-                        </div>
+            <DialogContent className="w-full max-w-6xl h-[80vh] p-0 bg-transparent border-none shadow-none overflow-hidden">
+                <div
+                    className="w-full h-full relative flex flex-col"
+                    style={{
+                        backgroundImage: "url('/guide.png')",
+                        backgroundSize: '100% 100%',
+                        backgroundRepeat: 'no-repeat',
+                        imageRendering: 'pixelated'
+                    }}
+                >
+                    {/* Header Section */}
+                    <div className="h-[12%] w-full flex items-center justify-between px-8 pt-1">
+                        <h2 className="text-[#0f172a] font-bold text-xl sm:text-2xl tracking-widest font-pixel uppercase"
+                            style={{ fontFamily: '"Press Start 2P", monospace' }}>
+                            {currentLevelId && completedLevels.length > 0
+                                ? `History: ${completedLevels[0].levelName}`
+                                : 'Code History'
+                            }
+                        </h2>
+                        <DialogDescription className="hidden">History of your completed levels and their code.</DialogDescription>
                     </div>
-                    <DialogDescription className="hidden">History of your completed levels and their code.</DialogDescription>
-                </DialogHeader>
 
-                <div className="flex-1 flex overflow-hidden">
-                    {!currentLevelId && (
-                        <HistorySidebar
-                            completedLevels={completedLevels}
+                    {/* Content Area */}
+                    <div className="flex-1 flex overflow-hidden px-10 pb-8">
+                        {!currentLevelId && (
+                            <HistorySidebar
+                                completedLevels={completedLevels}
+                                selectedLevelId={selectedLevelId}
+                                onLevelSelect={handleLevelSelect}
+                            />
+                        )}
+
+                        <HistoryViewer
                             selectedLevelId={selectedLevelId}
-                            onLevelSelect={handleLevelSelect}
+                            currentLevelId={currentLevelId}
+                            displayMode={displayMode}
+                            onDisplayModeChange={setDisplayMode}
+                            currentProgress={currentProgress}
+                            blocklyRef={blocklyRef}
+                            workspaceRef={workspaceRef}
+                            isOpen={isOpen}
                         />
-                    )}
-
-                    <HistoryViewer
-                        selectedLevelId={selectedLevelId}
-                        currentLevelId={currentLevelId}
-                        displayMode={displayMode}
-                        onDisplayModeChange={setDisplayMode}
-                        currentProgress={currentProgress}
-                        blocklyRef={blocklyRef}
-                        workspaceRef={workspaceRef}
-                        isOpen={isOpen}
-                    />
+                    </div>
                 </div>
             </DialogContent>
         </Dialog>

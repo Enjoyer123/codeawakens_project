@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+import { API_BASE_URL } from '../config/apiConfig';
 
 export const fetchUserProfile = async (getToken) => {
   try {
@@ -55,61 +55,61 @@ export const updateUsername = async (getToken, username) => {
 };
 
 export const uploadProfileImage = async (getToken, file) => {
-    try {
-      const token = await getToken();
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
-  
-      const formData = new FormData();
-      formData.append('profileImage', file);
-  
-      const response = await fetch(`${API_BASE_URL}/api/profile/profile/image`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formData,
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Failed to upload profile image' }));
-        throw new Error(errorData.message || 'Failed to upload profile image');
-      }
-  
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      throw error;
+  try {
+    const token = await getToken();
+    if (!token) {
+      throw new Error('No authentication token available');
     }
-  };
+
+    const formData = new FormData();
+    formData.append('profileImage', file);
+
+    const response = await fetch(`${API_BASE_URL}/api/profile/profile/image`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Failed to upload profile image' }));
+      throw new Error(errorData.message || 'Failed to upload profile image');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
 
 export const deleteProfileImage = async (getToken) => {
-    try {
-      const token = await getToken();
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
-  
-      const response = await fetch(`${API_BASE_URL}/api/profile/profile/image`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Failed to delete profile image' }));
-        throw new Error(errorData.message || 'Failed to delete profile image');
-      }
-  
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      throw error;
+  try {
+    const token = await getToken();
+    if (!token) {
+      throw new Error('No authentication token available');
     }
-  };
+
+    const response = await fetch(`${API_BASE_URL}/api/profile/profile/image`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Failed to delete profile image' }));
+      throw new Error(errorData.message || 'Failed to delete profile image');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
 
 export const getUserByClerkId = async (getToken) => {
   try {

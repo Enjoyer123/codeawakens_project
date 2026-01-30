@@ -9,7 +9,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 const ExecutionErrorModal = ({ open, error, onClose }) => {
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent 
+      <DialogContent
         className="z-[9999] max-w-md p-0 bg-white border-2 border-red-100"
         hideCloseButton
       >
@@ -44,7 +44,7 @@ const ExecutionErrorModal = ({ open, error, onClose }) => {
             onClick={onClose}
             className="w-full sm:w-auto px-8 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg shadow-sm transition-colors focus:ring-4 focus:ring-red-100"
           >
-            ตกลง, ฉันจะแก้ไข
+            ตกลง, ฉันจะแก้ไขฟห
           </button>
         </div>
       </DialogContent>

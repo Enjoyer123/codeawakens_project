@@ -5,15 +5,15 @@ export function defineFunctionBlocks() {
   Blockly.Blocks["function_definition"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("🔧 ฟังก์ชัน")
+        .appendField("🔧 Function")
         .appendField(new Blockly.FieldTextInput("myFunction"), "FUNCTION_NAME");
-      
+
       this.appendValueInput("ARGUMENT")
         .setCheck("Number")
-        .appendField("รับค่า");
-      
+        .appendField("Inputs");
+
       this.appendStatementInput("FUNCTION_BODY")
-        .appendField("ทำ");
+        .appendField("Do");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(290);
@@ -24,13 +24,13 @@ export function defineFunctionBlocks() {
   Blockly.Blocks["function_call"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("📞 เรียกฟังก์ชัน")
+        .appendField("📞 Call Function")
         .appendField(new Blockly.FieldTextInput("myFunction"), "FUNCTION_NAME");
-      
+
       this.appendValueInput("ARGUMENT")
         .setCheck("Number")
-        .appendField("ส่งค่า");
-      
+        .appendField("Send Input");
+
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(290);
@@ -43,7 +43,7 @@ export function defineFunctionBlocks() {
     init: function () {
       this.appendValueInput("VALUE")
         .setCheck(null)
-        .appendField("↩️ คืนค่า");
+        .appendField("↩️ Return");
       this.setPreviousStatement(true, null);
       this.setColour(290);
       this.setTooltip("คืนค่าจากฟังก์ชัน");

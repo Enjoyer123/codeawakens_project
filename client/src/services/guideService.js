@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+import { API_BASE_URL } from '../config/apiConfig';
 
 // Fetch all guides with pagination
 export const fetchAllGuides = async (getToken, page = 1, limit = 10, search = '') => {
@@ -8,7 +8,7 @@ export const fetchAllGuides = async (getToken, page = 1, limit = 10, search = ''
       page: page.toString(),
       limit: limit.toString(),
     });
-    
+
     if (search.trim()) {
       params.append('search', search);
     }
@@ -134,7 +134,7 @@ export const createGuide = async (getToken, guideData) => {
       } catch (e) {
         errorData = { message: `HTTP ${response.status}: ${response.statusText}` };
       }
-      
+
       console.error('Error response:', errorData);
       throw new Error(errorData.message || `Failed to create guide (${response.status})`);
     }
@@ -238,7 +238,7 @@ export const uploadGuideImage = async (getToken, guideId, imageFile) => {
       } catch (e) {
         errorData = { message: `HTTP ${response.status}: ${response.statusText}` };
       }
-      
+
       console.error('Error response:', errorData);
       throw new Error(errorData.message || `Failed to upload guide image (${response.status})`);
     }

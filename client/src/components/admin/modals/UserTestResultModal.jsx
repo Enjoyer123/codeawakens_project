@@ -62,13 +62,13 @@ const UserTestResultModal = ({ open, onOpenChange, user, testHistory }) => {
                 <DialogHeader>
                     <DialogTitle>Test Results: {user.username || user.email}</DialogTitle>
                 </DialogHeader>
-                
+
                 <Tabs defaultValue="pre" className="flex-1 overflow-hidden flex flex-col">
                     <TabsList>
                         <TabsTrigger value="pre">Pre-Test ({preTests.length})</TabsTrigger>
                         <TabsTrigger value="post">Post-Test ({postTests.length})</TabsTrigger>
                     </TabsList>
-                    
+
                     <ScrollArea className="flex-1 mt-4">
                         <TabsContent value="pre" className="m-0 pr-4">
                             {renderTestTable(preTests)}

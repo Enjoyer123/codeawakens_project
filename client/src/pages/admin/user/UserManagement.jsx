@@ -34,7 +34,7 @@ const UserManagement = () => {
     page: 1,
     limit: 5,
   });
-  
+
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [selectedUserForHistory, setSelectedUserForHistory] = useState(null);
   const [testHistory, setTestHistory] = useState([]);
@@ -115,25 +115,25 @@ const UserManagement = () => {
   }, [userToDelete, getToken, loadUsers]);
 
   const handleResetScore = async (userId, type) => {
-      if(!window.confirm(`Are you sure you want to reset the ${type}-test score for this user?`)) return;
-      try {
-          await resetUserTestScore(getToken, userId, type);
-          alert(`Reset ${type}-test score successfully`);
-          loadUsers();
-      } catch (err) {
-          alert('Failed to reset: ' + err.message);
-      }
+    if (!window.confirm(`Are you sure you want to reset the ${type}-test score for this user?`)) return;
+    try {
+      await resetUserTestScore(getToken, userId, type);
+      alert(`Reset ${type}-test score successfully`);
+      loadUsers();
+    } catch (err) {
+      alert('Failed to reset: ' + err.message);
+    }
   };
 
   const handleViewHistory = async (user) => {
     try {
-        setSelectedUserForHistory(user);
-        const history = await fetchUserTestHistory(getToken, user.user_id || user.id);
-        setTestHistory(history);
-        setHistoryModalOpen(true);
+      setSelectedUserForHistory(user);
+      const history = await fetchUserTestHistory(getToken, user.user_id || user.id);
+      setTestHistory(history);
+      setHistoryModalOpen(true);
     } catch (err) {
-        console.error("Failed to fetch history:", err);
-        alert("Failed to fetch test history");
+      console.error("Failed to fetch history:", err);
+      alert("Failed to fetch test history");
     }
   };
 
@@ -164,7 +164,7 @@ const UserManagement = () => {
         <AdminPageHeader
           title="User Management"
           subtitle="Manage users and their roles"
-          rightContent={<UserButton afterSignOutUrl="/login" />}
+
         />
 
         <ErrorAlert message={error} />
@@ -235,8 +235,8 @@ const UserManagement = () => {
         )}
         deleting={deleting}
       />
-      
-      <UserTestResultModal 
+
+      <UserTestResultModal
         open={historyModalOpen}
         onOpenChange={setHistoryModalOpen}
         user={selectedUserForHistory}

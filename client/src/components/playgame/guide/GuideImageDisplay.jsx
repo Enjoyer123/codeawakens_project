@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+import { API_BASE_URL } from '../../../config/apiConfig';
 
 const GuideImageDisplay = ({ currentGuide, currentGuideIndex, guides }) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);

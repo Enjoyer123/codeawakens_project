@@ -11,6 +11,13 @@ import { Plus } from 'lucide-react';
 import { fetchTestCasesByLevel, createTestCase, updateTestCase, deleteTestCase } from '../../../services/testCaseService';
 import { fetchLevelById } from '../../../services/levelService';
 import TestCaseTable from '@/components/admin/level/TestCaseTable';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 const TestCaseManagement = () => {
   const { getToken } = useAuth();
@@ -184,7 +191,7 @@ const TestCaseManagement = () => {
         <AdminPageHeader
           title={`Test Cases: ${level?.level_name || levelId}`}
           subtitle="จัดการ Test Cases สำหรับการตรวจสอบความถูกต้องของโค้ด"
-          backPath="/admin/levels"
+          backPath={`/admin/levels/${numericLevelId}/edit`}
           onAddClick={() => handleOpenDialog()}
           addButtonText="เพิ่ม Test Case"
         />
@@ -207,160 +214,160 @@ const TestCaseManagement = () => {
         </div>
 
         {/* Create/Edit Dialog */}
-        {dialogOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 overflow-y-auto pt-10 pb-10">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl p-6 space-y-4 my-auto">
-              <h2 className="text-lg font-semibold border-b pb-2">
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
                 {editingTestCase ? 'แก้ไข Test Case' : 'เพิ่ม Test Case ใหม่'}
-              </h2>
+              </DialogTitle>
+            </DialogHeader>
 
-              <ErrorAlert message={saveError} />
+            <ErrorAlert message={saveError} />
 
-              <div className="grid grid-cols-1 gap-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Test Case Name</label>
-                    <input
-                      type="text"
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                      value={formData.test_case_name}
-                      onChange={e => setFormData({ ...formData, test_case_name: e.target.value })}
-                      placeholder="e.g. Simple Sort"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Function Name</label>
-                    <input
-                      type="text"
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm font-mono"
-                      value={formData.function_name}
-                      onChange={e => setFormData({ ...formData, function_name: e.target.value })}
-                      placeholder="e.g. SORT"
-                    />
-                  </div>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Test Case Name</label>
+                  <input
+                    type="text"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                    value={formData.test_case_name}
+                    onChange={e => setFormData({ ...formData, test_case_name: e.target.value })}
+                    placeholder="e.g. Simple Sort"
+                  />
                 </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Input Params (JSON)
-                    </label>
-                    <textarea
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm font-mono h-[120px]"
-                      value={formData.input_params}
-                      onChange={e => setFormData({ ...formData, input_params: e.target.value })}
-                      placeholder='{"arr": [3, 1, 2]}'
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Expected Output
-                    </label>
-                    {formData.comparison_type === 'boolean_equals' ? (
-                      <select
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                        value={formData.expected_output === 'true' || formData.expected_output === true ? 'true' : 'false'}
-                        onChange={(e) => setFormData({ ...formData, expected_output: e.target.value })}
-                      >
-                        <option value="true">True</option>
-                        <option value="false">False</option>
-                      </select>
-                    ) : formData.comparison_type === 'number_equals' ? (
-                      <input
-                        type="number"
-                        step="any"
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                        value={formData.expected_output}
-                        onChange={(e) => setFormData({ ...formData, expected_output: e.target.value })}
-                        placeholder="e.g. 10.5"
-                      />
-                    ) : (
-                      <textarea
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm font-mono h-[120px]"
-                        value={typeof formData.expected_output === 'string' ? formData.expected_output : JSON.stringify(formData.expected_output, null, 2)}
-                        onChange={(e) => setFormData({ ...formData, expected_output: e.target.value })}
-                        placeholder='[1, 2, 3]'
-                      />
-                    )}
-                    {formData.comparison_type !== 'boolean_equals' && formData.comparison_type !== 'number_equals' && (
-                      <p className="text-xs text-gray-500 mt-1">Accepts valid JSON format (e.g. [1, 2] or 40.5)</p>
-                    )}
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Function Name</label>
+                  <input
+                    type="text"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm font-mono"
+                    value={formData.function_name}
+                    onChange={e => setFormData({ ...formData, function_name: e.target.value })}
+                    placeholder="e.g. SORT"
+                  />
                 </div>
+              </div>
 
-                <div className="grid grid-cols-3 gap-4 items-end">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Comparison Type</label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Input Params (JSON)
+                  </label>
+                  <textarea
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm font-mono h-[120px]"
+                    value={formData.input_params}
+                    onChange={e => setFormData({ ...formData, input_params: e.target.value })}
+                    placeholder='{"arr": [3, 1, 2]}'
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Expected Output
+                  </label>
+                  {formData.comparison_type === 'boolean_equals' ? (
                     <select
                       className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                      value={formData.comparison_type}
-                      onChange={(e) => {
-                        const newType = e.target.value;
-                        let newOutput = formData.expected_output;
-
-                        // Auto-reset expected output based on target type
-                        if (newType === 'boolean_equals') {
-                          newOutput = 'true';
-                        } else if (newType === 'number_equals') {
-                          // Try to parse existing as number, else reset to 0
-                          const num = parseFloat(newOutput);
-                          newOutput = isNaN(num) ? '0' : String(num);
-                        } else if (newType === 'array_equals') {
-                          // Switching to Array Equals -> Ensure it looks like an array
-                          if (!newOutput || newOutput === 'true' || newOutput === 'false') {
-                            newOutput = '[]';
-                          } else if (!newOutput.trim().startsWith('[')) {
-                            // Wrap scalar (like '0' or '10.5') in array
-                            newOutput = `[${newOutput}]`;
-                          }
-                        } else {
-                          // Switching to Exact Match (JSON) -> 0 or scalars are fine
-                          if (!newOutput || newOutput === 'true' || newOutput === 'false') newOutput = '{}';
-                        }
-
-                        setFormData({ ...formData, comparison_type: newType, expected_output: newOutput });
-                      }}
+                      value={formData.expected_output === 'true' || formData.expected_output === true ? 'true' : 'false'}
+                      onChange={(e) => setFormData({ ...formData, expected_output: e.target.value })}
                     >
-                      <option value="exact">Exact Match (JSON)</option>
-                      <option value="array_equals">Array Equals (Order insensitive)</option>
-                      <option value="number_equals">Number Equals</option>
-                      <option value="boolean_equals">Boolean Equals</option>
+                      <option value="true">True</option>
+                      <option value="false">False</option>
                     </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Display Order</label>
+                  ) : formData.comparison_type === 'number_equals' ? (
                     <input
                       type="number"
+                      step="any"
                       className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                      value={formData.display_order}
-                      onChange={e => setFormData({ ...formData, display_order: e.target.value })}
+                      value={formData.expected_output}
+                      onChange={(e) => setFormData({ ...formData, expected_output: e.target.value })}
+                      placeholder="e.g. 10.5"
                     />
-                  </div>
-                  <div className="pb-2">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formData.is_primary}
-                        onChange={e => setFormData({ ...formData, is_primary: e.target.checked })}
-                      />
-                      <span className="text-sm font-medium">Primary Test Case</span>
-                    </label>
-                  </div>
+                  ) : (
+                    <textarea
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm font-mono h-[120px]"
+                      value={typeof formData.expected_output === 'string' ? formData.expected_output : JSON.stringify(formData.expected_output, null, 2)}
+                      onChange={(e) => setFormData({ ...formData, expected_output: e.target.value })}
+                      placeholder='[1, 2, 3]'
+                    />
+                  )}
+                  {formData.comparison_type !== 'boolean_equals' && formData.comparison_type !== 'number_equals' && (
+                    <p className="text-xs text-gray-500 mt-1">Accepts valid JSON format (e.g. [1, 2] or 40.5)</p>
+                  )}
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-4 border-t mt-2">
-                <Button variant="outline" onClick={handleCloseDialog}>
-                  ยกเลิก
-                </Button>
-                <Button onClick={handleSave}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  บันทึก
-                </Button>
+              <div className="grid grid-cols-3 gap-4 items-end">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Comparison Type</label>
+                  <select
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                    value={formData.comparison_type}
+                    onChange={(e) => {
+                      const newType = e.target.value;
+                      let newOutput = formData.expected_output;
+
+                      // Auto-reset expected output based on target type
+                      if (newType === 'boolean_equals') {
+                        newOutput = 'true';
+                      } else if (newType === 'number_equals') {
+                        // Try to parse existing as number, else reset to 0
+                        const num = parseFloat(newOutput);
+                        newOutput = isNaN(num) ? '0' : String(num);
+                      } else if (newType === 'array_equals') {
+                        // Switching to Array Equals -> Ensure it looks like an array
+                        if (!newOutput || newOutput === 'true' || newOutput === 'false') {
+                          newOutput = '[]';
+                        } else if (!newOutput.trim().startsWith('[')) {
+                          // Wrap scalar (like '0' or '10.5') in array
+                          newOutput = `[${newOutput}]`;
+                        }
+                      } else {
+                        // Switching to Exact Match (JSON) -> 0 or scalars are fine
+                        if (!newOutput || newOutput === 'true' || newOutput === 'false') newOutput = '{}';
+                      }
+
+                      setFormData({ ...formData, comparison_type: newType, expected_output: newOutput });
+                    }}
+                  >
+                    <option value="exact">Exact Match (JSON)</option>
+                    <option value="array_equals">Array Equals (Order insensitive)</option>
+                    <option value="number_equals">Number Equals</option>
+                    <option value="boolean_equals">Boolean Equals</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Display Order</label>
+                  <input
+                    type="number"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                    value={formData.display_order}
+                    onChange={e => setFormData({ ...formData, display_order: e.target.value })}
+                  />
+                </div>
+                <div className="pb-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.is_primary}
+                      onChange={e => setFormData({ ...formData, is_primary: e.target.checked })}
+                    />
+                    <span className="text-sm font-medium">Primary Test Case</span>
+                  </label>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+
+            <DialogFooter>
+              <Button variant="outline" onClick={handleCloseDialog}>
+                ยกเลิก
+              </Button>
+              <Button onClick={handleSave}>
+                <Plus className="h-4 w-4 mr-2" />
+                บันทึก
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <DeleteConfirmDialog
           open={deleteDialogOpen}

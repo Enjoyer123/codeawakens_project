@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+import { API_BASE_URL } from '../config/apiConfig';
 
 // Fetch all levels with pagination
 export const fetchAllLevels = async (getToken, page = 1, limit = 10, search = '') => {
@@ -8,7 +8,7 @@ export const fetchAllLevels = async (getToken, page = 1, limit = 10, search = ''
       page: page.toString(),
       limit: limit.toString(),
     });
-    
+
     if (search.trim()) {
       params.append('search', search);
     }

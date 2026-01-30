@@ -1,290 +1,154 @@
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useProfileTab } from './hooks/useProfileTab';
+import { API_BASE_URL } from '../../../../config/apiConfig';
 
-const ProfileTab = ({ 
-    userDetails, 
-    setUserDetails, 
-    allowEdit, 
-    onUpdateSuccess, 
-    getToken,
-    selectedReward,
-    setSelectedReward
+const ProfileTab = ({
+    userDetails,
+    setUserDetails,
+    allowEdit,
+    onUpdateSuccess,
+    getToken
 }) => {
-  const {
-    isEditing,
-    usernameInput,
-    setUsernameInput,
-    usernameError,
-    usernameSuccess,
-    savingUsername,
-    uploadingImage,
-    imageError,
-    imageSuccess,
-    fileInputRef,
-    toggleEditMode,
-    handleUsernameUpdate,
-    handleImageUpload,
-    handleDeleteImage
-  } = useProfileTab({ userDetails, setUserDetails, getToken, onUpdateSuccess });
+    const {
+        isEditing,
+        usernameInput,
+        setUsernameInput,
+        usernameError,
+        usernameSuccess,
+        savingUsername,
+        uploadingImage,
+        imageError,
+        imageSuccess,
+        fileInputRef,
+        toggleEditMode,
+        handleUsernameUpdate,
+        handleImageUpload,
+        handleDeleteImage
+    } = useProfileTab({ userDetails, setUserDetails, getToken, onUpdateSuccess });
 
-  return (
-    <div className="mt-0 animate-in fade-in zoom-in-95 duration-200 flex flex-col gap-6">
-      {allowEdit && (
-        <div className="flex justify-end">
-           {!isEditing ? (
-             <Button onClick={toggleEditMode} variant="outline" size="sm" className="gap-2">
-               <span>✏️</span> Edit Profile
-             </Button>
-           ) : (
-             <Button onClick={toggleEditMode} variant="ghost" size="sm" className="text-red-500 hover:text-red-600 hover:bg-red-50">
-               Cancel Editing
-             </Button>
-           )}
-        </div>
-      )}
+    return (
+        <div className="h-full flex flex-col items-center gap-4 py-2 relative">
+            {/* Edit Trigger - Float top right */}
+            {allowEdit && (
+                <div className="absolute top-0 right-0 z-10">
+                    {!isEditing ? (
+                        <Button onClick={toggleEditMode} variant="ghost" size="icon" className="w-8 h-8 rounded-full bg-white/50 hover:bg-white text-slate-600">
+                            <span>✏️</span>
+                        </Button>
+                    ) : (
+                        <Button onClick={toggleEditMode} variant="ghost" size="xs" className="text-red-500 hover:text-red-600 bg-white/80 text-[10px]">
+                            Cancel
+                        </Button>
+                    )}
+                </div>
+            )}
 
-      {/* Top Row: Profile Info & Inventory */}
-      <div className="flex flex-col lg:flex-row gap-8">
-        
-        {/* Left Panel - Character Visuals & Stats (merged) */}
-        <div className="flex-1 flex flex-col md:flex-row gap-6">
-            {/* Profile Picture Frame */}
-            <div className="relative group mx-auto md:mx-0 w-fit shrink-0">
-                <div className={`relative w-48 h-48 bg-slate-100 rounded-xl overflow-hidden shadow-sm transition-all ${isEditing ? 'ring-4 ring-blue-100' : ''}`}>
-                {userDetails.user.profile_image || userDetails.user.profileImageUrl ? (
-                    <img
-                    src={
-                        (userDetails.user.profile_image || userDetails.user.profileImageUrl).startsWith('http')
-                        ? (userDetails.user.profile_image || userDetails.user.profileImageUrl)
-                        : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'}${userDetails.user.profile_image || userDetails.user.profileImageUrl}`
-                    }
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                    />
-                ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-slate-100">
-                    <span className="text-slate-400 text-5xl font-light">
-                        {userDetails.user.username?.[0] || userDetails.user.email?.[0] || 'U'}
-                    </span>
-                    </div>
-                )}
+            {/* Profile Picture */}
+            <div className="relative group">
+                <div className={`relative w-40 h-40 bg-slate-100 rounded-xl overflow-hidden shadow-md border-4 border-[#F5DEB3] ${isEditing ? 'ring-4 ring-blue-200' : ''}`}>
+                    {userDetails.user.profile_image || userDetails.user.profileImageUrl ? (
+                        <img
+                            src={
+                                (userDetails.user.profile_image || userDetails.user.profileImageUrl).startsWith('http')
+                                    ? (userDetails.user.profile_image || userDetails.user.profileImageUrl)
+                                    : `${API_BASE_URL}${userDetails.user.profile_image || userDetails.user.profileImageUrl}`
+                            }
+                            alt="Profile"
+                            className="w-full h-full object-cover"
+                        />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-slate-200">
+                            <span className="text-slate-400 text-5xl font-bold">
+                                {userDetails.user.username?.[0] || userDetails.user.email?.[0] || 'U'}
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 {uploadingImage && (
-                <div className="absolute inset-0 flex items-center justify-center z-20 bg-white/50 backdrop-blur-sm rounded-xl">
-                    <span className="text-slate-800 font-medium animate-pulse">Summoning...</span>
-                </div>
+                    <div className="absolute inset-0 flex items-center justify-center z-20 bg-white/50 backdrop-blur-sm rounded-xl">
+                        <span className="text-slate-800 font-bold text-xs animate-pulse">Summoning...</span>
+                    </div>
                 )}
 
-                {/* Upload Controls - Only Visible in Edit Mode */}
+
+                {/* Upload Controls */}
                 {allowEdit && isEditing && (
-                <div className="mt-3 space-y-2 w-48 animate-in slide-in-from-top-2 fade-in duration-300">
-                    <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                    disabled={uploadingImage}
-                    />
-                    <Button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 text-xs h-8"
-                    disabled={uploadingImage}
-                    size="sm"
-                    variant="outline"
-                    >
-                    {uploadingImage ? 'Uploading...' : 'Change Avatar'}
-                    </Button>
-
-                    {(userDetails.user.profile_image || userDetails.user.profileImageUrl) && 
-                    !(userDetails.user.profile_image || userDetails.user.profileImageUrl).includes('clerk') && (
-                    <Button
-                        onClick={handleDeleteImage}
-                        variant="ghost"
-                        className="w-full text-red-500 hover:text-red-600 hover:bg-red-50 text-xs h-8"
-                        disabled={uploadingImage}
-                        size="sm"
-                    >
-                        Remove Avatar
-                    </Button>
-                    )}
-
-                    {imageError && (
-                    <p className="text-xs text-red-500 text-center">{imageError}</p>
-                    )}
-                    {imageSuccess && (
-                    <p className="text-xs text-green-500 text-center">{imageSuccess}</p>
-                    )}
-                </div>
-                )}
-            </div>
-
-            {/* Character Details & Stats */}
-            <div className="flex-1 flex flex-col justify-start pt-2 gap-4">
-                <div>
-                    <h3 className="text-2xl font-bold text-slate-800 uppercase tracking-tight">
-                    {userDetails.user.first_name && userDetails.user.last_name
-                        ? `${userDetails.user.first_name} ${userDetails.user.last_name}`
-                        : userDetails.user.username || userDetails.user.email}
-                    </h3>
-                    
-                    {/* Edit Username */}
-                    {allowEdit && (
-                    <div className="mt-2">
-                        {isEditing ? (
-                        <form onSubmit={handleUsernameUpdate} className="space-y-2 animate-in fade-in duration-300 max-w-xs">
-                            <div className="flex gap-2">
-                            <Input
-                                type="text"
-                                value={usernameInput}
-                                onChange={(e) => setUsernameInput(e.target.value)}
-                                placeholder="New Alias"
-                                className="bg-white border-slate-200 text-slate-800 focus:ring-slate-400 h-8 text-sm"
-                                disabled={savingUsername}
-                            />
-                            <Button
-                                type="submit"
-                                disabled={savingUsername}
-                                size="sm"
-                                className="h-8 px-3 bg-slate-800 text-white hover:bg-slate-700"
-                            >
-                                {savingUsername ? '...' : 'Save'}
-                            </Button>
-                            </div>
-                            {usernameError && (
-                            <p className="text-xs text-red-500">{usernameError}</p>
-                            )}
-                            {usernameSuccess && (
-                            <p className="text-xs text-green-500">{usernameSuccess}</p>
-                            )}
-                        </form>
-                        ) : null}
-                    </div>
-                    )}
-                </div>
-
-                {/* Stats List */}
-                <div className="space-y-3 mt-2">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 flex items-center justify-center bg-slate-800 rounded text-yellow-400 text-lg shadow-sm">
-                            ⭐
-                        </div>
-                        <span className="font-bold text-lg text-slate-700">
-                             {userDetails.user_progress?.reduce((sum, p) => sum + (p.stars_earned || 0), 0) || 0}
-                        </span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 flex items-center justify-center bg-slate-800 rounded text-blue-400 text-lg shadow-sm">
-                             🏆
-                        </div>
-                        <span className="font-bold text-lg text-slate-700 uppercase">
-                             PASSED {userDetails.user_progress?.filter(p => p.status === 'completed').length || 0}
-                        </span>
-                    </div>
-                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 flex items-center justify-center bg-slate-800 rounded text-purple-400 text-lg shadow-sm">
-                             Rank
-                        </div>
-                         <span className="font-bold text-lg text-slate-700 uppercase">
-                             #{Math.floor(Math.random() * 1000) + 1}
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {/* Right Panel - Inventory Grid */}
-        <div className="flex-1 lg:max-w-[45%]">
-             <div className="bg-slate-100/50 p-4 rounded-xl">
-                 <div className="grid grid-cols-4 gap-2">
-                    {userDetails.user_reward && userDetails.user_reward.slice(0, 12).map((reward, i) => {
-                        const item = reward.reward;
-                        const itemImage = item.frame5 || item.frame1;
-                        const imageUrl = itemImage ? (
-                        itemImage.startsWith('http') ? itemImage : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'}${itemImage}`
-                        ) : null;
-
-                        return (
-                        <div
-                            key={i}
-                            className="aspect-square flex items-center justify-center cursor-help transition-transform hover:scale-105 relative bg-center bg-contain bg-no-repeat bg-slate-200 rounded-sm"
-                            style={{ backgroundImage: "url('/grid-item.png')" }}
-                            title={item.reward_name}
-                            onMouseEnter={() => setSelectedReward(reward)}
+                    <div className="relative mt-2 w-full flex flex-col gap-1 bg-white p-2 rounded shadow-lg">
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="hidden"
+                            disabled={uploadingImage}
+                        />
+                        <Button
+                            onClick={() => fileInputRef.current?.click()}
+                            className="w-full text-[10px] h-6"
+                            disabled={uploadingImage}
+                            size="sm"
+                            variant="outline"
                         >
-                            {imageUrl ? (
-                            <img src={imageUrl} alt={item.reward_name} className="w-4/5 h-4/5 object-contain drop-shadow-md" />
-                            ) : item.reward_type === 'sword' || item.reward_type === 'weapon' ? (
-                            <span className="text-xl drop-shadow-md">⚔️</span>
-                            ) : (
-                            <span className="text-[10px] text-center font-bold text-slate-300 drop-shadow-md px-1 truncate">
-                                {item.reward_name}
-                            </span>
+                            Change
+                        </Button>
+                        {(userDetails.user.profile_image || userDetails.user.profileImageUrl) &&
+                            !(userDetails.user.profile_image || userDetails.user.profileImageUrl).includes('clerk') && (
+                                <Button
+                                    onClick={handleDeleteImage}
+                                    variant="ghost"
+                                    className="w-full text-red-500 text-[10px] h-6"
+                                    disabled={uploadingImage}
+                                    size="sm"
+                                >
+                                    Remove
+                                </Button>
                             )}
-                        </div>
-                        );
-                    })}
-                    {/* Empty Slots Filler (Total 12 slots for 3x4 grid look) */}
-                    {[...Array(Math.max(0, 12 - (userDetails.user_reward?.length || 0)))].map((_, i) => (
-                        <div
-                        key={`empty-${i}`}
-                        className="aspect-square opacity-30 bg-center bg-contain bg-no-repeat grayscale bg-slate-200 rounded-sm"
-                        style={{ backgroundImage: "url('/grid-item.png')" }}
-                        ></div>
-                    ))}
-                </div>
-             </div>
-        </div>
-      </div>
-
-      {/* Bottom Row: Detailed Item View */}
-      <div 
-        className="w-full min-h-[140px] rounded-lg bg-center bg-no-repeat p-6 relative flex items-center"
-        style={{ backgroundImage: "url('/desrciption.png')", backgroundSize: '100% 100%' }}
-      >
-        {selectedReward?.reward ? (
-            (() => {
-            const item = selectedReward.reward;
-            const itemImage = item.frame5 || item.frame1;
-            const imageUrl = itemImage ? (
-                itemImage.startsWith('http') ? itemImage : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'}${itemImage}`
-            ) : null;
-
-            return (
-                <div className="flex gap-6 items-center px-4 w-full h-full">
-                    {/* Item Image Box */}
-                    <div className="w-20 h-20 bg-white border-2 border-slate-200 rounded-lg flex items-center justify-center shrink-0 shadow-sm">
-                        {imageUrl ? (
-                        <img src={imageUrl} alt={item.reward_name} className="w-full h-full object-contain p-2" />
-                        ) : (
-                        <span className="text-3xl">⚔️</span>
-                        )}
+                        {imageError && <p className="text-[10px] text-red-500 leading-tight">{imageError}</p>}
                     </div>
-                    
-                    {/* Text Content */}
-                    <div className="flex-1 text-left">
-                        <div className="font-bold text-slate-800 text-lg uppercase tracking-wide mb-1">
-                            {item.reward_name}
-                        </div>
-                        <div className="text-slate-600 font-medium text-sm leading-relaxed max-w-2xl">
-                             " {item.description || "A mysterious artifact found in the depths."} "
-                        </div>
-                    </div>
-                </div>
-            );
-            })()
-        ) : (
-            <div className="w-full text-center text-slate-400 font-medium italic">
-                Select an item from your inventory to view details
+                )}
+
             </div>
-        )}
-      </div>
-    </div>
-  );
+
+            {/* Name and Stats */}
+            <div className="text-center w-full">
+                {!isEditing ? (
+                    <h3 className="text-xl font-black text-[#5C4033] uppercase tracking-tight truncate px-2">
+                        {userDetails.user.first_name && userDetails.user.last_name
+                            ? `${userDetails.user.first_name} ${userDetails.user.last_name}`
+                            : userDetails.user.username || userDetails.user.email}
+                    </h3>
+                ) : (
+                    <form onSubmit={handleUsernameUpdate} className="flex flex-col items-center gap-1">
+                        <Input
+                            type="text"
+                            value={usernameInput}
+                            onChange={(e) => setUsernameInput(e.target.value)}
+                            placeholder="Name"
+                            className="h-8 text-center bg-white/80"
+                        />
+                        <Button type="submit" size="sm" className="h-6 text-xs w-full">Save</Button>
+                    </form>
+                )}
+
+                <div className="flex flex-col justify-center gap-4 mt-4">
+                    <div className="flex flex-col items-center">
+                        <div className="text-2xl drop-shadow-sm">⭐</div>
+                        <span className="font-bold text-[#5C4033]">
+                            {userDetails.user_progress?.reduce((sum, p) => sum + (p.stars_earned || 0), 0) || 0}
+                        </span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                        <p>Pre-Test Score: {userDetails.user.pre_score}</p>
+                        <p>Post-Test Score: {userDetails.user.post_score}</p>
+                        <p>Skill Level: {userDetails.user.skill_level}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 };
 
-
 export default ProfileTab;
+

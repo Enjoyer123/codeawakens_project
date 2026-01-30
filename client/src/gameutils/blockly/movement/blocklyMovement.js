@@ -4,7 +4,7 @@ import * as Blockly from "blockly/core";
 export function defineMovementBlocks() {
   Blockly.Blocks["move_forward"] = {
     init: function () {
-      this.appendDummyInput().appendField("🔽 เดินไปข้างหน้า");
+      this.appendDummyInput().appendField("🔽 Move Forward");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(160);
@@ -14,7 +14,7 @@ export function defineMovementBlocks() {
 
   Blockly.Blocks["turn_left"] = {
     init: function () {
-      this.appendDummyInput().appendField("↪️ หันซ้าย");
+      this.appendDummyInput().appendField("↪️ Turn Left");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(120);
@@ -24,7 +24,7 @@ export function defineMovementBlocks() {
 
   Blockly.Blocks["turn_right"] = {
     init: function () {
-      this.appendDummyInput().appendField("↩️ หันขวา");
+      this.appendDummyInput().appendField("↩️ Turn Right");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(280);
@@ -34,7 +34,7 @@ export function defineMovementBlocks() {
 
   Blockly.Blocks["hit"] = {
     init: function () {
-      this.appendDummyInput().appendField("⚔️ โจมตี");
+      this.appendDummyInput().appendField("⚔️ Attack");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(0);
@@ -46,7 +46,7 @@ export function defineMovementBlocks() {
     init: function () {
       this.appendValueInput("NODE_ID")
         .setCheck("Number")
-        .appendField("🎯 ไปที่ node");
+        .appendField("🎯 Go to Node");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(160);
@@ -59,7 +59,7 @@ export function defineMovementBlocks() {
     init: function () {
       this.appendValueInput("PATH")
         .setCheck("Array")
-        .appendField("🚶 เดินตาม path");
+        .appendField("🚶 Follow Path");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(160);

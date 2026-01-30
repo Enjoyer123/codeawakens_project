@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+import { API_BASE_URL } from '../config/apiConfig';
 
 // Fetch all patterns with optional level_id filter
 export const fetchAllPatterns = async (getToken, page = 1, limit = 100, levelId = null) => {
@@ -8,7 +8,7 @@ export const fetchAllPatterns = async (getToken, page = 1, limit = 100, levelId 
       page: page.toString(),
       limit: limit.toString(),
     });
-    
+
     if (levelId) {
       params.append('level_id', levelId.toString());
     }

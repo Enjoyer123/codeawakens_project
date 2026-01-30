@@ -2,13 +2,19 @@ import { useAuth } from '@clerk/clerk-react';
 import { Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { fetchUserProfile } from '../../services/profileService';
+import PageLoader from "./Loading/PageLoader";
 import useUserStore from '../../store/useUserStore';
 
 const ProtectedRoute = ({ children, requiredRole = null }) => {
   const { isSignedIn, isLoaded, getToken } = useAuth();
   const { setRole, role } = useUserStore();
-  const [loading, setLoading] = useState(true);
-  
+  // Optimize: If role is already loaded in store, don't start with loading=true
+  const [loading, setLoading] = useState(() => {
+    if (!isLoaded) return true;
+    if (isSignedIn && role === null) return true;
+    return false;
+  });
+
   useEffect(() => {
     const fetchRole = async () => {
       if (!isLoaded) {
@@ -39,15 +45,13 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
 
   // รอให้ Clerk โหลดเสร็จก่อน
   if (!isLoaded) {
-    return null; // ไม่ render อะไรจนกว่า Clerk จะโหลดเสร็จ
+    return <PageLoader message="Authentication..." />;
   }
 
   // ถ้ายังโหลด role อยู่ ให้แสดง loading state แทนที่จะ render children
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Loading...</div>
-      </div>
+      <PageLoader message="Checking permissions..." />
     );
   }
 

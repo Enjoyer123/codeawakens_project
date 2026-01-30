@@ -19,6 +19,13 @@ import ErrorAlert from '@/components/shared/alert/ErrorAlert';
 import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import GuideImageDialog from '../../../components/admin/guide/GuideImageDialog';
 import { getImageUrl } from '@/utils/imageUtils';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { createDeleteErrorMessage } from '@/utils/errorHandler';
 import LevelGuideTable from '@/components/admin/level/LevelGuideTable';
 
@@ -256,7 +263,7 @@ const LevelGuideManagement = () => {
         <AdminPageHeader
           title={`Guides: ${level?.level_name || levelId}`}
           subtitle="จัดการคำแนะนำ (Guides) ของด่านนี้"
-          backPath="/admin/levels"
+          backPath={`/admin/levels/${numericLevelId}/edit`}
           onAddClick={() => handleOpenGuideDialog()}
           addButtonText="เพิ่ม Guide"
         />
@@ -288,62 +295,63 @@ const LevelGuideManagement = () => {
         </div>
 
         {/* Create/Edit Dialog */}
-        {guideDialogOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 space-y-4">
-              <h2 className="text-lg font-semibold">
+        {/* Create/Edit Dialog */}
+        <Dialog open={guideDialogOpen} onOpenChange={setGuideDialogOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>
                 {editingGuide ? 'แก้ไข Guide' : 'เพิ่ม Guide ใหม่'}
-              </h2>
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Title</label>
-                  <input
-                    type="text"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                    value={guideForm.title}
-                    onChange={e => setGuideForm({ ...guideForm, title: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Description</label>
-                  <textarea
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                    rows={3}
-                    value={guideForm.description}
-                    onChange={e => setGuideForm({ ...guideForm, description: e.target.value })}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Display Order</label>
-                    <input
-                      type="number"
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                      value={guideForm.display_order}
-                      onChange={e => setGuideForm({ ...guideForm, display_order: e.target.value })}
-                    />
-                  </div>
-                  <div className="flex items-center gap-2 mt-6">
-                    <input
-                      id="guide-active"
-                      type="checkbox"
-                      checked={guideForm.is_active}
-                      onChange={e => setGuideForm({ ...guideForm, is_active: e.target.checked })}
-                    />
-                    <label htmlFor="guide-active" className="text-sm">Active</label>
-                  </div>
-                </div>
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium mb-1">Title</label>
+                <input
+                  type="text"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                  value={guideForm.title}
+                  onChange={e => setGuideForm({ ...guideForm, title: e.target.value })}
+                />
               </div>
-              <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={handleCloseGuideDialog}>ยกเลิก</Button>
-                <Button onClick={handleSaveGuide}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  บันทึก
-                </Button>
+              <div>
+                <label className="block text-sm font-medium mb-1">Description</label>
+                <textarea
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                  rows={3}
+                  value={guideForm.description}
+                  onChange={e => setGuideForm({ ...guideForm, description: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Display Order</label>
+                  <input
+                    type="number"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                    value={guideForm.display_order}
+                    onChange={e => setGuideForm({ ...guideForm, display_order: e.target.value })}
+                  />
+                </div>
+                <div className="flex items-center gap-2 mt-6">
+                  <input
+                    id="guide-active"
+                    type="checkbox"
+                    checked={guideForm.is_active}
+                    onChange={e => setGuideForm({ ...guideForm, is_active: e.target.checked })}
+                  />
+                  <label htmlFor="guide-active" className="text-sm">Active</label>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+            <DialogFooter>
+              <Button variant="outline" onClick={handleCloseGuideDialog}>ยกเลิก</Button>
+              <Button onClick={handleSaveGuide}>
+                <Plus className="h-4 w-4 mr-2" />
+                บันทึก
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <DeleteConfirmDialog
           open={deleteDialogOpen}

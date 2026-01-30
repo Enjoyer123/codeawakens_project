@@ -24,7 +24,7 @@ import {
   resetPlayerHp,
 } from '../../../gameutils/shared/game';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+import { API_BASE_URL } from '../../../config/apiConfig';
 
 /**
  * Hook for loading level data

@@ -1,3 +1,5 @@
+import { API_BASE_URL } from '../config/apiConfig';
+
 /**
  * Get full image URL from path
  * @param {string} pathFile - Image path
@@ -5,8 +7,7 @@
  */
 export const getImageUrl = (pathFile) => {
   if (!pathFile) return null;
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
-  return `${baseUrl}${pathFile}`;
+  return `${API_BASE_URL}${pathFile}`;
 };
 
 /**

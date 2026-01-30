@@ -7,7 +7,7 @@ export function defineEmeiVisualBlocks() {
         init: function () {
             this.appendValueInput("NODE")
                 .setCheck("Number")
-                .appendField("🌋 ไฮไลท์ยอดเขา");
+                .appendField("🌋 Highlight Peak");
             this.setPreviousStatement(true, null);
             this.setNextStatement(true, null);
             this.setColour(200);
@@ -20,13 +20,13 @@ export function defineEmeiVisualBlocks() {
         init: function () {
             this.appendValueInput("U")
                 .setCheck("Number")
-                .appendField("🚠 ไฮไลท์กระเช้าจาก");
+                .appendField("🚠 Highlight Cable Car from");
             this.appendValueInput("V")
                 .setCheck("Number")
-                .appendField("ไป");
+                .appendField("to");
             this.appendValueInput("CAPACITY")
                 .setCheck("Number")
-                .appendField("ความจุ");
+                .appendField("Capacity");
             this.setInputsInline(true);
             this.setPreviousStatement(true, null);
             this.setNextStatement(true, null);
@@ -40,10 +40,10 @@ export function defineEmeiVisualBlocks() {
         init: function () {
             this.appendValueInput("BOTTLENECK")
                 .setCheck("Number")
-                .appendField("🏆 แสดงผลลัพธ์: คอขวด");
+                .appendField("🏆 Show Result: Bottleneck");
             this.appendValueInput("ROUNDS")
                 .setCheck("Number")
-                .appendField("จำนวนรอบ");
+                .appendField("Rounds");
             this.setInputsInline(true);
             this.setPreviousStatement(true, null);
             this.setNextStatement(true, null);
@@ -57,13 +57,13 @@ export function defineEmeiVisualBlocks() {
         init: function () {
             this.appendValueInput("PARENT")
                 .setCheck("Array")
-                .appendField("🚩 ไฮไลท์เส้นทางคำตอบจาก parent");
+                .appendField("🚩 Highlight Path from Parent");
             this.appendValueInput("END")
                 .setCheck("Number")
-                .appendField("ไปยัง node");
+                .appendField("to Node");
             this.appendValueInput("BOTTLENECK")
                 .setCheck("Number")
-                .appendField("ด้วยความจุ");
+                .appendField("with Capacity");
             this.setInputsInline(true);
             this.setPreviousStatement(true, null);
             this.setNextStatement(true, null);

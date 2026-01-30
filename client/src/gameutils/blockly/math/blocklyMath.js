@@ -35,13 +35,13 @@ export function defineMathBlocks() {
   Blockly.Blocks["math_max"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("📈 ค่าสูงสุด");
+        .appendField("📈 Max");
       this.appendValueInput("A")
         .setCheck("Number")
-        .appendField("ระหว่าง");
+        .appendField("between");
       this.appendValueInput("B")
         .setCheck("Number")
-        .appendField("กับ");
+        .appendField("and");
       this.setOutput(true, "Number");
       this.setColour(230);
       this.setTooltip("หาค่าสูงสุดระหว่าง 2 จำนวน");
@@ -51,13 +51,13 @@ export function defineMathBlocks() {
   Blockly.Blocks["math_min"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("📉 ค่าต่ำสุด");
+        .appendField("📉 Min");
       this.appendValueInput("A")
         .setCheck("Number")
-        .appendField("ระหว่าง");
+        .appendField("between");
       this.appendValueInput("B")
         .setCheck("Number")
-        .appendField("กับ");
+        .appendField("and");
       this.setOutput(true, "Number");
       this.setColour(230);
       this.setTooltip("หาค่าต่ำสุดระหว่าง 2 จำนวน");
@@ -69,10 +69,10 @@ export function defineMathBlocks() {
     init: function () {
       this.appendDummyInput()
         .appendField(new Blockly.FieldDropdown([
-          ["ปัดขึ้น (CEIL)", "CEIL"],
-          ["ปัดลง (FLOOR)", "FLOOR"],
-          ["ปัดเศษ (ROUND)", "ROUND"],
-          ["รากที่สอง (ROOT)", "ROOT"]
+          ["Ceil", "CEIL"],
+          ["Floor", "FLOOR"],
+          ["Round", "ROUND"],
+          ["Square Root", "ROOT"]
         ]), "OP");
       this.appendValueInput("NUM")
         .setCheck("Number");
@@ -87,15 +87,15 @@ export function defineMathBlocks() {
     init: function () {
       this.appendDummyInput()
         .appendField(new Blockly.FieldDropdown([
-          ["📈 ค่าสูงสุด", "MAX"],
-          ["📉 ค่าต่ำสุด", "MIN"]
+          ["📈 Max", "MAX"],
+          ["📉 Min", "MIN"]
         ]), "OP");
       this.appendValueInput("A")
         .setCheck("Number")
-        .appendField("ระหว่าง");
+        .appendField("between");
       this.appendValueInput("B")
         .setCheck("Number")
-        .appendField("กับ");
+        .appendField("and");
       this.setOutput(true, "Number");
       this.setColour(230);
       this.setTooltip("หาค่าสูงสุดหรือต่ำสุดระหว่าง 2 จำนวน");

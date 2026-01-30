@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+import { API_BASE_URL } from '../../../../config/apiConfig';
 
 export const usePhaserGameInit = ({
   gameRef,
@@ -44,12 +44,12 @@ export const usePhaserGameInit = ({
     if (!phaserLoaded || !gameRef.current) {
       return;
     }
-    
+
     // Check if game already exists
     if (phaserGameRef.current) {
       return;
     }
-    
+
     const initializePhaser = () => {
       if (typeof window !== 'undefined' && window.Phaser && window.Phaser.Game) {
         if (gameRef.current) {
@@ -57,22 +57,22 @@ export const usePhaserGameInit = ({
             constructor() {
               super({ key: 'EditorScene' });
             }
-            
+
             create() {
               // Store graphics ref here to ensure it's available
-               const phaserGraphics = this.add.graphics();
-               phaserGraphicsRef.current = phaserGraphics;
-               
-               // Load initial background
-               const loadBackground = () => {
+              const phaserGraphics = this.add.graphics();
+              phaserGraphicsRef.current = phaserGraphics;
+
+              // Load initial background
+              const loadBackground = () => {
                 const currentBgUrl = backgroundImageUrlRef.current;
-                
+
                 if (currentBgUrl) {
                   let imageUrl = currentBgUrl;
                   if (!imageUrl.startsWith('data:') && !imageUrl.startsWith('http')) {
                     imageUrl = `${API_BASE_URL}${currentBgUrl}`;
                   }
-                  
+
                   // For data URLs
                   if (imageUrl.startsWith('data:')) {
                     const img = new Image();
@@ -84,8 +84,8 @@ export const usePhaserGameInit = ({
                         }
                         this.textures.addImage('background', img);
                         const newSprite = this.add.image(
-                          this.scale.width / 2, 
-                          this.scale.height / 2, 
+                          this.scale.width / 2,
+                          this.scale.height / 2,
                           'background'
                         );
                         backgroundSpriteRef.current = newSprite;
@@ -108,8 +108,8 @@ export const usePhaserGameInit = ({
                     this.load.image('background', imageUrl);
                     this.load.once('filecomplete-image-background', () => {
                       const newSprite = this.add.image(
-                        this.scale.width / 2, 
-                        this.scale.height / 2, 
+                        this.scale.width / 2,
+                        this.scale.height / 2,
                         'background'
                       );
                       backgroundSpriteRef.current = newSprite;
@@ -128,29 +128,29 @@ export const usePhaserGameInit = ({
                     this.load.start();
                   }
                 } else {
-                   this.cameras.main.setBackgroundColor(0x000000);
-                   redrawPhaser();
+                  this.cameras.main.setBackgroundColor(0x000000);
+                  redrawPhaser();
                 }
               };
-               
+
               if (createSceneCallback) {
-                  createSceneCallback(this);
+                createSceneCallback(this);
               }
-              
+
               // Load background after a short delay
               setTimeout(() => {
                 loadBackground();
               }, 200);
-              
+
               // Initial draw
               setTimeout(() => {
                 redrawPhaser();
               }, 100);
             }
-            
+
             update() {
               if (updateSceneCallback) {
-                  updateSceneCallback(this);
+                updateSceneCallback(this);
               }
             }
           }
@@ -205,31 +205,31 @@ export const usePhaserGameInit = ({
     if (!phaserLoaded || !game || !game.scene || game.scene.scenes.length === 0) {
       return;
     }
-    
+
     const scene = game.scene.scenes[0];
     const currentGraphics = phaserGraphicsRef.current;
     const currentSprite = backgroundSpriteRef.current;
     const currentBgUrl = backgroundImageUrl; // Use the prop value here
-    
+
     if (scene && currentBgUrl) {
       let imageUrl = currentBgUrl;
       if (!imageUrl.startsWith('data:') && !imageUrl.startsWith('http')) {
         imageUrl = `${API_BASE_URL}${currentBgUrl}`;
       }
-      
+
       // Remove old sprite FIRST before removing texture
       if (currentSprite) {
         currentSprite.destroy();
         backgroundSpriteRef.current = null;
       }
-      
+
       // Wait a frame to ensure sprite is destroyed
       setTimeout(() => {
         // Remove old texture after sprite is destroyed
         if (scene.textures.exists('background')) {
           scene.textures.remove('background');
         }
-        
+
         // For data URLs, use Image element
         if (imageUrl.startsWith('data:')) {
           const img = new Image();
@@ -242,8 +242,8 @@ export const usePhaserGameInit = ({
               }
               scene.textures.addImage('background', img);
               const newSprite = scene.add.image(
-                scene.scale.width / 2, 
-                scene.scale.height / 2, 
+                scene.scale.width / 2,
+                scene.scale.height / 2,
                 'background'
               );
               backgroundSpriteRef.current = newSprite;
@@ -268,8 +268,8 @@ export const usePhaserGameInit = ({
           scene.load.image('background', imageUrl);
           scene.load.once('filecomplete-image-background', () => {
             const newSprite = scene.add.image(
-              scene.scale.width / 2, 
-              scene.scale.height / 2, 
+              scene.scale.width / 2,
+              scene.scale.height / 2,
               'background'
             );
             backgroundSpriteRef.current = newSprite;

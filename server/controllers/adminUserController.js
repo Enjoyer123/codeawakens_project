@@ -127,6 +127,9 @@ exports.getUserDetails = async (req, res) => {
         is_active: true,
         created_at: true,
         updated_at: true,
+        pre_score: true,
+        post_score: true,
+        skill_level: true,
       },
     });
 
@@ -208,73 +211,73 @@ exports.resetUserTestScore = async (req, res) => {
     const targetTestType = type === 'pre' ? 'PreTest' : 'PostTest';
 
     await prisma.$transaction(async (prisma) => {
-        // 1. Reset Score
-        await prisma.user.update({
-            where: { user_id: parseInt(userId) },
-            data: updateData
-        });
+      // 1. Reset Score
+      await prisma.user.update({
+        where: { user_id: parseInt(userId) },
+        data: updateData
+      });
 
-        // 2. Delete UserTest history for this test type
-        await prisma.userTest.deleteMany({
-            where: {
-                user_id: parseInt(userId),
-                test: {
-                    test_type: targetTestType
-                }
-            }
-        });
+      // 2. Delete UserTest history for this test type
+      await prisma.userTest.deleteMany({
+        where: {
+          user_id: parseInt(userId),
+          test: {
+            test_type: targetTestType
+          }
+        }
+      });
     });
 
     res.json({
-       message: `Reset ${type}-test score and history successfully`
+      message: `Reset ${type}-test score and history successfully`
     });
 
   } catch (error) {
-      console.error("Error resetting score:", error);
-      res.status(500).json({ message: "Error resetting score" });
+    console.error("Error resetting score:", error);
+    res.status(500).json({ message: "Error resetting score" });
   }
 };
 
 exports.getUserTestHistory = async (req, res) => {
-    try {
-        const { userId } = req.params;
+  try {
+    const { userId } = req.params;
 
-        // Fetch all test answers for this user
-        const userTests = await prisma.userTest.findMany({
-            where: { user_id: parseInt(userId) },
-            include: {
-                test: {
-                   include: {
-                       choices: true // To find correct answer
-                   }
-                },
-                choice: true
-            },
-            orderBy: {
-                answered_at: 'desc'
-            }
-        });
+    // Fetch all test answers for this user
+    const userTests = await prisma.userTest.findMany({
+      where: { user_id: parseInt(userId) },
+      include: {
+        test: {
+          include: {
+            choices: true // To find correct answer
+          }
+        },
+        choice: true
+      },
+      orderBy: {
+        answered_at: 'desc'
+      }
+    });
 
-        // Group by test type? Or just send flat list and let frontend handle?
-        // Let's send a structured response.
-        
-        const history = userTests.map(record => {
-            const correctAnswer = record.test.choices.find(c => c.is_correct);
-            return {
-                test_id: record.test_id,
-                test_type: record.test.test_type,
-                question: record.test.question,
-                user_choice: record.choice ? record.choice.choice_text : "No Answer",
-                is_correct: record.is_correct,
-                correct_choice: correctAnswer ? correctAnswer.choice_text : "Unknown",
-                answered_at: record.answered_at
-            };
-        });
+    // Group by test type? Or just send flat list and let frontend handle?
+    // Let's send a structured response.
 
-        res.json(history);
+    const history = userTests.map(record => {
+      const correctAnswer = record.test.choices.find(c => c.is_correct);
+      return {
+        test_id: record.test_id,
+        test_type: record.test.test_type,
+        question: record.test.question,
+        user_choice: record.choice ? record.choice.choice_text : "No Answer",
+        is_correct: record.is_correct,
+        correct_choice: correctAnswer ? correctAnswer.choice_text : "Unknown",
+        answered_at: record.answered_at
+      };
+    });
 
-    } catch (error) {
-        console.error("Error fetching test history:", error);
-        res.status(500).json({ message: "Error fetching test history" });
-    }
+    res.json(history);
+
+  } catch (error) {
+    console.error("Error fetching test history:", error);
+    res.status(500).json({ message: "Error fetching test history" });
+  }
 };

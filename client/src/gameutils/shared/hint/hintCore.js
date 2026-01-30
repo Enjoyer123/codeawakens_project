@@ -45,7 +45,7 @@ export function getNextBlockHint(workspace, goodPatterns) {
   if (!currentXml) {
     console.log("❌ No XML found, returning loading message");
     return {
-      hint: "กำลังโหลด workspace...",
+      hint: "Loading workspace...",
       showHint: false,
       currentStep: 0,
       totalSteps: 0,

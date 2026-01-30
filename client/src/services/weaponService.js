@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+import { API_BASE_URL } from '../config/apiConfig';
 
 // Fetch all weapons with pagination
 export const fetchAllWeapons = async (getToken, page = 1, limit = 10, search = '') => {
@@ -8,7 +8,7 @@ export const fetchAllWeapons = async (getToken, page = 1, limit = 10, search = '
       page: page.toString(),
       limit: limit.toString(),
     });
-    
+
     if (search.trim()) {
       params.append('search', search);
     }
@@ -185,7 +185,7 @@ export const addWeaponImage = async (getToken, weaponId, imageFile, imageData) =
       } catch (e) {
         errorData = { message: `HTTP ${response.status}: ${response.statusText}` };
       }
-      
+
       console.error('Error response:', errorData);
       throw new Error(errorData.message || `Failed to add weapon image (${response.status})`);
     }
@@ -246,7 +246,7 @@ export const updateWeaponImage = async (getToken, imageId, imageFile, imageData)
       } catch (e) {
         errorData = { message: `HTTP ${response.status}: ${response.statusText}` };
       }
-      
+
       console.error('Error response:', errorData);
       throw new Error(errorData.message || `Failed to update weapon image (${response.status})`);
     }

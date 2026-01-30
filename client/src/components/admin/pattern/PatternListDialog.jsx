@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Plus, Trash2, Loader, Edit } from 'lucide-react';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
+import ContentLoader from '@/components/shared/Loading/ContentLoader';
 
 const PatternListDialog = ({ open, onOpenChange, levelId, levelName }) => {
   const { getToken } = useAuth();
@@ -95,9 +96,7 @@ const PatternListDialog = ({ open, onOpenChange, levelId, levelName }) => {
           )}
 
           {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader className="h-8 w-8 animate-spin" />
-            </div>
+            <ContentLoader message="Loading patterns..." height="h-64" />
           ) : patterns.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               ยังไม่มีรูปแบบคำตอบสำหรับด่านนี้

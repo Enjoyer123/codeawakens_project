@@ -196,6 +196,9 @@ exports.getUserByClerkId = async (req, res) => {
         is_active: true,
         created_at: true,
         updated_at: true,
+        pre_score: true,
+        post_score: true,
+        skill_level: true,
       },
     });
 

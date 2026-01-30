@@ -114,7 +114,33 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Custom Scrollbar for Profile Page Only */
+.profile-custom-scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.profile-custom-scrollbar::-webkit-scrollbar-track {
+  background-color: #3E2723;
+  /* Dark Brown */
+  border-radius: 4px;
+}
+
+.profile-custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #CD853F;
+  /* Peru/Tan */
+  border: 2px solid #3E2723;
+  /* Border to create padding effect */
+  border-radius: 4px;
+}
+
+.profile-custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #DEB887;
+  /* Lighten on hover */
 }
