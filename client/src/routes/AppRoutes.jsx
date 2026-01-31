@@ -30,9 +30,11 @@ import RequirePreTest from "../components/shared/RequirePreTest";
 const AppRoutes = () => {
   return (
     <Routes>
+      <Route index element={<LandingPage />} />
+      <Route path="auth/callback" element={<AuthCallback />} />
+
       <Route element={<NavLayout />}>
-        <Route index element={<LandingPage />} />
-        <Route path="auth/callback" element={<AuthCallback />} />
+        {/* Other public routes if any, or empty if Landing was the only one */}
       </Route>
 
       <Route

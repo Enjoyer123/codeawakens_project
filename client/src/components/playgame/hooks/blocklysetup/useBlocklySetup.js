@@ -107,7 +107,42 @@ export function useBlocklySetup({
         console.log("🔧 Creating toolbox");
         const toolbox = createToolboxConfig(enabledBlocks);
 
+        // Define Custom Theme (Purple & Dark Blue - Website Brand)
+        const rpgTheme = Blockly.Theme.defineTheme('rpg_theme', {
+          base: Blockly.Themes.Classic,
+          blockStyles: {
+            // Midnight Galaxy Palette (Purple/Blue tones)
+            "hat_blocks": { "colourPrimary": "#7048e8", "colourSecondary": "#845ef7", "colourTertiary": "#5f3dc4" }, // Royal Purple (Start)
+            "logic_blocks": { "colourPrimary": "#1c7ed6", "colourSecondary": "#228be6", "colourTertiary": "#1864ab" }, // Bright Blue (Logic)
+            "loop_blocks": { "colourPrimary": "#4263eb", "colourSecondary": "#5c7cfa", "colourTertiary": "#364fc7" }, // Indigo Blue (Loop)
+            "math_blocks": { "colourPrimary": "#1098ad", "colourSecondary": "#22b8cf", "colourTertiary": "#0b7285" }, // Cyan/Teal (Math)
+            "procedure_blocks": { "colourPrimary": "#ae3ec9", "colourSecondary": "#c0eb75", "colourTertiary": "#9c36b5" }, // Berry Purple (Function)
+            "list_blocks": { "colourPrimary": "#4c6ef5", "colourSecondary": "#748ffc", "colourTertiary": "#3b5bdb" }, // Cornflower Blue (List)
+            "variable_blocks": { "colourPrimary": "#0ca678", "colourSecondary": "#12b886", "colourTertiary": "#099268" } // Teal Green (Var)
+          },
+          componentStyles: {
+            "workspaceBackgroundColour": "#0f111a", // Deep Midnight Blue
+            "toolboxBackgroundColour": "#151725", // Dark Blue/Grey
+            "toolboxForegroundColour": "#e0e7ff", // Light Blueish White
+            "flyoutBackgroundColour": "#151725",
+            "flyoutForegroundColour": "#e0e7ff",
+            "flyoutOpacity": 0.95,
+            "scrollbarColour": "transparent",
+            "insertionMarkerColour": "#7048e8",
+            "insertionMarkerOpacity": 0.5,
+            "scrollbarOpacity": 0, // Hidden as requested
+            "cursorColour": "#7048e8"
+          },
+          fontStyle: {
+            "family": "'Segoe UI', 'Roboto', sans-serif",
+            "weight": "bold",
+            "size": 10
+          }
+        });
+
         const workspaceConfig = {
+          theme: rpgTheme,
+          renderer: 'Thrasos',
           toolbox,
           collapse: true,
           comments: true,
@@ -119,7 +154,14 @@ export function useBlocklySetup({
           css: true,
           media: "https://blockly-demo.appspot.com/static/media/",
           rtl: false,
-          scrollbars: true,
+          move: {
+            scrollbars: {
+              horizontal: false,
+              vertical: false
+            },
+            drag: true,
+            wheel: true,
+          },
           sounds: false,
           oneBasedIndex: true,
           variables: enabledBlocks["variables_get"] ||

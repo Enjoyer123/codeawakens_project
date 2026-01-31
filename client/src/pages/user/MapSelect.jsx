@@ -127,16 +127,27 @@ const MapSelect = () => {
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group"
                 style={{ left: `${position.left}%`, top: `${position.top}%` }}
               >
-                {/* Node Circle (Pill shape for Name) */}
-                <div className="px-2 py-1 md:px-4 md:py-2 min-w-[2rem] min-h-[2rem] md:min-w-[3rem] md:min-h-[3rem] bg-white border-2 md:border-4 border-blue-500 rounded-full shadow-lg flex items-center justify-center transition-transform transform group-hover:scale-110 group-active:scale-95 group-hover:border-yellow-400 z-10 relative">
-                  <span className="text-blue-800 font-bold text-[10px] md:text-sm lg:text-base whitespace-nowrap">
-                    {category.category_name}
-                  </span>
-
-                  {/* Unlocked/Count Indicator */}
-                  <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 bg-red-500 text-white text-[8px] md:text-xs font-bold px-1.5 py-0.5 rounded-full shadow border-2 border-white min-w-[16px] text-center">
-                    {count}
+                {/* Node Container (Interactive Dot with Label) */}
+                <div className="relative flex flex-col items-center justify-center transition-all duration-300">
+                  {/* Expanding Info Pill (Visible BY DEFAULT) */}
+                  <div className="mb-1.5 opacity-100 scale-100 transition-all duration-200 ease-out z-20">
+                    <div className="px-2 py-0.5 bg-[#0f111a]/90 border border-[#7048e8]/60 shadow-[0_2px_8px_rgba(0,0,0,0.5)] rounded flex items-center gap-1.5 whitespace-nowrap group-hover:border-[#7048e8] group-hover:shadow-[0_0_12px_rgba(112,72,232,0.4)] group-hover:bg-[#0f111a]">
+                      <span className="text-[#e0e7ff] font-bold text-[9px] md:text-xs tracking-wide">
+                        {category.category_name}
+                      </span>
+                      {count > 0 && (
+                        <span className="bg-[#7048e8]/80 text-white text-[8px] md:text-[10px] font-bold px-1.5 py-0.2 rounded-sm group-hover:bg-[#7048e8]">
+                          {count}
+                        </span>
+                      )}
+                    </div>
                   </div>
+
+                  {/* The actual Dot on the map */}
+                  <div className="w-3 h-3 md:w-4 md:h-4 bg-[#7048e8] rounded-full border border-white/40 shadow-[0_0_8px_rgba(112,72,232,0.6)] z-10 animate-pulse group-hover:animate-none group-hover:scale-110 transition-transform" />
+
+                  {/* Subtle Glow under the dot */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 bg-[#7048e8]/10 rounded-full blur-md -z-1" />
                 </div>
               </div>
             );

@@ -17,6 +17,7 @@ const patternRouter = require("./routes/PatternRoute");
 const testCaseRouter = require("./routes/testCaseRoutes");
 const testRouter = require("./routes/testRoutes");
 const notificationRouter = require("./routes/NotificationRoute");
+const dashboardRouter = require("./routes/dashboardRoutes");
 const path = require("path");
 const { clerkMiddleware } = require("@clerk/express");
 
@@ -45,6 +46,7 @@ app.use("/api", patternRouter);
 app.use("/api/test-cases", testCaseRouter);
 app.use("/api/tests", testRouter);
 app.use("/api", notificationRouter);
+app.use("/api", dashboardRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello World - Server is running!");

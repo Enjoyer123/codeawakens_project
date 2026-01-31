@@ -7,7 +7,7 @@ export function defineMovementBlocks() {
       this.appendDummyInput().appendField("🔽 Move Forward");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour(160);
+      this.setStyle('loop_blocks'); // Green (Stamina)
       this.setTooltip("เดินไปข้างหน้า 1 ช่อง (ตามทิศทางที่หัน)");
     },
   };
@@ -17,7 +17,7 @@ export function defineMovementBlocks() {
       this.appendDummyInput().appendField("↪️ Turn Left");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour(120);
+      this.setStyle('loop_blocks'); // Green (Stamina)
       this.setTooltip("หันไปทางซ้าย");
     },
   };
@@ -27,7 +27,7 @@ export function defineMovementBlocks() {
       this.appendDummyInput().appendField("↩️ Turn Right");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour(280);
+      this.setStyle('loop_blocks'); // Green (Stamina)
       this.setTooltip("หันไปทางขวา");
     },
   };
@@ -37,7 +37,7 @@ export function defineMovementBlocks() {
       this.appendDummyInput().appendField("⚔️ Attack");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour(0);
+      this.setStyle('hat_blocks'); // Red (Attack/HP)
       this.setTooltip("โจมตี Monster ในระยะ");
     },
   };
@@ -49,7 +49,7 @@ export function defineMovementBlocks() {
         .appendField("🎯 Go to Node");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour(160);
+      this.setStyle('loop_blocks');
       this.setTooltip("เดินไปที่ node ที่กำหนด");
     },
   };
@@ -62,7 +62,7 @@ export function defineMovementBlocks() {
         .appendField("🚶 Follow Path");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour(160);
+      this.setStyle('loop_blocks');
       this.setTooltip("เดินตาม path ที่กำหนด (list of nodes)");
     },
   };
