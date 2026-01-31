@@ -78,6 +78,13 @@ export function setupMonsters(scene) {
                 attackAnim = 'vampire_1-attack-down';
                 animPrefix = 'vampire_1';
                 hasDirectionalAnims = true;
+            } else if (monsterType === 'vampire_2') {
+                textureKey = 'Vampire_2';
+                idleAnim = 'vampire_2-idle_down';
+                moveAnim = 'vampire_2-walk_down';
+                attackAnim = 'vampire_2-attack-down';
+                animPrefix = 'vampire_2';
+                hasDirectionalAnims = true;
             } else if (monsterType === 'enemy') {
                 textureKey = 'vampire';
                 idleAnim = 'vampire-idle';

@@ -125,6 +125,7 @@ export const usePhaserMapRenderer = ({
         if (monsterX && monsterY) {
           const mType = monster.type || 'enemy';
           const isVampire = mType === 'vampire_1';
+          const isVampire2 = mType === 'vampire_2';
 
           // Shadow
           currentGraphics.fillStyle(0x000000, 0.3);
@@ -136,6 +137,9 @@ export const usePhaserMapRenderer = ({
 
           if (isVampire) {
             mColor = 0x9333ea; // Purple
+            mEmoji = '🧛';
+          } else if (isVampire2) {
+            mColor = 0x8B0000;
             mEmoji = '🧛';
           }
 

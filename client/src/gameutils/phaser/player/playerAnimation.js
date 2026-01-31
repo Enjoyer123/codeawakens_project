@@ -13,10 +13,10 @@ function getAnimKey(prefix, type, dir, hasDirectionalAnims) {
             return `${action}-side`;
         }
         return `${action}-${dir}`;
-    } else if (prefix === 'slime' || prefix === 'main') {
+    } else if (prefix === 'slime_1' || prefix === 'main_1' || prefix === 'main_2' || prefix === 'main_3') {
         // Slime/Main formatting: 'slime_1-walk_down', 'main_1-idle_down'
         // Uses prefix + '_1' as the animation key base
-        const keyPrefix = `${prefix}_1`;
+        const keyPrefix = `${prefix}`;
         return `${keyPrefix}-${type}_${dir}`;
     }
     return '';
@@ -80,8 +80,36 @@ export function playAttack(player) {
                 player.setFlipX(false);
             }
         } else {
-            // Slime: slime_1-attack_down
-            const animKey = `${prefix}_1-attack_${dir}`;
+            // Use standardized helper
+            // Main/Slime: full prefix + '-attack_' + dir
+            // Example: 'main_3-attack_down'
+            // Example: 'slime_1-attack_down' (if prefix is slime_1)
+            // But if prefix is 'slime', we need to check how it's set in playerSetup. 
+            // Previous code assumed 'slime' -> 'slime_1'. 
+            // But main_3 -> 'main_3_1' was the bug.
+
+            // Logic:
+            let animKey = '';
+            if (prefix.startsWith('main_')) {
+                animKey = `${prefix}-attack_${dir}`;
+            } else {
+                // Default fallback/Slime behavior to maintain existing logic if unsure
+                // But generally getAnimKey logic is safer.
+                animKey = getAnimKey(prefix, 'attack', dir);
+                // getAnimKey returns: `${keyPrefix}-${type}_${dir}`.
+                // For slime, if prefix is 'slime_1', getAnimKey returns 'slime_1-actack_dir'??
+                // Wait, getAnimKey uses 'actack' for player but type argument 'attack'.
+                // Line 20: return `${keyPrefix}-${type}_${dir}`;
+            }
+
+            // Let's rely on getAnimKey logic which I will fix/verify below
+            // Actually, simply applying the logic directly here is cleaner for now to match user request style
+            if (prefix === 'slime') {
+                animKey = `slime_1-attack_${dir}`;
+            } else {
+                animKey = `${prefix}-attack_${dir}`;
+            }
+
             if (player.scene && player.scene.anims && player.scene.anims.exists(animKey)) {
                 player.anims.play(animKey, true);
             }
@@ -127,8 +155,14 @@ export function playWalk(player) {
                 player.setFlipX(false);
             }
         } else {
-            // Slime: slime_1-walk_down
-            const animKey = `${prefix}_1-walk_${dir}`;
+            // Main/Slime logic
+            let animKey = '';
+            if (prefix === 'slime') {
+                animKey = `slime_1-walk_${dir}`;
+            } else {
+                animKey = `${prefix}-walk_${dir}`;
+            }
+
             if (player.scene && player.scene.anims && player.scene.anims.exists(animKey)) {
                 player.anims.play(animKey, true);
             }

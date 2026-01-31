@@ -51,7 +51,15 @@ export function drawPlayer(scene) {
             hasDirectionalAnims = true; // Slime has specific left/right anims
         } else if (characterType === 'main_1') {
             textureKey = 'main_1';
-            animPrefix = 'main';
+            animPrefix = 'main_1';
+            hasDirectionalAnims = true;
+        } else if (characterType === 'main_2') {
+            textureKey = 'main_2';
+            animPrefix = 'main_2';
+            hasDirectionalAnims = true;
+        } else if (characterType === 'main_3') {
+            textureKey = 'main_3';
+            animPrefix = 'main_3';
             hasDirectionalAnims = true;
         }
 
@@ -210,6 +218,9 @@ export function drawCinematicMonster(scene) {
             if (monsterType === 'vampire_1') {
                 textureKey = 'Vampire_1';
                 idleAnim = 'vampire_1-idle_down';
+            } else if (monsterType === 'vampire_2') {
+                textureKey = 'Vampire_2';
+                idleAnim = 'vampire_2-idle_down';
             } else if (monsterType === 'enemy') {
                 textureKey = 'vampire';
                 idleAnim = 'vampire-idle';

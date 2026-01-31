@@ -29,6 +29,9 @@ import { createVampireAnims } from '../../../anims/EnemyAnims';
 import { createVampire_1Anims } from '../../../anims/Vampire_1Anims';
 import { createSlime1Anims } from '../../../anims/Slime_1Anims';
 import { createMain_1Anims } from '../../../anims/Main_1Anims';
+import { createMain_2Anims } from '../../../anims/Main_2Anims';
+import { createMain_3Anims } from '../../../anims/Main_3Anims';
+import { createVampire_2Anims } from '../../../anims/Vampire_2Anims';
 import { preloadAllWeaponEffects } from '../../shared/combat';
 
 import { API_BASE_URL } from '../../../config/apiConfig';
@@ -83,10 +86,15 @@ export class GameScene extends Phaser.Scene {
         this.load.atlas('player', '/characters/player.png', '/characters/player.json');
         this.load.atlas('vampire', '/enemies/vampire.png', '/enemies/vampire.json');
         this.load.atlas('Vampire_1', '/enemies/Vampire1.png', '/enemies/Vampire1.json');
+        this.load.atlas('Vampire_2', '/enemies/Vampire2.png', '/enemies/Vampire2.json');
         // Load Slime sprites (using slime_1 key to match animation configs)
         this.load.atlas('slime_1', '/characters/Slime1.png', '/characters/Slime1.json');
         // Load newly added Main_1 character
         this.load.atlas('main_1', '/characters/Main1.png', '/characters/Main1.json');
+        // Load newly added Main_2 character
+        this.load.atlas('main_2', '/characters/Main2.png', '/characters/Main2.json');
+        // Load newly added Main_3 character
+        this.load.atlas('main_3', '/characters/Main3.png', '/characters/Main3.json');
 
         // Load Org bots for Coin Change
         this.load.image('bot_slime1', '/bot/slime1.png');
@@ -170,6 +178,9 @@ export class GameScene extends Phaser.Scene {
         createVampire_1Anims(this.anims);
         createSlime1Anims(this.anims);
         createMain_1Anims(this.anims);
+        createMain_2Anims(this.anims);
+        createMain_3Anims(this.anims);
+        createVampire_2Anims(this.anims);
 
         // Debug: Verify Slime animations
         const testKey = 'slime_1-walk_right';
