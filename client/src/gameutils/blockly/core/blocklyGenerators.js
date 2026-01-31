@@ -81,4 +81,15 @@ export function defineAllGenerators() {
   console.log('[defineAllGenerators] Final check - procedures_defreturn generator is our custom one:', isCustom);
 
   console.log('[defineAllGenerators] Finished generator definition.');
+
+  // VERIFY variables_set
+  const varSetGen = javascriptGenerator.forBlock["variables_set"];
+  const isMyVarSet = varSetGen && varSetGen.toString().includes('GEN-DEBUG');
+  console.log(`[defineAllGenerators] variables_set verification: Is Custom? ${isMyVarSet}`);
+  if (!isMyVarSet) {
+    console.warn('[defineAllGenerators] ⚠️ variables_set was overridden! Re-applying defineDataGenerators...');
+    defineDataGenerators();
+    const retryGen = javascriptGenerator.forBlock["variables_set"];
+    console.log(`[defineAllGenerators] Retry variables_set: Is Custom? ${retryGen && retryGen.toString().includes('GEN-DEBUG')}`);
+  }
 }

@@ -31,8 +31,9 @@ export function setupTrainSchedule(scene) {
         const chartWidth = width - margin.left - margin.right;
         const chartHeight = height - margin.top - margin.bottom;
 
-        // Create container for organized cleanup
-        const container = scene.add.container(0, 0);
+        // Center the board horizontally
+        const containerX = (scene.scale.width - width) / 2;
+        const container = scene.add.container(containerX, 0);
 
         // Background (Chart Area)
         const bg = scene.add.rectangle(margin.left + chartWidth / 2, margin.top + chartHeight / 2, chartWidth, chartHeight, 0x16213e);
@@ -87,8 +88,8 @@ export function setupTrainSchedule(scene) {
             container.add(timeLabel);
         }
 
-        // Title
-        const title = scene.add.text(scene.scale.width / 2, 50, payload.name || "Train Schedule", {
+        // Title (Centered relative to the container width)
+        const title = scene.add.text(width / 2, 50, payload.name || "Train Schedule", {
             fontSize: '24px',
             color: '#00d4ff',
             fontStyle: 'bold',

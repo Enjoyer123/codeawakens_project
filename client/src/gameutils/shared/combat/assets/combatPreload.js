@@ -52,6 +52,19 @@ export async function preloadWeaponEffectSafe(scene, weaponKey, effectType = '')
   // const API_BASE_URL = ... (Removed)
 
   // ตรวจสอบไฟล์ที่มีจริง
+  // 1. Check for Single File first (e.g. sword.png)
+  const singleFileUrl = `${API_BASE_URL}/uploads/weapons_effect/${weaponKey}.png`;
+  const singleFileKey = texturePrefix; // effect_sword
+
+  if (scene.textures && !scene.textures.exists(singleFileKey)) {
+    const exists = await checkImageExistsSafe(singleFileUrl);
+    if (exists) {
+      framesToLoad.push({ key: singleFileKey, url: singleFileUrl });
+      console.log(`Found single effect file: ${singleFileUrl}`);
+    }
+  }
+
+  // 2. Check for Multi-Frame sequence (e.g. sword_attack_1.png)
   for (let i = 1; i <= 20; i++) { // เพิ่มจำนวนสูงสุดเป็น 20
     let url;
     let frameKey;

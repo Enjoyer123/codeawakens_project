@@ -11,7 +11,7 @@ export function findNearbyEnemy(player) {
 
     for (const monster of scene.monsters) {
         // ตรวจสอบว่า monster ตายแล้วหรือไม่
-        if (monster.data?.defeated || monster.isDefeated || 
+        if (monster.data?.defeated || monster.isDefeated ||
             monster.sprite?.getData('defeated') || monster.sprite?.isDefeated) {
             continue;
         }
@@ -48,7 +48,7 @@ export function hitEnemyWithDamage(player, damage = 50) {
     // ศัตรูตายใน 1 hit
     const currentHP = targetMonster.data?.hp || 3;
     const newHP = 0; // ตายทันที
-    
+
     targetMonster.data.hp = newHP;
     targetMonster.data.defeated = true;
     targetMonster.isDefeated = true;
@@ -57,7 +57,7 @@ export function hitEnemyWithDamage(player, damage = 50) {
     enemySprite.isDefeated = true;
 
     updateEnemyHealthBar(enemySprite, newHP);
-    
+
     // ศัตรูตาย
     killEnemy(player, enemySprite);
 
@@ -75,7 +75,7 @@ export function defendFromEnemy(player, enemyDamage) {
 
     const weaponData = currentState.weaponData;
     const defense = weaponData.defense || 0;
-    
+
     if (defense >= enemyDamage) {
         // ป้องกันได้ทั้งหมด
         showDefenseEffect(player, enemyDamage, true);
@@ -91,13 +91,13 @@ export function defendFromEnemy(player, enemyDamage) {
 function showDefenseEffect(player, defenseAmount, fullDefense) {
     const effectEmoji = fullDefense ? '🛡️' : '⚔️';
     const effectColor = fullDefense ? '#00ff00' : '#ffaa00';
-    
+
     const effect = player.scene.add.text(player.x, player.y - 40, effectEmoji, {
         fontSize: '24px'
     });
     effect.setDepth(30);
 
-    const defenseText = player.scene.add.text(player.x + 15, player.y - 25, 
+    const defenseText = player.scene.add.text(player.x + 15, player.y - 25,
         fullDefense ? 'BLOCKED!' : `-${defenseAmount}`, {
         fontSize: '16px',
         color: effectColor,
@@ -145,9 +145,33 @@ function updateEnemyHealthBar(enemySprite, currentHealth) {
 }
 
 
-function killEnemy(player, enemySprite) {
+import { showMonsterDeathEffect } from '../../shared/combat/effects/deathEffects';
+
+async function killEnemy(player, enemySprite) {
     enemySprite.setData('defeated', true);
 
+    // Stop input/interaction on enemy
+    if (enemySprite.body) enemySprite.body.checkCollision.none = true;
+
+    // Show death effect and WAIT
+    if (showMonsterDeathEffect) {
+        // Hide health bars immediately so they don't float over the death anim
+        const healthBar = enemySprite.getData('healthBar');
+        const healthBarBg = enemySprite.getData('healthBarBg');
+        if (healthBar) healthBar.setVisible(false);
+        if (healthBarBg) healthBarBg.setVisible(false);
+
+        await showMonsterDeathEffect(player.scene, enemySprite.x, enemySprite.y);
+    } else {
+        createDeathExplosion(player, enemySprite.x, enemySprite.y);
+    }
+
+    // Now fade out/destroy the sprite
+    enemySprite.setVisible(false);
+    player.scene.events.emit('enemyDefeated', enemySprite);
+
+    // Original cleanup tween (optional now, since we hid it, but good for GC)
+    /*
     player.scene.tweens.add({
         targets: enemySprite,
         alpha: 0,
@@ -160,15 +184,7 @@ function killEnemy(player, enemySprite) {
             enemySprite.setVisible(false);
         }
     });
-
-    // Hide health bars
-    const healthBar = enemySprite.getData('healthBar');
-    const healthBarBg = enemySprite.getData('healthBarBg');
-    if (healthBar) healthBar.setVisible(false);
-    if (healthBarBg) healthBarBg.setVisible(false);
-
-    createDeathExplosion(player, enemySprite.x, enemySprite.y);
-    player.scene.events.emit('enemyDefeated', enemySprite);
+    */
 }
 
 function createDeathExplosion(player, x, y) {

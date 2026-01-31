@@ -1,4 +1,7 @@
 // Helper to get animation key based on prefix
+import { animateWeaponAttack, getWeaponData } from '../../shared/items/weaponUtils';
+import { getCurrentGameState } from '../../shared/game/gameState';
+
 function getAnimKey(prefix, type, dir, hasDirectionalAnims) {
     if (prefix === 'player') {
         // Player formatting: 'stand-side', 'walk-down', 'actack-side'
@@ -10,12 +13,10 @@ function getAnimKey(prefix, type, dir, hasDirectionalAnims) {
             return `${action}-side`;
         }
         return `${action}-${dir}`;
-    } else if (prefix === 'slime') {
-        // Slime formatting: 'slime_1-walk_down', 'slime_1-attack_down'
-        // Note: Check Slime_1Anims.js for exact keys. Assuming 'slime_1' is the prefix in keys.
-        // The asset key is 'slime_1' but prefix passed in setup is 'slime'
-        // Let's use 'slime_1' as the animation key prefix.
-        const keyPrefix = 'slime_1';
+    } else if (prefix === 'slime' || prefix === 'main') {
+        // Slime/Main formatting: 'slime_1-walk_down', 'main_1-idle_down'
+        // Uses prefix + '_1' as the animation key base
+        const keyPrefix = `${prefix}_1`;
         return `${keyPrefix}-${type}_${dir}`;
     }
     return '';
@@ -63,6 +64,8 @@ export function playIdle(player) {
     }
 }
 
+
+
 export function playAttack(player) {
     const dir = player.directions[player.directionIndex];
     const prefix = player.animPrefix || 'player';
@@ -84,6 +87,17 @@ export function playAttack(player) {
             }
             player.setFlipX(false);
         }
+
+        // --- NEW: Trigger Weapon Animation ---
+        const state = getCurrentGameState();
+        const weaponKey = (state && state.weaponKey) ? state.weaponKey : 'stick';
+        const weaponData = getWeaponData(weaponKey);
+        // Default to melee if invalid
+        const type = weaponData ? weaponData.weaponType : 'melee';
+
+        animateWeaponAttack(player.scene, type);
+
+        // -------------------------------------
 
         player.once('animationcomplete', () => {
             playIdle(player);

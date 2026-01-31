@@ -160,6 +160,14 @@ const GameCore = ({
 
   // Big O complexity state
   const [userBigO, setUserBigO] = useState(null);
+  const [showBigOQuiz, setShowBigOQuiz] = useState(false);
+
+
+
+  const handleBigOSelect = (value) => {
+    setUserBigO(value);
+    setShowBigOQuiz(false);
+  };
 
   // Hint system state
   const [hintData, setHintData] = useState({
@@ -169,6 +177,15 @@ const GameCore = ({
     totalSteps: 0,
     progress: 0
   });
+
+  // Trigger Big O Quiz when pattern is matched 100%
+  useEffect(() => {
+    if (hintData?.patternPercentage === 100) {
+      if (!userBigO) {
+        setShowBigOQuiz(true);
+      }
+    }
+  }, [hintData?.patternPercentage, userBigO]);
 
   // Score system state
   const [finalScore, setFinalScore] = useState(null);
@@ -737,8 +754,10 @@ const GameCore = ({
             collectedTreasures={collectedTreasures}
             workspaceRef={workspaceRef}
             userBigO={userBigO}
-            onUserBigOChange={setUserBigO}
-            onOpenGuide={openGuide}
+            onUserBigOChange={handleBigOSelect} // Update to use handleBigOSelect
+            showBigOQuiz={showBigOQuiz}
+            onCloseBigOQuiz={() => setShowBigOQuiz(false)}
+            userProgress={userProgress}
             hasGuides={hasGuides}
           />
         </div>

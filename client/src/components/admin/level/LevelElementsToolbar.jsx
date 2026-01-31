@@ -1,12 +1,61 @@
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Trash2, Coins, Users, Gem, Link } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Trash2, Coins, Users, Gem, Link, Code } from 'lucide-react';
 import { ITEM_TYPES } from '@/constants/itemTypes';
 
 import { useLevelElements } from './hooks/useLevelElements';
 
 const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, onAddMonster, onAddObstacle, selectedCategory, selectedMonsterType, onMonsterTypeChange, coinValue, onCoinValueChange, edgeWeight, onEdgeWeightChange, onFormDataChange }) => {
   const { isItemTypeEnabled, isWeightedGraphCategory } = useLevelElements(selectedCategory);
+
+  // --- Special Algorithm Mode Detection ---
+  const activeAlgo =
+    formData.knapsack_data ? { key: 'knapsack_data', label: 'Knapsack Data' } :
+      formData.coin_change_data ? { key: 'coin_change_data', label: 'Coin Change Data' } :
+        formData.subset_sum_data ? { key: 'subset_sum_data', label: 'Subset Sum Data' } :
+          formData.applied_data ? { key: 'applied_data', label: 'Applied Data' } : null;
+
+  // Local state for JSON string to allow editing
+  const [jsonString, setJsonString] = useState('');
+  const [jsonError, setJsonError] = useState(null);
+
+  // Sync internal JSON string with formData when algo changes or mounts
+  useEffect(() => {
+    if (activeAlgo) {
+      const data = formData[activeAlgo.key];
+      // If data is object/array, stringify. If null/undefined, empty string.
+      // If it's already a string (shouldn't be based on useLevelForm), leave it.
+      const str = data ? JSON.stringify(data, null, 2) : '{}';
+      setJsonString(str);
+    }
+  }, [activeAlgo?.key, formData]); // Dependency on formData might cause cursor jump if we sync on every regular update. Be careful.
+
+  // Optimize: Only sync if formData has changed SIGNIFICANTLY or keys changed.
+  // Actually, we should only pull from formData if we are NOT editing?
+  // But formData is the source of truth.
+  // Let's assume onFormDataChange updates formData with PARSED object.
+  // So if we type, we update formData. formData updates, triggering useEffect -> re-format.
+  // This WILL cause cursor jump.
+  // Solution: Update formData ONLY on Blur?
+  // Or: Don't dependency loop.
+  // Let's rely on local state for editing, and push to parent on change (if valid).
+
+  const handleJsonChange = (e) => {
+    const newVal = e.target.value;
+    setJsonString(newVal);
+
+    try {
+      const parsed = JSON.parse(newVal);
+      setJsonError(null);
+      // Valid JSON: Update parent
+      onFormDataChange({ ...formData, [activeAlgo.key]: parsed });
+    } catch (err) {
+      setJsonError("Invalid JSON");
+      // Don't update parent with invalid data, but keep local string
+    }
+  };
 
   const handleAddCoin = () => {
     onSetMode('coin');
@@ -19,6 +68,51 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
   const handleAddTreasure = () => {
     onSetMode('treasure');
   };
+
+  // --- Render Special Mode ---
+  if (activeAlgo) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-4 space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold text-blue-600">{activeAlgo.label}</h2>
+          <Badge variant="outline" className="text-xs">JSON Mode</Badge>
+        </div>
+
+        {/* Character Selection (Persisted) */}
+        <div className="space-y-2">
+          <label className="text-[10px] font-bold text-gray-500 uppercase">Player Character</label>
+          <select
+            value={formData.character || 'player'}
+            onChange={(e) => onFormDataChange({ ...formData, character: e.target.value })}
+            className="w-full text-xs h-8 border border-gray-200 rounded-md px-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          >
+            <option value="player">Player (Default)</option>
+            <option value="slime">Slime</option>
+            <option value="main_1">Main 1</option>
+          </select>
+        </div>
+
+        {/* JSON Editor */}
+        <div className="space-y-2">
+          <label className="flex items-center justify-between text-[10px] font-bold text-gray-500 uppercase">
+            <span>JSON Input</span>
+            {jsonError && <span className="text-red-500">{jsonError}</span>}
+          </label>
+          <textarea
+            value={jsonString}
+            onChange={handleJsonChange}
+            className={`w-full h-80 font-mono text-xs p-3 border rounded-md focus:outline-none focus:ring-1 ${jsonError ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'}`}
+            spellCheck="false"
+          />
+          <p className="text-[10px] text-gray-400">
+            Edit the raw data for {activeAlgo.label}. Must be valid JSON.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // --- Render Standard Mode ---
   return (
     <div className="bg-white rounded-lg shadow-md p-4 space-y-6">
       <div className="flex items-center justify-between">
@@ -119,6 +213,7 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
           >
             <option value="player">Player (Default)</option>
             <option value="slime">Slime</option>
+            <option value="main_1">Main 1</option>
           </select>
         </div>
 

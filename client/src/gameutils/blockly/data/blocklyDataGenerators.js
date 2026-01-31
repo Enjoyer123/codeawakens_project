@@ -44,12 +44,18 @@ export function defineDictionaryGenerators() {
   try {
     const dictVar = (${dict});
     const keyVar = (${keyCodeCoerced});
-    if (!dictVar || (typeof dictVar !== 'object' && typeof dictVar !== 'function')) return;
-    dictVar[keyVar] = (${value});
-    const currentState = getCurrentGameState();
-    if (currentState && currentState.currentScene) {
-      showMSTEdges(currentState.currentScene, dictVar);
-      await new Promise(resolve => setTimeout(resolve, 500));
+    if (dictVar && (typeof dictVar === 'object' || typeof dictVar === 'function')) {
+      dictVar[keyVar] = (${value});
+      console.log('[DEBUG-MST] Updated parent[' + keyVar + '] = ' + ${value} + '. Showing edges...');
+      const currentState = getCurrentGameState();
+      if (currentState && currentState.currentScene) {
+        showMSTEdges(currentState.currentScene, dictVar);
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } else {
+         console.warn('[DEBUG-MST] No scene found for visualization');
+      }
+    } else {
+      console.warn('[DEBUG-MST] Invalid parent dict for key: ' + keyVar);
     }
   } catch (e) {
     console.warn('dict_set (parent) error:', e);
@@ -61,8 +67,12 @@ export function defineDictionaryGenerators() {
   try {
     const dictVar = (${dict});
     const keyVar = (${keyCodeCoerced});
-    if (!dictVar || (typeof dictVar !== 'object' && typeof dictVar !== 'function')) return;
-    dictVar[keyVar] = (${value});
+    if (dictVar && (typeof dictVar === 'object' || typeof dictVar === 'function')) {
+      dictVar[keyVar] = (${value});
+      console.log('[DEBUG-DICT-SET] Set ' + keyVar + ' = ' + ${value});
+    } else {
+      console.warn('[DEBUG-DICT-SET] Invalid dict for key: ' + keyVar);
+    }
   } catch (e) {
     console.warn('dict_set error:', e);
   }
@@ -120,6 +130,60 @@ export function defineDataGenerators() {
             Blockly.Names.NameType.VARIABLE
         );
         return [varName, javascriptGenerator.ORDER_ATOMIC];
+    };
+
+    javascriptGenerator.forBlock["variables_set"] = function (block) {
+        const varName = javascriptGenerator.nameDB_.getName(
+            block.getFieldValue('VAR'),
+            Blockly.Names.NameType.VARIABLE
+        );
+        const argument0 = javascriptGenerator.valueToCode(block, 'VALUE', javascriptGenerator.ORDER_ASSIGNMENT) || '0';
+
+        let code = varName + ' = ' + argument0 + ';\n';
+
+        // Check if updating MST_weight
+        // We must check code variable name properly used in the block.
+        // The most robust way is to lookup the variable model by ID.
+        let variableName = '';
+        try {
+            const varId = block.getFieldValue('VAR');
+            const variableModel = block.workspace.getVariableById(varId);
+            if (variableModel) {
+                variableName = variableModel.name;
+            }
+            // Enable logging to debug
+            console.log(`[GEN-DEBUG] variables_set: ID=${varId}, Name=${variableName}, Model Found=${!!variableModel}`);
+        } catch (e) {
+            console.warn('Error looking up variable name:', e);
+        }
+
+        // Fallback if model lookup fails (e.g. during some export processes)
+        if (!variableName) {
+            variableName = block.getField('VAR') ? block.getField('VAR').getText() : '';
+            console.log(`[GEN-DEBUG] Fallback Name=${variableName}`);
+        }
+
+        // Console log to debug what we are seeing
+        // console.log('[DEBUG-GEN] variables_set for:', variableName);
+
+        // Check if updating MST_weight (Case insensitive and trimmed)
+        const normalizedVarName = (variableName || '').trim();
+        const isMST = normalizedVarName.toLowerCase() === 'mst_weight' || normalizedVarName === 'MST_weight';
+
+        if (isMST) {
+            console.log('[GEN-DEBUG] MATCHED MST_weight (Fuzzy)! Injecting update code...');
+            code += `console.log('!!! DEBUG-MST-WEIGHT-BLOCK START !!!');\n`;
+            code += `console.log('Variable used: ${varName}');\n`;
+            code += `if (typeof updateMSTWeight === 'function') { \n`;
+            code += `  console.log('Calling updateMSTWeight...');\n`;
+            code += `  updateMSTWeight(${varName}); \n`;
+            code += `} else { console.warn('updateMSTWeight NOT FOUND'); }\n`;
+            code += `console.log('[DEBUG-MST-WEIGHT] Updated MST_weight = ' + ${varName});\n`;
+        } else {
+            console.log(`[GEN-DEBUG] Ignored variable set: "${variableName}" (ID=${block.getFieldValue('VAR')})`);
+        }
+
+        return code;
     };
 
     // Stack operations

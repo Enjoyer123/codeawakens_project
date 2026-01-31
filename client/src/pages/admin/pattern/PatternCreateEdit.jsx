@@ -173,7 +173,9 @@ const PatternCreateEdit = () => {
                 >
                   <option value="">-- No Effect --</option>
                   <option value="circle_1">Circle 1</option>
+                  <option value="circle_2">Circle 2</option>
                   <option value="aura_1">Aura 1</option>
+                  <option value="aura_2">Aura 2</option>
                 </select>
               </div>
             </div>

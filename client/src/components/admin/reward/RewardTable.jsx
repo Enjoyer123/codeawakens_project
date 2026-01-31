@@ -67,35 +67,16 @@ const RewardTable = ({ rewards, onEdit, onDelete, onManageImages }) => {
               <td className="px-6 py-4">
                 <div className="flex items-center gap-2 flex-wrap">
                   {(() => {
-                    const frames = [
-                      reward.frame1,
-                      reward.frame2,
-                      reward.frame3,
-                      reward.frame4,
-                      reward.frame5,
-                    ].filter(Boolean);
+                    const frame = reward.frame1;
 
-                    return frames.length > 0 ? (
-                      <>
-                        <Badge variant="secondary">
-                          {frames.length} รูป
-                        </Badge>
-                        <div className="flex gap-1">
-                          {frames.slice(0, 3).map((frame, index) => (
-                            <img
-                              key={`frame${index + 1}`}
-                              src={getImageUrl(frame)}
-                              alt={`Frame ${index + 1}`}
-                              className="w-8 h-8 object-cover rounded border"
-                            />
-                          ))}
-                          {frames.length > 3 && (
-                            <div className="w-8 h-8 bg-gray-200 rounded border flex items-center justify-center text-xs">
-                              +{frames.length - 3}
-                            </div>
-                          )}
-                        </div>
-                      </>
+                    return frame ? (
+                      <div className="flex gap-1">
+                        <img
+                          src={getImageUrl(frame)}
+                          alt="Reward Image"
+                          className="w-8 h-8 object-cover rounded border"
+                        />
+                      </div>
                     ) : (
                       <span className="text-sm text-gray-400">ไม่มีรูป</span>
                     );

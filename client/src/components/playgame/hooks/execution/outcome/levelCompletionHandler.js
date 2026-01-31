@@ -239,6 +239,24 @@ const handleSuccess = async ({
 
     await finalizeTablesBeforeVictory(currentLevel, isTrainSchedule);
 
+    // [New] Add delay for Graph Algorithms (DFS, BFS, Prim, Kruskal, Dijkstra)
+    // to allow the final visualization steps (scanning, path drawing) to complete
+    // before showing the victory screen.
+    const categoryName = (currentLevel?.category?.category_name || currentLevel?.category_name || '').toLowerCase();
+    const isGraphAlgo = categoryName.includes('prim') ||
+        categoryName.includes('kruskal') ||
+        categoryName.includes('dijkstra') ||
+        categoryName.includes('shortest path') ||
+        categoryName.includes('minimum spanning tree') ||
+        categoryName.includes('graph') ||
+        categoryName.includes('bfs') ||
+        categoryName.includes('dfs');
+
+    if (isGraphAlgo) {
+        console.log("⏳ Waiting for graph visualization to finish...");
+        await new Promise(r => setTimeout(r, 2000));
+    }
+
     // Victory Animation
     let currentScene = getCurrentGameState().currentScene;
     await playVictorySequence(currentLevel, currentScene);

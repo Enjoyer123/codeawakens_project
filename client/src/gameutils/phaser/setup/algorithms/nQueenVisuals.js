@@ -26,7 +26,7 @@ export function setupNQueen(scene) {
     board: null,
     queens: [],
     cellSize: 60, // Size of each cell in pixels
-    boardStartX: 400, // Center of the board
+    boardStartX: 600, // Center of the board (Moved right from 400)
     boardStartY: 300, // Center of the board
     labels: []
   };
@@ -37,6 +37,11 @@ export function setupNQueen(scene) {
   const boardWidth = n * cellSize;
   const boardHeight = n * cellSize;
   const labelOffset = 25; // Offset for row/column labels
+
+  // Create board background image
+  const boardBg = scene.add.image(boardStartX, boardStartY, 'board_bg');
+  boardBg.setDisplaySize(boardWidth, boardHeight);
+  boardBg.setDepth(4); // Behind lines (depth 5)
 
   // Create board graphics container
   const boardGraphics = scene.add.graphics();
@@ -227,7 +232,15 @@ export function setupNQueen(scene) {
             try {
               setTimeout(() => {
                 try { scene.nqueen.clearCellOverlay(rr, cc); } catch (e) { }
-                try { drawQueenOnBoard(scene, rr, cc); } catch (e) { }
+                // Create gun sprite (Queen)
+                try {
+                  const b = cellBounds(rr, cc);
+                  const queen = scene.add.image(b.cx, b.cy, 'gun');
+                  queen.setScale(2.5); // Increased to 2.5
+                  queen.setDepth(9);
+                  scene.nqueen.queens.push({ row: rr, col: cc, graphics: queen });
+                } catch (e) { console.error('Error adding gun sprite:', e); }
+
               }, Math.max(0, (globalThis.__nqueenVisual_placeFlashDuration || 140)));
             } catch (e) { /* swallow */ }
           } catch (e) { console.warn('nqueenVisual onPlace error', e); }

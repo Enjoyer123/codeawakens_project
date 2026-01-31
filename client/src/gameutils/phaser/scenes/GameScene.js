@@ -28,6 +28,7 @@ import { createCharacterAnims } from '../../../anims/PlayerAnims';
 import { createVampireAnims } from '../../../anims/EnemyAnims';
 import { createVampire_1Anims } from '../../../anims/Vampire_1Anims';
 import { createSlime1Anims } from '../../../anims/Slime_1Anims';
+import { createMain_1Anims } from '../../../anims/Main_1Anims';
 import { preloadAllWeaponEffects } from '../../shared/combat';
 
 import { API_BASE_URL } from '../../../config/apiConfig';
@@ -84,12 +85,36 @@ export class GameScene extends Phaser.Scene {
         this.load.atlas('Vampire_1', '/enemies/Vampire1.png', '/enemies/Vampire1.json');
         // Load Slime sprites (using slime_1 key to match animation configs)
         this.load.atlas('slime_1', '/characters/Slime1.png', '/characters/Slime1.json');
+        // Load newly added Main_1 character
+        this.load.atlas('main_1', '/characters/Main1.png', '/characters/Main1.json');
+
+        // Load Org bots for Coin Change
+        this.load.image('bot_slime1', '/bot/slime1.png');
+        this.load.image('bot_humen1', '/bot/humen1.png');
+        this.load.image('org1', '/bot/org1.png');
+        this.load.image('org2', '/bot/org2.png');
+        this.load.image('org3', '/bot/org3.png');
 
         this.load.image('weapon_stick', `${API_BASE_URL}/uploads/weapons/stick_idle_1.png`);
 
+        // Load bag object
+        this.load.image('bag', '/object/bag.png');
+        // Load crown items
+        this.load.image('crown-1', '/object/crown-1.png');
+        this.load.image('crown-2', '/object/crown-2.png');
+        this.load.image('crown-3', '/object/crown-3.png');
+
+        // Load miscellaneous
+        this.load.image('board_bg', '/background.png');
+        this.load.image('gun', '/object/gun.png');
+
         // Load aura effects
-        for (let i = 1; i <= 4; i++) {
+        for (let i = 1; i <= 8; i++) {
             this.load.image(`aura_1_${i}`, `/aura/aura_1_${i}.png`);
+        }
+        // Load aura_2 (13 frames)
+        for (let i = 1; i <= 13; i++) {
+            this.load.image(`aura_2_${i}`, `/aura/aura_2_${i}.png`);
         }
     }
 
@@ -104,12 +129,31 @@ export class GameScene extends Phaser.Scene {
                     { key: 'aura_1_1' },
                     { key: 'aura_1_2' },
                     { key: 'aura_1_3' },
-                    { key: 'aura_1_4' }
+                    { key: 'aura_1_4' },
+                    { key: 'aura_1_5' },
+                    { key: 'aura_1_6' },
+                    { key: 'aura_1_7' },
+                    { key: 'aura_1_8' }
                 ],
                 frameRate: 8,
                 repeat: -1
             });
             console.log("✅ Aura animation created");
+        }
+
+        // Create aura_2 animation
+        if (this.textures.exists('aura_2_1')) {
+            const frames = [];
+            for (let i = 1; i <= 13; i++) {
+                frames.push({ key: `aura_2_${i}` });
+            }
+            this.anims.create({
+                key: 'aura_2',
+                frames: frames,
+                frameRate: 12,
+                repeat: -1
+            });
+            console.log("✅ Aura 2 animation created");
         }
 
         setCurrentScene(this);
@@ -125,6 +169,7 @@ export class GameScene extends Phaser.Scene {
         createVampireAnims(this.anims);
         createVampire_1Anims(this.anims);
         createSlime1Anims(this.anims);
+        createMain_1Anims(this.anims);
 
         // Debug: Verify Slime animations
         const testKey = 'slime_1-walk_right';

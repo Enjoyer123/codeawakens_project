@@ -1,5 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const path = require("path");
+const fs = require("fs");
 
 // Get all level categories without pagination
 exports.getAllLevelCategories = async (req, res) => {
@@ -271,6 +273,7 @@ exports.createLevelCategory = async (req, res) => {
       difficulty_order,
       color_code,
       block_key,
+      background_image,
     } = req.body;
 
     if (!category_name || !description || !difficulty_order || !color_code) {
@@ -322,6 +325,7 @@ exports.createLevelCategory = async (req, res) => {
         difficulty_order: parseInt(difficulty_order),
         color_code: trimmedColorCode,
         block_key: (block_key && block_key !== 'null' && block_key !== '') ? block_key : null,
+        background_image: background_image || null,
         category_items: categoryItemsData.length > 0
           ? {
             create: categoryItemsData,
@@ -363,6 +367,7 @@ exports.updateLevelCategory = async (req, res) => {
       difficulty_order,
       color_code,
       block_key,
+      background_image,
     } = req.body;
 
     if (!category_name || !description || !difficulty_order || !color_code) {
@@ -411,7 +416,9 @@ exports.updateLevelCategory = async (req, res) => {
         item_enable: item_enable === true || item_enable === 'true',
         difficulty_order: parseInt(difficulty_order),
         color_code: color_code.trim(),
+        color_code: color_code.trim(),
         block_key: (block_key && block_key !== 'null' && block_key !== '') ? block_key : null,
+        background_image: background_image !== undefined ? background_image : undefined,
         category_items: categoryItemsData.length > 0
           ? {
             create: categoryItemsData,
@@ -476,6 +483,18 @@ exports.deleteLevelCategory = async (req, res) => {
       });
     }
 
+    // Delete image if exists
+    if (levelCategory.background_image) {
+      const filePath = path.join(__dirname, "..", levelCategory.background_image);
+      if (fs.existsSync(filePath)) {
+        try {
+          fs.unlinkSync(filePath);
+        } catch (err) {
+          console.error(`Error deleting file ${filePath}:`, err);
+        }
+      }
+    }
+
     // Delete the level category (safe because no levels exist)
     await prisma.levelCategory.delete({
       where: { category_id: parseInt(categoryId) },
@@ -511,3 +530,136 @@ exports.deleteLevelCategory = async (req, res) => {
   }
 };
 
+// Upload category background
+exports.uploadCategoryBackground = async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const levelCategory = await prisma.levelCategory.findUnique({
+      where: { category_id: parseInt(categoryId) },
+    });
+
+    if (!levelCategory) {
+      // Delete uploaded file if category doesn't exist
+      if (req.file.path) {
+        try {
+          fs.unlinkSync(req.file.path);
+        } catch (err) {
+          console.error("Error deleting file:", err);
+        }
+      }
+      return res.status(404).json({ message: "Level category not found" });
+    }
+
+    // Generate correct filename
+    const ext = path.extname(req.file.originalname);
+    const timestamp = Date.now();
+    const correctFilename = `category-bg-${categoryId}-${timestamp}${ext}`;
+
+    // Move/rename file
+    const tempPath = req.file.path;
+    const itemsDir = path.join(__dirname, "..", "uploads", "items"); // Reuse items dir or create categories dir? 
+    // Wait, let's check structure. Probably 'uploads/categories' if it exists. Or just 'uploads'.
+    // User structure seems to be 'uploads/rewards', 'uploads/levels'.
+    // I'll use 'uploads/categories'. Warning: I need to ensure dir exists or use general 'uploads'.
+    // `rewardController` used `path.join(__dirname, "..", "uploads", "rewards")`.
+    // I should create/use `uploads/categories`.
+    // BUT `multer` middleware usually defines destination.
+    // If I use the same middleware as rewards, it might drop in generic folder.
+    // I'll assume `uploads/categories` is desired. I'll use `fs.mkdirSync` to be safe.
+
+    const categoriesDir = path.join(__dirname, "..", "uploads", "categories");
+    if (!fs.existsSync(categoriesDir)) {
+      fs.mkdirSync(categoriesDir, { recursive: true });
+    }
+
+    const correctPath = path.join(categoriesDir, correctFilename);
+
+    try {
+      fs.renameSync(tempPath, correctPath);
+    } catch (renameError) {
+      // Try copy and delete if rename fails (cross-device)
+      try {
+        fs.copyFileSync(tempPath, correctPath);
+        fs.unlinkSync(tempPath);
+      } catch (copyError) {
+        if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+        return res.status(500).json({ message: "Error saving file", error: copyError.message });
+      }
+    }
+
+    const path_file = `/uploads/categories/${correctFilename}`;
+
+    // Update DB
+    const updateData = { background_image: path_file };
+
+    // Delete old file
+    if (levelCategory.background_image) {
+      const oldFilePath = path.join(__dirname, "..", levelCategory.background_image);
+      if (fs.existsSync(oldFilePath)) {
+        try {
+          fs.unlinkSync(oldFilePath);
+        } catch (err) { }
+      }
+    }
+
+    const updatedCategory = await prisma.levelCategory.update({
+      where: { category_id: parseInt(categoryId) },
+      data: updateData,
+    });
+
+    res.json({
+      message: "Background uploaded successfully",
+      levelCategory: updatedCategory,
+    });
+  } catch (error) {
+    console.error("Error uploading background:", error);
+    if (req.file && req.file.path && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    res.status(500).json({ message: "Error uploading background", error: error.message });
+  }
+};
+
+// Delete category background
+exports.deleteCategoryBackground = async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+
+    const levelCategory = await prisma.levelCategory.findUnique({
+      where: { category_id: parseInt(categoryId) },
+    });
+
+    if (!levelCategory) {
+      return res.status(404).json({ message: "Level category not found" });
+    }
+
+    if (levelCategory.background_image) {
+      const filePath = path.join(__dirname, "..", levelCategory.background_image);
+      if (fs.existsSync(filePath)) {
+        try {
+          fs.unlinkSync(filePath);
+        } catch (err) {
+          console.error("Error deleting file:", err);
+        }
+      }
+    }
+
+    const updatedCategory = await prisma.levelCategory.update({
+      where: { category_id: parseInt(categoryId) },
+      data: { background_image: null },
+    });
+
+    res.json({
+      message: "Background deleted successfully",
+      levelCategory: updatedCategory,
+    });
+  } catch (error) {
+    console.error("Error deleting background:", error);
+    res.status(500).json({ message: "Error deleting background", error: error.message });
+  }
+};

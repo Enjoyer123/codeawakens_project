@@ -94,6 +94,7 @@ export const useLevelData = (levelId, getToken) => {
                     knapsack_data: typeof level.knapsack_data === 'string' ? JSON.parse(level.knapsack_data) : level.knapsack_data,
                     subset_sum_data: typeof level.subset_sum_data === 'string' ? JSON.parse(level.subset_sum_data) : level.subset_sum_data,
                     coin_change_data: typeof level.coin_change_data === 'string' ? JSON.parse(level.coin_change_data) : level.coin_change_data,
+                    applied_data: typeof level.applied_data === 'string' ? JSON.parse(level.applied_data) : level.applied_data,
                     nqueen_data: typeof level.nqueen_data === 'string' ? JSON.parse(level.nqueen_data) : level.nqueen_data,
 
                     selectedBlocks: level.level_blocks?.map(lb => lb.block_id) || [],

@@ -113,7 +113,7 @@ export function playCombatSequence(scene, isWin, onComplete) {
     // Store anim props for later use in this file
     player.customAnims = { move: moveAnim, stand: standAnim, attack: attackAnim, death: deathAnim };
 
-    const scale = 1.8; // Restored to standard size for consistency
+    const scale = 2.2; // Restored to standard size for consistency
     player.setScale(scale);
     player.setData('defaultScale', scale);
     player.setDepth(100);

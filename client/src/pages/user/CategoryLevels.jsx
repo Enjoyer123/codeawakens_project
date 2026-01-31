@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 
 import { useCategoryData } from './hooks/useCategoryData';
+import { getImageUrl } from '@/utils/imageUtils';
 import MapCoordinatePicker from '../../components/tools/MapCoordinatePicker';
 import PageLoader from '../../components/shared/Loading/PageLoader';
 
@@ -112,7 +113,7 @@ const CategoryLevels = () => {
       {/* Map Container */}
       <div className="relative w-full max-w-5xl mx-auto shadow-2xl lg:shadow-none lg:max-w-none lg:mx-0 lg:w-full lg:h-full">
         <img
-          src="/map_level.jpg"
+          src={categoryInfo?.background_image ? getImageUrl(categoryInfo.background_image) : "/map_level.jpg"}
           alt="Level Map"
           className="w-full h-auto object-contain lg:w-full lg:h-full lg:object-fill block"
         />

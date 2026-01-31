@@ -28,20 +28,21 @@ const RewardImageDialog = ({
         <DialogHeader>
           <DialogTitle>จัดการรูปภาพ: {selectedReward?.reward_name}</DialogTitle>
           <DialogDescription>
-            อัปโหลดรูปภาพสำหรับ Frame 1-5 (สูงสุด 5 รูป)
+            อัปโหลดรูปภาพรางวัล
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-6 py-4">
-          {[1, 2, 3, 4, 5].map((frameNum) => {
+          {(() => {
+            const frameNum = 1;
             const frameKey = `frame${frameNum}`;
             const frameImage = selectedReward?.[frameKey];
             const isUploading = uploadingFrame === frameNum;
             const isDeleting = deletingFrame === frameNum;
 
             return (
-              <Card key={frameNum}>
+              <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Frame {frameNum}</CardTitle>
+                  <CardTitle className="text-lg">Reward Image</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {frameImage ? (
@@ -49,7 +50,7 @@ const RewardImageDialog = ({
                       <div className="border rounded-lg p-2 relative group">
                         <img
                           src={getImageUrl(frameImage)}
-                          alt={`Frame ${frameNum}`}
+                          alt="Reward Image"
                           className="w-full h-48 object-contain rounded"
                         />
                         <Button
@@ -91,7 +92,7 @@ const RewardImageDialog = ({
                 </CardContent>
               </Card>
             );
-          })}
+          })()}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>

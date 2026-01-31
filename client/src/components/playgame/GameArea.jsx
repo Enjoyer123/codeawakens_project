@@ -12,6 +12,7 @@ import HintButton from './ui/HintButton';
 import GuideButton from './ui/GuideButton';
 import PatternMatchPanel from './ui/PatternMatchPanel';
 import BigOSelector from './ui/BigOSelector';
+import BigOQuizModal from './ui/BigOQuizModal';
 import HintPopup from './HintPopup';
 
 import { API_BASE_URL } from '../../config/apiConfig';
@@ -42,36 +43,19 @@ const GameArea = ({
   workspaceRef,
   userBigO,
   onUserBigOChange,
+  showBigOQuiz,
+  onCloseBigOQuiz,
   userProgress,
   allLevels,
   onOpenGuide,
   hasGuides,
 }) => {
   const { getToken } = useAuth();
-  const [viewerData, setViewerData] = useState(null);
   const [viewerLoading, setViewerLoading] = useState(false);
   const currentBlockCount = hintData?.currentBlockCount || 0;
 
   // ใช้ bestPattern.count ถ้ามี หรือใช้ totalBlocks เป็น fallback
   const patternBlockCount = hintData?.bestPattern?.count || hintData?.totalBlocks || null;
-  console.log('🔍 [GameArea] patternBlockCount:', patternBlockCount);
-  console.log('🔍 [GameArea] Block count debug:', {
-    currentBlockCount,
-    patternBlockCount,
-    hasBestPattern: !!hintData?.bestPattern,
-    bestPatternName: hintData?.bestPattern?.name,
-    bestPatternCount: hintData?.bestPattern?.count,
-    totalBlocks: hintData?.totalBlocks
-  });
-
-  console.log('🔍 [GameArea] render Assist panel state:', {
-    onNeedHintClickType: typeof onNeedHintClick,
-    hasLevelHints: Array.isArray(levelHints) && levelHints.length > 0,
-    levelHintsLength: levelHints?.length || 0,
-    hintOpen,
-    needHintDisabled,
-    hasActiveLevelHint: !!activeLevelHint,
-  });
 
   // --- Logic: ค้นหารูปอาวุธระดับดีที่สุดของด่านนี้ ---
   const allPatterns = [...(levelData?.goodPatterns || []), ...(levelData?.patterns || [])];
@@ -208,12 +192,17 @@ const GameArea = ({
             weaponImgSrc={weaponImgSrc}
           />
 
-          {/* Big O Complexity */}
-          <BigOSelector
-            userBigO={userBigO}
-            onUserBigOChange={onUserBigOChange}
-            hintData={hintData}
-          />
+          {/* Big O Complexity (Display Only if set) */}
+          {userBigO && (
+            <div className="flex-shrink-0 bg-black/30 rounded-lg p-3 border border-gray-700/50 min-w-[120px]">
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
+                Selected Big O
+              </label>
+              <div className="text-yellow-400 font-mono font-bold text-lg">
+                {userBigO}
+              </div>
+            </div>
+          )}
 
         </div>
       </div>
@@ -223,6 +212,13 @@ const GameArea = ({
         isOpen={hintOpen && levelHints && levelHints.length > 0}
         onClose={onToggleHint}
         initialHintIndex={hintOpenCount}
+      />
+
+      <BigOQuizModal
+        isOpen={showBigOQuiz}
+        onClose={onCloseBigOQuiz}
+        onSelect={onUserBigOChange}
+        currentPatternName={hintData?.bestPattern?.name}
       />
     </div>
 

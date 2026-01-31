@@ -7,15 +7,16 @@ import { getUserByClerkId } from '../../../services/profileService';
 import ProfileTab from './tabs/ProfileTab';
 import QuestLogTab from './tabs/QuestLogTab';
 import InventoryTab from './tabs/InventoryTab';
-import PageLoader from '../Loading/PageLoader';
-import { API_BASE_URL } from '../../../config/apiConfig';
+import { Loader } from '@/components/ui/loader';
 
+import { API_BASE_URL } from '../../../config/apiConfig';
 
 const UserDetailsContent = ({ userId, allowEdit = false, onUpdateSuccess, initialTabValue = 'profile', useProfileService = false }) => {
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(true);
   const [hoveredContent, setHoveredContent] = useState(null);
   const [userDetails, setUserDetails] = useState(null);
+
   useEffect(() => {
     if (userId || useProfileService) {
       loadUserDetails();
@@ -52,7 +53,10 @@ const UserDetailsContent = ({ userId, allowEdit = false, onUpdateSuccess, initia
 
   if (loading) {
     return (
-      <PageLoader message="Loading details..." />
+      <div className="w-full min-h-[600px] flex flex-col items-center justify-center">
+        <Loader size="lg" className="mb-4 text-primary" />
+        <p className="text-gray-500 font-medium">Loading details...</p>
+      </div>
     );
   }
 

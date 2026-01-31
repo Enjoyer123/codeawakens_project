@@ -48,7 +48,7 @@ const RewardFormDialog = ({
   const dialogContentClassName = 'max-w-4xl max-h-[90vh] overflow-y-auto';
   const gridClassName = 'grid grid-cols-2 gap-4';
   const noteClassName = 'text-xs text-gray-500 mt-1';
-  const noteText = 'หมายเหตุ: สามารถอัปโหลดรูปภาพ Frame 1-5 ได้หลังจากสร้าง reward แล้ว โดยกดปุ่ม "รูปภาพ" ในตาราง';
+  const noteText = 'หมายเหตุ: สามารถอัปโหลดรูปภาพได้หลังจากสร้าง reward แล้ว โดยกดปุ่ม "รูปภาพ" ในตาราง';
 
   const levelOptions = levels.map((level) => ({
     value: level.level_id,

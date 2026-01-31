@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Trash2, FileText } from 'lucide-react';
+import { Eye, Trash2, FileText, ClipboardList } from 'lucide-react';
 import { getImageUrlSafe } from '@/utils/imageUtils';
 
 const UserTable = ({ users, onRoleChange, onViewDetails, onViewHistory, onDelete, onResetScore }) => {
@@ -79,12 +79,14 @@ const UserTable = ({ users, onRoleChange, onViewDetails, onViewHistory, onDelete
                       ดูข้อมูล
                     </Button>
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
                       onClick={() => onViewHistory(userItem)}
                       title="View Test Results"
+                      className="text-blue-600 border-blue-200 hover:bg-blue-50"
                     >
-                      <FileText className="h-4 w-4 text-blue-600" />
+                      <ClipboardList className="h-4 w-4 mr-2" />
+                      ผลสอบ
                     </Button>
                     <select
                       value={userItem.role || 'user'}
@@ -106,18 +108,20 @@ const UserTable = ({ users, onRoleChange, onViewDetails, onViewHistory, onDelete
                     </Button>
                     <div className="flex flex-col gap-1">
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="xs"
                         onClick={() => onResetScore(userItem.user_id, 'pre')}
-                        className="text-xs h-6"
+                        className="text-[10px] h-6 px-2 text-amber-600 border-amber-200 hover:bg-amber-50 hover:text-amber-700"
+                        title="Reset Pre-Test Score"
                       >
                         Reset Pre
                       </Button>
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="xs"
                         onClick={() => onResetScore(userItem.user_id, 'post')}
-                        className="text-xs h-6"
+                        className="text-[10px] h-6 px-2 text-amber-600 border-amber-200 hover:bg-amber-50 hover:text-amber-700"
+                        title="Reset Post-Test Score"
                       >
                         Reset Post
                       </Button>

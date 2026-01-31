@@ -89,8 +89,9 @@ export function setupMonsters(scene) {
 
             // Create monster sprite with correct texture
             const monsterSprite = scene.add.sprite(startPos.x, startPos.y, textureKey);
-            monsterSprite.setScale(1.8);
-            monsterSprite.setData('defaultScale', 1.8);
+            monsterSprite.setScale(2.2);
+            monsterSprite.setData('defaultScale', 2.2);
+            monsterSprite.setOrigin(0.5, 0.75); // Raise sprite visually
             monsterSprite.setData('idleAnim', idleAnim);
             monsterSprite.setData('moveAnim', moveAnim);
             monsterSprite.setData('attackAnim', attackAnim);
