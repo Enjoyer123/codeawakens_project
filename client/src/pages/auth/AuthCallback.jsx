@@ -64,7 +64,7 @@ const AuthCallback = () => {
 
   if (loading) {
     return (
-      <PageLoader message="กำลังเข้าสู่ระบบ..." />
+      <PageLoader message="Loading..." />
     );
   }
 

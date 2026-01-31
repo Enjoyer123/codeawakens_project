@@ -35,7 +35,7 @@ export function createToolboxConfig(enabledBlocks) {
   if (movementBlocks.length > 0) {
     categories.push({
       kind: "category",
-      name: "🚀 Movement",
+      name: "Movement",
       categorystyle: "logic_category",
       contents: movementBlocks,
     });
