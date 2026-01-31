@@ -14,6 +14,7 @@ const PatternInfoForm = ({
   setBigO,
   isEditMode,
   patternLoaded,
+  weapons = [],
   disabled = false
 }) => {
   return (
@@ -59,14 +60,20 @@ const PatternInfoForm = ({
 
         <div>
           <Label htmlFor="weaponId">อาวุธ (ไม่บังคับ)</Label>
-          <Input
+          <select
             id="weaponId"
-            type="number"
+            className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
             value={weaponId || ''}
             onChange={(e) => setWeaponId(e.target.value)}
-            placeholder="ID อาวุธ"
             disabled={disabled}
-          />
+          >
+            <option value="">-- ไม่ระบุ --</option>
+            {weapons && weapons.map((weapon) => (
+              <option key={weapon.weapon_id} value={weapon.weapon_id}>
+                {weapon.weapon_name} {weapon.emoji}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="relative">

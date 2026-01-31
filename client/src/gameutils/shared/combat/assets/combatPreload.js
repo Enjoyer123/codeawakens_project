@@ -47,6 +47,50 @@ export async function preloadWeaponEffectSafe(scene, weaponKey, effectType = '')
   const texturePrefix = `effect_${weaponKey}${effectType ? `_${effectType}` : ''}`;
   const framesToLoad = [];
 
+  // SPECIAL CASE: Circle weapon
+  if (weaponKey.toLowerCase() === 'circle') {
+    console.log('Preloading Circle special frames...');
+    for (let i = 1; i <= 10; i++) {
+      const customKey = `Circle_${i}`;
+      // Try multiple potential paths for Circle images
+      // Priority 1: Uploads folder (if user uploaded via admin)
+      // Priority 2: Standard aura/effect folder
+
+      // Note: We'll try to check availability. Since we can't easily check multiple paths efficiently, 
+      // we'll try the uploads path first as that's where new "weapons" usually go.
+      // But user might have put them in /aura/ or root.
+
+      // Let's try the schema: /uploads/weapons_effect/Circle_1.png
+      const url1 = `${API_BASE_URL}/uploads/weapons_effect/Circle_${i}.png`;
+      const url2 = `/aura/Circle_${i}.png`;
+      const url3 = `/weapons_effect/Circle_${i}.png`;
+
+      if (scene.textures && !scene.textures.exists(customKey)) {
+        // We will try url1 first. If not exists, try others?
+        // `checkImageExistsSafe` is async.
+
+        // Concurrent check?
+        const exists1 = await checkImageExistsSafe(url1);
+        if (exists1) {
+          framesToLoad.push({ key: customKey, url: url1 });
+          continue;
+        }
+
+        const exists2 = await checkImageExistsSafe(url2);
+        if (exists2) {
+          framesToLoad.push({ key: customKey, url: url2 });
+          continue;
+        }
+
+        const exists3 = await checkImageExistsSafe(url3);
+        if (exists3) {
+          framesToLoad.push({ key: customKey, url: url3 });
+          continue;
+        }
+      }
+    }
+  }
+
   // ใช้รูปแบบใหม่: {weaponkey}_attack_frame.png
   const typeFile = effectType || 'attack'; // default เป็น 'attack' สำหรับ effect
   // const API_BASE_URL = ... (Removed)

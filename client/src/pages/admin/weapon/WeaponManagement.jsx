@@ -205,6 +205,15 @@ const WeaponManagement = () => {
       return;
     }
 
+    // Validation: Only 1 image for type 'weapon'
+    if (imageForm.type_animation === 'weapon') {
+      const hasWeaponImage = selectedWeapon.weapon_images?.some(img => img.type_animation === 'weapon');
+      if (hasWeaponImage) {
+        setImageError('สามารถเพิ่มรูปภาพอาวุธ (Type: Weapon) ได้เพียง 1 รูปเท่านั้น (หากต้องการเปลี่ยน ให้ลบรูปเดิมออกก่อน)');
+        return;
+      }
+    }
+
     try {
       setUploadingImage(true);
       setImageError(null);

@@ -24,14 +24,14 @@ import {
     updateMonsters,
     drawCinematicMonster
 } from '..';
-import { createCharacterAnims } from '../../../anims/PlayerAnims';
-import { createVampireAnims } from '../../../anims/EnemyAnims';
+// Removed Legacy Anims
 import { createVampire_1Anims } from '../../../anims/Vampire_1Anims';
 import { createSlime1Anims } from '../../../anims/Slime_1Anims';
 import { createMain_1Anims } from '../../../anims/Main_1Anims';
 import { createMain_2Anims } from '../../../anims/Main_2Anims';
 import { createMain_3Anims } from '../../../anims/Main_3Anims';
 import { createVampire_2Anims } from '../../../anims/Vampire_2Anims';
+import { createVampire_3Anims } from '../../../anims/Vampire_3Anims';
 import { preloadAllWeaponEffects } from '../../shared/combat';
 
 import { API_BASE_URL } from '../../../config/apiConfig';
@@ -83,10 +83,11 @@ export class GameScene extends Phaser.Scene {
         }
 
         // Load sprites
-        this.load.atlas('player', '/characters/player.png', '/characters/player.json');
-        this.load.atlas('vampire', '/enemies/vampire.png', '/enemies/vampire.json');
+        // Legacy 'player' and 'vampire' atlases removed
+        // Only load V1/2/3 and Main1/2/3 + Slime
         this.load.atlas('Vampire_1', '/enemies/Vampire1.png', '/enemies/Vampire1.json');
         this.load.atlas('Vampire_2', '/enemies/Vampire2.png', '/enemies/Vampire2.json');
+        this.load.atlas('Vampire_3', '/enemies/Vampire3.png', '/enemies/Vampire3.json');
         // Load Slime sprites (using slime_1 key to match animation configs)
         this.load.atlas('slime_1', '/characters/Slime1.png', '/characters/Slime1.json');
         // Load newly added Main_1 character
@@ -123,6 +124,15 @@ export class GameScene extends Phaser.Scene {
         // Load aura_2 (13 frames)
         for (let i = 1; i <= 13; i++) {
             this.load.image(`aura_2_${i}`, `/aura/aura_2_${i}.png`);
+        }
+
+        // Load circle_1 (7 frames)
+        for (let i = 1; i <= 7; i++) {
+            this.load.image(`circle_1_${i}`, `/aura/circle_1_${i}.png`);
+        }
+        // Load circle_2 (9 frames)
+        for (let i = 1; i <= 9; i++) {
+            this.load.image(`circle_2_${i}`, `/aura/circle_2_${i}.png`);
         }
     }
 
@@ -164,6 +174,34 @@ export class GameScene extends Phaser.Scene {
             console.log("✅ Aura 2 animation created");
         }
 
+        // Create circle_1 animation
+        if (this.textures.exists('circle_1_1')) {
+            const frames = [];
+            for (let i = 1; i <= 7; i++) {
+                frames.push({ key: `circle_1_${i}` });
+            }
+            this.anims.create({
+                key: 'circle_1',
+                frames: frames,
+                frameRate: 10,
+                repeat: -1
+            });
+        }
+
+        // Create circle_2 animation
+        if (this.textures.exists('circle_2_1')) {
+            const frames = [];
+            for (let i = 1; i <= 9; i++) {
+                frames.push({ key: `circle_2_${i}` });
+            }
+            this.anims.create({
+                key: 'circle_2',
+                frames: frames,
+                frameRate: 10,
+                repeat: -1
+            });
+        }
+
         setCurrentScene(this);
         this.levelData = this.currentLevel;
         console.log('🔍 Level data assigned to scene:', {
@@ -173,14 +211,16 @@ export class GameScene extends Phaser.Scene {
         });
 
         // Create animations
-        createCharacterAnims(this.anims);
-        createVampireAnims(this.anims);
+        // Legacy Animation Creators Removed
+        // createCharacterAnims(this.anims);
+        // createVampireAnims(this.anims);
         createVampire_1Anims(this.anims);
         createSlime1Anims(this.anims);
         createMain_1Anims(this.anims);
         createMain_2Anims(this.anims);
         createMain_3Anims(this.anims);
         createVampire_2Anims(this.anims);
+        createVampire_3Anims(this.anims);
 
         // Debug: Verify Slime animations
         const testKey = 'slime_1-walk_right';

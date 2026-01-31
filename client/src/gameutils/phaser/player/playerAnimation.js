@@ -4,16 +4,11 @@ import { getCurrentGameState } from '../../shared/game/gameState';
 
 function getAnimKey(prefix, type, dir, hasDirectionalAnims) {
     if (prefix === 'player') {
-        // Player formatting: 'stand-side', 'walk-down', 'actack-side'
-        // 'actack' seems to be a typo in original assets but checks out with existing code
-        const typeMap = { 'idle': 'stand', 'walk': 'walk', 'attack': 'actack' };
-        const action = typeMap[type];
+        // Legacy 'player' maps to 'main_1' now
+        prefix = 'main_1';
+    }
 
-        if (dir === 'left' || dir === 'right') {
-            return `${action}-side`;
-        }
-        return `${action}-${dir}`;
-    } else if (prefix === 'slime_1' || prefix === 'main_1' || prefix === 'main_2' || prefix === 'main_3') {
+    if (prefix === 'main_1' || prefix === 'main_2' || prefix === 'main_3') {
         // Slime/Main formatting: 'slime_1-walk_down', 'main_1-idle_down'
         // Uses prefix + '_1' as the animation key base
         const keyPrefix = `${prefix}`;

@@ -88,15 +88,6 @@ export function setupTrainSchedule(scene) {
             container.add(timeLabel);
         }
 
-        // Title (Centered relative to the container width)
-        const title = scene.add.text(width / 2, 50, payload.name || "Train Schedule", {
-            fontSize: '24px',
-            color: '#00d4ff',
-            fontStyle: 'bold',
-            fontFamily: 'Arial'
-        }).setOrigin(0.5);
-        container.add(title);
-
         // Store reference for updates
         scene.trainSchedule = {
             container,

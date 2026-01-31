@@ -123,9 +123,10 @@ export const usePhaserMapRenderer = ({
         const monsterY = monster.y || (monster.startNode ? currentFormData.nodes.find(n => n.id === monster.startNode)?.y : 0);
 
         if (monsterX && monsterY) {
-          const mType = monster.type || 'enemy';
+          const mType = monster.type || 'vampire_1';
           const isVampire = mType === 'vampire_1';
           const isVampire2 = mType === 'vampire_2';
+          const isVampire3 = mType === 'vampire_3';
 
           // Shadow
           currentGraphics.fillStyle(0x000000, 0.3);
@@ -141,6 +142,12 @@ export const usePhaserMapRenderer = ({
           } else if (isVampire2) {
             mColor = 0x8B0000;
             mEmoji = '🧛';
+          } else if (isVampire3) {
+            mColor = 0x8B0000;
+            mEmoji = '🧛';
+          } else if (mType === 'slime_1') {
+            mColor = 0x00ff00; // Green
+            mEmoji = '💧';
           }
 
           currentGraphics.fillStyle(mColor, 1);

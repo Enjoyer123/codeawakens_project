@@ -40,15 +40,17 @@ export function drawPlayer(scene) {
         }
 
         // Determine character texture and animation properties
-        const characterType = scene.levelData.character || 'player';
-        let textureKey = 'player';
-        let animPrefix = 'player';
-        let hasDirectionalAnims = false;
+        // DEFAULT TO MAIN_1 if undefined or 'player' (legacy)
+        const characterType = scene.levelData.character || 'main_1';
+        let textureKey = 'main_1';
+        let animPrefix = 'main_1';
+        let hasDirectionalAnims = true;
 
-        if (characterType === 'slime') {
-            textureKey = 'slime_1'; // Asset key for Slime
-            animPrefix = 'slime';
-            hasDirectionalAnims = true; // Slime has specific left/right anims
+        if (characterType === 'player') {
+            // Legacy mapping
+            textureKey = 'main_1';
+            animPrefix = 'main_1';
+            hasDirectionalAnims = true;
         } else if (characterType === 'main_1') {
             textureKey = 'main_1';
             animPrefix = 'main_1';
@@ -201,39 +203,42 @@ export function drawCinematicMonster(scene) {
     // Match the specific height used in drawPlayer fallback (bottom-left)
     // drawPlayer uses: scene.scale.height - 100
     // So we use same Y for alignment
-    const monsterY = height - 75;
+    const monsterY = height - 100;
     const monsterX = width - 100;
 
     console.log('🎬 Drawing Cinematic Monster at', monsterX, monsterY);
 
     try {
         // Determine texture and animation based on the first monster in levelData if available
-        let textureKey = 'vampire';
-        let idleAnim = 'vampire-idle';
+        let textureKey = 'Vampire_1';
+        let idleAnim = 'vampire_1-idle_left';
 
         if (scene.levelData.monsters && scene.levelData.monsters.length > 0) {
             const monsterData = scene.levelData.monsters[0];
-            const monsterType = monsterData.type || 'enemy';
+            const monsterType = monsterData.type || 'vampire_1';
 
             if (monsterType === 'vampire_1') {
                 textureKey = 'Vampire_1';
-                idleAnim = 'vampire_1-idle_down';
+                idleAnim = 'vampire_1-idle_left';
             } else if (monsterType === 'vampire_2') {
                 textureKey = 'Vampire_2';
-                idleAnim = 'vampire_2-idle_down';
-            } else if (monsterType === 'enemy') {
-                textureKey = 'vampire';
-                idleAnim = 'vampire-idle';
+                idleAnim = 'vampire_2-idle_left';
+            } else if (monsterType === 'vampire_3') {
+                textureKey = 'Vampire_3';
+                idleAnim = 'vampire_3-idle_left';
+            } else if (monsterType === 'slime_1') {
+                textureKey = 'slime_1';
+                idleAnim = 'slime_1-idle_left';
             }
         }
 
         const monster = scene.add.sprite(monsterX, monsterY, textureKey);
-        monster.setScale(1.8);
-        monster.setData('defaultScale', 1.8);
-        monster.setOrigin(0.5, 0.75);
+        monster.setScale(2.2); // Matching combat animation scale
+        monster.setData('defaultScale', 2.2);
+        monster.setOrigin(0.5, 0.5);
         monster.setData('idleAnim', idleAnim);
         monster.setDepth(8);
-        monster.setFlipX(true);
+        monster.setFlipX(false); // Do not flip, use Left anims directly
 
         // Play idle animation
         if (monster.anims && scene.anims.exists(idleAnim)) {

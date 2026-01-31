@@ -75,7 +75,7 @@ export function drawLevel(scene) {
         console.log(`🎨 Drawing ${scene.levelData.edges.length} edges...`);
     }
 
-    graphics.lineStyle(3, 0xffd700, 1);
+    graphics.lineStyle(3, 0xF5E6D3, 0.6); // Soft cream color with reduced opacity
     if (scene.levelData.edges && Array.isArray(scene.levelData.edges)) {
         scene.levelData.edges.forEach((edge, index) => {
             try {
@@ -172,7 +172,7 @@ export function setupObstacles(scene) {
             }
 
             // Draw pit
-            scene.levelGraphics.fillStyle(0x000000, 0.8);
+            scene.levelGraphics.fillStyle(0x000000, 0.2); // Reduced from 0.8 to 0.2 for fainter look
             scene.levelGraphics.beginPath();
             scene.levelGraphics.moveTo(obstacle.points[0].x, obstacle.points[0].y);
 
@@ -186,7 +186,7 @@ export function setupObstacles(scene) {
             scene.levelGraphics.fillPath();
 
             // Border
-            scene.levelGraphics.lineStyle(3, 0x8b4513);
+            scene.levelGraphics.lineStyle(2, 0x8b4513, 0.3); // Thinner and semi-transparent (was 3, 1.0)
             scene.levelGraphics.strokePath();
 
             scene.obstacles.push({

@@ -129,7 +129,9 @@ export function createCanvasBasedEffect(scene, posOrSprite, validFrames, weaponK
 
     // *** สร้าง effect ***
     const effect = scene.add.image(x, y, firstFrameKey);
-    effect.setScale(4.0);
+    // Use scale from config if available (for Circle aura etc), else default to 4.0
+    const finalScale = posOrSprite.scale || 4.0;
+    effect.setScale(finalScale);
     effect.setDepth(depth);
     effect.setRotation(angle); // Apply rotation if provided
     effect.setAlpha(0);

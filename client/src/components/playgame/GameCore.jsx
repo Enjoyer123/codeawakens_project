@@ -23,7 +23,6 @@ import {
 } from '../../gameutils/shared/items';
 import {
   getCurrentGameState,
-  toggleDebugMode,
 } from '../../gameutils/shared/game';
 import {
   isInCombat
@@ -178,14 +177,7 @@ const GameCore = ({
     progress: 0
   });
 
-  // Trigger Big O Quiz when pattern is matched 100%
-  useEffect(() => {
-    if (hintData?.patternPercentage === 100) {
-      if (!userBigO) {
-        setShowBigOQuiz(true);
-      }
-    }
-  }, [hintData?.patternPercentage, userBigO]);
+
 
   // Score system state
   const [finalScore, setFinalScore] = useState(null);
@@ -269,9 +261,6 @@ const GameCore = ({
 
   // Admin pattern management
   const [goodPatterns, setGoodPatterns] = useState([]);
-
-  // Debug mode state
-  const [debugMode, setDebugMode] = useState(false);
 
   // Text code editor state
   const [textCode, setTextCode] = useState("");
@@ -601,6 +590,29 @@ const GameCore = ({
     hintData // Pass hintData for pattern matching info in scoring
   });
 
+  // Trigger Big O Quiz logic moved to handleRunClick
+  const [shouldRunAfterBigO, setShouldRunAfterBigO] = useState(false);
+
+  // Hook to run code after BigO selection
+  useEffect(() => {
+    if (shouldRunAfterBigO && userBigO) {
+      console.log('Running code after BigO selection');
+      runCode();
+      setShouldRunAfterBigO(false);
+    }
+  }, [shouldRunAfterBigO, userBigO, runCode]);
+
+  const handleRunClick = () => {
+    // Check if pattern matched 100% AND BigO not yet provided
+    // Also ensure we are not already running
+    if (hintData?.patternPercentage === 100 && !userBigO) {
+      setShowBigOQuiz(true);
+      setShouldRunAfterBigO(true);
+      return;
+    }
+    runCode();
+  };
+
   // Handle restart game - using utils
   const handleRestartGame = () => {
     handleRestartGameUtil({
@@ -661,10 +673,7 @@ const GameCore = ({
     }
   };
 
-  const handleDebugToggle = () => {
-    setDebugMode(!debugMode);
-    toggleDebugMode();
-  };
+
 
   // Guide system state (Called unconditionally for React Hook rules)
   // Handles null currentLevel internally
@@ -810,12 +819,10 @@ const GameCore = ({
               <BlocklyArea
                 blocklyRef={blocklyRef}
                 blocklyLoaded={blocklyLoaded}
-                runCode={runCode}
+                runCode={handleRunClick}
                 gameState={gameState}
                 isRunning={isRunning}
                 isGameOver={isGameOver}
-                onDebugToggle={handleDebugToggle}
-                debugMode={debugMode}
                 currentLevel={currentLevel}
                 codeValidation={codeValidation}
                 blocklyJavaScriptReady={blocklyJavaScriptReady}
@@ -833,21 +840,39 @@ const GameCore = ({
 
       {/* Progress Modal - only show in normal mode */}
       {!isPreview && (
-        <ProgressModal
-          isOpen={showProgressModal}
-          onClose={handleCloseProgressModal}
-          gameResult={gameResult}
-          levelData={currentLevel}
-          attempts={attempts}
-          timeSpent={timeSpent}
-          blocklyXml={workspaceRef.current ? Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspaceRef.current)) : null}
-          textCodeContent={currentLevel?.textcode ? textCode || '' : null}
-          finalScore={finalScore}
-          hp_remaining={playerHpState}
-          getToken={getToken}
-          userBigO={userBigO}
-          targetBigO={hintData?.bestPatternBigO || hintData?.bestPattern?.big_o || hintData?.bestPattern?.bigO}
-        />
+        <>
+          <ProgressModal
+            isOpen={showProgressModal}
+            onClose={handleCloseProgressModal}
+            gameResult={gameResult}
+            levelData={currentLevel}
+            attempts={attempts}
+            timeSpent={timeSpent}
+            blocklyXml={workspaceRef.current ? Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspaceRef.current)) : null}
+            textCodeContent={currentLevel?.textcode ? textCode || '' : null}
+            finalScore={finalScore}
+            hp_remaining={playerHpState}
+            getToken={getToken}
+            userBigO={userBigO}
+            targetBigO={hintData?.bestPatternBigO || hintData?.bestPattern?.big_o || hintData?.bestPattern?.bigO}
+          />
+
+          {/* Floating "Show Results" button - appears when modal is minimized */}
+          {!showProgressModal && (isCompleted || isGameOver) && (
+            <button
+              onClick={() => setShowProgressModal(true)}
+              className="fixed top-4 right-4 z-50 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 rounded-lg shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 flex items-center gap-2 font-bold"
+              style={{
+                fontFamily: '"Press Start 2P", monospace',
+                fontSize: '10px',
+                textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
+              }}
+            >
+              <span>📊</span>
+              <span>SHOW RESULTS</span>
+            </button>
+          )}
+        </>
       )}
 
       <ExecutionErrorModal

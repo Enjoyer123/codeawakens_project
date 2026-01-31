@@ -29,6 +29,7 @@ const CategoryLevels = () => {
   const { categoryId } = useParams();
   const [reloadKey, setReloadKey] = useState(0);
   const [showDevTool, setShowDevTool] = useState(false);
+  const [hoveredLevelId, setHoveredLevelId] = useState(null);
 
   const { levels, categoryInfo, loading, error } = useCategoryData(getToken, categoryId, reloadKey);
 
@@ -126,18 +127,22 @@ const CategoryLevels = () => {
 
           if (!position) return null;
 
+          const isHovered = hoveredLevelId === level.level_id;
+
           return (
             <div
               key={level.level_id}
               onClick={() => !isLocked && handleLevelSelect(level.level_id)}
+              onMouseEnter={() => setHoveredLevelId(level.level_id)}
+              onMouseLeave={() => setHoveredLevelId(null)}
               className={`absolute transform -translate-x-1/2 -translate-y-1/2 z-10 
-                ${isLocked ? 'cursor-not-allowed contrast-75 grayscale-[0.6]' : 'cursor-pointer group'}`}
+                  ${isLocked ? 'cursor-not-allowed contrast-75 grayscale-[0.6]' : 'cursor-pointer group'}`}
               style={{ left: `${position.left}%`, top: `${position.top}%` }}
             >
               {/* Node Circle (Pill shape) */}
               <div className={`px-2 py-1 md:px-4 md:py-2 min-w-[2rem] min-h-[2rem] md:min-w-[3rem] md:min-h-[3rem] 
-                bg-white border-2 md:border-4 rounded-full shadow-lg flex items-center justify-center transition-transform 
-                ${isLocked ? 'border-gray-400 opacity-90' : 'border-green-500 transform group-hover:scale-110 group-active:scale-95 group-hover:border-yellow-400'}`}>
+                  bg-white border-2 md:border-4 rounded-full shadow-lg flex items-center justify-center transition-transform 
+                  ${isLocked ? 'border-gray-400 opacity-90' : 'border-green-500 transform group-hover:scale-110 group-active:scale-95 group-hover:border-yellow-400'}`}>
 
                 {isLocked && (
                   <div className="absolute -top-2 -right-2 bg-gray-700 text-white rounded-full p-1 shadow-md z-20">
@@ -157,6 +162,33 @@ const CategoryLevels = () => {
                   {level.title || level.level_name}
                 </span>
               </div>
+
+              {/* Locked Tooltip */}
+              {isLocked && isHovered && (
+                <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 w-max max-w-[200px] z-50">
+                  <div className="bg-black/90 text-white text-xs md:text-sm px-3 py-1.5 rounded-lg shadow-xl border border-white/20 text-center">
+                    {(() => {
+                      // Condition 1: Admin Locked (is_unlocked = false) -> Future Update
+                      if (level.is_unlocked === false) {
+                        return "รอการอัพเดทในอนาคต";
+                      }
+
+                      // Condition 2: Prerequisite Locked -> Must Pass ...
+                      const reqId = level.require_level_id || level.required_level_id;
+                      if (reqId) {
+                        const reqLevel = levels.find(l => l.level_id === reqId || l.level_id == reqId);
+                        const reqName = reqLevel ? (reqLevel.title || reqLevel.level_name) : `Level ${reqId}`;
+                        return `ต้องผ่านด่าน "${reqName}" ก่อน`;
+                      }
+
+                      // Fallback
+                      return "รอการอัพเดทในอนาคต";
+                    })()}
+                    {/* Little triangle arrow */}
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-black/90"></div>
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}

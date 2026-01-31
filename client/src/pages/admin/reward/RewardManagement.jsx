@@ -50,7 +50,6 @@ const RewardManagement = () => {
     reward_type: 'weapon',
     reward_name: '',
     description: '',
-    reward_data: '',
     required_score: 0,
     is_automatic: false,
   });
@@ -122,9 +121,6 @@ const RewardManagement = () => {
         reward_type: reward.reward_type,
         reward_name: reward.reward_name,
         description: reward.description || '',
-        reward_data: reward.reward_data
-          ? JSON.stringify(reward.reward_data, null, 2)
-          : '',
         required_score: reward.required_score,
         is_automatic: reward.is_automatic,
       });
@@ -135,7 +131,6 @@ const RewardManagement = () => {
         reward_type: 'weapon',
         reward_name: '',
         description: '',
-        reward_data: '',
         required_score: 0,
         is_automatic: false,
       });
@@ -153,32 +148,16 @@ const RewardManagement = () => {
       reward_type: 'weapon',
       reward_name: '',
       description: '',
-      reward_data: '',
       required_score: 0,
       is_automatic: false,
     });
   }, []);
 
   const handleSaveReward = useCallback(async () => {
-    setSaveError(null);
-
-    // Validate reward_data JSON if provided
-    let parsedRewardData = null;
-    if (rewardForm.reward_data.trim()) {
-      try {
-        parsedRewardData = JSON.parse(rewardForm.reward_data);
-      } catch (parseError) {
-        const errorMessage = 'Invalid JSON format in reward_data: ' + parseError.message;
-        setSaveError(errorMessage);
-        return { success: false, error: errorMessage };
-      }
-    }
-
     const formData = {
       ...rewardForm,
       level_id: parseInt(rewardForm.level_id),
       required_score: parseInt(rewardForm.required_score),
-      reward_data: parsedRewardData,
     };
 
     try {

@@ -32,30 +32,37 @@ export const playVictorySequence = async (currentLevel, initialScene) => {
         // 2. Determine configuration
         const victoryType = currentLevel.goalType === "ช่วยคน" ? 'rescue' : 'normal';
         const isCinematicLevel = !currentLevel.nodes || currentLevel.nodes.length === 0;
+        const isGraphLevel = currentLevel.nodes && currentLevel.nodes.length > 0 && currentLevel.edges && currentLevel.edges.length > 0;
 
         // 3. Pre-Banner Animation (Combat or Delay)
         if (isCinematicLevel) {
+            // Cinematic: Wait for combat animation to complete
             await new Promise((resolve) => {
                 playCombatSequence(currentScene, true, () => {
                     resolve();
                 });
             });
         } else {
-            // Minor delay to ensure everything settled before banner
-            await new Promise(r => setTimeout(r, 800));
+            // Graph/Regular: No pre-banner delay needed
+            // Visual effects will play naturally
         }
 
         // 4. Show Victory Banner
         showVictory(currentScene, victoryType);
 
-        // 5. Post-Banner Delay (for Node levels esp.)
-        if (!isCinematicLevel) {
-            // Delay before showing progress modal for node levels to let user impress with the banner
-            await new Promise(r => setTimeout(r, 2000));
+        // 5. Post-Banner Delay based on level type
+        if (isCinematicLevel) {
+            // Cinematic: Short delay to let banner appear, then show modal
+            await new Promise(r => setTimeout(r, 500));
+        } else if (isGraphLevel) {
+            // Graph: Minimal delay (just walks to goal node, no special effects)
+            await new Promise(r => setTimeout(r, 300));
+        } else {
+            // Regular level: Minimal delay, show modal almost immediately
+            await new Promise(r => setTimeout(r, 300));
         }
     } else {
         // Total fallback if no scene logic works (e.g. headless or broken state)
-        // Just verify we wait long enough roughly matching the animation time
-        await new Promise(r => setTimeout(r, 4000));
+        await new Promise(r => setTimeout(r, 2000));
     }
 };

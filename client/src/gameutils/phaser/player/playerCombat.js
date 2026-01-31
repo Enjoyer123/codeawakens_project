@@ -153,8 +153,40 @@ async function killEnemy(player, enemySprite) {
     // Stop input/interaction on enemy
     if (enemySprite.body) enemySprite.body.checkCollision.none = true;
 
-    // Show death effect and WAIT
-    if (showMonsterDeathEffect) {
+    // Helper to get direction (duplicated from Battle logic for independence)
+    const getDir = (sprite, target) => {
+        const ang = Phaser.Math.Angle.Between(sprite.x, sprite.y, target.x, target.y);
+        let deg = Phaser.Math.RadToDeg(ang);
+        deg = Phaser.Math.Angle.WrapDegrees(deg);
+        if (deg >= 45 && deg < 135) return 'down';
+        if (deg >= -45 && deg < 45) return 'right';
+        if (deg >= -135 && deg < -45) return 'up';
+        return 'left';
+    };
+
+    // Try to play Death Animation
+    let playedDeathAnim = false;
+    if (enemySprite.getData('hasDirectionalAnims')) {
+        const dir = getDir(enemySprite, player);
+        const prefix = enemySprite.getData('animPrefix');
+        const deathAnimKey = `${prefix}-death-${dir}`;
+
+        if (player.scene.anims.exists(deathAnimKey)) {
+            console.log(`💀 Playing death anim: ${deathAnimKey}`);
+            enemySprite.anims.play(deathAnimKey, true);
+            playedDeathAnim = true;
+
+            // Wait for animation
+            await new Promise(resolve => {
+                enemySprite.once('animationcomplete', () => resolve());
+                // Backup timeout
+                player.scene.time.delayedCall(1500, resolve);
+            });
+        }
+    }
+
+    // Show death effect and WAIT (Only if no death anim played, or as extra effect)
+    if (!playedDeathAnim && showMonsterDeathEffect) {
         // Hide health bars immediately so they don't float over the death anim
         const healthBar = enemySprite.getData('healthBar');
         const healthBarBg = enemySprite.getData('healthBarBg');
@@ -162,29 +194,25 @@ async function killEnemy(player, enemySprite) {
         if (healthBarBg) healthBarBg.setVisible(false);
 
         await showMonsterDeathEffect(player.scene, enemySprite.x, enemySprite.y);
-    } else {
+    } else if (!playedDeathAnim) {
         createDeathExplosion(player, enemySprite.x, enemySprite.y);
+    }
+
+    // Fade out if we played animation to smoother removal
+    if (playedDeathAnim) {
+        await new Promise(resolve => {
+            player.scene.tweens.add({
+                targets: enemySprite,
+                alpha: 0,
+                duration: 500,
+                onComplete: resolve
+            });
+        });
     }
 
     // Now fade out/destroy the sprite
     enemySprite.setVisible(false);
     player.scene.events.emit('enemyDefeated', enemySprite);
-
-    // Original cleanup tween (optional now, since we hid it, but good for GC)
-    /*
-    player.scene.tweens.add({
-        targets: enemySprite,
-        alpha: 0,
-        scaleX: 0.5,
-        scaleY: 0.5,
-        rotation: Math.PI * 2,
-        duration: 800,
-        ease: 'Back.easeIn',
-        onComplete: () => {
-            enemySprite.setVisible(false);
-        }
-    });
-    */
 }
 
 function createDeathExplosion(player, x, y) {

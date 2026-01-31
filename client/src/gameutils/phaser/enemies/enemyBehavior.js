@@ -77,10 +77,10 @@ export function attackPlayer(enemy, player) {
             if (scene.anims.exists(animKey)) {
                 enemy.anims.play(animKey, true);
             } else {
-                enemy.anims.play(enemy.getData('attackAnim') || 'vampire-attack', true);
+                enemy.anims.play(enemy.getData('attackAnim') || 'vampire_1-attack-down', true);
             }
         } else {
-            enemy.anims.play(enemy.getData('attackAnim') || 'vampire-attack', true);
+            enemy.anims.play(enemy.getData('attackAnim') || 'vampire_1-attack-down', true);
         }
     }
 
@@ -121,10 +121,10 @@ export function attackPlayer(enemy, player) {
                     if (scene.anims.exists(animKey)) {
                         enemy.anims.play(animKey, true);
                     } else {
-                        enemy.anims.play(enemy.getData('idleAnim') || 'vampire-idle', true);
+                        enemy.anims.play(enemy.getData('idleAnim') || 'vampire_1-idle_down', true);
                     }
                 } else {
-                    enemy.anims.play(enemy.getData('idleAnim') || 'vampire-idle', true);
+                    enemy.anims.play(enemy.getData('idleAnim') || 'vampire_1-idle_down', true);
                 }
             }
         });

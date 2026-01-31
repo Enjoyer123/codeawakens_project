@@ -4,6 +4,13 @@ import * as Blockly from 'blockly/core';
 import 'blockly/blocks';
 import 'blockly/javascript';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Loader } from '@/components/ui/loader';
 import PageLoader from '@/components/shared/Loading/PageLoader';
 import ContentLoader from '@/components/shared/Loading/ContentLoader';
@@ -13,6 +20,7 @@ import PatternInfoForm from '@/components/admin/pattern/PatternInfoForm';
 // Hooks
 import { useLevel } from '../../../services/hooks/useLevel';
 import { usePattern, usePatternTypes } from '../../../services/hooks/usePattern';
+import { useWeapons } from '../../../services/hooks/useWeapons';
 import { usePatternForm } from '../../../components/admin/pattern/hooks/usePatternForm';
 import { usePatternBlocklyManager } from '../../../components/admin/pattern/hooks/usePatternBlocklyManager';
 import { useSuppressBlocklyWarnings } from '@/components/admin/level/hooks/useSuppressBlocklyWarnings';
@@ -28,6 +36,7 @@ const PatternCreateEdit = () => {
   const { data: levelData, isLoading: isLevelLoading, error: levelError } = useLevel(levelId);
   const { data: patternData, isLoading: isPatternLoading, error: patternError } = usePattern(patternId);
   const { data: patternTypes = [] } = usePatternTypes();
+  const { data: weapons = [] } = useWeapons();
 
   // --- 2. View Mode ---
   const [isViewMode, setIsViewMode] = useState(false);
@@ -38,7 +47,7 @@ const PatternCreateEdit = () => {
     patternId,
     patternData,
     patternTypes,
-    onSaveSuccess: () => navigate(`/admin/levels/${levelId}/patterns`),
+    onSaveSuccess: () => navigate(`/admin/levels`),
     isEditMode
   });
 
@@ -121,7 +130,7 @@ const PatternCreateEdit = () => {
       <div className="flex-none p-4 bg-white shadow-sm z-10">
         <AdminPageHeader
           title={isEditMode ? `แก้ไขรูปแบบ: ${patternForm.patternName}` : "สร้างรูปแบบคำตอบใหม่"}
-          backPath={`/admin/levels/${levelId}/edit`}
+          backPath={`/admin/levels`}
           rightContent={
             <div className="flex gap-2">
               <Button
@@ -151,7 +160,10 @@ const PatternCreateEdit = () => {
             weaponId={patternForm.weaponId} setWeaponId={patternForm.setWeaponId}
             bigO={patternForm.bigO} setBigO={patternForm.setBigO}
             patternTypes={patternTypes}
+            weapons={weapons}
             disabled={isViewMode}
+            isEditMode={isEditMode}
+            patternLoaded={!!patternData}
           />
         </div>
 
@@ -162,22 +174,60 @@ const PatternCreateEdit = () => {
             <div className="flex items-center gap-4">
               <span className="font-bold text-gray-700">Step {blocklyManager.currentStepIndex + 1} / 3</span>
 
-              {/* Visual Effect Selector */}
-              <div className="flex items-center gap-2 border-l pl-4">
-                <span className="text-sm text-gray-500">Effect:</span>
-                <select
-                  className="bg-white border border-gray-300 text-gray-700 text-sm rounded-md focus:ring-blue-500 focus:border-blue-500 block p-1.5"
-                  value={(blocklyManager.steps[blocklyManager.currentStepIndex] && blocklyManager.steps[blocklyManager.currentStepIndex].effect) || ''}
-                  onChange={(e) => blocklyManager.updateStepEffect(e.target.value)}
-                  disabled={isViewMode}
-                >
-                  <option value="">-- No Effect --</option>
-                  <option value="circle_1">Circle 1</option>
-                  <option value="circle_2">Circle 2</option>
-                  <option value="aura_1">Aura 1</option>
-                  <option value="aura_2">Aura 2</option>
-                </select>
-              </div>
+              {/* Visual Effect Selector - Only for Step 1 & 2 */}
+              {blocklyManager.currentStepIndex < 2 && (
+                <div className="flex items-center gap-2 border-l pl-4">
+                  <span className="text-sm text-gray-500">Effect:</span>
+                  <Select
+                    value={(blocklyManager.steps[blocklyManager.currentStepIndex] && blocklyManager.steps[blocklyManager.currentStepIndex].effect) || ''}
+                    onValueChange={(value) => blocklyManager.updateStepEffect(value)}
+                    disabled={isViewMode}
+                  >
+                    <SelectTrigger className="w-[200px] h-[40px]">
+                      <SelectValue placeholder="-- No Effect --" />
+                    </SelectTrigger>
+                    <SelectContent className="z-[1000] max-h-[300px]">
+                      <SelectItem value="none">-- No Effect --</SelectItem>
+
+                      {/* Step 1 (Index 0): Only Aura */}
+                      {blocklyManager.currentStepIndex === 0 && (
+                        <>
+                          <SelectItem value="aura_1">
+                            <div className="flex items-center gap-2">
+                              <img src="/aura/aura_1_2.png" alt="Aura 1" className="w-8 h-8 object-contain bg-black/20 rounded-sm" />
+                              <span>Aura 1</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="aura_2">
+                            <div className="flex items-center gap-2">
+                              <img src="/aura/aura_2_2.png" alt="Aura 2" className="w-8 h-8 object-contain bg-black/20 rounded-sm" />
+                              <span>Aura 2</span>
+                            </div>
+                          </SelectItem>
+                        </>
+                      )}
+
+                      {/* Step 2 (Index 1): Only Circle */}
+                      {blocklyManager.currentStepIndex === 1 && (
+                        <>
+                          <SelectItem value="circle_1">
+                            <div className="flex items-center gap-2">
+                              <img src="/aura/circle_1_2.png" alt="Circle 1" className="w-8 h-8 object-contain bg-black/20 rounded-sm" />
+                              <span>Circle 1</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="circle_2">
+                            <div className="flex items-center gap-2">
+                              <img src="/aura/circle_2_2.png" alt="Circle 2" className="w-8 h-8 object-contain bg-black/20 rounded-sm" />
+                              <span>Circle 2</span>
+                            </div>
+                          </SelectItem>
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
             <div className="space-x-2">
               <Button variant="outline" size="sm" onClick={handleCopyToBuffer}>

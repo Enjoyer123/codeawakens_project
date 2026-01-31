@@ -72,7 +72,7 @@ const LevelCreateEdit = () => {
   const [edgeWeight, setEdgeWeight] = useState(1);
   const [patternListDialogOpen, setPatternListDialogOpen] = useState(false);
   const [monsterDialogOpen, setMonsterDialogOpen] = useState(false);
-  const [selectedMonsterType, setSelectedMonsterType] = useState('enemy');
+  const [selectedMonsterType, setSelectedMonsterType] = useState('vampire_1');
 
   // Selected Category (Needs to be synced with formData.category_id)
   const [selectedCategory, setSelectedCategory] = useState(null);

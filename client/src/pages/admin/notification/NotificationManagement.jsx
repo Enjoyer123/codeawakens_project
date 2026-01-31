@@ -38,7 +38,7 @@ const NotificationManagement = () => {
         title: '',
         message: '',
         expires_at: '',
-        is_active: true,
+        is_active: false,
     });
     const [saveError, setSaveError] = useState(null);
 
@@ -111,7 +111,7 @@ const NotificationManagement = () => {
                 title: '',
                 message: '',
                 expires_at: '',
-                is_active: true,
+                is_active: false,
             });
         }
         setSaveError(null);
@@ -126,7 +126,7 @@ const NotificationManagement = () => {
             title: '',
             message: '',
             expires_at: '',
-            is_active: true,
+            is_active: false,
         });
     }, []);
 
@@ -183,10 +183,22 @@ const NotificationManagement = () => {
         }
     }, [deleting]);
 
-    const handleSend = (notification) => {
-        // Placeholder for sending notification functionality
-        console.log("Send notification clicked:", notification);
-        alert(`Send feature for notification "${notification.title}" is not implemented yet.`);
+    const handleSend = async (notification) => {
+        try {
+            // Optimistic update: Temporarily set active in UI if needed, or wait for reload
+            setLoading(true); // Or just show a sending spinner
+            await updateNotification(getToken, notification.notification_id, {
+                ...notification,
+                is_active: true
+            });
+            await loadData(); // Reload data to reflect change
+            // Optional: Show success toast
+        } catch (err) {
+            console.error("Failed to send notification:", err);
+            setError('Failed to send notification: ' + (err.message || 'Unknown error'));
+        } finally {
+            setLoading(false);
+        }
     };
 
     const getDeleteDescription = (title) =>

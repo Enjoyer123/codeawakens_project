@@ -47,40 +47,38 @@ const WeaponImageDialog = ({
               <CardTitle className="text-lg">เพิ่มรูปภาพใหม่</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium">Type File</label>
-                  <select
-                    value={imageForm.type_file}
-                    onChange={(e) => onImageFormChange({ ...imageForm, type_file: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="idle">Idle</option>
-                    <option value="walking">Walking</option>
-                    <option value="attack">Attack</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Type Animation</label>
-                  <select
-                    value={imageForm.type_animation}
-                    onChange={(e) => onImageFormChange({ ...imageForm, type_animation: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="weapon">Weapon</option>
-                    <option value="effect">Effect</option>
-                  </select>
-                </div>
-              </div>
               <div>
-                <label className="text-sm font-medium">Frame</label>
-                <Input
-                  type="number"
-                  min="1"
-                  value={imageForm.frame}
-                  onChange={(e) => onImageFormChange({ ...imageForm, frame: parseInt(e.target.value) || 1 })}
-                />
+                <label className="text-sm font-medium">Type Animation</label>
+                <select
+                  value={imageForm.type_animation}
+                  onChange={(e) => {
+                    const newTypeAnim = e.target.value;
+                    const newTypeFile = newTypeAnim === 'weapon' ? 'idle' : 'attack';
+                    const newFrame = newTypeAnim === 'weapon' ? 1 : imageForm.frame;
+                    onImageFormChange({
+                      ...imageForm,
+                      type_animation: newTypeAnim,
+                      type_file: newTypeFile,
+                      frame: newFrame
+                    });
+                  }}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="weapon">Weapon</option>
+                  <option value="effect">Effect</option>
+                </select>
               </div>
+              {imageForm.type_animation === 'effect' && (
+                <div>
+                  <label className="text-sm font-medium">Frame</label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={imageForm.frame}
+                    onChange={(e) => onImageFormChange({ ...imageForm, frame: parseInt(e.target.value) || 1 })}
+                  />
+                </div>
+              )}
               <div>
                 <label className="text-sm font-medium">Image File</label>
                 <Input
