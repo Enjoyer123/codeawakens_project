@@ -76,7 +76,7 @@ export function showEffectWeaponFixed(enemy, damage, weaponKey = 'stick', weapon
 
         // Use fallback radial
         console.warn(`⚠️ No effect texture found for ${weaponKey} (checked ${firstFrameKey} and ${singleFrameKey})`);
-        showRadialFallback(scene, px, py, count, radius);
+        // showRadialFallback(scene, px, py, count, radius); // DISABLED: No star fallback
         return;
     }
 
@@ -90,7 +90,7 @@ export function showEffectWeaponFixed(enemy, damage, weaponKey = 'stick', weapon
     }
 
     if (validFrames.length === 0) {
-        showRadialFallback(scene, px, py, count, radius);
+        // showRadialFallback(scene, px, py, count, radius); // DISABLED: No star fallback
         return;
     }
 
@@ -134,31 +134,5 @@ export function showEffectWeaponFixed(enemy, damage, weaponKey = 'stick', weapon
 }
 
 function showRadialFallback(scene, px, py, count, radius) {
-    // Also update fallback to be directional if possible?
-    // Let's just use the same logic or simplify.
-    // For now, keep it omni-directional OR just spawn one big star at player?
-    // Let's make it match the cone for consistency.
-
-    let baseAngle = 0;
-    const player = scene.player;
-    if (player.flipX) baseAngle = Math.PI;
-
-    const coneCount = 1; // Just one big star for fallback
-    const angle = baseAngle;
-
-    const ex = px + Math.cos(angle) * radius;
-    const ey = py + Math.sin(angle) * radius;
-
-    // Massive star blast
-    const effect = scene.add.star(ex, ey, 5, 20, 60, 0xFFD700);
-    effect.setDepth(scene.player.depth + 20);
-
-    scene.tweens.add({
-        targets: effect,
-        scaleX: { from: 1.0, to: 4.0 },
-        scaleY: { from: 1.0, to: 4.0 },
-        alpha: { from: 1, to: 0 },
-        duration: 500,
-        onComplete: () => effect.destroy()
-    });
+    // Disabled: User requested NO star effect when texture is missing.
 }

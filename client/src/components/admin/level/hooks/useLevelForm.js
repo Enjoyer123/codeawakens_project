@@ -112,6 +112,12 @@ export const useLevelForm = ({
                 hp: 3,
                 damage: 100,
                 detectionRange: 80
+            },
+            'vampire_2': {
+                name: '🧛 Vampire 2',
+                hp: 3,
+                damage: 100,
+                detectionRange: 80
             }
         };
 

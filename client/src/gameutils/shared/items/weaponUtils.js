@@ -213,7 +213,7 @@ export function displayPlayerWeapon(weaponKey, scene) {
       playerWeaponContainer = createWeaponRing(scene, scene.player.x, scene.player.y, weaponKey);
 
       if (playerWeaponContainer) {
-        playerWeaponContainer.setDepth(scene.player.depth + 1);
+        playerWeaponContainer.setDepth(scene.player.depth - 1);
         updateWeaponPosition(scene); // Sync position immediately
         console.log(`✅ Weapon Ring created: ${weaponKey}`);
       }

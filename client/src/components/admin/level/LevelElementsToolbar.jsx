@@ -89,6 +89,8 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
             <option value="player">Player (Default)</option>
             <option value="slime">Slime</option>
             <option value="main_1">Main 1</option>
+            <option value="main_2">Main 2</option>
+            <option value="main_3">Main 3</option>
           </select>
         </div>
 
@@ -214,6 +216,8 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
             <option value="player">Player (Default)</option>
             <option value="slime">Slime</option>
             <option value="main_1">Main 1</option>
+            <option value="main_2">Main 2</option>
+            <option value="main_3">Main 3</option>
           </select>
         </div>
 
@@ -261,6 +265,14 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
                     className={`justify-start h-7 text-[10px] py-1 px-2 ${selectedMonsterType === 'vampire_1' ? 'bg-purple-100 text-purple-700 hover:bg-purple-200' : 'text-gray-600'}`}
                   >
                     <span className="mr-2">🧛</span> Vampire
+                  </Button>
+                  <Button
+                    variant={selectedMonsterType === 'vampire_2' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => typeof onMonsterTypeChange === 'function' && onMonsterTypeChange('vampire_2')}
+                    className={`justify-start h-7 text-[10px] py-1 px-2 ${selectedMonsterType === 'vampire_2' ? 'bg-purple-100 text-purple-700 hover:bg-purple-200' : 'text-gray-600'}`}
+                  >
+                    <span className="mr-2">🧛</span> Vampire 2
                   </Button>
                 </div>
               </div>
