@@ -21,6 +21,7 @@ const LEVEL_POSITIONS = {
   "23": { top: 37.07, left: 57.12 },
   "24": { top: 38.45, left: 65.07 },
   "27": { top: 40.45, left: 65.07 },
+  "13": { top: 62.39, left: 13.01 },
 };
 
 const CategoryLevels = () => {
@@ -92,7 +93,7 @@ const CategoryLevels = () => {
           data={levels}
           idKey="level_id"
           nameKey="title" // Assuming 'title' is valid, fallback to others handled in component
-          imageSrc="/map_level.jpg"
+          imageSrc={categoryInfo?.background_image ? getImageUrl(categoryInfo.background_image) : "/paper.png"}
         />
       </div>
     );
@@ -110,13 +111,13 @@ const CategoryLevels = () => {
       </button>
 
 
-
+      {console.log(categoryInfo)}
       {/* Map Container */}
       <div className="relative w-full max-w-5xl mx-auto shadow-2xl lg:shadow-none lg:max-w-none lg:mx-0 lg:w-full lg:h-full">
         <img
-          src={categoryInfo?.background_image ? getImageUrl(categoryInfo.background_image) : "/map_level.jpg"}
+          src={categoryInfo?.background_image ? getImageUrl(categoryInfo.background_image) : "/paper.png"}
           alt="Level Map"
-          className="w-full h-auto object-contain lg:w-full lg:h-full lg:object-fill block"
+          className="w-full h-auto object-contain lg:w-full lg:h-full lg:object-fill block pixelated"
         />
 
         {/* Level Nodes */}

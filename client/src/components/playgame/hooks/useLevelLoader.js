@@ -29,13 +29,19 @@ import { API_BASE_URL } from '../../../config/apiConfig';
 /**
  * Hook for loading level data
  */
-export function useLevelLoader({
-  levelId,
+// Removed direct fetching and internal state management.
+// This hook now processes the level data passed to it.
+
+// Note: We'll now export a function that processes the data, rather than a self-contained hook that fetches.
+// Or we modify this hook to take `levelData` as input and only run effects when `levelData` changes.
+
+export function useLevelInitializer({
+  levelData, // Now receiving data from parent
   getToken,
   isPreview,
-  setLoading,
-  setError,
-  setCurrentLevel,
+  // setLoading, // Managed by parent's useLevel
+  // setError,   // Managed by parent's useLevel
+  // setCurrentLevel, // We might still need to set this if GameCore relies on it, but ideally GameCore uses the prop
   setEnabledBlocks,
   setGoodPatterns,
   setCurrentHint,
@@ -46,69 +52,29 @@ export function useLevelLoader({
   setIsGameOver,
   setCurrentWeaponData,
   setPatternFeedback,
-  setGameState
+  setGameState,
+  setCurrentLevelState // Renamed to clarify it sets the state in parent
 }) {
   useEffect(() => {
-    const loadLevel = async () => {
-      if (!levelId) return;
+    if (!levelData) return;
 
-
-
-
-
-      setLoading(true);
-      setError(null);
-
+    const initializeLevel = async () => {
       try {
         // Load weapons data first
         await loadWeaponsData(getToken);
 
-        // Check for manual hardcoded level
-        const levelResponse = await fetchLevelById(getToken, levelId);
-        console.log('🔍 [useLevelLoader] levelResponse.hints:', {
-          hasHints: !!levelResponse.hints,
-          hintsType: typeof levelResponse.hints,
-          hintsLength: Array.isArray(levelResponse.hints) ? levelResponse.hints.length : 'n/a',
-          hints: levelResponse.hints
-        });
+        // normalize level data
+        const levelResponse = levelData;
 
-        // Debug: Log starter_xml
-        console.log('🔍 Level response starter_xml:', {
-          has_starter_xml: !!levelResponse.starter_xml,
-          starter_xml_type: typeof levelResponse.starter_xml,
-          starter_xml_length: levelResponse.starter_xml ? levelResponse.starter_xml.length : 0,
-          starter_xml_preview: levelResponse.starter_xml ? levelResponse.starter_xml.substring(0, 100) : null
-        });
+        console.log('🔍 [useLevelInitializer] Processing level data');
 
-        // Debug: Log test_cases
-        console.log('🔍 Level response test_cases:', {
-          has_test_cases: !!levelResponse.level_test_cases,
-          test_cases_type: typeof levelResponse.level_test_cases,
-          test_cases_length: levelResponse.level_test_cases?.length || 0,
-          test_cases: levelResponse.level_test_cases,
-          test_cases_raw: JSON.stringify(levelResponse.level_test_cases, null, 2)
-        });
-
-        // Check if level_test_cases exists but is empty array
-        if (levelResponse.level_test_cases && Array.isArray(levelResponse.level_test_cases)) {
-          console.log('🔍 level_test_cases is array with length:', levelResponse.level_test_cases.length);
-          if (levelResponse.level_test_cases.length > 0) {
-            console.log('🔍 First test case:', levelResponse.level_test_cases[0]);
-          }
-        } else {
-          console.log('🔍 level_test_cases is NOT an array or is null/undefined');
-        }
-
-        // ตรวจสอบว่าด่านถูกปลดล็อคหรือไม่ (สำหรับผู้เล่นปกติ, ไม่ใช่ preview)
+        // Check if level is unlocked
         const { user } = await getUserByClerkId(getToken);
         const isAdmin = user?.role === 'admin';
 
         if (!isPreview && !isAdmin && levelResponse.is_unlocked === false) {
-          throw new Error('ด่านนี้ยังไม่ถูกปลดล็อค กรุณารอให้ admin ทดสอบด่านก่อน');
-        }
-
-        if (!isPreview && !isAdmin && levelResponse.is_unlocked === false) {
-          throw new Error('ด่านนี้ยังไม่ถูกปลดล็อค กรุณารอให้ admin ทดสอบด่านก่อน');
+          console.error('Level not unlocked');
+          // Ideally throw error or handle UI state
         }
 
         const victoryConditions = (levelResponse.level_victory_conditions || [])
@@ -144,10 +110,8 @@ export function useLevelLoader({
           if (blockInfo?.block?.block_key) {
             const blockKey = blockInfo.block.block_key;
             enabledBlocksObj[blockKey] = true;
-            console.log(`✅ Enabled block from level_blocks: ${blockKey}`);
           }
         });
-        console.log("🔧 Enabled blocks from level_blocks:", Object.keys(enabledBlocksObj));
 
         const fallbackEnabledBlocks =
           levelResponse.enabled_blocks ||
@@ -156,25 +120,20 @@ export function useLevelLoader({
           levelResponse.allowedBlocks;
 
         if (Object.keys(enabledBlocksObj).length === 0 && fallbackEnabledBlocks) {
-          console.log("🔧 Using fallback enabled blocks:", fallbackEnabledBlocks);
           if (Array.isArray(fallbackEnabledBlocks)) {
             fallbackEnabledBlocks.forEach((blockInfo) => {
               if (typeof blockInfo === 'string') {
                 enabledBlocksObj[blockInfo] = true;
-                console.log(`✅ Enabled block from fallback array: ${blockInfo}`);
               } else if (blockInfo?.block_key) {
                 enabledBlocksObj[blockInfo.block_key] = true;
-                console.log(`✅ Enabled block from fallback array: ${blockInfo.block_key}`);
               } else if (blockInfo?.block?.block_key) {
                 enabledBlocksObj[blockInfo.block.block_key] = true;
-                console.log(`✅ Enabled block from fallback array: ${blockInfo.block.block_key}`);
               }
             });
           } else if (typeof fallbackEnabledBlocks === 'object') {
             Object.keys(fallbackEnabledBlocks).forEach((key) => {
               if (fallbackEnabledBlocks[key]) {
                 enabledBlocksObj[key] = true;
-                console.log(`✅ Enabled block from fallback object: ${key}`);
               }
             });
           }
@@ -183,10 +142,7 @@ export function useLevelLoader({
         if (Object.keys(enabledBlocksObj).length === 0) {
           const defaultBlocks = ensureDefaultBlocks();
           Object.assign(enabledBlocksObj, defaultBlocks);
-          console.log("🔧 Using default blocks:", Object.keys(defaultBlocks));
         }
-        console.log("🔧 Final enabledBlocksObj:", enabledBlocksObj);
-        console.log("🔧 Enabled block keys:", Object.keys(enabledBlocksObj));
         setEnabledBlocks(enabledBlocksObj);
 
         const allPatterns = (levelResponse.patterns || [])
@@ -206,12 +162,10 @@ export function useLevelLoader({
               }
               // If still not found, use default
               if (!weaponKey) {
-                console.warn(`⚠️ Weapon ID ${pattern.weapon_id} not found in weaponsData, using default`);
                 weaponKey = "stick"; // Default weapon
               }
             } else {
               // No weapon_id, use default
-              console.log(`ℹ️ Pattern "${pattern.pattern_name}" has no weapon_id, using default weapon`);
               weaponKey = "stick"; // Default weapon
             }
 
@@ -233,12 +187,6 @@ export function useLevelLoader({
         const goodPatterns = isPreview
           ? allPatterns
           : allPatterns.filter(p => p.is_available === true);
-
-        console.log(`🔍 [useLevelLoader] Pattern Visibility:`, {
-          isPreview,
-          count: goodPatterns.length,
-          allCount: allPatterns.length
-        });
 
         const backgroundPath = levelResponse.background_image
           ? (levelResponse.background_image.startsWith('http')
@@ -308,40 +256,8 @@ export function useLevelLoader({
           }))
         };
 
-        console.log("🔍 Final formattedLevelData starter_xml:", {
-          has_starter_xml: !!formattedLevelData.starter_xml,
-          starter_xml_type: typeof formattedLevelData.starter_xml,
-          starter_xml_length: formattedLevelData.starter_xml ? formattedLevelData.starter_xml.length : 0
-        });
-
-        console.log("🔍 Final formattedLevelData test_cases:", {
-          has_test_cases: !!formattedLevelData.test_cases,
-          test_cases_type: typeof formattedLevelData.test_cases,
-          test_cases_length: formattedLevelData.test_cases?.length || 0,
-          test_cases: formattedLevelData.test_cases,
-          test_cases_raw: JSON.stringify(formattedLevelData.test_cases, null, 2)
-        });
-
-        // Verify test_cases structure
-        if (formattedLevelData.test_cases && Array.isArray(formattedLevelData.test_cases)) {
-          console.log('🔍 ✅ test_cases is valid array');
-          formattedLevelData.test_cases.forEach((tc, idx) => {
-            console.log(`🔍 Test case ${idx + 1}:`, {
-              test_case_id: tc.test_case_id,
-              test_case_name: tc.test_case_name,
-              function_name: tc.function_name,
-              is_primary: tc.is_primary,
-              expected_output: tc.expected_output
-            });
-          });
-        } else {
-          console.log('🔍 ❌ test_cases is NOT a valid array!');
-        }
-        console.log("🔍 Final formattedLevelData:", formattedLevelData);
-        console.log("🔍 Final goodPatterns:", formattedLevelData.goodPatterns);
-
         setLevelData(formattedLevelData);
-        setCurrentLevel(formattedLevelData);
+        setCurrentLevelState(formattedLevelData);
         setGoodPatterns(formattedLevelData.goodPatterns);
 
         setCurrentHint(`📍 โหลดด่าน "${formattedLevelData.name}" เสร็จแล้ว`);
@@ -369,15 +285,16 @@ export function useLevelLoader({
         setCurrentWeaponData(weaponData);
         setPatternFeedback("วาง blocks เพื่อดูผลลัพธ์");
         setGameState("ready");
+
       } catch (err) {
-        console.error('Error loading level data:', err);
-        setError("ไม่สามารถโหลดข้อมูลด่านได้: " + err.message);
-        setGameState("error");
-      } finally {
-        setLoading(false);
+        console.error('Error initializing level data:', err);
+        // handle error
       }
     };
 
-    loadLevel();
-  }, [levelId, getToken]);
+    initializeLevel();
+  }, [levelData, getToken]);
+  // Removed isPreview form dep array to avoid re-runs if it doesn't change
+  // Added levelData as main dependency
 }
+

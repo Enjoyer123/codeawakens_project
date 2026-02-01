@@ -41,7 +41,9 @@ import { useGameConditions } from './hooks/useGameConditions';
 import { usePhaserGame } from './hooks/usePhaserGame';
 import { useBlocklySetup } from './hooks/blocklysetup/useBlocklySetup';
 import { useCodeExecution } from './hooks/execution/useCodeExecution';
-import { useLevelLoader } from './hooks/useLevelLoader';
+import { useLevel } from '../../services/hooks/useLevel';
+import { usePatterns } from '../../services/hooks/usePattern';
+import { useLevelInitializer } from './hooks/useLevelLoader';
 import { usePatternAnalysis } from './hooks/usePatternAnalysis';
 import { useTextCodeValidation } from './hooks/useTextCodeValidation';
 import { useGuideSystem } from '../../hooks/useGuideSystem';
@@ -371,14 +373,18 @@ const GameCore = ({
 
 
 
-  // Load level data - using hook
-  useLevelLoader({
-    levelId,
+
+
+  const { data: levelData, isLoading: isLevelLoading, isError: isLevelError, error: levelError } = useLevel(levelId);
+
+  // Initialize level data when levelData is available
+  useLevelInitializer({
+    levelData, // Pass the data from useLevel
     getToken,
     isPreview,
-    setLoading,
-    setError,
-    setCurrentLevel,
+    // setLoading, // No longer passed, state handled here
+    // setError,   // No longer passed
+    // setCurrentLevel, // No longer passed, we only set it here via local effect if needed or rely on levelData
     setEnabledBlocks,
     setGoodPatterns,
     setCurrentHint,
@@ -389,8 +395,21 @@ const GameCore = ({
     setIsGameOver,
     setCurrentWeaponData,
     setPatternFeedback,
-    setGameState
+    setGameState,
+    setCurrentLevelState: setCurrentLevel // Mapping back to the state setter
   });
+
+  // Sync loading and error states
+  useEffect(() => {
+    setLoading(isLevelLoading);
+  }, [isLevelLoading]);
+
+  useEffect(() => {
+    if (isLevelError && levelError) {
+      setError(levelError.message || "Failed to load level");
+    }
+  }, [isLevelError, levelError]);
+
 
   // Reset text code state when level changes
   useEffect(() => {
@@ -402,42 +421,23 @@ const GameCore = ({
     }
   }, [levelId]);
 
-  // Load patterns for the level
+  // Load patterns for the level using TanStack Query
+  const { data: patternsData } = usePatterns(currentLevel?.level_id || currentLevel?.id);
+
   useEffect(() => {
-    const loadPatterns = async () => {
-      if (!currentLevel || !getToken) return;
+    if (patternsData) {
+      // Handle both array and object with patterns property
+      const patterns = Array.isArray(patternsData) ? patternsData : (patternsData.patterns || []);
 
-      try {
-        const levelId = currentLevel.level_id || currentLevel.id;
-        if (!levelId) return;
+      // In preview mode, use all patterns (including is_available = false)
+      // In normal mode, only use patterns with is_available = true
+      const filteredPatterns = isPreview
+        ? patterns
+        : patterns.filter(p => p.is_available === true);
 
-        const response = await fetch(`${API_BASE_URL}/api/patterns?level_id=${levelId}&limit=100`, {
-          headers: {
-            'Authorization': `Bearer ${await getToken()}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          // Handle both array and object with patterns property
-          const patterns = Array.isArray(data) ? data : (data.patterns || []);
-
-          // In preview mode, use all patterns (including is_available = false)
-          // In normal mode, only use patterns with is_available = true
-          const filteredPatterns = isPreview
-            ? patterns
-            : patterns.filter(p => p.is_available === true);
-
-          setGoodPatterns(filteredPatterns);
-        }
-      } catch (err) {
-        console.error("Error loading patterns:", err);
-      }
-    };
-
-    loadPatterns();
-  }, [currentLevel, getToken]);
+      setGoodPatterns(filteredPatterns);
+    }
+  }, [patternsData, isPreview]);
 
   // Pattern analysis and weapon display - using hook
   console.log("🛠️ [GameCore] Calling usePatternAnalysis", {
@@ -477,7 +477,7 @@ const GameCore = ({
     }
     console.log("✅ All conditions met, calling initBlocklyAndPhaser");
     initBlocklyAndPhaser();
-  }, [currentLevel?.id, enabledBlockKeySignature, blocklyRef.current]);
+  }, [currentLevel, enabledBlockKeySignature, blocklyRef.current]);
 
   // Handle victory condition
   // Handle victory - using utils

@@ -5,7 +5,6 @@ import { API_BASE_URL } from '../../../../config/apiConfig';
 
 const ProfileTab = ({
     userDetails,
-    setUserDetails,
     allowEdit,
     onUpdateSuccess,
     getToken
@@ -25,7 +24,7 @@ const ProfileTab = ({
         handleUsernameUpdate,
         handleImageUpload,
         handleDeleteImage
-    } = useProfileTab({ userDetails, setUserDetails, getToken, onUpdateSuccess });
+    } = useProfileTab({ userDetails, getToken, onUpdateSuccess });
 
     return (
         <div className="h-full flex flex-col items-center gap-4 py-2 relative">

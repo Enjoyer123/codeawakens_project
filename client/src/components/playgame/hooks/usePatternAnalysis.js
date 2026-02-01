@@ -122,10 +122,11 @@ export function usePatternAnalysis({
 
       const allBlocks = workspace.getAllBlocks(false);
       const currentBlockCount = allBlocks.length;
-      console.log("🔍 [usePatternAnalysis] currentBlockCount:", currentBlockCount);
+      console.log(`🐞 [DEBUG] analyzePattern triggered. Block count: ${currentBlockCount}`);
 
       if (currentBlockCount === 0) {
         // No blocks → แสดง default weapon
+        console.log(`🐞 [DEBUG] No blocks found. Resetting state.`);
         const currentState = getCurrentGameState();
         const defaultWeaponKey = currentState.levelData?.defaultWeaponKey || "stick";
         const defaultWeaponData = getWeaponData(defaultWeaponKey);
@@ -178,6 +179,7 @@ export function usePatternAnalysis({
 
       // If no goodPatterns, still update hintData with default message
       if (!goodPatterns || goodPatterns.length === 0) {
+        console.log(`🐞 [DEBUG] No goodPatterns found (length: ${goodPatterns?.length}).`);
         const defaultHint = "วาง blocks เพื่อเริ่มต้น";
         setHintData({
           hint: defaultHint,
@@ -192,9 +194,12 @@ export function usePatternAnalysis({
         return;
       }
 
+      console.log(`🐞 [DEBUG] Checking against ${goodPatterns.length} patterns.`);
+
       // คำนวณเปอร์เซ็นต์การตรงกับ pattern
       const patternPercentage = calculatePatternMatchPercentage(workspace, goodPatterns);
-      // console.log("🔍 Pattern percentage:", patternPercentage);
+      console.log(`🐞 [DEBUG] Match Result: ${patternPercentage.percentage}% with ${patternPercentage.bestPattern?.name || 'None'}`);
+
 
       // ตรวจสอบ three parts match
       // CRITICAL: ถ้า percentage = 100% ให้ตรวจสอบ part3 โดยตรง

@@ -194,9 +194,9 @@ const TestPage = () => {
                         </div>
                         <div className="flex flex-col gap-2 flex-1">
                           {choice.choice_image && (
-                            <img 
-                              src={getImageUrl(choice.choice_image)} 
-                              alt="Choice" 
+                            <img
+                              src={getImageUrl(choice.choice_image)}
+                              alt="Choice"
                               className="max-h-32 w-auto object-contain rounded border self-start"
                             />
                           )}

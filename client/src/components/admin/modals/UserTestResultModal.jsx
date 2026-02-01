@@ -1,11 +1,20 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Loader } from '@/components/ui/loader';
 import { EmptyState } from '@/components/shared/DataTableStates';
 import { CheckCircle, XCircle, Clock, Award, Calculator } from 'lucide-react';
+import { useUserTestHistory } from '../../../services/hooks/useAdmin';
 
-const UserTestResultModal = ({ open, onOpenChange, user, testHistory }) => {
+const UserTestResultModal = ({ open, onOpenChange, user }) => {
+    // If modal is closed or no user, we might not want to fetch or render
+    const userId = user?.user_id || user?.id;
+    const {
+        data: testHistory = [],
+        isLoading,
+        isError
+    } = useUserTestHistory(open && userId ? userId : null); // Only fetch if open and user exists
+
     if (!user) return null;
 
     const preTests = testHistory.filter(t => t.test_type === 'PreTest');
@@ -98,6 +107,8 @@ const UserTestResultModal = ({ open, onOpenChange, user, testHistory }) => {
     );
 
     const renderTestList = (tests) => {
+        if (isLoading) return <div className="flex justify-center p-8"><Loader /></div>;
+        if (isError) return <div className="p-8 text-center text-red-500">Failed to load history</div>;
         if (tests.length === 0) return <EmptyState message="No test data found." />;
 
         return (

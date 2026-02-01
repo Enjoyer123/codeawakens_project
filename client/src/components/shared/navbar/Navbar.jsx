@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { SignInButton, SignUpButton, useAuth, useClerk } from '@clerk/clerk-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Menu, X } from 'lucide-react';
-import { fetchUserProfile } from '../../../services/profileService';
+import { useCheckUserProfile } from '../../../services/hooks/useProfile';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +29,15 @@ function Navbar({ navItems = [], isLoading = false, isGamePage = false, isTransp
   const [dbProfileImage, setDbProfileImage] = useState(null);
   const [scrolled, setScrolled] = useState(false);
 
+  // Use hook to check profile and get image
+  const { data: profileData } = useCheckUserProfile();
+
+  useEffect(() => {
+    if (profileData && profileData.profile_image) {
+      setDbProfileImage(profileData.profile_image);
+    }
+  }, [profileData]);
+
   // Handle scroll effect for transparent mode
   useEffect(() => {
     if (!isTransparent) {
@@ -49,27 +58,6 @@ function Navbar({ navItems = [], isLoading = false, isGamePage = false, isTransp
       setIsOpen(false);
     }
   }, [isGamePage]);
-
-
-  // Fetch user profile from DB
-  useEffect(() => {
-    const loadUserProfile = async () => {
-      if (isSignedIn) {
-        try {
-          const profileData = await fetchUserProfile(getToken);
-          if (profileData && profileData.profile_image) {
-            setDbProfileImage(profileData.profile_image);
-          }
-        } catch (error) {
-          console.error("Failed to load user profile for navbar:", error);
-        }
-      }
-    };
-
-    if (isLoaded && isSignedIn) {
-      loadUserProfile();
-    }
-  }, [isSignedIn, isLoaded, getToken]);
 
   if (isGamePage && !isOpen) {
     return (

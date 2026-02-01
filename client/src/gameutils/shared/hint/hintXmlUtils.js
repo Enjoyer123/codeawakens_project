@@ -38,14 +38,14 @@ export function getWorkspaceXml(workspace) {
  */
 function normalizeVariableName(varValue) {
   if (!varValue) return '';
-  
+
   // ถ้าเป็น ID (ตัวเลขทั้งหมด) - ควรจะ resolve เป็นชื่อตัวแปรก่อนเรียกฟังก์ชันนี้
   // แต่ถ้ายังเป็น ID อยู่ ให้คืนค่าเป็น ID (เพื่อให้เปรียบเทียบได้)
   if (/^\d+$/.test(varValue)) {
     console.log(`  - ⚠️ normalizeVariableName: varValue "${varValue}" is still an ID, should have been resolved earlier`);
     return varValue;
   }
-  
+
   // ถ้ามีรูปแบบ name_number ให้เอาแค่ name (เช่น "neighbor_1" -> "neighbor")
   const match = varValue.match(/^(.+?)_(\d+)$/);
   if (match) {
@@ -53,7 +53,7 @@ function normalizeVariableName(varValue) {
     console.log(`  - ℹ️ normalizeVariableName: "${varValue}" -> "${baseName}" (removed suffix)`);
     return baseName;
   }
-  
+
   // ถ้าเป็นชื่อตัวแปรปกติ ให้คืนค่าเป็นชื่อตัวแปรนั้น
   console.log(`  - ℹ️ normalizeVariableName: "${varValue}" -> "${varValue}" (no normalization needed)`);
   return varValue;
@@ -69,7 +69,7 @@ export function analyzeXmlStructure(xml, workspace = null) {
 
   const blocks = xml.querySelectorAll('block');
   const analysis = [];
-  
+
   // CRITICAL: สร้าง variable ID to name mapping จาก XML variables section
   const variableMap = new Map();
   const variablesSection = xml.querySelector('variables');
@@ -84,7 +84,7 @@ export function analyzeXmlStructure(xml, workspace = null) {
       }
     });
   }
-  
+
   // CRITICAL: ถ้าไม่มี variables section ใน XML แต่มี workspace ให้ resolve จาก workspace
   if (!variablesSection && workspace && workspace.getVariableMap) {
     try {
@@ -102,7 +102,7 @@ export function analyzeXmlStructure(xml, workspace = null) {
       console.log(`  - ⚠️ Error getting variables from workspace: ${e.message}`);
     }
   }
-  
+
   console.log(`  - 📊 Total variable mappings: ${variableMap.size}`);
 
   blocks.forEach((block, index) => {
@@ -126,10 +126,10 @@ export function analyzeXmlStructure(xml, workspace = null) {
         const varText = varField.textContent;
         const varValueAttr = varField.getAttribute('value');
         let varValue = varId || varText || varValueAttr || '';
-        
+
         console.log(`  - 🔍 VAR field raw: id=${varId}, textContent="${varText}", value=${varValueAttr}, initial="${varValue}"`);
         console.log(`  - 🔍 Variable map size: ${variableMap.size}, has "${varValue}": ${variableMap.has(varValue)}`);
-        
+
         // CRITICAL: ถ้า varValue เป็น ID (อาจเป็นตัวเลขหรือ string ที่เป็น ID) ให้หา variable name จาก variableMap
         // Blockly variable IDs อาจเป็น string ที่ไม่ใช่ตัวเลข (เช่น "S=:s{UNuK~JF42YVTzI5")
         if (varValue && variableMap.has(varValue)) {
@@ -183,9 +183,9 @@ export function analyzeXmlStructure(xml, workspace = null) {
             console.log(`  - ℹ️ VAR field value "${varValue}" not in variableMap, assuming it's a variable name`);
           }
         }
-        
+
         console.log(`  - 🔍 VAR field final value: "${varValue}"`);
-        
+
         const normalized = normalizeVariableName(varValue);
         blockInfo.varName = normalized;
         console.log(`  - ✅ Normalized VAR: ${varValue} -> ${normalized}`);
@@ -193,10 +193,10 @@ export function analyzeXmlStructure(xml, workspace = null) {
         console.log(`  - ⚠️ No VAR field found for ${type} block`);
       }
     }
-    
+
     // สำหรับ procedures: เช็ค NAME field
     if (type === 'procedures_defreturn' || type === 'procedures_defnoreturn' ||
-        type === 'procedures_callreturn' || type === 'procedures_callnoreturn') {
+      type === 'procedures_callreturn' || type === 'procedures_callnoreturn') {
       const nameField = block.querySelector('field[name="NAME"]');
       if (nameField) {
         blockInfo.procedureName = nameField.textContent || nameField.getAttribute('value') || '';
@@ -215,7 +215,7 @@ export function analyzeXmlStructure(xml, workspace = null) {
       blockInfo.valueBlocks = Array.from(valueBlocks).map(b => {
         const blockType = b.getAttribute('type');
         const blockInfo = { type: blockType };
-        
+
         // CRITICAL: ถ้าเป็น variables_get ใน value block ให้เช็ค VAR field ด้วย
         if (blockType === 'variables_get') {
           const varField = b.querySelector('field[name="VAR"]');
@@ -224,7 +224,7 @@ export function analyzeXmlStructure(xml, workspace = null) {
             const varText = varField.textContent;
             const varValueAttr = varField.getAttribute('value');
             let varValue = varId || varText || varValueAttr || '';
-            
+
             // CRITICAL: ถ้า varValue เป็น ID (อาจเป็นตัวเลขหรือ string ที่เป็น ID) ให้หา variable name จาก variableMap
             if (varValue && variableMap.has(varValue)) {
               const mappedName = variableMap.get(varValue);
@@ -243,13 +243,13 @@ export function analyzeXmlStructure(xml, workspace = null) {
               // ถ้าไม่ใช่ ID และไม่พบใน variableMap อาจเป็นชื่อตัวแปรโดยตรง
               console.log(`  - ℹ️ Value block VAR field value "${varValue}" not in variableMap, assuming it's a variable name`);
             }
-            
+
             const normalized = normalizeVariableName(varValue);
             blockInfo.varName = normalized;
             console.log(`  - ✅ Value block variables_get VAR: ${varValue} -> ${normalized}`);
           }
         }
-        
+
         return blockInfo;
       });
     }

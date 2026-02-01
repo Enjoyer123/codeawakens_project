@@ -1,7 +1,14 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { UserButton } from '@clerk/clerk-react';
-import { fetchAllUsers, updateUserRole, deleteUser, resetUserTestScore, fetchUserTestHistory } from '../../../services/adminService';
+
+import {
+  useUsers,
+  useUpdateUserRole,
+  useDeleteUser,
+  useResetUserTestScore
+} from '../../../services/hooks/useAdmin';
+
 import UserTestResultModal from '@/components/admin/modals/UserTestResultModal';
 import UserDetailsModal from '@/components/shared/userDetailProfile/UserDetailsModal';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
@@ -17,57 +24,40 @@ import UserTable from '@/components/admin/user/UserTable';
 const UserManagement = () => {
   const { getToken } = useAuth();
   const { page, rowsPerPage, handlePageChange } = usePagination(1, 5);
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [userToDelete, setUserToDelete] = useState(null);
-  const [deleting, setDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState(null);
-  const [roleError, setRoleError] = useState(null);
-  const [pagination, setPagination] = useState({
+
+  // TanStack Query Hooks
+  const {
+    data: usersData,
+    isLoading: loading,
+    isError,
+    error: queryError
+  } = useUsers(page, rowsPerPage, searchQuery);
+
+  const users = usersData?.users || [];
+  const pagination = usersData?.pagination || {
     total: 0,
     totalPages: 0,
     page: 1,
-    limit: 5,
-  });
+    limit: rowsPerPage,
+  };
+
+  // Mutations
+  const { mutateAsync: updateUserRoleAsync } = useUpdateUserRole();
+  const { mutateAsync: deleteUserAsync, isPending: deleting } = useDeleteUser();
+  const { mutateAsync: resetScoreAsync } = useResetUserTestScore();
+
+  // Local UI State
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [deleteError, setDeleteError] = useState(null);
+  const [roleError, setRoleError] = useState(null);
 
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [selectedUserForHistory, setSelectedUserForHistory] = useState(null);
-  const [testHistory, setTestHistory] = useState([]);
-
-  const loadUsers = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await fetchAllUsers(getToken, page, rowsPerPage, searchQuery);
-      setUsers(data.users || []);
-      setPagination(data.pagination || {
-        total: 0,
-        totalPages: 0,
-        page: 1,
-        limit: rowsPerPage,
-      });
-    } catch (err) {
-      setError('Failed to load users. Please check if the API endpoint exists.');
-      setUsers([]);
-      setPagination({
-        total: 0,
-        totalPages: 0,
-        page: 1,
-        limit: rowsPerPage,
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [getToken, page, rowsPerPage, searchQuery]);
-
-  useEffect(() => {
-    loadUsers();
-  }, [loadUsers]);
 
   const handleSearchChange = useCallback((value) => {
     setSearchQuery(value);
@@ -77,12 +67,12 @@ const UserManagement = () => {
   const handleRoleChange = useCallback(async (userId, newRole) => {
     try {
       setRoleError(null);
-      await updateUserRole(getToken, userId, newRole);
-      await loadUsers();
+      await updateUserRoleAsync({ userId, role: newRole });
+      // Query invalidation handles refresh
     } catch (err) {
       setRoleError('Failed to update user role: ' + (err.message || 'Unknown error'));
     }
-  }, [getToken, loadUsers]);
+  }, [updateUserRoleAsync]);
 
   const handleViewDetails = useCallback((userItem) => {
     setSelectedUser(userItem);
@@ -99,42 +89,33 @@ const UserManagement = () => {
     if (!userToDelete) return;
 
     try {
-      setDeleting(true);
       setDeleteError(null);
       const userId = userToDelete.user_id || userToDelete.id;
-      await deleteUser(getToken, userId);
+      await deleteUserAsync(userId);
       setDeleteDialogOpen(false);
       setUserToDelete(null);
-      await loadUsers();
+      // Query invalidation handles refresh
     } catch (err) {
       const errorMessage = createDeleteErrorMessage('user', err);
       setDeleteError(errorMessage);
-    } finally {
-      setDeleting(false);
     }
-  }, [userToDelete, getToken, loadUsers]);
+  }, [userToDelete, deleteUserAsync]);
 
   const handleResetScore = async (userId, type) => {
     if (!window.confirm(`Are you sure you want to reset the ${type}-test score for this user?`)) return;
     try {
-      await resetUserTestScore(getToken, userId, type);
+      await resetScoreAsync({ userId, type });
       alert(`Reset ${type}-test score successfully`);
-      loadUsers();
+      // Query invalidation handles refresh
     } catch (err) {
       alert('Failed to reset: ' + err.message);
     }
   };
 
-  const handleViewHistory = async (user) => {
-    try {
-      setSelectedUserForHistory(user);
-      const history = await fetchUserTestHistory(getToken, user.user_id || user.id);
-      setTestHistory(history);
-      setHistoryModalOpen(true);
-    } catch (err) {
-      console.error("Failed to fetch history:", err);
-      alert("Failed to fetch test history");
-    }
+  const handleViewHistory = (user) => {
+    setSelectedUserForHistory(user);
+    // Modal will handle fetching using useUserTestHistory hook
+    setHistoryModalOpen(true);
   };
 
   const handleDeleteDialogChange = useCallback((open) => {
@@ -157,6 +138,7 @@ const UserManagement = () => {
   );
 
   const searchPlaceholder = 'ค้นหาผู้ใช้ (username, email, name)...';
+  const error = isError ? (queryError?.message || 'Failed to load users') : null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -164,7 +146,6 @@ const UserManagement = () => {
         <AdminPageHeader
           title="User Management"
           subtitle="Manage users and their roles"
-
         />
 
         <ErrorAlert message={error} />
@@ -240,7 +221,7 @@ const UserManagement = () => {
         open={historyModalOpen}
         onOpenChange={setHistoryModalOpen}
         user={selectedUserForHistory}
-        testHistory={testHistory}
+      // testHistory prop removed - modal handles fetching
       />
     </div>
   );

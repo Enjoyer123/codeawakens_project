@@ -1,55 +1,63 @@
 import { useState, useRef } from 'react';
-import { updateUsername, uploadProfileImage, deleteProfileImage } from '../../../../../services/profileService';
+import { useUpdateUsername, useUploadProfileImage, useDeleteProfileImage } from '../../../../../services/hooks/useProfile';
 
-export const useProfileTab = ({ userDetails, setUserDetails, getToken, onUpdateSuccess }) => {
+export const useProfileTab = ({ userDetails, getToken, onUpdateSuccess }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [usernameInput, setUsernameInput] = useState(userDetails.user.username || '');
-  const [usernameError, setUsernameError] = useState('');
   const [usernameSuccess, setUsernameSuccess] = useState('');
-  const [savingUsername, setSavingUsername] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [imageError, setImageError] = useState('');
-  const [imageSuccess, setImageSuccess] = useState('');
   const fileInputRef = useRef(null);
+
+  // TanStack Query Mutations
+  const {
+    mutateAsync: updateUsernameAsync,
+    isPending: savingUsername,
+    error: updateUsernameError
+  } = useUpdateUsername();
+
+  const {
+    mutateAsync: uploadImageAsync,
+    isPending: uploadingImage,
+    error: uploadImageError
+  } = useUploadProfileImage();
+
+  const {
+    mutateAsync: deleteImageAsync,
+    isPending: deletingImage, // We can reuse uploadingImage state or use this
+    error: deleteImageError
+  } = useDeleteProfileImage();
+
+  // Unified error states derived from mutations
+  const usernameError = updateUsernameError?.message || '';
+  const imageError = uploadImageError?.message || deleteImageError?.message || '';
+  const [imageSuccess, setImageSuccess] = useState('');
 
   const toggleEditMode = () => {
     setIsEditing(!isEditing);
     // Reset inputs on cancel
     if (isEditing) {
       setUsernameInput(userDetails.user.username || '');
-      setUsernameError('');
-      setImageError('');
     }
   };
 
   const handleUsernameUpdate = async (e) => {
     e.preventDefault();
-    setUsernameError('');
     setUsernameSuccess('');
 
     if (!usernameInput || usernameInput.trim().length < 3) {
-      setUsernameError('Username must be at least 3 characters');
+      // We can manage local validation error if we want, or rely on backend
+      // But keeping local simple validation is good UX
+      alert('Username must be at least 3 characters');
       return;
     }
 
     try {
-      setSavingUsername(true);
-      const response = await updateUsername(getToken, usernameInput.trim());
-      setUserDetails((prev) => ({
-        ...prev,
-        user: {
-          ...prev.user,
-          username: response.user.username,
-        },
-      }));
+      await updateUsernameAsync(usernameInput.trim());
       setUsernameSuccess('Username updated successfully');
       setTimeout(() => setUsernameSuccess(''), 3000);
       setIsEditing(false); // Exit edit mode on success
       if (onUpdateSuccess) onUpdateSuccess();
     } catch (error) {
-      setUsernameError(error.message || 'Failed to update username');
-    } finally {
-      setSavingUsername(false);
+      // Error handled by query hook state
     }
   };
 
@@ -58,36 +66,25 @@ export const useProfileTab = ({ userDetails, setUserDetails, getToken, onUpdateS
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      setImageError('Please select an image file');
+      alert('Please select an image file');
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      setImageError('Image size must be less than 5MB');
+      alert('Image size must be less than 5MB');
       return;
     }
 
-    setImageError('');
     setImageSuccess('');
-    setUploadingImage(true);
 
     try {
-      const response = await uploadProfileImage(getToken, file);
-      setUserDetails((prev) => ({
-        ...prev,
-        user: {
-          ...prev.user,
-          profileImageUrl: response.profileImageUrl,
-          profile_image: response.profileImageUrl,
-        },
-      }));
+      await uploadImageAsync(file);
       setImageSuccess('Profile image updated successfully');
       setTimeout(() => setImageSuccess(''), 3000);
       if (onUpdateSuccess) onUpdateSuccess();
     } catch (error) {
-      setImageError(error.message || 'Failed to upload image');
+      // Error handled by query hook state
     } finally {
-      setUploadingImage(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -99,27 +96,15 @@ export const useProfileTab = ({ userDetails, setUserDetails, getToken, onUpdateS
       return;
     }
 
-    setImageError('');
     setImageSuccess('');
-    setUploadingImage(true);
 
     try {
-      const response = await deleteProfileImage(getToken);
-      setUserDetails((prev) => ({
-        ...prev,
-        user: {
-          ...prev.user,
-          profileImageUrl: response.profileImageUrl,
-          profile_image: response.profileImageUrl,
-        },
-      }));
+      await deleteImageAsync();
       setImageSuccess('Profile image deleted successfully');
       setTimeout(() => setImageSuccess(''), 3000);
       if (onUpdateSuccess) onUpdateSuccess();
     } catch (error) {
-      setImageError(error.message || 'Failed to delete image');
-    } finally {
-      setUploadingImage(false);
+      // Error handled by query hook state
     }
   };
 
@@ -130,7 +115,7 @@ export const useProfileTab = ({ userDetails, setUserDetails, getToken, onUpdateS
     usernameError,
     usernameSuccess,
     savingUsername,
-    uploadingImage,
+    uploadingImage: uploadingImage || deletingImage,
     imageError,
     imageSuccess,
     fileInputRef,

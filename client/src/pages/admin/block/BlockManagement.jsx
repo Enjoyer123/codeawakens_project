@@ -1,12 +1,14 @@
-import { useState, useCallback, useEffect } from 'react';
-import { useAuth } from '@clerk/clerk-react';
+import { useState, useCallback } from 'react';
+import { useAuth } from '@clerk/clerk-react'; // Still needed? Hooks handle token? Yes, but maybe unused here.
 import { useNavigate } from 'react-router-dom';
+
 import {
-  fetchAllBlocks,
-  updateBlock,
-  deleteBlock,
-  uploadBlockImage,
-} from '../../../services/blockService';
+  useBlocks,
+  useUpdateBlock,
+  useDeleteBlock,
+  useUploadBlockImage
+} from '../../../services/hooks/useBlocks';
+
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import SearchInput from '@/components/admin/formFields/SearchInput';
@@ -20,19 +22,31 @@ import BlockTable from '@/components/admin/block/BlockTable';
 import { getImageUrl } from '@/utils/imageUtils';
 
 const BlockManagement = () => {
-  const navigate = useNavigate();
-  const { getToken } = useAuth();
+  // const navigate = useNavigate(); // unused?
+  const { getToken } = useAuth(); // Hooks use token internally, but maybe we keep for consistency.
   const { page, rowsPerPage, handlePageChange } = usePagination(1, 10);
-  const [blocks, setBlocks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [pagination, setPagination] = useState({
+
+  // TanStack Query
+  const {
+    data: blocksData,
+    isLoading: loading,
+    isError,
+    error: blocksError
+  } = useBlocks(page, rowsPerPage, searchQuery);
+
+  const blocks = blocksData?.blocks || [];
+  const pagination = blocksData?.pagination || {
     total: 0,
     totalPages: 0,
     page: 1,
-    limit: 10,
-  });
+    limit: rowsPerPage,
+  };
+
+  // Mutations
+  const { mutateAsync: updateBlockAsync } = useUpdateBlock();
+  const { mutateAsync: deleteBlockAsync, isPending: deleting } = useDeleteBlock();
+  const { mutateAsync: uploadImageAsync } = useUploadBlockImage();
 
   // Block form states
   const [blockDialogOpen, setBlockDialogOpen] = useState(false);
@@ -51,43 +65,11 @@ const BlockManagement = () => {
   // Delete states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [blockToDelete, setBlockToDelete] = useState(null);
-  const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
 
   // Image states
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-
-  const loadBlocks = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await fetchAllBlocks(getToken, page, rowsPerPage, searchQuery);
-      setBlocks(data.blocks || []);
-      setPagination(data.pagination || {
-        total: 0,
-        totalPages: 0,
-        page: 1,
-        limit: rowsPerPage,
-      });
-    } catch (err) {
-      setError('Failed to load blocks. ' + (err.message || ''));
-      setBlocks([]);
-      setPagination({
-        total: 0,
-        totalPages: 0,
-        page: 1,
-        limit: rowsPerPage,
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [getToken, page, rowsPerPage, searchQuery]);
-
-  // Load blocks when page or search changes
-  useEffect(() => {
-    loadBlocks();
-  }, [loadBlocks]);
 
   const handleSearchChange = useCallback((value) => {
     setSearchQuery(value);
@@ -166,7 +148,7 @@ const BlockManagement = () => {
         // Upload image if selected
         let imagePath = blockForm.block_image;
         if (selectedImage) {
-          const uploadResult = await uploadBlockImage(getToken, selectedImage);
+          const uploadResult = await uploadImageAsync(selectedImage);
           imagePath = uploadResult.path;
         }
 
@@ -175,9 +157,12 @@ const BlockManagement = () => {
           block_image: imagePath
         };
 
-        await updateBlock(getToken, editingBlock.block_id, dataToSave);
+        await updateBlockAsync({
+          blockId: editingBlock.block_id,
+          blockData: dataToSave
+        });
         handleCloseBlockDialog();
-        await loadBlocks();
+        // Query invalidation handles refresh
         return { success: true };
       }
       return { success: false, error: 'Create block is not allowed' };
@@ -186,7 +171,7 @@ const BlockManagement = () => {
       setSaveError(errorMessage);
       return { success: false, error: errorMessage };
     }
-  }, [blockForm, editingBlock, getToken, handleCloseBlockDialog, loadBlocks, selectedImage]);
+  }, [blockForm, editingBlock, uploadImageAsync, updateBlockAsync, handleCloseBlockDialog, selectedImage]);
 
   const handleDeleteClick = useCallback((block) => {
     setBlockToDelete(block);
@@ -198,19 +183,16 @@ const BlockManagement = () => {
     if (!blockToDelete) return;
 
     try {
-      setDeleting(true);
       setDeleteError(null);
-      await deleteBlock(getToken, blockToDelete.block_id);
+      await deleteBlockAsync(blockToDelete.block_id);
       setDeleteDialogOpen(false);
       setBlockToDelete(null);
-      await loadBlocks();
+      // Query invalidation handles refresh
     } catch (err) {
       const errorMessage = createDeleteErrorMessage('block', err);
       setDeleteError(errorMessage);
-    } finally {
-      setDeleting(false);
     }
-  }, [blockToDelete, getToken, loadBlocks]);
+  }, [blockToDelete, deleteBlockAsync]);
 
   const handleDeleteDialogChange = useCallback((open) => {
     if (!deleting) {
@@ -224,6 +206,8 @@ const BlockManagement = () => {
 
   const getDeleteDescription = (blockName) =>
     `คุณแน่ใจหรือไม่ว่าต้องการลบบล็อก "${blockName}"? การกระทำนี้ไม่สามารถยกเลิกได้`;
+
+  const error = isError ? (blocksError?.message || 'Failed to load blocks') : null;
 
   return (
     <div className="min-h-screen bg-gray-50">

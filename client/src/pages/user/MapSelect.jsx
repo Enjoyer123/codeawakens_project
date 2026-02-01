@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 
-import { fetchAllLevelCategories } from '../../services/levelCategoryService';
+import { useLevelCategories } from '../../services/hooks/useLevelCategories';
 import CategoryCard from '../../components/user/CategoryCard';
 import MapCoordinatePicker from '../../components/tools/MapCoordinatePicker';
 import PageLoader from '../../components/shared/Loading/PageLoader';
@@ -26,37 +26,19 @@ const CATEGORY_POSITIONS = [
 const MapSelect = () => {
   const { getToken } = useAuth();
   const navigate = useNavigate();
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [showDevTool, setShowDevTool] = useState(false);
 
-  // ดึงข้อมูลประเภทด่านจาก API
-  useEffect(() => {
-    const fetchCategoriesall = async () => {
-      try {
-        setLoading(true);
+  // Use TanStack Query
+  const {
+    data: categoriesData,
+    isLoading: loading,
+    isError,
+    error: queryError
+  } = useLevelCategories();
 
-        const data = await fetchAllLevelCategories(getToken);
-        console.log('🔍 [MapSelect] data:', data);
-        const categoriesFix = Array.isArray(data?.levelCategories)
-          ? data.levelCategories
-          : [];
+  const categories = categoriesData?.levelCategories || [];
+  const error = isError ? (queryError?.message || 'Failed to fetch categories') : null;
 
-        setCategories(categoriesFix);
-        setError(null);
-
-      } catch (err) {
-        console.error('Error fetching categories:', err);
-        setError(err.message);
-        setCategories([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCategoriesall();
-  }, [getToken]);
 
   const handleCategorySelect = (categoryId) => {
     // ไปหน้าแสดงด่านในประเภทที่เลือก
