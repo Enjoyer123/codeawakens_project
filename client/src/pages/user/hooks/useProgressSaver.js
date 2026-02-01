@@ -1,35 +1,23 @@
 import { useState, useCallback } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@clerk/clerk-react';
 import { saveUserProgress, checkAndAwardRewards } from '../../../services/profileService';
 
-export const useProgressSaver = (getToken) => {
-  const [saving, setSaving] = useState(false);
+export const useProgressSaver = () => {
+  const { getToken } = useAuth();
+  const queryClient = useQueryClient();
+
   const [saveStatus, setSaveStatus] = useState(null); // 'success', 'error', null
-  const [saveError, setSaveError] = useState(null);
   const [awardedRewards, setAwardedRewards] = useState([]);
   const [checkingRewards, setCheckingRewards] = useState(false);
 
-  const saveProgress = useCallback(async ({
-    levelData,
-    gameResult,
-    attempts,
-    timeSpent,
-    blocklyXml,
-    textCodeContent,
-    finalScore,
-    hp_remaining,
-    userBigO
-  }) => {
-    // Basic validation
-    if (!getToken || !levelData || (!levelData.level_id && !levelData.id)) {
-      console.warn('⚠️ Cannot save progress: Missing data', { hasToken: !!getToken, levelData });
-      return;
-    }
+  const mutation = useMutation({
+    mutationFn: async (vars) => {
+      const { levelData, gameResult, attempts, timeSpent, blocklyXml, textCodeContent, finalScore, hp_remaining, userBigO } = vars;
+      if (!getToken || !levelData || (!levelData.level_id && !levelData.id)) {
+        throw new Error('Missing data');
+      }
 
-    setSaving(true);
-    setSaveStatus(null);
-    setSaveError(null);
-
-    try {
       const progressData = {
         level_id: levelData.level_id || levelData.id,
         status: gameResult === 'victory' ? 'completed' : 'in_progress',
@@ -46,12 +34,9 @@ export const useProgressSaver = (getToken) => {
       };
 
       console.log('📝 Saving user progress...', progressData);
-      
       const result = await saveUserProgress(getToken, progressData);
-      console.log('✅ Save success:', result);
-      setSaveStatus('success');
 
-      // Check for rewards
+      let rewards = [];
       if (gameResult === 'victory') {
         setCheckingRewards(true);
         try {
@@ -62,28 +47,42 @@ export const useProgressSaver = (getToken) => {
             totalScore
           );
           if (rewardResult?.awardedRewards?.length > 0) {
-            setAwardedRewards(rewardResult.awardedRewards);
+            rewards = rewardResult.awardedRewards;
           }
-        } catch (error) {
-          console.error('Error checking rewards:', error);
+        } catch (e) {
+          console.error('Error checking rewards:', e);
         } finally {
           setCheckingRewards(false);
         }
       }
+      return { result, rewards };
+    },
+    onSuccess: (data) => {
+      console.log('✅ Save success:', data.result);
+      setSaveStatus('success');
+      setAwardedRewards(data.rewards);
 
-    } catch (error) {
+      // Invalidate user profile to update progress across the app
+      queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      // Also invalidate levels if completion status is stored there (it usually is in user_progress which is in profile)
+    },
+    onError: (error) => {
       console.error('❌ Error saving user progress:', error);
       setSaveStatus('error');
-      setSaveError(error.message || 'Failed to save progress');
-    } finally {
-      setSaving(false);
     }
-  }, [getToken]);
+  });
+
+  const saveProgress = useCallback((data) => {
+    setSaveStatus(null);
+    setAwardedRewards([]);
+    mutation.mutate(data);
+  }, [mutation]);
 
   return {
-    saving,
+    saving: mutation.isPending,
     saveStatus,
-    saveError,
+    saveError: mutation.error?.message || null,
     awardedRewards,
     checkingRewards,
     saveProgress

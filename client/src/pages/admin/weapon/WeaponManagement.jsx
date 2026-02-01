@@ -2,13 +2,13 @@ import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
 import {
-  fetchAllWeapons,
-  createWeapon,
-  updateWeapon,
-  deleteWeapon,
-  addWeaponImage,
-  deleteWeaponImage,
-} from '../../../services/weaponService';
+  useWeapons,
+  useCreateWeapon,
+  useUpdateWeapon,
+  useDeleteWeapon,
+  useAddWeaponImage,
+  useDeleteWeaponImage,
+} from '../../../services/hooks/useWeapons';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import SearchInput from '@/components/admin/formFields/SearchInput';
@@ -26,16 +26,7 @@ const WeaponManagement = () => {
   const navigate = useNavigate();
   const { getToken } = useAuth();
   const { page, rowsPerPage, handlePageChange } = usePagination(1, 10);
-  const [weapons, setWeapons] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [pagination, setPagination] = useState({
-    total: 0,
-    totalPages: 0,
-    page: 1,
-    limit: 10,
-  });
 
   // Weapon form states
   const [weaponDialogOpen, setWeaponDialogOpen] = useState(false);
@@ -69,35 +60,44 @@ const WeaponManagement = () => {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
 
-  const loadWeapons = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await fetchAllWeapons(getToken, page, rowsPerPage, searchQuery);
-      setWeapons(data.weapons || []);
-      setPagination(data.pagination || {
-        total: 0,
-        totalPages: 0,
-        page: 1,
-        limit: rowsPerPage,
-      });
-    } catch (err) {
-      setError('Failed to load weapons. ' + (err.message || ''));
-      setWeapons([]);
-      setPagination({
-        total: 0,
-        totalPages: 0,
-        page: 1,
-        limit: rowsPerPage,
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [getToken, page, rowsPerPage, searchQuery]);
+  // TanStack Query Hooks
+  const {
+    data: weaponsData,
+    isLoading: loading,
+    isError,
+    error: queryError
+  } = useWeapons(page, rowsPerPage, searchQuery);
 
+  const createWeaponMutation = useCreateWeapon();
+  const updateWeaponMutation = useUpdateWeapon();
+  const deleteWeaponMutation = useDeleteWeapon();
+  const addImageMutation = useAddWeaponImage();
+  const deleteImageMutation = useDeleteWeaponImage();
+
+  // Derived state from query data
+  const weapons = weaponsData?.weapons || [];
+  const pagination = weaponsData?.pagination || {
+    total: 0,
+    totalPages: 0,
+    page: 1,
+    limit: rowsPerPage,
+  };
+
+  // Error handling
+  const error = isError ? (queryError?.message || 'Failed to load weapons') : null;
+
+  // Sync selectedWeapon with fresh data when weapons list updates (e.g. after adding image)
   useEffect(() => {
-    loadWeapons();
-  }, [loadWeapons]);
+    if (selectedWeapon) {
+      const updated = weapons.find(w => w.weapon_id === selectedWeapon.weapon_id);
+      if (updated && updated !== selectedWeapon) {
+        setSelectedWeapon(updated);
+      }
+    }
+  }, [weapons, selectedWeapon]);
+
+
+  // Manual loadWeapons is removed as useQuery handles it
 
   const handleSearchChange = useCallback((value) => {
     setSearchQuery(value);
@@ -149,19 +149,21 @@ const WeaponManagement = () => {
 
     try {
       if (editingWeapon) {
-        await updateWeapon(getToken, editingWeapon.weapon_id, weaponForm);
+        await updateWeaponMutation.mutateAsync({
+          weaponId: editingWeapon.weapon_id,
+          weaponData: weaponForm
+        });
       } else {
-        await createWeapon(getToken, weaponForm);
+        await createWeaponMutation.mutateAsync(weaponForm);
       }
       handleCloseWeaponDialog();
-      await loadWeapons();
       return { success: true };
     } catch (err) {
       const errorMessage = 'Failed to save weapon: ' + (err.message || 'Unknown error');
       setSaveError(errorMessage);
       return { success: false, error: errorMessage };
     }
-  }, [weaponForm, editingWeapon, getToken, handleCloseWeaponDialog, loadWeapons]);
+  }, [weaponForm, editingWeapon, updateWeaponMutation, createWeaponMutation, handleCloseWeaponDialog]);
 
   const handleOpenImageDialog = useCallback((weapon) => {
     setSelectedWeapon(weapon);
@@ -217,20 +219,25 @@ const WeaponManagement = () => {
     try {
       setUploadingImage(true);
       setImageError(null);
-      await addWeaponImage(getToken, selectedWeapon.weapon_id, imageForm.imageFile, {
-        type_file: imageForm.type_file,
-        type_animation: imageForm.type_animation,
-        frame: imageForm.frame,
-        weapon_key: selectedWeapon.weapon_key,
+
+      await addImageMutation.mutateAsync({
+        weaponId: selectedWeapon.weapon_id,
+        imageFile: imageForm.imageFile,
+        imageData: {
+          type_file: imageForm.type_file,
+          type_animation: imageForm.type_animation,
+          frame: imageForm.frame,
+          weapon_key: selectedWeapon.weapon_key,
+        }
       });
 
-      await loadWeapons();
-
-      const data = await fetchAllWeapons(getToken, page, rowsPerPage, searchQuery);
-      const updatedWeapon = data.weapons?.find(w => w.weapon_id === selectedWeapon.weapon_id);
-      if (updatedWeapon) {
-        setSelectedWeapon(updatedWeapon);
-      }
+      // No manual update needed, React Query invalidation handles it.
+      // However, we might want to update selectedWeapon if the UI depends on it updating immediately within the dialog
+      // But for now, let's rely on the list check or simple re-select if needed.
+      // Note: selectedWeapon is local state. If the list updates, 'weapons' updates.
+      // But 'selectedWeapon' object reference might stay stale.
+      // To fix this proper, we should derive selectedWeapon from the new 'weapons' list or close dialog.
+      // For this refactor, let's just clear the form.
 
       setImageForm({
         type_file: 'idle',
@@ -238,35 +245,27 @@ const WeaponManagement = () => {
         frame: 1,
         imageFile: null,
       });
+      // Optionally re-sync selectedWeapon from fresh list if needed in next render?
     } catch (err) {
       const errorMessage = err.message || 'Unknown error';
       setImageError('ไม่สามารถเพิ่มรูปภาพได้: ' + errorMessage);
     } finally {
       setUploadingImage(false);
     }
-  }, [selectedWeapon, imageForm, getToken, loadWeapons, page, rowsPerPage, searchQuery]);
+  }, [selectedWeapon, imageForm, addImageMutation]);
 
   const handleDeleteImage = useCallback(async (imageId) => {
     try {
       setDeletingImageId(imageId);
       setImageError(null);
-      await deleteWeaponImage(getToken, imageId);
-
-      await loadWeapons();
-
-      if (selectedWeapon) {
-        const data = await fetchAllWeapons(getToken, page, rowsPerPage, searchQuery);
-        const updatedWeapon = data.weapons?.find(w => w.weapon_id === selectedWeapon.weapon_id);
-        if (updatedWeapon) {
-          setSelectedWeapon(updatedWeapon);
-        }
-      }
+      await deleteImageMutation.mutateAsync(imageId);
+      // Invalidation happens in hook
     } catch (err) {
       setImageError('ไม่สามารถลบรูปภาพได้: ' + (err.message || 'Unknown error'));
     } finally {
       setDeletingImageId(null);
     }
-  }, [selectedWeapon, getToken, loadWeapons, page, rowsPerPage, searchQuery]);
+  }, [deleteImageMutation]);
 
   const handleDeleteClick = useCallback((weapon) => {
     setWeaponToDelete(weapon);
@@ -280,17 +279,16 @@ const WeaponManagement = () => {
     try {
       setDeleting(true);
       setDeleteError(null);
-      await deleteWeapon(getToken, weaponToDelete.weapon_id);
+      await deleteWeaponMutation.mutateAsync(weaponToDelete.weapon_id);
       setDeleteDialogOpen(false);
       setWeaponToDelete(null);
-      await loadWeapons();
     } catch (err) {
       const errorMessage = createDeleteErrorMessage('weapon', err);
       setDeleteError(errorMessage);
     } finally {
       setDeleting(false);
     }
-  }, [weaponToDelete, getToken, loadWeapons]);
+  }, [weaponToDelete, deleteWeaponMutation]);
 
   const handleDeleteDialogChange = useCallback((open) => {
     if (!deleting) {

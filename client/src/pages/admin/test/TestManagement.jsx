@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { fetchAllTests, deleteTest } from '../../../services/testService';
+import { useTests, useDeleteTest } from '../../../services/hooks/useTests';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import SearchInput from '@/components/admin/formFields/SearchInput';
@@ -14,9 +15,6 @@ const TestManagement = () => {
     const { getToken } = useAuth();
 
     const [activeTab, setActiveTab] = useState('PreTest');
-    const [tests, setTests] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
 
     // Dialog States
@@ -28,21 +26,28 @@ const TestManagement = () => {
     const [testToDelete, setTestToDelete] = useState(null);
     const [deleting, setDeleting] = useState(false);
 
-    const loadTests = useCallback(async () => {
-        try {
-            setLoading(true);
-            const data = await fetchAllTests(getToken);
-            setTests(data);
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    }, [getToken]);
+    // TanStack Query Hooks
+    const {
+        data: testsData,
+        isLoading: loading,
+        isError,
+        error: queryError
+    } = useTests(); // Fetches all tests by default
 
-    useEffect(() => {
-        loadTests();
-    }, [loadTests]);
+    const deleteTestMutation = useDeleteTest();
+
+    // Derived State
+    // The API fetchAllTests might return array directly or object { tests: [] }.
+    // Looking at service: return await response.json().
+    // Looking at service code again: fetchAllTests logic is complex, checks type param.
+    // If used without type, returns all?
+    // In TestManagement original code: fetchAllTests(getToken). 
+    // And TestService: export const fetchAllTests = async (getToken, type = '') ...
+    // ... const url = type ? ... : .../admin/all
+    // So it returns all tests.
+    // Assuming structure is array based on `setTests(data)`.
+    const tests = Array.isArray(testsData) ? testsData : (testsData?.tests || []);
+    const error = isError ? (queryError?.message || 'Failed to load tests') : null;
 
     const filteredTests = tests.filter(t =>
         t.test_type === activeTab &&
@@ -64,10 +69,9 @@ const TestManagement = () => {
         if (!testToDelete) return;
         try {
             setDeleting(true);
-            await deleteTest(getToken, testToDelete.test_id);
+            await deleteTestMutation.mutateAsync(testToDelete.test_id);
             setDeleteDialogOpen(false);
             setTestToDelete(null);
-            loadTests();
         } catch (err) {
             console.error(err);
         } finally {
@@ -120,7 +124,9 @@ const TestManagement = () => {
                     onOpenChange={setDialogOpen}
                     testToEdit={editingTest}
                     activeTab={activeTab}
-                    onSuccess={loadTests}
+                    onSuccess={() => {
+                        // Query invalidation handles refresh
+                    }}
                 />
 
                 <DeleteConfirmDialog

@@ -86,7 +86,7 @@ export const useAddWeaponImage = () => {
         mutationFn: ({ weaponId, imageFile, imageData }) => addWeaponImage(getToken, weaponId, imageFile, imageData),
         onSuccess: (data, variables) => {
             queryClient.invalidateQueries({ queryKey: ['weapon', variables.weaponId] });
-            // We generally don't need to invalidate 'weapons' list unless it shows nested images/counts
+            queryClient.invalidateQueries({ queryKey: ['weapons'] });
         },
     });
 };

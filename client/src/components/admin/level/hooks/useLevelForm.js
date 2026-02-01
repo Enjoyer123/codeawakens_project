@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import {
-    createLevel,
-    updateLevel,
-    uploadLevelBackgroundImage,
-} from '../../../../services/levelService';
+    useCreateLevel,
+    useUpdateLevel,
+    useUploadLevelBackground
+} from '../../../../services/hooks/useLevel';
 
 export const useLevelForm = ({
     initialData,
@@ -46,8 +47,14 @@ export const useLevelForm = ({
 
     const [backgroundImage, setBackgroundImage] = useState(null);
     const [backgroundImageUrl, setBackgroundImageUrl] = useState(null);
-    const [saving, setSaving] = useState(false);
-    const [error, setError] = useState(null);
+
+    // TanStack Query Mutations
+    const createLevelMutation = useCreateLevel();
+    const updateLevelMutation = useUpdateLevel();
+    const uploadBackgroundMutation = useUploadLevelBackground();
+
+    // Combined Loading state
+    const saving = createLevelMutation.isPending || updateLevelMutation.isPending || uploadBackgroundMutation.isPending;
 
     // Load initial data when available
     useEffect(() => {
@@ -101,30 +108,10 @@ export const useLevelForm = ({
         ];
 
         const monsterTemplates = {
-            'vampire_1': {
-                name: '🧛 Vampire',
-                hp: 3,
-                damage: 100,
-                detectionRange: 80
-            },
-            'vampire_2': {
-                name: '🧛 Vampire 2',
-                hp: 3,
-                damage: 100,
-                detectionRange: 80
-            },
-            'vampire_3': {
-                name: '🧛 Vampire 3',
-                hp: 3,
-                damage: 100,
-                detectionRange: 80
-            },
-            'slime_1': {
-                name: '💧 Slime 1',
-                hp: 2,
-                damage: 50,
-                detectionRange: 60
-            }
+            'vampire_1': { name: '🧛 Vampire', hp: 3, damage: 100, detectionRange: 80 },
+            'vampire_2': { name: '🧛 Vampire 2', hp: 3, damage: 100, detectionRange: 80 },
+            'vampire_3': { name: '🧛 Vampire 3', hp: 3, damage: 100, detectionRange: 80 },
+            'slime_1': { name: '💧 Slime 1', hp: 2, damage: 50, detectionRange: 60 }
         };
 
         const template = monsterTemplates[type] || monsterTemplates['vampire_1'];
@@ -147,13 +134,9 @@ export const useLevelForm = ({
 
     const handleSave = async () => {
         try {
-            setSaving(true);
-            setError(null);
-
             // Validate required fields
             if (!formData.category_id || !formData.level_name || !formData.difficulty_level || !formData.difficulty) {
-                setError('Please fill in all required fields: Category, Level Name, Difficulty Level, and Difficulty');
-                setSaving(false);
+                toast.error('Please fill in all required fields: Category, Level Name, Difficulty Level, and Difficulty');
                 return;
             }
 
@@ -162,11 +145,10 @@ export const useLevelForm = ({
 
             if (backgroundImage) {
                 try {
-                    const uploadResult = await uploadLevelBackgroundImage(getToken, backgroundImage);
+                    const uploadResult = await uploadBackgroundMutation.mutateAsync(backgroundImage);
                     backgroundImagePath = uploadResult.imagePath;
                 } catch (err) {
-                    setError('Failed to upload background image. Please try again.');
-                    setSaving(false);
+                    toast.error('Failed to upload background image. Please try again.');
                     return;
                 }
             } else if (!backgroundImagePath && backgroundImageUrl) {
@@ -174,26 +156,23 @@ export const useLevelForm = ({
                     const response = await fetch(backgroundImageUrl);
                     const blob = await response.blob();
                     const file = new File([blob], 'background-image.png', { type: blob.type });
-                    const uploadResult = await uploadLevelBackgroundImage(getToken, file);
+                    const uploadResult = await uploadBackgroundMutation.mutateAsync(file);
                     backgroundImagePath = uploadResult.imagePath;
                 } catch (err) {
                     if (backgroundImageUrl.startsWith('/uploads/')) {
                         backgroundImagePath = backgroundImageUrl;
                     } else {
-                        setError('Please upload a background image before saving.');
-                        setSaving(false);
+                        toast.error('Please upload a background image before saving.');
                         return;
                     }
                 }
             } else if (!backgroundImagePath || backgroundImagePath === '') {
-                setError('Please upload a background image before saving.');
-                setSaving(false);
+                toast.error('Please upload a background image before saving.');
                 return;
             }
 
             if (!backgroundImagePath || backgroundImagePath.trim() === '') {
-                setError('Background image is required. Please upload a background image.');
-                setSaving(false);
+                toast.error('Background image is required. Please upload a background image.');
                 return;
             }
 
@@ -230,16 +209,16 @@ export const useLevelForm = ({
             };
 
             if (isEditing) {
-                await updateLevel(getToken, levelId, levelData);
+                await updateLevelMutation.mutateAsync({ levelId, levelData });
+                toast.success('บันทึกข้อมูลด่านสำเร็จ');
             } else {
-                await createLevel(getToken, levelData);
+                await createLevelMutation.mutateAsync(levelData);
+                toast.success('สร้างด่านสำเร็จ');
             }
 
             navigate('/admin/levels');
         } catch (err) {
-            setError('Failed to save level: ' + (err.message || ''));
-        } finally {
-            setSaving(false);
+            toast.error('เกิดข้อผิดพลาดในการบันทึก: ' + (err.message || ''));
         }
     };
 
@@ -249,7 +228,6 @@ export const useLevelForm = ({
         backgroundImage,
         backgroundImageUrl,
         saving,
-        error,
         handleJsonFieldChange,
         handleBackgroundImageChange,
         handleDeleteMap,

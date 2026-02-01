@@ -8,8 +8,8 @@ import ErrorAlert from '@/components/shared/alert/ErrorAlert';
 import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import { Plus } from 'lucide-react';
-import { fetchTestCasesByLevel, createTestCase, updateTestCase, deleteTestCase } from '../../../services/testCaseService';
-import { fetchLevelById } from '../../../services/levelService';
+import { useTestCasesByLevel, useCreateTestCase, useUpdateTestCase, useDeleteTestCase } from '../../../services/hooks/useTestCases';
+import { useLevel } from '../../../services/hooks/useLevel';
 import TestCaseTable from '@/components/admin/level/TestCaseTable';
 import {
   Dialog,
@@ -25,10 +25,24 @@ const TestCaseManagement = () => {
   const { levelId } = useParams();
   const numericLevelId = parseInt(levelId, 10);
 
-  const [level, setLevel] = useState(null);
-  const [testCases, setTestCases] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // TanStack Query Hooks
+  const { data: level } = useLevel(numericLevelId);
+  const {
+    data: testCasesData,
+    isLoading: loading,
+    isError,
+    error: queryError
+  } = useTestCasesByLevel(numericLevelId);
+
+  const createTestCaseMutation = useCreateTestCase();
+  const updateTestCaseMutation = useUpdateTestCase();
+  const deleteTestCaseMutation = useDeleteTestCase();
+
+  // Derived State
+  const testCases = testCasesData || [];
+  const error = isError ? (queryError?.message || 'Failed to load test cases') : null;
+
+  // Dialog & Form States
 
   // Dialog & Form States
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -50,33 +64,7 @@ const TestCaseManagement = () => {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
 
-  const loadLevel = useCallback(async () => {
-    try {
-      const data = await fetchLevelById(getToken, numericLevelId);
-      setLevel(data);
-    } catch (err) {
-      console.error('Failed to load level', err);
-    }
-  }, [getToken, numericLevelId]);
-
-  const loadTestCases = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await fetchTestCasesByLevel(getToken, numericLevelId);
-      setTestCases(data || []);
-    } catch (err) {
-      setError('Failed to load test cases. ' + (err.message || ''));
-      setTestCases([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [getToken, numericLevelId]);
-
-  useEffect(() => {
-    loadLevel();
-    loadTestCases();
-  }, [loadLevel, loadTestCases]);
+  // No manual load effects needed
 
   const handleOpenDialog = useCallback((testCase = null) => {
     if (testCase) {
@@ -152,16 +140,18 @@ const TestCaseManagement = () => {
 
     try {
       if (editingTestCase) {
-        await updateTestCase(getToken, editingTestCase.test_case_id, payload);
+        await updateTestCaseMutation.mutateAsync({
+          testCaseId: editingTestCase.test_case_id,
+          data: payload
+        });
       } else {
-        await createTestCase(getToken, payload);
+        await createTestCaseMutation.mutateAsync(payload);
       }
       handleCloseDialog();
-      await loadTestCases();
     } catch (err) {
       setSaveError('ไม่สามารถบันทึก Test Case ได้: ' + (err.message || 'Unknown error'));
     }
-  }, [editingTestCase, getToken, formData, numericLevelId, handleCloseDialog, loadTestCases]);
+  }, [editingTestCase, formData, numericLevelId, handleCloseDialog, updateTestCaseMutation, createTestCaseMutation]);
 
   const handleDeleteClick = useCallback((testCase) => {
     setTestCaseToDelete(testCase);
@@ -174,16 +164,15 @@ const TestCaseManagement = () => {
     try {
       setDeleting(true);
       setDeleteError(null);
-      await deleteTestCase(getToken, testCaseToDelete.test_case_id);
+      await deleteTestCaseMutation.mutateAsync(testCaseToDelete.test_case_id);
       setDeleteDialogOpen(false);
       setTestCaseToDelete(null);
-      await loadTestCases();
     } catch (err) {
       setDeleteError('ไม่สามารถลบ Test Case ได้: ' + (err.message || 'Unknown error'));
     } finally {
       setDeleting(false);
     }
-  }, [testCaseToDelete, getToken, loadTestCases]);
+  }, [testCaseToDelete, deleteTestCaseMutation]);
 
   return (
     <div className="min-h-screen bg-gray-50">

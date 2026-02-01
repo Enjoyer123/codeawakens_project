@@ -5,7 +5,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import GameCore from '../../../components/playgame/GameCore';
 import { fetchLevelById } from '../../../services/levelService';
-import { unlockPattern, unlockLevel } from '../../../services/patternService';
+import { useUnlockPattern, useUnlockLevel } from '../../../services/hooks/usePattern';
 import PageLoader from '../../../components/shared/Loading/PageLoader';
 
 import { API_BASE_URL } from '../../../config/apiConfig';
@@ -18,6 +18,9 @@ const PreviewLevel = () => {
   const [error, setError] = useState(null);
   const [level, setLevel] = useState(null);
   const [pattern, setPattern] = useState(null);
+
+  const unlockPatternMutation = useUnlockPattern();
+  const unlockLevelMutation = useUnlockLevel();
 
   useEffect(() => {
     const loadData = async () => {
@@ -56,8 +59,7 @@ const PreviewLevel = () => {
 
   const handleUnlockPattern = async (unlockPatternId) => {
     try {
-      const token = await getToken();
-      await unlockPattern(unlockPatternId, token);
+      await unlockPatternMutation.mutateAsync(unlockPatternId);
       console.log('Pattern unlocked successfully');
     } catch (error) {
       console.error('Error unlocking pattern:', error);
@@ -67,8 +69,7 @@ const PreviewLevel = () => {
 
   const handleUnlockLevel = async (unlockLevelId) => {
     try {
-      const token = await getToken();
-      await unlockLevel(unlockLevelId, token);
+      await unlockLevelMutation.mutateAsync(unlockLevelId);
       console.log('Level unlocked successfully');
 
       // Show success message and navigate back
