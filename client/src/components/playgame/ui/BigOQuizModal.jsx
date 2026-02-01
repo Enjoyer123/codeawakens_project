@@ -18,7 +18,7 @@ const BigOQuizModal = ({ isOpen, onClose, onSelect, currentPatternName }) => {
                         Big O Complexity Quiz
                     </DialogTitle>
                     <DialogDescription className="text-gray-300">
-                        Code ของคุณตรงกับรูปแบบ <strong>{currentPatternName || 'Unknown'}</strong>!
+                        Code ของคุณตรงกับรูปแบบ <strong>{currentPatternName || 'รูปแบบที่ไม่รู้จัก'}</strong>!
                         <br />
                         คุณคิดว่า Code นี้มีความซับซ้อน (Time Complexity) เท่าไหร่?
                     </DialogDescription>

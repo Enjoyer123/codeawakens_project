@@ -4,11 +4,11 @@ import { Badge } from '@/components/ui/badge';
 import { Edit, Trash2, Eye, Play, Lightbulb, Blocks, Terminal, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-const LevelTable = ({ 
-    levels, 
-    onDelete, 
-    onViewPatterns, 
-    onNavigate 
+const LevelTable = ({
+  levels,
+  onDelete,
+  onViewPatterns,
+  onNavigate
 }) => {
   const navigate = useNavigate();
 
@@ -80,7 +80,7 @@ const LevelTable = ({
                 </div>
               </td>
               <td className={tableCellClassName}>
-                {level.creator?.username || 'Unknown'}
+                {level.creator?.username || 'ไม่ระบุ'}
               </td>
               <td className={actionsCellClassName}>
                 <div className="flex items-center gap-2 flex-wrap">
