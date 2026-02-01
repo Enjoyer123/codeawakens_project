@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, X, Image as ImageIcon, Plus } from "lucide-react";
 import ErrorAlert from "@/components/shared/alert/ErrorAlert";
+import { toast } from 'sonner';
 import { getImageUrl } from "@/utils/imageUtils";
 import {
     useCreateTest,
@@ -95,6 +96,11 @@ const TestCreateEditModal = ({
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
+            if (file.size > 2 * 1024 * 1024) { // 2MB
+                toast.error('Image file is too large. Max size is 2MB.');
+                e.target.value = '';
+                return;
+            }
             setSelectedImage(file);
             const reader = new FileReader();
             reader.onloadend = () => setImagePreview(reader.result);
@@ -111,6 +117,11 @@ const TestCreateEditModal = ({
     const handleChoiceImageChange = (index, e) => {
         const file = e.target.files[0];
         if (file) {
+            if (file.size > 2 * 1024 * 1024) { // 2MB
+                toast.error('Image file is too large. Max size is 2MB.');
+                e.target.value = '';
+                return;
+            }
             setChoiceImages(prev => ({ ...prev, [index]: file }));
             const reader = new FileReader();
             reader.onloadend = () => {

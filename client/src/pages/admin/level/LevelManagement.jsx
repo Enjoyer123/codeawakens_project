@@ -50,7 +50,6 @@ const LevelManagement = () => {
   // Delete states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [levelToDelete, setLevelToDelete] = useState(null);
-  const [deleteError, setDeleteError] = useState(null);
 
   // Handle Search
   const handleSearchChange = useCallback((value) => {
@@ -61,7 +60,6 @@ const LevelManagement = () => {
   // Handle Delete
   const handleDeleteClick = useCallback((level) => {
     setLevelToDelete(level);
-    setDeleteError(null);
     setDeleteDialogOpen(true);
   }, []);
 
@@ -69,14 +67,13 @@ const LevelManagement = () => {
     if (!levelToDelete) return;
 
     try {
-      setDeleteError(null);
       await deleteLevelAsync(levelToDelete.level_id);
       setDeleteDialogOpen(false);
       setLevelToDelete(null);
       // Query automatically invalidated by mutation hook
     } catch (err) {
-      const errorMessage = createDeleteErrorMessage('level', err);
-      setDeleteError(errorMessage);
+      // Global error handler will show toast
+      console.error(err);
     }
   }, [levelToDelete, deleteLevelAsync]);
 
@@ -85,7 +82,6 @@ const LevelManagement = () => {
       setDeleteDialogOpen(open);
       if (!open) {
         setLevelToDelete(null);
-        setDeleteError(null);
       }
     }
   }, [deleting]);
@@ -113,8 +109,7 @@ const LevelManagement = () => {
         />
 
         <ErrorAlert message={error} />
-        {/* Save error removed as edit dialog is not here */}
-        <ErrorAlert message={deleteError} />
+
 
         <SearchInput
           defaultValue={searchQuery}

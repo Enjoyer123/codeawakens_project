@@ -171,6 +171,35 @@ export const updateLevel = async (getToken, levelId, levelData) => {
   }
 };
 
+// Update level coordinates
+export const updateLevelCoordinates = async (getToken, levelId, coordinates) => {
+  try {
+    const token = await getToken();
+    if (!token) {
+      throw new Error('No authentication token available');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/levels/coordinates/${levelId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ coordinates }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Failed to update level coordinates' }));
+      throw new Error(errorData.message || 'Failed to update level coordinates');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 // Delete level
 export const deleteLevel = async (getToken, levelId) => {
   try {

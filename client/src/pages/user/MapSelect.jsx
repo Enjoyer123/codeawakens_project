@@ -1,30 +1,18 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
+import useUserStore from '../../store/useUserStore';
 
 import { useLevelCategories } from '../../services/hooks/useLevelCategories';
 import CategoryCard from '../../components/user/CategoryCard';
 import MapCoordinatePicker from '../../components/tools/MapCoordinatePicker';
 import PageLoader from '../../components/shared/Loading/PageLoader';
 
-const CATEGORY_POSITIONS = [
-  { id: 1, top: 20.44, left: 73.3 },
-  { id: 2, top: 42.94, left: 59.84 },
-  { id: 3, top: 43.19, left: 19.3 },
-  { id: 4, top: 81.06, left: 65.21 },
-  { id: 5, top: 62.81, left: 77.21 },
-  { id: 6, top: 33.56, left: 40.23 },
-  { id: 7, top: 69.69, left: 29.28 },
-  { id: 8, top: 29.44, left: 51.95 },
-  { id: 9, top: 50.94, left: 20.91 },
-  { id: 10, top: 14.69, left: 57.26 },
-  { id: 11, top: 64.94, left: 69.12 },
-  { id: 12, top: 85.56, left: 58.72 },
-  { id: 13, top: 73.94, left: 77.07 },
-];
+
 
 const MapSelect = () => {
   const { getToken } = useAuth();
+  const { role } = useUserStore();
   const navigate = useNavigate();
   const [showDevTool, setShowDevTool] = useState(false);
 
@@ -72,19 +60,26 @@ const MapSelect = () => {
         >
           Close Map Picker
         </button>
-        <MapCoordinatePicker />
+        <MapCoordinatePicker
+          data={categories} // Pass existing fetched data
+          idKey="category_id"
+          nameKey="category_name"
+          saveType="category"
+        />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen w-full bg-gray-900 relative overflow-hidden flex flex-col justify-center lg:h-screen lg:w-full lg:block">
-      <button
-        onClick={() => setShowDevTool(true)}
-        className="fixed bottom-4 right-4 z-50 bg-gray-800 text-white px-3 py-1 text-xs rounded shadow hover:bg-gray-700 transition opacity-50 hover:opacity-100"
-      >
-        Open Coordinate Picker
-      </button>
+      {role === 'admin' && (
+        <button
+          onClick={() => setShowDevTool(true)}
+          className="fixed bottom-4 right-4 z-50 bg-gray-800 text-white px-3 py-1 text-xs rounded shadow hover:bg-gray-700 transition opacity-50 hover:opacity-100"
+        >
+          Open Coordinate Picker
+        </button>
+      )}
 
       {/* Map Container */}
       {!loading && !error && (
@@ -96,8 +91,10 @@ const MapSelect = () => {
           />
 
           {/* Category Nodes */}
+          {/* Category Nodes */}
           {categories.map((category) => {
-            const position = CATEGORY_POSITIONS.find(p => p.id === category.category_id);
+            // Use coordinates from DB
+            const position = category.coordinates;
             const count = getCategoryCount(category);
 
             if (!position) return null;
@@ -138,10 +135,10 @@ const MapSelect = () => {
       )}
 
       {/* Fallback for categories without positions */}
-      {!loading && !error && categories.some(c => !CATEGORY_POSITIONS.find(p => p.id === c.category_id)) && (
+      {!loading && !error && categories.some(c => !c.coordinates) && (
         <div className="p-4 bg-gray-100/90 backdrop-blur-sm grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
           <div className="col-span-full text-sm text-gray-600 font-bold mb-2 uppercase tracking-wider">Other Categories</div>
-          {categories.filter(c => !CATEGORY_POSITIONS.find(p => p.id === c.category_id)).map(category => (
+          {categories.filter(c => !c.coordinates).map(category => (
             <div key={category.category_id} onClick={() => handleCategorySelect(category.category_id)} className="bg-white p-3 rounded shadow cursor-pointer hover:bg-gray-50 flex items-center gap-2 border border-gray-200">
               <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold">{category.category_id}</div>
               <div className="text-sm truncate font-medium">{category.name}</div>

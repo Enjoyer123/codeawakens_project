@@ -3,6 +3,7 @@ import ProtectedRoute from "../components/shared/ProtectedRoute";
 import AuthCallback from "../pages/auth/AuthCallback";
 import LandingPage from "../pages/Landing";
 import UserProfile from "../pages/user/UserProfile";
+import Leaderboard from "../pages/user/Leaderboard";
 import MapSelect from "../pages/user/MapSelect";
 import CategoryLevels from "../pages/user/CategoryLevels";
 import LevelGame from "../pages/user/LevelGame";
@@ -45,6 +46,7 @@ const AppRoutes = () => {
         }
       >
         <Route path="user/profile" element={<UserProfile />} />
+        <Route path="user/leaderboard" element={<Leaderboard />} />
 
         <Route element={<RequirePreTest><Outlet /></RequirePreTest>}>
           <Route path="user/mapselect" element={<MapSelect />} />

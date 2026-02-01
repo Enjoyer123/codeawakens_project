@@ -29,6 +29,7 @@ exports.getAllLevelCategories = async (req, res) => {
             is_unlocked: true,
             required_level_id: true,
             required_skill_level: true,
+            coordinates: true, // Included coordinates
           },
         },
         category_items: {
@@ -158,6 +159,7 @@ exports.getLevelCategoryById = async (req, res) => {
             is_unlocked: true,
             required_level_id: true,
             required_skill_level: true,
+            coordinates: true, // Included coordinates
           },
           orderBy: {
             level_id: 'asc',
@@ -274,6 +276,7 @@ exports.createLevelCategory = async (req, res) => {
       color_code,
       block_key,
       background_image,
+      coordinates
     } = req.body;
 
     if (!category_name || !description || !difficulty_order || !color_code) {
@@ -326,6 +329,7 @@ exports.createLevelCategory = async (req, res) => {
         color_code: trimmedColorCode,
         block_key: (block_key && block_key !== 'null' && block_key !== '') ? block_key : null,
         background_image: background_image || null,
+        coordinates: coordinates ? JSON.parse(JSON.stringify(coordinates)) : null, // Ensure valid JSON
         category_items: categoryItemsData.length > 0
           ? {
             create: categoryItemsData,
@@ -419,6 +423,7 @@ exports.updateLevelCategory = async (req, res) => {
         color_code: color_code.trim(),
         block_key: (block_key && block_key !== 'null' && block_key !== '') ? block_key : null,
         background_image: background_image !== undefined ? background_image : undefined,
+        coordinates: coordinates !== undefined ? JSON.parse(JSON.stringify(coordinates)) : undefined, // Update if provided
         category_items: categoryItemsData.length > 0
           ? {
             create: categoryItemsData,
@@ -661,5 +666,36 @@ exports.deleteCategoryBackground = async (req, res) => {
   } catch (error) {
     console.error("Error deleting background:", error);
     res.status(500).json({ message: "Error deleting background", error: error.message });
+  }
+};
+
+// Update only level category coordinates
+exports.updateLevelCategoryCoordinates = async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+    const { coordinates } = req.body;
+
+    const levelCategory = await prisma.levelCategory.findUnique({
+      where: { category_id: parseInt(categoryId) },
+    });
+
+    if (!levelCategory) {
+      return res.status(404).json({ message: "Level category not found" });
+    }
+
+    const updatedCategory = await prisma.levelCategory.update({
+      where: { category_id: parseInt(categoryId) },
+      data: {
+        coordinates: coordinates, // Expecting JSON object or null
+      },
+    });
+
+    res.json({
+      message: "Level category coordinates updated successfully",
+      levelCategory: updatedCategory,
+    });
+  } catch (error) {
+    console.error("Error updating level category coordinates:", error);
+    res.status(500).json({ message: "Error updating level category coordinates", error: error.message });
   }
 };

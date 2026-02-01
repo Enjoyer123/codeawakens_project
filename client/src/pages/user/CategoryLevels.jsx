@@ -2,30 +2,18 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
+import useUserStore from '../../store/useUserStore';
 
 import { useCategoryData } from './hooks/useCategoryData';
 import { getImageUrl } from '@/utils/imageUtils';
 import MapCoordinatePicker from '../../components/tools/MapCoordinatePicker';
 import PageLoader from '../../components/shared/Loading/PageLoader';
 
-const LEVEL_POSITIONS = {
-  '1': { top: 28.44, left: 30.27 },
-  '2': { top: 28.44, left: 25.27 },
-  "4": { top: 36.82, left: 47.58 },
-  '5': { top: 35.69, left: 64.92 },
-  "6": { top: 56.69, left: 64.92 },
-  "7": { top: 52.69, left: 56.27 },
-  "8": { top: 67.56, left: 28.63 },
-  "10": { top: 39.57, left: 51.38 },
-  "22": { top: 35.45, left: 49.88 },
-  "23": { top: 37.07, left: 57.12 },
-  "24": { top: 38.45, left: 65.07 },
-  "27": { top: 40.45, left: 65.07 },
-  "13": { top: 62.39, left: 13.01 },
-};
+
 
 const CategoryLevels = () => {
   const { getToken } = useAuth();
+  const { role } = useUserStore();
   const navigate = useNavigate();
   const { categoryId } = useParams();
   const [reloadKey, setReloadKey] = useState(0);
@@ -108,6 +96,7 @@ const CategoryLevels = () => {
           data={levels}
           idKey="level_id"
           nameKey="title" // Assuming 'title' is valid, fallback to others handled in component
+          saveType="level" // Enable level saving mode
           imageSrc={categoryInfo?.background_image ? getImageUrl(categoryInfo.background_image) : "/paper.png"}
         />
       </div>
@@ -118,12 +107,15 @@ const CategoryLevels = () => {
     <div className="min-h-screen w-full bg-gray-900 relative overflow-hidden flex flex-col justify-center lg:h-screen lg:w-full lg:block">
 
       {/* Dev Tool Button */}
-      <button
-        onClick={() => setShowDevTool(true)}
-        className="fixed bottom-4 right-4 z-50 bg-gray-800 text-white px-3 py-1 text-xs rounded shadow hover:bg-gray-700 transition opacity-50 hover:opacity-100"
-      >
-        Open Level Picker
-      </button>
+      {/* Dev Tool Button - Admin Only */}
+      {role === 'admin' && (
+        <button
+          onClick={() => setShowDevTool(true)}
+          className="fixed bottom-4 right-4 z-50 bg-gray-800 text-white px-3 py-1 text-xs rounded shadow hover:bg-gray-700 transition opacity-50 hover:opacity-100"
+        >
+          Open Level Picker
+        </button>
+      )}
 
 
       {console.log(categoryInfo)}
@@ -137,7 +129,8 @@ const CategoryLevels = () => {
 
         {/* Level Nodes */}
         {levels.map((level) => {
-          const position = LEVEL_POSITIONS[level.level_id];
+          // Use coordinates from DB
+          const position = level.coordinates;
           // Level is locked if user hasn't unlocked it yet OR if it's a DRAFT (is_unlocked === false)
           const isLocked = level.is_locked || !level.is_unlocked;
 
@@ -211,12 +204,12 @@ const CategoryLevels = () => {
       </div>
 
       {/* Fallback for levels without positions */}
-      {levels.some(l => !LEVEL_POSITIONS[l.level_id]) && (
+      {levels.some(l => !l.coordinates) && (
         <div className="absolute bottom-16 left-0 right-0 p-4 flex justify-center pointer-events-none">
           <div className="bg-white/90 backdrop-blur-md p-4 rounded-xl shadow-xl pointer-events-auto max-w-2xl w-full">
             <h3 className="text-sm font-bold text-gray-500 mb-2 uppercase">Unplaced Levels ({categoryInfo.category_name})</h3>
             <div className="flex flex-wrap gap-2">
-              {levels.filter(l => !LEVEL_POSITIONS[l.level_id]).map(level => (
+              {levels.filter(l => !l.coordinates).map(level => (
                 <button
                   key={level.level_id}
                   onClick={() => handleLevelSelect(level.level_id)}

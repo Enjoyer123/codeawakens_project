@@ -843,14 +843,18 @@ const GameCore = ({
           {!showProgressModal && (isCompleted || isGameOver) && (
             <button
               onClick={() => setShowProgressModal(true)}
-              className="fixed top-4 right-4 z-50 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 rounded-lg shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 flex items-center gap-2 font-bold"
+              className="fixed top-20 right-4 z-50 text-[#2d1b0e] px-8 py-6 rounded-lg shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 flex items-center gap-2 font-bold"
               style={{
+                backgroundImage: 'url("/scoreccl1.png")',
+                backgroundSize: '100% 100%',
+                imageRendering: 'pixelated',
                 fontFamily: '"Press Start 2P", monospace',
-                fontSize: '10px',
-                textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
+                fontSize: '12px',
+                textShadow: 'none',
+                boxShadow: '0 4px 6px rgba(0,0,0,0.3)'
               }}
             >
-              <span>📊</span>
+              <span className="text-xl">📊</span>
               <span>SHOW RESULTS</span>
             </button>
           )}

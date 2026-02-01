@@ -46,6 +46,7 @@ app.use("/api", patternRouter);
 app.use("/api/test-cases", testCaseRouter);
 app.use("/api/tests", testRouter);
 app.use("/api", notificationRouter);
+app.use("/api", require("./routes/leaderboardRoutes"));
 app.use("/api", dashboardRouter);
 
 app.get("/", (req, res) => {

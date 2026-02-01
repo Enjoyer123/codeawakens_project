@@ -79,6 +79,10 @@ const NavbarWrapper = () => {
         path: '/user/mapselect'
       },
       {
+        label: 'Leaderboard',
+        path: '/user/leaderboard'
+      },
+      {
         label: 'Profile',
         path: '/user/profile'
       },
@@ -100,6 +104,10 @@ const NavbarWrapper = () => {
       {
         label: 'Play',
         path: '/user/mapselect'
+      },
+      {
+        label: 'Leaderboard',
+        path: '/user/leaderboard'
       },
       {
         label: 'Profile',

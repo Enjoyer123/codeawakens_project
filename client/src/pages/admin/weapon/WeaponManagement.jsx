@@ -39,9 +39,7 @@ const WeaponManagement = () => {
     emoji: '',
     weapon_type: 'melee',
   });
-  const [saveError, setSaveError] = useState(null);
 
-  // Image management states
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [selectedWeapon, setSelectedWeapon] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -52,13 +50,10 @@ const WeaponManagement = () => {
     frame: 1,
     imageFile: null,
   });
-  const [imageError, setImageError] = useState(null);
-
   // Delete states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [weaponToDelete, setWeaponToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState(null);
 
   // TanStack Query Hooks
   const {
@@ -159,9 +154,8 @@ const WeaponManagement = () => {
       handleCloseWeaponDialog();
       return { success: true };
     } catch (err) {
-      const errorMessage = 'Failed to save weapon: ' + (err.message || 'Unknown error');
-      setSaveError(errorMessage);
-      return { success: false, error: errorMessage };
+      console.error(err);
+      return { success: false, error: err.message };
     }
   }, [weaponForm, editingWeapon, updateWeaponMutation, createWeaponMutation, handleCloseWeaponDialog]);
 
@@ -247,8 +241,7 @@ const WeaponManagement = () => {
       });
       // Optionally re-sync selectedWeapon from fresh list if needed in next render?
     } catch (err) {
-      const errorMessage = err.message || 'Unknown error';
-      setImageError('ไม่สามารถเพิ่มรูปภาพได้: ' + errorMessage);
+      console.error(err);
     } finally {
       setUploadingImage(false);
     }
@@ -261,7 +254,7 @@ const WeaponManagement = () => {
       await deleteImageMutation.mutateAsync(imageId);
       // Invalidation happens in hook
     } catch (err) {
-      setImageError('ไม่สามารถลบรูปภาพได้: ' + (err.message || 'Unknown error'));
+      console.error(err);
     } finally {
       setDeletingImageId(null);
     }
@@ -269,7 +262,6 @@ const WeaponManagement = () => {
 
   const handleDeleteClick = useCallback((weapon) => {
     setWeaponToDelete(weapon);
-    setDeleteError(null);
     setDeleteDialogOpen(true);
   }, []);
 
@@ -278,13 +270,11 @@ const WeaponManagement = () => {
 
     try {
       setDeleting(true);
-      setDeleteError(null);
       await deleteWeaponMutation.mutateAsync(weaponToDelete.weapon_id);
       setDeleteDialogOpen(false);
       setWeaponToDelete(null);
     } catch (err) {
-      const errorMessage = createDeleteErrorMessage('weapon', err);
-      setDeleteError(errorMessage);
+      console.error(err);
     } finally {
       setDeleting(false);
     }
@@ -295,7 +285,6 @@ const WeaponManagement = () => {
       setDeleteDialogOpen(open);
       if (!open) {
         setWeaponToDelete(null);
-        setDeleteError(null);
       }
     }
   }, [deleting]);
@@ -322,9 +311,6 @@ const WeaponManagement = () => {
         />
 
         <ErrorAlert message={error} />
-        <ErrorAlert message={saveError} />
-        <ErrorAlert message={imageError} />
-        <ErrorAlert message={deleteError} />
 
         <SearchInput
           defaultValue={searchQuery}

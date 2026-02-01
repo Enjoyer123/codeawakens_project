@@ -53,8 +53,6 @@ const UserManagement = () => {
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
-  const [deleteError, setDeleteError] = useState(null);
-  const [roleError, setRoleError] = useState(null);
 
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [selectedUserForHistory, setSelectedUserForHistory] = useState(null);
@@ -66,11 +64,10 @@ const UserManagement = () => {
 
   const handleRoleChange = useCallback(async (userId, newRole) => {
     try {
-      setRoleError(null);
       await updateUserRoleAsync({ userId, role: newRole });
       // Query invalidation handles refresh
     } catch (err) {
-      setRoleError('Failed to update user role: ' + (err.message || 'Unknown error'));
+      console.error(err);
     }
   }, [updateUserRoleAsync]);
 
@@ -81,7 +78,6 @@ const UserManagement = () => {
 
   const handleDeleteClick = useCallback((userItem) => {
     setUserToDelete(userItem);
-    setDeleteError(null);
     setDeleteDialogOpen(true);
   }, []);
 
@@ -89,15 +85,13 @@ const UserManagement = () => {
     if (!userToDelete) return;
 
     try {
-      setDeleteError(null);
       const userId = userToDelete.user_id || userToDelete.id;
       await deleteUserAsync(userId);
       setDeleteDialogOpen(false);
       setUserToDelete(null);
       // Query invalidation handles refresh
     } catch (err) {
-      const errorMessage = createDeleteErrorMessage('user', err);
-      setDeleteError(errorMessage);
+      console.error(err);
     }
   }, [userToDelete, deleteUserAsync]);
 
@@ -123,7 +117,6 @@ const UserManagement = () => {
       setDeleteDialogOpen(open);
       if (!open) {
         setUserToDelete(null);
-        setDeleteError(null);
       }
     }
   }, [deleting]);
@@ -149,8 +142,6 @@ const UserManagement = () => {
         />
 
         <ErrorAlert message={error} />
-        <ErrorAlert message={roleError} />
-        <ErrorAlert message={deleteError} />
 
         {error && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">

@@ -90,7 +90,6 @@ const LevelCategoryManagement = () => {
   // Delete states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [levelCategoryToDelete, setLevelCategoryToDelete] = useState(null);
-  const [deleteError, setDeleteError] = useState(null);
 
   // Image management states
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
@@ -234,7 +233,7 @@ const LevelCategoryManagement = () => {
 
   const handleDeleteClick = useCallback((levelCategory) => {
     setLevelCategoryToDelete(levelCategory);
-    setDeleteError(null);
+    setLevelCategoryToDelete(levelCategory);
     setDeleteDialogOpen(true);
   }, []);
 
@@ -242,13 +241,11 @@ const LevelCategoryManagement = () => {
     if (!levelCategoryToDelete) return;
 
     try {
-      setDeleteError(null);
       await deleteCategoryAsync(levelCategoryToDelete.category_id);
       setDeleteDialogOpen(false);
       setLevelCategoryToDelete(null);
     } catch (err) {
-      const errorMessage = createDeleteErrorMessage('level category', err);
-      setDeleteError(errorMessage);
+      console.error(err);
     }
   }, [levelCategoryToDelete, deleteCategoryAsync]);
 
@@ -257,7 +254,6 @@ const LevelCategoryManagement = () => {
       setDeleteDialogOpen(open);
       if (!open) {
         setLevelCategoryToDelete(null);
-        setDeleteError(null);
       }
     }
   }, [deleting]);
@@ -336,7 +332,6 @@ const LevelCategoryManagement = () => {
         {/* But we have `setSaveError` here, so we display it here. */}
         <ErrorAlert message={saveError} />
         <ErrorAlert message={imageError} />
-        <ErrorAlert message={deleteError} />
 
         <SearchInput
           defaultValue={searchQuery}

@@ -33,13 +33,10 @@ const VictoryConditionManagement = () => {
     check: '',
     is_available: true,
   });
-  const [saveError, setSaveError] = useState(null);
-
   // Delete States
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [victoryConditionToDelete, setVictoryConditionToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState(null);
 
   // TanStack Query Hooks
   const {
@@ -127,10 +124,8 @@ const VictoryConditionManagement = () => {
       handleCloseVictoryConditionDialog();
       return { success: true };
     } catch (err) {
-      const errorMessage = 'ไม่สามารถบันทึก victory condition ได้: ' +
-        (err.message || 'Unknown error');
-      setSaveError(errorMessage);
-      return { success: false, error: errorMessage };
+      console.error(err);
+      return { success: false, error: err.message };
     }
   }, [
     victoryConditionForm,
@@ -142,7 +137,6 @@ const VictoryConditionManagement = () => {
 
   const handleDeleteClick = useCallback((victoryCondition) => {
     setVictoryConditionToDelete(victoryCondition);
-    setDeleteError(null);
     setDeleteDialogOpen(true);
   }, []);
 
@@ -150,16 +144,13 @@ const VictoryConditionManagement = () => {
     if (!victoryConditionToDelete) return;
 
     try {
-      setDeleting(true);
-      setDeleteError(null);
       await deleteVictoryConditionMutation.mutateAsync(
         victoryConditionToDelete.victory_condition_id
       );
       setDeleteDialogOpen(false);
       setVictoryConditionToDelete(null);
     } catch (err) {
-      const errorMessage = createDeleteErrorMessage('victory condition', err);
-      setDeleteError(errorMessage);
+      console.error(err);
     } finally {
       setDeleting(false);
     }
@@ -170,7 +161,6 @@ const VictoryConditionManagement = () => {
       setDeleteDialogOpen(open);
       if (!open) {
         setVictoryConditionToDelete(null);
-        setDeleteError(null);
       }
     }
   }, [deleting]);
@@ -191,8 +181,6 @@ const VictoryConditionManagement = () => {
         />
 
         <ErrorAlert message={error} />
-        <ErrorAlert message={saveError} />
-        <ErrorAlert message={deleteError} />
 
         <SearchInput
           defaultValue={searchQuery}
