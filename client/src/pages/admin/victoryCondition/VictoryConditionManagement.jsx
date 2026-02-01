@@ -201,7 +201,7 @@ const VictoryConditionManagement = () => {
   const getDeleteDescription = (type) =>
     `คุณแน่ใจหรือไม่ว่าต้องการลบเงื่อนไขชัยชนะ "${type}"? ` +
     'การกระทำนี้ไม่สามารถยกเลิกได้';
-    
+
   const searchPlaceholder =
     'ค้นหาเงื่อนไขชัยชนะ (type, description, check)...';
 
@@ -211,8 +211,6 @@ const VictoryConditionManagement = () => {
         <AdminPageHeader
           title="Victory Condition Management"
           subtitle="จัดการเงื่อนไขชัยชนะ"
-          onAddClick={() => handleOpenVictoryConditionDialog()}
-          addButtonText="เพิ่มเงื่อนไขชัยชนะ"
         />
 
         <ErrorAlert message={error} />

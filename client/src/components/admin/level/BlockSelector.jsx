@@ -18,7 +18,30 @@ const BlockSelector = ({ allBlocks, selectedBlocks, onBlocksChange }) => {
 
   return (
     <div className="bg-white rounded-lg shadow-md p-4">
-      <h2 className="text-xl font-bold mb-4">ADD BLOCK</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">ADD BLOCK</h2>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              const allBlockIds = allBlocks.map(b => b.block_id);
+              onBlocksChange(allBlockIds);
+            }}
+            className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 transition-colors"
+          >
+            Select All
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onBlocksChange([]);
+            }}
+            className="text-sm bg-red-100 text-red-700 px-3 py-1 rounded hover:bg-red-200 transition-colors"
+          >
+            Unselect All
+          </button>
+        </div>
+      </div>
       <div className="space-y-2 max-auto ">
         {blockCategories.map(category => (
           <div key={category} className="border rounded p-2">
@@ -33,9 +56,9 @@ const BlockSelector = ({ allBlocks, selectedBlocks, onBlocksChange }) => {
                     className="flex-shrink-0"
                   />
                   {block.block_image ? (
-                    <img 
-                      src={getImageUrl(block.block_image)} 
-                      alt={block.block_name} 
+                    <img
+                      src={getImageUrl(block.block_image)}
+                      alt={block.block_name}
                       className="h-50 w-50 object-cover rounded border flex-shrink-0"
                     />
                   ) : (

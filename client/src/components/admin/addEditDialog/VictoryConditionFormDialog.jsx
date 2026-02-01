@@ -79,6 +79,7 @@ const VictoryConditionFormDialog = ({
             onChange={(e) => handleChange('check', e.target.value)}
             placeholder="เช่น goalReached"
             required
+            disabled={!!editingVictoryCondition}
           />
           <FormCheckbox
             label="Available"

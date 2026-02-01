@@ -213,7 +213,25 @@ export function useBlocklySetup({
         // CRITICAL: Prevent auto-creation of procedure definitions
         let isCreatingCallBlock = false;
 
+        // ⚡ Performance: Track XML loading state to skip event processing
+        let isLoadingXml = false;
+        // Store reference to workspace for use in XML loader
+        window.__blocklyIsLoadingXml = () => isLoadingXml;
+        window.__blocklySetLoadingXml = (value) => { isLoadingXml = value; };
+
         workspace.addChangeListener((event) => {
+          // ⚡ Performance: Skip all processing during XML load
+          if (isLoadingXml) {
+            return;
+          }
+
+          // ⚡ Performance: Skip UI-only events that don't need processing
+          if (event.type === Blockly.Events.UI ||
+            event.type === Blockly.Events.SELECTED ||
+            event.type === Blockly.Events.CLICK) {
+            return;
+          }
+
           // Track when call blocks are being created
           if (event.type === Blockly.Events.BLOCK_CREATE) {
             const block = workspace.getBlockById(event.blockId);
@@ -411,16 +429,42 @@ export function useBlocklySetup({
           try {
             const xml = Blockly.utils.xml.textToDom(cleanedStarterXml);
             workspaceRef.current.clear();
+
+            // ⚡ Performance: Set flag to skip event processing during XML load
+            if (window.__blocklySetLoadingXml) {
+              window.__blocklySetLoadingXml(true);
+            }
+
             Blockly.Xml.domToWorkspace(xml, workspaceRef.current);
+
+            if (window.__blocklySetLoadingXml) {
+              window.__blocklySetLoadingXml(false);
+            }
+
             lastLoadedXmlRef.current = starter_xml;
           } catch (primaryErr) {
             console.warn('⚠️ Failed to load processed starter XML, retrying raw starter_xml:', primaryErr);
             try {
               const xmlRaw = Blockly.utils.xml.textToDom(starter_xml);
               workspaceRef.current.clear();
+
+              // ⚡ Performance: Set flag to skip event processing
+              if (window.__blocklySetLoadingXml) {
+                window.__blocklySetLoadingXml(true);
+              }
+
               Blockly.Xml.domToWorkspace(xmlRaw, workspaceRef.current);
+
+              if (window.__blocklySetLoadingXml) {
+                window.__blocklySetLoadingXml(false);
+              }
+
               lastLoadedXmlRef.current = starter_xml;
             } catch (rawErr) {
+              // Re-enable event processing even on error
+              if (window.__blocklySetLoadingXml) {
+                window.__blocklySetLoadingXml(false);
+              }
               console.error('❌ Failed to load starter XML (raw and processed):', rawErr);
               setCurrentHint('⚠️ ไม่สามารถโหลด starter blocks ได้: ' + (rawErr.message || 'invalid XML'));
               return;

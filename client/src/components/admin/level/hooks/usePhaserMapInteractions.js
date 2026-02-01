@@ -278,10 +278,10 @@ export const usePhaserMapInteractions = ({
 
       const newMonster = {
         id: newMonsterId,
-        name: '👹 Goblin',
+        name: '🧛 Vampire',
         hp: 3,
         damage: 100,
-        type: 'enemy', // Default type
+        type: 'vampire_1', // Default type
         x: centerX,
         y: centerY,
         startNode: clickedNode ? clickedNode.id : null,

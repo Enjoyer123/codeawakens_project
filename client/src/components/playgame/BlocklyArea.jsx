@@ -14,8 +14,6 @@ const BlocklyArea = ({
   gameState,
   isRunning,
   isGameOver,
-  onDebugToggle,
-  debugMode,
   currentLevel,
   codeValidation,
   blocklyJavaScriptReady,
@@ -99,8 +97,6 @@ const BlocklyArea = ({
         blocklyJavaScriptReady={blocklyJavaScriptReady}
         codeValidation={codeValidation}
         currentLevel={currentLevel}
-        onDebugToggle={onDebugToggle}
-        debugMode={debugMode}
         onHistoryClick={() => setHistoryOpen(true)}
       />
 

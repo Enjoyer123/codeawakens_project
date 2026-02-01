@@ -44,13 +44,19 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, blocklyXml, tex
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, levelData, getToken, gameResult]);
 
-  const handleClose = () => {
+  // Minimize modal (just close, don't navigate)
+  const handleMinimize = () => {
+    onClose();
+  };
+
+  // Navigate away (for buttons)
+  const handleNavigateAway = () => {
     onClose();
     navigate('/user/mapselect');
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={handleMinimize}>
       <DialogContent
         className="max-w-2xl p-0 bg-transparent border-0 shadow-none overflow-visible"
         // Prevent default close button from showing
@@ -82,7 +88,7 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, blocklyXml, tex
                 {gameResult === 'victory' ? 'VICTORY' : 'GAME OVER'}
               </h2>
 
-              <button onClick={handleClose} className="text-[#5d4037] hover:text-red-600 hover:scale-110 transition-transform font-bold text-xl">
+              <button onClick={handleNavigateAway} className="text-[#5d4037] hover:text-red-600 hover:scale-110 transition-transform font-bold text-xl">
                 ✕
               </button>
             </div>
@@ -233,6 +239,7 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, blocklyXml, tex
 
               {/* ปุ่ม AGAIN */}
               <button
+                onClick={handleNavigateAway}
                 // ✅ ปรับขนาด: w-5/12 (กว้างเกือบครึ่ง) และ max-w จำกัดไม่ให้ใหญ่เกิน
                 className="group relative w-5/12 max-w-[220px] transition-transform hover:scale-105 active:translate-y-1"
               >
@@ -261,7 +268,7 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, blocklyXml, tex
               {/* ปุ่ม NEXT (แสดงเฉพาะตอนชนะ) */}
               {gameResult === 'victory' && (
                 <button
-                  onClick={() => { /* ใส่ฟังก์ชันไปด่านถัดไป */ }}
+                  onClick={handleNavigateAway}
                   className="group relative w-5/12 max-w-[220px] transition-transform hover:scale-105 active:translate-y-1"
                 >
                   {/* 1. รูปหลัก */}

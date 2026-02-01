@@ -101,12 +101,6 @@ export const useLevelForm = ({
         ];
 
         const monsterTemplates = {
-            'enemy': {
-                name: '👹 Goblin',
-                hp: 3,
-                damage: 100,
-                detectionRange: 60
-            },
             'vampire_1': {
                 name: '🧛 Vampire',
                 hp: 3,
@@ -118,10 +112,22 @@ export const useLevelForm = ({
                 hp: 3,
                 damage: 100,
                 detectionRange: 80
+            },
+            'vampire_3': {
+                name: '🧛 Vampire 3',
+                hp: 3,
+                damage: 100,
+                detectionRange: 80
+            },
+            'slime_1': {
+                name: '💧 Slime 1',
+                hp: 2,
+                damage: 50,
+                detectionRange: 60
             }
         };
 
-        const template = monsterTemplates[type] || monsterTemplates['enemy'];
+        const template = monsterTemplates[type] || monsterTemplates['vampire_1'];
 
         const baseMonsterData = {
             ...template,

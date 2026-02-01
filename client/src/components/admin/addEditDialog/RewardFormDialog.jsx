@@ -97,18 +97,6 @@ const RewardFormDialog = ({
             onChange={(e) => handleChange('description', e.target.value)}
             placeholder="คำอธิบายรางวัล"
           />
-          <div>
-            <FormTextarea
-              label="Reward Data (JSON)"
-              name="reward_data"
-              value={formData.reward_data || ''}
-              onChange={(e) => handleChange('reward_data', e.target.value)}
-              placeholder='{"weapon_id": 1, "combat_power": 10}'
-              rows={4}
-              textareaClassName="font-mono"
-            />
-            <p className={noteClassName}>Format: JSON object (optional)</p>
-          </div>
           <FormInput
             label="Required Score"
             name="required_score"

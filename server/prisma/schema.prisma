@@ -241,7 +241,6 @@ model Reward {
   reward_type    RewardType
   reward_name    String
   description    String?
-  reward_data    Json?
   required_score Int
   is_automatic   Boolean      @default(false)
   frame1         String?

@@ -82,11 +82,35 @@ export function showEffectWeaponFixed(enemy, damage, weaponKey = 'stick', weapon
 
     // Spawn multiple effects (Multi-frame)
     const validFrames = [];
-    // ... (Validation logic same as before to find frames) ...
-    for (let i = 1; i <= 10; i++) {
-        const frameKey = `${texturePrefix}-${i}`;
-        if (scene.textures.exists(frameKey)) validFrames.push(frameKey);
-        else break;
+
+    // SPECIAL CASE: 'circle' weapon using 'Circle_N' format (underscore)
+    // User requested: "shows picture like aura but name circle", "I added Circle_1, 2", "increase size"
+    let customScale = undefined;
+
+    if (weaponKey.toLowerCase() === 'circle') {
+        // Try looking for Circle_1, Circle_2
+        for (let i = 1; i <= 10; i++) {
+            const frameKey = `Circle_${i}`;
+            if (scene.textures.exists(frameKey)) {
+                validFrames.push(frameKey);
+            } else {
+                break;
+            }
+        }
+        if (validFrames.length > 0) {
+            console.log("✨ Found custom Circle frames:", validFrames);
+            customScale = 8.0; // Increase size as requested (default is 4.0)
+        }
+    }
+
+    // Standard detection if custom detection failed
+    if (validFrames.length === 0) {
+        // ... (Validation logic same as before to find frames) ...
+        for (let i = 1; i <= 10; i++) {
+            const frameKey = `${texturePrefix}-${i}`;
+            if (scene.textures.exists(frameKey)) validFrames.push(frameKey);
+            else break;
+        }
     }
 
     if (validFrames.length === 0) {
@@ -128,7 +152,8 @@ export function showEffectWeaponFixed(enemy, damage, weaponKey = 'stick', weapon
             y: ey,
             depth: scene.player.depth + 10,
             angle: angle + Math.PI / 2, // Rotate sprite to face outward
-            moveOutward: true
+            moveOutward: true,
+            scale: customScale // Pass custom scale if defined
         }, validFrames, weaponKey);
     }
 }

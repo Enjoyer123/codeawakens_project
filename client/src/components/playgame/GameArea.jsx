@@ -164,6 +164,15 @@ const GameArea = ({
           <StatusPanel
             playerHpState={playerHpState}
             currentWeaponData={currentWeaponData}
+            characterName={levelData?.character || 'main_1'}
+          />
+
+          {/* Pattern Match */}
+          <PatternMatchPanel
+            hintData={hintData}
+            idealPattern={idealPattern}
+            weaponProgress={weaponProgress}
+            weaponImgSrc={weaponImgSrc}
           />
 
           {/* Block Count */}
@@ -182,14 +191,6 @@ const GameArea = ({
           <GuideButton
             onOpenGuide={onOpenGuide}
             disabled={!hasGuides}
-          />
-
-          {/* Pattern Match */}
-          <PatternMatchPanel
-            hintData={hintData}
-            idealPattern={idealPattern}
-            weaponProgress={weaponProgress}
-            weaponImgSrc={weaponImgSrc}
           />
 
           {/* Big O Complexity (Display Only if set) */}

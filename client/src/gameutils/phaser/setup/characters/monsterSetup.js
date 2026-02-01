@@ -63,13 +63,13 @@ export function setupMonsters(scene) {
             if (!startPos) return;
 
             // Determine texture and initial animation based on monster type
-            const monsterType = monsterData.type || 'enemy';
-            let textureKey = 'vampire'; // Default for Goblin
-            let idleAnim = 'vampire-idle';
-            let moveAnim = 'vampire-movement';
-            let attackAnim = 'vampire-attack';
-            let animPrefix = 'vampire';
-            let hasDirectionalAnims = false;
+            const monsterType = monsterData.type || 'vampire_1'; // Modified default
+            let textureKey = 'Vampire_1'; // Default updated to Vampire 1
+            let idleAnim = 'vampire_1-idle_down';
+            let moveAnim = 'vampire_1-walk_down';
+            let attackAnim = 'vampire_1-attack-down';
+            let animPrefix = 'vampire_1';
+            let hasDirectionalAnims = true; // Vampire 1 uses directional anims
 
             if (monsterType === 'vampire_1') {
                 textureKey = 'Vampire_1';
@@ -85,13 +85,20 @@ export function setupMonsters(scene) {
                 attackAnim = 'vampire_2-attack-down';
                 animPrefix = 'vampire_2';
                 hasDirectionalAnims = true;
-            } else if (monsterType === 'enemy') {
-                textureKey = 'vampire';
-                idleAnim = 'vampire-idle';
-                moveAnim = 'vampire-movement';
-                attackAnim = 'vampire-attack';
-                animPrefix = 'vampire';
-                hasDirectionalAnims = false;
+            } else if (monsterType === 'vampire_3') {
+                textureKey = 'Vampire_3';
+                idleAnim = 'vampire_3-idle_down';
+                moveAnim = 'vampire_3-walk_down';
+                attackAnim = 'vampire_3-attack-down';
+                animPrefix = 'vampire_3';
+                hasDirectionalAnims = true;
+            } else if (monsterType === 'slime_1') {
+                textureKey = 'slime_1';
+                idleAnim = 'slime-idle_down';
+                moveAnim = 'slime-walk_down';
+                attackAnim = 'slime-attack-down'; // Assuming standard naming
+                animPrefix = 'slime';
+                hasDirectionalAnims = true;
             }
 
             // Create monster sprite with correct texture

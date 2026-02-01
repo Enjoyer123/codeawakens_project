@@ -220,8 +220,8 @@ export function updateMonsters(scene, delta, isRunning, setPlayerHp, setIsGameOv
   updateAllCombatUIs(scene);
 
   scene.monsters.forEach((monster) => {
-    // ตรวจสอบว่าศัตรูตายแล้วหรือไม่ หรืออยู่ในระหว่างการต่อสู้
-    if (isDefeat(monster.sprite) || monster.data?.defeated || monster.sprite.getData('defeated') || monster.isDefeated || monster.data?.inBattle) return;
+    // ตรวจสอบว่าศัตรูตายแล้วหรือไม่ (Remove inBattle check to allow Flee Detection to run)
+    if (isDefeat(monster.sprite) || monster.data?.defeated || monster.sprite.getData('defeated') || monster.isDefeated) return;
 
     const distToPlayer = Phaser.Math.Distance.Between(
       scene.player.x,
@@ -236,7 +236,7 @@ export function updateMonsters(scene, delta, isRunning, setPlayerHp, setIsGameOv
     if (distToPlayer < monster.data.detectionRange && !monster.data.isChasing) {
       monster.data.isChasing = true;
       monster.glow.setFillStyle(0xff6600, 0.4);
-    } else if (distToPlayer > monster.data.detectionRange && monster.data.isChasing) {
+    } else if (distToPlayer > monster.data.detectionRange && monster.data.isChasing && !monster.data.hasEngaged) {
       // Determine direction from last movement to play correct idle
       const angle = Phaser.Math.Angle.Between(monster.sprite.x, monster.sprite.y, scene.player.x, scene.player.y);
       const idleAnim = monster.sprite.getData('idleAnim') || 'vampire-idle';
@@ -254,7 +254,8 @@ export function updateMonsters(scene, delta, isRunning, setPlayerHp, setIsGameOv
         monster.sprite.anims.play(idleAnim, true);
       }
 
-      // continue to next monster
+      // continue to next monster (Stop chasing)
+      monster.data.isChasing = false;
       return;
     }
 
@@ -265,30 +266,22 @@ export function updateMonsters(scene, delta, isRunning, setPlayerHp, setIsGameOv
         scene.player.x,
         scene.player.y
       );
-      const speed = 120 * (delta / 1000);
-      monster.sprite.x += Math.cos(angle) * speed;
-      monster.sprite.y += Math.sin(angle) * speed;
-      monster.glow.x = monster.sprite.x;
-      monster.glow.y = monster.sprite.y;
+
+      // Only move if NOT in battle (Don't override attack lunges)
+      if (!monster.data.inBattle) {
+        const speed = 120 * (delta / 1000);
+        monster.sprite.x += Math.cos(angle) * speed;
+        monster.sprite.y += Math.sin(angle) * speed;
+        monster.glow.x = monster.sprite.x;
+        monster.glow.y = monster.sprite.y;
+      }
 
       // 🛑 Flee Detection & "Walk Past" Detection
       if (monster.data.hasEngaged) {
         const isPlayerMoving = scene.tweens.isTweening(scene.player);
 
-        // Rule 1: Moving while Engaged = Instant Death
-        // This covers "Walking Past" (entering attack range and keeping moving)
-        // and "Walking Into" (trying to enter the monster's tile)
-        if (isPlayerMoving) {
-          console.log("💀 Player moving while engaged! Instant Death.");
-          if (scene.player.takeDamage) {
-            scene.player.takeDamage(100, true);
-          } else {
-            setGlobalPlayerHp(0);
-            if (typeof setIsGameOver === 'function') setIsGameOver(true);
-            showGameOver(scene);
-          }
-          return;
-        }
+        // Rule 1: Moving while Engaged -> Removed to prevent instant death while entering the node
+        // We only enforce Rule 2 (Distance) now.
 
         const distForFlee = Phaser.Math.Distance.Between(scene.player.x, scene.player.y, monster.sprite.x, monster.sprite.y);
         // Rule 2: Fleeing (Distance based)
@@ -307,33 +300,35 @@ export function updateMonsters(scene, delta, isRunning, setPlayerHp, setIsGameOv
       }
 
       // 🛑 Collision Detection: If player walks INTO monster (isMoving + close)
-      // This is a backup for cases where startBattle (Engagement) might lag or threshold mismatch
-      const isPlayerMoving = scene.tweens.isTweening(scene.player);
-      const distForCollision = Phaser.Math.Distance.Between(scene.player.x, scene.player.y, monster.sprite.x, monster.sprite.y);
+      if (!monster.data.inBattle) { // Only checking generic collision if not already battling
+        const isPlayerMoving = scene.tweens.isTweening(scene.player);
+        const distForCollision = Phaser.Math.Distance.Between(scene.player.x, scene.player.y, monster.sprite.x, monster.sprite.y);
 
-      if (isPlayerMoving && distForCollision < 25) { // Very close collision while moving
-        console.log("💀 Player walked into monster! Instant Death.");
-        // Call takeDamage with forceKill = true
-        if (scene.player.takeDamage) {
-          scene.player.takeDamage(100, true);
-        } else {
-          setGlobalPlayerHp(0);
-          if (typeof setIsGameOver === 'function') setIsGameOver(true);
-          showGameOver(scene);
+        if (isPlayerMoving && distForCollision < 25) {
+          console.log("💀 Player walked into monster! Instant Death.");
+          if (scene.player.takeDamage) {
+            scene.player.takeDamage(100, true);
+          } else {
+            setGlobalPlayerHp(0);
+            if (typeof setIsGameOver === 'function') setIsGameOver(true);
+            showGameOver(scene);
+          }
+          return;
         }
-        return;
       }
 
-      // Update animation based on direction
-      if (monster.sprite.getData('hasDirectionalAnims')) {
-        const dir = getDirectionFromAngle(angle);
-        const prefix = monster.sprite.getData('animPrefix');
-        const animKey = `${prefix}-walk_${dir}`;
-        if (scene.anims.exists(animKey)) {
-          monster.sprite.anims.play(animKey, true);
+      // Update animation based on direction (Only if NOT in battle)
+      if (!monster.data.inBattle) {
+        if (monster.sprite.getData('hasDirectionalAnims')) {
+          const dir = getDirectionFromAngle(angle);
+          const prefix = monster.sprite.getData('animPrefix');
+          const animKey = `${prefix}-walk_${dir}`;
+          if (scene.anims.exists(animKey)) {
+            monster.sprite.anims.play(animKey, true);
+          }
+        } else {
+          monster.sprite.anims.play(monster.sprite.getData('moveAnim') || 'vampire-movement', true);
         }
-      } else {
-        monster.sprite.anims.play(monster.sprite.getData('moveAnim') || 'vampire-movement', true);
       }
 
       // Update health bar position - adjusted for bigger sprite
@@ -358,7 +353,7 @@ export function updateMonsters(scene, delta, isRunning, setPlayerHp, setIsGameOv
         scene.player.y
       );
 
-      const attackRange = monster.data.attackRange || 45; // Increased from 30 to 45 to cover adjacent tiles (32px)
+      const attackRange = monster.data.attackRange || 45;
       // ⭐ Attack if close enough (removed isRunning check to allow manual movement attacks)
       if (distAfterMove <= attackRange && !monster.data.inBattle) {
         // startBattle will handle damage and game over logic; don't await here to keep update loop responsive
@@ -384,7 +379,7 @@ export function updateMonsters(scene, delta, isRunning, setPlayerHp, setIsGameOv
 
       if (distToTarget < 5) {
         monster.data.currentPatrolIndex = (monster.data.currentPatrolIndex + 1) % monster.data.patrol.length;
-        return;  // Added return to prevent extra movement after reaching target
+        return;
       } else {
         const angle = Phaser.Math.Angle.Between(
           monster.sprite.x,

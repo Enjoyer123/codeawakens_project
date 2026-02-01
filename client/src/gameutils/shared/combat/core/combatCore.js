@@ -35,7 +35,7 @@ export function initiateCombat(player, enemy) {
   // หยุดการเคลื่อนที่ของศัตรู
   if (enemy.sprite) {
     enemy.sprite.body?.setVelocity?.(0, 0); // ปลอดภัย ถ้ามี physics body
-    enemy.sprite.anims?.play('vampire-idle', true);
+    enemy.sprite.anims?.play('vampire_1-idle_down', true);
   }
 
   // แสดงข้อความเริ่มต้นการต่อสู้

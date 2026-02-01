@@ -8,8 +8,10 @@ import { API_BASE_URL } from '../../../config/apiConfig';
 // Global weapon variables
 let weaponsData = null; // เก็บข้อมูลอาวุธจาก API
 let playerWeaponContainer = null; // Container for the weapon ring
-let playerEffectGraphics = null; // สำหรับวาด circle
-let playerEffectSprite = null;   // สำหรับแสดง aura (sprite)
+let playerEffectGraphics = null; // สำหรับวาด circle (legacy/fallback)
+let circleEffectSprite = null;   // สำหรับแสดง Circle effect
+let auraEffectSprite = null;     // สำหรับแสดง Aura effect
+let playerEffectSprite = null;   // DEPRECATED: Keeping for compatibility during refactor, will remove usages
 
 // Export weaponsData for external access
 export function getWeaponsData() {
@@ -347,6 +349,7 @@ export function displayPlayerEffect(effectKey, scene, keepExisting = false) {
   if (!scene || !scene.player) return;
 
   // ลบเอฟเฟกต์เก่าออกก่อน (ถ้าไม่ได้สั่งให้เก็บไว้)
+  // Note: ถ้า keepExisting = true แสดงว่าเราต้องการให้ effect ซ้อนกันได้ (เช่น จากการใส่ item หลายชิ้น)
   if (!keepExisting) {
     clearPlayerEffects();
   }
@@ -371,6 +374,15 @@ function clearPlayerEffects() {
     playerEffectGraphics.destroy();
     playerEffectGraphics = null;
   }
+  if (circleEffectSprite) {
+    circleEffectSprite.destroy();
+    circleEffectSprite = null;
+  }
+  if (auraEffectSprite) {
+    auraEffectSprite.destroy();
+    auraEffectSprite = null;
+  }
+  // Legacy cleanup
   if (playerEffectSprite) {
     playerEffectSprite.destroy();
     playerEffectSprite = null;
@@ -380,61 +392,71 @@ function clearPlayerEffects() {
 function drawMagicCircle(scene, index) {
   const player = scene.player;
 
-  // เคลียร์อันเก่าของประเภทเดียวกันออกก่อนเพื่อไม่ให้ซ้อนกันเอง
+  // Logic: "circle_1" is the animation key. 
+  // Frames are "circle_1_1" to "circle_1_7".
+  const animKey = `circle_${index}`;
+  const firstFrameKey = `circle_${index}_1`; // Default first frame if anim doesn't exist but texture does
+
+  console.log(`🔥 [weaponUtils] drawMagicCircle trying anim: ${animKey}`);
+
+  // เคลียร์สไปรท์เก่าออกก่อน
+  if (circleEffectSprite) {
+    circleEffectSprite.destroy();
+    circleEffectSprite = null;
+  }
   if (playerEffectGraphics) {
     playerEffectGraphics.destroy();
     playerEffectGraphics = null;
   }
 
-  const graphics = scene.add.graphics();
-  graphics.setDepth(player.depth - 1); // อยู่ใต้เท้า
+  // Check if animation exists or at least the first frame exists
+  if (scene.anims.exists(animKey) || scene.textures.exists(firstFrameKey)) {
+    // Create sprite using the first frame
+    // Note: If anim exists, playing it will override this texture anyway
+    const startTexture = scene.textures.exists(firstFrameKey) ? firstFrameKey : animKey;
 
-  // Determine color based on index
-  // circle_1 (index=1) = Cyan (0x00ffff)
-  // circle_2 (index=2) = Gold/Orange (0xffaa00)
-  const color = (index === 2) ? 0xffaa00 : 0x00ffff;
-  const alpha = 0.6;
-  const radius = 40;
-
-  // วาดวงกลมชั้นนอก (แบบจางๆ)
-  graphics.lineStyle(2, color, alpha);
-  graphics.strokeCircle(0, 0, radius);
-
-  // วาดสัญลักษณ์ข้างใน (จำลองตาม index)
-  graphics.lineStyle(1, color, alpha * 0.5);
-  graphics.strokeCircle(0, 0, radius - 5);
-
-  if (index > 0) {
-    // วาดเส้นกากบาท หรือสามเหลี่ยมข้างในให้ดูเหมือนวงเวทย์
-    for (let i = 0; i < 4; i++) {
-      const angle = (i * Math.PI) / 2;
-      graphics.lineBetween(
-        Math.cos(angle) * (radius - 10), Math.sin(angle) * (radius - 10),
-        Math.cos(angle + Math.PI) * (radius - 10), Math.sin(angle + Math.PI) * (radius - 10)
-      );
+    // Safety check if we can actually create a sprite
+    if (!scene.textures.exists(startTexture) && !scene.anims.exists(animKey)) {
+      console.warn(`⚠️ Cannot create circle sprite: texture ${startTexture} not found.`);
+      return;
     }
+
+    // Create sprite
+    const circle = scene.add.sprite(player.x, player.y, startTexture);
+    circle.setDepth(player.depth - 1);
+    circle.setScale(4.5); // ปรับลดขนาดลงอีกตามที่ขอ (6.0 -> 4.5)
+    circle.setAlpha(0.8);
+
+    // Play animation if available
+    if (scene.anims.exists(animKey)) {
+      circle.play(animKey);
+    } else {
+      // Fallback: rotate the single frame we found
+      scene.tweens.add({
+        targets: circle,
+        angle: 360,
+        duration: 3000,
+        repeat: -1,
+        ease: 'Linear'
+      });
+    }
+
+    circleEffectSprite = circle;
+
+    // อัปเดตตำแหน่งตามผู้เล่น
+    const updatePos = () => {
+      if (circleEffectSprite && !circleEffectSprite.isDestroyed && player) {
+        circleEffectSprite.setPosition(player.x, player.y);
+      }
+    };
+    scene.events.on('update', updatePos);
+
+    circle.once('destroy', () => {
+      scene.events.off('update', updatePos);
+    });
+  } else {
+    console.warn(`⚠️ Circle animation/texture ${animKey} or ${firstFrameKey} not found!`);
   }
-
-  playerEffectGraphics = graphics;
-
-  // ให้วงเวทย์หมุนช้าๆ
-  scene.tweens.add({
-    targets: graphics,
-    angle: 360,
-    duration: 5000,
-    repeat: -1
-  });
-
-  // อัปเดตตำแหน่งตามผู้เล่น
-  const updatePos = () => {
-    if (playerEffectGraphics && player) {
-      playerEffectGraphics.setPosition(player.x, player.y + 15);
-    }
-  };
-  scene.events.on('update', updatePos);
-  playerEffectGraphics.once('destroy', () => {
-    scene.events.off('update', updatePos);
-  });
 }
 
 function showPlayerAura(scene, index) {
@@ -443,32 +465,47 @@ function showPlayerAura(scene, index) {
 
   console.log(`🔥 [weaponUtils] showPlayerAura using sprite: ${animKey}`);
 
-  // เคลียร์สไปรท์เก่าออกก่อน
-  if (playerEffectSprite) {
-    playerEffectSprite.destroy();
-    playerEffectSprite = null;
+  // เคลียร์สไปรท์ของ Aura อันเก่าออกก่อน
+  if (auraEffectSprite) {
+    auraEffectSprite.destroy();
+    auraEffectSprite = null;
   }
 
   // Create aura sprite
   // We use the first frame as the initial texture
-  const aura = scene.add.sprite(player.x, player.y, `${animKey}_1`);
+  const startTexture = `${animKey}_1`;
+
+  if (!scene.textures.exists(startTexture) && !scene.anims.exists(animKey)) {
+    console.warn(`⚠️ Aura texture/anim ${animKey} not found`);
+    return;
+  }
+
+  const aura = scene.add.sprite(player.x, player.y, startTexture);
+  // Aura depth: If circle is depth-1, aura can be depth-1 too, but let's make sure it sorts correctly.
+  // Adding it after circle (if both present) will make it appear on top.
   aura.setDepth(player.depth - 1);
-  aura.setScale(1.5); // ปรับขนาดให้พอดีกับตัวละคร (จากเดิม 2.5)
+  aura.setScale(1.5);
   aura.setAlpha(0.8);
 
   // เล่น Animation
   if (scene.anims.exists(animKey)) {
     aura.play(animKey);
   } else {
-    console.warn(`⚠️ Animation ${animKey} not found!`);
+    // If just static frames (which aura usually isn't), maybe rotate?
+    // But aura logic usually expects anim.
+    if (scene.textures.exists(startTexture)) {
+      // Just static
+    } else {
+      console.warn(`⚠️ Animation ${animKey} failed to play`);
+    }
   }
 
-  playerEffectSprite = aura;
+  auraEffectSprite = aura;
 
   // อัปเดตตำแหน่งตามผู้เล่น
   const updatePos = () => {
-    if (playerEffectSprite && !playerEffectSprite.isDestroyed && player) {
-      playerEffectSprite.setPosition(player.x, player.y);
+    if (auraEffectSprite && !auraEffectSprite.isDestroyed && player) {
+      auraEffectSprite.setPosition(player.x, player.y);
     }
   };
   scene.events.on('update', updatePos);

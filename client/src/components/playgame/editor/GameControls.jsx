@@ -10,8 +10,6 @@ const GameControls = ({
     blocklyJavaScriptReady,
     codeValidation,
     currentLevel,
-    onDebugToggle,
-    debugMode,
     onHistoryClick
 }) => {
     const isRunDisabled =
@@ -28,7 +26,7 @@ const GameControls = ({
                 <button
                     onClick={runCode}
                     disabled={isRunDisabled}
-                    className="col-span-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white py-2 rounded-lg font-bold shadow-lg transform transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="col-span-3 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white py-2 rounded-lg font-bold shadow-lg transform transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                     {gameState === "running" ? (
                         <>
@@ -48,15 +46,7 @@ const GameControls = ({
                     🔄 Reset
                 </button>
 
-                <button
-                    onClick={onDebugToggle}
-                    className={`py-2 rounded-lg font-semibold shadow transition active:scale-95 flex items-center justify-center gap-1 ${debugMode
-                        ? "bg-yellow-600 text-white ring-2 ring-yellow-400/50"
-                        : "bg-stone-700 hover:bg-stone-600 text-stone-300"
-                        }`}
-                >
-                    🐞 Debug
-                </button>
+
 
                 <button
                     onClick={onHistoryClick}

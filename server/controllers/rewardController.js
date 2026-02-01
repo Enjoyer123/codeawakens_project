@@ -131,7 +131,6 @@ exports.createReward = async (req, res) => {
       reward_type,
       reward_name,
       description,
-      reward_data,
       required_score,
       is_automatic,
       frame1,
@@ -158,25 +157,12 @@ exports.createReward = async (req, res) => {
       return res.status(400).json({ message: "Invalid reward_type" });
     }
 
-    // Parse reward_data if it's a string
-    let parsedRewardData = null;
-    if (reward_data) {
-      try {
-        parsedRewardData = typeof reward_data === 'string'
-          ? JSON.parse(reward_data)
-          : reward_data;
-      } catch (parseError) {
-        return res.status(400).json({ message: "Invalid reward_data JSON format" });
-      }
-    }
-
     const reward = await prisma.reward.create({
       data: {
         level_id: parseInt(level_id),
         reward_type,
         reward_name,
         description: description || null,
-        reward_data: parsedRewardData,
         required_score: parseInt(required_score),
         is_automatic: is_automatic === true || is_automatic === 'true',
         frame1: frame1 || null,
@@ -215,7 +201,6 @@ exports.updateReward = async (req, res) => {
       reward_type,
       reward_name,
       description,
-      reward_data,
       required_score,
       is_automatic,
       frame1,
@@ -249,15 +234,6 @@ exports.updateReward = async (req, res) => {
     }
     if (reward_name !== undefined) updateData.reward_name = reward_name;
     if (description !== undefined) updateData.description = description;
-    if (reward_data !== undefined) {
-      try {
-        updateData.reward_data = typeof reward_data === 'string'
-          ? JSON.parse(reward_data)
-          : reward_data;
-      } catch (parseError) {
-        return res.status(400).json({ message: "Invalid reward_data JSON format" });
-      }
-    }
     if (required_score !== undefined) updateData.required_score = parseInt(required_score);
     if (is_automatic !== undefined) updateData.is_automatic = is_automatic === true || is_automatic === 'true';
     if (frame1 !== undefined) updateData.frame1 = frame1 || null;

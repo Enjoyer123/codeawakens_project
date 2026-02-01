@@ -82,12 +82,10 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
         <div className="space-y-2">
           <label className="text-[10px] font-bold text-gray-500 uppercase">Player Character</label>
           <select
-            value={formData.character || 'player'}
+            value={formData.character || 'main_1'}
             onChange={(e) => onFormDataChange({ ...formData, character: e.target.value })}
             className="w-full text-xs h-8 border border-gray-200 rounded-md px-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
-            <option value="player">Player (Default)</option>
-            <option value="slime">Slime</option>
             <option value="main_1">Main 1</option>
             <option value="main_2">Main 2</option>
             <option value="main_3">Main 3</option>
@@ -251,14 +249,6 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
                 </label>
                 <div className="flex flex-col gap-1">
                   <Button
-                    variant={selectedMonsterType === 'enemy' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => typeof onMonsterTypeChange === 'function' && onMonsterTypeChange('enemy')}
-                    className={`justify-start h-7 text-[10px] py-1 px-2 ${selectedMonsterType === 'enemy' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'text-gray-600'}`}
-                  >
-                    <span className="mr-2">👹</span> Goblin
-                  </Button>
-                  <Button
                     variant={selectedMonsterType === 'vampire_1' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => typeof onMonsterTypeChange === 'function' && onMonsterTypeChange('vampire_1')}
@@ -273,6 +263,14 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
                     className={`justify-start h-7 text-[10px] py-1 px-2 ${selectedMonsterType === 'vampire_2' ? 'bg-purple-100 text-purple-700 hover:bg-purple-200' : 'text-gray-600'}`}
                   >
                     <span className="mr-2">🧛</span> Vampire 2
+                  </Button>
+                  <Button
+                    variant={selectedMonsterType === 'vampire_3' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => typeof onMonsterTypeChange === 'function' && onMonsterTypeChange('vampire_3')}
+                    className={`justify-start h-7 text-[10px] py-1 px-2 ${selectedMonsterType === 'vampire_3' ? 'bg-purple-100 text-purple-700 hover:bg-purple-200' : 'text-gray-600'}`}
+                  >
+                    <span className="mr-2">🧛</span> Vampire 3
                   </Button>
                 </div>
               </div>

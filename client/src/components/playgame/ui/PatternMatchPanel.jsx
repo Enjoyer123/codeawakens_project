@@ -21,24 +21,25 @@ import { API_BASE_URL } from '../../../config/apiConfig';
 const PatternMatchPanel = ({ hintData, idealPattern, weaponProgress, weaponImgSrc }) => {
   return (
     <div className="flex-1 bg-black/30 rounded-lg p-3 border border-gray-700/50">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Pattern Match</span>
-        <div className="flex items-center gap-4">
-          <span className="text-[10px] text-gray-500">
-            {hintData?.matchedBlocks || 0}/{hintData?.totalBlocks || 0}
-          </span>
+      <div className="flex items-stretch h-full">
+        {/* Left: Weapon & Stats (50%) */}
+        <div className="w-1/2 flex flex-col items-center gap-2 pr-2 border-r border-gray-700/50">
+          <div className="flex flex-col items-center">
+            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">MATCH</span>
+            <span className="text-[10px] text-gray-500 font-mono">
+              {hintData?.matchedBlocks || 0}/{hintData?.totalBlocks || 0}
+            </span>
+          </div>
 
-          {/* Best Weapon Icon Display */}
           {idealPattern && (
-            <div className="flex items-center gap-1.5 bg-green-500/10 rounded-md px-1.5 py-0.5 border border-green-500/20">
-              <div className="relative w-8 h-8 bg-black/40 rounded border border-gray-700/50 overflow-hidden flex items-center justify-center">
+            <div className="flex flex-col items-center gap-1">
+              <div className="relative w-16 h-16 bg-white/90 rounded border border-gray-700/50 overflow-hidden flex items-center justify-center flex-shrink-0">
                 {/* Background (Locked/Dimmed) */}
                 <img
                   src={weaponImgSrc}
                   alt="Weapon"
-                  className="absolute w-6 h-6 object-contain brightness-50 grayscale"
+                  className="absolute w-full h-full object-contain brightness-50 grayscale scale-[5.0]"
                   onError={(e) => {
-                    // Fallback 1: ลอง path ทั่วไป
                     if (!e.target.src.includes('_idle_1')) {
                       const key = idealPattern.weaponKey || idealPattern.weapon?.weapon_key || 'stick';
                       e.target.src = `/weapons/${key}.png`;
@@ -57,7 +58,7 @@ const PatternMatchPanel = ({ hintData, idealPattern, weaponProgress, weaponImgSr
                   <img
                     src={weaponImgSrc}
                     alt="Weapon Progress"
-                    className="w-6 h-6 object-contain"
+                    className="w-full h-full object-contain scale-[5.0]"
                     onError={(e) => {
                       if (!e.target.src.includes('_idle_1')) {
                         const key = idealPattern.weaponKey || idealPattern.weapon?.weapon_key || 'stick';
@@ -69,84 +70,58 @@ const PatternMatchPanel = ({ hintData, idealPattern, weaponProgress, weaponImgSr
                   />
                 </div>
               </div>
-              <div className="flex flex-col">
-                <span className="text-[9px] text-green-400 font-bold leading-none">
-                  {idealPattern.pattern_type_id === 1 ? '⭐ GOLD' : '🥈 SILVER'}
+
+              {/* Rank & Progress Text (Below Image) */}
+              <div className="flex items-center gap-1 bg-black/40 px-1.5 py-0.5 rounded text-[8px] font-bold leading-none">
+                <span className={idealPattern.pattern_type_id === 1 ? 'text-yellow-400' : 'text-gray-300'}>
+                  {idealPattern.pattern_type_id === 1 ? 'GOLD' : 'SILVER'}
                 </span>
-                <span className="text-[10px] text-white font-mono leading-none mt-0.5">
+                <span className="text-white">
                   {weaponProgress}%
                 </span>
               </div>
             </div>
           )}
         </div>
-      </div>
 
-      {hintData && hintData.showPatternProgress ? (
-        <div className="space-y-2">
-          <div className="w-full h-1.5 bg-gray-700 rounded-full overflow-hidden">
-            <div
-              className={`h-full transition-all duration-300 ${(hintData.patternPercentage || 0) === 100 ? 'bg-green-500' : 'bg-blue-500'
-                }`}
-              style={{ width: `${hintData.patternPercentage || 0}%` }}
-            ></div>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-[10px] text-gray-300 truncate max-w-[120px]">
-              {hintData.patternName}
-            </span>
-            <span className="text-[10px] text-blue-400 font-mono">
-              {hintData.patternPercentage}%
-            </span>
-          </div>
-
-          {/* Three Parts Match Indicator */}
-          {hintData.threePartsMatch && (
-            <div className="mt-2 pt-2 border-t border-gray-700/50">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                  Pattern Parts
+        {/* Right: Pattern Info (50%) */}
+        <div className="w-1/2 flex flex-col pl-2">
+          {hintData && hintData.showPatternProgress ? (
+            <div className="flex flex-col items-center gap-2 w-full">
+              <div className="flex flex-col items-center">
+                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">
+                  Pattern
                 </span>
-                <span className="text-[10px] text-gray-500">
-                  {hintData.threePartsMatch.matchedParts || 0}/3
+                <span className="text-[10px] text-gray-300 truncate font-medium leading-tight max-w-full text-center">
+                  {hintData.patternName}
                 </span>
               </div>
-              <div className="flex gap-1">
-                <div
-                  className={`flex-1 h-1.5 rounded ${hintData.threePartsMatch.part1Match ? 'bg-green-500' : 'bg-gray-700'
-                    }`}
-                  title="Part 1: Initialization"
-                ></div>
-                <div
-                  className={`flex-1 h-1.5 rounded ${hintData.threePartsMatch.part2Match
-                      ? 'bg-green-500'
-                      : hintData.threePartsMatch.part1Match ? 'bg-yellow-500' : 'bg-gray-700'
-                    }`}
-                  title="Part 2: While Loop"
-                ></div>
-                <div
-                  className={`flex-1 h-1.5 rounded ${hintData.threePartsMatch.part3Match
-                      ? 'bg-green-500'
-                      : hintData.threePartsMatch.part2Match ? 'bg-yellow-500' : 'bg-gray-700'
-                    }`}
-                  title="Part 3: Neighbor Loop"
-                ></div>
-              </div>
-              <div className="text-[9px] text-gray-500 mt-1 text-center">
-                {hintData.threePartsMatch.matchedParts === 0 && 'No parts matched'}
-                {hintData.threePartsMatch.matchedParts === 1 && 'Part 1: Initialization ✓'}
-                {hintData.threePartsMatch.matchedParts === 2 && 'Part 1+2: Initialization + While Loop ✓'}
-                {hintData.threePartsMatch.matchedParts === 3 && 'Part 1+2+3: Full Pattern ✓'}
-              </div>
+
+              {/* Three Parts Match Indicator - Sprite-based */}
+              {hintData.threePartsMatch && (
+                <div className="flex flex-col items-center gap-1 bg-black/20 rounded p-1 w-full">
+                  <span className="text-[9px] text-gray-500 w-full text-center">
+                    Parts: {hintData.threePartsMatch.matchedParts || 0}/3
+                  </span>
+                  <img
+                    src={`/pattern/Part_${(hintData.threePartsMatch.matchedParts || 0) + 1}.png`}
+                    alt={`Pattern ${hintData.threePartsMatch.matchedParts || 0} parts`}
+                    className="block h-6 object-contain"
+                    style={{ imageRendering: 'pixelated' }}
+                  />
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="h-full flex items-center justify-center">
+              <p className="text-[10px] text-gray-600 italic text-center">
+                Scan Blocks...
+              </p>
             </div>
           )}
         </div>
-      ) : (
-        <p className="text-[10px] text-gray-600 italic text-center py-1">
-          Place blocks to see pattern match
-        </p>
-      )}
-    </div>
+      </div>
+    </div >
   );
 };
 
