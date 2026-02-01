@@ -10,12 +10,12 @@ import { Upload, X, Image as ImageIcon, Plus } from "lucide-react";
 import ErrorAlert from "@/components/shared/alert/ErrorAlert";
 import { getImageUrl } from "@/utils/imageUtils";
 import {
-    createTest,
-    updateTest,
-    uploadTestImage,
-    uploadChoiceImage,
-    deleteTestChoice
-} from '../../../services/testService';
+    useCreateTest,
+    useUpdateTest,
+    useUploadTestImage,
+    useUploadChoiceImage,
+    useDeleteTestChoice
+} from '../../../services/hooks/useTests';
 
 const TestCreateEditModal = ({
     open,
@@ -41,6 +41,13 @@ const TestCreateEditModal = ({
     const [choiceImagePreviews, setChoiceImagePreviews] = useState({});
     const [saveError, setSaveError] = useState(null);
     const [saving, setSaving] = useState(false);
+
+    // Mutation Hooks
+    const createTestMutation = useCreateTest();
+    const updateTestMutation = useUpdateTest();
+    const deleteTestChoiceMutation = useDeleteTestChoice();
+    const uploadTestImageMutation = useUploadTestImage();
+    const uploadChoiceImageMutation = useUploadChoiceImage();
 
     // Initialize form when opening
     useEffect(() => {
@@ -151,13 +158,10 @@ const TestCreateEditModal = ({
         const choice = formData.choices[index];
         if (choice.test_choice_id) {
             try {
-                // If it's an existing one, delete via API
-                // Note: Ideally we should batch this or just mark for deletion, 
-                // but following existing pattern:
-                await deleteTestChoice(getToken, choice.test_choice_id);
+                await deleteTestChoiceMutation.mutateAsync(choice.test_choice_id);
             } catch (err) {
                 setSaveError("Failed to delete choice: " + err.message);
-                return;
+                return; // Stop if delete fails
             }
         }
         const newChoices = formData.choices.filter((_, i) => i !== index);
@@ -182,7 +186,7 @@ const TestCreateEditModal = ({
 
             let imagePath = formData.test_image;
             if (selectedImage) {
-                const uploadResult = await uploadTestImage(getToken, selectedImage);
+                const uploadResult = await uploadTestImageMutation.mutateAsync(selectedImage);
                 imagePath = uploadResult.path;
             }
 
@@ -190,7 +194,7 @@ const TestCreateEditModal = ({
                 let choiceImagePath = choice.choice_image;
                 // If there's a new file selected for this index, upload it
                 if (choiceImages[idx]) {
-                    const uploadResult = await uploadChoiceImage(getToken, choiceImages[idx]);
+                    const uploadResult = await uploadChoiceImageMutation.mutateAsync(choiceImages[idx]);
                     choiceImagePath = uploadResult.path;
                 }
                 return {
@@ -206,9 +210,12 @@ const TestCreateEditModal = ({
             };
 
             if (testToEdit) {
-                await updateTest(getToken, testToEdit.test_id, dataToSave);
+                await updateTestMutation.mutateAsync({
+                    id: testToEdit.test_id,
+                    testData: dataToSave
+                });
             } else {
-                await createTest(getToken, dataToSave);
+                await createTestMutation.mutateAsync(dataToSave);
             }
 
             setSaving(false);

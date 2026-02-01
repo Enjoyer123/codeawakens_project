@@ -1,17 +1,17 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  fetchGuidesByLevel,
-  createGuide,
-  updateGuide,
-  deleteGuide,
-  uploadGuideImage,
-  deleteGuideImage,
-} from '../../../services/guideService';
-import { fetchLevelById } from '../../../services/levelService';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
+import {
+  useLevelGuides,
+  useCreateGuide,
+  useUpdateGuide,
+  useDeleteGuide,
+  useUploadGuideImage,
+  useDeleteGuideImage
+} from '../../../services/hooks/useLevelGuides';
+import { useLevel } from '../../../services/hooks/useLevel';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import SearchInput from '@/components/admin/formFields/SearchInput';
@@ -35,10 +35,24 @@ const LevelGuideManagement = () => {
   const { levelId } = useParams();
   const numericLevelId = parseInt(levelId, 10);
 
-  const [level, setLevel] = useState(null);
-  const [guides, setGuides] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // TanStack Query Hooks
+  const { data: level } = useLevel(numericLevelId);
+  const {
+    data: guidesData,
+    isLoading: loading,
+    isError,
+    error: queryError
+  } = useLevelGuides(numericLevelId);
+
+  const createGuideMutation = useCreateGuide();
+  const updateGuideMutation = useUpdateGuide();
+  const deleteGuideMutation = useDeleteGuide();
+  const uploadImageMutation = useUploadGuideImage();
+  const deleteImageMutation = useDeleteGuideImage();
+
+  // Derived State
+  const guides = guidesData || [];
+  const error = isError ? (queryError?.message || 'Failed to load guides') : null;
   const [searchQuery, setSearchQuery] = useState('');
 
   // Guide form states
@@ -66,33 +80,7 @@ const LevelGuideManagement = () => {
   const [imageFile, setImageFile] = useState(null);
   const [imageError, setImageError] = useState(null);
 
-  const loadLevel = useCallback(async () => {
-    try {
-      const data = await fetchLevelById(getToken, numericLevelId);
-      setLevel(data);
-    } catch (err) {
-      console.error('Failed to load level', err);
-    }
-  }, [getToken, numericLevelId]);
-
-  const loadGuides = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await fetchGuidesByLevel(getToken, numericLevelId);
-      setGuides(data || []);
-    } catch (err) {
-      setError('Failed to load guides. ' + (err.message || ''));
-      setGuides([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [getToken, numericLevelId]);
-
-  useEffect(() => {
-    loadLevel();
-    loadGuides();
-  }, [loadLevel, loadGuides]);
+  // No manual load effects
 
   const handleOpenGuideDialog = useCallback((guide = null) => {
     if (guide) {
@@ -147,17 +135,19 @@ const LevelGuideManagement = () => {
 
     try {
       if (editingGuide) {
-        await updateGuide(getToken, editingGuide.guide_id, formData);
+        await updateGuideMutation.mutateAsync({
+          guideId: editingGuide.guide_id,
+          data: formData
+        });
       } else {
-        await createGuide(getToken, formData);
+        await createGuideMutation.mutateAsync(formData);
       }
       handleCloseGuideDialog();
-      await loadGuides();
     } catch (err) {
       const errorMessage = 'ไม่สามารถบันทึก guide ได้: ' + (err.message || 'Unknown error');
       setSaveError(errorMessage);
     }
-  }, [guideForm, editingGuide, getToken, numericLevelId, handleCloseGuideDialog, loadGuides]);
+  }, [guideForm, editingGuide, numericLevelId, handleCloseGuideDialog, updateGuideMutation, createGuideMutation]);
 
   const handleDeleteClick = useCallback((guide) => {
     setGuideToDelete(guide);
@@ -170,17 +160,16 @@ const LevelGuideManagement = () => {
     try {
       setDeleting(true);
       setDeleteError(null);
-      await deleteGuide(getToken, guideToDelete.guide_id);
+      await deleteGuideMutation.mutateAsync(guideToDelete.guide_id);
       setDeleteDialogOpen(false);
       setGuideToDelete(null);
-      await loadGuides();
     } catch (err) {
       const errorMessage = createDeleteErrorMessage('guide', err);
       setDeleteError(errorMessage);
     } finally {
       setDeleting(false);
     }
-  }, [guideToDelete, getToken, loadGuides]);
+  }, [guideToDelete, deleteGuideMutation]);
 
   const handleOpenImageDialog = useCallback((guide) => {
     setSelectedGuide(guide);
@@ -214,13 +203,14 @@ const LevelGuideManagement = () => {
     try {
       setUploadingImage(true);
       setImageError(null);
-      await uploadGuideImage(getToken, selectedGuide.guide_id, imageFile);
-      await loadGuides();
+      await uploadImageMutation.mutateAsync({
+        guideId: selectedGuide.guide_id,
+        file: imageFile
+      });
 
-      // Refresh selected guide
-      const data = await fetchGuidesByLevel(getToken, numericLevelId);
-      const updated = data.find(g => g.guide_id === selectedGuide.guide_id);
-      if (updated) setSelectedGuide(updated);
+      // Same as in Hints, we rely on TanStack Query invalidation.
+      // But selectedGuide is local, so we should update it or clear it.
+      // Updating it via effect is better.
 
       setImageFile(null);
       const input = document.getElementById('guide-image-input');
@@ -230,27 +220,27 @@ const LevelGuideManagement = () => {
     } finally {
       setUploadingImage(false);
     }
-  }, [selectedGuide, imageFile, getToken, loadGuides, numericLevelId]);
+  }, [selectedGuide, imageFile, uploadImageMutation]);
 
   const handleDeleteImage = useCallback(async (imageId) => {
     try {
       setDeletingImageId(imageId);
       setImageError(null);
-      await deleteGuideImage(getToken, imageId);
-      await loadGuides();
-
-      if (selectedGuide) {
-        const updatedImages = selectedGuide.guide_images?.filter(
-          img => img.guide_file_id !== parseInt(imageId)
-        ) || [];
-        setSelectedGuide({ ...selectedGuide, guide_images: updatedImages });
-      }
+      await deleteImageMutation.mutateAsync(imageId);
     } catch (err) {
       setImageError('ไม่สามารถลบรูปภาพได้: ' + (err.message || 'Unknown error'));
     } finally {
       setDeletingImageId(null);
     }
-  }, [selectedGuide, getToken, loadGuides]);
+  }, [deleteImageMutation]);
+
+  // Sync selectedGuide with guidesData
+  useEffect(() => {
+    if (selectedGuide && guidesData) {
+      const updated = guidesData.find(g => g.guide_id === selectedGuide.guide_id);
+      if (updated) setSelectedGuide(updated);
+    }
+  }, [guidesData, selectedGuide]);
 
   const filteredGuides = guides.filter(g =>
     (g.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||

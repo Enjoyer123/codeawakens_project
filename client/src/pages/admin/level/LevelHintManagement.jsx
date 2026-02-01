@@ -11,8 +11,15 @@ import { usePagination } from '@/hooks/usePagination';
 import PaginationControls from '@/components/shared/pagination/PaginationControls';
 import SearchInput from '@/components/admin/formFields/SearchInput';
 import { Plus } from 'lucide-react';
-import { fetchHintsByLevel, createLevelHint, updateLevelHint, deleteLevelHint, uploadHintImage, deleteHintImage } from '../../../services/levelHintService';
-import { fetchLevelById } from '../../../services/levelService';
+import {
+  useLevelHints,
+  useCreateLevelHint,
+  useUpdateLevelHint,
+  useDeleteLevelHint,
+  useUploadHintImage,
+  useDeleteHintImage
+} from '../../../services/hooks/useLevelHints';
+import { useLevel } from '../../../services/hooks/useLevel';
 import LevelHintImageDialog from '../../../components/admin/level/LevelHintImageDialog';
 import { getImageUrl } from '@/utils/imageUtils';
 import LevelHintTable from '@/components/admin/level/LevelHintTable';
@@ -32,18 +39,52 @@ const LevelHintManagement = () => {
 
   const { page, rowsPerPage, handlePageChange } = usePagination(1, 10);
 
-  const [level, setLevel] = useState(null);
-  const [hints, setHints] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // TanStack Query Hooks
+  const { data: level } = useLevel(numericLevelId);
+  const {
+    data: hintsData,
+    isLoading: loading,
+    isError,
+    error: queryError
+  } = useLevelHints(numericLevelId);
+
+  const createHintMutation = useCreateLevelHint();
+  const updateHintMutation = useUpdateLevelHint();
+  const deleteHintMutation = useDeleteLevelHint();
+  const uploadImageMutation = useUploadHintImage();
+  const deleteImageMutation = useDeleteHintImage();
+
+  // Derived State
+  const allHints = hintsData || [];
+  const error = isError ? (queryError?.message || 'Failed to load hints') : null;
+
+  // Client-side filtering & pagination
+  const { filteredHints, pagination } = (() => {
+    const filtered = searchQuery
+      ? allHints.filter(h =>
+        (h.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (h.description || '').toLowerCase().includes(searchQuery.toLowerCase())
+      )
+      : allHints;
+
+    const total = filtered.length;
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    const pageItems = filtered.slice(start, end);
+
+    return {
+      filteredHints: pageItems,
+      pagination: {
+        total,
+        totalPages: Math.max(1, Math.ceil(total / rowsPerPage)),
+        page,
+        limit: rowsPerPage,
+      }
+    };
+  })();
+
   const [searchQuery, setSearchQuery] = useState('');
 
-  const [pagination, setPagination] = useState({
-    total: 0,
-    totalPages: 0,
-    page: 1,
-    limit: 10,
-  });
 
   const [hintDialogOpen, setHintDialogOpen] = useState(false);
   const [editingHint, setEditingHint] = useState(null);
@@ -68,63 +109,7 @@ const LevelHintManagement = () => {
   const [deletingImageId, setDeletingImageId] = useState(null);
   const [imageError, setImageError] = useState(null);
 
-  const loadLevel = useCallback(async () => {
-    try {
-      const data = await fetchLevelById(getToken, numericLevelId);
-      setLevel(data);
-    } catch (err) {
-      // ไม่ critical สำหรับการจัดการ hint
-    }
-  }, [getToken, numericLevelId]);
-
-  const loadHints = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await fetchHintsByLevel(getToken, numericLevelId);
-
-      // client-side filter + pagination (เพราะ backend per-level routeยังไม่รองรับ pagination)
-      const allHints = data || [];
-      const filtered = searchQuery
-        ? allHints.filter(h =>
-          (h.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (h.description || '').toLowerCase().includes(searchQuery.toLowerCase())
-        )
-        : allHints;
-
-      const total = filtered.length;
-      const start = (page - 1) * rowsPerPage;
-      const end = start + rowsPerPage;
-      const pageItems = filtered.slice(start, end);
-
-      setHints(pageItems);
-      setPagination({
-        total,
-        totalPages: Math.max(1, Math.ceil(total / rowsPerPage)),
-        page,
-        limit: rowsPerPage,
-      });
-    } catch (err) {
-      setError('Failed to load hints. ' + (err.message || ''));
-      setHints([]);
-      setPagination({
-        total: 0,
-        totalPages: 0,
-        page: 1,
-        limit: rowsPerPage,
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [getToken, numericLevelId, page, rowsPerPage, searchQuery]);
-
-  useEffect(() => {
-    loadLevel();
-  }, [loadLevel]);
-
-  useEffect(() => {
-    loadHints();
-  }, [loadHints]);
+  // No manual load effects needed
 
   const handleSearchChange = useCallback(
     (value) => {
@@ -187,19 +172,21 @@ const LevelHintManagement = () => {
 
     try {
       if (editingHint) {
-        await updateLevelHint(getToken, editingHint.hint_id, payload);
+        await updateHintMutation.mutateAsync({
+          hintId: editingHint.hint_id,
+          data: payload
+        });
       } else {
-        await createLevelHint(getToken, payload);
+        await createHintMutation.mutateAsync(payload);
       }
       handleCloseHintDialog();
-      await loadHints();
       return { success: true };
     } catch (err) {
       const msg = 'ไม่สามารถบันทึก hint ได้: ' + (err.message || 'Unknown error');
       setSaveError(msg);
       return { success: false, error: msg };
     }
-  }, [editingHint, getToken, hintForm, numericLevelId, handleCloseHintDialog, loadHints]);
+  }, [editingHint, hintForm, numericLevelId, handleCloseHintDialog, updateHintMutation, createHintMutation]);
 
   const handleDeleteClick = useCallback((hint) => {
     setHintToDelete(hint);
@@ -212,16 +199,15 @@ const LevelHintManagement = () => {
     try {
       setDeleting(true);
       setDeleteError(null);
-      await deleteLevelHint(getToken, hintToDelete.hint_id);
+      await deleteHintMutation.mutateAsync(hintToDelete.hint_id);
       setDeleteDialogOpen(false);
       setHintToDelete(null);
-      await loadHints();
     } catch (err) {
       setDeleteError('ไม่สามารถลบ hint ได้: ' + (err.message || 'Unknown error'));
     } finally {
       setDeleting(false);
     }
-  }, [hintToDelete, getToken, loadHints]);
+  }, [hintToDelete, deleteHintMutation]);
 
   const handleDeleteDialogChange = useCallback(
     (open) => {
@@ -268,16 +254,21 @@ const LevelHintManagement = () => {
     try {
       setUploadingImage(true);
       setImageError(null);
-      await uploadHintImage(getToken, selectedHint.hint_id, imageFile);
 
-      await loadHints();
+      await uploadImageMutation.mutateAsync({
+        hintId: selectedHint.hint_id,
+        file: imageFile
+      });
 
-      // รีเฟรช selectedHint จากข้อมูลล่าสุด
-      const all = await fetchHintsByLevel(getToken, numericLevelId);
-      const updated = all.find(h => h.hint_id === selectedHint.hint_id);
-      if (updated) {
-        setSelectedHint(updated);
-      }
+      // Refetch updated hint to get image URL for UI
+      // Since we invalidated query, hintsData will update.
+      // But selectedHint is local state. We need to sync it.
+      // We can use a side effect or find it from hintsData
+      // For now, simpler to just clear inputs and let user re-open checks if needed, 
+      // OR re-find from hintsData if the dialog stays open.
+      // The original logic re-fetched manually.
+      // Here, React Query will update hintsData. 
+      // We can update selectedHint in a useEffect or just let it be if the dialog relies on selectedHint.
 
       setImageFile(null);
       const input = document.getElementById('level-hint-image-input');
@@ -289,29 +280,29 @@ const LevelHintManagement = () => {
     } finally {
       setUploadingImage(false);
     }
-  }, [selectedHint, imageFile, getToken, loadHints, numericLevelId]);
+  }, [selectedHint, imageFile, uploadImageMutation]);
 
   const handleDeleteImage = useCallback(async (imageId) => {
     try {
       setDeletingImageId(imageId);
       setImageError(null);
-      await deleteHintImage(getToken, imageId);
-
-      await loadHints();
-
-      if (selectedHint) {
-        const all = await fetchHintsByLevel(getToken, numericLevelId);
-        const updated = all.find(h => h.hint_id === selectedHint.hint_id);
-        if (updated) {
-          setSelectedHint(updated);
-        }
-      }
+      await deleteImageMutation.mutateAsync(imageId);
     } catch (err) {
       setImageError('ไม่สามารถลบรูปภาพได้: ' + (err.message || 'Unknown error'));
     } finally {
       setDeletingImageId(null);
     }
-  }, [selectedHint, getToken, loadHints, numericLevelId]);
+  }, [deleteImageMutation]);
+
+  // Sync selectedHint with hintsData when it changes (for image dialog updates)
+  useEffect(() => {
+    if (selectedHint && hintsData) {
+      const updated = hintsData.find(h => h.hint_id === selectedHint.hint_id);
+      if (updated) {
+        setSelectedHint(updated);
+      }
+    }
+  }, [hintsData, selectedHint]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -346,7 +337,7 @@ const LevelHintManagement = () => {
           ) : (
             <>
               <LevelHintTable
-                hints={hints}
+                hints={filteredHints}
                 onEdit={handleOpenHintDialog}
                 onDelete={handleDeleteClick}
                 onManageImages={handleOpenImageDialog}

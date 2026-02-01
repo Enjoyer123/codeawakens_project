@@ -2,11 +2,11 @@ import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
 import {
-  fetchAllVictoryConditions,
-  createVictoryCondition,
-  updateVictoryCondition,
-  deleteVictoryCondition,
-} from '../../../services/victoryConditionService';
+  useVictoryConditions,
+  useCreateVictoryCondition,
+  useUpdateVictoryCondition,
+  useDeleteVictoryCondition,
+} from '../../../services/hooks/useVictoryConditions';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import SearchInput from '@/components/admin/formFields/SearchInput';
@@ -22,18 +22,9 @@ const VictoryConditionManagement = () => {
   const navigate = useNavigate();
   const { getToken } = useAuth();
   const { page, rowsPerPage, handlePageChange } = usePagination(1, 10);
-  const [victoryConditions, setVictoryConditions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [pagination, setPagination] = useState({
-    total: 0,
-    totalPages: 0,
-    page: 1,
-    limit: 10,
-  });
 
-  // Victory Condition form states
+  // Form States
   const [victoryConditionDialogOpen, setVictoryConditionDialogOpen] = useState(false);
   const [editingVictoryCondition, setEditingVictoryCondition] = useState(null);
   const [victoryConditionForm, setVictoryConditionForm] = useState({
@@ -44,46 +35,36 @@ const VictoryConditionManagement = () => {
   });
   const [saveError, setSaveError] = useState(null);
 
-  // Delete states
+  // Delete States
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [victoryConditionToDelete, setVictoryConditionToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
 
-  const loadVictoryConditions = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await fetchAllVictoryConditions(
-        getToken,
-        page,
-        rowsPerPage,
-        searchQuery
-      );
-      setVictoryConditions(data.victoryConditions || []);
-      setPagination(data.pagination || {
-        total: 0,
-        totalPages: 0,
-        page: 1,
-        limit: rowsPerPage,
-      });
-    } catch (err) {
-      setError('Failed to load victory conditions. ' + (err.message || ''));
-      setVictoryConditions([]);
-      setPagination({
-        total: 0,
-        totalPages: 0,
-        page: 1,
-        limit: rowsPerPage,
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [getToken, page, rowsPerPage, searchQuery]);
+  // TanStack Query Hooks
+  const {
+    data: victoryConditionsData,
+    isLoading: loading,
+    isError,
+    error: queryError
+  } = useVictoryConditions(page, rowsPerPage, searchQuery);
 
-  useEffect(() => {
-    loadVictoryConditions();
-  }, [loadVictoryConditions]);
+  const createVictoryConditionMutation = useCreateVictoryCondition();
+  const updateVictoryConditionMutation = useUpdateVictoryCondition();
+  const deleteVictoryConditionMutation = useDeleteVictoryCondition();
+
+  // Derived State
+  const victoryConditions = victoryConditionsData?.victoryConditions || [];
+  const pagination = victoryConditionsData?.pagination || {
+    total: 0,
+    totalPages: 0,
+    page: 1,
+    limit: rowsPerPage,
+  };
+
+  const error = isError ? (queryError?.message || 'Failed to load victory conditions') : null;
+
+  // No manual load effect needed
 
   const handleSearchChange = useCallback((value) => {
     setSearchQuery(value);
@@ -136,16 +117,14 @@ const VictoryConditionManagement = () => {
 
     try {
       if (editingVictoryCondition) {
-        await updateVictoryCondition(
-          getToken,
-          editingVictoryCondition.victory_condition_id,
-          formData
-        );
+        await updateVictoryConditionMutation.mutateAsync({
+          victoryConditionId: editingVictoryCondition.victory_condition_id,
+          data: formData
+        });
       } else {
-        await createVictoryCondition(getToken, formData);
+        await createVictoryConditionMutation.mutateAsync(formData);
       }
       handleCloseVictoryConditionDialog();
-      await loadVictoryConditions();
       return { success: true };
     } catch (err) {
       const errorMessage = 'ไม่สามารถบันทึก victory condition ได้: ' +
@@ -156,9 +135,9 @@ const VictoryConditionManagement = () => {
   }, [
     victoryConditionForm,
     editingVictoryCondition,
-    getToken,
+    updateVictoryConditionMutation,
+    createVictoryConditionMutation,
     handleCloseVictoryConditionDialog,
-    loadVictoryConditions,
   ]);
 
   const handleDeleteClick = useCallback((victoryCondition) => {
@@ -173,20 +152,18 @@ const VictoryConditionManagement = () => {
     try {
       setDeleting(true);
       setDeleteError(null);
-      await deleteVictoryCondition(
-        getToken,
+      await deleteVictoryConditionMutation.mutateAsync(
         victoryConditionToDelete.victory_condition_id
       );
       setDeleteDialogOpen(false);
       setVictoryConditionToDelete(null);
-      await loadVictoryConditions();
     } catch (err) {
       const errorMessage = createDeleteErrorMessage('victory condition', err);
       setDeleteError(errorMessage);
     } finally {
       setDeleting(false);
     }
-  }, [victoryConditionToDelete, getToken, loadVictoryConditions]);
+  }, [victoryConditionToDelete, deleteVictoryConditionMutation]);
 
   const handleDeleteDialogChange = useCallback((open) => {
     if (!deleting) {

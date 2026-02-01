@@ -14,7 +14,7 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, blocklyXml, tex
     awardedRewards,
     checkingRewards,
     saveProgress
-  } = useProgressSaver(getToken);
+  } = useProgressSaver();
 
   // Data to display/save
   const userProgressData = {

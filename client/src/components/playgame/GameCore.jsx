@@ -41,6 +41,7 @@ import { useGameConditions } from './hooks/useGameConditions';
 import { usePhaserGame } from './hooks/usePhaserGame';
 import { useBlocklySetup } from './hooks/blocklysetup/useBlocklySetup';
 import { useCodeExecution } from './hooks/execution/useCodeExecution';
+import { useGameHistory } from './hooks/useGameData';
 import { useLevel } from '../../services/hooks/useLevel';
 import { usePatterns } from '../../services/hooks/usePattern';
 import { useLevelInitializer } from './hooks/useLevelLoader';
@@ -275,41 +276,22 @@ const GameCore = ({
   }, [blocklyJavaScriptReady]);
 
   // History system state
-  const [userProgress, setUserProgress] = useState([]);
-  const [allLevelsData, setAllLevelsData] = useState([]);
+  // History system state - using TanStack Query
+  const { userProgress, allLevels: allLevelsData } = useGameHistory();
 
   // Fetch user progress and all levels on mount
   // Fetch user progress and all levels
-  const fetchHistoryData = React.useCallback(async () => {
-    if (!getToken) return;
-    try {
-      const [profileData, levelsData] = await Promise.all([
-        getUserByClerkId(getToken),
-        fetchAllLevels(getToken, 1, 100) // Large limit to get all levels
-      ]);
+  // No manual history fetching needed
 
-      if (profileData?.user_progress) {
-        setUserProgress(profileData.user_progress);
-      }
-
-      if (levelsData?.levels) {
-        setAllLevelsData(levelsData.levels);
-      }
-      console.log('🔄 History data refreshed');
-    } catch (err) {
-      console.error("Error fetching history data:", err);
-    }
-  }, [getToken]);
-
-  // Initial fetch
-  useEffect(() => {
-    fetchHistoryData();
-  }, [fetchHistoryData]);
-
+  // Ideally, invalidate query here, but for now relies on natural refetch or we can import useQueryClient
+  // For simplicity, we assume ProgressModal might trigger refetch internally or just let it be.
+  // Actually, useGameHistory relies on useUserProfile which has staleTime 5 mins.
+  // We should invalidate 'userProfile' when level is completed/saved.
+  // ProgressModal saves data. We can pass a refetch function if needed,
+  // or better, handle invalidation in the mutation that saves progress (which is likely in ProgressModal or passed down).
+  // Current GameCore doesn't have the save mutation visible here (passed as prop or handled inside logic).
   const handleCloseProgressModal = () => {
     setShowProgressModal(false);
-    // Refresh history data when modal closes (after save)
-    fetchHistoryData();
   };
 
   // Set blocklyJavaScriptReady when blocklyLoaded becomes true

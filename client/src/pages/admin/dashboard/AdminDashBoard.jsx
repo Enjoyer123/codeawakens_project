@@ -9,11 +9,11 @@ import {
   PieChart as RePieChart, Pie, Cell
 } from 'recharts';
 import {
-  fetchDashboardStats,
-  fetchLevelStats,
-  fetchUserStats,
-  fetchTestStats
-} from '../../../services/dashboardService';
+  useDashboardStats,
+  useLevelStats,
+  useUserStats,
+  useTestStats
+} from '../../../services/hooks/useDashboard';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
@@ -21,41 +21,25 @@ const AdminDashBoard = () => {
   const navigate = useNavigate();
   const { getToken } = useAuth();
 
-  const [stats, setStats] = useState({
+  // TanStack Query Hooks
+  const { data: statsData, isLoading: loadingOverview } = useDashboardStats();
+  const { data: levelsData, isLoading: loadingLevels } = useLevelStats();
+  const { data: usersData, isLoading: loadingUsers } = useUserStats();
+  const { data: testsData, isLoading: loadingTests } = useTestStats();
+
+  const loading = loadingOverview || loadingLevels || loadingUsers || loadingTests;
+
+  // Defaults
+  const stats = statsData || {
     totalUsers: 0,
     totalLevels: 0,
     totalCompletions: 0,
     totalStars: 0
-  });
+  };
 
-  const [levelStats, setLevelStats] = useState([]);
-  const [userStats, setUserStats] = useState({ skillDistribution: [] });
-  const [testStats, setTestStats] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [dashboardData, levelsData, usersData, testsData] = await Promise.all([
-          fetchDashboardStats(getToken),
-          fetchLevelStats(getToken),
-          fetchUserStats(getToken),
-          fetchTestStats(getToken)
-        ]);
-
-        if (dashboardData) setStats(dashboardData);
-        if (levelsData) setLevelStats(levelsData);
-        if (usersData) setUserStats(usersData);
-        if (testsData) setTestStats(testsData);
-      } catch (error) {
-        console.error("Failed to load dashboard data", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
-  }, [getToken]);
+  const levelStats = levelsData || [];
+  const userStats = usersData || { skillDistribution: [] };
+  const testStats = testsData || [];
 
   const adminNavItems = [
     { label: 'USER MANAGEMENT', path: '/admin/users', icon: Users },

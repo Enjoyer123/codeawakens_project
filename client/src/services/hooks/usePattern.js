@@ -5,7 +5,10 @@ import {
     updatePattern,
     fetchPatternTypes,
     fetchAllPatterns,
-    deletePattern
+    deletePattern,
+    unlockPattern,
+    unlockLevel
+
 } from '../patternService';
 import { useAuth } from '@clerk/clerk-react';
 
@@ -114,6 +117,40 @@ export const useDeletePattern = () => {
         onSuccess: (data, variables) => {
             // Invalidate all pattern lists
             queryClient.invalidateQueries({ queryKey: ['patterns'] });
+        }
+    });
+};
+
+// Hook for unlocking a pattern
+export const useUnlockPattern = () => {
+    const { getToken } = useAuth();
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (patternId) => {
+            return await unlockPattern(patternId, getToken);
+        },
+        onSuccess: (data, patternId) => {
+            // Invalidate specific pattern and patterns list
+            queryClient.invalidateQueries(['pattern', patternId]);
+            queryClient.invalidateQueries(['patterns']);
+        }
+    });
+};
+
+// Hook for unlocking a level
+export const useUnlockLevel = () => {
+    const { getToken } = useAuth();
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (levelId) => {
+            return await unlockLevel(levelId, getToken);
+        },
+        onSuccess: (data, levelId) => {
+            // Invalidate specific level and levels list
+            queryClient.invalidateQueries(['level', levelId]);
+            queryClient.invalidateQueries(['levels']);
         }
     });
 };

@@ -32,7 +32,22 @@ const CategoryLevels = () => {
   const [showDevTool, setShowDevTool] = useState(false);
   const [hoveredLevelId, setHoveredLevelId] = useState(null);
 
-  const { levels, categoryInfo, loading, error } = useCategoryData(getToken, categoryId, reloadKey);
+  // useCategoryData now uses useAuth internal to hook, so only categoryId is needed.
+  // reloadKey is handled by query invalidation or manual refetch if explicitly exposed.
+  // But for simple error retry, we might need a refetch function from the hook, 
+  // or just invalidate queries.
+  // The new hook returns { levels, categoryInfo, loading, error }.
+  const { levels, categoryInfo, loading, error } = useCategoryData(null, categoryId, null);
+  // Note: first arg was getToken (removed), 3rd was reloadKey. 
+  // Actually I refactored it to: useCategoryData(getToken, categoryId, reloadKey) 
+  // Wait, let me check the file I just wrote. 
+  // Export line: export const useCategoryData = (getToken, categoryId, reloadKey) => { ... }
+  // I kept the signature in the file definition to matching existing call site temporarily, 
+  // but inside I don't use getToken/reloadKey except indirectly? 
+  // Checking file content again: 
+  // export const useCategoryData = (getToken, categoryId, reloadKey) => { ... useLevelCategory(categoryId) ... }
+  // I DID NOT use getToken or reloadKey in the implementation!
+  // So I can clean up the call site.
 
   const handleLevelSelect = (levelId) => {
     if (levelId === 'train-schedule') {
