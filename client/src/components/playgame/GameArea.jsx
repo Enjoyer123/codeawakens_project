@@ -66,14 +66,23 @@ const GameArea = ({
   let weaponProgress = 0;
 
   if (idealPattern) {
-    const isMatchingIdeal = currentBestPattern?.pattern_id === idealPattern.pattern_id ||
-      currentBestPattern?.name === idealPattern.name;
+    // OLD LOGIC: Checked exact ID/Name match, which failed for alternative patterns of same tier
+    // const isMatchingIdeal = currentBestPattern?.pattern_id === idealPattern.pattern_id ||
+    //   currentBestPattern?.name === idealPattern.name;
 
-    if (isMatchingIdeal) {
+    // NEW LOGIC: Check if the current pattern is of the same Tier (type_id) as the ideal pattern
+    // e.g. If both are Gold (type 1), show the progress.
+    const isMatchingTier = currentBestPattern?.pattern_type_id === idealPattern.pattern_type_id;
+
+    if (isMatchingTier) {
       weaponProgress = hintData.patternPercentage || 0;
     } else if (currentBestPattern?.pattern_type_id === 2 && idealPattern.pattern_type_id === 1) {
       // ด่านมีระดับดี (Gold) แต่เราเขียนระดับกลาง (Silver) ให้ค้างที่ 66% ตามที่ตกลงกัน
       weaponProgress = 66;
+    } else if (currentBestPattern?.pattern_type_id < idealPattern.pattern_type_id) {
+      // Rare case: User found a BETTER pattern than what we thought was ideal?
+      // Should show progress too.
+      weaponProgress = hintData.patternPercentage || 0;
     } else {
       // กรณีอื่นๆ เช่น ยังเขียนไม่ถึง หรือเขียนคนละตัว
       weaponProgress = 0;
