@@ -3,11 +3,29 @@ import {
     fetchPatternById,
     createPattern,
     updatePattern,
-    fetchPatternTypes
+    fetchPatternTypes,
+    fetchAllPatterns,
+    deletePattern
 } from '../patternService';
 import { useAuth } from '@clerk/clerk-react';
 
 import { API_BASE_URL } from '../../config/apiConfig';
+
+// Hook for fetching all patterns (optionally filtered by levelId)
+export const usePatterns = (levelId = null) => {
+    const { getToken } = useAuth();
+
+    return useQuery({
+        queryKey: ['patterns', levelId], // Include levelId in key
+        queryFn: async () => {
+            return await fetchAllPatterns(getToken, 1, 100, levelId);
+        },
+        enabled: !!getToken, // Always enabled if token exists, fetching all or filtered
+        staleTime: 0,
+        gcTime: 0,
+    });
+};
+
 
 // Hook for fetching pattern types
 export const usePatternTypes = () => {
@@ -45,7 +63,8 @@ export const usePattern = (patternId) => {
             return data?.pattern || data;
         },
         enabled: !!patternId, // Only run if patternId is provided
-        staleTime: 1000 * 60 * 5, // 5 minutes
+        staleTime: 0,
+        gcTime: 0,
     });
 };
 
@@ -79,6 +98,22 @@ export const useUpdatePattern = () => {
         onSuccess: (data, variables) => {
             // Update the cache for this specific pattern
             queryClient.invalidateQueries(['pattern', variables.patternId]);
+        }
+    });
+};
+
+// Hook for deleting a pattern
+export const useDeletePattern = () => {
+    const { getToken } = useAuth();
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (patternId) => {
+            return await deletePattern(getToken, patternId);
+        },
+        onSuccess: (data, variables) => {
+            // Invalidate all pattern lists
+            queryClient.invalidateQueries({ queryKey: ['patterns'] });
         }
     });
 };

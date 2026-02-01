@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { Bell, Check } from 'lucide-react';
+import { useState } from 'react';
+import { Bell } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import {
     Popover,
@@ -7,57 +7,26 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { fetchUserNotifications, markNotificationAsRead } from '@/services/notificationService';
+import { useUserNotifications, useMarkNotificationAsRead } from '@/services/hooks/useNotifications';
 import { formatDate } from '@/utils/formatters';
 
 const NotificationBell = () => {
-    const { getToken, userId } = useAuth();
-    const [notifications, setNotifications] = useState([]);
-    const [unreadCount, setUnreadCount] = useState(0);
+    const { userId } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
-    const [loading, setLoading] = useState(false);
 
-    const fetchNotifications = async () => {
-        try {
-            const data = await fetchUserNotifications(getToken);
-            setNotifications(data.notifications || []);
-            setUnreadCount(data.unreadCount || 0);
-        } catch (error) {
-            console.error("Failed to fetch notifications:", error);
-        }
-    };
+    // Fetch notifications
+    const { data, isLoading } = useUserNotifications();
 
-    useEffect(() => {
-        if (userId) {
-            fetchNotifications();
-            // Optional: proper interval polling or socket could go here
-            const interval = setInterval(fetchNotifications, 30000); // Poll every 30 seconds
-            return () => clearInterval(interval);
-        }
-    }, [userId, getToken]);
+    // Mutations
+    const { mutate: markAsRead } = useMarkNotificationAsRead();
 
-    const handleRead = async (notification) => {
+    // Derived state
+    const notifications = data?.notifications || [];
+    const unreadCount = data?.unreadCount || 0;
+
+    const handleRead = (notification) => {
         if (notification.is_read) return;
-
-        try {
-            // Optimistic update
-            const updatedNotifications = notifications.map(n =>
-                n.notification_id === notification.notification_id
-                    ? { ...n, is_read: true }
-                    : n
-            );
-            setNotifications(updatedNotifications);
-            setUnreadCount(prev => Math.max(0, prev - 1));
-
-            await markNotificationAsRead(getToken, notification.notification_id);
-            // Re-fetch to be sure sync is correct or just trust optimistic
-        } catch (error) {
-            console.error("Failed to mark as read:", error);
-            // Revert on error
-            fetchNotifications();
-        }
+        markAsRead(notification.notification_id);
     };
 
     return (
@@ -80,7 +49,11 @@ const NotificationBell = () => {
                     )}
                 </div>
                 <ScrollArea className="h-[300px]">
-                    {notifications.length === 0 ? (
+                    {isLoading ? (
+                        <div className="flex items-center justify-center h-full p-4">
+                            <span className="text-xs text-muted-foreground">Loading...</span>
+                        </div>
+                    ) : notifications.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full p-4 text-center text-muted-foreground">
                             <Bell className="w-8 h-8 mb-2 opacity-20" />
                             <p className="text-sm">No notifications</p>

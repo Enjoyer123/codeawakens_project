@@ -1,15 +1,6 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
-import {
-  fetchAllRewards,
-  createReward,
-  updateReward,
-  deleteReward,
-  fetchLevelsForReward,
-  uploadRewardFrame,
-  deleteRewardFrame,
-} from '../../../services/rewardService';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Edit, Trash2, Image as ImageIcon } from 'lucide-react';
@@ -25,22 +16,48 @@ import { usePagination } from '@/hooks/usePagination';
 import { getImageUrl } from '@/utils/imageUtils';
 import { createDeleteErrorMessage } from '@/utils/errorHandler';
 import RewardTable from '../../../components/admin/reward/RewardTable';
+import {
+  useRewards,
+  useReward,
+  useRewardLevels,
+  useCreateReward,
+  useUpdateReward,
+  useDeleteReward,
+  useUploadRewardFrame,
+  useDeleteRewardFrame
+} from '@/services/hooks/useRewards';
 
 const RewardManagement = () => {
   const navigate = useNavigate();
   const { getToken } = useAuth();
   const { page, rowsPerPage, handlePageChange } = usePagination(1, 10);
-  const [rewards, setRewards] = useState([]);
-  const [levels, setLevels] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [pagination, setPagination] = useState({
+
+  // TanStack Query Hooks
+  const {
+    data: rewardsData,
+    isLoading: loading,
+    isError,
+    error: queryError
+  } = useRewards(page, rowsPerPage, searchQuery);
+
+  const { data: levelsData } = useRewardLevels();
+  const levels = levelsData || [];
+
+  const rewards = rewardsData?.rewards || [];
+  const pagination = rewardsData?.pagination || {
     total: 0,
     totalPages: 0,
     page: 1,
-    limit: 10,
-  });
+    limit: rowsPerPage,
+  };
+
+  // Mutations
+  const { mutateAsync: createRewardAsync } = useCreateReward();
+  const { mutateAsync: updateRewardAsync } = useUpdateReward();
+  const { mutateAsync: deleteRewardAsync, isPending: deleting } = useDeleteReward();
+  const { mutateAsync: uploadFrameAsync } = useUploadRewardFrame();
+  const { mutateAsync: deleteFrameAsync } = useDeleteRewardFrame();
 
   // Reward form states
   const [rewardDialogOpen, setRewardDialogOpen] = useState(false);
@@ -58,7 +75,6 @@ const RewardManagement = () => {
   // Delete states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [rewardToDelete, setRewardToDelete] = useState(null);
-  const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
 
   // Image management states
@@ -67,46 +83,6 @@ const RewardManagement = () => {
   const [uploadingFrame, setUploadingFrame] = useState(null);
   const [deletingFrame, setDeletingFrame] = useState(null);
   const [imageError, setImageError] = useState(null);
-
-  const loadRewards = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await fetchAllRewards(getToken, page, rowsPerPage, searchQuery);
-      setRewards(data.rewards || []);
-      setPagination(data.pagination || {
-        total: 0,
-        totalPages: 0,
-        page: 1,
-        limit: rowsPerPage,
-      });
-    } catch (err) {
-      setError('Failed to load rewards. ' + (err.message || ''));
-      setRewards([]);
-      setPagination({
-        total: 0,
-        totalPages: 0,
-        page: 1,
-        limit: rowsPerPage,
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [getToken, page, rowsPerPage, searchQuery]);
-
-  const loadLevels = useCallback(async () => {
-    try {
-      const data = await fetchLevelsForReward(getToken);
-      setLevels(data || []);
-    } catch (err) {
-      // Silently fail - levels are optional
-    }
-  }, [getToken]);
-
-  useEffect(() => {
-    loadRewards();
-    loadLevels();
-  }, [loadRewards, loadLevels]);
 
   const handleSearchChange = useCallback((value) => {
     setSearchQuery(value);
@@ -162,19 +138,18 @@ const RewardManagement = () => {
 
     try {
       if (editingReward) {
-        await updateReward(getToken, editingReward.reward_id, formData);
+        await updateRewardAsync({ rewardId: editingReward.reward_id, rewardData: formData });
       } else {
-        await createReward(getToken, formData);
+        await createRewardAsync(formData);
       }
       handleCloseRewardDialog();
-      await loadRewards();
       return { success: true };
     } catch (err) {
       const errorMessage = 'ไม่สามารถบันทึก reward ได้: ' + (err.message || 'Unknown error');
       setSaveError(errorMessage);
       return { success: false, error: errorMessage };
     }
-  }, [rewardForm, editingReward, getToken, handleCloseRewardDialog, loadRewards]);
+  }, [rewardForm, editingReward, updateRewardAsync, createRewardAsync, handleCloseRewardDialog]);
 
   const handleDeleteClick = useCallback((reward) => {
     setRewardToDelete(reward);
@@ -186,19 +161,15 @@ const RewardManagement = () => {
     if (!rewardToDelete) return;
 
     try {
-      setDeleting(true);
       setDeleteError(null);
-      await deleteReward(getToken, rewardToDelete.reward_id);
+      await deleteRewardAsync(rewardToDelete.reward_id);
       setDeleteDialogOpen(false);
       setRewardToDelete(null);
-      await loadRewards();
     } catch (err) {
       const errorMessage = createDeleteErrorMessage('reward', err);
       setDeleteError(errorMessage);
-    } finally {
-      setDeleting(false);
     }
-  }, [rewardToDelete, getToken, loadRewards]);
+  }, [rewardToDelete, deleteRewardAsync]);
 
   const handleDeleteDialogChange = useCallback((open) => {
     if (!deleting) {
@@ -235,20 +206,69 @@ const RewardManagement = () => {
     try {
       setUploadingFrame(frameNumber);
       setImageError(null);
-      await uploadRewardFrame(getToken, selectedReward.reward_id, imageFile, frameNumber);
-      await loadRewards();
+      await uploadFrameAsync({
+        rewardId: selectedReward.reward_id,
+        imageFile,
+        frameNumber
+      });
 
-      const data = await fetchAllRewards(getToken, page, rowsPerPage, searchQuery);
-      const updatedReward = data.rewards?.find(r => r.reward_id === selectedReward.reward_id);
-      if (updatedReward) {
-        setSelectedReward(updatedReward);
-      }
+      // Update local selectedReward state to reflect changes immediately in dialog
+      // Since useUploadRewardFrame invalidates 'rewards', the main list updates.
+      // But selectedReward is local state. We might need to sync it.
+      // Easiest is to let the user close/reopen or trust that image URL will work if predictable?
+      // Actually, standard pattern is to re-fetch or update local state.
+      // Since we rely on invalidation, let's just minimal update if possible or ignore if dialog uses props?
+      // Dialog uses selectedReward. So we need to update it.
+      // We can use the data returned from mutation to update selectedReward!
+
+      // But wait, mutation returns what the API returns.
+      // Let's assume API returns updated reward or frame info.
+      // If not, we might need a separate query for single reward to verify strict sync,
+      // OR just updating the timestamp on the image URL if usage is based on predictable URLs.
+
+      // For now, let's trust that invalidation updates the list, but selectedReward is STALE.
+      // We need to re-fetch the specific reward or update selectedReward state.
+      // Since useRewards is paginated, finding it in new data might be tricky if page changes (unlikely here).
+
+      // A trick: The dialog only needs to know it's done. 
+      // If the dialog re-renders from `rewards` list finding, that works.
+      // But `selectedReward` is a copy.
+      // Let's manually update `selectedReward` or re-fetch it.
+      // Since we don't have useReward(id) active here for the selected one, simple manual patch?
+
+      // Quick fix: Since we can't easily get the fresh reward object without a query,
+      // we might want to close and reopen or just accept it?
+      // Actually, `uploadRewardFrame` API usually returns updated reward structure?
+      // Let's check service... yes returns data.
+
+      // Let's assume we can't easily patch deeply nested frame structure without knowing API response format perfectly.
+      // I'll leave it as is, but maybe add a refetch via queryClient if critical?
+      // Actually, if I invalidate 'rewards', the `rewardsData` updates.
+      // But `selectedReward` state does NOT update automatically.
+      // So I should watch `rewardsData` and update `selectedReward` if it exists?
+      // Or cleaner: `handleUploadFrame` can fetch fresh reward data via `queryClient.fetchQuery`?
+      // Let's try to update selectedReward with what we know or just toggle loading.
+
+      // Better yet: make the Dialog fetch its own data using `useReward` hook!
+      // But that requires refactoring Dialog wrapper or component.
+
+      // For now, I will add a listener logic or just manual checking.
+      // Actually, in the old code:
+      // const data = await fetchAllRewards(...)
+      // const updatedReward = data.rewards?.find(...)
+      // setSelectedReward(updatedReward);
+
+      // I can duplicate that logic using `queryClient`?
+      // Or just close/reopen? No, bad UX.
+      // I'll stick to not updating it perfectly unless I add `useReward` for `selectedReward`.
+      // Actually, adding `useReward(selectedReward?.reward_id)` is easy and proper!
+
     } catch (err) {
       setImageError('ไม่สามารถอัปโหลดรูปภาพได้: ' + (err.message || 'Unknown error'));
     } finally {
       setUploadingFrame(null);
     }
-  }, [selectedReward, getToken, loadRewards, page, rowsPerPage, searchQuery]);
+  }, [selectedReward, uploadFrameAsync]);
 
   const handleDeleteFrame = useCallback(async (frameNumber) => {
     if (!selectedReward) return;
@@ -256,20 +276,36 @@ const RewardManagement = () => {
     try {
       setDeletingFrame(frameNumber);
       setImageError(null);
-      await deleteRewardFrame(getToken, selectedReward.reward_id, frameNumber);
-      await loadRewards();
-
-      const data = await fetchAllRewards(getToken, page, rowsPerPage, searchQuery);
-      const updatedReward = data.rewards?.find(r => r.reward_id === selectedReward.reward_id);
-      if (updatedReward) {
-        setSelectedReward(updatedReward);
-      }
+      await deleteFrameAsync({
+        rewardId: selectedReward.reward_id,
+        frameNumber
+      });
+      // Same issue as upload: selectedReward is stale.
     } catch (err) {
       setImageError('ไม่สามารถลบรูปภาพได้: ' + (err.message || 'Unknown error'));
     } finally {
       setDeletingFrame(null);
     }
-  }, [selectedReward, getToken, loadRewards, page, rowsPerPage, searchQuery]);
+  }, [selectedReward, deleteFrameAsync]);
+
+
+  // HACK: To update selectedReward when keys invalidate
+  // This is a bit dirty but works for this specific interaction without deep refactor
+  // If `selectedReward` is set, we can try to find it in `rewards` list if it's there.
+  // But `rewards` only has current page.
+  // If we really want live updates in dialog, passing `rewardId` to dialog and letting it fetch is best.
+  // But for now, let's rely on simple state update if api returns it, or just ignore live update if visuals don't break.
+  // (Frames usually update via URL timestamp or similar?)
+  // Let's modify `handleUploadFrame` to partially mock update if needed or just leave as is.
+  // The User will close dialog eventually.
+
+  // Real Solution: Use `useReward` for the active selected reward to keep it fresh!
+  const { data: activeRewardData } = useReward(selectedReward?.reward_id);
+  // When activeRewardData changes, update selectedReward?
+  // Or just pass activeRewardData to the dialog instead of selectedReward state?
+  // Yes! Pass `activeRewardData || selectedReward` to dialog.
+
+  const dialogReward = activeRewardData || selectedReward;
 
   const getDeleteDescription = (rewardName) => (
     <>
@@ -280,11 +316,7 @@ const RewardManagement = () => {
     </>
   );
 
-  const tableHeaderClassName =
-    'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
-  const tableCellClassName = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900';
-  const actionsCellClassName = 'px-6 py-4 whitespace-nowrap text-sm font-medium';
-  const searchPlaceholder = 'ค้นหารางวัล (ชื่อ, คำอธิบาย)...';
+  const error = isError ? (queryError?.message || 'Failed to load rewards') : null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -304,7 +336,7 @@ const RewardManagement = () => {
         <SearchInput
           defaultValue={searchQuery}
           onSearch={handleSearchChange}
-          placeholder={searchPlaceholder}
+          placeholder="ค้นหารางวัล (ชื่อ, คำอธิบาย)..."
         />
 
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -348,7 +380,7 @@ const RewardManagement = () => {
         <RewardImageDialog
           open={imageDialogOpen}
           onOpenChange={handleImageDialogChange}
-          selectedReward={selectedReward}
+          selectedReward={dialogReward}
           uploadingFrame={uploadingFrame}
           deletingFrame={deletingFrame}
           onUploadFrame={handleUploadFrame}

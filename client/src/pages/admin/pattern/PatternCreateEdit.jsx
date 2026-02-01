@@ -36,7 +36,8 @@ const PatternCreateEdit = () => {
   const { data: levelData, isLoading: isLevelLoading, error: levelError } = useLevel(levelId);
   const { data: patternData, isLoading: isPatternLoading, error: patternError } = usePattern(patternId);
   const { data: patternTypes = [] } = usePatternTypes();
-  const { data: weapons = [] } = useWeapons();
+  const { data: weaponsData } = useWeapons(1, 100);
+  const weapons = weaponsData?.weapons || [];
 
   // --- 2. View Mode ---
   const [isViewMode, setIsViewMode] = useState(false);

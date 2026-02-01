@@ -2,13 +2,9 @@ import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
 import {
-  fetchAllLevels,
-  createLevel,
-  updateLevel,
-  deleteLevel,
-  fetchAllCategories,
-  fetchLevelsForPrerequisite,
-} from '../../../services/levelService';
+  useLevels,
+  useDeleteLevel
+} from '../../../services/hooks/useLevel';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import SearchInput from '@/components/admin/formFields/SearchInput';
@@ -22,179 +18,47 @@ import LevelTable from '@/components/admin/level/LevelTable';
 
 const LevelManagement = () => {
   const navigate = useNavigate();
-  const { getToken } = useAuth();
+  const { getToken } = useAuth(); // Still needed for auth context if any, or maybe not if hooks handle it. Hooks handle it.
+  // Actually useLevel hooks use useAuth internally. So getToken is not needed here unless passed to something else.
+  // But LevelTable might not need it.
+
   const { page, rowsPerPage, handlePageChange } = usePagination(1, 10);
-  const [levels, setLevels] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [prerequisiteLevels, setPrerequisiteLevels] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [pagination, setPagination] = useState({
+
+  // Use TanStack Query
+  const {
+    data: levelsData,
+    isLoading: loading,
+    isError,
+    error: levelsError
+  } = useLevels(page, rowsPerPage, searchQuery);
+
+  const levels = levelsData?.levels || [];
+  const pagination = levelsData?.pagination || {
     total: 0,
     totalPages: 0,
     page: 1,
-    limit: 10,
-  });
+    limit: rowsPerPage,
+  };
+
+  const { mutateAsync: deleteLevelAsync, isPending: deleting } = useDeleteLevel();
+
+  // Dialog states
   const [patternListDialogOpen, setPatternListDialogOpen] = useState(false);
   const [selectedLevelForPatterns, setSelectedLevelForPatterns] = useState(null);
-
-  // Level form states
-  const [levelDialogOpen, setLevelDialogOpen] = useState(false);
-  const [editingLevel, setEditingLevel] = useState(null);
-  const [levelForm, setLevelForm] = useState({
-    category_id: '',
-    level_name: '',
-    description: '',
-    difficulty_level: 1,
-    difficulty: 'easy',
-    is_unlocked: false,
-    required_level_id: '',
-    textcode: false,
-    background_image: '',
-  });
-  const [saveError, setSaveError] = useState(null);
 
   // Delete states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [levelToDelete, setLevelToDelete] = useState(null);
-  const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
 
-  const loadLevels = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await fetchAllLevels(getToken, page, rowsPerPage, searchQuery);
-      setLevels(data.levels || []);
-      setPagination(data.pagination || {
-        total: 0,
-        totalPages: 0,
-        page: 1,
-        limit: rowsPerPage,
-      });
-    } catch (err) {
-      setError('Failed to load levels. ' + (err.message || ''));
-      setLevels([]);
-      setPagination({
-        total: 0,
-        totalPages: 0,
-        page: 1,
-        limit: rowsPerPage,
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [getToken, page, rowsPerPage, searchQuery]);
-
-  const loadCategories = useCallback(async () => {
-    try {
-      const data = await fetchAllCategories(getToken);
-      setCategories(data || []);
-    } catch (err) {
-      // Silently fail - categories are optional
-    }
-  }, [getToken]);
-
-  const loadPrerequisiteLevels = useCallback(async () => {
-    try {
-      const data = await fetchLevelsForPrerequisite(getToken);
-      setPrerequisiteLevels(data || []);
-    } catch (err) {
-      // Silently fail - prerequisite levels are optional
-    }
-  }, [getToken]);
-
-  useEffect(() => {
-    loadLevels();
-    loadCategories();
-    loadPrerequisiteLevels();
-  }, [loadLevels, loadCategories, loadPrerequisiteLevels]);
-
+  // Handle Search
   const handleSearchChange = useCallback((value) => {
     setSearchQuery(value);
     handlePageChange(1);
   }, [handlePageChange]);
 
-  const handleOpenLevelDialog = useCallback((level = null) => {
-    if (level) {
-      setEditingLevel(level);
-      setLevelForm({
-        category_id: level.category_id.toString(),
-        level_name: level.level_name,
-        description: level.description || '',
-        difficulty_level: level.difficulty_level,
-        difficulty: level.difficulty,
-        is_unlocked: level.is_unlocked,
-        required_level_id: level.required_level_id
-          ? level.required_level_id.toString()
-          : '',
-        textcode: level.textcode,
-        background_image: level.background_image,
-      });
-    } else {
-      setEditingLevel(null);
-      setLevelForm({
-        category_id: '',
-        level_name: '',
-        description: '',
-        difficulty_level: 1,
-        difficulty: 'easy',
-        is_unlocked: false,
-        required_level_id: '',
-        textcode: false,
-        background_image: '',
-      });
-    }
-    setSaveError(null);
-    setLevelDialogOpen(true);
-  }, []);
-
-  const handleCloseLevelDialog = useCallback(() => {
-    setLevelDialogOpen(false);
-    setEditingLevel(null);
-    setSaveError(null);
-    setLevelForm({
-      category_id: '',
-      level_name: '',
-      description: '',
-      difficulty_level: 1,
-      difficulty: 'easy',
-      is_unlocked: false,
-      required_level_id: '',
-      textcode: false,
-      background_image: '',
-    });
-  }, []);
-
-  const handleSaveLevel = useCallback(async () => {
-    setSaveError(null);
-
-    try {
-      const formData = {
-        ...levelForm,
-        category_id: parseInt(levelForm.category_id),
-        difficulty_level: parseInt(levelForm.difficulty_level),
-        required_level_id: levelForm.required_level_id
-          ? parseInt(levelForm.required_level_id)
-          : null,
-      };
-
-      if (editingLevel) {
-        await updateLevel(getToken, editingLevel.level_id, formData);
-      } else {
-        await createLevel(getToken, formData);
-      }
-      handleCloseLevelDialog();
-      await loadLevels();
-      return { success: true };
-    } catch (err) {
-      const errorMessage = 'ไม่สามารถบันทึกด่านได้: ' + (err.message || 'Unknown error');
-      setSaveError(errorMessage);
-      return { success: false, error: errorMessage };
-    }
-  }, [levelForm, editingLevel, getToken, handleCloseLevelDialog, loadLevels]);
-
+  // Handle Delete
   const handleDeleteClick = useCallback((level) => {
     setLevelToDelete(level);
     setDeleteError(null);
@@ -205,19 +69,16 @@ const LevelManagement = () => {
     if (!levelToDelete) return;
 
     try {
-      setDeleting(true);
       setDeleteError(null);
-      await deleteLevel(getToken, levelToDelete.level_id);
+      await deleteLevelAsync(levelToDelete.level_id);
       setDeleteDialogOpen(false);
       setLevelToDelete(null);
-      await loadLevels();
+      // Query automatically invalidated by mutation hook
     } catch (err) {
       const errorMessage = createDeleteErrorMessage('level', err);
       setDeleteError(errorMessage);
-    } finally {
-      setDeleting(false);
     }
-  }, [levelToDelete, getToken, loadLevels]);
+  }, [levelToDelete, deleteLevelAsync]);
 
   const handleDeleteDialogChange = useCallback((open) => {
     if (!deleting) {
@@ -239,6 +100,7 @@ const LevelManagement = () => {
   );
 
   const searchPlaceholder = 'ค้นหาด่าน (ชื่อ, คำอธิบาย)...';
+  const error = isError ? (levelsError?.message || 'Failed to load levels') : null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -251,7 +113,7 @@ const LevelManagement = () => {
         />
 
         <ErrorAlert message={error} />
-        <ErrorAlert message={saveError} />
+        {/* Save error removed as edit dialog is not here */}
         <ErrorAlert message={deleteError} />
 
         <SearchInput

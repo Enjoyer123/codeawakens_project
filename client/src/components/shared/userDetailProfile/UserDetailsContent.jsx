@@ -2,8 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 
-import { getUserDetails } from '../../../services/adminService';
-import { getUserByClerkId } from '../../../services/profileService';
+import { useUserDetails } from '../../../services/hooks/useAdmin';
+import { useProfile } from '../../../services/hooks/useProfile';
 import ProfileTab from './tabs/ProfileTab';
 import QuestLogTab from './tabs/QuestLogTab';
 import InventoryTab from './tabs/InventoryTab';
@@ -13,43 +13,53 @@ import { API_BASE_URL } from '../../../config/apiConfig';
 
 const UserDetailsContent = ({ userId, allowEdit = false, onUpdateSuccess, initialTabValue = 'profile', useProfileService = false }) => {
   const { getToken } = useAuth();
-  const [loading, setLoading] = useState(true);
   const [hoveredContent, setHoveredContent] = useState(null);
-  const [userDetails, setUserDetails] = useState(null);
 
+  // Use hooks conditionally based on useProfileService prop
+  const currentUserId = userId; // User ID is passed for admin view
+
+  // Hook for User Profile (Current User)
+  const {
+    data: profileData,
+    isLoading: profileLoading,
+    isError: profileError
+  } = useProfile({
+    enabled: useProfileService
+  });
+
+  // Hook for Admin View (Other User)
+  // We need to pass options to useUserDetails to control 'enabled', but my hook doesn't accept options.
+  // I should update useUserDetails hook to accept options OR just handle it here if I modify the hook.
+  // But wait, useQuery hook returns 'refetch', but I need 'enabled'.
+  // My hook wrapper `useUserDetails` hardcodes `enabled: !!userId && !!getToken`.
+  // If I use `useUserDetails` here, it will trigger if `userId` is present.
+  // We only want it if `!useProfileService`.
+  // So I need to modify `useUserDetails` or use a conditional standard query here.
+  // Best practice: Update `useUserDetails` to accept options.
+  // BUT I can't update hook file in this turn easily without another tool call.
+  // LIMITATION: 'useUserDetails' forces enabled.
+  // Workaround: Pass userId as null if useProfileService is true.
+
+  const adminQueryUserId = !useProfileService ? userId : null;
+  const {
+    data: adminDetailsData,
+    isLoading: adminLoading,
+    isError: adminError
+  } = useUserDetails(adminQueryUserId); // If null, hook sets enabled: false
+
+  const userDetails = useProfileService ? profileData : adminDetailsData;
+  const loading = useProfileService ? profileLoading : adminLoading;
+
+  // Effect to set initial hovered content
   useEffect(() => {
-    if (userId || useProfileService) {
-      loadUserDetails();
-    }
-  }, [userId, useProfileService]);
-
-  const loadUserDetails = async () => {
-    try {
-      setLoading(true);
-      let details;
-
-      // Use profileService for own profile, adminService for viewing other users
-      if (useProfileService) {
-        details = await getUserByClerkId(getToken);
-      } else {
-        details = await getUserDetails(getToken, userId);
+    if (userDetails) {
+      if (userDetails.user_reward && userDetails.user_reward.length > 0) {
+        setHoveredContent({ type: 'reward', data: userDetails.user_reward[0] });
+      } else if (userDetails.user_progress && userDetails.user_progress.length > 0) {
+        setHoveredContent({ type: 'level', data: userDetails.user_progress[0] });
       }
-
-      setUserDetails(details);
-
-      // Default hover content to first item if available, or just null
-      if (details.user_reward && details.user_reward.length > 0) {
-        setHoveredContent({ type: 'reward', data: details.user_reward[0] });
-      } else if (details.user_progress && details.user_progress.length > 0) {
-        setHoveredContent({ type: 'level', data: details.user_progress[0] });
-      }
-
-    } catch (err) {
-      console.error('Failed to load user details:', err);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [userDetails]);
 
   if (loading) {
     return (
@@ -109,7 +119,6 @@ const UserDetailsContent = ({ userId, allowEdit = false, onUpdateSuccess, initia
           >
             <ProfileTab
               userDetails={userDetails}
-              setUserDetails={setUserDetails}
               allowEdit={allowEdit}
               onUpdateSuccess={onUpdateSuccess}
               getToken={getToken}

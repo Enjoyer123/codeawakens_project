@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
-import { fetchAllPatterns, deletePattern } from '../../../services/patternService';
+import { usePatterns, useDeletePattern } from '@/services/hooks/usePattern';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -17,31 +17,15 @@ import ContentLoader from '@/components/shared/Loading/ContentLoader';
 const PatternListDialog = ({ open, onOpenChange, levelId, levelName }) => {
   const { getToken } = useAuth();
   const navigate = useNavigate();
-  const [patterns, setPatterns] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [patternToDelete, setPatternToDelete] = useState(null);
 
-  useEffect(() => {
-    if (open && levelId) {
-      loadPatterns();
-    }
-  }, [open, levelId]);
+  // Use TanStack Query hooks
+  const { data: patternsData, isLoading, error: queryError } = usePatterns(levelId);
+  const deletePatternMutation = useDeletePattern();
 
-  const loadPatterns = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await fetchAllPatterns(getToken, 1, 100, levelId);
-      setPatterns(data.patterns || []);
-    } catch (err) {
-      setError('Failed to load patterns: ' + (err.message || ''));
-      console.error('Error loading patterns:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const patterns = patternsData?.patterns || [];
+  const error = queryError ? 'Failed to load patterns: ' + queryError.message : null;
 
   const handleDeleteClick = (pattern) => {
     setPatternToDelete(pattern);
@@ -52,13 +36,12 @@ const PatternListDialog = ({ open, onOpenChange, levelId, levelName }) => {
     if (!patternToDelete) return;
 
     try {
-      await deletePattern(getToken, patternToDelete.pattern_id);
-      setPatterns(patterns.filter(p => p.pattern_id !== patternToDelete.pattern_id));
+      await deletePatternMutation.mutateAsync(patternToDelete.pattern_id);
       setDeleteDialogOpen(false);
       setPatternToDelete(null);
     } catch (err) {
-      setError('Failed to delete pattern: ' + (err.message || ''));
       console.error('Error deleting pattern:', err);
+      // Optional: show toast error
     }
   };
 
@@ -95,7 +78,13 @@ const PatternListDialog = ({ open, onOpenChange, levelId, levelName }) => {
             </div>
           )}
 
-          {loading ? (
+          {deletePatternMutation.isError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+              Error deleting pattern: {deletePatternMutation.error?.message}
+            </div>
+          )}
+
+          {isLoading ? (
             <ContentLoader message="Loading patterns..." height="h-64" />
           ) : patterns.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
@@ -147,8 +136,13 @@ const PatternListDialog = ({ open, onOpenChange, levelId, levelName }) => {
                         size="sm"
                         onClick={() => handleDeleteClick(pattern)}
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        disabled={deletePatternMutation.isPending}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        {deletePatternMutation.isPending && patternToDelete?.pattern_id === pattern.pattern_id ? (
+                          <Loader className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
                       </Button>
                     </div>
                   </div>
@@ -165,6 +159,7 @@ const PatternListDialog = ({ open, onOpenChange, levelId, levelName }) => {
         onConfirm={handleDeleteConfirm}
         title="ลบรูปแบบคำตอบ"
         message={`คุณแน่ใจหรือไม่ว่าต้องการลบรูปแบบคำตอบ "${patternToDelete?.pattern_name}"?`}
+        isDeleting={deletePatternMutation.isPending}
       />
     </>
   );

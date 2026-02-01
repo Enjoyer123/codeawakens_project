@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
@@ -11,25 +11,37 @@ import NotificationTable from '@/components/admin/notification/NotificationTable
 import { usePagination } from '@/hooks/usePagination';
 import { createDeleteErrorMessage } from '@/utils/errorHandler';
 import {
-    fetchAllNotifications,
-    createNotification,
-    updateNotification,
-    deleteNotification
-} from '@/services/notificationService';
+    useNotifications,
+    useCreateNotification,
+    useUpdateNotification,
+    useDeleteNotification
+} from '@/services/hooks/useNotifications';
 
 const NotificationManagement = () => {
     const { getToken } = useAuth();
     const { page, rowsPerPage, handlePageChange } = usePagination(1, 10);
-    const [notifications, setNotifications] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
-    const [pagination, setPagination] = useState({
+
+    // TanStack Query Hooks
+    const {
+        data: notificationsData,
+        isLoading: loading,
+        isError,
+        error: queryError
+    } = useNotifications(page, rowsPerPage, searchQuery);
+
+    const notifications = notificationsData?.notifications || [];
+    const pagination = notificationsData?.pagination || {
         total: 0,
         totalPages: 0,
         page: 1,
-        limit: 10,
-    });
+        limit: rowsPerPage,
+    };
+
+    // Mutations
+    const { mutateAsync: createNotificationAsync } = useCreateNotification();
+    const { mutateAsync: updateNotificationAsync } = useUpdateNotification();
+    const { mutateAsync: deleteNotificationAsync, isPending: deleting } = useDeleteNotification();
 
     // Notification form states
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -45,39 +57,7 @@ const NotificationManagement = () => {
     // Delete states
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
-    const [deleting, setDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState(null);
-
-    const loadData = useCallback(async () => {
-        try {
-            setLoading(true);
-            setError(null);
-            const data = await fetchAllNotifications(getToken, page, rowsPerPage, searchQuery);
-            setNotifications(data.notifications || []);
-            setPagination(data.pagination || {
-                total: 0,
-                totalPages: 0,
-                page: 1,
-                limit: rowsPerPage,
-            });
-        } catch (err) {
-            setError('Failed to load notifications. ' + (err.message || ''));
-            setNotifications([]);
-            setPagination({
-                total: 0,
-                totalPages: 0,
-                page: 1,
-                limit: rowsPerPage,
-            });
-        } finally {
-            setLoading(false);
-        }
-    }, [getToken, page, rowsPerPage, searchQuery]);
-
-    // Load data when page or search changes
-    useEffect(() => {
-        loadData();
-    }, [loadData]);
 
     const handleSearchChange = useCallback((value) => {
         setSearchQuery(value);
@@ -91,10 +71,6 @@ const NotificationManagement = () => {
             let expiresAtStr = '';
             if (notification.expires_at) {
                 const d = new Date(notification.expires_at);
-                // Adjust to local time string format manually or use library if strictly consistent
-                // Simple slice for ISO might be UTC, so be careful. 
-                // For simplicity here, let's assume we just want to set it if it exists.
-                // Correct implementation usually handles timezone offset.
                 const offset = d.getTimezoneOffset() * 60000;
                 expiresAtStr = new Date(d.getTime() - offset).toISOString().slice(0, 16);
             }
@@ -135,19 +111,21 @@ const NotificationManagement = () => {
 
         try {
             if (editingNotification) {
-                await updateNotification(getToken, editingNotification.notification_id, formData);
+                await updateNotificationAsync({
+                    notificationId: editingNotification.notification_id,
+                    notificationData: formData
+                });
             } else {
-                await createNotification(getToken, formData);
+                await createNotificationAsync(formData);
             }
             handleCloseDialog();
-            await loadData();
             return { success: true };
         } catch (err) {
             const errorMessage = 'ไม่สามารถบันทึกข้อมูลได้: ' + (err.message || 'Unknown error');
             setSaveError(errorMessage);
             return { success: false, error: errorMessage };
         }
-    }, [formData, editingNotification, getToken, handleCloseDialog, loadData]);
+    }, [formData, editingNotification, updateNotificationAsync, createNotificationAsync, handleCloseDialog]);
 
     const handleDeleteClick = useCallback((item) => {
         setItemToDelete(item);
@@ -159,19 +137,15 @@ const NotificationManagement = () => {
         if (!itemToDelete) return;
 
         try {
-            setDeleting(true);
             setDeleteError(null);
-            await deleteNotification(getToken, itemToDelete.notification_id);
+            await deleteNotificationAsync(itemToDelete.notification_id);
             setDeleteDialogOpen(false);
             setItemToDelete(null);
-            await loadData();
         } catch (err) {
             const errorMessage = createDeleteErrorMessage('notification', err);
             setDeleteError(errorMessage);
-        } finally {
-            setDeleting(false);
         }
-    }, [itemToDelete, getToken, loadData]);
+    }, [itemToDelete, deleteNotificationAsync]);
 
     const handleDeleteDialogChange = useCallback((open) => {
         if (!deleting) {
@@ -185,24 +159,25 @@ const NotificationManagement = () => {
 
     const handleSend = async (notification) => {
         try {
-            // Optimistic update: Temporarily set active in UI if needed, or wait for reload
-            setLoading(true); // Or just show a sending spinner
-            await updateNotification(getToken, notification.notification_id, {
-                ...notification,
-                is_active: true
+            // "Send" essentially means setting active to true
+            await updateNotificationAsync({
+                notificationId: notification.notification_id,
+                notificationData: {
+                    ...notification,
+                    is_active: true
+                }
             });
-            await loadData(); // Reload data to reflect change
             // Optional: Show success toast
         } catch (err) {
             console.error("Failed to send notification:", err);
-            setError('Failed to send notification: ' + (err.message || 'Unknown error'));
-        } finally {
-            setLoading(false);
+            alert('Failed to send notification: ' + (err.message || 'Unknown error'));
         }
     };
 
     const getDeleteDescription = (title) =>
         `คุณแน่ใจหรือไม่ว่าต้องการลบแจ้งเตือน "${title}"? การกระทำนี้ไม่สามารถยกเลิกได้`;
+
+    const error = isError ? (queryError?.message || 'Failed to load notifications') : null;
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -274,5 +249,4 @@ const NotificationManagement = () => {
         </div>
     );
 };
-
 export default NotificationManagement;
