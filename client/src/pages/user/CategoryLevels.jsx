@@ -53,7 +53,7 @@ const CategoryLevels = () => {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center text-white">
-          <div className="text-4xl mb-4">⚠</div>
+          <div className="text-4xl mb-4 font-bold">!</div>
           <p className="text-lg mb-4">{error}</p>
           <button
             onClick={() => setReloadKey((prev) => prev + 1)}
@@ -70,7 +70,7 @@ const CategoryLevels = () => {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center text-white">
-          <div className="text-4xl mb-4">❌</div>
+          <div className="text-4xl mb-4 font-bold">?</div>
           <p className="text-lg mb-4">ไม่พบประเภทด่านที่ต้องการ</p>
           <button
             onClick={() => navigate('/user/mapselect')}
@@ -122,7 +122,7 @@ const CategoryLevels = () => {
       {/* Map Container */}
       <div className="relative w-full max-w-5xl mx-auto shadow-2xl lg:shadow-none lg:max-w-none lg:mx-0 lg:w-full lg:h-full">
         <img
-          src={categoryInfo?.background_image ? getImageUrl(categoryInfo.background_image) : "/paper.png"}
+          src={categoryInfo?.background_image ? getImageUrl(categoryInfo.background_image) : "/Mapdefault.png"}
           alt="Level Map"
           className="w-full h-auto object-contain lg:w-full lg:h-full lg:object-fill block pixelated"
         />
@@ -148,28 +148,49 @@ const CategoryLevels = () => {
                   ${isLocked ? 'cursor-not-allowed contrast-75 grayscale-[0.6]' : 'cursor-pointer group'}`}
               style={{ left: `${position.left}%`, top: `${position.top}%` }}
             >
-              {/* Node Circle (Pill shape) */}
-              <div className={`px-2 py-1 md:px-4 md:py-2 min-w-[2rem] min-h-[2rem] md:min-w-[3rem] md:min-h-[3rem] 
-                  bg-white border-2 md:border-4 rounded-full shadow-lg flex items-center justify-center transition-transform 
-                  ${isLocked ? 'border-gray-400 opacity-90' : 'border-green-500 transform group-hover:scale-110 group-active:scale-95 group-hover:border-yellow-400'}`}>
+              {/* Node Container (Interactive Dot with Label) */}
+              <div className="relative flex flex-col items-center justify-center transition-all duration-300">
 
-                {isLocked && (
-                  <div className="absolute -top-2 -right-2 bg-gray-700 text-white rounded-full p-1 shadow-md z-20">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 md:h-4 md:w-4" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                    </svg>
+                {/* Expanding Info Pill (Label Above) */}
+                <div className={`mb-1.5 transition-all duration-200 ease-out z-20 ${isHovered ? 'scale-110' : 'scale-100'}`}>
+                  <div className={`
+                    px-2 py-0.5 border shadow-[0_2px_8px_rgba(0,0,0,0.5)] rounded flex items-center gap-1.5 whitespace-nowrap
+                    ${isLocked
+                      ? 'bg-gray-800/90 border-gray-600/60 shadow-none'
+                      : 'bg-[#0f111a]/90 border-[#7048e8]/60 group-hover:border-[#7048e8] group-hover:shadow-[0_0_12px_rgba(112,72,232,0.4)] group-hover:bg-[#0f111a]'
+                    }
+                  `}>
+                    {!level.is_unlocked && (
+                      <span className="bg-red-600 text-white text-[8px] md:text-[9px] font-bold px-1 py-0.5 rounded-sm">
+                        DRAFT
+                      </span>
+                    )}
+
+                    <span className={`font-bold text-[9px] md:text-xs tracking-wide ${isLocked ? 'text-gray-400' : 'text-[#e0e7ff]'}`}>
+                      {level.title || level.level_name}
+                    </span>
+
+                    {isLocked && (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
                   </div>
-                )}
+                </div>
 
-                {!level.is_unlocked && (
-                  <div className="absolute -bottom-2 bg-red-600 text-white text-[8px] md:text-[10px] px-1.5 py-0.5 rounded-md font-bold z-20 shadow-sm uppercase tracking-wider border border-white/20">
-                    Draft
-                  </div>
-                )}
+                {/* The actual Dot on the map */}
+                <div className={`
+                  w-3 h-3 md:w-4 md:h-4 rounded-full border border-white/40 z-10 transition-transform
+                  ${isLocked
+                    ? 'bg-gray-600 shadow-none'
+                    : 'bg-[#7048e8] shadow-[0_0_8px_rgba(112,72,232,0.6)] animate-pulse group-hover:animate-none group-hover:scale-110'
+                  }
+                `} />
 
-                <span className={`font-bold text-[10px] md:text-sm lg:text-base whitespace-nowrap ${isLocked ? 'text-gray-500' : 'text-green-800'}`}>
-                  {level.title || level.level_name}
-                </span>
+                {/* Subtle Glow under the dot (Only if unlocked) */}
+                {!isLocked && (
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 bg-[#7048e8]/10 rounded-full blur-md -z-1" />
+                )}
               </div>
 
               {/* Locked Tooltip */}

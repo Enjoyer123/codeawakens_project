@@ -16,29 +16,30 @@ export function ensureStandardBlocks() {
   // Apply Procedure Overrides (Fix renaming, N-Queen logic, etc.)
   applyProcedureOverrides();
 
-  // Create fallback for variables_get if missing
-  if (!Blockly.Blocks['variables_get']) {
-    console.warn('variables_get block not found, creating fallback...');
-    try {
-      Blockly.Blocks['variables_get'] = {
-        init: function () {
-          this.appendDummyInput()
-            .appendField(new Blockly.FieldVariable("item"), "VAR");
-          this.setOutput(true, null);
-          this.setColour(330);
-          this.setTooltip("ค่าของตัวแปร");
-        }
-      };
+  // Override variables_get to ensure Thai tooltip
+  try {
+    Blockly.Blocks['variables_get'] = {
+      init: function () {
+        this.appendDummyInput()
+          .appendField(new Blockly.FieldVariable("item"), "VAR");
+        this.setOutput(true, null);
+        this.setColour(330);
+        this.setTooltip("ค่าของตัวแปร");
+        this.setHelpUrl("");
+      }
+    };
 
+    // Ensure generator exists
+    if (!javascriptGenerator.forBlock['variables_get']) {
       javascriptGenerator.forBlock['variables_get'] = function (block) {
         const varName = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
         return [varName, javascriptGenerator.ORDER_ATOMIC];
       };
-
-      console.log('Created fallback variables_get block');
-    } catch (e) {
-      console.error('Failed to create fallback variables_get block:', e);
     }
+
+    console.log('Overridden variables_get block to fix tooltip');
+  } catch (e) {
+    console.error('Failed to override variables_get block:', e);
   }
 
   // Override variables_set to fix message format issues

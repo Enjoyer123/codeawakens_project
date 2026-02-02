@@ -31,7 +31,7 @@ export function defineTrainScheduleBlocks() {
         this.setPreviousStatement(true, null);
         this.setNextStatement(true, null);
         this.setColour(230);
-        this.setTooltip("Sorts the 'trains' list in place.");
+        this.setTooltip("เรียงลำดับรายการรถไฟ (ในที่เดิม)");
       }
     };
 
@@ -67,7 +67,7 @@ export function defineTrainScheduleBlocks() {
           ]), "KEY");
         this.setOutput(true, "Number");
         this.setColour(160);
-        this.setTooltip("Get arrival or departure time of a train.");
+        this.setTooltip("รับเวลามาถึงหรือเวลาออกเดินทางของรถไฟ");
       }
     };
 
@@ -92,7 +92,7 @@ export function defineTrainScheduleBlocks() {
         this.setPreviousStatement(true, null);
         this.setNextStatement(true, null);
         this.setColour(160);
-        this.setTooltip("Records the assignment for visualization.");
+        this.setTooltip("บันทึกการมอบหมายเพื่อการแสดงผล");
       }
     };
 

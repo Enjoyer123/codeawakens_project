@@ -33,7 +33,7 @@ export function defineCoinChangeVisualBlocks() {
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(260);
-      this.setTooltip("Track decision for coin change algorithm");
+      this.setTooltip("ติดตามการตัดสินใจสำหรับอัลกอริทึมแลกเหรียญ");
     },
   };
 }

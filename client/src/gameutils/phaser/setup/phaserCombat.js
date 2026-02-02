@@ -270,7 +270,7 @@ export function showCombatUI(scene, monster, distance, warningRange, dangerRange
   uiContainer.add(gradient);
 
   // Enemy name
-  const enemyName = scene.add.text(panelX, panelY - 20, `🧛 ${monster.data.name || 'Vampire'}`, {
+  const enemyName = scene.add.text(panelX, panelY - 20, `${monster.data.name || 'Vampire'}`, {
     fontSize: '14px',
     color: '#ffffff',
     fontStyle: 'bold',
@@ -281,7 +281,7 @@ export function showCombatUI(scene, monster, distance, warningRange, dangerRange
   uiContainer.add(enemyName);
 
   // Distance indicator with icon
-  const distanceIcon = scene.add.text(panelX - 70, panelY - 5, '📏', {
+  const distanceIcon = scene.add.text(panelX - 70, panelY - 5, 'Dist:', {
     fontSize: '12px'
   });
   distanceIcon.setOrigin(0.5);
@@ -305,15 +305,15 @@ export function showCombatUI(scene, monster, distance, warningRange, dangerRange
   if (uiState === 'danger') {
     statusText = 'IN COMBAT RANGE!';
     statusColor = '#ff0000';
-    statusIcon = '⚔️';
+    statusIcon = '!';
   } else if (uiState === 'warning') {
     statusText = 'APPROACHING!';
     statusColor = '#ffaa00';
-    statusIcon = '⚠️';
+    statusIcon = '!';
   } else {
     statusText = 'DETECTED';
     statusColor = '#00ff00';
-    statusIcon = '👁️';
+    statusIcon = 'O';
   }
 
   const statusIconText = scene.add.text(panelX - 70, panelY + 10, statusIcon, {
@@ -333,7 +333,7 @@ export function showCombatUI(scene, monster, distance, warningRange, dangerRange
   uiContainer.add(status);
 
   // Health bar for enemy with icon
-  const healthIcon = scene.add.text(panelX - 70, panelY + 25, '❤️', {
+  const healthIcon = scene.add.text(panelX - 70, panelY + 25, 'HP', {
     fontSize: '10px'
   });
   healthIcon.setOrigin(0.5);
@@ -384,7 +384,7 @@ export function showCombatUI(scene, monster, distance, warningRange, dangerRange
 
   // Attack power indicator
   const attackPower = monster.data.damage || 25;
-  const attackIcon = scene.add.text(panelX - 70, panelY + 40, '⚔️', {
+  const attackIcon = scene.add.text(panelX - 70, panelY + 40, 'ATK', {
     fontSize: '9px'
   });
   attackIcon.setOrigin(0.5);

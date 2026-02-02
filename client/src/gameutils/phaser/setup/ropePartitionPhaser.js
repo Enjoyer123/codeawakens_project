@@ -174,7 +174,7 @@ export function updateRopePartitionVisuals(scene, state) {
             // Optional: Pruned text
             let prunedText = null;
             if (node.status === 'pruned') {
-                prunedText = scene.add.text(pos.x, pos.y + 30, '✂️ > L', {
+                prunedText = scene.add.text(pos.x, pos.y + 30, '> L', {
                     fontSize: '10px', color: '#ff0000'
                 }).setOrigin(0.5);
                 container.add(prunedText);
@@ -227,7 +227,7 @@ export function updateRopePartitionVisuals(scene, state) {
 
             // Handle Pruned Text appearing dynamically
             if (node.status === 'pruned' && !visuals.prunedText) {
-                visuals.prunedText = scene.add.text(pos.x, pos.y + 30, '✂️ > L', {
+                visuals.prunedText = scene.add.text(pos.x, pos.y + 30, '> L', {
                     fontSize: '10px', color: '#ff0000'
                 }).setOrigin(0.5);
                 container.add(visuals.prunedText);
@@ -239,7 +239,7 @@ export function updateRopePartitionVisuals(scene, state) {
     if (state.result !== undefined && state.result !== null) {
         let resText = drawnNodes.get('result_overlay');
         const resY = height - 50;
-        const msg = state.result === -1 ? '❌ ไม่สามารถหาคำตอบได้ (-1)' : `✅ คำตอบ: ${state.result} ท่อน`;
+        const msg = state.result === -1 ? 'Cannot find answer (-1)' : `Answer: ${state.result}`;
         const color = state.result === -1 ? '#ff6b6b' : '#00ff00';
 
         if (!resText) {

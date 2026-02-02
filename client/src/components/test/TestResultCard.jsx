@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Lock } from 'lucide-react';
 
 const TestResultCard = ({ result, displayType, onContinue }) => {
   if (result.locked) {
@@ -10,7 +10,7 @@ const TestResultCard = ({ result, displayType, onContinue }) => {
         <Card className="w-full max-w-2xl text-center p-8 border-red-200">
           <div className="flex justify-center mb-4">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-              <span className="text-3xl">🔒</span>
+              <Lock className="w-8 h-8 text-red-500" />
             </div>
           </div>
           <h1 className="text-3xl font-bold mb-4 text-gray-800">Locked</h1>

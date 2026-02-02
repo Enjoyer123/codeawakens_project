@@ -102,9 +102,9 @@ function Navbar({ navItems = [], isLoading = false, isGamePage = false, isTransp
         <div className="flex items-center gap-8">
           <a href="/" className="flex items-center scale-90 md:scale-100 origin-left">
             <img
-              src="https://eastwardgame.com/wp-content/themes/eastward/assets/images/logo-eastward.png"
-              alt="Eastward Logo"
-              className="h-10 md:h-14 object-contain brightness-0 invert hue-rotate-[280deg]"
+              src="/logo.png"
+              alt="logo.png"
+              className="h-30 object-contain"
             />
           </a>
         </div>

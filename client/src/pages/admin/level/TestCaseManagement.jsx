@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import { useAuth } from '@clerk/clerk-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -61,13 +62,8 @@ const TestCaseManagement = () => {
     is_primary: false,
     display_order: 0,
   });
-  const [saveError, setSaveError] = useState(null);
-
-  // Delete States
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [testCaseToDelete, setTestCaseToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState(null);
 
   // No manual load effects needed
 
@@ -95,26 +91,19 @@ const TestCaseManagement = () => {
         display_order: 0,
       });
     }
-    setSaveError(null);
-    setDialogOpen(true);
-  }, []);
-
-  const handleCloseDialog = useCallback(() => {
     setDialogOpen(false);
     setEditingTestCase(null);
-    setSaveError(null);
   }, []);
 
   const handleSave = useCallback(async () => {
-    setSaveError(null);
 
     // Validation
     if (!formData.test_case_name.trim()) {
-      setSaveError('กรุณากรอกชื่อ Test Case');
+      toast.error('กรุณากรอกชื่อ Test Case');
       return;
     }
     if (!formData.function_name.trim()) {
-      setSaveError('กรุณากรอกชื่อ Function');
+      toast.error('กรุณากรอกชื่อ Function');
       return;
     }
 
@@ -122,13 +111,13 @@ const TestCaseManagement = () => {
     try {
       parsedInput = JSON.parse(formData.input_params);
     } catch (e) {
-      setSaveError('Input Params ต้องเป็น JSON ที่ถูกต้อง');
+      toast.error('Input Params ต้องเป็น JSON ที่ถูกต้อง');
       return;
     }
     try {
       parsedOutput = JSON.parse(formData.expected_output);
     } catch (e) {
-      setSaveError('Expected Output ต้องเป็น JSON ที่ถูกต้อง');
+      toast.error('Expected Output ต้องเป็น JSON ที่ถูกต้อง');
       return;
     }
 
@@ -149,18 +138,19 @@ const TestCaseManagement = () => {
           testCaseId: editingTestCase.test_case_id,
           data: payload
         });
+        toast.success('อัปเดต Test Case สำเร็จ');
       } else {
         await createTestCaseMutation.mutateAsync(payload);
+        toast.success('เพิ่ม Test Case สำเร็จ');
       }
       handleCloseDialog();
     } catch (err) {
-      setSaveError('ไม่สามารถบันทึก Test Case ได้: ' + (err.message || 'Unknown error'));
+      toast.error('ไม่สามารถบันทึก Test Case ได้: ' + (err.message || 'Unknown error'));
     }
   }, [editingTestCase, formData, numericLevelId, handleCloseDialog, updateTestCaseMutation, createTestCaseMutation]);
 
   const handleDeleteClick = useCallback((testCase) => {
     setTestCaseToDelete(testCase);
-    setDeleteError(null);
     setDeleteDialogOpen(true);
   }, []);
 
@@ -168,12 +158,12 @@ const TestCaseManagement = () => {
     if (!testCaseToDelete) return;
     try {
       setDeleting(true);
-      setDeleteError(null);
       await deleteTestCaseMutation.mutateAsync(testCaseToDelete.test_case_id);
+      toast.success('ลบ Test Case สำเร็จ');
       setDeleteDialogOpen(false);
       setTestCaseToDelete(null);
     } catch (err) {
-      setDeleteError('ไม่สามารถลบ Test Case ได้: ' + (err.message || 'Unknown error'));
+      toast.error('ไม่สามารถลบ Test Case ได้: ' + (err.message || 'Unknown error'));
     } finally {
       setDeleting(false);
     }
@@ -185,12 +175,10 @@ const TestCaseManagement = () => {
         <AdminPageHeader
           title={`Test Cases: ${level?.level_name || levelId}`}
           subtitle="จัดการ Test Cases สำหรับการตรวจสอบความถูกต้องของโค้ด"
-          backPath={`/admin/levels/${numericLevelId}/edit`}
+          backPath={`/admin/levels`}
           onAddClick={() => handleOpenDialog()}
           addButtonText="เพิ่ม Test Case"
         />
-
-        <ErrorAlert message={deleteError} />
 
         <div className="bg-white rounded-lg shadow-md overflow-hidden mt-4">
           {loading ? (
@@ -214,8 +202,6 @@ const TestCaseManagement = () => {
                 {editingTestCase ? 'แก้ไข Test Case' : 'เพิ่ม Test Case ใหม่'}
               </DialogTitle>
             </DialogHeader>
-
-            <ErrorAlert message={saveError} />
 
             <div className="grid grid-cols-1 gap-4">
               <div className="grid grid-cols-2 gap-4">

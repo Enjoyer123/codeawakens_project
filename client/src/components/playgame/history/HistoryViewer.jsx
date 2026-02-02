@@ -75,26 +75,6 @@ const HistoryViewer = ({
                                     {currentProgress.text_code}
                                 </pre>
                             </div>
-                        ) : currentProgress?.blockly_code ? (
-                            <div className="flex-1 min-h-0 bg-[#2d1b0e]/10 rounded-xl border border-[#8b6f47]/30 p-6 flex flex-col">
-                                <div className="flex-1 overflow-auto">
-                                    <pre className="font-mono text-sm text-black whitespace-pre-wrap leading-relaxed">
-                                        {(() => {
-                                            try {
-
-                                                const headless = new Blockly.Workspace();
-                                                const xml = Blockly.utils.xml.textToDom(currentProgress.blockly_code);
-                                                Blockly.Xml.domToWorkspace(xml, headless);
-                                                const code = javascriptGenerator.workspaceToCode(headless);
-                                                headless.dispose();
-                                                return code || "// (No code generated)";
-                                            } catch (e) {
-                                                return "// (Failed to generate code from blocks)";
-                                            }
-                                        })()}
-                                    </pre>
-                                </div>
-                            </div>
                         ) : (
                             <div className="flex-1 flex items-center justify-center text-[#2d1b0e]/50 italic bg-[#d4b896]/20 border border-[#8b6f47]/20 rounded-xl">
                                 ไม่มีข้อมูล Text Code ในด่านนี้

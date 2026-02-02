@@ -89,7 +89,7 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, blocklyXml, tex
               </h2>
 
               <button onClick={handleNavigateAway} className="text-[#5d4037] hover:text-red-600 hover:scale-110 transition-transform font-bold text-xl">
-                ✕
+                X
               </button>
             </div>
 
@@ -234,13 +234,12 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, blocklyXml, tex
               </div>
             </div>
 
-            {/* === C. Footer Buttons (AGAIN / NEXT) === */}
+            {/* === C. Footer Buttons (AGAIN / HOME) === */}
             <div className="flex justify-center gap-4 shrink-0 pb-12 items-end">
 
-              {/* ปุ่ม AGAIN */}
+              {/* ปุ่ม AGAIN (Restart) */}
               <button
-                onClick={handleNavigateAway}
-                // ✅ ปรับขนาด: w-5/12 (กว้างเกือบครึ่ง) และ max-w จำกัดไม่ให้ใหญ่เกิน
+                onClick={() => window.location.reload()}
                 className="group relative w-5/12 max-w-[220px] transition-transform hover:scale-105 active:translate-y-1"
               >
                 {/* 1. รูปหลัก (Base) */}
@@ -265,34 +264,32 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, blocklyXml, tex
                 </span>
               </button>
 
-              {/* ปุ่ม NEXT (แสดงเฉพาะตอนชนะ) */}
-              {gameResult === 'victory' && (
-                <button
-                  onClick={handleNavigateAway}
-                  className="group relative w-5/12 max-w-[220px] transition-transform hover:scale-105 active:translate-y-1"
-                >
-                  {/* 1. รูปหลัก */}
-                  <img
-                    src="/button.png"
-                    alt="Button Normal"
-                    className="block w-full h-auto"
-                    style={{ imageRendering: 'pixelated' }}
-                  />
+              {/* ปุ่ม HOME (Map Select) */}
+              <button
+                onClick={() => navigate('/user/mapselect')}
+                className="group relative w-5/12 max-w-[220px] transition-transform hover:scale-105 active:translate-y-1"
+              >
+                {/* 1. รูปหลัก */}
+                <img
+                  src="/button.png"
+                  alt="Button Normal"
+                  className="block w-full h-auto"
+                  style={{ imageRendering: 'pixelated' }}
+                />
 
-                  {/* 2. รูป Hover */}
-                  <img
-                    src="/buttonhover.png"
-                    alt="Button Hover"
-                    className="absolute inset-0 w-full h-full opacity-0 group-hover:opacity-100 transition-opacity duration-100"
-                    style={{ imageRendering: 'pixelated' }}
-                  />
+                {/* 2. รูป Hover */}
+                <img
+                  src="/buttonhover.png"
+                  alt="Button Hover"
+                  className="absolute inset-0 w-full h-full opacity-0 group-hover:opacity-100 transition-opacity duration-100"
+                  style={{ imageRendering: 'pixelated' }}
+                />
 
-                  {/* 3. Text */}
-                  <span className="absolute inset-0 flex items-center justify-center pb-1 text-[#fdf6e3] group-hover:text-white font-bold text-sm sm:text-lg drop-shadow-md font-pixel uppercase">
-                    NEXT
-                  </span>
-                </button>
-              )}
+                {/* 3. Text */}
+                <span className="absolute inset-0 flex items-center justify-center pb-1 text-[#fdf6e3] group-hover:text-white font-bold text-sm sm:text-lg drop-shadow-md font-pixel uppercase">
+                  HOME
+                </span>
+              </button>
 
             </div>
 

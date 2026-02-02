@@ -356,18 +356,46 @@ export function usePatternAnalysis({
       }
     };
 
-    workspace.addChangeListener(analyzePattern);
+    // Debounce logic for pattern analysis
+    const onWorkspaceChange = (event) => {
+      // Filter out UI events (clicks, scrolling, category opening, selections)
+      // We only care about code structure changes: create, delete, move, change
+      if (
+        event.type === Blockly.Events.UI ||
+        event.type === Blockly.Events.CLICK ||
+        event.type === Blockly.Events.VIEWPORT_CHANGE ||
+        event.type === Blockly.Events.SELECTED ||
+        event.type === 'drag' // Some versions emit custom drag events
+      ) {
+        return;
+      }
 
-    // We want to run analysis immediately when:
-    // 1. Workspace is loaded (mount)
-    // 2. hintOpen toggles (to update highlights)
-    // 3. But we DON'T want to re-attach the listener constantly for other prop changes
+      // Special case: If it's a move event but only visually (not changing parent/connection), we might want to ignore it?
+      // But in Blockly, a move that snaps effectively changes connection.
+      // Let's stick to basic UI filtering first.
+
+      if (processingRef.current) {
+        clearTimeout(processingRef.current);
+      }
+
+      processingRef.current = setTimeout(() => {
+        analyzePattern();
+      }, 500); // Wait 500ms after last change stops
+    };
+
+    workspace.addChangeListener(onWorkspaceChange);
+
+    // Run immediately on sensitive updates (like hint open) or mount
+    // But avoid running if we just mounted and there are no blocks to avoid flashing
     analyzePattern();
 
     return () => {
       if (workspace && workspace.removeChangeListener) {
-        workspace.removeChangeListener(analyzePattern);
+        workspace.removeChangeListener(onWorkspaceChange);
+      }
+      if (processingRef.current) {
+        clearTimeout(processingRef.current);
       }
     };
-  }, [blocklyLoaded, workspaceRef.current, hintOpen, goodPatterns]); // Added goodPatterns to dependencies
+  }, [blocklyLoaded, workspaceRef.current, hintOpen, goodPatterns]);
 }
