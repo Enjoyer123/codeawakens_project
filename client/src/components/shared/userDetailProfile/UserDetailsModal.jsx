@@ -10,15 +10,15 @@ import UserDetailsContent from './UserDetailsContent';
 
 const UserDetailsModal = ({ open, onOpenChange, userId, userName, allowEdit = false, onUpdateSuccess }) => {
   return (
-    
+
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-auto flex flex-col p-0">
-        
-        
-        <div className="flex-1 relative">
-           
 
-           <div className="relative z-10 p-8">
+
+        <div className="flex-1 relative">
+
+
+          <div className="relative z-10 p-8">
             {userId ? (
               <UserDetailsContent
                 userId={userId}
@@ -33,7 +33,7 @@ const UserDetailsModal = ({ open, onOpenChange, userId, userName, allowEdit = fa
           </div>
         </div>
 
-     
+
       </DialogContent>
     </Dialog>
   );

@@ -19,6 +19,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
+import PageError from '@/components/shared/Error/PageError';
+
 const TestCaseManagement = () => {
   const { getToken } = useAuth();
   const navigate = useNavigate();
@@ -34,13 +36,16 @@ const TestCaseManagement = () => {
     error: queryError
   } = useTestCasesByLevel(numericLevelId);
 
+  if (isError) {
+    return <PageError message={queryError?.message} title="Failed to load test cases" />;
+  }
+
   const createTestCaseMutation = useCreateTestCase();
   const updateTestCaseMutation = useUpdateTestCase();
   const deleteTestCaseMutation = useDeleteTestCase();
 
   // Derived State
   const testCases = testCasesData || [];
-  const error = isError ? (queryError?.message || 'Failed to load test cases') : null;
 
   // Dialog & Form States
 
@@ -185,7 +190,6 @@ const TestCaseManagement = () => {
           addButtonText="เพิ่ม Test Case"
         />
 
-        <ErrorAlert message={error} />
         <ErrorAlert message={deleteError} />
 
         <div className="bg-white rounded-lg shadow-md overflow-hidden mt-4">
@@ -364,11 +368,6 @@ const TestCaseManagement = () => {
           onConfirm={handleDeleteConfirm}
           itemName={testCaseToDelete?.test_case_name}
           title="ยืนยันการลบ Test Case"
-          description={
-            <>
-              คุณแน่ใจหรือไม่ว่าต้องการลบ Test Case <strong>{testCaseToDelete?.test_case_name}</strong>?
-            </>
-          }
           deleting={deleting}
         />
       </div>

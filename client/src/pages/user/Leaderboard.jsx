@@ -1,31 +1,18 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@clerk/clerk-react';
-import { fetchLeaderboard } from '../../services/api/leaderboardService';
+import { useLeaderboard } from '../../services/hooks/useLeaderboard';
 import PageLoader from '../../components/shared/Loading/PageLoader';
 import { getImageUrl } from '@/utils/imageUtils';
+import PageError from '../../components/shared/Error/PageError';
 
 const Leaderboard = () => {
-    const { getToken } = useAuth();
-
-    const { data: leaderboard, isLoading, isError, error } = useQuery({
-        queryKey: ['leaderboard'],
-        queryFn: () => fetchLeaderboard(getToken),
-    });
+    const { data: leaderboard, isLoading, isError, error } = useLeaderboard();
 
     if (isLoading) {
         return <PageLoader message="Loading Rankings..." />;
     }
 
     if (isError) {
-        return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">
-                <div className="text-center">
-                    <p className="text-xl text-red-400 mb-2">Failed to load leaderboard</p>
-                    <p className="text-sm text-gray-400">{error.message}</p>
-                </div>
-            </div>
-        );
+        return <PageError message={error?.message} title="Failed to load leaderboard" />;
     }
 
     return (

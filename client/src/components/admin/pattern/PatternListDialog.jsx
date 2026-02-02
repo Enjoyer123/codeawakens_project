@@ -10,8 +10,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Plus, Trash2, Loader, Edit } from 'lucide-react';
+import { Plus, Trash2, Loader, Pencil, Puzzle } from 'lucide-react';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
+import PatternInfoDialog from '@/components/admin/pattern/PatternInfoDialog';
 import ContentLoader from '@/components/shared/Loading/ContentLoader';
 
 const PatternListDialog = ({ open, onOpenChange, levelId, levelName }) => {
@@ -19,6 +20,10 @@ const PatternListDialog = ({ open, onOpenChange, levelId, levelName }) => {
   const navigate = useNavigate();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [patternToDelete, setPatternToDelete] = useState(null);
+
+  // Info Edit State
+  const [infoDialogOpen, setInfoDialogOpen] = useState(false);
+  const [patternToEditInfo, setPatternToEditInfo] = useState(null);
 
   // Use TanStack Query hooks
   const { data: patternsData, isLoading, error: queryError } = usePatterns(levelId);
@@ -49,8 +54,13 @@ const PatternListDialog = ({ open, onOpenChange, levelId, levelName }) => {
     navigate(`/admin/levels/${levelId}/patterns/create`);
   };
 
-  const handleEditPattern = (patternId) => {
+  const handleEditPatternLogic = (patternId) => {
     navigate(`/admin/levels/${levelId}/patterns/${patternId}/edit`);
+  };
+
+  const handleEditInfo = (patternId) => {
+    setPatternToEditInfo(patternId);
+    setInfoDialogOpen(true);
   };
 
   return (
@@ -122,21 +132,34 @@ const PatternListDialog = ({ open, onOpenChange, levelId, levelName }) => {
                         </p>
                       )}
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex bg-gray-50 p-1 rounded-md gap-1">
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
-                        onClick={() => handleEditPattern(pattern.pattern_id)}
-                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        onClick={() => handleEditInfo(pattern.pattern_id)}
+                        className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 h-8 px-2"
+                        title="แก้ไขข้อมูลทั่วไป"
                       >
-                        <Edit className="h-4 w-4" />
+                        <Pencil className="h-4 w-4" />
                       </Button>
+                      <div className="w-[1px] bg-gray-200 my-1"></div>
                       <Button
-                        variant="outline"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditPatternLogic(pattern.pattern_id)}
+                        className="text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 h-8 px-2"
+                        title="แก้ไข Logic (Blockly)"
+                      >
+                        <Puzzle className="h-4 w-4" />
+                      </Button>
+                      <div className="w-[1px] bg-gray-200 my-1"></div>
+                      <Button
+                        variant="ghost"
                         size="sm"
                         onClick={() => handleDeleteClick(pattern)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="text-gray-600 hover:text-red-600 hover:bg-red-50 h-8 px-2"
                         disabled={deletePatternMutation.isPending}
+                        title="ลบ"
                       >
                         {deletePatternMutation.isPending && patternToDelete?.pattern_id === pattern.pattern_id ? (
                           <Loader className="h-4 w-4 animate-spin" />
@@ -158,9 +181,17 @@ const PatternListDialog = ({ open, onOpenChange, levelId, levelName }) => {
         onOpenChange={setDeleteDialogOpen}
         onConfirm={handleDeleteConfirm}
         title="ลบรูปแบบคำตอบ"
-        message={`คุณแน่ใจหรือไม่ว่าต้องการลบรูปแบบคำตอบ "${patternToDelete?.pattern_name}"?`}
-        isDeleting={deletePatternMutation.isPending}
+        itemName={patternToDelete?.pattern_name}
+        deleting={deletePatternMutation.isPending}
       />
+
+      {infoDialogOpen && patternToEditInfo && (
+        <PatternInfoDialog
+          open={infoDialogOpen}
+          onOpenChange={setInfoDialogOpen}
+          patternId={patternToEditInfo}
+        />
+      )}
     </>
   );
 };

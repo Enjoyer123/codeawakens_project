@@ -21,6 +21,8 @@ import { usePagination } from '@/hooks/usePagination';
 import { createDeleteErrorMessage } from '@/utils/errorHandler';
 import UserTable from '@/components/admin/user/UserTable';
 
+import PageError from '@/components/shared/Error/PageError';
+
 const UserManagement = () => {
   const { getToken } = useAuth();
   const { page, rowsPerPage, handlePageChange } = usePagination(1, 5);
@@ -33,6 +35,10 @@ const UserManagement = () => {
     isError,
     error: queryError
   } = useUsers(page, rowsPerPage, searchQuery);
+
+  if (isError) {
+    return <PageError message={queryError?.message} title="Failed to load users" />;
+  }
 
   const users = usersData?.users || [];
   const pagination = usersData?.pagination || {
@@ -56,6 +62,9 @@ const UserManagement = () => {
 
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [selectedUserForHistory, setSelectedUserForHistory] = useState(null);
+
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [resetTarget, setResetTarget] = useState(null);
 
   const handleSearchChange = useCallback((value) => {
     setSearchQuery(value);
@@ -95,16 +104,24 @@ const UserManagement = () => {
     }
   }, [userToDelete, deleteUserAsync]);
 
-  const handleResetScore = async (userId, type) => {
-    if (!window.confirm(`Are you sure you want to reset the ${type}-test score for this user?`)) return;
+  const handleResetScore = (userId, type) => {
+    setResetTarget({ userId, type });
+    setResetDialogOpen(true);
+  };
+
+  const handleResetConfirm = async () => {
+    if (!resetTarget) return;
     try {
-      await resetScoreAsync({ userId, type });
-      alert(`Reset ${type}-test score successfully`);
+      await resetScoreAsync(resetTarget);
+      // alert(`Reset ${resetTarget.type}-test score successfully`); // Removed alert for cleaner UX, standard dialog closes on success usually
+      setResetTarget(null);
+      setResetDialogOpen(false);
       // Query invalidation handles refresh
     } catch (err) {
       alert('Failed to reset: ' + err.message);
     }
   };
+
 
   const handleViewHistory = (user) => {
     setSelectedUserForHistory(user);
@@ -121,17 +138,12 @@ const UserManagement = () => {
     }
   }, [deleting]);
 
-  const getDeleteDescription = (userName) => (
-    <>
-      คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้ <strong>{userName}</strong>?
-      <br />
-      <br />
-      การกระทำนี้ไม่สามารถยกเลิกได้ และจะลบข้อมูลผู้ใช้ทั้งหมดรวมถึงข้อมูลที่เกี่ยวข้อง
-    </>
-  );
+  const handleResetDialogChange = useCallback((open) => {
+    setResetDialogOpen(open);
+    if (!open) setResetTarget(null);
+  }, []);
 
   const searchPlaceholder = 'ค้นหาผู้ใช้ (username, email, name)...';
-  const error = isError ? (queryError?.message || 'Failed to load users') : null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -140,17 +152,6 @@ const UserManagement = () => {
           title="User Management"
           subtitle="Manage users and their roles"
         />
-
-        <ErrorAlert message={error} />
-
-        {error && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-            <p className="text-yellow-800">{error}</p>
-            <p className="text-sm text-yellow-600 mt-2">
-              Note: You may need to create the /api/users endpoint on the backend.
-            </p>
-          </div>
-        )}
 
         <SearchInput
           defaultValue={searchQuery}
@@ -161,7 +162,7 @@ const UserManagement = () => {
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {loading ? (
             <LoadingState message="Loading users..." />
-          ) : users.length === 0 ? (
+          ) : usersData?.users?.length === 0 ? (
             <EmptyState
               message="ไม่พบผู้ใช้ที่ค้นหา"
               searchQuery={searchQuery}
@@ -169,7 +170,7 @@ const UserManagement = () => {
           ) : (
             <>
               <UserTable
-                users={users}
+                users={usersData?.users || []}
                 onRoleChange={handleRoleChange}
                 onViewDetails={handleViewDetails}
                 onViewHistory={handleViewHistory}
@@ -202,10 +203,17 @@ const UserManagement = () => {
         onConfirm={handleDeleteConfirm}
         itemName={userToDelete?.username || userToDelete?.email}
         title="ยืนยันการลบผู้ใช้"
-        description={getDeleteDescription(
-          userToDelete?.username || userToDelete?.email
-        )}
         deleting={deleting}
+      />
+
+      <DeleteConfirmDialog
+        open={resetDialogOpen}
+        onOpenChange={handleResetDialogChange}
+        onConfirm={handleResetConfirm}
+        itemName={`คะแนน ${resetTarget?.type || ''} ของผู้ใช้นี้`}
+        title="ยืนยันการรีเซ็ตคะแนน"
+        confirmText="รีเซ็ต"
+        deleting={false} // Reset mutation state if available around?
       />
 
       <UserTestResultModal

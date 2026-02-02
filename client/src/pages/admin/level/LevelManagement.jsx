@@ -16,6 +16,8 @@ import { createDeleteErrorMessage } from '@/utils/errorHandler';
 import PatternListDialog from '../../../components/admin/pattern/PatternListDialog';
 import LevelTable from '@/components/admin/level/LevelTable';
 
+import PageError from '@/components/shared/Error/PageError';
+
 const LevelManagement = () => {
   const navigate = useNavigate();
   const { getToken } = useAuth(); // Still needed for auth context if any, or maybe not if hooks handle it. Hooks handle it.
@@ -32,6 +34,10 @@ const LevelManagement = () => {
     isError,
     error: levelsError
   } = useLevels(page, rowsPerPage, searchQuery);
+
+  if (isError) {
+    return <PageError message={levelsError?.message} title="Failed to load levels" />;
+  }
 
   const levels = levelsData?.levels || [];
   const pagination = levelsData?.pagination || {
@@ -86,17 +92,9 @@ const LevelManagement = () => {
     }
   }, [deleting]);
 
-  const getDeleteDescription = (levelName) => (
-    <>
-      คุณแน่ใจหรือไม่ว่าต้องการลบด่าน <strong>{levelName}</strong>?
-      <br />
-      <br />
-      การกระทำนี้ไม่สามารถยกเลิกได้ และจะลบข้อมูลด่านทั้งหมดรวมถึงข้อมูลที่เกี่ยวข้อง
-    </>
-  );
+
 
   const searchPlaceholder = 'ค้นหาด่าน (ชื่อ, คำอธิบาย)...';
-  const error = isError ? (levelsError?.message || 'Failed to load levels') : null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -107,9 +105,6 @@ const LevelManagement = () => {
           onAddClick={() => navigate('/admin/levels/create')}
           addButtonText="เพิ่มด่าน"
         />
-
-        <ErrorAlert message={error} />
-
 
         <SearchInput
           defaultValue={searchQuery}
@@ -155,7 +150,6 @@ const LevelManagement = () => {
         onConfirm={handleDeleteConfirm}
         itemName={levelToDelete?.level_name}
         title="ยืนยันการลบด่าน"
-        description={getDeleteDescription(levelToDelete?.level_name)}
         deleting={deleting}
       />
 

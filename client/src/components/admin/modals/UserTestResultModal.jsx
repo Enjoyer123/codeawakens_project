@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Loader } from '@/components/ui/loader';
 import { EmptyState } from '@/components/shared/DataTableStates';
-import { CheckCircle, XCircle, Clock, Award, Calculator } from 'lucide-react';
+import { CheckCircle, XCircle, Clock } from 'lucide-react';
 import { useUserTestHistory } from '../../../services/hooks/useAdmin';
 
 const UserTestResultModal = ({ open, onOpenChange, user }) => {
@@ -19,43 +19,6 @@ const UserTestResultModal = ({ open, onOpenChange, user }) => {
 
     const preTests = testHistory.filter(t => t.test_type === 'PreTest');
     const postTests = testHistory.filter(t => t.test_type === 'PostTest');
-
-    const calculateStats = (tests) => {
-        const total = tests.length;
-        const correct = tests.filter(t => t.is_correct).length;
-        const percentage = total > 0 ? Math.round((correct / total) * 100) : 0;
-        return { total, correct, percentage };
-    };
-
-    const SummaryCard = ({ tests }) => {
-        const { total, correct, percentage } = calculateStats(tests);
-
-        return (
-            <div className="grid grid-cols-3 gap-4 mb-6">
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 flex flex-col items-center justify-center text-center">
-                    <div className="bg-blue-100 p-2 rounded-full mb-2">
-                        <Award className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <span className="text-2xl font-bold text-blue-700">{percentage}%</span>
-                    <span className="text-xs text-blue-600 font-medium uppercase tracking-wide">Score</span>
-                </div>
-                <div className="bg-green-50 p-4 rounded-lg border border-green-100 flex flex-col items-center justify-center text-center">
-                    <div className="bg-green-100 p-2 rounded-full mb-2">
-                        <CheckCircle className="h-5 w-5 text-green-600" />
-                    </div>
-                    <span className="text-2xl font-bold text-green-700">{correct}</span>
-                    <span className="text-xs text-green-600 font-medium uppercase tracking-wide">Correct</span>
-                </div>
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 flex flex-col items-center justify-center text-center">
-                    <div className="bg-gray-100 p-2 rounded-full mb-2">
-                        <Calculator className="h-5 w-5 text-gray-600" />
-                    </div>
-                    <span className="text-2xl font-bold text-gray-700">{total}</span>
-                    <span className="text-xs text-gray-600 font-medium uppercase tracking-wide">Total Users</span>
-                </div>
-            </div>
-        );
-    };
 
     const QuestionCard = ({ record, index }) => (
         <div className={`p-4 rounded-lg border mb-3 transition-all ${record.is_correct
@@ -113,7 +76,6 @@ const UserTestResultModal = ({ open, onOpenChange, user }) => {
 
         return (
             <div className="space-y-6">
-                <SummaryCard tests={tests} />
                 <div className="space-y-1">
                     <h3 className="text-sm font-medium text-gray-500 mb-3 uppercase tracking-wider">Detailed Results</h3>
                     {tests.map((record, idx) => (

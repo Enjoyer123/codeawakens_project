@@ -4,9 +4,9 @@ import { useAuth } from '@clerk/clerk-react';
 import useUserStore from '../../store/useUserStore';
 
 import { useLevelCategories } from '../../services/hooks/useLevelCategories';
-import CategoryCard from '../../components/user/CategoryCard';
 import MapCoordinatePicker from '../../components/tools/MapCoordinatePicker';
 import PageLoader from '../../components/shared/Loading/PageLoader';
+import PageError from '../../components/shared/Error/PageError';
 
 
 
@@ -24,8 +24,11 @@ const MapSelect = () => {
     error: queryError
   } = useLevelCategories();
 
+  if (isError) {
+    return <PageError message={queryError?.message} title="Failed to fetch categories" />;
+  }
+
   const categories = categoriesData?.levelCategories || [];
-  const error = isError ? (queryError?.message || 'Failed to fetch categories') : null;
 
 
   const handleCategorySelect = (categoryId) => {
@@ -82,7 +85,7 @@ const MapSelect = () => {
       )}
 
       {/* Map Container */}
-      {!loading && !error && (
+      {!loading && (
         <div className="relative w-full max-w-5xl mx-auto shadow-2xl lg:shadow-none lg:max-w-none lg:mx-0 lg:w-full lg:h-full">
           <img
             src="/map.jpg"
@@ -135,7 +138,7 @@ const MapSelect = () => {
       )}
 
       {/* Fallback for categories without positions */}
-      {!loading && !error && categories.some(c => !c.coordinates) && (
+      {!loading && categories.some(c => !c.coordinates) && (
         <div className="p-4 bg-gray-100/90 backdrop-blur-sm grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
           <div className="col-span-full text-sm text-gray-600 font-bold mb-2 uppercase tracking-wider">Other Categories</div>
           {categories.filter(c => !c.coordinates).map(category => (
@@ -152,23 +155,8 @@ const MapSelect = () => {
         <PageLoader message="Loading map..." />
       )}
 
-      {/* Error State */}
-      {error && (
-        <div className="w-full h-screen flex items-center justify-center bg-red-50">
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded max-w-lg text-center">
-            <p className="mb-4">เกิดข้อผิดพลาด: {error}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="bg-red-500 hover:bg-red-700 text-white px-4 py-2 rounded"
-            >
-              ลองใหม่
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* No Data State */}
-      {!loading && !error && categories.length === 0 && (
+      {!loading && categories.length === 0 && (
         <div className="w-full h-screen flex items-center justify-center bg-gray-100">
           <p className="text-gray-600 font-medium">ไม่พบข้อมูลประเภทด่าน</p>
         </div>

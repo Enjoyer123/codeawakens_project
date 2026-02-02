@@ -5,7 +5,7 @@ import { API_BASE_URL } from '../../../../config/apiConfig';
 const InventoryTab = ({ userDetails, onHover }) => {
   return (
     <div className="h-full flex flex-col p-2">
-      <h3 className="text-center font-bold text-[#5C4033] mb-2 uppercase tracking-widest text-sm">inventory</h3>
+      <h3 className="text-center font-bold text-black mb-2 uppercase tracking-widest text-sm">inventory</h3>
       <div className="flex-1 p-2 overflow-y-auto profile-custom-scrollbar">
         <div className="grid grid-cols-3 gap-2">
           {userDetails.user_reward.map((userReward) => {
@@ -33,10 +33,8 @@ const InventoryTab = ({ userDetails, onHover }) => {
                     alt={item.reward_name}
                     className="w-full h-full object-contain p-1"
                   />
-                ) : item.reward_type === "sword" || item.reward_type === "weapon" ? (
-                  <span className="text-2xl drop-shadow-sm text-slate-600">⚔️</span>
                 ) : (
-                  <span className="text-[10px] font-bold text-center text-[#5C4033] leading-tight">
+                  <span className="text-xl font-bold text-center text-white leading-tight">
                     {item.reward_name}
                   </span>
                 )}

@@ -11,6 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TestTable from '@/components/admin/test/TestTable';
 import TestCreateEditModal from '@/components/admin/test/TestCreateEditModal';
 
+import PageError from '@/components/shared/Error/PageError';
+
 const TestManagement = () => {
     const { getToken } = useAuth();
 
@@ -34,6 +36,10 @@ const TestManagement = () => {
         error: queryError
     } = useTests(); // Fetches all tests by default
 
+    if (isError) {
+        return <PageError message={queryError?.message} title="Failed to load tests" />;
+    }
+
     const deleteTestMutation = useDeleteTest();
 
     // Derived State
@@ -47,7 +53,6 @@ const TestManagement = () => {
     // So it returns all tests.
     // Assuming structure is array based on `setTests(data)`.
     const tests = Array.isArray(testsData) ? testsData : (testsData?.tests || []);
-    const error = isError ? (queryError?.message || 'Failed to load tests') : null;
 
     const filteredTests = tests.filter(t =>
         t.test_type === activeTab &&
@@ -88,8 +93,6 @@ const TestManagement = () => {
                     onAddClick={() => handleOpenDialog()}
                     addButtonText="Add Question"
                 />
-
-                <ErrorAlert message={error} />
 
                 <Tabs defaultValue="PreTest" value={activeTab} onValueChange={setActiveTab} className="mt-6">
                     <TabsList>

@@ -31,6 +31,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
+import PageError from '@/components/shared/Error/PageError';
+
 const LevelHintManagement = () => {
   const { getToken } = useAuth();
   const navigate = useNavigate();
@@ -48,6 +50,10 @@ const LevelHintManagement = () => {
     error: queryError
   } = useLevelHints(numericLevelId);
 
+  if (isError) {
+    return <PageError message={queryError?.message} title="Failed to load hints" />;
+  }
+
   const createHintMutation = useCreateLevelHint();
   const updateHintMutation = useUpdateLevelHint();
   const deleteHintMutation = useDeleteLevelHint();
@@ -56,7 +62,6 @@ const LevelHintManagement = () => {
 
   // Derived State
   const allHints = hintsData || [];
-  const error = isError ? (queryError?.message || 'Failed to load hints') : null;
 
   // Client-side filtering & pagination
   const { filteredHints, pagination } = (() => {
@@ -315,7 +320,6 @@ const LevelHintManagement = () => {
           addButtonText="เพิ่ม Hint"
         />
 
-        <ErrorAlert message={error} />
         <ErrorAlert message={saveError} />
         <ErrorAlert message={deleteError} />
         <ErrorAlert message={imageError} />
@@ -429,13 +433,6 @@ const LevelHintManagement = () => {
           onConfirm={handleDeleteConfirm}
           itemName={hintToDelete?.title}
           title="ยืนยันการลบ Hint"
-          description={
-            <>
-              คุณแน่ใจหรือไม่ว่าต้องการลบ Hint <strong>{hintToDelete?.title}</strong>?
-              <br />
-              การกระทำนี้ไม่สามารถยกเลิกได้
-            </>
-          }
           deleting={deleting}
         />
 

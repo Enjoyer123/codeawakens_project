@@ -10,6 +10,7 @@ import TestResultCard from '../../components/test/TestResultCard';
 import { getImageUrl } from '@/utils/imageUtils';
 import { useTestsByType, useSubmitTest } from '../../services/hooks/useTests';
 import { useProfile } from '../../services/hooks/useProfile';
+import PageError from '../../components/shared/Error/PageError';
 
 const TestPage = () => {
   const { type } = useParams(); // 'pre' or 'post'
@@ -29,6 +30,14 @@ const TestPage = () => {
   } = useProfile();
 
   const submitTestMutation = useSubmitTest();
+
+  // Handle critical load errors (except 403 locked which is handled below)
+  if (isTestsError) {
+    const isMissingLevelsError = testsError?.response?.status === 403 && testsError?.response?.data?.missing_levels;
+    if (!isMissingLevelsError) {
+      return <PageError message={testsError?.message} title="Failed to load tests" />;
+    }
+  }
 
   // Local State
   const [answers, setAnswers] = useState({});
@@ -66,10 +75,8 @@ const TestPage = () => {
           locked: true,
           missingLevels: testsError.response.data.missing_levels
         });
-      } else {
-        // General error
-        setError('Failed to load test questions. ' + (testsError.response?.data?.message || testsError.message));
       }
+      // General errors are now handled by PageError component above
     }
   }, [isTestsError, testsError]);
 
