@@ -11,12 +11,14 @@ const UserProfile = () => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
-      <UserDetailsContent
-        allowEdit={true}
-        useProfileService={true}
-      // UserDetailsContent can handle its own refresh on interaction if needed
-      />
+    <div className="min-h-screen bg-[#120a1f] w-full flex justify-center py-8">
+      <div className="w-full max-w-5xl px-4">
+        <UserDetailsContent
+          allowEdit={true}
+          useProfileService={true}
+        // UserDetailsContent can handle its own refresh on interaction if needed
+        />
+      </div>
     </div>
   );
 };

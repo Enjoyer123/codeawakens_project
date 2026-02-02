@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import {
   useVictoryConditions,
   useCreateVictoryCondition,
@@ -17,6 +18,8 @@ import VictoryConditionFormDialog from '@/components/admin/addEditDialog/Victory
 import VictoryConditionTable from '@/components/admin/victoryCondition/VictoryConditionTable';
 import { usePagination } from '@/hooks/usePagination';
 import { createDeleteErrorMessage } from '@/utils/errorHandler';
+
+import PageError from '@/components/shared/Error/PageError';
 
 const VictoryConditionManagement = () => {
   const navigate = useNavigate();
@@ -37,6 +40,7 @@ const VictoryConditionManagement = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [victoryConditionToDelete, setVictoryConditionToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  // const [saveError, setSaveError] = useState(null);
 
   // TanStack Query Hooks
   const {
@@ -45,6 +49,10 @@ const VictoryConditionManagement = () => {
     isError,
     error: queryError
   } = useVictoryConditions(page, rowsPerPage, searchQuery);
+
+  if (isError) {
+    return <PageError message={queryError?.message} title="Failed to load victory conditions" />;
+  }
 
   const createVictoryConditionMutation = useCreateVictoryCondition();
   const updateVictoryConditionMutation = useUpdateVictoryCondition();
@@ -86,14 +94,14 @@ const VictoryConditionManagement = () => {
         is_available: true,
       });
     }
-    setSaveError(null);
+    // setSaveError(null);
     setVictoryConditionDialogOpen(true);
   }, []);
 
   const handleCloseVictoryConditionDialog = useCallback(() => {
     setVictoryConditionDialogOpen(false);
     setEditingVictoryCondition(null);
-    setSaveError(null);
+    // setSaveError(null);
     setVictoryConditionForm({
       type: '',
       description: '',
@@ -103,7 +111,7 @@ const VictoryConditionManagement = () => {
   }, []);
 
   const handleSaveVictoryCondition = useCallback(async () => {
-    setSaveError(null);
+    // setSaveError(null);
 
     const formData = {
       ...victoryConditionForm,
@@ -125,6 +133,7 @@ const VictoryConditionManagement = () => {
       return { success: true };
     } catch (err) {
       console.error(err);
+      toast.error(err.message || 'บันทึกเงื่อนไขชัยชนะไม่สำเร็จ');
       return { success: false, error: err.message };
     }
   }, [
@@ -165,9 +174,7 @@ const VictoryConditionManagement = () => {
     }
   }, [deleting]);
 
-  const getDeleteDescription = (type) =>
-    `คุณแน่ใจหรือไม่ว่าต้องการลบเงื่อนไขชัยชนะ "${type}"? ` +
-    'การกระทำนี้ไม่สามารถยกเลิกได้';
+
 
   const searchPlaceholder =
     'ค้นหาเงื่อนไขชัยชนะ (type, description, check)...';
@@ -179,8 +186,6 @@ const VictoryConditionManagement = () => {
           title="Victory Condition Management"
           subtitle="จัดการเงื่อนไขชัยชนะ"
         />
-
-        <ErrorAlert message={error} />
 
         <SearchInput
           defaultValue={searchQuery}
@@ -227,11 +232,9 @@ const VictoryConditionManagement = () => {
           open={deleteDialogOpen}
           onOpenChange={handleDeleteDialogChange}
           onConfirm={handleDeleteConfirm}
+          itemName={victoryConditionToDelete?.type}
           title="ยืนยันการลบเงื่อนไขชัยชนะ"
-          description={getDeleteDescription(victoryConditionToDelete?.type)}
-          confirmText="ลบ"
-          cancelText="ยกเลิก"
-          isLoading={deleting}
+          deleting={deleting}
         />
       </div>
     </div>

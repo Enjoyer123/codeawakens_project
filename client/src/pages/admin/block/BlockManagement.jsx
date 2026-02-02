@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { toast } from 'sonner';
 import { useAuth } from '@clerk/clerk-react'; // Still needed? Hooks handle token? Yes, but maybe unused here.
 import { useNavigate } from 'react-router-dom';
 
@@ -21,6 +22,8 @@ import { createDeleteErrorMessage } from '@/utils/errorHandler';
 import BlockTable from '@/components/admin/block/BlockTable';
 import { getImageUrl } from '@/utils/imageUtils';
 
+import PageError from '@/components/shared/Error/PageError';
+
 const BlockManagement = () => {
   // const navigate = useNavigate(); // unused?
   const { getToken } = useAuth(); // Hooks use token internally, but maybe we keep for consistency.
@@ -34,6 +37,10 @@ const BlockManagement = () => {
     isError,
     error: blocksError
   } = useBlocks(page, rowsPerPage, searchQuery);
+
+  if (isError) {
+    return <PageError message={blocksError?.message} title="Failed to load blocks" />;
+  }
 
   const blocks = blocksData?.blocks || [];
   const pagination = blocksData?.pagination || {
@@ -63,6 +70,7 @@ const BlockManagement = () => {
   // Delete states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [blockToDelete, setBlockToDelete] = useState(null);
+  // const [saveError, setSaveError] = useState(null);
 
   // Image states
   const [selectedImage, setSelectedImage] = useState(null);
@@ -127,7 +135,7 @@ const BlockManagement = () => {
   };
 
   const handleSaveBlock = useCallback(async () => {
-    setSaveError(null);
+    // setSaveError(null);
 
     const formData = {
       ...blockForm,
@@ -163,6 +171,7 @@ const BlockManagement = () => {
       return { success: false, error: 'Create block is not allowed' };
     } catch (err) {
       console.error(err);
+      toast.error(err.message || 'บันทึกบล็อกไม่สำเร็จ');
       return { success: false, error: err.message };
     }
   }, [blockForm, editingBlock, uploadImageAsync, updateBlockAsync, handleCloseBlockDialog, selectedImage]);
@@ -194,10 +203,7 @@ const BlockManagement = () => {
     }
   }, [deleting]);
 
-  const getDeleteDescription = (blockName) =>
-    `คุณแน่ใจหรือไม่ว่าต้องการลบบล็อก "${blockName}"? การกระทำนี้ไม่สามารถยกเลิกได้`;
 
-  const error = isError ? (blocksError?.message || 'Failed to load blocks') : null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -207,8 +213,6 @@ const BlockManagement = () => {
           subtitle="จัดการบล็อก"
         // Removed onAddClick and addButtonText to disable adding blocks
         />
-
-        <ErrorAlert message={error} />
 
         <SearchInput
           defaultValue={searchQuery}
@@ -259,11 +263,9 @@ const BlockManagement = () => {
           open={deleteDialogOpen}
           onOpenChange={handleDeleteDialogChange}
           onConfirm={handleDeleteConfirm}
+          itemName={blockToDelete?.block_name}
           title="ยืนยันการลบบล็อก"
-          description={getDeleteDescription(blockToDelete?.block_name)}
-          confirmText="ลบ"
-          cancelText="ยกเลิก"
-          isLoading={deleting}
+          deleting={deleting}
         />
       </div>
     </div>

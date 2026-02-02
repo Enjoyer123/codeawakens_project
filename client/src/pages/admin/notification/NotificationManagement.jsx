@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
+import { toast } from 'sonner';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import SearchInput from '@/components/admin/formFields/SearchInput';
@@ -17,6 +18,8 @@ import {
     useDeleteNotification
 } from '@/services/hooks/useNotifications';
 
+import PageError from '@/components/shared/Error/PageError';
+
 const NotificationManagement = () => {
     const { getToken } = useAuth();
     const { page, rowsPerPage, handlePageChange } = usePagination(1, 10);
@@ -29,6 +32,10 @@ const NotificationManagement = () => {
         isError,
         error: queryError
     } = useNotifications(page, rowsPerPage, searchQuery);
+
+    if (isError) {
+        return <PageError message={queryError?.message} title="Failed to load notifications" />;
+    }
 
     const notifications = notificationsData?.notifications || [];
     const pagination = notificationsData?.pagination || {
@@ -55,6 +62,7 @@ const NotificationManagement = () => {
     // Delete states
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
+    // const [saveError, setSaveError] = useState(null);
 
     const handleSearchChange = useCallback((value) => {
         setSearchQuery(value);
@@ -103,7 +111,7 @@ const NotificationManagement = () => {
     }, []);
 
     const handleSave = useCallback(async () => {
-        setSaveError(null);
+        // setSaveError(null);
 
         try {
             if (editingNotification) {
@@ -118,6 +126,7 @@ const NotificationManagement = () => {
             return { success: true };
         } catch (err) {
             console.error(err);
+            toast.error(err.message || 'บันทึกแจ้งเตือนไม่สำเร็จ');
             return { success: false, error: err.message };
         }
     }, [formData, editingNotification, updateNotificationAsync, createNotificationAsync, handleCloseDialog]);
@@ -161,10 +170,7 @@ const NotificationManagement = () => {
         }
     };
 
-    const getDeleteDescription = (title) =>
-        `คุณแน่ใจหรือไม่ว่าต้องการลบแจ้งเตือน "${title}"? การกระทำนี้ไม่สามารถยกเลิกได้`;
 
-    const error = isError ? (queryError?.message || 'Failed to load notifications') : null;
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -175,8 +181,6 @@ const NotificationManagement = () => {
                     onAddClick={() => handleOpenDialog()}
                     addButtonText="เพิ่มแจ้งเตือน"
                 />
-
-                <ErrorAlert message={error} />
 
                 <SearchInput
                     defaultValue={searchQuery}
@@ -224,11 +228,9 @@ const NotificationManagement = () => {
                     open={deleteDialogOpen}
                     onOpenChange={handleDeleteDialogChange}
                     onConfirm={handleDeleteConfirm}
+                    itemName={itemToDelete?.title}
                     title="ยืนยันการลบแจ้งเตือน"
-                    description={getDeleteDescription(itemToDelete?.title)}
-                    confirmText="ลบ"
-                    cancelText="ยกเลิก"
-                    isLoading={deleting}
+                    deleting={deleting}
                 />
             </div>
         </div>

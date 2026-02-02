@@ -22,6 +22,8 @@ import { createDeleteErrorMessage } from '@/utils/errorHandler';
 import LevelCategoryTable from '@/components/admin/levelCategory/LevelCategoryTable';
 import { getImageUrl } from '@/utils/imageUtils';
 
+import PageError from '@/components/shared/Error/PageError';
+
 const LevelCategoryManagement = () => {
   const { getToken } = useAuth(); // Keeping if needed for other things, but hooks handle tokens.
   const { page, rowsPerPage, handlePageChange } = usePagination(1, 10);
@@ -34,6 +36,10 @@ const LevelCategoryManagement = () => {
     isError,
     error: categoriesError
   } = useLevelCategories(searchQuery);
+
+  if (isError) {
+    return <PageError message={categoriesError?.message} title="Failed to load level categories" />;
+  }
 
   // Mutations
   const { mutateAsync: createCategoryAsync } = useCreateLevelCategory();
@@ -258,9 +264,7 @@ const LevelCategoryManagement = () => {
     }
   }, [deleting]);
 
-  const getDeleteDescription = (categoryName) =>
-    `คุณแน่ใจหรือไม่ว่าต้องการลบหมวดหมู่ "${categoryName}"? ` +
-    'การกระทำนี้ไม่สามารถยกเลิกได้';
+
 
   // Image Management Handlers
   const handleOpenImageDialog = useCallback((category) => {
@@ -313,8 +317,6 @@ const LevelCategoryManagement = () => {
     }
   }, [selectedCategory, deleteImageAsync]);
 
-  const error = isError ? (categoriesError?.message || 'Failed to load level categories') : null;
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -325,7 +327,6 @@ const LevelCategoryManagement = () => {
           addButtonText="เพิ่มหมวดหมู่"
         />
 
-        <ErrorAlert message={error} />
         {/* Save error moved to inside dialog usually, but here it's global? */}
         {/* The dialog component probably displays its own errors or we pass it? */}
         {/* Looking at dialog usage below, we pass `onSave`. The dialog might handle error display? */}
@@ -390,11 +391,9 @@ const LevelCategoryManagement = () => {
           open={deleteDialogOpen}
           onOpenChange={handleDeleteDialogChange}
           onConfirm={handleDeleteConfirm}
+          itemName={levelCategoryToDelete?.category_name}
           title="ยืนยันการลบหมวดหมู่"
-          description={getDeleteDescription(levelCategoryToDelete?.category_name)}
-          confirmText="ลบ"
-          cancelText="ยกเลิก"
-          isLoading={deleting}
+          deleting={deleting}
         />
       </div>
     </div>

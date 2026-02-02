@@ -1,7 +1,13 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Trash2, FileText, ClipboardList } from 'lucide-react';
+import { Eye, Trash2, FileText, ClipboardList, RotateCcw } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { getImageUrlSafe } from '@/utils/imageUtils';
 
 const UserTable = ({ users, onRoleChange, onViewDetails, onViewHistory, onDelete, onResetScore }) => {
@@ -106,26 +112,28 @@ const UserTable = ({ users, onRoleChange, onViewDetails, onViewHistory, onDelete
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
-                    <div className="flex flex-col gap-1">
-                      <Button
-                        variant="outline"
-                        size="xs"
-                        onClick={() => onResetScore(userItem.user_id, 'pre')}
-                        className="text-[10px] h-6 px-2 text-amber-600 border-amber-200 hover:bg-amber-50 hover:text-amber-700"
-                        title="Reset Pre-Test Score"
-                      >
-                        Reset Pre
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="xs"
-                        onClick={() => onResetScore(userItem.user_id, 'post')}
-                        className="text-[10px] h-6 px-2 text-amber-600 border-amber-200 hover:bg-amber-50 hover:text-amber-700"
-                        title="Reset Post-Test Score"
-                      >
-                        Reset Post
-                      </Button>
-                    </div>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-orange-600 border-orange-200 hover:bg-orange-50"
+                        >
+                          <RotateCcw className="h-4 w-4 mr-2" />
+                          Reset Score
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => onResetScore(userItem.user_id, 'pre')}>
+                          Reset Pre-Test
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onResetScore(userItem.user_id, 'post')}>
+                          Reset Post-Test
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
                   </div>
                 </td>
               </tr>

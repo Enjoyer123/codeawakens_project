@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import {
   useWeapons,
   useCreateWeapon,
@@ -21,6 +22,8 @@ import { usePagination } from '@/hooks/usePagination';
 import { getImageUrl } from '@/utils/imageUtils';
 import { createDeleteErrorMessage } from '@/utils/errorHandler';
 import WeaponTable from '@/components/admin/weapon/WeaponTable';
+
+import PageError from '@/components/shared/Error/PageError';
 
 const WeaponManagement = () => {
   const navigate = useNavigate();
@@ -54,6 +57,8 @@ const WeaponManagement = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [weaponToDelete, setWeaponToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  // const [saveError, setSaveError] = useState(null);
+  const [imageError, setImageError] = useState(null); // Added this as it seemed missing based on usage
 
   // TanStack Query Hooks
   const {
@@ -62,6 +67,10 @@ const WeaponManagement = () => {
     isError,
     error: queryError
   } = useWeapons(page, rowsPerPage, searchQuery);
+
+  if (isError) {
+    return <PageError message={queryError?.message} title="Failed to load weapons" />;
+  }
 
   const createWeaponMutation = useCreateWeapon();
   const updateWeaponMutation = useUpdateWeapon();
@@ -121,14 +130,14 @@ const WeaponManagement = () => {
         weapon_type: 'melee',
       });
     }
-    setSaveError(null);
+    // setSaveError(null);
     setWeaponDialogOpen(true);
   }, []);
 
   const handleCloseWeaponDialog = useCallback(() => {
     setWeaponDialogOpen(false);
     setEditingWeapon(null);
-    setSaveError(null);
+    // setSaveError(null);
     setWeaponForm({
       weapon_key: '',
       weapon_name: '',
@@ -140,7 +149,7 @@ const WeaponManagement = () => {
   }, []);
 
   const handleSaveWeapon = useCallback(async () => {
-    setSaveError(null);
+    // setSaveError(null);
 
     try {
       if (editingWeapon) {
@@ -155,6 +164,7 @@ const WeaponManagement = () => {
       return { success: true };
     } catch (err) {
       console.error(err);
+      toast.error(err.message || 'บันทึกอาวุธไม่สำเร็จ');
       return { success: false, error: err.message };
     }
   }, [weaponForm, editingWeapon, updateWeaponMutation, createWeaponMutation, handleCloseWeaponDialog]);
@@ -289,14 +299,7 @@ const WeaponManagement = () => {
     }
   }, [deleting]);
 
-  const getDeleteDescription = (weaponName) => (
-    <>
-      คุณแน่ใจหรือไม่ว่าต้องการลบอาวุธ <strong>{weaponName}</strong>?
-      <br />
-      <br />
-      การกระทำนี้ไม่สามารถยกเลิกได้ และจะลบข้อมูลอาวุธทั้งหมดรวมถึงรูปภาพที่เกี่ยวข้อง
-    </>
-  );
+
 
   const searchPlaceholder = 'ค้นหาอาวุธ (ชื่อ, key, คำอธิบาย)...';
 
@@ -310,7 +313,7 @@ const WeaponManagement = () => {
           addButtonText="เพิ่มอาวุธ"
         />
 
-        <ErrorAlert message={error} />
+        <ErrorAlert message={imageError} />
 
         <SearchInput
           defaultValue={searchQuery}
@@ -374,7 +377,6 @@ const WeaponManagement = () => {
           onConfirm={handleDeleteConfirm}
           itemName={weaponToDelete?.weapon_name}
           title="ยืนยันการลบอาวุธ"
-          description={getDeleteDescription(weaponToDelete?.weapon_name)}
           deleting={deleting}
         />
       </div>

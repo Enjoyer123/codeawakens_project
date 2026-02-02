@@ -2,53 +2,35 @@ import { Outlet, useLocation } from "react-router";
 import Navbar from '../components/shared/navbar/Navbar';
 import useUserStore from '../store/useUserStore';
 import { useAuth } from '@clerk/clerk-react';
-import { useEffect, useState } from 'react';
-import { fetchUserProfile } from '../services/profileService';
+import { useProfile } from '../services/hooks/useProfile';
+import { useEffect } from 'react';
 import PageLoader from '../components/shared/Loading/PageLoader';
 
 const NavbarWrapper = () => {
   const { role, setRole, setScores } = useUserStore();
-  const { isSignedIn, isLoaded, getToken } = useAuth();
-  // If we are signed in but role is missing, we are loading. 
-  // If not loaded yet, we treat as loading (or let isLoaded handle it).
-  // But strictly for roleLoading:
-  const [roleLoading, setRoleLoading] = useState(() => {
-    if (!isLoaded) return true;
-    if (isSignedIn && role === null) return true;
-    return false;
-  });
+  const { isSignedIn, isLoaded } = useAuth();
   const { pathname } = useLocation();
 
+  // Use the standardized hook for profile data
+  const {
+    data: profile,
+    isLoading: isProfileLoading
+  } = useProfile();
+
+  // Sync profile data to store when available
   useEffect(() => {
-    const fetchRole = async () => {
-      if (!isLoaded) {
-        setRoleLoading(true);
-        return;
-      }
+    if (profile && profile.user) {
+      setRole(profile.user.role);
+      setScores(profile.user.pre_score, profile.user.post_score);
+    } else if (isLoaded && !isSignedIn) {
+      // Clear role if not signed in
+      setRole(null);
+    }
+  }, [profile, isSignedIn, isLoaded, setRole, setScores]);
 
-      if (isSignedIn && role === null) {
-        try {
-          const profile = await fetchUserProfile(getToken);
-          setRole(profile.role);
-          setScores(profile.pre_score, profile.post_score);
-        } catch (error) {
-          console.error('Failed to fetch user role:', error);
-        } finally {
-          setRoleLoading(false);
-        }
-      } else if (!isSignedIn) {
-        setRole(null);
-        setRoleLoading(false);
-      } else if (isSignedIn && role !== null) {
-        setRoleLoading(false);
-      }
-    };
-
-    fetchRole();
-  }, [isSignedIn, isLoaded, role, getToken, setRole]);
-
-  // รอให้ Clerk และ role โหลดเสร็จก่อน
-  const isLoading = !isLoaded || roleLoading;
+  // Combined loading state
+  // We wait for Clerk (isLoaded) and if signed in, wait for Profile (isProfileLoading)
+  const isLoading = !isLoaded || (isSignedIn && isProfileLoading);
 
   // ถ้ายังโหลดอยู่ ให้ส่ง navItems ว่าง
   if (isLoading) {

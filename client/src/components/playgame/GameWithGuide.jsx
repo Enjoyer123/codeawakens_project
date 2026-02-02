@@ -1,6 +1,5 @@
 import React from 'react';
 import GuidePopup from './GuidePopup';
-import { useGuideSystem } from '../../hooks/useGuideSystem';
 
 const GameWithGuide = ({ levelData, children, levelName, showGuide, guides, closeGuide }) => {
 

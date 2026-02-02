@@ -24,8 +24,8 @@ import PageLoader from '@/components/shared/Loading/PageLoader';
 import ContentLoader from '@/components/shared/Loading/ContentLoader';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import PatternBlocklyWorkspace from '@/components/admin/pattern/PatternBlocklyWorkspace';
-
 import { API_BASE_URL } from '../../../config/apiConfig';
+import PageError from '@/components/shared/Error/PageError';
 
 const StarterCreateEdit = () => {
   const { levelId } = useParams();
@@ -349,14 +349,7 @@ const StarterCreateEdit = () => {
   // Combined error check
   if (isError || blocklyInitError) {
     const errorMsg = error?.message || blocklyInitError || 'Something went wrong';
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center text-red-600">
-          <div className="text-lg mb-2">❌ {errorMsg}</div>
-          <Button onClick={() => navigate(-1)}>กลับ</Button>
-        </div>
-      </div>
-    );
+    return <PageError message={errorMsg} title="Failed to load starter blocks" />;
   }
 
   return (

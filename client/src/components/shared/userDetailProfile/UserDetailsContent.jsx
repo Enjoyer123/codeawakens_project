@@ -149,7 +149,7 @@ const UserDetailsContent = ({ userId, allowEdit = false, onUpdateSuccess, initia
                 Hover item to view
               </div>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-start gap-3 animate-in fade-in duration-200 w-full pt-2">
+              <div className="flex-1 flex flex-col items-center justify-start animate-in fade-in duration-200 w-full pt-2">
 
                 {/* 1. Image (Larger & Proportional) */}
                 <div
@@ -170,12 +170,12 @@ const UserDetailsContent = ({ userId, allowEdit = false, onUpdateSuccess, initia
                 </div>
 
                 {/* 2. Name */}
-                <h4 className="font-bold text-[#5C4033] text-sm uppercase text-center leading-tight px-1">
+                <h4 className="font-bold text-black text-xl uppercase text-center leading-tight px-1">
                   {hoveredContent.data.reward ? hoveredContent.data.reward.reward_name : (hoveredContent.data.reward_name || "")}
                 </h4>
 
                 {/* 3. Description */}
-                <div className="text-[10px] text-[#8B4513] leading-relaxed text-center opacity-80 px-2 w-full break-words">
+                <div className="text-[20px] text-white leading-relaxed text-center opacity-80 px-2 w-full break-words">
                   {hoveredContent.data.reward ? hoveredContent.data.reward.description : (hoveredContent.data.description || "No description.")}
                 </div>
               </div>

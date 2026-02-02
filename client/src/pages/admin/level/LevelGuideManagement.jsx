@@ -29,6 +29,8 @@ import {
 import { createDeleteErrorMessage } from '@/utils/errorHandler';
 import LevelGuideTable from '@/components/admin/level/LevelGuideTable';
 
+import PageError from '@/components/shared/Error/PageError';
+
 const LevelGuideManagement = () => {
   const navigate = useNavigate();
   const { getToken } = useAuth();
@@ -44,6 +46,10 @@ const LevelGuideManagement = () => {
     error: queryError
   } = useLevelGuides(numericLevelId);
 
+  if (isError) {
+    return <PageError message={queryError?.message} title="Failed to load guides" />;
+  }
+
   const createGuideMutation = useCreateGuide();
   const updateGuideMutation = useUpdateGuide();
   const deleteGuideMutation = useDeleteGuide();
@@ -52,7 +58,6 @@ const LevelGuideManagement = () => {
 
   // Derived State
   const guides = guidesData || [];
-  const error = isError ? (queryError?.message || 'Failed to load guides') : null;
   const [searchQuery, setSearchQuery] = useState('');
 
   // Guide form states
@@ -258,7 +263,6 @@ const LevelGuideManagement = () => {
           addButtonText="เพิ่ม Guide"
         />
 
-        <ErrorAlert message={error} />
         <ErrorAlert message={deleteError} />
         <ErrorAlert message={saveError} />
         <ErrorAlert message={imageError} />
@@ -349,11 +353,6 @@ const LevelGuideManagement = () => {
           onConfirm={handleDeleteConfirm}
           itemName={guideToDelete?.title}
           title="ยืนยันการลบ Guide"
-          description={
-            <>
-              คุณแน่ใจหรือไม่ว่าต้องการลบ Guide <strong>{guideToDelete?.title}</strong>?
-            </>
-          }
           deleting={deleting}
         />
 

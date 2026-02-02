@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Edit, Trash2, Image as ImageIcon } from 'lucide-react';
+import { toast } from 'sonner';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import SearchInput from '@/components/admin/formFields/SearchInput';
@@ -27,6 +28,8 @@ import {
   useDeleteRewardFrame
 } from '@/services/hooks/useRewards';
 
+import PageError from '@/components/shared/Error/PageError';
+
 const RewardManagement = () => {
   const navigate = useNavigate();
   const { getToken } = useAuth();
@@ -40,6 +43,10 @@ const RewardManagement = () => {
     isError,
     error: queryError
   } = useRewards(page, rowsPerPage, searchQuery);
+
+  if (isError) {
+    return <PageError message={queryError?.message} title="Failed to load rewards" />;
+  }
 
   const { data: levelsData } = useRewardLevels();
   const levels = levelsData || [];
@@ -81,6 +88,10 @@ const RewardManagement = () => {
   const [uploadingFrame, setUploadingFrame] = useState(null);
   const [deletingFrame, setDeletingFrame] = useState(null);
 
+  // Error states
+  const [imageError, setImageError] = useState(null);
+  // const [saveError, setSaveError] = useState(null); // Removed in favor of toast
+
   const handleSearchChange = useCallback((value) => {
     setSearchQuery(value);
     handlePageChange(1);
@@ -108,14 +119,14 @@ const RewardManagement = () => {
         is_automatic: false,
       });
     }
-    setSaveError(null);
+    // setSaveError(null);
     setRewardDialogOpen(true);
   }, []);
 
   const handleCloseRewardDialog = useCallback(() => {
     setRewardDialogOpen(false);
     setEditingReward(null);
-    setSaveError(null);
+    // setSaveError(null);
     setRewardForm({
       level_id: '',
       reward_type: 'weapon',
@@ -143,6 +154,7 @@ const RewardManagement = () => {
       return { success: true };
     } catch (err) {
       console.error(err);
+      toast.error(err.message || 'บันทึกรางวัลไม่สำเร็จ');
       return { success: false, error: err.message };
     }
   }, [rewardForm, editingReward, updateRewardAsync, createRewardAsync, handleCloseRewardDialog]);
@@ -299,17 +311,6 @@ const RewardManagement = () => {
 
   const dialogReward = activeRewardData || selectedReward;
 
-  const getDeleteDescription = (rewardName) => (
-    <>
-      คุณแน่ใจหรือไม่ว่าต้องการลบรางวัล <strong>{rewardName}</strong>?
-      <br />
-      <br />
-      การกระทำนี้ไม่สามารถยกเลิกได้ และจะลบข้อมูลรางวัลทั้งหมดรวมถึงข้อมูลที่เกี่ยวข้อง
-    </>
-  );
-
-  const error = isError ? (queryError?.message || 'Failed to load rewards') : null;
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -320,7 +321,7 @@ const RewardManagement = () => {
           addButtonText="เพิ่มรางวัล"
         />
 
-        <ErrorAlert message={error} />
+        <ErrorAlert message={imageError} />
 
         <SearchInput
           defaultValue={searchQuery}
@@ -383,7 +384,6 @@ const RewardManagement = () => {
           onConfirm={handleDeleteConfirm}
           itemName={rewardToDelete?.reward_name}
           title="ยืนยันการลบรางวัล"
-          description={getDeleteDescription(rewardToDelete?.reward_name)}
           deleting={deleting}
         />
       </div>

@@ -6,7 +6,7 @@ const QuestLogTab = ({ userDetails, onHover }) => {
 
   return (
     <div className="h-full flex flex-col p-2">
-      <h3 className="text-center font-bold text-[#5C4033] mb-2 uppercase tracking-widest text-sm">Adventure Log</h3>
+      <h3 className="text-center font-bold text-black mb-2 uppercase tracking-widest text-sm">Adventure Log</h3>
       {userDetails.user_progress.length === 0 ? (
         <div className="text-center py-10 text-slate-500 text-sm italic">
           No adventures yet.
