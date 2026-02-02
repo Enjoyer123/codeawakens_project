@@ -83,6 +83,32 @@ export const updateLevelCategory = async (getToken, categoryId, levelCategoryDat
   }
 };
 
+// Update level category coordinates
+export const updateLevelCategoryCoordinates = async (getToken, categoryId, coordinates) => {
+  try {
+    const token = await getToken();
+    const response = await fetch(`${API_BASE_URL}/api/level-categories/coordinates/${categoryId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ coordinates }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Failed to update coordinates' }));
+      throw new Error(errorData.message || 'Failed to update coordinates');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error updating coordinates:', error);
+    throw error;
+  }
+};
+
 // Delete level category
 export const deleteLevelCategory = async (getToken, categoryId) => {
   try {

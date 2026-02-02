@@ -52,12 +52,9 @@ const NotificationManagement = () => {
         expires_at: '',
         is_active: false,
     });
-    const [saveError, setSaveError] = useState(null);
-
     // Delete states
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
-    const [deleteError, setDeleteError] = useState(null);
 
     const handleSearchChange = useCallback((value) => {
         setSearchQuery(value);
@@ -90,14 +87,13 @@ const NotificationManagement = () => {
                 is_active: false,
             });
         }
-        setSaveError(null);
         setDialogOpen(true);
     }, []);
 
     const handleCloseDialog = useCallback(() => {
         setDialogOpen(false);
         setEditingNotification(null);
-        setSaveError(null);
+        setEditingNotification(null);
         setFormData({
             title: '',
             message: '',
@@ -121,15 +117,13 @@ const NotificationManagement = () => {
             handleCloseDialog();
             return { success: true };
         } catch (err) {
-            const errorMessage = 'ไม่สามารถบันทึกข้อมูลได้: ' + (err.message || 'Unknown error');
-            setSaveError(errorMessage);
-            return { success: false, error: errorMessage };
+            console.error(err);
+            return { success: false, error: err.message };
         }
     }, [formData, editingNotification, updateNotificationAsync, createNotificationAsync, handleCloseDialog]);
 
     const handleDeleteClick = useCallback((item) => {
         setItemToDelete(item);
-        setDeleteError(null);
         setDeleteDialogOpen(true);
     }, []);
 
@@ -137,13 +131,8 @@ const NotificationManagement = () => {
         if (!itemToDelete) return;
 
         try {
-            setDeleteError(null);
-            await deleteNotificationAsync(itemToDelete.notification_id);
-            setDeleteDialogOpen(false);
-            setItemToDelete(null);
         } catch (err) {
-            const errorMessage = createDeleteErrorMessage('notification', err);
-            setDeleteError(errorMessage);
+            console.error(err);
         }
     }, [itemToDelete, deleteNotificationAsync]);
 
@@ -152,7 +141,6 @@ const NotificationManagement = () => {
             setDeleteDialogOpen(open);
             if (!open) {
                 setItemToDelete(null);
-                setDeleteError(null);
             }
         }
     }, [deleting]);
@@ -170,7 +158,6 @@ const NotificationManagement = () => {
             // Optional: Show success toast
         } catch (err) {
             console.error("Failed to send notification:", err);
-            alert('Failed to send notification: ' + (err.message || 'Unknown error'));
         }
     };
 
@@ -190,8 +177,6 @@ const NotificationManagement = () => {
                 />
 
                 <ErrorAlert message={error} />
-                <ErrorAlert message={saveError} />
-                <ErrorAlert message={deleteError} />
 
                 <SearchInput
                     defaultValue={searchQuery}

@@ -42,6 +42,7 @@ model LevelCategory {
   color_code       String
   block_key        Json?
   background_image String?
+  coordinates      Json?    // { "top": 20.44, "left": 73.3 }
   levels           Level[]
   category_items   LevelCategoryItem[]
 
@@ -77,8 +78,8 @@ model LevelVictoryCondition {
   level_victory_condition_id Int              @id @default(autoincrement())
   level_id                   Int
   victory_condition_id       Int
-  level                      Level            @relation(fields: [level_id], references: [level_id])
-  victory_condition          VictoryCondition @relation(fields: [victory_condition_id], references: [victory_condition_id])
+  level                      Level            @relation(fields: [level_id], references: [level_id], onDelete: Cascade)
+  victory_condition          VictoryCondition @relation(fields: [victory_condition_id], references: [victory_condition_id], onDelete: Cascade)
 
   @@unique([level_id, victory_condition_id])
   @@map("level_victory_conditions")
@@ -96,7 +97,7 @@ model LevelTestCase {
   display_order   Int      @default(0)
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
-  level           Level    @relation(fields: [level_id], references: [level_id])
+  level           Level    @relation(fields: [level_id], references: [level_id], onDelete: Cascade)
 
   @@map("level_test_cases")
 }
@@ -114,6 +115,7 @@ model Level {
   required_for_post_test   Boolean                 @default(false)
   textcode                 Boolean
   background_image         String
+  coordinates              Json?    // { "top": 28.44, "left": 30.27 }
   start_node_id            Int?
   goal_node_id             Int?
   goal_type                String?
@@ -139,7 +141,7 @@ model Level {
   level_blocks             LevelBlock[]
   level_victory_conditions LevelVictoryCondition[]
   level_test_cases         LevelTestCase[]
-  category                 LevelCategory           @relation(fields: [category_id], references: [category_id])
+  category                 LevelCategory           @relation(fields: [category_id], references: [category_id], onDelete: Cascade)
   creator                  User                    @relation("LevelCreator", fields: [created_by], references: [user_id])
   patterns                 Pattern[]
   rewards                  Reward[]
@@ -175,9 +177,9 @@ model Pattern {
   count           Int?
   created_at      DateTime      @default(now())
   updated_at      DateTime      @updatedAt
-  level           Level         @relation(fields: [level_id], references: [level_id])
+  level           Level         @relation(fields: [level_id], references: [level_id], onDelete: Cascade)
   pattern_type    PatternType   @relation(fields: [pattern_type_id], references: [pattern_type_id])
-  weapon          Weapon?       @relation(fields: [weapon_id], references: [weapon_id])
+  weapon          Weapon?       @relation(fields: [weapon_id], references: [weapon_id], onDelete: SetNull)
 
   @@map("patterns")
 }
@@ -192,7 +194,7 @@ model LevelHint {
   is_active     Boolean        @default(true)
   created_at    DateTime       @default(now())
   updated_at    DateTime       @updatedAt
-  level         Level          @relation(fields: [level_id], references: [level_id])
+  level         Level          @relation(fields: [level_id], references: [level_id], onDelete: Cascade)
   hint_images   LevelHintImage[]
 
   @@map("level_hints")
@@ -205,7 +207,7 @@ model LevelHintImage {
   path_file     String
   created_at    DateTime   @default(now())
   updated_at    DateTime   @updatedAt
-  hint          LevelHint  @relation(fields: [hint_id], references: [hint_id])
+  hint          LevelHint  @relation(fields: [hint_id], references: [hint_id], onDelete: Cascade)
 
   @@map("level_hint_images")
 }
@@ -228,8 +230,8 @@ model UserProgress {
   completed_at        DateTime?
   hp_remaining        Int?
   user_big_o          BigO?     // BigO ที่ผู้เล่นเลือกสำหรับด่านนี้ (จะใช้คำนวนคะแนนในอนาคต)
-  level               Level     @relation(fields: [level_id], references: [level_id])
-  user                User      @relation(fields: [user_id], references: [user_id])
+  level               Level     @relation(fields: [level_id], references: [level_id], onDelete: Cascade)
+  user                User      @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 
   @@unique([user_id, level_id])
   @@map("user_progress")
@@ -244,7 +246,7 @@ model Reward {
   required_score Int
   is_automatic   Boolean      @default(false)
   frame1         String?
-  level          Level        @relation(fields: [level_id], references: [level_id])
+  level          Level        @relation(fields: [level_id], references: [level_id], onDelete: Cascade)
   user_rewards   UserReward[]
 
   @@map("rewards")
@@ -307,9 +309,9 @@ model UserReward {
   reward_id      Int
   level_id       Int
   earned_at      DateTime @default(now())
-  level          Level    @relation(fields: [level_id], references: [level_id])
-  reward         Reward   @relation(fields: [reward_id], references: [reward_id])
-  user           User     @relation(fields: [user_id], references: [user_id])
+  level          Level    @relation(fields: [level_id], references: [level_id], onDelete: Cascade)
+  reward         Reward   @relation(fields: [reward_id], references: [reward_id], onDelete: Cascade)
+  user           User     @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 
   @@map("user_rewards")
 }
@@ -335,8 +337,8 @@ model UserNotification {
   is_read              Boolean      @default(false)
   read_at              DateTime?
   created_at           DateTime     @default(now())
-  notification         Notification @relation(fields: [notification_id], references: [notification_id])
-  user                 User         @relation(fields: [user_id], references: [user_id])
+  notification         Notification @relation(fields: [notification_id], references: [notification_id], onDelete: Cascade)
+  user                 User         @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 
   @@unique([notification_id, user_id])
   @@map("user_notifications")
@@ -380,8 +382,8 @@ model LevelBlock {
   level_id       Int
   block_id       Int
   order_sequence Int?
-  block          Block @relation(fields: [block_id], references: [block_id])
-  level          Level @relation(fields: [level_id], references: [level_id])
+  block          Block @relation(fields: [block_id], references: [block_id], onDelete: Cascade)
+  level          Level @relation(fields: [level_id], references: [level_id], onDelete: Cascade)
 
   @@unique([level_id, block_id])
   @@map("level_blocks")
@@ -396,7 +398,7 @@ model Guide {
   is_active     Boolean       @default(true)
   created_at    DateTime      @default(now())
   updated_at    DateTime      @updatedAt
-  level         Level         @relation(fields: [level_id], references: [level_id])
+  level         Level         @relation(fields: [level_id], references: [level_id], onDelete: Cascade)
   guide_images  Guide_Image[]
 
   @@map("guides")
@@ -408,7 +410,7 @@ model Guide_Image {
   path_file     String
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
-  guide         Guide    @relation(fields: [guide_id], references: [guide_id])
+  guide         Guide    @relation(fields: [guide_id], references: [guide_id], onDelete: Cascade)
 
   @@map("guide_image")
 }
@@ -422,7 +424,7 @@ model Weapon_Image {
   frame          Int
   created_at     DateTime      @default(now())
   updated_at     DateTime      @updatedAt
-  weapon         Weapon        @relation(fields: [weapon_id], references: [weapon_id])
+  weapon         Weapon        @relation(fields: [weapon_id], references: [weapon_id], onDelete: Cascade)
 
   @@map("weapon_image")
 }

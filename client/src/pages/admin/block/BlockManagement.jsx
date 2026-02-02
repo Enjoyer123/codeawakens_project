@@ -60,12 +60,9 @@ const BlockManagement = () => {
     is_available: true,
     syntax_example: '',
   });
-  const [saveError, setSaveError] = useState(null);
-
   // Delete states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [blockToDelete, setBlockToDelete] = useState(null);
-  const [deleteError, setDeleteError] = useState(null);
 
   // Image states
   const [selectedImage, setSelectedImage] = useState(null);
@@ -90,7 +87,6 @@ const BlockManagement = () => {
       });
       setSelectedImage(null);
       setImagePreview(getImageUrl(block.block_image));
-      setSaveError(null);
       setBlockDialogOpen(true);
     }
     // If block is null (add mode), do nothing as we only allow edit
@@ -99,7 +95,6 @@ const BlockManagement = () => {
   const handleCloseBlockDialog = useCallback(() => {
     setBlockDialogOpen(false);
     setEditingBlock(null);
-    setSaveError(null);
     setBlockForm({
       block_key: '',
       block_name: '',
@@ -167,15 +162,13 @@ const BlockManagement = () => {
       }
       return { success: false, error: 'Create block is not allowed' };
     } catch (err) {
-      const errorMessage = 'ไม่สามารถบันทึก block ได้: ' + (err.message || 'Unknown error');
-      setSaveError(errorMessage);
-      return { success: false, error: errorMessage };
+      console.error(err);
+      return { success: false, error: err.message };
     }
   }, [blockForm, editingBlock, uploadImageAsync, updateBlockAsync, handleCloseBlockDialog, selectedImage]);
 
   const handleDeleteClick = useCallback((block) => {
     setBlockToDelete(block);
-    setDeleteError(null);
     setDeleteDialogOpen(true);
   }, []);
 
@@ -183,14 +176,12 @@ const BlockManagement = () => {
     if (!blockToDelete) return;
 
     try {
-      setDeleteError(null);
       await deleteBlockAsync(blockToDelete.block_id);
       setDeleteDialogOpen(false);
       setBlockToDelete(null);
       // Query invalidation handles refresh
     } catch (err) {
-      const errorMessage = createDeleteErrorMessage('block', err);
-      setDeleteError(errorMessage);
+      console.error(err);
     }
   }, [blockToDelete, deleteBlockAsync]);
 
@@ -199,7 +190,6 @@ const BlockManagement = () => {
       setDeleteDialogOpen(open);
       if (!open) {
         setBlockToDelete(null);
-        setDeleteError(null);
       }
     }
   }, [deleting]);
@@ -219,8 +209,6 @@ const BlockManagement = () => {
         />
 
         <ErrorAlert message={error} />
-        <ErrorAlert message={saveError} />
-        <ErrorAlert message={deleteError} />
 
         <SearchInput
           defaultValue={searchQuery}

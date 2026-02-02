@@ -207,13 +207,11 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
         <div className="space-y-2">
           <label className="text-[10px] font-bold text-gray-500 uppercase">Player Character</label>
           <select
-            value={formData.character || 'player'}
+            value={formData.character || 'main_1'}
             onChange={(e) => onFormDataChange({ ...formData, character: e.target.value })}
             className="w-full text-xs h-8 border border-gray-200 rounded-md px-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
-            <option value="player">Player (Default)</option>
-            <option value="slime">Slime</option>
-            <option value="main_1">Main 1</option>
+            <option value="main_1">Main 1 (Default)</option>
             <option value="main_2">Main 2</option>
             <option value="main_3">Main 3</option>
           </select>

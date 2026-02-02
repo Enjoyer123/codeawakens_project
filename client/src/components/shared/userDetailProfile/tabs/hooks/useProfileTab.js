@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useUpdateUsername, useUploadProfileImage, useDeleteProfileImage } from '../../../../../services/hooks/useProfile';
+import { toast } from 'sonner';
 
 export const useProfileTab = ({ userDetails, getToken, onUpdateSuccess }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -66,12 +67,12 @@ export const useProfileTab = ({ userDetails, getToken, onUpdateSuccess }) => {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('Please select an image file');
+      toast.error('Please select an image file');
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert('Image size must be less than 5MB');
+      toast.error('Image size must be less than 5MB');
       return;
     }
 

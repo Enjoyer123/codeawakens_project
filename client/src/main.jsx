@@ -14,9 +14,27 @@ if (!PUBLISHABLE_KEY) {
 // // Disable console.log to reduce noise
 // console.log = () => {};
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import { formatErrorMessage } from './utils/errorHandler'
 
 const queryClient = new QueryClient({
+  queryCache: new QueryCache({
+    onError: (error) => {
+      // Global error handler for all queries
+      console.error('Global Query Error:', error);
+      const message = formatErrorMessage(error, 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้');
+      toast.error(`เกิดข้อผิดพลาด: ${message}`);
+    },
+  }),
+  mutationCache: new MutationCache({
+    onError: (error) => {
+      // Global error handler for all mutations
+      console.error('Global Mutation Error:', error);
+      const message = formatErrorMessage(error, 'การทำรายการล้มเหลว');
+      toast.error(`เกิดข้อผิดพลาด: ${message}`);
+    },
+  }),
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false, // Optional: prevent refetch on window focus
@@ -28,10 +46,10 @@ const queryClient = new QueryClient({
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <ClerkProvider 
-        publishableKey={PUBLISHABLE_KEY} 
-        afterSignOutUrl={'/'} 
-        signUpFallbackRedirectUrl={'/auth/callback'} 
+      <ClerkProvider
+        publishableKey={PUBLISHABLE_KEY}
+        afterSignOutUrl={'/'}
+        signUpFallbackRedirectUrl={'/auth/callback'}
         signInFallbackRedirectUrl={'/auth/callback'}
       >
         <App />

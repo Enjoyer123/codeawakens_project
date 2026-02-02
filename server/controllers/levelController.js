@@ -331,6 +331,7 @@ exports.createLevel = async (req, res) => {
       required_skill_level,
       required_for_post_test,
       character,
+      coordinates,
     } = req.body;
 
     // Get user from request (set by authCheck middleware)
@@ -460,6 +461,7 @@ exports.createLevel = async (req, res) => {
         goal_node_id: goal_node_id !== null && goal_node_id !== undefined ? parseInt(goal_node_id) : null,
         goal_type: goal_type || null,
         character: character || null,
+        coordinates: parseJsonField(coordinates), // Parse and save coordinates
         nodes: parseJsonField(nodes),
         edges: parseJsonField(edges),
         monsters: parseJsonField(monsters),
@@ -565,6 +567,7 @@ exports.updateLevel = async (req, res) => {
       required_skill_level,
       required_for_post_test,
       character,
+      coordinates,
     } = req.body;
 
     const existingLevel = await prisma.level.findUnique({
@@ -631,6 +634,7 @@ exports.updateLevel = async (req, res) => {
     if (goal_node_id !== undefined) updateData.goal_node_id = goal_node_id !== null ? parseInt(goal_node_id) : null;
     if (goal_type !== undefined) updateData.goal_type = goal_type || null;
     if (character !== undefined) updateData.character = character;
+    if (coordinates !== undefined) updateData.coordinates = parseJsonField(coordinates); // Update coordinates
     if (nodes !== undefined) updateData.nodes = parseJsonField(nodes);
     if (edges !== undefined) updateData.edges = parseJsonField(edges);
     if (monsters !== undefined) updateData.monsters = parseJsonField(monsters);
@@ -787,7 +791,6 @@ exports.unlockLevel = async (req, res) => {
 
     res.json({
       message: "Level unlocked successfully",
-      level: updatedLevel,
     });
   } catch (error) {
     console.error("Error unlocking level:", error);
@@ -795,6 +798,37 @@ exports.unlockLevel = async (req, res) => {
       message: "Error unlocking level",
       error: error.message
     });
+  }
+};
+
+// Update only level coordinates
+exports.updateLevelCoordinates = async (req, res) => {
+  try {
+    const { levelId } = req.params;
+    const { coordinates } = req.body;
+
+    const level = await prisma.level.findUnique({
+      where: { level_id: parseInt(levelId) },
+    });
+
+    if (!level) {
+      return res.status(404).json({ message: "Level not found" });
+    }
+
+    const updatedLevel = await prisma.level.update({
+      where: { level_id: parseInt(levelId) },
+      data: {
+        coordinates: coordinates, // Expecting JSON object or null
+      },
+    });
+
+    res.json({
+      message: "Level coordinates updated successfully",
+      level: updatedLevel,
+    });
+  } catch (error) {
+    console.error("Error updating level coordinates:", error);
+    res.status(500).json({ message: "Error updating level coordinates", error: error.message });
   }
 };
 

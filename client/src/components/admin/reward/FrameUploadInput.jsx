@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader } from '@/components/ui/loader';
 import { Plus, X } from 'lucide-react';
+import { toast } from 'sonner';
 
 const FrameUploadInput = ({ frameNumber, onUpload, isUploading }) => {
   const [imageFile, setImageFile] = useState(null);
@@ -10,6 +11,11 @@ const FrameUploadInput = ({ frameNumber, onUpload, isUploading }) => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (file.size > 2 * 1024 * 1024) { // 2MB
+        toast.error('Image file is too large. Max size is 2MB.');
+        e.target.value = '';
+        return;
+      }
       setImageFile(file);
     }
   };

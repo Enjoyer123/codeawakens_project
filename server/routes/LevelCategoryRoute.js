@@ -13,13 +13,17 @@ const {
   deleteLevelCategory,
   uploadCategoryBackground,
   deleteCategoryBackground,
+  updateLevelCategoryCoordinates, // Added this import
 } = require("../controllers/levelCategoryController");
 
 // Level Category CRUD routes
 router.get("/level-categories", authCheck, getAllLevelCategories);
 router.get("/level-categories/:categoryId", authCheck, getLevelCategoryById);
 router.post("/level-categories", authCheck, requireAdmin, createLevelCategory);
-router.put("/level-categories/:categoryId", authCheck, requireAdmin, updateLevelCategory);
+// Update level category coordinates
+router.put("/level-categories/coordinates/:categoryId", authCheck, updateLevelCategoryCoordinates); // Changed path to match existing style
+// Update level category
+router.put("/level-categories/:categoryId", authCheck, requireAdmin, updateLevelCategory); // Reverted path and requireAdmin to original, used imported function
 router.delete("/level-categories/:categoryId", authCheck, requireAdmin, deleteLevelCategory);
 
 // Category background image routes

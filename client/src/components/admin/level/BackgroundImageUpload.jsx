@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload } from 'lucide-react';
+import { toast } from 'sonner';
 
 const BackgroundImageUpload = ({ onImageChange, backgroundImageUrl }) => {
   const fileInputRef = useRef(null);
@@ -8,6 +9,12 @@ const BackgroundImageUpload = ({ onImageChange, backgroundImageUrl }) => {
   const handleBackgroundImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        toast.error("Image file is too large. Max size is 2MB.");
+        e.target.value = ''; // Reset input
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (event) => {
         onImageChange(file, event.target.result);

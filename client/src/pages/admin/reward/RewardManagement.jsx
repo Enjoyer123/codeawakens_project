@@ -70,19 +70,16 @@ const RewardManagement = () => {
     required_score: 0,
     is_automatic: false,
   });
-  const [saveError, setSaveError] = useState(null);
 
   // Delete states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [rewardToDelete, setRewardToDelete] = useState(null);
-  const [deleteError, setDeleteError] = useState(null);
 
   // Image management states
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [selectedReward, setSelectedReward] = useState(null);
   const [uploadingFrame, setUploadingFrame] = useState(null);
   const [deletingFrame, setDeletingFrame] = useState(null);
-  const [imageError, setImageError] = useState(null);
 
   const handleSearchChange = useCallback((value) => {
     setSearchQuery(value);
@@ -145,15 +142,13 @@ const RewardManagement = () => {
       handleCloseRewardDialog();
       return { success: true };
     } catch (err) {
-      const errorMessage = 'ไม่สามารถบันทึก reward ได้: ' + (err.message || 'Unknown error');
-      setSaveError(errorMessage);
-      return { success: false, error: errorMessage };
+      console.error(err);
+      return { success: false, error: err.message };
     }
   }, [rewardForm, editingReward, updateRewardAsync, createRewardAsync, handleCloseRewardDialog]);
 
   const handleDeleteClick = useCallback((reward) => {
     setRewardToDelete(reward);
-    setDeleteError(null);
     setDeleteDialogOpen(true);
   }, []);
 
@@ -161,13 +156,11 @@ const RewardManagement = () => {
     if (!rewardToDelete) return;
 
     try {
-      setDeleteError(null);
       await deleteRewardAsync(rewardToDelete.reward_id);
       setDeleteDialogOpen(false);
       setRewardToDelete(null);
     } catch (err) {
-      const errorMessage = createDeleteErrorMessage('reward', err);
-      setDeleteError(errorMessage);
+      console.error(err);
     }
   }, [rewardToDelete, deleteRewardAsync]);
 
@@ -176,7 +169,6 @@ const RewardManagement = () => {
       setDeleteDialogOpen(open);
       if (!open) {
         setRewardToDelete(null);
-        setDeleteError(null);
       }
     }
   }, [deleting]);
@@ -329,9 +321,6 @@ const RewardManagement = () => {
         />
 
         <ErrorAlert message={error} />
-        <ErrorAlert message={saveError} />
-        <ErrorAlert message={imageError} />
-        <ErrorAlert message={deleteError} />
 
         <SearchInput
           defaultValue={searchQuery}
