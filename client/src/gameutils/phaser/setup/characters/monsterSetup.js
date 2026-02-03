@@ -128,9 +128,9 @@ export function setupMonsters(scene) {
             monsterSprite.lastAttackTime = 0;
 
             // Create health bar - larger to match bigger sprite
-            const healthBarBg = scene.add.rectangle(startPos.x, startPos.y - 40, 50, 6, 0x000000, 0.8);
+            const healthBarBg = scene.add.rectangle(startPos.x, startPos.y - 70, 50, 6, 0x000000, 0.8);
             healthBarBg.setDepth(9);
-            const healthBar = scene.add.rectangle(startPos.x, startPos.y - 40, 50, 6, 0x00ff00, 1);
+            const healthBar = scene.add.rectangle(startPos.x, startPos.y - 70, 50, 6, 0x00ff00, 1);
             healthBar.setDepth(10);
             healthBar.setOrigin(0, 0.5);
 

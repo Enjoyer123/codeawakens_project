@@ -51,7 +51,8 @@ const PatternListDialog = ({ open, onOpenChange, levelId, levelName }) => {
   };
 
   const handleAddPattern = () => {
-    navigate(`/admin/levels/${levelId}/patterns/create`);
+    setPatternToEditInfo(null); // Create mode
+    setInfoDialogOpen(true);
   };
 
   const handleEditPatternLogic = (patternId) => {
@@ -185,11 +186,12 @@ const PatternListDialog = ({ open, onOpenChange, levelId, levelName }) => {
         deleting={deletePatternMutation.isPending}
       />
 
-      {infoDialogOpen && patternToEditInfo && (
+      {(infoDialogOpen) && (
         <PatternInfoDialog
           open={infoDialogOpen}
           onOpenChange={setInfoDialogOpen}
           patternId={patternToEditInfo}
+          levelId={levelId}
         />
       )}
     </>

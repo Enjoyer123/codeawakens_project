@@ -4,6 +4,7 @@ import { useAuth } from '@clerk/clerk-react';
 import useUserStore from '../../store/useUserStore';
 
 import { useLevelCategories } from '../../services/hooks/useLevelCategories';
+import { useProfile } from '../../services/hooks/useProfile';
 import MapCoordinatePicker from '../../components/tools/MapCoordinatePicker';
 import PageLoader from '../../components/shared/Loading/PageLoader';
 import PageError from '../../components/shared/Error/PageError';
@@ -12,9 +13,22 @@ import PageError from '../../components/shared/Error/PageError';
 
 const MapSelect = () => {
   const { getToken } = useAuth();
-  const { role } = useUserStore();
+  const { role, preScore } = useUserStore();
   const navigate = useNavigate();
   const [showDevTool, setShowDevTool] = useState(false);
+
+  // Check if user needs pre-test
+  // Use direct profile fetch to adhere to backend data, preventing store race conditions on refresh
+  const { data: userProfile, isLoading: isProfileLoading } = useProfile();
+
+  // Prefer backend score if available (even if store is not yet synced)
+  const backendPreScore = userProfile?.user?.pre_score;
+  const effectivePreScore = (backendPreScore !== undefined && backendPreScore !== null)
+    ? backendPreScore
+    : preScore;
+
+  // Only block if we are NOT loading and we are sure score is missing
+  const isPretestRequired = role === 'user' && !isProfileLoading && (effectivePreScore === null || effectivePreScore === undefined);
 
   // Use TanStack Query
   const {
@@ -161,6 +175,32 @@ const MapSelect = () => {
           <p className="text-gray-600 font-medium">ไม่พบข้อมูลประเภทด่าน</p>
         </div>
       )}
+      {/* Pretest Requirement Alert - Blocking Overlay */}
+      {isPretestRequired && !loading && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full text-center border-4 border-yellow-400">
+            <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <span className="text-4xl">⚠️</span>
+            </div>
+
+            <h2 className="text-2xl font-bold text-gray-800 mb-2 font-pixel">
+              กรุณาทำแบบทดสอบ
+            </h2>
+            <p className="text-gray-600 mb-8 text-lg">
+              คุณยังไม่มีคะแนน Pre-test<br />
+              โปรดทำแบบทดสอบก่อนเข้าเล่นเกม
+            </p>
+
+            <button
+              onClick={() => navigate('/test/pre')}
+              className="w-full py-4 bg-yellow-500 hover:bg-yellow-400 text-white font-bold text-xl rounded-lg shadow-lg transform transition hover:scale-105 active:scale-95 font-pixel border-b-4 border-yellow-700"
+            >
+              ทำแบบทดสอบ Pretest
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

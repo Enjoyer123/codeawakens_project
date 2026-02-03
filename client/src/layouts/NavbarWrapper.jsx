@@ -6,7 +6,7 @@ import { useProfile } from '../services/hooks/useProfile';
 import { useEffect } from 'react';
 import PageLoader from '../components/shared/Loading/PageLoader';
 
-const NavbarWrapper = () => {
+const NavbarWrapper = (props) => {
   const { role, setRole, setScores } = useUserStore();
   const { isSignedIn, isLoaded } = useAuth();
   const { pathname } = useLocation();
@@ -100,7 +100,7 @@ const NavbarWrapper = () => {
 
   const isGamePage = pathname.startsWith('/user/mapselection/');
 
-  return <Navbar navItems={navItems} isLoading={isLoading} isGamePage={isGamePage} />;
+  return <Navbar navItems={navItems} isLoading={isLoading} isGamePage={isGamePage} {...props} />;
 };
 
 export default NavbarWrapper;

@@ -16,6 +16,13 @@ export function applyProcedureOverrides() {
             const originalRenameProcedure = Blockly.Blocks['procedures_defreturn'].renameProcedure;
             const originalCustomContextMenu = Blockly.Blocks['procedures_defreturn'].customContextMenu;
 
+            // Override init to set Thai tooltip
+            const originalInit = Blockly.Blocks['procedures_defreturn'].init;
+            Blockly.Blocks['procedures_defreturn'].init = function () {
+                if (originalInit) originalInit.call(this);
+                this.setTooltip("สร้างฟังก์ชันที่คืนค่า");
+            };
+
             // Override renameProcedure FIRST to prevent errors
             Blockly.Blocks['procedures_defreturn'].renameProcedure = function (oldName, newName) {
                 try {
@@ -135,6 +142,13 @@ export function applyProcedureOverrides() {
     try {
         // Override procedures_callreturn
         if (Blockly.Blocks['procedures_callreturn']) {
+            // Override init to set Thai tooltip
+            const originalInitCallReturn = Blockly.Blocks['procedures_callreturn'].init;
+            Blockly.Blocks['procedures_callreturn'].init = function () {
+                if (originalInitCallReturn) originalInitCallReturn.call(this);
+                this.setTooltip("เรียกใช้ฟังก์ชันและรับค่าคืน");
+            };
+
             const originalRenameProcedure = Blockly.Blocks['procedures_callreturn'].renameProcedure;
 
             if (originalRenameProcedure) {
@@ -217,6 +231,13 @@ export function applyProcedureOverrides() {
 
         // Override procedures_callnoreturn
         if (Blockly.Blocks['procedures_callnoreturn']) {
+            // Override init to set Thai tooltip
+            const originalInitCallNoReturn = Blockly.Blocks['procedures_callnoreturn'].init;
+            Blockly.Blocks['procedures_callnoreturn'].init = function () {
+                if (originalInitCallNoReturn) originalInitCallNoReturn.call(this);
+                this.setTooltip("เรียกใช้ฟังก์ชัน");
+            };
+
             const originalRenameProcedure = Blockly.Blocks['procedures_callnoreturn'].renameProcedure;
 
             if (originalRenameProcedure) {
@@ -288,6 +309,13 @@ export function applyProcedureOverrides() {
     // Override procedures_defnoreturn to fix undefined replace error
     try {
         if (Blockly.Blocks['procedures_defnoreturn']) {
+            // Override init to set Thai tooltip
+            const originalInitDefNoReturn = Blockly.Blocks['procedures_defnoreturn'].init;
+            Blockly.Blocks['procedures_defnoreturn'].init = function () {
+                if (originalInitDefNoReturn) originalInitDefNoReturn.call(this);
+                this.setTooltip("สร้างฟังก์ชันที่ไม่คืนค่า");
+            };
+
             // Store original functions before overriding
             const originalLoadExtraState = Blockly.Blocks['procedures_defnoreturn'].loadExtraState;
             const originalRenameProcedure = Blockly.Blocks['procedures_defnoreturn'].renameProcedure;
@@ -392,5 +420,18 @@ export function applyProcedureOverrides() {
         }
     } catch (e) {
         console.error('Failed to patch procedures_defnoreturn:', e);
+    }
+
+    // Override procedures_ifreturn for tooltip
+    try {
+        if (Blockly.Blocks['procedures_ifreturn']) {
+            const originalInitIfReturn = Blockly.Blocks['procedures_ifreturn'].init;
+            Blockly.Blocks['procedures_ifreturn'].init = function () {
+                if (originalInitIfReturn) originalInitIfReturn.call(this);
+                this.setTooltip("ถ้าเงื่อนไขเป็นจริง ให้คืนค่า");
+            };
+        }
+    } catch (e) {
+        console.error('Failed to patch procedures_ifreturn:', e);
     }
 }

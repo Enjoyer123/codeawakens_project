@@ -336,11 +336,11 @@ export function updateMonsters(scene, delta, isRunning, setPlayerHp, setIsGameOv
       const healthBarBg = monster.sprite.getData('healthBarBg');
       if (healthBar) {
         healthBar.x = monster.sprite.x;
-        healthBar.y = monster.sprite.y - 40;
+        healthBar.y = monster.sprite.y - 70;
       }
       if (healthBarBg) {
         healthBarBg.x = monster.sprite.x;
-        healthBarBg.y = monster.sprite.y - 40;
+        healthBarBg.y = monster.sprite.y - 70;
       }
 
       // checkPlayerInRange(monster.sprite); // ⚠️ Comment out to prevent conflict with cinematic startBattle system
@@ -411,11 +411,11 @@ export function updateMonsters(scene, delta, isRunning, setPlayerHp, setIsGameOv
         const healthBarBg = monster.sprite.getData('healthBarBg');
         if (healthBar) {
           healthBar.x = monster.sprite.x;
-          healthBar.y = monster.sprite.y - 40;
+          healthBar.y = monster.sprite.y - 70;
         }
         if (healthBarBg) {
           healthBarBg.x = monster.sprite.x;
-          healthBarBg.y = monster.sprite.y - 40;
+          healthBarBg.y = monster.sprite.y - 70;
         }
       }
     }

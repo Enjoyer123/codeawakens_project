@@ -1,18 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Play, ShoppingCart, ChevronRight, Twitter, Github, ZoomIn, Image as ImageIcon, Train, Users } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import Navbar from '../components/shared/navbar/Navbar';
+import NavbarWrapper from '@/layouts/NavbarWrapper';
 
 const Landing = () => {
   const [activeTab, setActiveTab] = useState('ALL');
 
-  const navItems = [
-    { label: 'Home', path: '/' },
-    { label: 'Contact', path: '#' },
-    { label: 'Play', path: '/user/mapselect' },
-    { label: 'Profile', path: '/user/profile' },
-    { label: 'Dashboard', path: '/admin' },
-  ];
+
 
   const features = [
     {
@@ -74,7 +68,7 @@ const Landing = () => {
       <div className="fixed inset-0 pointer-events-none z-[100] opacity-[0.03] bg-[linear-gradient(rgba(18,10,31,0)_50%,rgba(0,0,0,0.5)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]"></div>
 
       {/* Navigation */}
-      <Navbar navItems={navItems} isTransparent={true} />
+      <NavbarWrapper isTransparent={true} />
 
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">

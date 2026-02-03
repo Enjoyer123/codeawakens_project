@@ -63,6 +63,20 @@ import { setupRopePartitionBridge } from './utils/apiBridges/ropePartitionBridge
 import { updateTrainScheduleVisualsIfNeeded, updateRopePartitionVisualsIfNeeded } from './utils/apiBridges/visualUpdates';
 import ExecutionErrorModal from './ExecutionErrorModal';
 import PageLoader from '../../components/shared/Loading/PageLoader';
+import { resetDijkstraState } from '../../gameutils/blockly/graph/dijkstraStateManager';
+import { resetAntDpTableState } from '../../gameutils/blockly/algorithms/ant_dp/antDpStateManager';
+import { resetCoinChangeTableState } from '../../gameutils/blockly/algorithms/coin_change/coinChangeStateManager';
+import { resetKnapsackTableState } from '../../gameutils/blockly/algorithms/knapsack/knapsackStateManager';
+import { resetSubsetSumTableState } from '../../gameutils/blockly/algorithms/subset_sum/subsetSumStateManager';
+
+const resetAllAlgorithmStates = () => {
+  resetDijkstraState();
+  resetAntDpTableState();
+  resetCoinChangeTableState();
+  resetKnapsackTableState();
+  resetSubsetSumTableState();
+};
+
 
 /**
  * GameCore Component
@@ -400,6 +414,7 @@ const GameCore = ({
       setTextCode("");
       setCodeValidation({ isValid: false, message: "" });
       setBlocklyJavaScriptReady(false);
+      resetAllAlgorithmStates(); // Reset algorithm visual state
     }
   }, [levelId]);
 
@@ -459,6 +474,33 @@ const GameCore = ({
     }
     console.log("✅ All conditions met, calling initBlocklyAndPhaser");
     initBlocklyAndPhaser();
+
+    // Cleanup function
+    return () => {
+      console.log("🧹 Cleanup: Destroying Phaser game and Blockly workspace...");
+
+      resetAllAlgorithmStates(); // Reset algorithm visual state
+
+      if (phaserGameRef.current) {
+        try {
+          phaserGameRef.current.destroy(true);
+          phaserGameRef.current = null;
+          console.log("✅ Phaser game destroyed");
+        } catch (e) {
+          console.error("❌ Error destroying Phaser game:", e);
+        }
+      }
+
+      if (workspaceRef.current) {
+        try {
+          workspaceRef.current.dispose();
+          workspaceRef.current = null;
+          console.log("✅ Blockly workspace disposed");
+        } catch (e) {
+          console.warn("Error disposing workspace:", e);
+        }
+      }
+    };
   }, [currentLevel, enabledBlockKeySignature, blocklyRef.current]);
 
   // Handle victory condition

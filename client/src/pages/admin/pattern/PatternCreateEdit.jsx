@@ -12,15 +12,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Loader } from '@/components/ui/loader';
+import { Info } from 'lucide-react';
 import PageLoader from '@/components/shared/Loading/PageLoader';
 import ContentLoader from '@/components/shared/Loading/ContentLoader';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
-import PatternInfoForm from '@/components/admin/pattern/PatternInfoForm';
-
 // Hooks
 import { useLevel } from '../../../services/hooks/useLevel';
 import { usePattern, usePatternTypes } from '../../../services/hooks/usePattern';
-import { useWeapons } from '../../../services/hooks/useWeapons';
+// import { useWeapons } from '../../../services/hooks/useWeapons'; // Unused in this file now
 import { usePatternForm } from '../../../components/admin/pattern/hooks/usePatternForm';
 import { usePatternBlocklyManager } from '../../../components/admin/pattern/hooks/usePatternBlocklyManager';
 import { useSuppressBlocklyWarnings } from '@/components/admin/level/hooks/useSuppressBlocklyWarnings';
@@ -28,6 +27,7 @@ import { useSuppressBlocklyWarnings } from '@/components/admin/level/hooks/useSu
 const PatternCreateEdit = () => {
   const { levelId, patternId } = useParams();
   const navigate = useNavigate();
+  // IsEditMode is always true here effectively because we only come here after creating
   const isEditMode = !!patternId;
 
   useSuppressBlocklyWarnings();
@@ -35,22 +35,9 @@ const PatternCreateEdit = () => {
   // --- 1. Data Layer ---
   const { data: levelData, isLoading: isLevelLoading, error: levelError } = useLevel(levelId);
   const { data: patternData, isLoading: isPatternLoading, error: patternError } = usePattern(patternId);
-  const { data: patternTypes = [] } = usePatternTypes();
-  const { data: weaponsData } = useWeapons(1, 100);
-  const weapons = weaponsData?.weapons || [];
 
   // --- 2. View Mode ---
   const [isViewMode, setIsViewMode] = useState(false);
-
-  // --- 3. Form Management Hook ---
-  const patternForm = usePatternForm({
-    levelId,
-    patternId,
-    patternData,
-    patternTypes,
-    onSaveSuccess: () => navigate(`/admin/levels`),
-    isEditMode
-  });
 
   // --- 4. Blockly Manager Hook ---
   const blocklyManager = usePatternBlocklyManager({
@@ -60,16 +47,29 @@ const PatternCreateEdit = () => {
   });
 
   // --- 5. Handlers ---
-  const handleSaveWrapper = () => {
-    // Save current blocks to logic
+  // Re-implement simplified save using hook later in imports
+  // For now let's use the patternForm hook just for save?
+  const patternForm = usePatternForm({
+    levelId,
+    patternId,
+    patternData,
+    patternTypes: [], // Not needed for logic save
+    onSaveSuccess: () => {
+      alert('บันทึก Logic เรียบร้อย');
+      navigate(`/admin/levels/${levelId}/preview/${patternId}`);
+    },
+    isEditMode
+  });
+
+  const handleSaveLogic = () => {
     blocklyManager.saveCurrentWorkspaceToRef();
-
-    // Get latest data
-    const finalSteps = blocklyManager.stepsRef.current.slice(0, 3);
+    // User expects that saving at a specific step means "this is the end of the pattern".
+    // So we truncate any steps after the current one.
+    const finalSteps = blocklyManager.stepsRef.current.slice(0, blocklyManager.currentStepIndex + 1);
     const workspaceXml = blocklyManager.getCurrentXml();
-
     patternForm.handleSave(finalSteps, workspaceXml);
   };
+
 
   const handleCopyToBuffer = () => {
     const xmlText = blocklyManager.getCurrentXml();
@@ -106,7 +106,6 @@ const PatternCreateEdit = () => {
         );
         if (!confirmed) return;
 
-        // Note: We need to access workspace via ref within hook or pass it out
         if (blocklyManager.workspaceRef.current) {
           const xmlDom = Blockly.utils.xml.textToDom(xmlText);
           Blockly.Xml.domToWorkspace(xmlDom, blocklyManager.workspaceRef.current);
@@ -123,15 +122,15 @@ const PatternCreateEdit = () => {
   const isLoading = isLevelLoading || isPatternLoading;
   const errorObj = levelError || patternError || blocklyManager.blocklyInitError;
 
-  if (isLoading) return <PageLoader message="Loading data..." />;
+  if (isLoading) return <PageLoader message="Loading logic editor..." />;
   if (errorObj) return <div className="p-8 text-center text-red-500">เกิดข้อผิดพลาด: {errorObj.message || errorObj}</div>;
 
   return (
     <div className="flex flex-col h-screen bg-gray-50 overflow-hidden">
       <div className="flex-none p-4 bg-white shadow-sm z-10">
         <AdminPageHeader
-          title={isEditMode ? `แก้ไขรูปแบบ: ${patternForm.patternName}` : "สร้างรูปแบบคำตอบใหม่"}
-          backPath={`/admin/levels`}
+          title={`แก้ไข Logic: ${patternData?.pattern_name || 'Pattern'}`}
+          backPath={`/admin/levels`} // Optionally back to level list
           rightContent={
             <div className="flex gap-2">
               <Button
@@ -141,35 +140,33 @@ const PatternCreateEdit = () => {
                 {isViewMode ? '✏️ Edit Mode' : '👁️ View Mode'}
               </Button>
               <Button
-                onClick={handleSaveWrapper}
+                onClick={handleSaveLogic}
                 disabled={patternForm.isSaving || isViewMode}
               >
                 {patternForm.isSaving && <Loader size="sm" className="mr-2" />}
-                บันทึก
+                บันทึก Logic
               </Button>
             </div>
           }
         />
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left: Settings */}
-        <div className="w-1/3 bg-white border-r border-gray-200 overflow-y-auto p-4">
-          <PatternInfoForm
-            patternName={patternForm.patternName} setPatternName={patternForm.setPatternName}
-            patternDescription={patternForm.patternDescription} setPatternDescription={patternForm.setPatternDescription}
-            weaponId={patternForm.weaponId} setWeaponId={patternForm.setWeaponId}
-            bigO={patternForm.bigO} setBigO={patternForm.setBigO}
-            patternTypes={patternTypes}
-            weapons={weapons}
-            disabled={isViewMode}
-            isEditMode={isEditMode}
-            patternLoaded={!!patternData}
-          />
+      <div className="px-4 pb-2">
+        <div className="bg-blue-50 border border-blue-200 rounded-md p-3 flex items-start gap-3 text-blue-800 text-sm shadow-sm">
+          <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-bold mb-1">คำแนะนำการบันทึก Logic</p>
+            <p>
+              ระบบจะบันทึก Pattern ตามจำนวน Step ที่คุณทำเสร็จสิ้น ณ ขณะที่กดบันทึก <br />
+              เช่น หากคุณกดบันทึกที่ <strong>Step 1</strong> ระบบจะถือว่า Pattern นี้มีแค่ <strong>1 Part</strong> (ข้อมูลใน Step 2 และ 3 จะถูกตัดออก)
+            </p>
+          </div>
         </div>
+      </div>
 
-        {/* Right: Workspace */}
-        <div className="w-2/3 flex flex-col relative bg-gray-100">
+      <div className="flex flex-1 overflow-hidden">
+        {/* Full Width Workspace */}
+        <div className="w-full flex flex-col relative bg-gray-100">
           {/* Step Navigation */}
           <div className="bg-white p-2 border-b flex justify-between items-center px-4">
             <div className="flex items-center gap-4">
@@ -182,7 +179,6 @@ const PatternCreateEdit = () => {
                   <Select
                     value={(blocklyManager.steps[blocklyManager.currentStepIndex] && blocklyManager.steps[blocklyManager.currentStepIndex].effect) || ''}
                     onValueChange={(value) => blocklyManager.updateStepEffect(value)}
-                    disabled={isViewMode}
                   >
                     <SelectTrigger className="w-[200px] h-[40px]">
                       <SelectValue placeholder="-- No Effect --" />

@@ -1,5 +1,5 @@
 import React from 'react';
-import { History } from 'lucide-react';
+import { History, Loader2, Play, RotateCcw } from 'lucide-react';
 
 const GameControls = ({
     runCode,
@@ -30,11 +30,11 @@ const GameControls = ({
                 >
                     {gameState === "running" ? (
                         <>
-                            <span className="animate-spin">🌀</span> Running...
+                            <Loader2 className="animate-spin" size={20} /> Running...
                         </>
                     ) : (
                         <>
-                            <span>▶️</span> RUN CODE
+                            <Play size={20} fill="currentColor" /> RUN CODE
                         </>
                     )}
                 </button>
@@ -43,7 +43,7 @@ const GameControls = ({
                     onClick={() => window.location.reload()}
                     className="bg-stone-700 hover:bg-stone-600 text-stone-200 py-2 rounded-lg font-semibold shadow transition active:scale-95 flex items-center justify-center gap-1"
                 >
-                    🔄 Reset
+                    <RotateCcw size={18} /> Reset
                 </button>
 
 

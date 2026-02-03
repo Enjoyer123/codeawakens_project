@@ -167,7 +167,7 @@ const MapCoordinatePicker = ({
                 >
                   <div className="font-semibold">{itemName}</div>
                   <div className="text-xs opacity-75">
-                    {isPlaced ? '✅ Placed' : '⚪ Not placed'}
+                    {isPlaced ? '(Placed)' : '(Not placed)'}
                   </div>
                 </div>
               );

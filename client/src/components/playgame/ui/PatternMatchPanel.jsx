@@ -5,7 +5,8 @@
  * This is a complex UI component extracted from GameArea.jsx for better organization.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 import { API_BASE_URL } from '../../../config/apiConfig';
 
@@ -19,8 +20,27 @@ import { API_BASE_URL } from '../../../config/apiConfig';
  * @param {string} props.weaponImgSrc - URL to weapon image
  */
 const PatternMatchPanel = ({ hintData, idealPattern, weaponProgress, weaponImgSrc }) => {
+  const [showHelp, setShowHelp] = useState(false);
+
   return (
     <div className="flex-1 bg-black/30 rounded-lg p-3 border border-gray-700/50">
+      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+        <DialogContent className="max-w-4xl bg-transparent border-0 shadow-none p-0 flex justify-center items-center outline-none">
+          <div className="relative">
+            <button
+              onClick={() => setShowHelp(false)}
+              className="absolute -top-4 -right-4 bg-white text-black rounded-full w-8 h-8 font-bold border-2 border-black z-50 hover:bg-gray-200 flex items-center justify-center shadow-lg"
+            >
+              X
+            </button>
+            <img
+              src="/PatternDes.png"
+              alt="Pattern Description"
+              className="max-h-[85vh] w-auto rounded-lg shadow-2xl border-4 border-white"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
       <div className="flex items-stretch h-full">
         {/* Left: Weapon & Stats (50%) */}
         <div className="w-1/2 flex flex-col items-center gap-2 pr-2 border-r border-gray-700/50">
@@ -89,9 +109,18 @@ const PatternMatchPanel = ({ hintData, idealPattern, weaponProgress, weaponImgSr
           {hintData && hintData.showPatternProgress ? (
             <div className="flex flex-col items-center gap-2 w-full">
               <div className="flex flex-col items-center">
-                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">
-                  Pattern
-                </span>
+                <div className="flex items-center gap-1 mb-0.5">
+                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">
+                    Pattern
+                  </span>
+                  <button
+                    onClick={() => setShowHelp(true)}
+                    className="text-[9px] bg-gray-600 hover:bg-gray-500 text-white rounded-full w-4 h-4 flex items-center justify-center transition-colors shadow-sm"
+                    title="How Pattern works?"
+                  >
+                    ?
+                  </button>
+                </div>
                 <span className="text-[10px] text-gray-300 truncate font-medium leading-tight max-w-full text-center">
                   {hintData.patternName}
                 </span>

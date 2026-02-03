@@ -26,7 +26,7 @@ const StatusPanel = ({ playerHpState, currentWeaponData, characterName = 'main_1
         <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Status</span>
         {currentWeaponData && (
           <span className="text-[10px] bg-blue-900/40 text-blue-300 px-2 py-0.5 rounded border border-blue-800/50">
-            ⚔️ {currentWeaponData.name}
+            {currentWeaponData.name}
           </span>
         )}
       </div>

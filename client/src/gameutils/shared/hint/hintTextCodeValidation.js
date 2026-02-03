@@ -9,7 +9,8 @@ import {
   checkIfHasElse,
   skipIfBlock,
   skipElseBlock,
-  skipLoopBlock
+  skipLoopBlock,
+  parseFunctionDefinition
 } from './hintTextCodeParser';
 
 /**
@@ -192,22 +193,22 @@ function convertTextCodeToStructure(textCode) {
     // ===== MOVEMENT BLOCKS =====
     if (line.includes('await moveForward()')) {
       structure.push({ type: 'move_forward', hasNext: true });
-    } 
+    }
     else if (line.includes('await turnLeft()')) {
       structure.push({ type: 'turn_left', hasNext: true });
-    } 
+    }
     else if (line.includes('await turnRight()')) {
       structure.push({ type: 'turn_right', hasNext: true });
-    } 
+    }
     else if (line.includes('await hit()')) {
       structure.push({ type: 'hit', hasNext: true });
     }
-    
+
     // ===== COIN BLOCKS =====
     else if (line.includes('await collectCoin()')) {
       structure.push({ type: 'collect_coin', hasNext: true });
     }
-    
+
     // ===== PERSON RESCUE BLOCKS =====
     else if (line.includes('await rescuePerson()')) {
       structure.push({ type: 'rescue_person', hasNext: true });
@@ -215,13 +216,13 @@ function convertTextCodeToStructure(textCode) {
     else if (line.includes('await rescuePersonAtNode(')) {
       const match = line.match(/rescuePersonAtNode\((\d+)\)/);
       const nodeId = match ? parseInt(match[1]) : 0;
-      structure.push({ 
-        type: 'rescue_person_at_node', 
+      structure.push({
+        type: 'rescue_person_at_node',
         hasNext: true,
         nodeId: nodeId
       });
     }
-    
+
     // ===== CONDITION BLOCKS =====
     else if (line.includes('if (foundMonster())')) {
       structure.push(parseIfBlock(lines, i, 'found_monster'));
@@ -251,7 +252,7 @@ function convertTextCodeToStructure(textCode) {
       structure.push(parseIfBlock(lines, i, 'has_coin'));
       i = skipIfBlock(lines, i);
     }
-    
+
     // ===== IF-ELSE BLOCKS =====
     else if (line.startsWith('if (') && !line.includes('foundMonster') && !line.includes('canMove')) {
       const hasElse = checkIfHasElse(lines, i);
@@ -262,36 +263,74 @@ function convertTextCodeToStructure(textCode) {
       }
       i = skipIfBlock(lines, i);
     }
-    
+
     // ===== LOOP BLOCKS =====
-    else {
+    else if (line.includes('repeat') || line.includes('for') || line.includes('while')) {
       // Support `repeat(n) { ... }` syntax (user-friendly repeat)
       const repeatMatch = line.match(/repeat\s*\(\s*(\d+)\s*\)\s*\{/);
       if (repeatMatch) {
+        // ... existing logic ...
         const times = parseInt(repeatMatch[1], 10);
         structure.push(parseLoopBlock(lines, i, 'repeat', times));
         i = skipLoopBlock(lines, i);
         continue;
       }
-      // More flexible for-loop detection: support `let|const|var`, any iterator name, `<` or `<=`, and numeric limit
+      // Relaxed repeat match (without brace)
+      const repeatMatchRelaxed = line.match(/repeat\s*\(\s*(\d+)\s*\)/);
+      if (repeatMatchRelaxed) {
+        const times = parseInt(repeatMatchRelaxed[1], 10);
+        structure.push(parseLoopBlock(lines, i, 'repeat', times));
+        i = skipLoopBlock(lines, i);
+        continue;
+      }
+
+      // More flexible for-loop detection
       const forHeaderMatch = line.match(/for\s*\(\s*(?:let|const|var)\s+(\w+)\s*=\s*(\d+)\s*;\s*\1\s*(<|<=)\s*(\d+)\s*;/);
       if (forHeaderMatch) {
         const varName = forHeaderMatch[1];
         const start = parseInt(forHeaderMatch[2], 10);
         const operator = forHeaderMatch[3];
         const limit = parseInt(forHeaderMatch[4], 10);
-        // Calculate how many iterations the for-loop will run when bounds are numeric
         const times = operator === '<' ? Math.max(0, limit - start) : Math.max(0, limit - start + 1);
         structure.push(parseLoopBlock(lines, i, 'repeat', times));
+        // Note: Could map to 'for_index' if we wanted stricter checking
         i = skipLoopBlock(lines, i);
         continue;
       }
-      else if (line.includes('while (')) {
-      const match = line.match(/while \((.*?)\)/);
-      const condition = match ? match[1] : '';
-      structure.push(parseLoopBlock(lines, i, 'while_loop', null, condition));
-      i = skipLoopBlock(lines, i);
+
+      const whileMatch = line.match(/while\s*\((.*?)\)/);
+      if (whileMatch) {
+        const condition = whileMatch[1];
+        structure.push(parseLoopBlock(lines, i, 'while_loop', null, condition));
+        i = skipLoopBlock(lines, i);
+        continue;
+      }
     }
+
+    // ===== FUNCTION DEFINITION =====
+    else if (line.startsWith('function ')) {
+      structure.push(parseFunctionDefinition(lines, i));
+      i = skipLoopBlock(lines, i); // Reuse skipLoopBlock as it just counts braces
+    }
+
+    // ===== SORTING / COIN BLOCKS (STATEMENTS) =====
+    else if (line.includes('swapCoins(')) {
+      structure.push({ type: 'swap_coins', hasNext: true });
+    }
+    else if (line.includes('compareCoins(')) {
+      // Only add as statement logic if it's a standalone call (not inside if)
+      // But usually verifyTextCode iterates lines. If `if (compareCoins())` is passed,
+      // it's handled by parseIfBlock calling parseStatement? 
+      // parseStatement needs to support generic calls too.
+      structure.push({ type: 'compare_coins', hasNext: true });
+    }
+
+    // ===== FUNCTION CALLS =====
+    else {
+      const funcCallMatch = line.match(/(\w+)\s*\(/);
+      if (funcCallMatch && !line.startsWith('if') && !line.startsWith('while') && !line.startsWith('for')) {
+        structure.push({ type: 'function_call', name: funcCallMatch[1], hasNext: true });
+      }
     }
     // Note: other for-index patterns (e.g., <= with different formatting) will be covered by the flexible regex above
   }
@@ -318,13 +357,11 @@ function compareStructures(blockStructure, codeStructure) {
     }
 
     // ตรวจสอบ statement blocks
-    if (block.statement && code.statement) {
-      if (!compareStructures(block.statement, code.statement)) {
-        console.log(`❌ Different statements at ${i}`);
-        return false;
-      }
-    } else if (block.statement !== code.statement) {
-      console.log(`❌ Different statement presence at ${i}`);
+    const blockStmts = block.statement || [];
+    const codeStmts = code.statement || [];
+
+    if (!compareStructures(blockStmts, codeStmts)) {
+      console.log(`❌ Different statements at ${i}`);
       return false;
     }
 

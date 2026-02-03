@@ -1,5 +1,86 @@
 import { Input } from '@/components/ui/input';
 
+const ALGORITHM_TEMPLATES = {
+  knapsack_data: {
+    bag: {
+      x: 400,
+      y: 450,
+      label: ""
+    },
+    items: [
+      {
+        x: 150,
+        y: 150,
+        id: 1,
+        label: "",
+        price: null,
+        weight: null
+      },
+      {
+        x: 400,
+        y: 150,
+        id: 2,
+        label: "",
+        price: null,
+        weight: null
+      },
+      {
+        x: 650,
+        y: 150,
+        id: 3,
+        label: "",
+        price: null,
+        weight: null
+      }
+    ],
+    capacity: null
+  },
+  subset_sum_data: {
+    side1: {
+      x: 200,
+      y: 450,
+      label: "ฝั่ง 1"
+    },
+    side2: {
+      x: 600,
+      y: 450,
+      label: "ฝั่ง 2"
+    },
+    warriors: [
+      null,
+      null,
+      null
+    ],
+    target_sum: null,
+    warriors_display: [
+      {
+        x: 150,
+        y: 150,
+        id: 1,
+        label: "",
+        power: null
+      },
+      {
+        x: 400,
+        y: 150,
+        id: 2,
+        label: "",
+        power: null
+      },
+      {
+        x: 650,
+        y: 150,
+        id: 3,
+        label: "",
+        power: null
+      }
+    ],
+  },
+  coin_change_data: {
+    monster_power: null
+  }
+};
+
 const LevelInfoForm = ({ formData, categories, prerequisiteLevels, isEditing, levelId, onFormDataChange }) => {
   const handleChange = (field, value) => {
     onFormDataChange({ ...formData, [field]: value });
@@ -121,14 +202,32 @@ const LevelInfoForm = ({ formData, categories, prerequisiteLevels, isEditing, le
             />
             <span className="text-sm font-medium">Required for Post-Test</span>
           </label>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={formData.textcode}
-              onChange={(e) => handleChange('textcode', e.target.checked)}
-            />
-            <span className="text-sm font-medium">Text Code</span>
-          </label>
+          {(() => {
+            const selectedCategory = categories.find(c => String(c.category_id) === String(formData.category_id));
+            const restrictedCategories = [
+              "DFS",
+              "BFS",
+              "Shortest Path",
+              "Minimum Spanning Tree",
+              "Backtrack",
+              "Dynamic Programing", // User specified spelling
+              "Dynamic Programming", // Common variant
+              "Greedy"
+            ];
+            const isTextCodeDisabled = selectedCategory && restrictedCategories.includes(selectedCategory.category_name);
+
+            return (
+              <label className={`flex items-center gap-2 ${isTextCodeDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                <input
+                  type="checkbox"
+                  checked={!isTextCodeDisabled && formData.textcode}
+                  disabled={isTextCodeDisabled}
+                  onChange={(e) => handleChange('textcode', e.target.checked)}
+                />
+                <span className="text-sm font-medium">Text Code {isTextCodeDisabled && '(Disabled for this category)'}</span>
+              </label>
+            );
+          })()}
         </div>
       </div>
 
@@ -158,7 +257,7 @@ const LevelInfoForm = ({ formData, categories, prerequisiteLevels, isEditing, le
                     newData.applied_data = null;
 
                     // Enable selected (Initialize with empty object if null)
-                    newData[type.field] = formData[type.field] || {};
+                    newData[type.field] = formData[type.field] || ALGORITHM_TEMPLATES[type.field] || {};
                   } else {
                     // Disable
                     newData[type.field] = null;
