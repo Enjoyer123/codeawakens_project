@@ -396,53 +396,12 @@ exports.createLevel = async (req, res) => {
       return field;
     };
 
-    // Fix sequence issue: Reset the sequences to match the current max IDs
-    // This prevents "Unique constraint failed" errors when the sequences are out of sync
-    try {
-      // Reset level_id sequence
-      await prisma.$executeRaw`
-        SELECT setval(
-          pg_get_serial_sequence('levels', 'level_id'),
-          COALESCE((SELECT MAX(level_id) FROM levels), 1),
-          true
-        )
-      `;
-      console.log("Level sequence reset successfully");
-    } catch (seqError) {
-      console.warn("Warning: Could not reset level sequence:", seqError);
-    }
+    // Sequence reset logic removed for production deployment
 
-    // Reset level_blocks sequence if we're creating blocks
-    if (block_ids && block_ids.length > 0) {
-      try {
-        await prisma.$executeRaw`
-          SELECT setval(
-            pg_get_serial_sequence('level_blocks', 'level_block_id'),
-            COALESCE((SELECT MAX(level_block_id) FROM level_blocks), 1),
-            true
-          )
-        `;
-        console.log("Level blocks sequence reset successfully");
-      } catch (seqError) {
-        console.warn("Warning: Could not reset level_blocks sequence:", seqError);
-      }
-    }
 
-    // Reset level_victory_conditions sequence if we're creating victory conditions
-    if (victory_condition_ids && victory_condition_ids.length > 0) {
-      try {
-        await prisma.$executeRaw`
-          SELECT setval(
-            pg_get_serial_sequence('level_victory_conditions', 'level_victory_condition_id'),
-            COALESCE((SELECT MAX(level_victory_condition_id) FROM level_victory_conditions), 1),
-            true
-          )
-        `;
-        console.log("Level victory conditions sequence reset successfully");
-      } catch (seqError) {
-        console.warn("Warning: Could not reset level_victory_conditions sequence:", seqError);
-      }
-    }
+
+
+
 
     const level = await prisma.level.create({
       data: {

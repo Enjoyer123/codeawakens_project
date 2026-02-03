@@ -47,7 +47,7 @@ export function usePhaserGame({
       type: Phaser.AUTO,
       width: 1200,
       height: 920,
-      backgroundColor: "#222222",
+      backgroundColor: "#0f111a",
       parent: gameRef.current,
       // We don't define scene here, we add it manually to pass data
       scene: [],

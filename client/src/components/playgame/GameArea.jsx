@@ -150,7 +150,7 @@ const GameArea = ({
   return (
     <div className="flex flex-col h-full overflow-hidden relative">
       {/* Phaser Game - Main container */}
-      <div className="flex-1 w-full relative flex items-end justify-center overflow-hidden bg-stone-900 min-h-0">
+      <div className="flex-1 w-full relative flex items-end justify-center overflow-hidden bg-[#0f111a] min-h-0">
         <div
           ref={gameRef}
           className="w-full h-full"
@@ -166,8 +166,8 @@ const GameArea = ({
       </div>
 
       {/* Compact Bottom UI Bar */}
-      <div className="flex-shrink-0 bg-stone-900/95 backdrop-blur-md border-t border-gray-700/50 shadow-2xl z-30">
-        <div className="flex items-center gap-4 p-3 text-gray-200">
+      <div className="flex-shrink-0 bg-[#1e1b4b]/95 backdrop-blur-md border-t border-purple-500/30 shadow-2xl z-30">
+        <div className="flex items-center gap-4 p-3 text-purple-100">
 
           {/* STATUS: HP & Weapon */}
           <StatusPanel
@@ -204,8 +204,8 @@ const GameArea = ({
 
           {/* Big O Complexity (Display Only if set) */}
           {userBigO && (
-            <div className="flex-shrink-0 bg-black/30 rounded-lg p-3 border border-gray-700/50 min-w-[120px]">
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
+            <div className="flex-shrink-0 bg-purple-900/40 rounded-lg p-3 border border-purple-500/30 min-w-[120px]">
+              <label className="text-[10px] font-bold text-purple-300 uppercase tracking-wider block mb-1">
                 Selected Big O
               </label>
               <div className="text-yellow-400 font-mono font-bold text-lg">

@@ -67,153 +67,7 @@ exports.getVictoryConditionById = async (req, res) => {
   }
 };
 
-// Create victory condition
-exports.createVictoryCondition = async (req, res) => {
-  try {
-    const {
-      type,
-      description,
-      check,
-      is_available,
-    } = req.body;
-
-    if (!type || !description || !check) {
-      return res.status(400).json({
-        message: "Missing required fields: type, description, check"
-      });
-    }
-
-    const trimmedType = type.trim();
-    console.log("Victory condition req.body:", req.body);
-    console.log("Trimmed type:", trimmedType);
-    console.log("Trimmed type length:", trimmedType.length);
-    console.log("Trimmed type char codes:", Array.from(trimmedType).map(c => c.charCodeAt(0)));
-
-    // Debug: Get all existing types to help identify the issue
-    const allVictoryConditions = await prisma.victoryCondition.findMany({
-      select: {
-        victory_condition_id: true,
-        type: true,
-        description: true,
-      },
-      orderBy: {
-        victory_condition_id: 'asc',
-      },
-    });
-    console.log("All existing victory conditions:", JSON.stringify(allVictoryConditions, null, 2));
-
-    // Check if type already exists using raw SQL query for case-insensitive comparison
-    // This matches how PostgreSQL unique constraint works
-    const existingVictoryConditionRaw = await prisma.$queryRaw`
-      SELECT victory_condition_id, type, description 
-      FROM victory_conditions 
-      WHERE LOWER(TRIM(type)) = LOWER(${trimmedType})
-      LIMIT 1
-    `;
-
-    if (existingVictoryConditionRaw && existingVictoryConditionRaw.length > 0) {
-      const existing = existingVictoryConditionRaw[0];
-      console.log("Existing victory condition found (case-insensitive raw query):", existing);
-      console.log("Existing type:", existing.type);
-      console.log("Existing type length:", existing.type.length);
-      console.log("Existing type char codes:", Array.from(existing.type).map(c => c.charCodeAt(0)));
-      return res.status(409).json({ 
-        message: `A victory condition with this type "${trimmedType}" already exists (Victory Condition ID: ${existing.victory_condition_id}, Description: ${existing.description}). Existing type in DB: "${existing.type}"` 
-      });
-    }
-
-    // Also check exact match (case-sensitive) as fallback
-    const exactMatch = await prisma.victoryCondition.findUnique({
-      where: { type: trimmedType },
-    });
-
-    if (exactMatch) {
-      console.log("Exact match found (case-sensitive):", exactMatch);
-      return res.status(409).json({ 
-        message: `A victory condition with this type "${trimmedType}" already exists (Victory Condition ID: ${exactMatch.victory_condition_id}, Description: ${exactMatch.description}).` 
-      });
-    }
-
-    // Fix sequence issue: Reset the sequence to match the current max ID
-    // This prevents "unique constraint failed on victory_condition_id" error
-    try {
-      await prisma.$executeRaw`
-        SELECT setval(
-          pg_get_serial_sequence('victory_conditions', 'victory_condition_id'),
-          COALESCE((SELECT MAX(victory_condition_id) FROM victory_conditions), 1),
-          true
-        )
-      `;
-      console.log("Sequence reset successfully");
-    } catch (seqError) {
-      console.warn("Warning: Could not reset sequence:", seqError);
-      // Continue anyway, as this might not be critical
-    }
-
-    const victoryCondition = await prisma.victoryCondition.create({
-      data: {
-        type: trimmedType,
-        description: description.trim(),
-        check: check.trim(),
-        is_available: is_available === true || is_available === 'true' || is_available === undefined,
-      },
-    });
-    console.log("Victory condition created:", victoryCondition);
-    res.status(201).json({
-      message: "Victory condition created successfully",
-      victoryCondition,
-    });
-  } catch (error) {
-    console.error("Error creating victory condition:", error);
-    console.error("Error stack:", error.stack);
-    console.error("Error code:", error.code);
-    console.error("Error meta:", error.meta);
-    if (error.code === 'P2002') {
-      // P2002 is unique constraint violation
-      // Try to find the existing record using raw SQL for case-insensitive comparison
-      try {
-        const trimmedType = req.body.type?.trim();
-        if (trimmedType) {
-          const existingRaw = await prisma.$queryRaw`
-            SELECT victory_condition_id, type, description 
-            FROM victory_conditions 
-            WHERE LOWER(TRIM(type)) = LOWER(${trimmedType})
-            LIMIT 1
-          `;
-          
-          if (existingRaw && existingRaw.length > 0) {
-            const existing = existingRaw[0];
-            return res.status(409).json({ 
-              message: `A victory condition with this type "${trimmedType}" already exists (Victory Condition ID: ${existing.victory_condition_id}, Description: ${existing.description}). Existing type in DB: "${existing.type}"` 
-            });
-          }
-
-          // If not found with case-insensitive, try to get all similar types
-          const similarTypes = await prisma.$queryRaw`
-            SELECT victory_condition_id, type, description 
-            FROM victory_conditions 
-            WHERE LOWER(type) LIKE LOWER(${`%${trimmedType}%`})
-          `;
-          
-          if (similarTypes && similarTypes.length > 0) {
-            const typesList = similarTypes.map(t => `ID ${t.victory_condition_id}: "${t.type}"`).join(', ');
-            return res.status(409).json({ 
-              message: `A victory condition with this type "${trimmedType}" already exists. Similar types found: ${typesList}` 
-            });
-          }
-        }
-      } catch (findError) {
-        console.error("Error finding existing record:", findError);
-      }
-      return res.status(409).json({ 
-        message: `A victory condition with this type "${req.body.type?.trim() || 'unknown'}" already exists. Please check the database for duplicate entries.` 
-      });
-    } else if (error.code === 'P2011') {
-      return res.status(400).json({ message: "Null constraint violation. Check required fields." });
-    }
-    res.status(500).json({ message: "Error creating victory condition", error: error.message });
-  }
-};
+// Create victory condition function removed: Creation only allowed via seed/migration
 
 // Update victory condition
 exports.updateVictoryCondition = async (req, res) => {
@@ -245,7 +99,7 @@ exports.updateVictoryCondition = async (req, res) => {
     if (trimmedType !== existingVictoryCondition.type) {
       // Check case-insensitive first
       const victoryConditionWithSameType = await prisma.victoryCondition.findFirst({
-        where: { 
+        where: {
           type: {
             equals: trimmedType,
             mode: 'insensitive'
@@ -255,10 +109,10 @@ exports.updateVictoryCondition = async (req, res) => {
           }
         },
       });
-      
+
       if (victoryConditionWithSameType) {
-        return res.status(409).json({ 
-          message: `A victory condition with this type "${trimmedType}" already exists (Victory Condition ID: ${victoryConditionWithSameType.victory_condition_id}).` 
+        return res.status(409).json({
+          message: `A victory condition with this type "${trimmedType}" already exists (Victory Condition ID: ${victoryConditionWithSameType.victory_condition_id}).`
         });
       }
 
@@ -266,10 +120,10 @@ exports.updateVictoryCondition = async (req, res) => {
       const exactMatch = await prisma.victoryCondition.findUnique({
         where: { type: trimmedType },
       });
-      
+
       if (exactMatch && exactMatch.victory_condition_id !== parseInt(victoryConditionId)) {
-        return res.status(409).json({ 
-          message: `A victory condition with this type "${trimmedType}" already exists (Victory Condition ID: ${exactMatch.victory_condition_id}).` 
+        return res.status(409).json({
+          message: `A victory condition with this type "${trimmedType}" already exists (Victory Condition ID: ${exactMatch.victory_condition_id}).`
         });
       }
     }
@@ -332,8 +186,8 @@ exports.deleteVictoryCondition = async (req, res) => {
     if (victoryCondition.level_victory_conditions && victoryCondition.level_victory_conditions.length > 0) {
       const levelIds = victoryCondition.level_victory_conditions.map(lvc => lvc.level_id);
       const uniqueLevelIds = [...new Set(levelIds)];
-      
-      return res.status(400).json({ 
+
+      return res.status(400).json({
         message: `Cannot delete victory condition: This victory condition is being used in ${victoryCondition.level_victory_conditions.length} level victory condition(s) across ${uniqueLevelIds.length} level(s). Please remove the victory condition from all levels before deleting.`,
         level_victory_conditions_count: victoryCondition.level_victory_conditions.length,
         levels_count: uniqueLevelIds.length,
@@ -356,7 +210,7 @@ exports.deleteVictoryCondition = async (req, res) => {
     console.error("Error stack:", error.stack);
     console.error("Error code:", error.code);
     console.error("Error meta:", error.meta);
-    
+
     // Provide more detailed error message
     let errorMessage = "Error deleting victory condition";
     if (error.code === 'P2003') {
@@ -366,9 +220,9 @@ exports.deleteVictoryCondition = async (req, res) => {
     } else if (error.message) {
       errorMessage = error.message;
     }
-    
-    res.status(500).json({ 
-      message: errorMessage, 
+
+    res.status(500).json({
+      message: errorMessage,
       error: error.message,
       code: error.code,
       meta: error.meta
