@@ -112,30 +112,30 @@ export function useBlocklySetup({
           base: Blockly.Themes.Classic,
           blockStyles: {
             // Midnight Galaxy Palette (Purple/Blue tones)
-            "hat_blocks": { "colourPrimary": "#7048e8", "colourSecondary": "#845ef7", "colourTertiary": "#5f3dc4" }, // Royal Purple (Start)
-            "logic_blocks": { "colourPrimary": "#1c7ed6", "colourSecondary": "#228be6", "colourTertiary": "#1864ab" }, // Bright Blue (Logic)
-            "loop_blocks": { "colourPrimary": "#4263eb", "colourSecondary": "#5c7cfa", "colourTertiary": "#364fc7" }, // Indigo Blue (Loop)
-            "math_blocks": { "colourPrimary": "#1098ad", "colourSecondary": "#22b8cf", "colourTertiary": "#0b7285" }, // Cyan/Teal (Math)
-            "procedure_blocks": { "colourPrimary": "#ae3ec9", "colourSecondary": "#c0eb75", "colourTertiary": "#9c36b5" }, // Berry Purple (Function)
-            "list_blocks": { "colourPrimary": "#4c6ef5", "colourSecondary": "#748ffc", "colourTertiary": "#3b5bdb" }, // Cornflower Blue (List)
-            "variable_blocks": { "colourPrimary": "#0ca678", "colourSecondary": "#12b886", "colourTertiary": "#099268" } // Teal Green (Var)
+            "hat_blocks": { "colourPrimary": "#a855f7", "colourSecondary": "#c084fc", "colourTertiary": "#7e22ce" }, // Purple 500/400/700 (Start)
+            "logic_blocks": { "colourPrimary": "#8b5cf6", "colourSecondary": "#a78bfa", "colourTertiary": "#7c3aed" }, // Violet 500/400/600 (Logic)
+            "loop_blocks": { "colourPrimary": "#6366f1", "colourSecondary": "#818cf8", "colourTertiary": "#4f46e5" }, // Indigo 500/400/600 (Loop)
+            "math_blocks": { "colourPrimary": "#06b6d4", "colourSecondary": "#22d3ee", "colourTertiary": "#0891b2" }, // Cyan 500/400/600 (Math)
+            "procedure_blocks": { "colourPrimary": "#d946ef", "colourSecondary": "#e879f9", "colourTertiary": "#c026d3" }, // Fuchsia 500/400/600 (Function)
+            "list_blocks": { "colourPrimary": "#3b82f6", "colourSecondary": "#60a5fa", "colourTertiary": "#2563eb" }, // Blue 500/400/600 (List)
+            "variable_blocks": { "colourPrimary": "#14b8a6", "colourSecondary": "#2dd4bf", "colourTertiary": "#0d9488" } // Teal 500/400/600 (Var)
           },
           componentStyles: {
-            "workspaceBackgroundColour": "#0f111a", // Deep Midnight Blue
-            "toolboxBackgroundColour": "#151725", // Dark Blue/Grey
-            "toolboxForegroundColour": "#e0e7ff", // Light Blueish White
-            "flyoutBackgroundColour": "#151725",
-            "flyoutForegroundColour": "#e0e7ff",
+            "workspaceBackgroundColour": "#1e1b4b", // Deep Indigo/Purple
+            "toolboxBackgroundColour": "#2e1065", // Dark Purple 950
+            "toolboxForegroundColour": "#ffffff", // White
+            "flyoutBackgroundColour": "#2e1065", // Dark Purple 950
+            "flyoutForegroundColour": "#ffffff",
             "flyoutOpacity": 0.95,
             "scrollbarColour": "transparent",
-            "insertionMarkerColour": "#7048e8",
+            "insertionMarkerColour": "#a855f7", // Purple 500
             "insertionMarkerOpacity": 0.5,
             "scrollbarOpacity": 0, // Hidden as requested
-            "cursorColour": "#7048e8"
+            "cursorColour": "#a855f7" // Purple 500
           },
           fontStyle: {
-            "family": "'Segoe UI', 'Roboto', sans-serif",
-            "weight": "bold",
+            "family": "'Press Start 2P', cursive", // Match game font
+            "weight": "normal",
             "size": 10
           }
         });

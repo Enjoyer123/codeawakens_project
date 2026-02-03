@@ -21,7 +21,9 @@ const BlocklyArea = ({
   handleTextCodeChange,
   testCaseResult,
   userProgress,
-  allLevels
+  allLevels,
+  onLoadXml,
+  isPreview
 }) => {
   const [activeTab, setActiveTab] = useState("blocks");
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -37,15 +39,15 @@ const BlocklyArea = ({
     <div className="flex flex-col h-full bg-transparent">
       {/* Tabs Header */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-        <div className="bg-stone-900 border-b border-gray-700 px-4 pt-2">
-          <TabsList className="bg-stone-800 border border-stone-700">
-            <TabsTrigger value="blocks" className="data-[state=active]:bg-stone-700 text-stone-300 data-[state=active]:text-white flex items-center gap-2">
+        <div className="bg-[#1e1b4b] border-b border-purple-900/50 px-4 pt-2">
+          <TabsList className="bg-[#2e1065] border border-purple-900/50">
+            <TabsTrigger value="blocks" className="data-[state=active]:bg-[#4c1d95] text-purple-200 data-[state=active]:text-white flex items-center gap-2">
               <Box size={16} />
               <span>Visual Blocks</span>
             </TabsTrigger>
 
             {currentLevel?.textcode && (
-              <TabsTrigger value="text" className="data-[state=active]:bg-stone-700 text-stone-300 data-[state=active]:text-white flex items-center gap-2">
+              <TabsTrigger value="text" className="data-[state=active]:bg-[#4c1d95] text-purple-200 data-[state=active]:text-white flex items-center gap-2">
                 <Code size={16} />
                 <span>Text Code</span>
                 <div className={`ml-2 w-2 h-2 rounded-full ${!blocklyJavaScriptReady
@@ -57,7 +59,7 @@ const BlocklyArea = ({
               </TabsTrigger>
             )}
 
-            <TabsTrigger value="test" className="data-[state=active]:bg-stone-700 text-stone-300 data-[state=active]:text-white flex items-center gap-2 relative">
+            <TabsTrigger value="test" className="data-[state=active]:bg-[#4c1d95] text-purple-200 data-[state=active]:text-white flex items-center gap-2 relative">
               <FlaskConical size={16} />
               <span>Test Results</span>
               {testCaseResult && (
@@ -98,6 +100,8 @@ const BlocklyArea = ({
         codeValidation={codeValidation}
         currentLevel={currentLevel}
         onHistoryClick={() => setHistoryOpen(true)}
+        onLoadXml={onLoadXml}
+        isPreview={isPreview}
       />
 
       <HistoryModal

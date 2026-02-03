@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   useVictoryConditions,
-  useCreateVictoryCondition,
+
   useUpdateVictoryCondition,
   useDeleteVictoryCondition,
 } from '../../../services/hooks/useVictoryConditions';
@@ -54,7 +54,7 @@ const VictoryConditionManagement = () => {
     return <PageError message={queryError?.message} title="Failed to load victory conditions" />;
   }
 
-  const createVictoryConditionMutation = useCreateVictoryCondition();
+
   const updateVictoryConditionMutation = useUpdateVictoryCondition();
   const deleteVictoryConditionMutation = useDeleteVictoryCondition();
 
@@ -76,7 +76,7 @@ const VictoryConditionManagement = () => {
     handlePageChange(1);
   }, [handlePageChange]);
 
-  const handleOpenVictoryConditionDialog = useCallback((victoryCondition = null) => {
+  const handleOpenVictoryConditionDialog = useCallback((victoryCondition) => {
     if (victoryCondition) {
       setEditingVictoryCondition(victoryCondition);
       setVictoryConditionForm({
@@ -85,17 +85,9 @@ const VictoryConditionManagement = () => {
         check: victoryCondition.check || '',
         is_available: victoryCondition.is_available,
       });
-    } else {
-      setEditingVictoryCondition(null);
-      setVictoryConditionForm({
-        type: '',
-        description: '',
-        check: '',
-        is_available: true,
-      });
+      // setSaveError(null);
+      setVictoryConditionDialogOpen(true);
     }
-    // setSaveError(null);
-    setVictoryConditionDialogOpen(true);
   }, []);
 
   const handleCloseVictoryConditionDialog = useCallback(() => {
@@ -126,8 +118,6 @@ const VictoryConditionManagement = () => {
           victoryConditionId: editingVictoryCondition.victory_condition_id,
           data: formData
         });
-      } else {
-        await createVictoryConditionMutation.mutateAsync(formData);
       }
       handleCloseVictoryConditionDialog();
       return { success: true };
@@ -140,7 +130,7 @@ const VictoryConditionManagement = () => {
     victoryConditionForm,
     editingVictoryCondition,
     updateVictoryConditionMutation,
-    createVictoryConditionMutation,
+
     handleCloseVictoryConditionDialog,
   ]);
 

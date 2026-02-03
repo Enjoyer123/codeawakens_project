@@ -725,10 +725,10 @@ const GameCore = ({
       guides={guides}
       closeGuide={closeGuide}
     >
-      <div className={`flex ${isPreview ? 'h-full' : 'h-screen'} bg-gray-900`}>
+      <div className={`flex ${isPreview ? 'h-full' : 'h-screen'} bg-[#0f111a]`}>
         {/* Game Area - 65% ของหน้าจอ */}
 
-        <div className="w-[50%] relative bg-black">
+        <div className="w-[50%] relative bg-[#0f111a]">
           <GameArea
             gameRef={gameRef}
             gameState={gameState}
@@ -806,37 +806,14 @@ const GameCore = ({
             imageRendering: "pixelated"
           }}
         >
-          <div className="flex flex-col h-full px-4 py-4 md:px-20">
+          <div className="flex flex-col h-full px-4 py-2 relative">
 
-            <div className="bg-stone-900 p-4 shadow-lg shrink-0 mb-4 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-bold text-white">
-                    {currentLevel?.level_name || `ด่าน ${levelId}`}
-                    {isPreview && <span className="ml-2 text-yellow-400 text-sm">(Preview)</span>}
-                  </h2>
-                </div>
-                {/* Temporary buttons to load example blocks - Remove after development */}
-                {workspaceRef.current && isPreview && (
-                  <div className="flex flex-wrap gap-2 justify-end mb-2">
-                    <button
-                      onClick={() => setShowLoadXmlModal(true)}
-                      className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded shadow-sm hover:shadow-md transition-all flex items-center gap-2"
-                      title="โหลดตัวอย่าง XML"
-                    >
-                      📂 โหลด XML
-                    </button>
-                    <LoadXmlModal
-                      isOpen={showLoadXmlModal}
-                      onClose={() => setShowLoadXmlModal(false)}
-                      options={EXAMPLE_LOADERS.map(loader => ({
-                        ...loader,
-                        onClick: () => workspaceRef.current && loader.loader(workspaceRef.current)
-                      }))}
-                    />
-                  </div>
-                )}
-              </div>
+            {/* Floating Level Name */}
+            <div className="absolute top-4 right-8 z-10 pointer-events-none">
+              <h2 className="text-xl font-bold text-white/90 drop-shadow-md bg-[#2e1065]/80 backdrop-blur-md px-3 py-1 rounded-lg border border-purple-500/30">
+                {currentLevel?.level_name || `ด่าน ${levelId}`}
+                {isPreview && <span className="ml-2 text-yellow-400 text-sm">(Preview)</span>}
+              </h2>
             </div>
             <div className="flex-1 min-h-0 relative shadow-2xl rounded-lg overflow-hidden">
 
@@ -855,6 +832,8 @@ const GameCore = ({
                 testCaseResult={testCaseResult}
                 userProgress={userProgress}
                 allLevels={allLevelsData}
+                onLoadXml={() => setShowLoadXmlModal(true)}
+                isPreview={isPreview}
               />
             </div>
           </div>
@@ -862,6 +841,7 @@ const GameCore = ({
         </div>
       </div>
 
+      {/* Progress Modal - only show in normal mode */}
       {/* Progress Modal - only show in normal mode */}
       {!isPreview && (
         <>
@@ -901,6 +881,18 @@ const GameCore = ({
             </button>
           )}
         </>
+      )}
+
+      {/* Load XML Modal */}
+      {isPreview && (
+        <LoadXmlModal
+          isOpen={showLoadXmlModal}
+          onClose={() => setShowLoadXmlModal(false)}
+          options={EXAMPLE_LOADERS.map(loader => ({
+            ...loader,
+            onClick: () => workspaceRef.current && loader.loader(workspaceRef.current)
+          }))}
+        />
       )}
 
       <ExecutionErrorModal

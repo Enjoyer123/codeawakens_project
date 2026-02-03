@@ -269,19 +269,19 @@ export function loadDfsExampleBlocks(workspace) {
 
   try {
     console.log('📦 Loading DFS example blocks into workspace...');
-    
+
     // Clear workspace first
     workspace.clear();
-    
+
     // Wait a bit for workspace to be ready
     setTimeout(() => {
       try {
         // Parse XML
         const xmlDom = Blockly.utils.xml.textToDom(dfsExampleXml);
-        
+
         // Load into workspace
         Blockly.Xml.domToWorkspace(xmlDom, workspace);
-        
+
         // Ensure variables exist
         const variableNames = ['container', 'visited', 'path', 'node', 'neighbor', 'garph', 'start', 'goal', 'map'];
         variableNames.forEach(varName => {
@@ -305,7 +305,7 @@ export function loadDfsExampleBlocks(workspace) {
             console.debug(`Variable ${varName} already exists or error creating:`, e);
           }
         });
-        
+
         console.log('✅ DFS example blocks loaded successfully');
       } catch (error) {
         console.error('❌ Error loading DFS example blocks:', error);

@@ -288,19 +288,8 @@ exports.createLevelCategory = async (req, res) => {
     const trimmedCategoryName = category_name.trim();
     const trimmedColorCode = color_code.trim();
 
-    // Fix sequence issue: Reset the sequence to match the current max ID
-    try {
-      await prisma.$executeRaw`
-        SELECT setval(
-          pg_get_serial_sequence('level_categories', 'category_id'),
-          COALESCE((SELECT MAX(category_id) FROM level_categories), 1),
-          true
-        )
-      `;
-      console.log("Sequence reset successfully");
-    } catch (seqError) {
-      console.warn("Warning: Could not reset sequence:", seqError);
-    }
+    // Sequence reset logic removed for production deployment
+
 
     // Prepare category_items data
     const categoryItemsData = [];

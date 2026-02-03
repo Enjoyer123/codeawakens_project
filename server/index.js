@@ -23,7 +23,7 @@ const { clerkMiddleware } = require("@clerk/express");
 
 app.use(
   cors({
-    origin: "*",
+    origin: process.env.CLIENT_URL || "*",
   })
 );
 

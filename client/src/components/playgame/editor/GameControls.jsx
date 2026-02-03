@@ -1,5 +1,5 @@
 import React from 'react';
-import { History, Loader2, Play, RotateCcw } from 'lucide-react';
+import { History, Loader2, Play, FolderOpen } from 'lucide-react';
 
 const GameControls = ({
     runCode,
@@ -10,7 +10,9 @@ const GameControls = ({
     blocklyJavaScriptReady,
     codeValidation,
     currentLevel,
-    onHistoryClick
+    onHistoryClick,
+    onLoadXml,
+    isPreview
 }) => {
     const isRunDisabled =
         gameState === "running" ||
@@ -21,7 +23,7 @@ const GameControls = ({
         (currentLevel?.textcode && (!codeValidation || !codeValidation.isValid));
 
     return (
-        <div className="flex-none bg-stone-900 border-t border-gray-700 shadow-xl z-20 p-4">
+        <div className="flex-none bg-[#1e1b4b] border-t border-purple-900/50 shadow-xl z-20 p-4">
             <div className="grid grid-cols-5 gap-2">
                 <button
                     onClick={runCode}
@@ -39,18 +41,21 @@ const GameControls = ({
                     )}
                 </button>
 
-                <button
-                    onClick={() => window.location.reload()}
-                    className="bg-stone-700 hover:bg-stone-600 text-stone-200 py-2 rounded-lg font-semibold shadow transition active:scale-95 flex items-center justify-center gap-1"
-                >
-                    <RotateCcw size={18} /> Reset
-                </button>
+                {isPreview && onLoadXml && (
+                    <button
+                        onClick={onLoadXml}
+                        className="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-semibold shadow transition active:scale-95 flex items-center justify-center gap-1"
+                        title="โหลดตัวอย่าง XML"
+                    >
+                        <FolderOpen size={18} /> Load XML
+                    </button>
+                )}
 
 
 
                 <button
                     onClick={onHistoryClick}
-                    className="bg-stone-700 hover:bg-stone-600 text-stone-300 py-2 rounded-lg font-semibold shadow transition active:scale-95 flex items-center justify-center gap-1"
+                    className="bg-[#2e1065] hover:bg-[#4c1d95] text-purple-200 py-2 rounded-lg font-semibold shadow transition active:scale-95 flex items-center justify-center gap-1"
                     title="History"
                 >
                     <History size={18} />
