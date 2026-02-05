@@ -17,7 +17,8 @@ import {
     getAntDpInitCode,
     instrumentAntDp,
     getRopePartitionInitCode,
-    instrumentRopePartition
+    instrumentRopePartition,
+    getSimplifiedHelpersInitCode
 } from './executionInstrumentation';
 
 import {
@@ -81,7 +82,8 @@ export const initializeLevelState = (currentLevel, code) => {
         coinChange: '',
         antDp: '',
         nqueen: '',
-        ropePartition: ''
+        ropePartition: '',
+        helpers: ''
     };
 
     // --- Knapsack ---
@@ -139,6 +141,9 @@ export const initializeLevelState = (currentLevel, code) => {
             console.warn('[executionStateInit] Error checking Rope Partition instrumentation:', e);
         }
     }
+
+    // Always inject simplified helpers for Text Code users
+    initCodes.helpers = getSimplifiedHelpersInitCode();
 
     return {
         modifiedCode,

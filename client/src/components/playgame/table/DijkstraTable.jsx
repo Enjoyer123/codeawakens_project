@@ -22,7 +22,7 @@ const DijkstraTable = ({ isVisible, visited, pq, mstWeight, algorithmName }) => 
             {/* Content Container */}
             <div className={`rounded-lg transition-all duration-300 ${isMinimized ? 'p-2' : 'p-3'}`}>
                 <div className="text-amber-900 font-bold text-sm mb-3 flex items-center justify-between border-b border-amber-900/20 pb-2">
-                    <span className="truncate">📊 {algorithmName} State</span>
+                    <span className="truncate">{algorithmName} State</span>
                     <button
                         onClick={() => setIsMinimized(!isMinimized)}
                         className="text-amber-900/60 hover:text-amber-900 transition-colors ml-2"
@@ -36,7 +36,7 @@ const DijkstraTable = ({ isVisible, visited, pq, mstWeight, algorithmName }) => 
                         {/* Visited Row */}
                         <div className="mb-3">
                             <div className="text-amber-900 font-bold text-xs mb-1 flex items-center gap-1">
-                                <span>✅ Visited:</span>
+                                <span>Visited:</span>
                             </div>
                             <div className="bg-amber-950/80 rounded-md p-2 min-h-[40px] max-h-[80px] overflow-y-auto border border-amber-900/30">
                                 {visited.length > 0 ? (
@@ -59,7 +59,7 @@ const DijkstraTable = ({ isVisible, visited, pq, mstWeight, algorithmName }) => 
                         {/* Priority Queue Row */}
                         <div className="mb-1">
                             <div className="text-amber-900 font-bold text-xs mb-1 flex items-center gap-1">
-                                <span>📋 Priority Queue (PQ):</span>
+                                <span>Priority Queue (PQ):</span>
                             </div>
                             <div className="bg-amber-950/80 rounded-md p-2 min-h-[60px] max-h-[200px] overflow-y-auto border border-amber-900/30">
                                 {pq.length > 0 ? (

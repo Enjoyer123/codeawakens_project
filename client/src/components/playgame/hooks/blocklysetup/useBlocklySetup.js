@@ -46,7 +46,9 @@ export function useBlocklySetup({
   setCurrentHint,
   initPhaserGame,
   starter_xml = null,
-  blocklyLoaded = false
+  blocklyLoaded = false,
+  isTextCodeEnabled = false,
+  onCodeGenerated = null
 }) {
   const initBlocklyAndPhaser = () => {
     console.log("initBlocklyAndPhaser called");
@@ -493,6 +495,29 @@ export function useBlocklySetup({
           // CRITICAL: Fix procedure call blocks immediately after loading starter XML
           // Call imported fixer, passing workspace and setCurrentHint
           fixCallBlocks(workspaceRef.current, setCurrentHint);
+
+          // If text code is enabled, generate code from starter XML
+          if (isTextCodeEnabled && onCodeGenerated) {
+            console.log('📝 Generating starter text code from XML...');
+            try {
+              // Enable Clean Mode
+              javascriptGenerator.isCleanMode = true;
+              let code = javascriptGenerator.workspaceToCode(workspaceRef.current);
+              javascriptGenerator.isCleanMode = false;
+
+              if (code && code.trim()) {
+                // Remove auto-generated var declarations specific to Blockly
+                // e.g. "var garph, start, goal, path, container, visited, map, node, neighbor;"
+                code = code.replace(/^var\s+[\w,\s]+;\n+/, '');
+
+                console.log('✅ Generated starter code length (Clean):', code.length);
+                onCodeGenerated(code);
+              }
+            } catch (genErr) {
+              javascriptGenerator.isCleanMode = false;
+              console.error('❌ Failed to generate starter text code:', genErr);
+            }
+          }
 
         } catch (xmlError) {
           console.error('⚠️ Error loading starter XML:', xmlError);

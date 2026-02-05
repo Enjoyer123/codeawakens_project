@@ -12,8 +12,9 @@ import {
     resetKnapsackSelectionTracking, startKnapsackSelectionTracking, showKnapsackFinalSelection,
     addWarriorToSide1Visual, addWarriorToSide2Visual, resetSubsetSumWarriorsVisual,
     startSubsetSumTrackingVisual, showSubsetSumFinalSolutionVisual, resetSubsetSumTrackingVisual,
-    addWarriorToSelectionVisual, resetCoinChangeVisualDisplay,
     resetCoinChangeSelectionTracking, startCoinChangeSelectionTracking, trackCoinChangeDecision, showCoinChangeFinalSolution,
+    addWarriorToSelectionVisual,
+    sortTrains, assignTrainVisual
 
 } from '../../../../../gameutils/blockly';
 
@@ -103,6 +104,7 @@ export const buildExecutionContext = ({
         addWarriorToSide1Visual, addWarriorToSide2Visual, resetSubsetSumWarriorsVisual,
         updateSubsetSumCellVisual, updateCoinChangeCellVisual, updateAntDpCellVisual,
         addWarriorToSelectionVisual, trackCoinChangeDecision,
+        sortTrains, assignTrainVisual,
         highlightPeak: (node) => highlightPeak(null, node),
         highlightCableCar: (u, v, cap) => highlightCableCar(null, u, v, cap),
         showEmeiFinalResult: (bn, rounds) => showEmeiFinalResult(null, bn, rounds),

@@ -82,6 +82,54 @@ export function defineProcedureDefGenerators() {
         const argsString = args.length > 0 ? args.join(', ') : '';
         const branch = javascriptGenerator.statementToCode(block, 'STACK');
 
+        // Clean Mode
+        if (javascriptGenerator.isCleanMode) {
+            // Collect all variables used in this block's scope (rudimentary approach)
+            // We can regex the branch for simple variable names or use nameDB
+            // Standard Blockly puts vars at top of code.
+            // We want them inside.
+            // Let's assume common vars: distance, parent, PQ, visited, MST_weight
+            // A better way is to iterate variables in workspace, but that's global.
+            // Let's manually inject the specific variables expected for Prim/Dijkstra for now
+            // OR, just use "let " prefix for the first assignment? No, that's hard to track.
+            // Track declared variables to support "let x = ..." on first use
+            // Add arguments to the set so we don't redeclare them
+            javascriptGenerator.declaredVariables = new Set(args);
+
+            // Generate body code
+            // Note: declaredVariables is populated above.
+            const cleanBranch = javascriptGenerator.statementToCode(block, 'STACK');
+
+            // Generate return code
+            let returnValue = '';
+
+            // Safely check inputs
+            if (block.getInput('RETURN')) {
+                returnValue = javascriptGenerator.valueToCode(block, 'RETURN', javascriptGenerator.ORDER_NONE);
+            }
+            if (!returnValue && block.getInput('VALUE')) {
+                returnValue = javascriptGenerator.valueToCode(block, 'VALUE', javascriptGenerator.ORDER_NONE);
+            }
+
+            returnValue = returnValue || '';
+
+            // Fallback for algorithms if return is empty and branch doesn't already end with a return
+            if (!returnValue) {
+                const trimmedBranch = cleanBranch.trim();
+                const branchLines = trimmedBranch.split('\n');
+                const lastLine = branchLines[branchLines.length - 1] || '';
+                if (!lastLine.trim().startsWith('return')) {
+                    if (name === 'PRIM') returnValue = 'MST_weight';
+                    else if (name === 'subsetSum') returnValue = 'false';
+                    else if (name === 'knapsack') returnValue = '0';
+                }
+            }
+
+            let returnCode = returnValue ? `  return ${returnValue};\n` : '';
+
+            return `function ${name}(${argsString}) {\n${cleanBranch}${returnCode}}\n`;
+        }
+
         const code = `async function ${name}(${argsString}) {\n${paramValidation}${localVarDeclarations}${branch}}`;
         console.log('[CUSTOM GENERATOR] Generated code:', code.substring(0, 200));
         console.log('[CUSTOM GENERATOR] Generator function:', typeof javascriptGenerator.forBlock["procedures_defreturn"]);

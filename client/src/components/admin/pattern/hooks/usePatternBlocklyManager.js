@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import * as Blockly from 'blockly/core';
 import { useBlocklyWorkspace } from '../../level/hooks/useBlocklyWorkspace';
 import { useBlocklyCleanup } from '../../level/hooks/useBlocklyCleanup';
-import { removeVariableIdsFromXml, addMutationToProcedureDefinitions } from '../utils/patternBlocklyUtils';
+import { removeVariableIdsFromXml, addMutationToProcedureDefinitions, fixWorkspaceProcedures } from '../utils/patternBlocklyUtils';
 import { delay } from '../../level/utils/asyncUtils';
 
 export const usePatternBlocklyManager = ({
@@ -117,6 +117,10 @@ export const usePatternBlocklyManager = ({
 
         if (!isViewMode && isForward && index > 0) {
             const prevStep = stepsRef.current[index - 1];
+            const currentWorkspaceXml = getCurrentXml(); // Check if we should carry over current work
+
+            // Logic: ถ้าเป็นการกด Next เราอาจจะอยากโหลด XML ของ Step ก่อนหน้ามาทำต่อ
+            // แต่ในที่นี้ใช้ logic ดึงจาก saved step
             if (prevStep && prevStep.xml) {
                 xmlToLoad = prevStep.xml;
             }
@@ -149,7 +153,26 @@ export const usePatternBlocklyManager = ({
             }
 
             const xmlDom = Blockly.utils.xml.textToDom(finalXml);
+
+            // ⚡ Performance: Set flag to skip event processing during load
+            if (window.__blocklySetLoadingXml) {
+                window.__blocklySetLoadingXml(true);
+            }
+
             Blockly.Xml.domToWorkspace(xmlDom, workspaceRef.current);
+
+            // -----------------------------------------------------------
+            // ✅ FIX: เรียกใช้ Runtime Fixer ทันทีหลังจากโหลด XML ลง Workspace
+            // เพื่อจัดการกับบล็อก solve1, solve2 ที่อาจเกิดขึ้น
+            // -----------------------------------------------------------
+            if (workspaceRef.current) {
+                fixWorkspaceProcedures(workspaceRef.current);
+            }
+            // -----------------------------------------------------------
+
+            if (window.__blocklySetLoadingXml) {
+                window.__blocklySetLoadingXml(false);
+            }
 
             if (!isViewMode && cleanupDuplicateProcedures) {
                 await delay(50);
@@ -175,6 +198,9 @@ export const usePatternBlocklyManager = ({
     const saveCurrentWorkspaceToRef = useCallback(() => {
         if (!workspaceRef.current) return false;
         try {
+            // ก่อน Save ทำการ fix อีกรอบเพื่อความชัวร์ว่า XML ที่ออกไปสะอาด
+            fixWorkspaceProcedures(workspaceRef.current);
+
             const xmlDom = Blockly.Xml.workspaceToDom(workspaceRef.current);
             let xmlText = Blockly.Xml.domToText(xmlDom);
             xmlText = addMutationToProcedureDefinitions(xmlText);
@@ -242,6 +268,9 @@ export const usePatternBlocklyManager = ({
     // Get current XML for saving
     const getCurrentXml = () => {
         if (!workspaceRef.current) return '';
+        // Fix ก่อน export เสมอ
+        fixWorkspaceProcedures(workspaceRef.current);
+
         const xmlDom = Blockly.Xml.workspaceToDom(workspaceRef.current);
         return Blockly.Xml.domToText(xmlDom);
     }

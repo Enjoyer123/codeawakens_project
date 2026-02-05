@@ -84,8 +84,8 @@ const dfsExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                         </value>
                         <next>
                           <!-- ถ้า node = goal แล้ว return path -->
-                          <block type="controls_if" id="check_goal">
-                            <value name="IF0">
+                          <block type="if_only" id="check_goal">
+                            <value name="CONDITION">
                               <block type="logic_compare" id="node_equals_goal">
                                 <value name="A">
                                   <block type="variables_get" id="node_var">
@@ -100,7 +100,7 @@ const dfsExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                                 </value>
                               </block>
                             </value>
-                            <statement name="DO0">
+                            <statement name="DO">
                               <block type="procedures_return" id="return_path">
                                 <value name="VALUE">
                                   <block type="variables_get" id="path_var2">
@@ -129,8 +129,8 @@ const dfsExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                                 </value>
                                 <statement name="DO">
                                   <!-- ถ้า neighbor ไม่มีอยู่ใน visited -->
-                                  <block type="controls_if" id="check_not_visited">
-                                    <value name="IF0">
+                                  <block type="if_only" id="check_not_visited">
+                                    <value name="CONDITION">
                                       <block type="logic_not_in" id="not_in_visited">
                                         <value name="ITEM">
                                           <block type="variables_get" id="neighbor_var">
@@ -144,7 +144,7 @@ const dfsExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                                         </value>
                                       </block>
                                     </value>
-                                    <statement name="DO0">
+                                    <statement name="DO">
                                       <!-- เพิ่ม neighbor เข้า visited -->
                                       <block type="lists_add_item" id="add_to_visited">
                                         <value name="LIST">

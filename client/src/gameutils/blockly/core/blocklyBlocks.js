@@ -19,6 +19,7 @@ import { defineSubsetSumVisualBlocks } from '../algorithms/subset_sum/blocklySub
 import { defineCoinChangeVisualBlocks } from '../algorithms/coin_change/blocklyCoinChangeVisualBlocks';
 import { defineTrainScheduleBlocks } from '../algorithms/special/blocklyTrainScheduleVisualBlocks';
 import { defineEmeiVisualBlocks } from '../algorithms/special/blocklyEmeiVisualBlocks';
+import { defineNQueenBlocks } from '../algorithms/nqueen/blocklyNQueenBlocks';
 
 
 export function defineAllBlocks() {
@@ -43,6 +44,7 @@ export function defineAllBlocks() {
   defineCoinChangeVisualBlocks();
   defineTrainScheduleBlocks();
   defineEmeiVisualBlocks();
+  defineNQueenBlocks();
 }
 
 

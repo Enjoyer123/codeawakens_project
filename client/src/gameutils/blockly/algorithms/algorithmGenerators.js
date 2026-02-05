@@ -17,11 +17,17 @@ export function defineAlgorithmGenerators() {
     // Subset Sum visual feedback generators
     javascriptGenerator.forBlock["subset_sum_add_warrior_to_side1"] = function (block) {
         const warriorIndex = javascriptGenerator.valueToCode(block, 'WARRIOR_INDEX', javascriptGenerator.ORDER_NONE) || '0';
+        if (javascriptGenerator.isCleanMode) {
+            return `subset_sum_add_warrior_to_side1(${warriorIndex});\n`;
+        }
         return `await addWarriorToSide1Visual(${warriorIndex});\n`;
     };
 
     javascriptGenerator.forBlock["subset_sum_add_warrior_to_side2"] = function (block) {
         const warriorIndex = javascriptGenerator.valueToCode(block, 'WARRIOR_INDEX', javascriptGenerator.ORDER_NONE) || '0';
+        if (javascriptGenerator.isCleanMode) {
+            return `subset_sum_add_warrior_to_side2(${warriorIndex});\n`;
+        }
         return `await addWarriorToSide2Visual(${warriorIndex});\n`;
     };
 
@@ -42,6 +48,9 @@ export function defineAlgorithmGenerators() {
     // Emei Mountain Visuals
     javascriptGenerator.forBlock["emei_highlight_peak"] = function (block) {
         const node = javascriptGenerator.valueToCode(block, "NODE", javascriptGenerator.ORDER_NONE) || "0";
+        if (javascriptGenerator.isCleanMode) {
+            return `highlightPeak(${node});\n`;
+        }
         return `await highlightPeak(${node});\n`;
     };
 
@@ -49,12 +58,18 @@ export function defineAlgorithmGenerators() {
         const u = javascriptGenerator.valueToCode(block, "U", javascriptGenerator.ORDER_NONE) || "0";
         const v = javascriptGenerator.valueToCode(block, "V", javascriptGenerator.ORDER_NONE) || "0";
         const capacity = javascriptGenerator.valueToCode(block, "CAPACITY", javascriptGenerator.ORDER_NONE) || "0";
+        if (javascriptGenerator.isCleanMode) {
+            return `highlightCableCar(${u}, ${v}, ${capacity});\n`;
+        }
         return `await highlightCableCar(${u}, ${v}, ${capacity});\n`;
     };
 
     javascriptGenerator.forBlock["emei_show_final_result"] = function (block) {
         const bottleneck = javascriptGenerator.valueToCode(block, "BOTTLENECK", javascriptGenerator.ORDER_NONE) || "0";
         const rounds = javascriptGenerator.valueToCode(block, "ROUNDS", javascriptGenerator.ORDER_NONE) || "0";
+        if (javascriptGenerator.isCleanMode) {
+            return `showFinalResult(${bottleneck}, ${rounds});\n`;
+        }
         return `await showEmeiFinalResult(${bottleneck}, ${rounds});\n`;
     };
 
@@ -62,6 +77,11 @@ export function defineAlgorithmGenerators() {
         const parent = javascriptGenerator.valueToCode(block, "PARENT", javascriptGenerator.ORDER_NONE) || "[]";
         const end = javascriptGenerator.valueToCode(block, "END", javascriptGenerator.ORDER_NONE) || "0";
         const bottleneck = javascriptGenerator.valueToCode(block, "BOTTLENECK", javascriptGenerator.ORDER_NONE) || "0";
+
+        if (javascriptGenerator.isCleanMode) {
+            return `highlightPath(${parent}, ${end}, ${bottleneck});\n`;
+        }
+
         return `await (async function() {
       console.log('🚩 [emei_highlight_path] START');
       try { 

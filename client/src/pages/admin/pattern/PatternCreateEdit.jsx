@@ -108,7 +108,16 @@ const PatternCreateEdit = () => {
 
         if (blocklyManager.workspaceRef.current) {
           const xmlDom = Blockly.utils.xml.textToDom(xmlText);
+
+          if (window.__blocklySetLoadingXml) {
+            window.__blocklySetLoadingXml(true);
+          }
+
           Blockly.Xml.domToWorkspace(xmlDom, blocklyManager.workspaceRef.current);
+
+          if (window.__blocklySetLoadingXml) {
+            window.__blocklySetLoadingXml(false);
+          }
         }
       } catch (e) {
         console.error('[Import XML] Error:', e);

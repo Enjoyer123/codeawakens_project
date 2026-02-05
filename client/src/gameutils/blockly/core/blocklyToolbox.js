@@ -30,6 +30,10 @@ export function createToolboxConfig(enabledBlocks) {
     console.log("✅ Adding move_along_path block");
     movementBlocks.push({ kind: "block", type: "move_along_path" });
   }
+  if (enabledBlocks["nqueen_place"])
+    movementBlocks.push({ kind: "block", type: "nqueen_place" });
+  if (enabledBlocks["nqueen_remove"])
+    movementBlocks.push({ kind: "block", type: "nqueen_remove" });
 
   console.log("🔧 Movement blocks count:", movementBlocks.length);
   if (movementBlocks.length > 0) {
@@ -59,6 +63,8 @@ export function createToolboxConfig(enabledBlocks) {
     logicBlocks.push({ kind: "block", type: "logic_operation" });
   if (enabledBlocks["logic_not_in"])
     logicBlocks.push({ kind: "block", type: "logic_not_in" });
+  if (enabledBlocks["nqueen_is_safe"])
+    logicBlocks.push({ kind: "block", type: "nqueen_is_safe" });
 
   if (logicBlocks.length > 0) {
     categories.push({

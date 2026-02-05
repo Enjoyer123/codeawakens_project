@@ -19,3 +19,6 @@ export * from './helpers/graphHelpers';
 
 // Algorithm Visualization Setup & Wrappers (Knapsack, Ant, Subset Sum, Coin Change)
 export * from './helpers/visualHelpers';
+
+// Train Schedule Helpers
+export * from './helpers/trainScheduleHelpers';

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLeaderboard } from '../../services/hooks/useLeaderboard';
 import PageLoader from '../../components/shared/Loading/PageLoader';
-import { getImageUrl } from '@/utils/imageUtils';
+import { getImageUrlSafe } from '@/utils/imageUtils';
 import PageError from '../../components/shared/Error/PageError';
 
 const Leaderboard = () => {
@@ -62,7 +62,7 @@ const Leaderboard = () => {
                                                     <div className={`w-12 h-12 rounded-full overflow-hidden border-2 ${rank <= 3 ? 'border-white' : 'border-[#a855f7]/50'}`}>
                                                         {player.profile_image ? (
                                                             <img
-                                                                src={getImageUrl(player.profile_image)}
+                                                                src={getImageUrlSafe(player.profile_image)}
                                                                 alt={player.username}
                                                                 className="w-full h-full object-cover"
                                                             />

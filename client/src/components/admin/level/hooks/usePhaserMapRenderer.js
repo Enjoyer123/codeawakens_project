@@ -124,45 +124,23 @@ export const usePhaserMapRenderer = ({
 
         if (monsterX && monsterY) {
           const mType = monster.type || 'vampire_1';
-          const isVampire = mType === 'vampire_1';
-          const isVampire2 = mType === 'vampire_2';
-          const isVampire3 = mType === 'vampire_3';
+          let textureKey = 'vampire_1';
 
-          // Shadow
-          currentGraphics.fillStyle(0x000000, 0.3);
-          currentGraphics.fillCircle(monsterX + 2, monsterY + 2, 15);
+          if (mType === 'vampire_2') textureKey = 'vampire_2';
+          else if (mType === 'vampire_3') textureKey = 'vampire_3';
+          else if (mType === 'slime_1') textureKey = 'slime_1';
 
-          // Monster circle - Green for Goblin, Purple for Vampire (or red for enemy)
-          let mColor = 0xff0000; // Red for default/goblin
-          let mEmoji = '👹';
-
-          if (isVampire) {
-            mColor = 0x9333ea; // Purple
-            mEmoji = '🧛';
-          } else if (isVampire2) {
-            mColor = 0x8B0000;
-            mEmoji = '🧛';
-          } else if (isVampire3) {
-            mColor = 0x8B0000;
-            mEmoji = '🧛';
-          } else if (mType === 'slime_1') {
-            mColor = 0x00ff00; // Green
-            mEmoji = '💧';
-          }
-
-          currentGraphics.fillStyle(mColor, 1);
-          currentGraphics.fillCircle(monsterX, monsterY, 15);
-
-          // Border
-          currentGraphics.lineStyle(2, 0xffffff, 1);
-          currentGraphics.strokeCircle(monsterX, monsterY, 15);
-
-          // Monster emoji text
           if (currentGraphics.scene) {
-            const text = currentGraphics.scene.add.text(monsterX, monsterY, mEmoji, {
-              fontSize: '16px',
-            });
-            text.setOrigin(0.5);
+            // Shadow
+            const shadow = currentGraphics.scene.add.image(monsterX + 2, monsterY + 2, textureKey);
+            shadow.setDisplaySize(30, 30);
+            shadow.setTint(0x000000);
+            shadow.setAlpha(0.3);
+            coinTextsRef.current.push(shadow);
+
+            const monsterSprite = currentGraphics.scene.add.image(monsterX, monsterY, textureKey);
+            monsterSprite.setDisplaySize(30, 30);
+            coinTextsRef.current.push(monsterSprite);
           }
         }
       });
@@ -207,29 +185,27 @@ export const usePhaserMapRenderer = ({
 
     // Draw people
     if (currentFormData.people && currentFormData.people.length > 0) {
+      const charType = currentFormData.character || 'main_1';
+      let textureKey = 'main_1';
+      if (charType === 'main_2') textureKey = 'main_2';
+      else if (charType === 'main_3') textureKey = 'main_3';
+
       currentFormData.people.forEach(person => {
         const personX = person.x;
         const personY = person.y;
 
         if (personX !== undefined && personY !== undefined) {
-          // Shadow
-          currentGraphics.fillStyle(0x000000, 0.3);
-          currentGraphics.fillCircle(personX + 2, personY + 2, 10);
-
-          // Person circle (green)
-          currentGraphics.fillStyle(0x10b981, 1);
-          currentGraphics.fillCircle(personX, personY, 10);
-
-          // Border
-          currentGraphics.lineStyle(2, 0xffffff, 1);
-          currentGraphics.strokeCircle(personX, personY, 10);
-
-          // Person emoji
           if (currentGraphics.scene) {
-            const text = currentGraphics.scene.add.text(personX, personY, '👤', {
-              fontSize: '12px',
-            });
-            text.setOrigin(0.5);
+            // Shadow
+            const shadow = currentGraphics.scene.add.image(personX + 2, personY + 2, textureKey);
+            shadow.setDisplaySize(20, 20);
+            shadow.setTint(0x000000);
+            shadow.setAlpha(0.3);
+            coinTextsRef.current.push(shadow);
+
+            const personSprite = currentGraphics.scene.add.image(personX, personY, textureKey);
+            personSprite.setDisplaySize(20, 20);
+            coinTextsRef.current.push(personSprite);
           }
         }
       });

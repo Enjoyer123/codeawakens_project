@@ -18,6 +18,11 @@ export function defineListGenerators() {
     const isPQ = listCode.includes('PQ') || listCode.includes('pq');
     const isMSTEdges = listCode.includes('MST_edges') || listCode.includes('mst_edges');
 
+    // Clean Mode
+    if (javascriptGenerator.isCleanMode) {
+      return `${list}.push(${item});\n`;
+    }
+
     if (isVisited) {
       return `${list}.push(${item});\nconsole.log('[DEBUG-PQ-PUSH] Added to visited:', ${item});\nawait markVisitedWithVisual(${item});\n`;
     } else if (isContainer) {
@@ -42,6 +47,11 @@ export function defineListGenerators() {
 
   javascriptGenerator.forBlock["lists_get_last"] = function (block) {
     const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
+    // Clean Mode
+    if (javascriptGenerator.isCleanMode) {
+      return [`${list}[${list}.length - 1]`, javascriptGenerator.ORDER_MEMBER];
+    }
+
     return [`(function() {
       try {
         const listVar = (${list});
@@ -61,6 +71,10 @@ export function defineListGenerators() {
 
   javascriptGenerator.forBlock["lists_get_first"] = function (block) {
     const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
+    // Clean Mode
+    if (javascriptGenerator.isCleanMode) {
+      return [`${list}[0]`, javascriptGenerator.ORDER_MEMBER];
+    }
     return [`(function() {
       try {
         const listVar = (${list});
@@ -77,7 +91,26 @@ export function defineListGenerators() {
     const mode = block.getFieldValue('MODE');
     const where = block.getFieldValue('WHERE');
     const list = javascriptGenerator.valueToCode(block, 'VALUE', javascriptGenerator.ORDER_MEMBER) || '[]';
-    const at = javascriptGenerator.valueToCode(block, 'AT', javascriptGenerator.ORDER_ATOMIC) || '0';
+    const at = javascriptGenerator.valueToCode(block, 'AT', javascriptGenerator.ORDER_NONE) || '0';
+
+    // Clean Mode
+    if (javascriptGenerator.isCleanMode) {
+      if (where === 'FROM_START' || where === 'FROM_END' || where === 'FIRST' || where === 'LAST') {
+        let indexCode = '';
+        if (where === 'FIRST') indexCode = '0';
+        else if (where === 'LAST') indexCode = `${list}.length - 1`;
+        else if (where === 'FROM_START') indexCode = at;
+        else if (where === 'FROM_END') indexCode = `${list}.length - 1 - ${at}`;
+
+        if (mode === 'GET') {
+          return [`${list}[${indexCode}]`, javascriptGenerator.ORDER_MEMBER];
+        } else if (mode === 'GET_REMOVE') {
+          return [`${list}.splice(${indexCode}, 1)[0]`, javascriptGenerator.ORDER_FUNCTION_CALL];
+        } else if (mode === 'REMOVE') {
+          return `${list}.splice(${indexCode}, 1);\n`;
+        }
+      }
+    }
 
     const body = `(function() {
       try {
@@ -115,6 +148,10 @@ export function defineListGenerators() {
   javascriptGenerator.forBlock["lists_contains"] = function (block) {
     const item = javascriptGenerator.valueToCode(block, 'ITEM', javascriptGenerator.ORDER_EQUALITY) || 'null';
     const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
+    // Clean Mode
+    if (javascriptGenerator.isCleanMode) {
+      return [`${list}.includes(${item})`, javascriptGenerator.ORDER_EQUALITY];
+    }
     return [`(function() {
       const _l = ${list};
       const _i = ${item};
@@ -134,22 +171,36 @@ export function defineListGenerators() {
 
   javascriptGenerator.forBlock["lists_isEmpty"] = function (block) {
     const list = javascriptGenerator.valueToCode(block, 'VALUE', javascriptGenerator.ORDER_MEMBER) || '[]';
+    // Clean Mode: User requested .isEmpty()
+    if (javascriptGenerator.isCleanMode) {
+      return [`${list}.length === 0`, javascriptGenerator.ORDER_EQUALITY];
+    }
     return [`${list}.length === 0`, javascriptGenerator.ORDER_EQUALITY];
   };
 
   javascriptGenerator.forBlock["lists_length"] = function (block) {
     const list = javascriptGenerator.valueToCode(block, 'VALUE', javascriptGenerator.ORDER_MEMBER) || '[]';
+    if (javascriptGenerator.isCleanMode) {
+      return [`${list}.length`, javascriptGenerator.ORDER_ATOMIC];
+    }
     return [`(function() { const listVar = ${list}; return listVar && Array.isArray(listVar) ? listVar.length : 0; })()`, javascriptGenerator.ORDER_MEMBER];
   };
 
   javascriptGenerator.forBlock["lists_find_min_index"] = function (block) {
     const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
     const exclude = javascriptGenerator.valueToCode(block, 'EXCLUDE', javascriptGenerator.ORDER_MEMBER) || 'null';
+    if (javascriptGenerator.isCleanMode) {
+      return [`findMinIndex(${list})`, javascriptGenerator.ORDER_FUNCTION_CALL];
+    }
     return [`await findMinIndex(${list}, ${exclude})`, javascriptGenerator.ORDER_FUNCTION_CALL];
   };
 
   javascriptGenerator.forBlock["lists_find_max_index"] = function (block) {
     const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
+    // Clean Mode
+    if (javascriptGenerator.isCleanMode) {
+      return [`lists_find_max_index(${list})`, javascriptGenerator.ORDER_FUNCTION_CALL];
+    }
     const exclude = javascriptGenerator.valueToCode(block, 'EXCLUDE', javascriptGenerator.ORDER_MEMBER) || 'null';
     return [`await findMaxIndex(${list}, ${exclude})`, javascriptGenerator.ORDER_FUNCTION_CALL];
   };
@@ -161,16 +212,15 @@ export function defineListGenerators() {
       console.warn('lists_get_at_index detected [object Object] in list input. Falling back to []. Raw:', listRaw);
       list = '[]';
     }
-    let indexCode = '';
-    if (block.getInput('INDEX')) {
-      const val = javascriptGenerator.valueToCode(block, 'INDEX', javascriptGenerator.ORDER_SUBTRACTION);
-      if (typeof val === 'string') indexCode = val;
+    const index = javascriptGenerator.valueToCode(block, 'INDEX', javascriptGenerator.ORDER_NONE) ||
+      javascriptGenerator.valueToCode(block, 'AT', javascriptGenerator.ORDER_NONE) || '0';
+
+    // Clean Mode
+    if (javascriptGenerator.isCleanMode) {
+      const idx = javascriptGenerator.valueToCode(block, 'INDEX', javascriptGenerator.ORDER_NONE) ||
+        javascriptGenerator.valueToCode(block, 'AT', javascriptGenerator.ORDER_NONE) || '0';
+      return [`${list}[${idx}]`, javascriptGenerator.ORDER_MEMBER];
     }
-    if (!indexCode && block.getInput('AT')) {
-      const val = javascriptGenerator.valueToCode(block, 'AT', javascriptGenerator.ORDER_SUBTRACTION);
-      if (typeof val === 'string') indexCode = val;
-    }
-    const index = indexCode || '0';
 
     return [`(function() { 
       try {
@@ -197,6 +247,10 @@ export function defineListGenerators() {
   javascriptGenerator.forBlock["lists_remove_at_index"] = function (block) {
     const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
     const index = javascriptGenerator.valueToCode(block, 'INDEX', javascriptGenerator.ORDER_ATOMIC) || '0';
+    // Clean Mode
+    if (javascriptGenerator.isCleanMode) {
+      return `${list}.splice(${index}, 1);\n`;
+    }
     return `(function() {
       const _b_list = ${list};
       const _b_idx = ${index};
@@ -235,24 +289,5 @@ export function defineListGenerators() {
   };
 
   // Override variables_set to detect MST_weight updates
-  javascriptGenerator.forBlock["variables_set"] = function (block) {
-    const variable = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const value = javascriptGenerator.valueToCode(block, 'VALUE', javascriptGenerator.ORDER_ASSIGNMENT) || 'null';
-
-    const varFieldValue = block.getFieldValue('VAR');
-    const varName = variable || varFieldValue;
-    const varNameLower = String(varName).toLowerCase();
-
-    const isMSTWeight = varNameLower === 'mst_weight' ||
-      varNameLower === 'mstweight' ||
-      varNameLower.includes('mst_weight') ||
-      varNameLower.includes('mstweight');
-
-    if (isMSTWeight) {
-      console.log('✅ Detected MST_weight update:', { varName, variable, value });
-      return `${variable} = ${value};\nupdateMSTWeight(${variable});\n`;
-    }
-
-    return `${variable} = ${value};\n`;
-  };
+  // variables_set generator removed (handled in blocklyDataGenerators.js)
 }

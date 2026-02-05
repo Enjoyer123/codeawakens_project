@@ -17,16 +17,13 @@ import { defineAlgorithmGenerators } from '../algorithms/algorithmGenerators';
 import { defineSpecialMathGenerators } from '../algorithms/specialMathGenerators';
 import { defineProcedureDefGenerators } from '../procedure/procedureDefGenerators';
 import { defineProcedureCallGenerators } from '../procedure/procedureCallGenerators';
+import { defineNQueenGenerators } from '../algorithms/nqueen/blocklyNQueenGenerators';
 
 /**
  * Define all Blockly generators by calling all category-specific generator functions
  */
 // List of generators that MUST be preserved/restored (Nuclear Force)
 const CRITICAL_FORCE_GENERATORS = [
-  "math_max",
-  "variables_get",
-  "math_arithmetic",
-  "procedures_defreturn"
 ];
 
 /**
@@ -60,6 +57,7 @@ export function defineAllGenerators() {
   defineSpecialMathGenerators();
   defineProcedureDefGenerators();
   defineProcedureCallGenerators();
+  defineNQueenGenerators();
 
   // Verify that our generator was set
   console.log('[defineAllGenerators] procedures_defreturn generator set:', typeof javascriptGenerator.forBlock["procedures_defreturn"]);

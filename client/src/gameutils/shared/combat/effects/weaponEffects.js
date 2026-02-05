@@ -44,9 +44,11 @@ export function showEffectWeaponFixed(enemy, damage, weaponKey = 'stick', weapon
     const count = 6; // Match ring count
     const radius = 45; // Match ring radius
 
-    // Position base: Player center
-    const px = scene.player.x;
-    const py = scene.player.y;
+    // Position base: Source center (passed in, e.g. cinematic actor or weapon ring container)
+    // Fallback to scene.player if no valid source with x,y provided
+    const sourceObj = (weaponSprite && typeof weaponSprite.x === 'number') ? weaponSprite : scene.player;
+    const px = sourceObj.x;
+    const py = sourceObj.y;
 
     const texturePrefix = `effect_${weaponKey}${effectType ? `_${effectType}` : ''}`;
     const firstFrameKey = `${texturePrefix}-1`;
@@ -120,10 +122,10 @@ export function showEffectWeaponFixed(enemy, damage, weaponKey = 'stick', weapon
 
     // Determine facing angle
     let baseAngle = 0;
-    const player = scene.player;
+    const angleSource = sourceObj; // Use the same source object selected above
 
-    if (player.directions && player.directionIndex !== undefined) {
-        const dir = player.directions[player.directionIndex];
+    if (angleSource.directions && angleSource.directionIndex !== undefined) {
+        const dir = angleSource.directions[angleSource.directionIndex];
         switch (dir) {
             case 'down': baseAngle = Math.PI / 2; break;
             case 'left': baseAngle = Math.PI; break;
@@ -132,7 +134,7 @@ export function showEffectWeaponFixed(enemy, damage, weaponKey = 'stick', weapon
         }
     } else {
         // Fallback to FlipX
-        baseAngle = player.flipX ? Math.PI : 0;
+        baseAngle = angleSource.flipX ? Math.PI : 0;
     }
 
     // Cone configuration: 3 projectiles in a 60 degree arc
@@ -150,7 +152,7 @@ export function showEffectWeaponFixed(enemy, damage, weaponKey = 'stick', weapon
         createCanvasBasedEffect(scene, {
             x: ex,
             y: ey,
-            depth: scene.player.depth + 10,
+            depth: sourceObj.depth + 10,
             angle: angle + Math.PI / 2, // Rotate sprite to face outward
             moveOutward: true,
             scale: customScale // Pass custom scale if defined

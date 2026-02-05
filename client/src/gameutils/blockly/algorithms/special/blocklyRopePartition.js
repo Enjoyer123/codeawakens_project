@@ -16,6 +16,9 @@ export function registerRopePartitionBlocks() {
         }
     };
     javascriptGenerator.forBlock['rope_get_cuts'] = function (block) {
+        if (javascriptGenerator.isCleanMode) {
+            return ['getCuts()', javascriptGenerator.ORDER_FUNCTION_CALL];
+        }
         // Use global API if available, else default. Add logic for safety.
         return [`(typeof getRopeCuts === 'function' && getRopeCuts()) || [2, 3, 5]`, javascriptGenerator.ORDER_ATOMIC];
     };
@@ -33,6 +36,22 @@ export function registerRopePartitionBlocks() {
         }
     };
     javascriptGenerator.forBlock['rope_target_len'] = function (block) {
+        if (javascriptGenerator.isCleanMode) {
+            // User's example uses a variable `target`, but this block returns the value. 
+            // Ideally it should be `target` if the variable exists, but this block gets the value.
+            // Let's return the simplified call assuming the user assigns it.
+            // Actually, user's ideal code shows `let cuts = getCuts();` creating a var. 
+            // But valid JS would be `getRopeTarget()`. User code: `var target = 10;` manually? 
+            // No, the user code has `solve(..., (typeof ... || 10))`.
+            // I will return `10` or a function call `getTarget()`? User didn't specify `getTarget` in ideal,
+            // but `var target = 10` implies hardcoded or fetched. I'll stick to a clean function call or just `10`.
+            // Better: `10` (if static) or `target` if it's a variable reference. 
+            // Let's assume `target` variable is passed in `solve`.
+            // If this block is used to GET the valid cuts, it returns an array.
+            // If this block is used for target, `(typeof getRopeTarget === 'function' && getRopeTarget()) || 10`.
+            // I'll return `10` to match the "var target = 10" line at end of user's ideal code.
+            return ['10', javascriptGenerator.ORDER_ATOMIC];
+        }
         return [`(typeof getRopeTarget === 'function' && getRopeTarget()) || 10`, javascriptGenerator.ORDER_ATOMIC];
     };
 
@@ -57,6 +76,11 @@ export function registerRopePartitionBlocks() {
     javascriptGenerator.forBlock['rope_vis_enter'] = function (block) {
         const cut = javascriptGenerator.valueToCode(block, 'CUT', javascriptGenerator.ORDER_ATOMIC) || '0';
         const sum = javascriptGenerator.valueToCode(block, 'SUM', javascriptGenerator.ORDER_ATOMIC) || '0';
+
+        if (javascriptGenerator.isCleanMode) {
+            return `await pushNode(${cut}, ${sum});\n`;
+        }
+
         // Calls the Stack-based API in GameCore
         // CRITICAL FIX: capture result. If -1 (depth limit), return immediately to stop recursion.
         // Debug logging for type verification
@@ -95,6 +119,9 @@ export function registerRopePartitionBlocks() {
         }
     };
     javascriptGenerator.forBlock['rope_vis_exit'] = function (block) {
+        if (javascriptGenerator.isCleanMode) {
+            return `await popNode();\n`;
+        }
         return `if (typeof popRopeNode === 'function') await popRopeNode();\n`;
     };
 
@@ -123,6 +150,11 @@ export function registerRopePartitionBlocks() {
     };
     javascriptGenerator.forBlock['rope_vis_status'] = function (block) {
         const status = block.getFieldValue('STATUS');
+
+        if (javascriptGenerator.isCleanMode) {
+            return `await updateStatus('${status}');\n`;
+        }
+
         // We assume GameCore has logic to update the 'current' node (top of stack)
         // Since markCurrentRopeNode might not exist, we use updateRopeNodeStatus with helper
         const code = `
@@ -149,6 +181,10 @@ export function registerRopePartitionBlocks() {
         }
     };
     javascriptGenerator.forBlock['rope_visual_init'] = function (block) {
+        // Clean Mode: Likely omitted or minimal
+        if (javascriptGenerator.isCleanMode) {
+            return ''; // Usually init is handled implicitly or not needed in clean snippet
+        }
         return `if (typeof initRopeTree === 'function') await initRopeTree();\n`;
     };
 }

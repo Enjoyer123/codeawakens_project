@@ -31,7 +31,7 @@ const CoinPeopleStateTable = ({ levelData, playerCoins = [], rescuedPeople = [],
 
                 {/* Header for Minimize */}
                 <div className="text-amber-900 font-bold text-sm flex items-center justify-between border-b border-amber-900/20 pb-2">
-                    <span>📊 Level Status</span>
+                    <span>Level Status</span>
                     <button
                         onClick={() => setIsMinimized(!isMinimized)}
                         className="text-amber-900/60 hover:text-amber-900 transition-colors ml-2"
@@ -46,7 +46,7 @@ const CoinPeopleStateTable = ({ levelData, playerCoins = [], rescuedPeople = [],
                         {showCoins && (
                             <div className="bg-amber-950/80 rounded-md p-2 border border-amber-900/30">
                                 <div className="text-amber-400 font-bold text-xs mb-1 flex items-center gap-1">
-                                    <span>🪙 เหรียญ ({playerCoins.length})</span>
+                                    <span>เหรียญ ({playerCoins.length})</span>
                                 </div>
                                 <div className="flex flex-wrap gap-1">
                                     {playerCoins.slice(0, 5).map((coin, index) => (
@@ -70,7 +70,7 @@ const CoinPeopleStateTable = ({ levelData, playerCoins = [], rescuedPeople = [],
                         {showPeople && (
                             <div className="bg-amber-950/80 rounded-md p-2 border border-amber-900/30">
                                 <div className="text-amber-500 font-bold text-xs mb-1 flex items-center gap-1">
-                                    <span>🆘 คน ({rescuedPeople.length}/{levelData?.people?.length || 0})</span>
+                                    <span>คน ({rescuedPeople.length}/{levelData?.people?.length || 0})</span>
                                 </div>
                                 <div className="grid grid-cols-3 gap-1 text-xs">
                                     {levelData.people?.slice(0, 6).map((person, index) => {
@@ -84,7 +84,7 @@ const CoinPeopleStateTable = ({ levelData, playerCoins = [], rescuedPeople = [],
                                                     }`}
                                                 title={`${person.personName} ที่ Node ${person.nodeId}`}
                                             >
-                                                {isRescued ? '✅' : '❌'}
+                                                {isRescued ? 'ช่วยแล้ว' : 'ยังไม่ช่วย'}
                                                 <span className="ml-1 text-[10px] opacity-100">{person.personName}</span>
                                             </div>
                                         );
@@ -102,7 +102,7 @@ const CoinPeopleStateTable = ({ levelData, playerCoins = [], rescuedPeople = [],
                         {(levelData?.treasures?.length > 0 || collectedTreasures.length > 0) && (
                             <div className="bg-amber-950/80 rounded-md p-2 border border-amber-900/30">
                                 <div className="text-amber-400 font-bold text-xs mb-1 flex items-center gap-1">
-                                    <span>💎 สมบัติ ({collectedTreasures.length}/{levelData?.treasures?.length || 0})</span>
+                                    <span>สมบัติ ({collectedTreasures.length}/{levelData?.treasures?.length || 0})</span>
                                 </div>
                                 <div className="flex flex-col gap-1 text-xs">
                                     {levelData?.treasures?.map((treasure, index) => {
@@ -116,7 +116,7 @@ const CoinPeopleStateTable = ({ levelData, playerCoins = [], rescuedPeople = [],
                                                     }`}
                                             >
                                                 <span className="font-medium">#{index + 1} Node {treasure.nodeId}</span>
-                                                <span>{isCollected ? '✅' : '🔒'}</span>
+                                                <span>{isCollected ? 'เก็บแล้ว' : 'ยังไม่เก็บ'}</span>
                                             </div>
                                         )
                                     })}
