@@ -51,6 +51,7 @@ const TestCaseManagement = () => {
   // Dialog & Form States
 
   // Dialog & Form States
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTestCase, setEditingTestCase] = useState(null);
   const [formData, setFormData] = useState({
@@ -91,8 +92,21 @@ const TestCaseManagement = () => {
         display_order: 0,
       });
     }
+    setDialogOpen(true);
+  }, []);
+
+  const handleCloseDialog = useCallback(() => {
     setDialogOpen(false);
     setEditingTestCase(null);
+    setFormData({
+      test_case_name: '',
+      function_name: '',
+      input_params: '{}',
+      expected_output: '[]',
+      comparison_type: 'exact',
+      is_primary: false,
+      display_order: 0,
+    });
   }, []);
 
   const handleSave = useCallback(async () => {
@@ -147,7 +161,7 @@ const TestCaseManagement = () => {
     } catch (err) {
       toast.error('ไม่สามารถบันทึก Test Case ได้: ' + (err.message || 'Unknown error'));
     }
-  }, [editingTestCase, formData, numericLevelId, handleCloseDialog, updateTestCaseMutation, createTestCaseMutation]);
+  }, [editingTestCase, formData, numericLevelId, updateTestCaseMutation, createTestCaseMutation, handleCloseDialog]);
 
   const handleDeleteClick = useCallback((testCase) => {
     setTestCaseToDelete(testCase);
@@ -350,7 +364,7 @@ const TestCaseManagement = () => {
 
         <DeleteConfirmDialog
           open={deleteDialogOpen}
-          onOpenChange={(open) => !deleting && setDeleteDialogOpen(open)}
+          onOpenChange={setDeleteDialogOpen}
           onConfirm={handleDeleteConfirm}
           itemName={testCaseToDelete?.test_case_name}
           title="ยืนยันการลบ Test Case"

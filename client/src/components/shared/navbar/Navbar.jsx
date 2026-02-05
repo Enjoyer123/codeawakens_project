@@ -104,7 +104,7 @@ function Navbar({ navItems = [], isLoading = false, isGamePage = false, isTransp
             <img
               src="/logo.png"
               alt="logo.png"
-              className="h-30 object-contain"
+              className="h-18 object-contain"
             />
           </a>
         </div>

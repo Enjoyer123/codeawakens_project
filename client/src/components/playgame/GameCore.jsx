@@ -570,7 +570,9 @@ const GameCore = ({
     setCurrentHint,
     initPhaserGame,
     starter_xml: currentLevel?.starter_xml || null,
-    blocklyLoaded
+    blocklyLoaded,
+    isTextCodeEnabled: currentLevel?.textcode || false,
+    onCodeGenerated: handleTextCodeChangeWithState
   });
 
   // Code execution
@@ -627,9 +629,9 @@ const GameCore = ({
   }, [shouldRunAfterBigO, userBigO, runCode]);
 
   const handleRunClick = () => {
-    // Check if pattern matched 100% AND BigO not yet provided
+    // Check if pattern matched 100% AND BigO is required (bestPatternBigO exists) AND BigO not yet provided
     // Also ensure we are not already running
-    if (hintData?.patternPercentage === 100 && !userBigO) {
+    if (hintData?.patternPercentage === 100 && hintData?.bestPatternBigO && !userBigO) {
       setShowBigOQuiz(true);
       setShouldRunAfterBigO(true);
       return;
@@ -799,14 +801,14 @@ const GameCore = ({
         <div
           className="w-[50%] border-l border-black flex flex-col backdrop-blur-sm overflow-hidden"
           style={{
-            backgroundImage: "url('/blocklyBg.png')",
+            // backgroundImage: "url('/blocklyBg.png')",
             backgroundSize: "100% 100%",
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",
             imageRendering: "pixelated"
           }}
         >
-          <div className="flex flex-col h-full px-4 py-2 relative">
+          <div className="flex flex-col h-full relative">
 
             {/* Floating Level Name */}
             <div className="absolute top-4 right-8 z-10 pointer-events-none">

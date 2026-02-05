@@ -2,11 +2,18 @@ import axios from 'axios';
 import { API_BASE_URL } from '../../config/apiConfig';
 
 export const fetchLeaderboard = async (getToken) => {
-    const token = await getToken();
-    const response = await axios.get(`${API_BASE_URL}/api/leaderboard`, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    });
-    return response.data;
+    try {
+        const token = await getToken();
+        const config = {};
+        if (token) {
+            config.headers = {
+                Authorization: `Bearer ${token}`,
+            };
+        }
+        const response = await axios.get(`${API_BASE_URL}/api/leaderboard`, config);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching leaderboard:', error);
+        throw error;
+    }
 };

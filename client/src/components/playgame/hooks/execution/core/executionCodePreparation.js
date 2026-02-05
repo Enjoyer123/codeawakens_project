@@ -279,6 +279,7 @@ export const prepareExecutableCode = (code, analysisResult, currentLevel, initCo
         ${antDpInitCode}
         ${nqueenInitCode}
         ${ropePartitionInitCode}
+        ${initCodes.helpers || ''}
         ${nqueenCaptureShim}
         ${code}
         ${nqueenFallbackCall}

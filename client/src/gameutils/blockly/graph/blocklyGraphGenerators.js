@@ -5,6 +5,11 @@ export function defineGraphGenerators() {
     javascriptGenerator.forBlock["graph_get_neighbors"] = function (block) {
         const graph = javascriptGenerator.valueToCode(block, 'GRAPH', javascriptGenerator.ORDER_MEMBER) || '{}';
         const node = javascriptGenerator.valueToCode(block, 'NODE', javascriptGenerator.ORDER_MEMBER) || '0';
+        if (javascriptGenerator.isCleanMode) {
+            // Assume graph variable has getNeighbors method or use utility wrapper if needed.
+            // Based on user request: "garph.getNeighbors(node)"
+            return [`${graph}.getNeighbors(${node})`, javascriptGenerator.ORDER_FUNCTION_CALL];
+        }
         return [`getGraphNeighborsWithVisualSync(${graph}, ${node})`, javascriptGenerator.ORDER_FUNCTION_CALL];
     };
 
@@ -19,17 +24,26 @@ export function defineGraphGenerators() {
 
     javascriptGenerator.forBlock["graph_get_all_edges"] = function (block) {
         const graph = javascriptGenerator.valueToCode(block, 'GRAPH', javascriptGenerator.ORDER_MEMBER) || '{}';
+        if (javascriptGenerator.isCleanMode) {
+            return [`${graph}.getAllEdges()`, javascriptGenerator.ORDER_FUNCTION_CALL];
+        }
         return [`getAllEdges(${graph})`, javascriptGenerator.ORDER_FUNCTION_CALL];
     };
 
     javascriptGenerator.forBlock["lists_sort_by_weight"] = function (block) {
         const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
+        if (javascriptGenerator.isCleanMode) {
+            return [`${list}.sortByWeight()`, javascriptGenerator.ORDER_FUNCTION_CALL];
+        }
         return [`sortEdgesByWeight(${list})`, javascriptGenerator.ORDER_FUNCTION_CALL];
     };
 
     javascriptGenerator.forBlock["graph_get_neighbors_with_weight"] = function (block) {
         const graph = javascriptGenerator.valueToCode(block, 'GRAPH', javascriptGenerator.ORDER_MEMBER) || '{}';
         const node = javascriptGenerator.valueToCode(block, 'NODE', javascriptGenerator.ORDER_MEMBER) || '0';
+        if (javascriptGenerator.isCleanMode) {
+            return [`getNeighborsWithWeight(${graph}, ${node})`, javascriptGenerator.ORDER_FUNCTION_CALL];
+        }
         return [`await getGraphNeighborsWithWeightWithVisualSync(${graph}, ${node})`, javascriptGenerator.ORDER_FUNCTION_CALL];
     };
 

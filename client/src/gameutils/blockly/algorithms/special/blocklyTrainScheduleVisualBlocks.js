@@ -39,6 +39,13 @@ export function defineTrainScheduleBlocks() {
       const key = block.getFieldValue('KEY');
       const order = block.getFieldValue('ORDER');
 
+      if (javascriptGenerator.isCleanMode) {
+        if (key === 'arrive' && order === 'ASC') {
+          return `sortTrains(trains);\n`;
+        }
+        return `sortTrains(trains, '${key}', '${order}');\n`;
+      }
+
       return `
         (function() {
           if (typeof trains !== 'undefined' && Array.isArray(trains)) {
@@ -74,6 +81,11 @@ export function defineTrainScheduleBlocks() {
     javascriptGenerator.forBlock['get_train_value'] = function (block) {
       const train = javascriptGenerator.valueToCode(block, 'TRAIN', javascriptGenerator.ORDER_ATOMIC) || '{}';
       const key = block.getFieldValue('KEY');
+
+      if (javascriptGenerator.isCleanMode) {
+        return [`${train}.${key}`, javascriptGenerator.ORDER_MEMBER];
+      }
+
       return [`(${train}['${key}'])`, javascriptGenerator.ORDER_ATOMIC];
     };
   }
@@ -98,7 +110,11 @@ export function defineTrainScheduleBlocks() {
 
     javascriptGenerator.forBlock['assign_train_visual'] = function (block) {
       const train = javascriptGenerator.valueToCode(block, 'TRAIN', javascriptGenerator.ORDER_ATOMIC) || 'null';
-      const platform = javascriptGenerator.valueToCode(block, 'PLATFORM', javascriptGenerator.ORDER_ATOMIC) || '0';
+      const platform = javascriptGenerator.valueToCode(block, 'PLATFORM', javascriptGenerator.ORDER_NONE) || '0';
+
+      if (javascriptGenerator.isCleanMode) {
+        return `assignTrainVisual(${train}, ${platform});\n`;
+      }
 
       return `
             (function() {

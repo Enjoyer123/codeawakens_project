@@ -21,22 +21,28 @@ export function defineLogicGenerators() {
     };
 
     javascriptGenerator.forBlock["logic_compare"] = function (block) {
-        const a = javascriptGenerator.valueToCode(block, 'A', javascriptGenerator.ORDER_ATOMIC);
-        const b = javascriptGenerator.valueToCode(block, 'B', javascriptGenerator.ORDER_ATOMIC);
+        const aOrder = javascriptGenerator.isCleanMode ? javascriptGenerator.ORDER_NONE : javascriptGenerator.ORDER_ATOMIC;
+        const bOrder = javascriptGenerator.isCleanMode ? javascriptGenerator.ORDER_NONE : javascriptGenerator.ORDER_ATOMIC;
+        const a = javascriptGenerator.valueToCode(block, 'A', aOrder);
+        const b = javascriptGenerator.valueToCode(block, 'B', bOrder);
         const operator = block.getFieldValue('OP');
 
         const valueA = (a && a.trim()) ? a : '0';
         const valueB = (b && b.trim()) ? b : '0';
 
-        let op;
-        switch (operator) {
-            case 'EQ': op = '=='; break;
-            case 'NEQ': op = '!='; break;
-            case 'LT': op = '<'; break;
-            case 'LTE': op = '<='; break;
-            case 'GT': op = '>'; break;
-            case 'GTE': op = '>='; break;
-            default: op = '==';
+        const opMap = {
+            'EQ': '==',
+            'NEQ': '!=',
+            'LT': '<',
+            'LTE': '<=',
+            'GT': '>',
+            'GTE': '>='
+        };
+        const op = opMap[operator] || '==';
+
+        // Clean Mode for Text Code Generation
+        if (javascriptGenerator.isCleanMode) {
+            return [`${valueA} ${op} ${valueB}`, javascriptGenerator.ORDER_RELATIONAL];
         }
 
         const code = `(function() {
@@ -64,6 +70,9 @@ export function defineLogicGenerators() {
 
     javascriptGenerator.forBlock["logic_negate"] = function (block) {
         const bool = javascriptGenerator.valueToCode(block, 'BOOL', javascriptGenerator.ORDER_LOGICAL_NOT) || 'false';
+        if (javascriptGenerator.isCleanMode) {
+            return [`!${bool}`, javascriptGenerator.ORDER_LOGICAL_NOT];
+        }
         return [`(!${bool})`, javascriptGenerator.ORDER_LOGICAL_NOT];
     };
 
@@ -74,6 +83,10 @@ export function defineLogicGenerators() {
 
         const op = operator === 'AND' ? '&&' : '||';
         const order = operator === 'AND' ? javascriptGenerator.ORDER_LOGICAL_AND : javascriptGenerator.ORDER_LOGICAL_OR;
+
+        if (javascriptGenerator.isCleanMode) {
+            return [`${a} ${op} ${b}`, order];
+        }
 
         return [`(${a} ${op} ${b})`, order];
     };

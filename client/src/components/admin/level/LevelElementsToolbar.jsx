@@ -9,6 +9,7 @@ import { useLevelElements } from './hooks/useLevelElements';
 
 const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, onAddMonster, onAddObstacle, selectedCategory, selectedMonsterType, onMonsterTypeChange, coinValue, onCoinValueChange, edgeWeight, onEdgeWeightChange, onFormDataChange }) => {
   const { isItemTypeEnabled, isWeightedGraphCategory } = useLevelElements(selectedCategory);
+  const [showPlayerSelect, setShowPlayerSelect] = useState(false);
 
   // --- Special Algorithm Mode Detection ---
   const activeAlgo =
@@ -131,22 +132,30 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
       {/* Group 1: Map Structure */}
       <div className="space-y-2">
         <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Map Structure</h3>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           <Button
             variant={currentMode === 'node' ? 'default' : 'outline'}
             onClick={() => onSetMode('node')}
-            className="w-full justify-start"
+            className="w-full justify-start px-2"
           >
-            <Plus className="h-4 w-4 mr-2" />
-            Node
+            <Plus className="h-3 w-3 mr-1" />
+            <span className="text-[10px]">Node</span>
           </Button>
           <Button
             variant={currentMode === 'edge' ? 'default' : 'outline'}
             onClick={() => onSetMode('edge')}
-            className="w-full justify-start"
+            className="w-full justify-start px-2"
           >
-            <Plus className="h-4 w-4 mr-2" />
-            Edge
+            <Plus className="h-3 w-3 mr-1" />
+            <span className="text-[10px]">Edge</span>
+          </Button>
+          <Button
+            variant={currentMode === 'obstacle' ? 'default' : 'outline'}
+            onClick={onAddObstacle}
+            className="w-full justify-start px-2"
+          >
+            <Plus className="h-3 w-3 mr-1" />
+            <span className="text-[10px]">Obstacle</span>
           </Button>
         </div>
 
@@ -199,152 +208,164 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
         </div>
       </div>
 
-      {/* Group 3: Enemies & Obstacles */}
+      {/* Group 3: Characters & Enemies */}
       <div className="space-y-4">
         <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Characters & Enemies</h3>
 
-        {/* Character Selection */}
-        <div className="space-y-2">
-          <label className="text-[10px] font-bold text-gray-500 uppercase">Player Character</label>
-          <select
-            value={formData.character || 'main_1'}
-            onChange={(e) => onFormDataChange({ ...formData, character: e.target.value })}
-            className="w-full text-xs h-8 border border-gray-200 rounded-md px-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            <option value="main_1">Main 1 (Default)</option>
-            <option value="main_2">Main 2</option>
-            <option value="main_3">Main 3</option>
-          </select>
-        </div>
-
-        <div className="space-y-3 pt-2 border-t border-gray-100">
-          <label className="text-[10px] font-bold text-gray-500 uppercase">Enemies & Obstacles</label>
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                variant={currentMode === 'monster' ? 'default' : 'outline'}
-                onClick={onAddMonster}
-                className="w-full justify-start"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Monster
-              </Button>
-              <Button
-                variant={currentMode === 'obstacle' ? 'default' : 'outline'}
-                onClick={onAddObstacle}
-                className="w-full justify-start"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Obstacle
-              </Button>
-            </div>
-
-            {/* Monster Type Selector - แสดงเมื่ออยู่ในโหมด monster */}
-            {currentMode === 'monster' && (
-              <div className="bg-gray-50 p-2 rounded-md border border-gray-100 animate-in fade-in slide-in-from-top-1 duration-200">
-                <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">
-                  Monster Type
-                </label>
-                <div className="flex flex-col gap-1">
-                  <Button
-                    variant={selectedMonsterType === 'vampire_1' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => typeof onMonsterTypeChange === 'function' && onMonsterTypeChange('vampire_1')}
-                    className={`justify-start h-7 text-[10px] py-1 px-2 ${selectedMonsterType === 'vampire_1' ? 'bg-purple-100 text-purple-700 hover:bg-purple-200' : 'text-gray-600'}`}
-                  >
-                    <span className="mr-2">🧛</span> Vampire
-                  </Button>
-                  <Button
-                    variant={selectedMonsterType === 'vampire_2' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => typeof onMonsterTypeChange === 'function' && onMonsterTypeChange('vampire_2')}
-                    className={`justify-start h-7 text-[10px] py-1 px-2 ${selectedMonsterType === 'vampire_2' ? 'bg-purple-100 text-purple-700 hover:bg-purple-200' : 'text-gray-600'}`}
-                  >
-                    <span className="mr-2">🧛</span> Vampire 2
-                  </Button>
-                  <Button
-                    variant={selectedMonsterType === 'vampire_3' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => typeof onMonsterTypeChange === 'function' && onMonsterTypeChange('vampire_3')}
-                    className={`justify-start h-7 text-[10px] py-1 px-2 ${selectedMonsterType === 'vampire_3' ? 'bg-purple-100 text-purple-700 hover:bg-purple-200' : 'text-gray-600'}`}
-                  >
-                    <span className="mr-2">🧛</span> Vampire 3
-                  </Button>
-                </div>
-              </div>
-            )}
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              variant={showPlayerSelect ? 'default' : 'outline'}
+              onClick={() => {
+                setShowPlayerSelect(!showPlayerSelect);
+                if (currentMode === 'monster') onSetMode(null);
+              }}
+              className={`w-full justify-start ${showPlayerSelect ? 'bg-blue-600' : ''}`}
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Player
+            </Button>
+            <Button
+              variant={currentMode === 'monster' ? 'default' : 'outline'}
+              onClick={() => {
+                onAddMonster();
+                setShowPlayerSelect(false);
+              }}
+              className="w-full justify-start"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Monster
+            </Button>
           </div>
+
+          {/* Player Character Selector */}
+          {showPlayerSelect && (
+            <div className="bg-gray-50 p-2 rounded-md border border-gray-100 animate-in fade-in slide-in-from-top-1 duration-200">
+              <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">
+                Choose Character
+              </label>
+              <div className="flex flex-col gap-1">
+                {[
+                  { id: 'main_1', name: 'Main 1', img: '/characters/main_1_00.png' },
+                  { id: 'main_2', name: 'Main 2', img: '/characters/main_2_00.png' },
+                  { id: 'main_3', name: 'Main 3', img: '/characters/main_3_00.png' },
+                ].map((char) => (
+                  <Button
+                    key={char.id}
+                    variant={(formData.character || 'main_1') === char.id ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => {
+                      onFormDataChange({ ...formData, character: char.id });
+                    }}
+                    className={`justify-start h-9 text-[10px] py-1 px-2 ${(formData.character || 'main_1') === char.id ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'text-gray-600'}`}
+                  >
+                    <img src={char.img} alt={char.name} className="w-6 h-6 mr-2 object-contain" />
+                    {char.name}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Monster Type Selector */}
+          {currentMode === 'monster' && (
+            <div className="bg-gray-50 p-2 rounded-md border border-gray-100 animate-in fade-in slide-in-from-top-1 duration-200">
+              <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">
+                Monster Type
+              </label>
+              <div className="flex flex-col gap-1">
+                {[
+                  { id: 'vampire_1', name: 'Vampire', img: '/enemies/vampire_1_00.png' },
+                  { id: 'vampire_2', name: 'Vampire 2', img: '/enemies/vampire_2_00.png' },
+                  { id: 'vampire_3', name: 'Vampire 3', img: '/enemies/vampire_3_00.png' },
+                ].map((monster) => (
+                  <Button
+                    key={monster.id}
+                    variant={selectedMonsterType === monster.id ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => typeof onMonsterTypeChange === 'function' && onMonsterTypeChange(monster.id)}
+                    className={`justify-start h-9 text-[10px] py-1 px-2 ${selectedMonsterType === monster.id ? 'bg-purple-100 text-purple-700 hover:bg-purple-200' : 'text-gray-600'}`}
+                  >
+                    <img src={monster.img} alt={monster.name} className="w-6 h-6 mr-2 object-contain" />
+                    {monster.name}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Group 4: Items (Conditional) */}
-      {(isItemTypeEnabled(ITEM_TYPES.COIN_POSITIONS) || isItemTypeEnabled(ITEM_TYPES.PEOPLE) || isItemTypeEnabled(ITEM_TYPES.TREASURES)) && (
-        <div className="space-y-2">
-          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Items</h3>
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-2">
-              {isItemTypeEnabled(ITEM_TYPES.COIN_POSITIONS) && (
-                <Button
-                  variant={currentMode === 'coin' ? 'default' : 'outline'}
-                  onClick={handleAddCoin}
-                  className="w-full justify-start"
-                >
-                  <Coins className="h-4 w-4 mr-2" />
-                  Coin
-                </Button>
-              )}
-              {isItemTypeEnabled(ITEM_TYPES.PEOPLE) && (
-                <Button
-                  variant={currentMode === 'people' ? 'default' : 'outline'}
-                  onClick={handleAddPeople}
-                  className="w-full justify-start"
-                >
-                  <Users className="h-4 w-4 mr-2" />
-                  People
-                </Button>
-              )}
-              {isItemTypeEnabled(ITEM_TYPES.TREASURES) && (
-                <Button
-                  variant={currentMode === 'treasure' ? 'default' : 'outline'}
-                  onClick={handleAddTreasure}
-                  className="w-full justify-start"
-                >
-                  <Gem className="h-4 w-4 mr-2" />
-                  Treasure
-                </Button>
+      {
+        (isItemTypeEnabled(ITEM_TYPES.COIN_POSITIONS) || isItemTypeEnabled(ITEM_TYPES.PEOPLE) || isItemTypeEnabled(ITEM_TYPES.TREASURES)) && (
+          <div className="space-y-2">
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Items</h3>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                {isItemTypeEnabled(ITEM_TYPES.COIN_POSITIONS) && (
+                  <Button
+                    variant={currentMode === 'coin' ? 'default' : 'outline'}
+                    onClick={handleAddCoin}
+                    className="w-full justify-start"
+                  >
+                    <Coins className="h-4 w-4 mr-2" />
+                    Coin
+                  </Button>
+                )}
+                {isItemTypeEnabled(ITEM_TYPES.PEOPLE) && (
+                  <Button
+                    variant={currentMode === 'people' ? 'default' : 'outline'}
+                    onClick={handleAddPeople}
+                    className="w-full justify-start"
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    People
+                  </Button>
+                )}
+                {isItemTypeEnabled(ITEM_TYPES.TREASURES) && (
+                  <Button
+                    variant={currentMode === 'treasure' ? 'default' : 'outline'}
+                    onClick={handleAddTreasure}
+                    className="w-full justify-start"
+                  >
+                    <Gem className="h-4 w-4 mr-2" />
+                    Treasure
+                  </Button>
+                )}
+              </div>
+
+              {/* Coin Value Input Sub-section */}
+              {isItemTypeEnabled(ITEM_TYPES.COIN_POSITIONS) && currentMode === 'coin' && (
+                <div className="bg-gray-50 p-2 rounded-md border border-gray-100 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">
+                    Coin Value
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <Coins className="w-3 h-3 text-yellow-500" />
+                    <Input
+                      type="number"
+                      min="1"
+                      value={coinValue || 10}
+                      onChange={(e) => {
+                        const newValue = e.target.value === '' ? 10 : parseInt(e.target.value, 10);
+                        const finalValue = isNaN(newValue) ? 10 : newValue;
+                        onCoinValueChange(finalValue);
+                      }}
+                      className="h-7 text-sm py-1"
+                      placeholder="10"
+                      autoFocus
+                    />
+                  </div>
+                </div>
               )}
             </div>
-
-            {/* Coin Value Input Sub-section */}
-            {isItemTypeEnabled(ITEM_TYPES.COIN_POSITIONS) && currentMode === 'coin' && (
-              <div className="bg-gray-50 p-2 rounded-md border border-gray-100 animate-in fade-in slide-in-from-top-1 duration-200">
-                <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">
-                  Coin Value
-                </label>
-                <div className="flex items-center gap-2">
-                  <Coins className="w-3 h-3 text-yellow-500" />
-                  <Input
-                    type="number"
-                    min="1"
-                    value={coinValue || 10}
-                    onChange={(e) => {
-                      const newValue = e.target.value === '' ? 10 : parseInt(e.target.value, 10);
-                      const finalValue = isNaN(newValue) ? 10 : newValue;
-                      onCoinValueChange(finalValue);
-                    }}
-                    className="h-7 text-sm py-1"
-                    placeholder="10"
-                    autoFocus
-                  />
-                </div>
-              </div>
-            )}
           </div>
-        </div>
-      )}
+        )
+      }
 
 
-    </div>
+    </div >
   );
 };
 

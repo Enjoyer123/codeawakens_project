@@ -288,6 +288,7 @@ const trainScheduleExampleXml = `<xml xmlns="https://developers.google.com/block
         <mutation name="solve">
           <arg name="trains"></arg>
         </mutation>
+        <field name="NAME">solve</field>
         <value name="ARG0">
           <block type="variables_get">
             <field name="VAR" id="trains">trains</field>
@@ -295,9 +296,6 @@ const trainScheduleExampleXml = `<xml xmlns="https://developers.google.com/block
         </value>
       </block>
     </value>
-  </block>
-  <block type="variables_get" x="50" y="900">
-    <field name="VAR" id="platform_count">platform_count</field>
   </block>
 </xml>`;
 

@@ -162,6 +162,7 @@ export function usePatternAnalysis({
           totalSteps: 0,
           progress: 0, // Reset progress bar
           patternPercentage: 0,
+          bestPatternBigO: null,
           showPatternProgress: true,
           threePartsMatch: { matchedParts: 0, part1Match: false, part2Match: false, part3Match: false }
         };
@@ -186,7 +187,8 @@ export function usePatternAnalysis({
           showHint: true,
           currentStep: 0,
           totalSteps: 0,
-          progress: 0
+          progress: 0,
+          bestPatternBigO: null
         });
         if (setCurrentHintRef.current) {
           setCurrentHintRef.current(defaultHint);

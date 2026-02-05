@@ -189,7 +189,6 @@ export const setupCustomGenerator = (currentLevel) => {
         // Safety Step Limit: Increment and check counter
         const stepLimitCode = "if (typeof globalThis !== 'undefined') { globalThis.__stepCount = (globalThis.__stepCount || 0) + 1; if (globalThis.__stepCount > 5000000) throw new Error('Infinite Loop / Recursion Limit Exceeded (5M steps)'); }";
         const code = `async function ${name}(${argsString}) {\n  if (typeof globalThis !== 'undefined' && globalThis.__isVisualRun !== false) await new Promise(r => setTimeout(r, 0));\n  ${stepLimitCode}\n${paramValidation}${localVarDeclarations}${branch}${returnStatement}}`;
-        console.error('[CUSTOM GENERATOR] Generated code preview:', code);
         return code;
     };
 

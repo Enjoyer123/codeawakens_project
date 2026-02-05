@@ -1,5 +1,6 @@
 // Helper function to load N-Queen example blocks into Blockly workspace
 import * as Blockly from "blockly/core";
+import { addMutationToProcedureDefinitions } from "../../../components/playgame/hooks/blocklysetup/xmlFixers";
 
 // N-Queen Example XML - Backtracking recursive solution (FIXED - return solution in base case)
 const nQueenExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
@@ -161,8 +162,6 @@ const nQueenExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml"
           </block>
         </statement>
         <!-- ❌ REMOVED: return solution was here (outside base case) -->
-      </block>
-      <!-- Recursive case: Loop through columns (only executes if base case is false) -->
       <next>
         <block type="for_loop_dynamic" id="for_col_loop">
           <field name="VAR">col</field>
@@ -190,18 +189,13 @@ const nQueenExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml"
             <!-- Inner if: if safe(row, col) -->
             <block type="if_only" id="if_safe">
               <value name="CONDITION">
-                <block type="procedures_callreturn" id="call_safe">
-                  <mutation name="safe">
-                    <arg name="row"></arg>
-                    <arg name="col"></arg>
-                  </mutation>
-                  <field name="NAME">safe</field>
-                  <value name="ARG0">
+                <block type="nqueen_is_safe" id="call_safe">
+                  <value name="ROW">
                     <block type="variables_get" id="row_var_safe">
                       <field name="VAR">row</field>
                     </block>
                   </value>
-                  <value name="ARG1">
+                  <value name="COL">
                     <block type="variables_get" id="col_var_safe">
                       <field name="VAR">col</field>
                     </block>
@@ -210,18 +204,13 @@ const nQueenExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml"
               </value>
               <statement name="DO">
                 <!-- place(row, col) -->
-                <block type="procedures_callnoreturn" id="call_place">
-                  <mutation name="place">
-                    <arg name="row"></arg>
-                    <arg name="col"></arg>
-                  </mutation>
-                  <field name="NAME">place</field>
-                  <value name="ARG0">
+                <block type="nqueen_place" id="call_place">
+                  <value name="ROW">
                     <block type="variables_get" id="row_var_place">
                       <field name="VAR">row</field>
                     </block>
                   </value>
-                  <value name="ARG1">
+                  <value name="COL">
                     <block type="variables_get" id="col_var_place">
                       <field name="VAR">col</field>
                     </block>
@@ -280,18 +269,13 @@ const nQueenExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml"
                           </statement>
                           <statement name="ELSE_DO">
                             <!-- remove(row, col) and continue loop -->
-                            <block type="procedures_callnoreturn" id="call_remove">
-                              <mutation name="remove">
-                                <arg name="row"></arg>
-                                <arg name="col"></arg>
-                              </mutation>
-                              <field name="NAME">remove</field>
-                              <value name="ARG0">
+                            <block type="nqueen_remove" id="call_remove">
+                              <value name="ROW">
                                 <block type="variables_get" id="row_var_remove">
                                   <field name="VAR">row</field>
                                 </block>
                               </value>
-                              <value name="ARG1">
+                              <value name="COL">
                                 <block type="variables_get" id="col_var_remove">
                                   <field name="VAR">col</field>
                                 </block>
@@ -316,6 +300,7 @@ const nQueenExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml"
           </next>
         </block>
       </next>
+    </block>
     </statement>
     <mutation>
       <arg name="row"></arg>
@@ -353,11 +338,23 @@ export function loadNQueenExampleBlocks(workspace) {
 
   try {
     console.log('🔍 Loading N-Queen example blocks (FIXED)...');
-    const xmlDom = Blockly.utils.xml.textToDom(nQueenExampleXml);
-    
+
+    // Process XML to fix definitions and deduplicate
+    const processedXml = addMutationToProcedureDefinitions(nQueenExampleXml);
+    const xmlDom = Blockly.utils.xml.textToDom(processedXml);
+
+    // ⚡ Performance: Set flag to skip event processing during load to prevent auto-creation of definitions
+    if (window.__blocklySetLoadingXml) {
+      window.__blocklySetLoadingXml(true);
+    }
+
     // Load into workspace
     Blockly.Xml.domToWorkspace(xmlDom, workspace);
-    
+
+    if (window.__blocklySetLoadingXml) {
+      window.__blocklySetLoadingXml(false);
+    }
+
     // Ensure necessary variables exist (use getVariableMap() APIs for Blockly v12+)
     const variableNames = ['row', 'col', 'n', 'result', 'solution', 'i', 'j', 'solveResult', 'board'];
     variableNames.forEach(varName => {
@@ -385,7 +382,7 @@ export function loadNQueenExampleBlocks(workspace) {
         console.debug('Variable', varName, 'already exists or error:', e);
       }
     });
-    
+
     console.log('✅ N-Queen example blocks loaded successfully');
     console.log('⚠️ Note: Functions safe(row, col), place(row, col), and remove(row, col) will be initialized by nqueenInitCode');
   } catch (error) {

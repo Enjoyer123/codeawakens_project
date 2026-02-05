@@ -8,9 +8,10 @@ import 'blockly/javascript';
 import {
   syncProcedureParameters,
   removeVariableIdsFromXml,
-  //   getParamCount, // Unused here, used in hook
-  //   rebindCallers  // Unused here, used in hook
 } from '../../../components/admin/level/utils/blocklyProcedureUtils';
+
+// ✅ เพิ่ม import fixWorkspaceProcedures
+import { addMutationToProcedureDefinitions, fixWorkspaceProcedures } from '../../../components/admin/pattern/utils/patternBlocklyUtils';
 
 import { useBlocklyCleanup } from '../../../components/admin/level/hooks/useBlocklyCleanup';
 import { useSuppressBlocklyWarnings } from '../../../components/admin/level/hooks/useSuppressBlocklyWarnings';
@@ -156,7 +157,8 @@ const StarterCreateEdit = () => {
             }
 
             const cleanedStarterXml = removeVariableIdsFromXml(starter_xml);
-            const xml = Blockly.utils.xml.textToDom(cleanedStarterXml);
+            const robustXml = addMutationToProcedureDefinitions(cleanedStarterXml);
+            const xml = Blockly.utils.xml.textToDom(robustXml);
 
             workspaceRef.current.clear();
 
@@ -181,7 +183,15 @@ const StarterCreateEdit = () => {
 
             // Load XML
             try {
+              if (window.__blocklySetLoadingXml) {
+                window.__blocklySetLoadingXml(true);
+              }
+
               Blockly.Xml.domToWorkspace(xml, workspaceRef.current);
+
+              if (window.__blocklySetLoadingXml) {
+                window.__blocklySetLoadingXml(false);
+              }
             } catch (loadErr) {
               if (!isLastAttempt) {
                 await delay(500);
@@ -211,68 +221,11 @@ const StarterCreateEdit = () => {
               continue; // Retry loop
             }
 
-            // Blocks loaded successfully. Fix procedure calls.
+            // ✅ CHANGED: ใช้ fixWorkspaceProcedures แทน Logic เดิม
+            // เพื่อใช้สูตร Winner/Loser (Keep block with logic)
             await delay(50);
-
-            try {
-              const definitionBlocks = workspaceRef.current.getBlocksByType('procedures_defreturn', false)
-                .concat(workspaceRef.current.getBlocksByType('procedures_defnoreturn', false));
-
-              const callBlocks = workspaceRef.current.getBlocksByType('procedures_callreturn', false)
-                .concat(workspaceRef.current.getBlocksByType('procedures_callnoreturn', false));
-
-              const validProcedureNames = new Set();
-              definitionBlocks.forEach(defBlock => {
-                try {
-                  const name = defBlock.getFieldValue('NAME');
-                  if (name && name !== 'unnamed' && name !== 'undefined' && name.trim() !== '') {
-                    validProcedureNames.add(name);
-                  }
-                } catch (e) { }
-              });
-
-              // Fix call blocks
-              callBlocks.forEach(callBlock => {
-                try {
-                  const nameField = callBlock.getField('NAME');
-                  if (nameField) {
-                    const currentName = nameField.getValue();
-                    if (!validProcedureNames.has(currentName)) {
-                      if (validProcedureNames.size > 0) {
-                        const firstValidName = Array.from(validProcedureNames)[0];
-                        nameField.setValue(firstValidName);
-                        // Sync
-                        const matchedDef = definitionBlocks.find(def => {
-                          try { return def.getFieldValue('NAME') === firstValidName; } catch (e) { return false; }
-                        });
-                        if (matchedDef && callBlock.setProcedureParameters) {
-                          syncProcedureParameters(callBlock, matchedDef, workspaceRef.current);
-                        }
-                        if (callBlock.render) callBlock.render();
-                      }
-                    }
-                  }
-                } catch (e) { }
-              });
-
-              // Remove bad definitions
-              definitionBlocks.forEach(defBlock => {
-                try {
-                  const defName = defBlock.getFieldValue('NAME');
-                  if (defName && !validProcedureNames.has(defName)) {
-                    const isNumberedVariant = Array.from(validProcedureNames).some(validName => {
-                      const baseName = validName.replace(/\d+$/, '');
-                      const defBaseName = defName.replace(/\d+$/, '');
-                      return baseName === defBaseName && defName !== validName;
-                    });
-                    if (isNumberedVariant && !defBlock.isDisposed()) {
-                      defBlock.dispose(false);
-                    }
-                  }
-                } catch (e) { }
-              });
-            } catch (fixErr) {
-              // Ignore fixing errors
+            if (workspaceRef.current) {
+              fixWorkspaceProcedures(workspaceRef.current);
             }
 
             // Success! Finish up.
@@ -320,14 +273,18 @@ const StarterCreateEdit = () => {
     }
 
     try {
+      // ✅ เรียก fix อีกทีเพื่อความชัวร์ก่อน Save
+      fixWorkspaceProcedures(workspaceRef.current);
+
       const xml = Blockly.Xml.workspaceToDom(workspaceRef.current);
-      const xmlText = Blockly.Xml.domToText(xml);
+      let xmlText = Blockly.Xml.domToText(xml);
+
+      xmlText = addMutationToProcedureDefinitions(xmlText);
 
       const updateData = {
         starter_xml: xmlText || null,
       };
 
-      // Use updating mutation instead of direct API call
       await updateLevelMutation.mutateAsync({
         levelId: levelId,
         levelData: updateData

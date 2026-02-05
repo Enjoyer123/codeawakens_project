@@ -43,7 +43,7 @@ export function updateDijkstraPQ(pq) {
  */
 export function updateMSTWeight(weight) {
   const weightNum = Number(weight) || 0;
-  console.log('📊 updateMSTWeight called with weight:', weight, 'converted to:', weightNum);
+  console.log('updateMSTWeight called with weight:', weight, 'converted to:', weightNum);
 
   const currentState = getCurrentGameState();
   setCurrentGameState({
@@ -53,7 +53,7 @@ export function updateMSTWeight(weight) {
     }
   });
 
-  console.log('📊 Updated dijkstraState.mstWeight to:', weightNum);
+  console.log('Updated dijkstraState.mstWeight to:', weightNum);
 }
 
 /**

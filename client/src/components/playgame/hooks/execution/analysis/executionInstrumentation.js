@@ -777,3 +777,37 @@ export const instrumentNQueenVisuals = (codeWithReturnCapture) => {
         return codeWithReturnCapture;
     }
 };
+
+export const getSimplifiedHelpersInitCode = () => {
+    return `
+        /* Simplified Visual Helpers for Text Code */
+        
+        // Knapsack
+        var selectItem = (typeof selectKnapsackItemVisual === 'function') ? selectKnapsackItemVisual : (x) => {};
+        var unselectItem = (typeof unselectKnapsackItemVisual === 'function') ? unselectKnapsackItemVisual : (x) => {};
+        
+        // Subset Sum
+        var addToSide1 = (typeof addWarriorToSide1Visual === 'function') ? addWarriorToSide1Visual : (x) => {};
+        var addToSide2 = (typeof addWarriorToSide2Visual === 'function') ? addWarriorToSide2Visual : (x) => {};
+        
+        // Coin Change
+        var trackDecision = (typeof trackCoinChangeDecision === 'function') ? trackCoinChangeDecision : (amt, idx, inc, exc) => {};
+        var addWarrior = (typeof addWarriorToSelectionVisual === 'function') ? addWarriorToSelectionVisual : (x) => {};
+        
+        // Ant DP
+        var moveAnt = (typeof antMaxWithVisual === 'function') ? function(r, c) { return antMaxWithVisual(r, c, 0, 0, []); } : (r, c) => {};
+
+        // Rope Partition
+        var pushNode = (typeof pushRopeNode === 'function') ? pushRopeNode : (cut, sum) => {};
+        var popNode = (typeof popRopeNode === 'function') ? popRopeNode : () => {};
+        var updateStatus = (typeof updateRopeNodeStatus === 'function') ? 
+            (status) => { 
+                if (typeof ropeStack !== 'undefined' && ropeStack.length > 0) {
+                    updateRopeNodeStatus(ropeStack[ropeStack.length - 1], status);
+                }
+            } : (status) => {};
+        var getCuts = (typeof getRopeCuts === 'function') ? getRopeCuts : () => [2, 3, 5];
+        
+        console.log('🔍 Loaded Simplified Text Code Helpers (selectItem, addToSide1, trackDecision, etc.)');
+    `;
+};

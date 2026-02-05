@@ -22,6 +22,10 @@ const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
       // Global error handler for all queries
+      // Suppress common errors for guest users (public access)
+      if (error?.response?.status === 401) return;
+      if (error?.message === 'No authentication token available') return;
+
       console.error('Global Query Error:', error);
       const message = formatErrorMessage(error, 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้');
       toast.error(`เกิดข้อผิดพลาด: ${message}`);
@@ -30,6 +34,10 @@ const queryClient = new QueryClient({
   mutationCache: new MutationCache({
     onError: (error) => {
       // Global error handler for all mutations
+      // Suppress common errors for guest users
+      if (error?.response?.status === 401) return;
+      if (error?.message === 'No authentication token available') return;
+
       console.error('Global Mutation Error:', error);
       const message = formatErrorMessage(error, 'การทำรายการล้มเหลว');
       toast.error(`เกิดข้อผิดพลาด: ${message}`);

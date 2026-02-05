@@ -30,10 +30,16 @@ export function defineProcedureCallGenerators() {
 
                         console.log(`[blocklyGenerators] 🔍 Mutation name extracted: "${mutationName}"`);
 
-                        if (mutationName && (mutationName === 'safe' || mutationName === 'place' || mutationName === 'remove')) {
+                        // FIX: Allow ANY mutation name, not just N-Queen helpers.
+                        // Ideally we trust the mutation name if it exists.
+                        if (mutationName) {
                             procedureName = mutationName;
-                            isNQueenHelper = true;
-                            console.log(`[blocklyGenerators] ✅ Found N-Queen helper name from mutation: ${procedureName}`);
+                            if (mutationName === 'safe' || mutationName === 'place' || mutationName === 'remove') {
+                                isNQueenHelper = true;
+                                console.log(`[blocklyGenerators] ✅ Found N-Queen helper name from mutation: ${procedureName}`);
+                            } else {
+                                console.log(`[blocklyGenerators] ✅ Found procedure name from mutation: ${procedureName}`);
+                            }
                         }
                     }
                 } catch (e) {
@@ -41,19 +47,11 @@ export function defineProcedureCallGenerators() {
                 }
             }
 
-            // Check NAME field if mutation didn't give us a name
-            if (!procedureName) {
-                const nameField = block.getField('NAME');
-                if (nameField) {
-                    const nameFromField = nameField.getValue();
-                    if (nameFromField === 'safe' || nameFromField === 'place' || nameFromField === 'remove') {
-                        procedureName = nameFromField;
-                        isNQueenHelper = true;
-                        console.log(`[blocklyGenerators] ✅ Found N-Queen helper name from NAME field: "${procedureName}"`);
-                    } else if (nameFromField) {
-                        procedureName = nameFromField;
-                        console.log(`[blocklyGenerators] procedures_callreturn: Got name from NAME field: "${procedureName}"`);
-                    }
+            // For Clean Mode, try very hard to get the real name
+            if (javascriptGenerator.isCleanMode) {
+                const nameFromField = block.getFieldValue('NAME');
+                if (nameFromField && nameFromField !== 'unnamed') {
+                    procedureName = nameFromField;
                 }
             }
 
@@ -134,7 +132,7 @@ export function defineProcedureCallGenerators() {
 
         if (!procedureName || procedureName === 'unnamed' || procedureName === 'undefined' ||
             (typeof procedureName === 'string' && procedureName.trim() === '')) {
-            if (!isNQueenHelper) {
+            if (!isNQueenHelper && !javascriptGenerator.isCleanMode) {
                 console.warn('Procedure call block has invalid name, trying to fix:', procedureName);
 
                 try {
@@ -161,7 +159,7 @@ export function defineProcedureCallGenerators() {
             }
 
             const finalIsNQueenHelper = procedureName === 'safe' || procedureName === 'place' || procedureName === 'remove';
-            if (!finalIsNQueenHelper && (!procedureName || procedureName === 'unnamed' || procedureName === 'undefined' ||
+            if (!javascriptGenerator.isCleanMode && !finalIsNQueenHelper && (!procedureName || procedureName === 'unnamed' || procedureName === 'undefined' ||
                 (typeof procedureName === 'string' && procedureName.trim() === ''))) {
                 return ['null', javascriptGenerator.ORDER_ATOMIC];
             }
@@ -169,24 +167,30 @@ export function defineProcedureCallGenerators() {
 
         // Get arguments
         const args = [];
+        const requestOrder = javascriptGenerator.isCleanMode ? javascriptGenerator.ORDER_NONE : javascriptGenerator.ORDER_NONE;
+
         if (block.arguments_ && block.arguments_.length > 0) {
             for (let i = 0; i < block.arguments_.length; i++) {
-                const argCode = javascriptGenerator.valueToCode(block, 'ARG' + i, javascriptGenerator.ORDER_NONE) || 'null';
+                const argCode = javascriptGenerator.valueToCode(block, 'ARG' + i, requestOrder) || 'null';
                 args.push(argCode);
             }
         } else {
             let i = 0;
             while (block.getInput('ARG' + i)) {
-                const argCode = javascriptGenerator.valueToCode(block, 'ARG' + i, javascriptGenerator.ORDER_NONE) || 'null';
+                const argCode = javascriptGenerator.valueToCode(block, 'ARG' + i, requestOrder) || 'null';
                 args.push(argCode);
                 i++;
-            }
-            if (i > 0) {
-                console.log(`[blocklyGenerators] ⚠️ Fallback argument scanning found ${i} args for ${procedureName}`);
             }
         }
 
         const argsString = args.length > 0 ? args.join(', ') : '';
+        if (javascriptGenerator.isCleanMode) {
+            // Very critical: if procedureName is missing, try to get it from NAME field again
+            if (!procedureName || procedureName === 'unnamed') {
+                procedureName = block.getFieldValue('NAME') || 'solve';
+            }
+            return [`${procedureName}(${argsString})`, javascriptGenerator.ORDER_FUNCTION_CALL];
+        }
         return [`(await ${procedureName}(${argsString}))`, javascriptGenerator.ORDER_FUNCTION_CALL];
     };
 
@@ -309,6 +313,9 @@ export function defineProcedureCallGenerators() {
             console.log(`[blocklyGenerators] Generating code for ${procedureName}(${argsString}) (no-return)`);
         }
 
+        if (javascriptGenerator.isCleanMode) {
+            return `${procedureName}(${argsString});\n`;
+        }
         return `await ${procedureName}(${argsString});\n`;
     };
 }

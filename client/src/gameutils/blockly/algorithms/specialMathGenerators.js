@@ -12,6 +12,11 @@ export function defineSpecialMathGenerators() {
         const valueA = (a && a.trim()) ? a : '0';
         const valueB = (b && b.trim()) ? b : '0';
 
+        // Clean Mode: Return standard Math.max without visual wrappers
+        if (javascriptGenerator.isCleanMode) {
+            return [`Math.max(${valueA}, ${valueB})`, javascriptGenerator.ORDER_FUNCTION_CALL];
+        }
+
         try {
             // Check if this is inside a knapsack function
             let parentBlock = block.getParent();

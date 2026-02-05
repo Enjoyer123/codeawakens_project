@@ -23,6 +23,8 @@ export const removeVariableIdsFromXml = (xmlString) => {
 export const addMutationToProcedureDefinitions = (xmlString) => {
     if (!xmlString) return xmlString;
 
+    console.log("🛠️ [patternBlocklyUtils] Processing XML length:", xmlString.length);
+
     let result = xmlString;
 
     try {
@@ -48,6 +50,7 @@ export const addMutationToProcedureDefinitions = (xmlString) => {
                     return fullBlock.replace('</mutation>', `</mutation><field name="NAME">${mutationName}</field>`);
                 } else {
                     // Fallback injection (should typically have mutation closing tag though)
+                    // If no mutation tag end found, append to start of content (risky but rare)
                     return fullBlock.replace(content, `<mutation name="${mutationName}"></mutation><field name="NAME">${mutationName}</field>` + content.replace(/<mutation[^>]*>[\s\S]*?<\/mutation>/, ''));
                 }
             } else if (nameFieldMatch[1] !== mutationName) {
@@ -94,47 +97,228 @@ export const addMutationToProcedureDefinitions = (xmlString) => {
             } catch (e) { }
         });
 
-        if (procedureParams.size === 0) {
-            return result;
+        // --- STEP 3: Fix Definition Blocks (Add missing params) ---
+        if (procedureParams.size > 0) {
+            procedureParams.forEach((params, name) => {
+                // Find definition block for this procedure
+                const defBlockRegex = new RegExp(
+                    `(<block[^>]*type="procedures_def(return|noreturn)"[^>]*>)([\\s\\S]*?)(<\\/block>)`,
+                    'g'
+                );
+
+                result = result.replace(defBlockRegex, (match, openTag, content, closeTag) => {
+                    // Check if this is the right procedure
+                    // Need to find the name in the content
+                    const nameMatch = content.match(/<field name="NAME">([^<]+)<\/field>/);
+                    if (!nameMatch || nameMatch[1] !== name) {
+                        return match;
+                    }
+
+                    // Check if mutation already exists
+                    if (content.includes('<mutation')) {
+                        return match;
+                    }
+
+                    // Build mutation XML string
+                    const argXml = params.map(paramName => `    <arg name="${paramName}"></arg>`).join('\n');
+                    const mutationXml = `\n    <mutation name="${name}">\n${argXml}\n    </mutation>`;
+
+                    return openTag + mutationXml + content + closeTag;
+                });
+            });
         }
 
-        // --- STEP 3: Fix Definition Blocks (Add missing params) ---
-        procedureParams.forEach((params, name) => {
-            // Find definition block for this procedure
-            const defBlockRegex = new RegExp(
-                `(<block[^>]*type="procedures_def(return|noreturn)"[^>]*>)([\\s\\S]*?)(<\\/block>)`,
-                'g'
-            );
+        // --- STEP 3.5: Unify Numbered Variants ---
+        // Identify procedures like "solve2", "solve3" and rename them to "solve" if "solve" is the intended base.
+        // 1. Gather all procedure names (Definitions AND Calls)
+        const allKeys = new Set();
 
-            result = result.replace(defBlockRegex, (match, openTag, content, closeTag) => {
-                // Check if this is the right procedure
-                // Need to find the name in the content
-                const nameMatch = content.match(/<field name="NAME">([^<]+)<\/field>/);
-                if (!nameMatch || nameMatch[1] !== name) {
-                    return match;
+        // Scan definitions
+        const defBlockRegexGather = /<block[^>]*type="procedures_def(return|noreturn)"[^>]*>[\s\S]*?<field name="NAME">([^<]+)<\/field>/g;
+        let match;
+        while ((match = defBlockRegexGather.exec(result)) !== null) {
+            if (match[2]) allKeys.add(match[2].trim());
+        }
+
+        // Scan calls (Field NAME)
+        const callBlockRegexGather = /<block[^>]*type="procedures_call(return|noreturn)"[^>]*>[\s\S]*?<field name="NAME">([^<]+)<\/field>/g;
+        while ((match = callBlockRegexGather.exec(result)) !== null) {
+            if (match[2]) allKeys.add(match[2].trim());
+        }
+
+        // Scan calls (Mutation name - mostly reliable source of truth)
+        const callMutationRegexGather = /<mutation[^>]*name="([^"]+)"/g;
+        while ((match = callMutationRegexGather.exec(result)) !== null) {
+            if (match[1]) allKeys.add(match[1].trim());
+        }
+
+        const allKeysArray = Array.from(allKeys);
+
+        // 2. Identify variants
+        const baseNames = new Set();
+        allKeysArray.forEach(name => {
+            if (!name.match(/\d+$/)) {
+                baseNames.add(name);
+            }
+        });
+
+        const replacements = new Map();
+
+        allKeysArray.forEach(name => {
+            const variantMatch = name.match(/^(.+?)(\d+)$/);
+            if (variantMatch) {
+                const baseName = variantMatch[1].trim();
+                // Only rename if baseName exists in our set OR if baseName is 'solve' (hardcoded heuristic for N-Queen/Common levels)
+                if (baseNames.has(baseName) || baseName === 'solve') {
+                    replacements.set(name, baseName);
                 }
+            }
+        });
 
-                // Check if mutation already exists
-                if (content.includes('<mutation')) {
-                    // Update existing mutation if needed? For now, assume if mutation exists, it's correct-ish
-                    // Or we could enforce params? Let's leave it to avoid overwriting intentional edits
-                    return match;
-                }
+        // 3. Apply replacements Globally (Mutations and NAME fields)
+        if (replacements.size > 0) {
+            console.log("🔄 Unifying numbered variants:", Object.fromEntries(replacements));
+            replacements.forEach((newName, oldName) => {
+                // Replace field NAME (handle potential whitespace in XML)
+                const fieldRegex = new RegExp(`<field name="NAME">\\s*${oldName}\\s*<\\/field>`, 'g');
+                result = result.replace(fieldRegex, `<field name="NAME">${newName}</field>`);
 
-                // Build mutation XML string
-                const argXml = params.map(paramName => `    <arg name="${paramName}"></arg>`).join('\n');
-                const mutationXml = `\n    <mutation name="${name}">\n${argXml}\n    </mutation>`;
-
-                // Insert mutation before the fields or comments
-                // Usually just after openTag is safe-ish if we reconstruct, but 'content' is the inner part
-                // Let's prepend to content
-                return openTag + mutationXml + content + closeTag;
+                // Replace mutation name
+                const mutationRegex = new RegExp(`name="\\s*${oldName}\\s*"`, 'g');
+                result = result.replace(mutationRegex, `name="${newName}"`);
             });
+        }
+
+        // --- STEP 4: Deduplicate Definitions ---
+        // If the XML contains multiple definitions for the same name, keep only the first one
+        const defBlockRegex2 = /<block[^>]*type="procedures_def(return|noreturn)"[^>]*>[\s\S]*?<\/block>/g;
+        const seenDefs = new Set();
+        result = result.replace(defBlockRegex2, (fullBlock) => {
+            const nameMatch = fullBlock.match(/<field name="NAME">([^<]+)<\/field>/);
+            const name = nameMatch ? nameMatch[1] : null;
+
+            if (name) {
+                if (seenDefs.has(name)) {
+                    console.log(`🗑️ Removing duplicate definition for: ${name}`);
+                    return ''; // Remove duplicate
+                }
+                seenDefs.add(name);
+            }
+            return fullBlock;
         });
 
         return result;
     } catch (e) {
-        console.error("Error in addMutationToProcedureDefinitions:", e);
+        console.error("Error in addMutationToProcedureDefinitions (PatternUtils):", e);
         return xmlString; // Return original if error
     }
+};
+
+export const fixWorkspaceProcedures = (workspace) => {
+    if (!workspace) return;
+
+    setTimeout(() => {
+        try {
+            console.log("🛠️ Running Smart Merge Procedure Fixer...");
+
+            // 1. หาและจัดกลุ่ม Definition Blocks
+            const defBlocks = workspace.getBlocksByType('procedures_defreturn', false)
+                .concat(workspace.getBlocksByType('procedures_defnoreturn', false));
+
+            const groups = {};
+            defBlocks.forEach(block => {
+                const name = block.getFieldValue('NAME');
+                const baseName = name.replace(/\d+$/, ''); // solve1 -> solve
+                if (!groups[baseName]) groups[baseName] = [];
+                groups[baseName].push({ name, block });
+            });
+
+            // 2. จัดการทีละกลุ่ม
+            Object.keys(groups).forEach(baseName => {
+                const variants = groups[baseName];
+                if (variants.length <= 1) return;
+
+                // 2.1 หา Winner (ตัวที่มี Code เยอะสุด เก็บไว้เป็นตัวหลัก)
+                variants.sort((a, b) => {
+                    return b.block.getDescendants(false).length - a.block.getDescendants(false).length;
+                });
+                const winner = variants[0];
+                const losers = variants.slice(1);
+                const winnerCurrentName = winner.name;
+
+                // 2.2 [NEW] หาตัวที่มี Argument ครบที่สุด (Best Signature)
+                // เพื่อแก้ปัญหาตัวหลักมี Arg ไม่ครบ (เช่น มีแค่ row แต่ตัวที่กำลังจะลบมี row, col)
+                let bestSigBlock = winner.block;
+                let maxArgs = (winner.block.arguments_ || []).length;
+
+                variants.forEach(v => {
+                    const args = v.block.arguments_ || [];
+                    if (args.length > maxArgs) {
+                        maxArgs = args.length;
+                        bestSigBlock = v.block;
+                    }
+                });
+
+                // ถ้าพบว่ามีตัวอื่นที่มี Argument เยอะกว่าตัว Winner -> ให้ก๊อปปี้ Argument มาใส่ Winner
+                if (bestSigBlock !== winner.block) {
+                    console.log(`✨ Syncing arguments from "${bestSigBlock.getFieldValue('NAME')}" to "${winnerCurrentName}"`);
+                    if (bestSigBlock.mutationToDom && winner.block.domToMutation) {
+                        const bestMutation = bestSigBlock.mutationToDom();
+                        // สำคัญ: ต้องคงชื่อเดิมของ Winner ไว้ก่อน (เดี๋ยวค่อยเปลี่ยนชื่อทีหลัง)
+                        bestMutation.setAttribute('name', winnerCurrentName);
+                        winner.block.domToMutation(bestMutation);
+                    }
+                }
+
+                console.log(`🔍 Merging "${baseName}": Keep "${winnerCurrentName}" (${maxArgs} args)`);
+
+                // 3. ย้าย Call Blocks ไปหา Winner (พร้อม Sync Argument ล่าสุด)
+                const allCallBlocks = workspace.getBlocksByType('procedures_callreturn', false)
+                    .concat(workspace.getBlocksByType('procedures_callnoreturn', false));
+
+                allCallBlocks.forEach(callBlock => {
+                    const currentCallName = callBlock.getFieldValue('NAME');
+                    // เช็คว่ากำลังเรียกตัวที่กำลังจะโดนลบหรือไม่
+                    const isCallingLoser = losers.some(l => l.name === currentCallName);
+
+                    if (isCallingLoser) {
+                        // เปลี่ยนชื่อให้ไปเรียก Winner
+                        callBlock.setFieldValue(winnerCurrentName, 'NAME');
+
+                        // Sync Mutation จาก Winner (ซึ่งตอนนี้มี Arg ครบแล้ว) มาใส่บล็อกเรียก
+                        if (callBlock.mutationToDom && winner.block.mutationToDom) {
+                            const defMutation = winner.block.mutationToDom();
+                            const callMutation = document.createElement('mutation');
+                            callMutation.setAttribute('name', winnerCurrentName);
+
+                            // Copy <arg> tags
+                            Array.from(defMutation.children).forEach(child => {
+                                if (child.tagName.toLowerCase() === 'arg') {
+                                    callMutation.appendChild(child.cloneNode(true));
+                                }
+                            });
+
+                            callBlock.domToMutation(callMutation);
+                        }
+                    }
+                });
+
+                // 4. ลบ Losers ทิ้ง
+                losers.forEach(loser => {
+                    if (!loser.block.isDisposed()) {
+                        loser.block.dispose(false);
+                    }
+                });
+
+                // 5. เปลี่ยนชื่อ Winner กลับเป็นชื่อฐาน (เช่น solve1 -> solve)
+                // ขั้นตอนนี้ Blockly จะอัปเดตชื่อใน Call Blocks ที่เชื่อมอยู่ให้อัตโนมัติ
+                if (winnerCurrentName !== baseName) {
+                    winner.block.setFieldValue(baseName, 'NAME');
+                }
+            });
+
+        } catch (e) {
+            console.warn('Error in fixWorkspaceProcedures:', e);
+        }
+    }, 150);
 };

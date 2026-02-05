@@ -139,7 +139,19 @@ export const usePhaserGameInit = ({
 
               // Load background after a short delay
               setTimeout(() => {
-                loadBackground();
+                // Preload characters and monsters
+                this.load.image('main_1', '/characters/main_1_00.png');
+                this.load.image('main_2', '/characters/main_2_00.png');
+                this.load.image('main_3', '/characters/main_3_00.png');
+                this.load.image('vampire_1', '/enemies/vampire_1_00.png');
+                this.load.image('vampire_2', '/enemies/vampire_2_00.png');
+                this.load.image('vampire_3', '/enemies/vampire_3_00.png');
+                this.load.image('slime_1', '/characters/Slime1.png');
+
+                this.load.once('complete', () => {
+                  loadBackground();
+                });
+                this.load.start();
               }, 200);
 
               // Initial draw
