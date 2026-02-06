@@ -41,9 +41,16 @@ function checkBlocksSubsequenceMatch(currentAnalysis, targetAnalysis, strict = f
     }
 
     // procedureName (ถ้า target ระบุ)
-    if (isMatch && tgt.procedureName !== undefined && cur.procedureName !== tgt.procedureName) {
-      console.log(`  - 🔍 [SubsequenceMatch] procedureName mismatch: current="${cur.procedureName}", target="${tgt.procedureName}"`);
-      isMatch = false;
+    // RELAXED: เช็คเฉพาะเมื่อทั้ง current และ target มี procedureName
+    // เพราะผู้ใช้อาจยังไม่ได้ตั้งชื่อ procedure (ใช้ชื่อ default)
+    if (isMatch && tgt.procedureName !== undefined && cur.procedureName !== undefined) {
+      if (cur.procedureName !== tgt.procedureName) {
+        console.log(`  - 🔍 [SubsequenceMatch] procedureName mismatch: current="${cur.procedureName}", target="${tgt.procedureName}"`);
+        isMatch = false;
+      }
+    } else if (isMatch && tgt.procedureName !== undefined && !cur.procedureName) {
+      // Target มี procedureName แต่ current ไม่มี - ให้ผ่านไปก่อน (RELAXED)
+      console.log(`  - ⚠️ [SubsequenceMatch] [RELAXED] Target expects procedureName="${tgt.procedureName}" but current has none - allowing match`);
     }
 
     // RELAXED MODE: ไม่เช็ค hasStatement/hasValue/valueBlocks อย่างเข้มงวด
@@ -274,23 +281,23 @@ export function checkThreePartsMatch(workspace, pattern) {
     part1And2Length: parts.part1And2Xml?.length || 0,
     fullPatternLength: parts.fullPatternXml?.length || 0
   });
-  
+
   let part1Match = false;
   let part2Match = false;
   let part3Match = false;
-  
+
   // วิเคราะห์ current XML structure (full)
   const currentAnalysis = analyzeXmlStructure(currentXml, workspace);
   console.log('🔍 Current XML analysis:', {
     blockCount: currentAnalysis.length,
     blockTypes: currentAnalysis.map(b => b.type)
   });
-  
+
   // วิเคราะห์ pattern parts
   let part1Analysis = null;
   let part1And2Analysis = null;
   let fullPatternAnalysis = null;
-  
+
   if (parts.part1Xml) {
     try {
       const parser = new DOMParser();
@@ -304,7 +311,7 @@ export function checkThreePartsMatch(workspace, pattern) {
       console.error('Error analyzing part 1:', error);
     }
   }
-  
+
   if (parts.part1And2Xml) {
     try {
       const parser = new DOMParser();
@@ -318,7 +325,7 @@ export function checkThreePartsMatch(workspace, pattern) {
       console.error('Error analyzing part 1+2:', error);
     }
   }
-  
+
   // เช็ค Part 1: ใช้ subsequence matching (บล็อกไม่จำเป็นต้องติดกัน)
   if (part1Analysis) {
     console.log('🎯 Part 1 Expected blocks:', part1Analysis.map(b => `${b.type}${b.varName ? ` (var: ${b.varName})` : ''}`));
@@ -331,7 +338,7 @@ export function checkThreePartsMatch(workspace, pattern) {
     console.log('🎯 Part 1+2 Expected blocks:', part1And2Analysis.map(b => `${b.type}${b.varName ? ` (var: ${b.varName})` : ''}`));
     part2Match = checkBlocksSubsequenceMatch(currentAnalysis, part1And2Analysis);
     console.log('🔍 Part 1+2 (initialization + while loop) subsequence match:', part2Match);
-    
+
     // ถ้า Part 2 ผ่าน → Part 1 ต้องผ่านด้วย (เพราะ Part 2 รวม Part 1)
     if (part2Match) {
       part1Match = true;
@@ -371,7 +378,7 @@ export function checkThreePartsMatch(workspace, pattern) {
     part1Match = true;
     console.log('🔍 Part 2 matches, setting part1 to true');
   }
-  
+
   // ระบุ current step
   const currentStep = part3Match ? 3 : (part2Match ? 2 : (part1Match ? 1 : 0));
   console.log('🔍 Current step determination:', {
@@ -379,24 +386,24 @@ export function checkThreePartsMatch(workspace, pattern) {
     part2Match,
     part3Match,
     currentStep: currentStep,
-    stepDescription: currentStep === 3 ? 'Step 3 (All parts passed)' : 
-                     (currentStep === 2 ? 'Step 2 (Part 1+2 passed, working on Part 3)' : 
-                     (currentStep === 1 ? 'Step 1 (Part 1 passed, working on Part 2)' : 'Step 0 (Not started)'))
+    stepDescription: currentStep === 3 ? 'Step 3 (All parts passed)' :
+      (currentStep === 2 ? 'Step 2 (Part 1+2 passed, working on Part 3)' :
+        (currentStep === 1 ? 'Step 1 (Part 1 passed, working on Part 2)' : 'Step 0 (Not started)'))
   });
-  
+
   // นับจำนวนชุดที่ตรง
   let matchedParts = 0;
   if (part1Match) matchedParts = 1;
   if (part2Match) matchedParts = 2;
   if (part3Match) matchedParts = 3;
-  
+
   console.log('🔍 Three parts match result:', {
     part1Match,
     part2Match,
     part3Match,
     matchedParts
   });
-  
+
   return {
     part1Match,
     part2Match,
@@ -434,12 +441,12 @@ export function findBestThreePartsMatch(workspace, goodPatterns) {
 
   for (const pattern of sortedPatterns) {
     const matchResult = checkThreePartsMatch(workspace, pattern);
-    
+
     // เลือก pattern ที่มี matchedParts สูงสุดและ type_id ต่ำสุด
     if (matchResult.matchedParts > bestMatchedParts) {
       bestMatchedParts = matchResult.matchedParts;
       bestPattern = pattern;
-      
+
       // ถ้า matchedParts = 3 แสดงว่า match ทั้งหมดแล้ว หยุดค้นหา
       if (bestMatchedParts === 3) {
         break;

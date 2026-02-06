@@ -258,7 +258,7 @@ const LevelGuideManagement = () => {
         <AdminPageHeader
           title={`Guides: ${level?.level_name || levelId}`}
           subtitle="จัดการคำแนะนำ (Guides) ของด่านนี้"
-          backPath={`/admin/levels/${numericLevelId}/edit`}
+          backPath={`/admin/levels`}
           onAddClick={() => handleOpenGuideDialog()}
           addButtonText="เพิ่ม Guide"
         />

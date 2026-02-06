@@ -147,9 +147,7 @@ const LevelInfoForm = ({ formData, categories, prerequisiteLevels, isEditing, le
               <option value="hard">Hard</option>
               <option value="expert">Expert</option>
             </select>
-
           </div>
-
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -202,77 +200,58 @@ const LevelInfoForm = ({ formData, categories, prerequisiteLevels, isEditing, le
             />
             <span className="text-sm font-medium">Required for Post-Test</span>
           </label>
-          {(() => {
-            const selectedCategory = categories.find(c => String(c.category_id) === String(formData.category_id));
-            const restrictedCategories = [
-              "DFS",
-              "BFS",
-              "Shortest Path",
-              "Minimum Spanning Tree",
-              "Backtrack",
-              "Dynamic Programing", // User specified spelling
-              "Dynamic Programming", // Common variant
-              "Greedy"
-            ];
-            const isTextCodeDisabled = selectedCategory && restrictedCategories.includes(selectedCategory.category_name);
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={formData.textcode}
+              onChange={(e) => handleChange('textcode', e.target.checked)}
+            />
+            <span className="text-sm font-medium">Text Code</span>
+          </label>
+        </div>
 
-            return (
-              <label className={`flex items-center gap-2 ${isTextCodeDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+        {/* Level Type Selection (Mutually Exclusive) */}
+        <div className="space-y-2 pt-4 border-t border-gray-100">
+          <label className="text-sm font-bold text-gray-700">Level Type (Algorithm)</label>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { label: 'Knapsack', field: 'knapsack_data' },
+              { label: 'Coin Change', field: 'coin_change_data' },
+              { label: 'Subset Sum', field: 'subset_sum_data' },
+              { label: 'Applied Data', field: 'applied_data' }
+            ].map((type) => (
+              <label key={type.field} className="flex items-center gap-2 p-2 border rounded-md hover:bg-gray-50 cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={!isTextCodeDisabled && formData.textcode}
-                  disabled={isTextCodeDisabled}
-                  onChange={(e) => handleChange('textcode', e.target.checked)}
+                  checked={!!formData[type.field]}
+                  onChange={(e) => {
+                    const isChecked = e.target.checked;
+                    const newData = { ...formData };
+
+                    if (isChecked) {
+                      // Mutual exclusivity: Clear others
+                      newData.knapsack_data = null;
+                      newData.coin_change_data = null;
+                      newData.subset_sum_data = null;
+                      newData.applied_data = null;
+
+                      // Enable selected (Initialize with empty object if null)
+                      newData[type.field] = formData[type.field] || ALGORITHM_TEMPLATES[type.field] || {};
+                    } else {
+                      // Disable
+                      newData[type.field] = null;
+                    }
+                    onFormDataChange(newData);
+                  }}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <span className="text-sm font-medium">Text Code {isTextCodeDisabled && '(Disabled for this category)'}</span>
+                <span className="text-sm text-gray-700">{type.label}</span>
               </label>
-            );
-          })()}
-        </div>
-      </div>
-
-      {/* Level Type Selection (Mutually Exclusive) */}
-      <div className="space-y-2 pt-4 border-t border-gray-100">
-        <label className="text-sm font-bold text-gray-700">Level Type (Algorithm)</label>
-        <div className="grid grid-cols-2 gap-2">
-          {[
-            { label: 'Knapsack', field: 'knapsack_data' },
-            { label: 'Coin Change', field: 'coin_change_data' },
-            { label: 'Subset Sum', field: 'subset_sum_data' },
-            { label: 'Applied Data', field: 'applied_data' }
-          ].map((type) => (
-            <label key={type.field} className="flex items-center gap-2 p-2 border rounded-md hover:bg-gray-50 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={!!formData[type.field]}
-                onChange={(e) => {
-                  const isChecked = e.target.checked;
-                  const newData = { ...formData };
-
-                  if (isChecked) {
-                    // Mutual exclusivity: Clear others
-                    newData.knapsack_data = null;
-                    newData.coin_change_data = null;
-                    newData.subset_sum_data = null;
-                    newData.applied_data = null;
-
-                    // Enable selected (Initialize with empty object if null)
-                    newData[type.field] = formData[type.field] || ALGORITHM_TEMPLATES[type.field] || {};
-                  } else {
-                    // Disable
-                    newData[type.field] = null;
-                  }
-                  onFormDataChange(newData);
-                }}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="text-sm text-gray-700">{type.label}</span>
-            </label>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </div>
-
   );
 };
 

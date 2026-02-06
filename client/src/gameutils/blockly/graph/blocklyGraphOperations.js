@@ -7,7 +7,7 @@ export function defineGraphOperationsBlocks() {
     init: function () {
       this.appendValueInput("GRAPH")
         .setCheck(null)
-        .appendField("🗺️ Get Neighbors of Node");
+        .appendField("Get Neighbors of Node");
       this.appendValueInput("NODE")
         .setCheck("Number")
         .appendField("from Graph");
@@ -22,7 +22,7 @@ export function defineGraphOperationsBlocks() {
     init: function () {
       this.appendValueInput("NODE")
         .setCheck("Number")
-        .appendField("📊 Node Value");
+        .appendField("Node Value");
       this.setOutput(true, "Number");
       this.setColour(200);
       this.setTooltip("อ่านค่า node");
@@ -33,7 +33,7 @@ export function defineGraphOperationsBlocks() {
   Blockly.Blocks["graph_get_current_node"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("📍 Current Node ID");
+        .appendField("Current Node ID");
       this.setOutput(true, "Number");
       this.setColour(200);
       this.setTooltip("แสดงเลข node ที่ตัวละครอยู่ปัจจุบัน");
@@ -45,7 +45,7 @@ export function defineGraphOperationsBlocks() {
     init: function () {
       this.appendValueInput("GRAPH")
         .setCheck(null)
-        .appendField("🗺️ Get Neighbors with Weight of Node");
+        .appendField("Get Neighbors with Weight of Node");
       this.appendValueInput("NODE")
         .setCheck("Number")
         .appendField("from Graph");
@@ -60,11 +60,12 @@ export function defineGraphOperationsBlocks() {
     init: function () {
       this.appendValueInput("GRAPH")
         .setCheck(null)
-        .appendField("🔗 Get All Edges from Graph");
+        .appendField("Get All Edges from Graph");
       this.setOutput(true, "Array");
       this.setColour(200);
       this.setTooltip("ดึง edges ทั้งหมดจาก graph (return array of [u, v, weight])");
     },
   };
 }
+
 

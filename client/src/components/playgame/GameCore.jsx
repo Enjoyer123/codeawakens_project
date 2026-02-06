@@ -10,16 +10,17 @@ import "blockly/blocks";
 import "blockly/javascript";
 
 import { API_BASE_URL } from '../../config/apiConfig';
-
 window.Blockly = Blockly;
 
 // Import utilities and data
 import {
   getWeaponData,
-
   getRescuedPeople,
   displayPlayerWeapon,
-  getCollectedTreasures
+  getCollectedTreasures,
+  clearPlayerCoins,
+  clearRescuedPeople,
+  clearStack
 } from '../../gameutils/shared/items';
 import {
   getCurrentGameState,
@@ -69,12 +70,17 @@ import { resetCoinChangeTableState } from '../../gameutils/blockly/algorithms/co
 import { resetKnapsackTableState } from '../../gameutils/blockly/algorithms/knapsack/knapsackStateManager';
 import { resetSubsetSumTableState } from '../../gameutils/blockly/algorithms/subset_sum/subsetSumStateManager';
 
-const resetAllAlgorithmStates = () => {
+const resetAllGameStates = () => {
   resetDijkstraState();
   resetAntDpTableState();
   resetCoinChangeTableState();
   resetKnapsackTableState();
   resetSubsetSumTableState();
+
+  // Clear shared game state (Coins, People, Treasures)
+  clearPlayerCoins();
+  clearRescuedPeople();
+  clearStack();
 };
 
 
@@ -414,7 +420,7 @@ const GameCore = ({
       setTextCode("");
       setCodeValidation({ isValid: false, message: "" });
       setBlocklyJavaScriptReady(false);
-      resetAllAlgorithmStates(); // Reset algorithm visual state
+      resetAllGameStates(); // Reset algorithm visual state
     }
   }, [levelId]);
 
@@ -479,7 +485,7 @@ const GameCore = ({
     return () => {
       console.log("🧹 Cleanup: Destroying Phaser game and Blockly workspace...");
 
-      resetAllAlgorithmStates(); // Reset algorithm visual state
+      resetAllGameStates(); // Reset algorithm visual state
 
       if (phaserGameRef.current) {
         try {
@@ -867,19 +873,26 @@ const GameCore = ({
           {!showProgressModal && (isCompleted || isGameOver) && (
             <button
               onClick={() => setShowProgressModal(true)}
-              className="fixed top-20 right-4 z-50 text-[#2d1b0e] px-8 py-6 rounded-lg shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 flex items-center gap-2 font-bold"
-              style={{
-                backgroundImage: 'url("/scoreccl1.png")',
-                backgroundSize: '100% 100%',
-                imageRendering: 'pixelated',
-                fontFamily: '"Press Start 2P", monospace',
-                fontSize: '12px',
-                textShadow: 'none',
-                boxShadow: '0 4px 6px rgba(0,0,0,0.3)'
-              }}
+              className="fixed top-20 right-4 z-50 group transition-transform hover:scale-105 active:translate-y-1 w-48"
             >
-              <span className="text-xl">📊</span>
-              <span>SHOW RESULTS</span>
+              {/* 1. Base Button Image */}
+              <img
+                src="/button.png"
+                alt="Show Results"
+                className="w-full h-auto block select-none"
+                style={{ imageRendering: 'pixelated' }}
+              />
+              {/* 2. Hover Image */}
+              <img
+                src="/buttonhover.png"
+                alt="Show Results Hover"
+                className="absolute inset-0 w-full h-full opacity-0 group-hover:opacity-100 transition-opacity duration-100 select-none"
+                style={{ imageRendering: 'pixelated' }}
+              />
+              {/* 3. Text Overlay */}
+              <div className="absolute inset-0 flex items-center justify-center gap-2 pb-1 text-[#fdf6e3] group-hover:text-white font-bold font-pixel text-[10px] sm:text-xs tracking-wider uppercase drop-shadow-md">
+                <span>SHOW RESULTS</span>
+              </div>
             </button>
           )}
         </>

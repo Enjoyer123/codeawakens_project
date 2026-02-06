@@ -30,10 +30,10 @@ export function createToolboxConfig(enabledBlocks) {
     console.log("✅ Adding move_along_path block");
     movementBlocks.push({ kind: "block", type: "move_along_path" });
   }
-  if (enabledBlocks["nqueen_place"])
-    movementBlocks.push({ kind: "block", type: "nqueen_place" });
-  if (enabledBlocks["nqueen_remove"])
-    movementBlocks.push({ kind: "block", type: "nqueen_remove" });
+  if (enabledBlocks["nqueen_place"] || enabledBlocks["place"])
+    movementBlocks.push({ kind: "block", type: enabledBlocks["place"] ? "place" : "nqueen_place" });
+  if (enabledBlocks["nqueen_remove"] || enabledBlocks["delete"])
+    movementBlocks.push({ kind: "block", type: enabledBlocks["delete"] ? "delete" : "nqueen_remove" });
 
   console.log("🔧 Movement blocks count:", movementBlocks.length);
   if (movementBlocks.length > 0) {
@@ -63,13 +63,17 @@ export function createToolboxConfig(enabledBlocks) {
     logicBlocks.push({ kind: "block", type: "logic_operation" });
   if (enabledBlocks["logic_not_in"])
     logicBlocks.push({ kind: "block", type: "logic_not_in" });
-  if (enabledBlocks["nqueen_is_safe"])
-    logicBlocks.push({ kind: "block", type: "nqueen_is_safe" });
+  if (enabledBlocks["nqueen_is_safe"] || enabledBlocks["is_safe"])
+    logicBlocks.push({ kind: "block", type: enabledBlocks["is_safe"] ? "is_safe" : "nqueen_is_safe" });
+  if (enabledBlocks["controls_if"])
+    logicBlocks.push({ kind: "block", type: "controls_if" });
+  if (enabledBlocks["logic_null"])
+    logicBlocks.push({ kind: "block", type: "logic_null" });
 
   if (logicBlocks.length > 0) {
     categories.push({
       kind: "category",
-      name: "🧠 Logic",
+      name: "Logic",
       categorystyle: "procedure_category",
       contents: logicBlocks,
     });
@@ -89,7 +93,7 @@ export function createToolboxConfig(enabledBlocks) {
   if (conditionBlocks.length > 0) {
     categories.push({
       kind: "category",
-      name: "❓ Conditions",
+      name: "Conditions",
       categorystyle: "math_category",
       contents: conditionBlocks,
     });
@@ -107,11 +111,19 @@ export function createToolboxConfig(enabledBlocks) {
     loopBlocks.push({ kind: "block", type: "for_index" });
   if (enabledBlocks["for_loop_dynamic"])
     loopBlocks.push({ kind: "block", type: "for_loop_dynamic" });
+  if (enabledBlocks["controls_repeat_ext"])
+    loopBlocks.push({ kind: "block", type: "controls_repeat_ext" });
+  if (enabledBlocks["controls_for"])
+    loopBlocks.push({ kind: "block", type: "controls_for" });
+  if (enabledBlocks["controls_forEach"])
+    loopBlocks.push({ kind: "block", type: "controls_forEach" });
+  if (enabledBlocks["controls_flow_statements"])
+    loopBlocks.push({ kind: "block", type: "controls_flow_statements" });
 
   if (loopBlocks.length > 0) {
     categories.push({
       kind: "category",
-      name: "🔄 Loops",
+      name: "Loops",
       categorystyle: "loop_category",
       contents: loopBlocks,
     });
@@ -121,13 +133,13 @@ export function createToolboxConfig(enabledBlocks) {
   const coinBlocks = [];
   if (enabledBlocks["collect_coin"])
     coinBlocks.push({ kind: "block", type: "collect_coin" });
-  if (enabledBlocks["have_coin"])
-    coinBlocks.push({ kind: "block", type: "have_coin" });
+  if (enabledBlocks["have_coin"] || enabledBlocks["has_coin"])
+    coinBlocks.push({ kind: "block", type: enabledBlocks["has_coin"] ? "has_coin" : "have_coin" });
 
   if (coinBlocks.length > 0) {
     categories.push({
       kind: "category",
-      name: "🪙 Coins",
+      name: "Coins",
       categorystyle: "text_category",
       contents: coinBlocks,
     });
@@ -149,7 +161,7 @@ export function createToolboxConfig(enabledBlocks) {
   if (coinSortingBlocks.length > 0) {
     categories.push({
       kind: "category",
-      name: "🔄 Sort Coins",
+      name: "Sort Coins",
       categorystyle: "list_category",
       contents: coinSortingBlocks,
     });
@@ -179,15 +191,65 @@ export function createToolboxConfig(enabledBlocks) {
   if (mathBlocks.length > 0) {
     categories.push({
       kind: "category",
-      name: "🧮 Math",
+      name: "Math",
       categorystyle: "math_category",
       contents: mathBlocks,
     });
   }
 
+  // Text category
+  const textBlocks = [];
+  if (enabledBlocks["text"])
+    textBlocks.push({ kind: "block", type: "text" });
+
+  if (textBlocks.length > 0) {
+    categories.push({
+      kind: "category",
+      name: "Text",
+      categorystyle: "text_category",
+      contents: textBlocks,
+    });
+  }
+
+  // Visual & Algorithm category
+  const visualBlocks = [];
+  // Emei Visual
+  if (enabledBlocks["emei_highlight_peak"]) visualBlocks.push({ kind: "block", type: "emei_highlight_peak" });
+  if (enabledBlocks["emei_highlight_path"]) visualBlocks.push({ kind: "block", type: "emei_highlight_path" });
+  if (enabledBlocks["emei_show_final_result"]) visualBlocks.push({ kind: "block", type: "emei_show_final_result" });
+
+  // Coin Change / Subset Sum Visual
+  if (enabledBlocks["coin_change_add_warrior_to_selection"]) visualBlocks.push({ kind: "block", type: "coin_change_add_warrior_to_selection" });
+  if (enabledBlocks["coin_change_track_decision"]) visualBlocks.push({ kind: "block", type: "coin_change_track_decision" });
+  if (enabledBlocks["subset_sum_add_warrior_to_side1"]) visualBlocks.push({ kind: "block", type: "subset_sum_add_warrior_to_side1" });
+  if (enabledBlocks["subset_sum_add_warrior_to_side2"]) visualBlocks.push({ kind: "block", type: "subset_sum_add_warrior_to_side2" });
+
+  // Rope Visual
+  if (enabledBlocks["rope_visual_init"]) visualBlocks.push({ kind: "block", type: "rope_visual_init" });
+  if (enabledBlocks["rope_vis_enter"]) visualBlocks.push({ kind: "block", type: "rope_vis_enter" });
+  if (enabledBlocks["rope_vis_exit"]) visualBlocks.push({ kind: "block", type: "rope_vis_exit" });
+  if (enabledBlocks["rope_vis_status"]) visualBlocks.push({ kind: "block", type: "rope_vis_status" });
+  if (enabledBlocks["rope_target_len"]) visualBlocks.push({ kind: "block", type: "rope_target_len" });
+  if (enabledBlocks["rope_get_cuts"]) visualBlocks.push({ kind: "block", type: "rope_get_cuts" });
+
+  // Train Visual
+  if (enabledBlocks["assign_train_visual"]) visualBlocks.push({ kind: "block", type: "assign_train_visual" });
+  if (enabledBlocks["get_train_value"]) visualBlocks.push({ kind: "block", type: "get_train_value" });
+  if (enabledBlocks["sort_trains"]) visualBlocks.push({ kind: "block", type: "sort_trains" });
+
+  if (visualBlocks.length > 0) {
+    categories.push({
+      kind: "category",
+      name: "Visual",
+      categorystyle: "hat_blocks",
+      contents: visualBlocks,
+    });
+  }
+
   // Person Rescue category
   const personRescueBlocks = [];
-  if (enabledBlocks["rescue_person_at_node"]) personRescueBlocks.push({ kind: "block", type: "rescue_person_at_node" });
+  if (enabledBlocks["rescue_person_at_node"] || enabledBlocks["rescue_person"])
+    personRescueBlocks.push({ kind: "block", type: enabledBlocks["rescue_person"] ? "rescue_person" : "rescue_person_at_node" });
   if (enabledBlocks["has_person"]) personRescueBlocks.push({ kind: "block", type: "has_person" });
   if (enabledBlocks["person_rescued"]) personRescueBlocks.push({ kind: "block", type: "person_rescued" });
   if (enabledBlocks["person_count"]) personRescueBlocks.push({ kind: "block", type: "person_count" });
@@ -197,7 +259,7 @@ export function createToolboxConfig(enabledBlocks) {
   if (personRescueBlocks.length > 0) {
     categories.push({
       kind: "category",
-      name: "🆘 Rescue",
+      name: "Rescue",
       categorystyle: "text_category",
       contents: personRescueBlocks,
     });
@@ -253,7 +315,7 @@ export function createToolboxConfig(enabledBlocks) {
   if (listBlocks.length > 0) {
     categories.push({
       kind: "category",
-      name: "🗂️ Lists",
+      name: "Lists",
       categorystyle: "list_category",
       contents: listBlocks,
     });
@@ -272,7 +334,7 @@ export function createToolboxConfig(enabledBlocks) {
   if (stackBlocks.length > 0) {
     categories.push({
       kind: "category",
-      name: "📚 Stack",
+      name: "Stack",
       categorystyle: "procedure_category",
       contents: stackBlocks,
     });
@@ -293,7 +355,7 @@ export function createToolboxConfig(enabledBlocks) {
     if (enabledBlocks["procedures_defreturn"]) {
       categories.push({
         kind: "category",
-        name: "↩️ Return",
+        name: "Return",
         categorystyle: "procedure_category",
         contents: [{ kind: "block", type: "procedures_return" }]
       });
@@ -322,7 +384,7 @@ export function createToolboxConfig(enabledBlocks) {
   if (enabledBlocks["move_to_node"]) {
     categories.push({
       kind: "category",
-      name: "🚀 Advanced Movement",
+      name: "Advanced Movement",
       categorystyle: "procedure_category",
       contents: [{ kind: "block", type: "move_to_node" }]
     });
@@ -344,7 +406,7 @@ export function createToolboxConfig(enabledBlocks) {
   if (graphBlocks.length > 0) {
     categories.push({
       kind: "category",
-      name: "🗺️ Graph",
+      name: "Graph",
       categorystyle: "procedure_category",
       contents: graphBlocks,
     });
@@ -368,7 +430,7 @@ export function createToolboxConfig(enabledBlocks) {
   if (dictBlocks.length > 0) {
     categories.push({
       kind: "category",
-      name: "📚 Dictionary",
+      name: "Dictionary",
       categorystyle: "variable_category",
       contents: dictBlocks,
     });

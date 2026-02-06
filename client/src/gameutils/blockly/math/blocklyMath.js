@@ -35,7 +35,7 @@ export function defineMathBlocks() {
   Blockly.Blocks["math_max"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("📈 Max");
+        .appendField("Max");
       this.appendValueInput("A")
         .setCheck("Number")
         .appendField("between");
@@ -51,7 +51,7 @@ export function defineMathBlocks() {
   Blockly.Blocks["math_min"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("📉 Min");
+        .appendField("Min");
       this.appendValueInput("A")
         .setCheck("Number")
         .appendField("between");
@@ -87,8 +87,8 @@ export function defineMathBlocks() {
     init: function () {
       this.appendDummyInput()
         .appendField(new Blockly.FieldDropdown([
-          ["📈 Max", "MAX"],
-          ["📉 Min", "MIN"]
+          ["Max", "MAX"],
+          ["Min", "MIN"]
         ]), "OP");
       this.appendValueInput("A")
         .setCheck("Number")

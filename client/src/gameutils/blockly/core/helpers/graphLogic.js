@@ -6,6 +6,35 @@ export function getGraphNeighbors(graph, node) {
         console.warn('Invalid graph:', graph);
         return [];
     }
+
+    // Support Edge List input (Array of edges) for custom test cases
+    if (Array.isArray(graph)) {
+        const neighbors = [];
+        // Iterate through edges to find connections
+        for (const edge of graph) {
+            let u, v;
+
+            // Check for Array format [u, v, w]
+            if (Array.isArray(edge)) {
+                if (edge.length < 2) continue;
+                u = edge[0];
+                v = edge[1];
+            }
+            // Check for Object format {from, to} or {u, v}
+            else if (typeof edge === 'object') {
+                u = edge.from !== undefined ? edge.from : edge.u;
+                v = edge.to !== undefined ? edge.to : edge.v;
+            } else {
+                continue;
+            }
+
+            // Undirected check
+            if (u == node) neighbors.push(v);
+            else if (v == node) neighbors.push(u);
+        }
+        return neighbors;
+    }
+
     const nodeKey = String(node);
     return graph[nodeKey] || graph[node] || [];
 }
@@ -66,82 +95,45 @@ export function getGraphNeighborsWithWeight(graph, node) {
     }
 
     // Check if graph is an edge list format: [[u, v, weight], ...] or [{from, to, value}, ...]
-    if (Array.isArray(graph) && graph.length > 0) {
-        const firstEdge = graph[0];
+    if (Array.isArray(graph)) {
+        // console.log('[getGraphNeighborsWithWeight] Using custom Array graph');
+        const neighbors = [];
 
-        // Check if it's array format [[u, v, weight], ...] or [[u, v], ...] (without weight)
-        if (Array.isArray(firstEdge)) {
-            // Check if edges have weights
-            const hasWeights = firstEdge.length >= 3 && firstEdge[2] !== undefined;
+        for (const edge of graph) {
+            let u, v, weight;
 
-            if (!hasWeights) {
-                // Edges don't have weights, need to get from levelData.edges
-                const currentState = getCurrentGameState();
-                const levelData = currentState.levelData;
-
-                if (levelData && levelData.edges) {
-                    const neighbors = [];
-                    for (const edge of graph) {
-                        if (!Array.isArray(edge) || edge.length < 2) continue;
-                        const u = edge[0];
-                        const v = edge[1];
-
-                        // Check if this edge connects to our node
-                        if (u === node || v === node) {
-                            const neighbor = u === node ? v : u;
-                            // Find weight from levelData.edges
-                            const edgeData = levelData.edges.find(e =>
-                                (e.from === u && e.to === v) ||
-                                (e.from === v && e.to === u) ||
-                                (e.u === u && e.v === v) ||
-                                (e.u === v && e.v === u)
-                            );
-                            const weight = edgeData && edgeData.value !== undefined
-                                ? Number(edgeData.value)
-                                : (edgeData && edgeData.weight !== undefined ? Number(edgeData.weight) : 1);
-                            neighbors.push([neighbor, weight]);
-                        }
-                    }
-                    return neighbors;
-                }
-                return [];
+            // Check for Array format [u, v, w]
+            if (Array.isArray(edge)) {
+                if (edge.length < 2) continue;
+                u = edge[0];
+                v = edge[1];
+                weight = edge.length > 2 ? Number(edge[2]) : 1;
+            }
+            // Check for Object format {from, to, value}
+            else if (typeof edge === 'object') {
+                u = edge.from !== undefined ? edge.from : edge.u;
+                v = edge.to !== undefined ? edge.to : edge.v;
+                weight = edge.value !== undefined ? Number(edge.value) : (edge.weight !== undefined ? Number(edge.weight) : 1);
+            } else {
+                continue;
             }
 
-            // Edges have weights, proceed normally
-            const neighbors = [];
-            for (const edge of graph) {
-                if (!Array.isArray(edge) || edge.length < 3) continue;
-                const u = edge[0];
-                const v = edge[1];
-                const weight = edge[2];
+            // Check if this edge connects to our node (undirected)
+            // Ensure inputs are treated as numbers/strings consistently
+            const nodeVal = Number(node);
+            const uVal = Number(u);
+            const vVal = Number(v);
 
-                // Check if this edge connects to our node (undirected)
-                if (u === node) {
-                    neighbors.push([v, weight]);
-                } else if (v === node) {
-                    neighbors.push([u, weight]);
-                }
+            if (!isNaN(nodeVal) && !isNaN(uVal) && !isNaN(vVal)) {
+                if (uVal === nodeVal) neighbors.push([vVal, weight]);
+                else if (vVal === nodeVal) neighbors.push([uVal, weight]);
+            } else {
+                // Fallback for non-numeric IDs
+                if (u == node) neighbors.push([v, weight]);
+                else if (v == node) neighbors.push([u, weight]);
             }
-            return neighbors;
         }
-
-        // Check if it's object format [{from, to, value}, ...]
-        if (firstEdge && typeof firstEdge === 'object' && ('from' in firstEdge || 'u' in firstEdge)) {
-            const neighbors = [];
-            for (const edge of graph) {
-                const u = edge.from !== undefined ? edge.from : edge.u;
-                const v = edge.to !== undefined ? edge.to : edge.v;
-                const weight = edge.value !== undefined ? edge.value : edge.weight;
-
-                // Check if this edge connects to our node (undirected)
-                if (u === node) {
-                    neighbors.push([v, weight]);
-                } else if (v === node) {
-                    neighbors.push([u, weight]);
-                }
-            }
-            return neighbors;
-        }
+        return neighbors;
     }
 
     // Otherwise, use adjacency list format with levelData.edges
@@ -179,6 +171,33 @@ export function getGraphNeighborsWithWeight(graph, node) {
  * @returns {Array} Array of edges: [[u, v, weight], ...]
  */
 export function getAllEdges(graph) {
+    // console.log('[getAllEdges] Graph input type:', Array.isArray(graph) ? 'Array' : typeof graph);
+
+    // Support Edge List input (Array of edges) for custom test cases
+    if (Array.isArray(graph)) {
+        const edges = [];
+        graph.forEach(edge => {
+            // Handle [u, v, w] format
+            if (Array.isArray(edge)) {
+                if (edge.length >= 2) {
+                    const weight = edge.length > 2 ? Number(edge[2]) : 1;
+                    edges.push([edge[0], edge[1], weight]);
+                }
+            }
+            // Handle {from, to, value} or {u, v, w} format
+            else if (typeof edge === 'object') {
+                const u = edge.from !== undefined ? edge.from : edge.u;
+                const v = edge.to !== undefined ? edge.to : edge.v;
+                if (u !== undefined && v !== undefined) {
+                    const weight = edge.value !== undefined ? Number(edge.value) : (edge.weight !== undefined ? Number(edge.weight) : 1);
+                    edges.push([u, v, weight]);
+                }
+            }
+        });
+        // console.log('[getAllEdges] Extracted', edges.length, 'edges from custom graph');
+        return edges;
+    }
+
     if (!graph || typeof graph !== 'object') {
         console.warn('getAllEdges: Invalid graph:', graph);
         return [];
@@ -192,7 +211,7 @@ export function getAllEdges(graph) {
         return [];
     }
 
-    // Convert edges to format [u, v, weight]
+    // Convert levelData edges to format [u, v, weight]
     const edges = [];
     levelData.edges.forEach(edge => {
         if (edge.from !== undefined && edge.to !== undefined) {

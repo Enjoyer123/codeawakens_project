@@ -7,7 +7,7 @@ export function defineEmeiVisualBlocks() {
         init: function () {
             this.appendValueInput("NODE")
                 .setCheck("Number")
-                .appendField("🌋 Highlight Peak");
+                .appendField("Highlight Peak");
             this.setPreviousStatement(true, null);
             this.setNextStatement(true, null);
             this.setColour(200);
@@ -20,7 +20,7 @@ export function defineEmeiVisualBlocks() {
         init: function () {
             this.appendValueInput("U")
                 .setCheck("Number")
-                .appendField("🚠 Highlight Cable Car from");
+                .appendField("Highlight Cable Car from");
             this.appendValueInput("V")
                 .setCheck("Number")
                 .appendField("to");
@@ -40,7 +40,7 @@ export function defineEmeiVisualBlocks() {
         init: function () {
             this.appendValueInput("BOTTLENECK")
                 .setCheck("Number")
-                .appendField("🏆 Show Result: Bottleneck");
+                .appendField("Show Result: Bottleneck");
             this.appendValueInput("ROUNDS")
                 .setCheck("Number")
                 .appendField("Rounds");
@@ -57,7 +57,7 @@ export function defineEmeiVisualBlocks() {
         init: function () {
             this.appendValueInput("PARENT")
                 .setCheck("Array")
-                .appendField("🚩 Highlight Path from Parent");
+                .appendField("Highlight Path from Parent");
             this.appendValueInput("END")
                 .setCheck("Number")
                 .appendField("to Node");

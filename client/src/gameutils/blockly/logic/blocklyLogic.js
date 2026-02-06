@@ -6,7 +6,7 @@ export function defineLogicBlocks() {
     init: function () {
       this.appendValueInput("CONDITION")
         .setCheck("Boolean")
-        .appendField("🔀 If");
+        .appendField("If");
       this.appendStatementInput("IF_DO")
         .appendField("Do");
       this.appendStatementInput("ELSE_DO")
@@ -22,7 +22,7 @@ export function defineLogicBlocks() {
     init: function () {
       this.appendValueInput("CONDITION")
         .setCheck("Boolean")
-        .appendField("❓ If");
+        .appendField("If");
       this.appendStatementInput("DO")
         .appendField("Do");
       this.setPreviousStatement(true, null);
@@ -36,7 +36,7 @@ export function defineLogicBlocks() {
     init: function () {
       this.appendValueInput("CONDITION")
         .setCheck("Boolean")
-        .appendField("🔀 If");
+        .appendField("If");
       this.appendDummyInput()
         .appendField("Return");
       this.setPreviousStatement(true, null);
@@ -120,7 +120,7 @@ export function defineLogicBlocks() {
 
   Blockly.Blocks["found_monster"] = {
     init: function () {
-      this.appendDummyInput().appendField("👹 Found Monster");
+      this.appendDummyInput().appendField("Found Monster");
       this.setOutput(true, "Boolean");
       this.setColour(330);
       this.setTooltip("ตรวจสอบว่าเจอ Monster หรือไม่");
@@ -129,7 +129,7 @@ export function defineLogicBlocks() {
 
   Blockly.Blocks["can_move_forward"] = {
     init: function () {
-      this.appendDummyInput().appendField("🚶 Can Move Forward");
+      this.appendDummyInput().appendField("Can Move Forward");
       this.setOutput(true, "Boolean");
       this.setColour(330);
       this.setTooltip("ตรวจสอบว่าเดินไปข้างหน้าได้หรือไม่");
@@ -138,7 +138,7 @@ export function defineLogicBlocks() {
 
   Blockly.Blocks["near_pit"] = {
     init: function () {
-      this.appendDummyInput().appendField("🕳️ Near Pit");
+      this.appendDummyInput().appendField("Near Pit");
       this.setOutput(true, "Boolean");
       this.setColour(330);
       this.setTooltip("ตรวจสอบว่าใกล้หลุมหรือไม่");
@@ -147,7 +147,7 @@ export function defineLogicBlocks() {
 
   Blockly.Blocks["at_goal"] = {
     init: function () {
-      this.appendDummyInput().appendField("🎯 At Goal");
+      this.appendDummyInput().appendField("At Goal");
       this.setOutput(true, "Boolean");
       this.setColour(330);
       this.setTooltip("ตรวจสอบว่าถึงเป้าหมายแล้วหรือไม่");

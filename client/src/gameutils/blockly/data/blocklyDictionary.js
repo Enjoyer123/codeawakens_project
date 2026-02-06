@@ -6,7 +6,7 @@ export function defineDictionaryBlocks() {
   Blockly.Blocks["dict_create"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("📚 Create Empty Dictionary");
+        .appendField("Create Empty Dictionary");
       this.setOutput(true, null);
       this.setColour(230);
       this.setTooltip("สร้าง dictionary/object ใหม่ที่ว่างเปล่า");
@@ -18,7 +18,7 @@ export function defineDictionaryBlocks() {
     init: function () {
       this.appendValueInput("DICT")
         .setCheck(null)
-        .appendField("📝 Set");
+        .appendField("Set");
       this.appendValueInput("KEY")
         .setCheck(["String", "Number"])
         .appendField("key");
@@ -39,7 +39,7 @@ export function defineDictionaryBlocks() {
     init: function () {
       this.appendValueInput("DICT")
         .setCheck(null)
-        .appendField("📖 Get Value");
+        .appendField("Get Value");
       this.appendValueInput("KEY")
         .setCheck(["String", "Number"])
         .appendField("key");
@@ -56,7 +56,7 @@ export function defineDictionaryBlocks() {
     init: function () {
       this.appendValueInput("DICT")
         .setCheck(null)
-        .appendField("🔍 Dictionary Has Key");
+        .appendField("Dictionary Has Key");
       this.appendValueInput("KEY")
         .setCheck(["String", "Number"])
         .appendField("?");
@@ -71,7 +71,7 @@ export function defineDictionaryBlocks() {
     init: function () {
       this.appendValueInput("PARENT")
         .setCheck("Object")
-        .appendField("🔍 DSU Find");
+        .appendField("DSU Find");
       this.appendValueInput("NODE")
         .setCheck("Number")
         .appendField("node");
@@ -87,7 +87,7 @@ export function defineDictionaryBlocks() {
     init: function () {
       this.appendValueInput("PARENT")
         .setCheck("Object")
-        .appendField("🔗 DSU Union");
+        .appendField("DSU Union");
       this.appendValueInput("RANK")
         .setCheck("Object")
         .appendField("rank");

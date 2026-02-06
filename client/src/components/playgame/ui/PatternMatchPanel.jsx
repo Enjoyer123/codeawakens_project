@@ -19,7 +19,7 @@ import { API_BASE_URL } from '../../../config/apiConfig';
  * @param {number} props.weaponProgress - Weapon unlock progress (0-100)
  * @param {string} props.weaponImgSrc - URL to weapon image
  */
-const PatternMatchPanel = ({ hintData, idealPattern, weaponProgress, weaponImgSrc }) => {
+const PatternMatchPanel = ({ hintData, idealPattern, weaponProgress, weaponImgSrc, currentWeaponData }) => {
   const [showHelp, setShowHelp] = useState(false);
 
   return (
@@ -92,11 +92,11 @@ const PatternMatchPanel = ({ hintData, idealPattern, weaponProgress, weaponImgSr
               </div>
 
               {/* Rank & Progress Text (Below Image) */}
-              <div className="flex items-center gap-1 bg-black/40 px-1.5 py-0.5 rounded text-[8px] font-bold leading-none">
-                <span className={idealPattern.pattern_type_id === 1 ? 'text-yellow-400' : 'text-gray-300'}>
-                  {idealPattern.pattern_type_id === 1 ? 'GOLD' : 'SILVER'}
+              <div className="flex items-center justify-between gap-1.5 bg-black/40 px-2 py-1 rounded text-[10px] font-bold leading-none w-full max-w-[120px]">
+                <span className="text-yellow-400 truncate flex-1 text-left">
+                  {(currentWeaponData?.name || '').toUpperCase().replace(/🏭|✨/g, '').trim()}
                 </span>
-                <span className="text-white">
+                <span className="text-white bg-white/10 px-1 rounded-sm text-[9px] shrink-0">
                   {weaponProgress}%
                 </span>
               </div>
@@ -126,18 +126,29 @@ const PatternMatchPanel = ({ hintData, idealPattern, weaponProgress, weaponImgSr
                 </span>
               </div>
 
-              {/* Three Parts Match Indicator - Sprite-based */}
+              {/* Three Parts Match Indicator - Bar-based */}
               {hintData.threePartsMatch && (
-                <div className="flex flex-col items-center gap-1 bg-black/20 rounded p-1 w-full">
-                  <span className="text-[9px] text-gray-500 w-full text-center">
-                    Parts: {hintData.threePartsMatch.matchedParts || 0}/3
+                <div className="flex flex-col items-center gap-1.5 bg-black/20 rounded p-1.5 w-full">
+                  <span className="text-[9px] text-gray-400 w-full text-center font-bold tracking-tight">
+                    PARTS: {hintData.threePartsMatch.matchedParts || 0}/3
                   </span>
-                  <img
-                    src={`/pattern/Part_${(hintData.threePartsMatch.matchedParts || 0) + 1}.png`}
-                    alt={`Pattern ${hintData.threePartsMatch.matchedParts || 0} parts`}
-                    className="block h-6 object-contain"
-                    style={{ imageRendering: 'pixelated' }}
-                  />
+                  <div className="flex gap-1 w-full h-1.5 px-1">
+                    {[1, 2, 3].map((part) => {
+                      const matchedParts = hintData.threePartsMatch.matchedParts || 0;
+                      let bgColor = 'bg-gray-700'; // Default gray
+
+                      if (part <= matchedParts) {
+                        bgColor = 'bg-green-500'; // Completed
+                      }
+
+                      return (
+                        <div
+                          key={part}
+                          className={`flex-1 ${bgColor} rounded-full transition-colors duration-300 shadow-[0_0_5px_rgba(0,0,0,0.5)]`}
+                        />
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>

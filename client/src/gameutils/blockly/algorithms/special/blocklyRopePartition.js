@@ -7,10 +7,10 @@ export function registerRopePartitionBlocks() {
     Blockly.Blocks['rope_get_cuts'] = {
         init: function () {
             this.jsonInit({
-                "message0": "✂️ Available Cuts",
+                "message0": "Available Cuts",
                 "output": "Array", // Returns array of numbers
                 "colour": 120, // Greenish
-                "tooltip": "Get list of available cut sizes.",
+                "tooltip": "รับรายการขนาดเชือกที่สามารถตัดได้",
                 "helpUrl": ""
             });
         }
@@ -27,10 +27,10 @@ export function registerRopePartitionBlocks() {
     Blockly.Blocks['rope_target_len'] = {
         init: function () {
             this.jsonInit({
-                "message0": "🎯 Rope Length",
+                "message0": "Rope Length",
                 "output": "Number",
                 "colour": 230, // Blueish
-                "tooltip": "Get the target rope length.",
+                "tooltip": "รับความยาวเชือกเป้าหมาย",
                 "helpUrl": ""
             });
         }
@@ -60,7 +60,7 @@ export function registerRopePartitionBlocks() {
     Blockly.Blocks['rope_vis_enter'] = {
         init: function () {
             this.jsonInit({
-                "message0": "👀 Visualize Visit | Cut: %1 Sum: %2",
+                "message0": "Visualize Visit | Cut: %1 Sum: %2",
                 "args0": [
                     { "type": "input_value", "name": "CUT", "check": "Number" },
                     { "type": "input_value", "name": "SUM", "check": "Number" }
@@ -68,7 +68,7 @@ export function registerRopePartitionBlocks() {
                 "previousStatement": null,
                 "nextStatement": null,
                 "colour": 290, // Purple
-                "tooltip": "Visualize visiting a state. Place at start of function.",
+                "tooltip": "แสดงภาพเมื่อเข้าสู่สถานะใหม่ (ควรวางไว้ที่จุดเริ่มต้นของฟังก์ชัน)",
                 "helpUrl": ""
             });
         }
@@ -109,11 +109,11 @@ export function registerRopePartitionBlocks() {
     Blockly.Blocks['rope_vis_exit'] = {
         init: function () {
             this.jsonInit({
-                "message0": "🔙 Visualize Return",
+                "message0": "Visualize Return",
                 "previousStatement": null,
                 "nextStatement": null,
                 "colour": 290,
-                "tooltip": "Visualize returning from a state. Place before return.",
+                "tooltip": "แสดงภาพเมื่อออกจากสถานะ (ควรวางไว้ก่อนคำสั่ง return)",
                 "helpUrl": ""
             });
         }
@@ -129,7 +129,7 @@ export function registerRopePartitionBlocks() {
     Blockly.Blocks['rope_vis_status'] = {
         init: function () {
             this.jsonInit({
-                "message0": "🏷️ Mark Node: %1",
+                "message0": "Mark Node: %1",
                 "args0": [
                     {
                         "type": "field_dropdown",
@@ -143,7 +143,7 @@ export function registerRopePartitionBlocks() {
                 "previousStatement": null,
                 "nextStatement": null,
                 "colour": 60, // Orange
-                "tooltip": "Mark the status of the current node.",
+                "tooltip": "ระบุสถานะให้กับโหนดปัจจุบัน",
                 "helpUrl": ""
             });
         }
@@ -171,11 +171,11 @@ export function registerRopePartitionBlocks() {
     Blockly.Blocks['rope_visual_init'] = {
         init: function () {
             this.jsonInit({
-                "message0": "🎬 Init Visualization",
+                "message0": "Init Visualization",
                 "previousStatement": null,
                 "nextStatement": null,
                 "colour": 290,
-                "tooltip": "Initialize the visualization tree.",
+                "tooltip": "เริ่มต้นระบบแสดงภาพแบบต้นไม้",
                 "helpUrl": ""
             });
         }

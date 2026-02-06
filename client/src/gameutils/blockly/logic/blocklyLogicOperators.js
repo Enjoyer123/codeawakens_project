@@ -7,7 +7,7 @@ export function defineLogicOperatorsBlocks() {
     init: function () {
       this.appendValueInput("ITEM")
         .setCheck(null)
-        .appendField("❌ Not");
+        .appendField("Not");
       this.appendValueInput("LIST")
         .setCheck("Array")
         .appendField("in");

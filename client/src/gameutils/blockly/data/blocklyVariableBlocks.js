@@ -6,7 +6,7 @@ export function defineVariableBlocks() {
   Blockly.Blocks["var_math"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("🧮 Calculate")
+        .appendField("Calculate")
         .appendField(new Blockly.FieldVariable("i"), "VAR")
         .appendField(new Blockly.FieldDropdown([
           ["+", "ADD"],
@@ -43,7 +43,7 @@ export function defineVariableBlocks() {
   Blockly.Blocks["get_var_value"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("📊 Value of")
+        .appendField("Value of")
         .appendField(new Blockly.FieldVariable("i"), "VAR");
       this.setOutput(true, "Number");
       this.setColour(330);

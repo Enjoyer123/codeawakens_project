@@ -151,11 +151,11 @@ const Landing = () => {
                   <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-[#a855f7]"></div>
                   <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-[#a855f7]"></div>
 
-                  <div className="overflow-hidden border-4 border-white shadow-[20px_20px_0px_rgba(0,0,0,0.5)]">
+                  <div className="overflow-hidden border-4 border-white group-hover:border-[#a855f7] transition-all duration-300 shadow-[20px_20px_0px_rgba(0,0,0,0.5)] active:translate-x-1 active:translate-y-1 active:shadow-[16px_16px_0px_rgba(0,0,0,0.5)]">
                     <img
                       src={feature.img}
                       alt={feature.title}
-                      className="w-full aspect-video object-cover transition-transform duration-700 group-hover:scale-110"
+                      className="w-full aspect-video object-cover"
                     />
                   </div>
                 </div>

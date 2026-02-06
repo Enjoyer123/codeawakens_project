@@ -182,6 +182,7 @@ const GameArea = ({
             idealPattern={idealPattern}
             weaponProgress={weaponProgress}
             weaponImgSrc={weaponImgSrc}
+            currentWeaponData={currentWeaponData}
           />
 
           {/* Block Count */}
@@ -201,18 +202,6 @@ const GameArea = ({
             onOpenGuide={onOpenGuide}
             disabled={!hasGuides}
           />
-
-          {/* Big O Complexity (Display Only if set) */}
-          {userBigO && (
-            <div className="flex-shrink-0 bg-purple-900/40 rounded-lg p-3 border border-purple-500/30 min-w-[120px]">
-              <label className="text-[10px] font-bold text-purple-300 uppercase tracking-wider block mb-1">
-                Selected Big O
-              </label>
-              <div className="text-yellow-400 font-mono font-bold text-lg">
-                {userBigO}
-              </div>
-            </div>
-          )}
 
         </div>
       </div>

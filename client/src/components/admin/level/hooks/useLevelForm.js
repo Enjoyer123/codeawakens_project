@@ -191,7 +191,7 @@ export const useLevelForm = ({
                 start_node_id: formData.start_node_id !== null && formData.start_node_id !== undefined ? formData.start_node_id : null,
                 goal_node_id: formData.goal_node_id !== null && formData.goal_node_id !== undefined ? formData.goal_node_id : null,
                 goal_type: formData.goal_type || null,
-                character: formData.character || 'player',
+                character: formData.character || 'main_1',
                 nodes: formData.nodes.length > 0 ? JSON.stringify(formData.nodes) : null,
                 edges: formData.edges.length > 0 ? JSON.stringify(formData.edges) : null,
                 monsters: formData.monsters.length > 0 ? JSON.stringify(formData.monsters) : null,

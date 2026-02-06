@@ -7,7 +7,7 @@ export function defineNQueenBlocks() {
         init: function () {
             this.appendValueInput("ROW")
                 .setCheck("Number")
-                .appendField("🔍 Is Safe? Row");
+                .appendField("Is Safe? Row");
             this.appendValueInput("COL")
                 .setCheck("Number")
                 .appendField("Col");
@@ -18,12 +18,15 @@ export function defineNQueenBlocks() {
         },
     };
 
+    // Alias for database consistency
+    Blockly.Blocks["is_safe"] = Blockly.Blocks["nqueen_is_safe"];
+
     // 2. place(row, col) - Statement block
     Blockly.Blocks["nqueen_place"] = {
         init: function () {
             this.appendValueInput("ROW")
                 .setCheck("Number")
-                .appendField("👑 Place Queen: Row");
+                .appendField("Place Queen: Row");
             this.appendValueInput("COL")
                 .setCheck("Number")
                 .appendField("Col");
@@ -35,12 +38,15 @@ export function defineNQueenBlocks() {
         },
     };
 
+    // Alias for database consistency
+    Blockly.Blocks["place"] = Blockly.Blocks["nqueen_place"];
+
     // 3. remove(row, col) - Statement block
     Blockly.Blocks["nqueen_remove"] = {
         init: function () {
             this.appendValueInput("ROW")
                 .setCheck("Number")
-                .appendField("❌ Remove Queen: Row");
+                .appendField("Remove Queen: Row");
             this.appendValueInput("COL")
                 .setCheck("Number")
                 .appendField("Col");
@@ -51,4 +57,7 @@ export function defineNQueenBlocks() {
             this.setTooltip("ยกควีนออกจากกระดานที่ตำแหน่ง (row, col) (Backtracking)");
         },
     };
+
+    // Alias for database consistency
+    Blockly.Blocks["delete"] = Blockly.Blocks["nqueen_remove"];
 }

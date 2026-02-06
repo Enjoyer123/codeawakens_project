@@ -4,7 +4,7 @@ import * as Blockly from "blockly/core";
 // ==========================================
 // 🔧 CONSTANTS & CONFIGURATION
 // ==========================================
-const COMMON_VARIABLES = ['i', 'j', 'k', 'coin', 'item', 'index', 'count', 'value'];
+const COMMON_VARIABLES = ['i', 'j', 'k', 'coin', 'element', 'index', 'count', 'value'];
 const DEFAULT_VAR_NAME = 'variable';
 
 // ==========================================
@@ -33,15 +33,39 @@ function ensureVariableExists(block, fieldName, defaultName) {
   const field = block.getField(fieldName);
   if (!field) return null;
 
-  const varName = field.getValue() || defaultName;
   const workspace = block.workspace;
-
-  // Check if variable exists, create if not
   const variableMap = workspace.getVariableMap();
+
+  // 🔧 CRITICAL FIX: field.getValue() returns variable ID, not name!
+  // We need to resolve ID to name first
+  const fieldValue = field.getValue();
+  let varName = defaultName;
+
+  if (fieldValue) {
+    // Try to get variable by ID first
+    const existingVar = variableMap.getVariableById(fieldValue);
+    if (existingVar) {
+      // Use the name from existing variable
+      varName = existingVar.name;
+    } else {
+      // If no variable found by ID, check if fieldValue looks like an ID or a name
+      // IDs usually contain special characters like /, :, etc.
+      if (/[^a-zA-Z0-9_]/.test(fieldValue)) {
+        // Looks like an ID but variable not found - use default name
+        console.warn(`[Variable Safety] Field value "${fieldValue}" looks like ID but variable not found, using default "${defaultName}"`);
+        varName = defaultName;
+      } else {
+        // Looks like a name, use it
+        varName = fieldValue;
+      }
+    }
+  }
+
+  // Check if variable with this name exists, create if not
   let variable = variableMap.getVariable(varName);
 
   if (!variable) {
-    // console.log(`[Variable Safety] Creating missing variable: "${varName}"`);
+    console.log(`[Variable Safety] Creating missing variable: "${varName}"`);
     try {
       variable = variableMap.createVariable(varName);
     } catch (error) {
@@ -50,10 +74,10 @@ function ensureVariableExists(block, fieldName, defaultName) {
     }
   }
 
-  // Update field value to ensure consistency (sync ID/Name)
-  if (field.getValue() !== varName) {
+  // Update field to use the correct variable ID
+  if (variable && field.getValue() !== variable.getId()) {
     try {
-      field.setValue(varName);
+      field.setValue(variable.getId());
     } catch (error) {
       console.warn('[Variable Safety] Error syncing field value:', error);
     }

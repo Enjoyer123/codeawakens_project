@@ -6,7 +6,7 @@ export function defineLoopBlocks() {
   Blockly.Blocks["repeat"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("🔄 Repeat")
+        .appendField("Repeat")
         .appendField(new Blockly.FieldNumber(3, 1, 10), "TIMES")
         .appendField("times");
       this.appendStatementInput("DO").appendField("Do");
@@ -21,7 +21,7 @@ export function defineLoopBlocks() {
     init: function () {
       this.appendValueInput("CONDITION")
         .setCheck("Boolean")
-        .appendField("🔁 Repeat While");
+        .appendField("Repeat While");
       this.appendStatementInput("DO")
         .appendField("Do");
       this.setPreviousStatement(true, null);
@@ -34,7 +34,7 @@ export function defineLoopBlocks() {
   Blockly.Blocks["for_index"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("🔢 For")
+        .appendField("For")
         .appendField(new Blockly.FieldVariable("i"), "VAR")
         .appendField("from")
         .appendField(new Blockly.FieldNumber(1, 0), "FROM")
@@ -75,7 +75,7 @@ export function defineLoopBlocks() {
   Blockly.Blocks["for_loop_dynamic"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("🔢 For")
+        .appendField("For")
         .appendField(new Blockly.FieldVariable("i"), "VAR")
         .appendField("from");
       this.appendValueInput("FROM")

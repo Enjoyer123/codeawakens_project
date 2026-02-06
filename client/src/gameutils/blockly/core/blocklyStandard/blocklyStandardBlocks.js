@@ -16,6 +16,19 @@ export function ensureStandardBlocks() {
   // Apply Procedure Overrides (Fix renaming, N-Queen logic, etc.)
   applyProcedureOverrides();
 
+  // Thai Tooltips only for Standard List Blocks (Labels remain English)
+  Blockly.Msg["LISTS_INDEX_OF_TOOLTIP"] = "คืนค่าตำแหน่ง (index) ของสิ่งที่ต้องการค้นหาในรายการ หรือคืนค่า 0 หากไม่พบ";
+
+  Blockly.Msg["LISTS_GET_INDEX_TOOLTIP_GET_FROM"] = "คืนค่าไอเทมจากตำแหน่งที่ระบุในรายการ";
+  Blockly.Msg["LISTS_GET_INDEX_TOOLTIP_GET_FIRST"] = "คืนค่าไอเทมลำดับแรกในรายการ";
+  Blockly.Msg["LISTS_GET_INDEX_TOOLTIP_GET_LAST"] = "คืนค่าไอเทมลำดับสุดท้ายในรายการ";
+  Blockly.Msg["LISTS_GET_INDEX_TOOLTIP_GET_RANDOM"] = "คืนค่าไอเทมแบบสุ่มในรายการ";
+  Blockly.Msg["LISTS_GET_INDEX_TOOLTIP_GET_REMOVE_FROM"] = "ดึงค่าและลบไอเทมออกจากตำแหน่งที่ระบุในรายการ";
+  Blockly.Msg["LISTS_GET_INDEX_TOOLTIP_REMOVE_FROM"] = "ลบไอเทมออกจากตำแหน่งที่ระบุในรายการ";
+
+  Blockly.Msg["LISTS_SET_INDEX_TOOLTIP_SET_FROM"] = "ตั้งค่าไอเทมในตำแหน่งที่กำหนดในรายการ";
+  Blockly.Msg["LISTS_SET_INDEX_TOOLTIP_INSERT_FROM"] = "แทรกไอเทมในตำแหน่งที่กำหนดในรายการ";
+
   // Override variables_get to ensure Thai tooltip
   try {
     Blockly.Blocks['variables_get'] = {

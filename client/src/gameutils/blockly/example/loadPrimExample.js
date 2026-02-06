@@ -304,9 +304,9 @@ const primExampleXml = `<?xml version="1.0" encoding="UTF-8"?>
                                                           </block>
                                                         </value>
                                                         <next>
-                                                          <!-- if node in visited: continue -->
-                                                          <block type="controls_if" id="check_visited">
-                                                            <value name="IF0">
+                                                          <!-- if node in visited: skip, else: process -->
+                                                          <block type="if_else" id="check_visited">
+                                                            <value name="CONDITION">
                                                               <block type="lists_contains" id="node_in_visited">
                                                                 <value name="ITEM">
                                                                   <block type="variables_get" id="node_var_visited">
@@ -320,233 +320,230 @@ const primExampleXml = `<?xml version="1.0" encoding="UTF-8"?>
                                                                 </value>
                                                               </block>
                                                             </value>
-                                                            <statement name="DO0">
-                                                              <!-- Continue (empty block) - skip to next iteration -->
+                                                            <statement name="IF_DO">
+                                                              <!-- ถ้า node อยู่ใน visited แล้ว: ไม่ทำอะไร (skip) -->
                                                             </statement>
-                                                            <next>
+                                                            <statement name="ELSE_DO">
                                                               <!-- MST_weight = MST_weight + dist -->
-                                                                  <block type="variables_set" id="update_mst_weight">
-                                                                    <field name="VAR">MST_weight</field>
-                                                                    <value name="VALUE">
-                                                                      <block type="math_arithmetic" id="add_mst_weight">
-                                                                        <field name="OP">ADD</field>
-                                                                        <value name="A">
-                                                                          <block type="variables_get" id="mst_weight_var">
-                                                                            <field name="VAR">MST_weight</field>
-                                                                          </block>
-                                                                        </value>
-                                                                        <value name="B">
-                                                                          <block type="variables_get" id="dist_var_add">
-                                                                            <field name="VAR">dist</field>
-                                                                          </block>
-                                                                        </value>
+                                                              <block type="variables_set" id="update_mst_weight">
+                                                                <field name="VAR">MST_weight</field>
+                                                                <value name="VALUE">
+                                                                  <block type="math_arithmetic" id="add_mst_weight">
+                                                                    <field name="OP">ADD</field>
+                                                                    <value name="A">
+                                                                      <block type="variables_get" id="mst_weight_var">
+                                                                        <field name="VAR">MST_weight</field>
+                                                                      </block>
+                                                                    </value>
+                                                                    <value name="B">
+                                                                      <block type="variables_get" id="dist_var_add">
+                                                                        <field name="VAR">dist</field>
+                                                                      </block>
+                                                                    </value>
+                                                                  </block>
+                                                                </value>
+                                                                <next>
+                                                                  <!-- add node to visited -->
+                                                                  <block type="lists_add_item" id="add_to_visited">
+                                                                    <value name="LIST">
+                                                                      <block type="variables_get" id="visited_var_add">
+                                                                        <field name="VAR">visited</field>
+                                                                      </block>
+                                                                    </value>
+                                                                    <value name="ITEM">
+                                                                      <block type="variables_get" id="node_var_add">
+                                                                        <field name="VAR">node</field>
                                                                       </block>
                                                                     </value>
                                                                     <next>
-                                                                      <!-- add node to visited -->
-                                                                      <block type="lists_add_item" id="add_to_visited">
+                                                                      <!-- for neighbor, weight in graph[node] -->
+                                                                      <block type="for_each_in_list" id="for_each_neighbor">
+                                                                        <field name="VAR">neighbor_data</field>
                                                                         <value name="LIST">
-                                                                          <block type="variables_get" id="visited_var_add">
-                                                                            <field name="VAR">visited</field>
+                                                                          <block type="graph_get_neighbors_with_weight" id="get_neighbors_weight">
+                                                                            <value name="GRAPH">
+                                                                              <block type="variables_get" id="graph_var">
+                                                                                <field name="VAR">graph</field>
+                                                                              </block>
+                                                                            </value>
+                                                                            <value name="NODE">
+                                                                              <block type="variables_get" id="node_var_neighbors">
+                                                                                <field name="VAR">node</field>
+                                                                              </block>
+                                                                            </value>
                                                                           </block>
                                                                         </value>
-                                                                        <value name="ITEM">
-                                                                          <block type="variables_get" id="node_var_add">
-                                                                            <field name="VAR">node</field>
-                                                                          </block>
-                                                                        </value>
-                                                                        <next>
-                                                                          <!-- for neighbor, weight in graph[node] -->
-                                                                          <block type="for_each_in_list" id="for_each_neighbor">
-                                                                            <field name="VAR">neighbor_data</field>
-                                                                            <value name="LIST">
-                                                                              <block type="graph_get_neighbors_with_weight" id="get_neighbors_weight">
-                                                                                <value name="GRAPH">
-                                                                                  <block type="variables_get" id="graph_var">
-                                                                                    <field name="VAR">graph</field>
+                                                                        <statement name="DO">
+                                                                          <!-- neighbor = neighbor_data[0], weight = neighbor_data[1] -->
+                                                                          <block type="variables_set" id="set_neighbor">
+                                                                            <field name="VAR">neighbor</field>
+                                                                            <value name="VALUE">
+                                                                              <block type="lists_get_at_index" id="get_neighbor">
+                                                                                <value name="LIST">
+                                                                                  <block type="variables_get" id="neighbor_data_var">
+                                                                                    <field name="VAR">neighbor_data</field>
                                                                                   </block>
                                                                                 </value>
-                                                                                <value name="NODE">
-                                                                                  <block type="variables_get" id="node_var_neighbors">
-                                                                                    <field name="VAR">node</field>
+                                                                                <value name="INDEX">
+                                                                                  <block type="math_number" id="neighbor_index">
+                                                                                    <field name="NUM">0</field>
                                                                                   </block>
                                                                                 </value>
                                                                               </block>
                                                                             </value>
-                                                                            <statement name="DO">
-                                                                              <!-- neighbor = neighbor_data[0], weight = neighbor_data[1] -->
-                                                                              <block type="variables_set" id="set_neighbor">
-                                                                                <field name="VAR">neighbor</field>
+                                                                            <next>
+                                                                              <block type="variables_set" id="set_weight">
+                                                                                <field name="VAR">weight</field>
                                                                                 <value name="VALUE">
-                                                                                  <block type="lists_get_at_index" id="get_neighbor">
+                                                                                  <block type="lists_get_at_index" id="get_weight">
                                                                                     <value name="LIST">
-                                                                                      <block type="variables_get" id="neighbor_data_var">
+                                                                                      <block type="variables_get" id="neighbor_data_var2">
                                                                                         <field name="VAR">neighbor_data</field>
                                                                                       </block>
                                                                                     </value>
                                                                                     <value name="INDEX">
-                                                                                      <block type="math_number" id="neighbor_index">
-                                                                                        <field name="NUM">0</field>
+                                                                                      <block type="math_number" id="weight_index">
+                                                                                        <field name="NUM">1</field>
                                                                                       </block>
                                                                                     </value>
                                                                                   </block>
                                                                                 </value>
                                                                                 <next>
-                                                                                  <block type="variables_set" id="set_weight">
-                                                                                    <field name="VAR">weight</field>
-                                                                                    <value name="VALUE">
-                                                                                      <block type="lists_get_at_index" id="get_weight">
-                                                                                        <value name="LIST">
-                                                                                          <block type="variables_get" id="neighbor_data_var2">
-                                                                                            <field name="VAR">neighbor_data</field>
+                                                                                  <!-- if neighbor not in visited && weight < distance[neighbor] -->
+                                                                                  <block type="controls_if" id="check_neighbor">
+                                                                                    <value name="IF0">
+                                                                                      <block type="logic_operation" id="neighbor_condition">
+                                                                                        <field name="OP">AND</field>
+                                                                                        <value name="A">
+                                                                                          <block type="logic_negate" id="neighbor_visited">
+                                                                                            <value name="BOOL">
+                                                                                              <block type="lists_contains" id="neighbor_in_visited">
+                                                                                                <value name="ITEM">
+                                                                                                  <block type="variables_get" id="neighbor_var_check">
+                                                                                                    <field name="VAR">neighbor</field>
+                                                                                                  </block>
+                                                                                                </value>
+                                                                                                <value name="LIST">
+                                                                                                  <block type="variables_get" id="visited_var_neighbor">
+                                                                                                    <field name="VAR">visited</field>
+                                                                                                  </block>
+                                                                                                </value>
+                                                                                              </block>
+                                                                                            </value>
                                                                                           </block>
                                                                                         </value>
-                                                                                        <value name="INDEX">
-                                                                                          <block type="math_number" id="weight_index">
-                                                                                            <field name="NUM">1</field>
+                                                                                        <value name="B">
+                                                                                          <block type="logic_compare" id="weight_less_than_distance">
+                                                                                            <value name="A">
+                                                                                              <block type="variables_get" id="weight_var_compare">
+                                                                                                <field name="VAR">weight</field>
+                                                                                              </block>
+                                                                                            </value>
+                                                                                            <field name="OP">LT</field>
+                                                                                            <value name="B">
+                                                                                              <block type="dict_get" id="get_distance_neighbor">
+                                                                                                <value name="DICT">
+                                                                                                  <block type="variables_get" id="distance_var_get">
+                                                                                                    <field name="VAR">distance</field>
+                                                                                                  </block>
+                                                                                                </value>
+                                                                                                <value name="KEY">
+                                                                                                  <block type="variables_get" id="neighbor_var_get">
+                                                                                                    <field name="VAR">neighbor</field>
+                                                                                                  </block>
+                                                                                                </value>
+                                                                                              </block>
+                                                                                            </value>
                                                                                           </block>
                                                                                         </value>
                                                                                       </block>
                                                                                     </value>
-                                                                                    <next>
-                                                                                      <!-- if neighbor not in visited && weight < distance[neighbor] -->
-                                                                                      <block type="controls_if" id="check_neighbor">
-                                                                                        <value name="IF0">
-                                                                                          <block type="logic_operation" id="neighbor_condition">
-                                                                                            <field name="OP">AND</field>
-                                                                                            <value name="A">
-                                                                                              <block type="logic_negate" id="neighbor_visited">
-                                                                                                <value name="BOOL">
-                                                                                                  <block type="lists_contains" id="neighbor_in_visited">
-                                                                                                    <value name="ITEM">
-                                                                                                      <block type="variables_get" id="neighbor_var_check">
-                                                                                                        <field name="VAR">neighbor</field>
-                                                                                                      </block>
-                                                                                                    </value>
-                                                                                                    <value name="LIST">
-                                                                                                      <block type="variables_get" id="visited_var_neighbor">
-                                                                                                        <field name="VAR">visited</field>
-                                                                                                      </block>
-                                                                                                    </value>
-                                                                                                  </block>
-                                                                                                </value>
-                                                                                              </block>
-                                                                                            </value>
-                                                                                            <value name="B">
-                                                                                              <block type="logic_compare" id="weight_less_than_distance">
-                                                                                                <value name="A">
-                                                                                                  <block type="variables_get" id="weight_var_compare">
-                                                                                                    <field name="VAR">weight</field>
-                                                                                                  </block>
-                                                                                                </value>
-                                                                                                <field name="OP">LT</field>
-                                                                                                <value name="B">
-                                                                                                  <block type="dict_get" id="get_distance_neighbor">
-                                                                                                    <value name="DICT">
-                                                                                                      <block type="variables_get" id="distance_var_get">
-                                                                                                        <field name="VAR">distance</field>
-                                                                                                      </block>
-                                                                                                    </value>
-                                                                                                    <value name="KEY">
-                                                                                                      <block type="variables_get" id="neighbor_var_get">
-                                                                                                        <field name="VAR">neighbor</field>
-                                                                                                      </block>
-                                                                                                    </value>
-                                                                                                  </block>
-                                                                                                </value>
-                                                                                              </block>
-                                                                                            </value>
+                                                                                    <statement name="DO0">
+                                                                                      <!-- distance[neighbor] = weight -->
+                                                                                      <block type="dict_set" id="set_distance_neighbor">
+                                                                                        <value name="DICT">
+                                                                                          <block type="variables_get" id="distance_var_set">
+                                                                                            <field name="VAR">distance</field>
                                                                                           </block>
                                                                                         </value>
-                                                                                        <statement name="DO0">
-                                                                                          <!-- distance[neighbor] = weight -->
-                                                                                          <block type="dict_set" id="set_distance_neighbor">
+                                                                                        <value name="KEY">
+                                                                                          <block type="variables_get" id="neighbor_var_set">
+                                                                                            <field name="VAR">neighbor</field>
+                                                                                          </block>
+                                                                                        </value>
+                                                                                        <value name="VALUE">
+                                                                                          <block type="variables_get" id="weight_var_set">
+                                                                                            <field name="VAR">weight</field>
+                                                                                          </block>
+                                                                                        </value>
+                                                                                        <next>
+                                                                                          <!-- parent[neighbor] = node -->
+                                                                                          <block type="dict_set" id="set_parent_neighbor">
                                                                                             <value name="DICT">
-                                                                                              <block type="variables_get" id="distance_var_set">
-                                                                                                <field name="VAR">distance</field>
+                                                                                              <block type="variables_get" id="parent_var_set">
+                                                                                                <field name="VAR">parent</field>
                                                                                               </block>
                                                                                             </value>
                                                                                             <value name="KEY">
-                                                                                              <block type="variables_get" id="neighbor_var_set">
+                                                                                              <block type="variables_get" id="neighbor_var_parent">
                                                                                                 <field name="VAR">neighbor</field>
                                                                                               </block>
                                                                                             </value>
                                                                                             <value name="VALUE">
-                                                                                              <block type="variables_get" id="weight_var_set">
-                                                                                                <field name="VAR">weight</field>
+                                                                                              <block type="variables_get" id="node_var_parent">
+                                                                                                <field name="VAR">node</field>
                                                                                               </block>
                                                                                             </value>
                                                                                             <next>
-                                                                                              <!-- parent[neighbor] = node -->
-                                                                                              <!-- Note: We don't update MST_weight here because MST_weight is only updated when a node is added to visited -->
-                                                                                              <block type="dict_set" id="set_parent_neighbor">
-                                                                                                <value name="DICT">
-                                                                                                  <block type="variables_get" id="parent_var_set">
-                                                                                                    <field name="VAR">parent</field>
+                                                                                              <!-- PQ push(distance[neighbor], neighbor) -->
+                                                                                              <block type="lists_add_item" id="add_to_pq">
+                                                                                                <value name="LIST">
+                                                                                                  <block type="variables_get" id="pq_var_add">
+                                                                                                    <field name="VAR">PQ</field>
                                                                                                   </block>
                                                                                                 </value>
-                                                                                                <value name="KEY">
-                                                                                                  <block type="variables_get" id="neighbor_var_parent">
-                                                                                                    <field name="VAR">neighbor</field>
-                                                                                                  </block>
-                                                                                                </value>
-                                                                                                <value name="VALUE">
-                                                                                                  <block type="variables_get" id="node_var_parent">
-                                                                                                    <field name="VAR">node</field>
-                                                                                                  </block>
-                                                                                                </value>
-                                                                                                <next>
-                                                                                                  <!-- PQ push(distance[neighbor], neighbor) -->
-                                                                                                  <block type="lists_add_item" id="add_to_pq">
-                                                                                                    <value name="LIST">
-                                                                                                      <block type="variables_get" id="pq_var_add">
-                                                                                                        <field name="VAR">PQ</field>
-                                                                                                      </block>
-                                                                                                    </value>
-                                                                                                    <value name="ITEM">
-                                                                                                      <block type="lists_create_with" id="pq_tuple_new">
-                                                                                                        <mutation items="2"></mutation>
-                                                                                                        <value name="ADD0">
-                                                                                                          <block type="dict_get" id="get_distance_for_pq">
-                                                                                                            <value name="DICT">
-                                                                                                              <block type="variables_get" id="distance_var_pq">
-                                                                                                                <field name="VAR">distance</field>
-                                                                                                              </block>
-                                                                                                            </value>
-                                                                                                            <value name="KEY">
-                                                                                                              <block type="variables_get" id="neighbor_var_pq">
-                                                                                                                <field name="VAR">neighbor</field>
-                                                                                                              </block>
-                                                                                                            </value>
+                                                                                                <value name="ITEM">
+                                                                                                  <block type="lists_create_with" id="pq_tuple_new">
+                                                                                                    <mutation items="2"></mutation>
+                                                                                                    <value name="ADD0">
+                                                                                                      <block type="dict_get" id="get_distance_for_pq">
+                                                                                                        <value name="DICT">
+                                                                                                          <block type="variables_get" id="distance_var_pq">
+                                                                                                            <field name="VAR">distance</field>
                                                                                                           </block>
                                                                                                         </value>
-                                                                                                        <value name="ADD1">
-                                                                                                          <block type="variables_get" id="neighbor_var_pq_item">
+                                                                                                        <value name="KEY">
+                                                                                                          <block type="variables_get" id="neighbor_var_pq">
                                                                                                             <field name="VAR">neighbor</field>
                                                                                                           </block>
                                                                                                         </value>
                                                                                                       </block>
                                                                                                     </value>
+                                                                                                    <value name="ADD1">
+                                                                                                      <block type="variables_get" id="neighbor_var_pq_item">
+                                                                                                        <field name="VAR">neighbor</field>
+                                                                                                      </block>
+                                                                                                    </value>
                                                                                                   </block>
-                                                                                                </next>
+                                                                                                </value>
                                                                                               </block>
                                                                                             </next>
                                                                                           </block>
-                                                                                        </statement>
+                                                                                        </next>
                                                                                       </block>
-                                                                                    </next>
+                                                                                    </statement>
                                                                                   </block>
                                                                                 </next>
                                                                               </block>
-                                                                            </statement>
+                                                                            </next>
                                                                           </block>
-                                                                        </next>
+                                                                        </statement>
                                                                       </block>
                                                                     </next>
                                                                   </block>
                                                                 </next>
                                                               </block>
-                                                            </next>
+                                                            </statement>
                                                           </block>
                                                         </next>
                                                       </block>
@@ -556,9 +553,18 @@ const primExampleXml = `<?xml version="1.0" encoding="UTF-8"?>
                                               </block>
                                             </next>
                                           </block>
-                                        </next>
+                                        </statement>
                                       </block>
                                     </next>
+                                  </block>
+                                </statement>
+                                <next>
+                                  <block type="procedures_return" id="return_mst_weight">
+                                    <value name="VALUE">
+                                      <block type="variables_get">
+                                        <field name="VAR">MST_weight</field>
+                                      </block>
+                                    </value>
                                   </block>
                                 </next>
                               </block>

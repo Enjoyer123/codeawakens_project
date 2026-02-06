@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -39,8 +39,6 @@ const LevelHintManagement = () => {
   const { levelId } = useParams();
   const numericLevelId = parseInt(levelId, 10);
 
-  const { page, rowsPerPage, handlePageChange } = usePagination(1, 10);
-
   // TanStack Query Hooks
   const { data: level } = useLevel(numericLevelId);
   const {
@@ -50,46 +48,15 @@ const LevelHintManagement = () => {
     error: queryError
   } = useLevelHints(numericLevelId);
 
-  if (isError) {
-    return <PageError message={queryError?.message} title="Failed to load hints" />;
-  }
-
   const createHintMutation = useCreateLevelHint();
   const updateHintMutation = useUpdateLevelHint();
   const deleteHintMutation = useDeleteLevelHint();
   const uploadImageMutation = useUploadHintImage();
   const deleteImageMutation = useDeleteHintImage();
 
-  // Derived State
-  const allHints = hintsData || [];
-
-  // Client-side filtering & pagination
-  const { filteredHints, pagination } = (() => {
-    const filtered = searchQuery
-      ? allHints.filter(h =>
-        (h.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (h.description || '').toLowerCase().includes(searchQuery.toLowerCase())
-      )
-      : allHints;
-
-    const total = filtered.length;
-    const start = (page - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-    const pageItems = filtered.slice(start, end);
-
-    return {
-      filteredHints: pageItems,
-      pagination: {
-        total,
-        totalPages: Math.max(1, Math.ceil(total / rowsPerPage)),
-        page,
-        limit: rowsPerPage,
-      }
-    };
-  })();
-
+  // State
   const [searchQuery, setSearchQuery] = useState('');
-
+  const { page, rowsPerPage, handlePageChange } = usePagination(1, 10);
 
   const [hintDialogOpen, setHintDialogOpen] = useState(false);
   const [editingHint, setEditingHint] = useState(null);
@@ -114,7 +81,37 @@ const LevelHintManagement = () => {
   const [deletingImageId, setDeletingImageId] = useState(null);
   const [imageError, setImageError] = useState(null);
 
-  // No manual load effects needed
+  if (isError) {
+    return <PageError message={queryError?.message} title="Failed to load hints" />;
+  }
+
+  // Derived State
+  const allHints = hintsData || [];
+
+  // Client-side filtering & pagination
+  const { filteredHints, pagination } = useMemo(() => {
+    const filtered = searchQuery
+      ? allHints.filter(h =>
+        (h.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (h.description || '').toLowerCase().includes(searchQuery.toLowerCase())
+      )
+      : allHints;
+
+    const total = filtered.length;
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    const pageItems = filtered.slice(start, end);
+
+    return {
+      filteredHints: pageItems,
+      pagination: {
+        total,
+        totalPages: Math.max(1, Math.ceil(total / rowsPerPage)),
+        page,
+        limit: rowsPerPage,
+      }
+    };
+  }, [allHints, searchQuery, page, rowsPerPage]);
 
   const handleSearchChange = useCallback(
     (value) => {
@@ -265,16 +262,6 @@ const LevelHintManagement = () => {
         file: imageFile
       });
 
-      // Refetch updated hint to get image URL for UI
-      // Since we invalidated query, hintsData will update.
-      // But selectedHint is local state. We need to sync it.
-      // We can use a side effect or find it from hintsData
-      // For now, simpler to just clear inputs and let user re-open checks if needed, 
-      // OR re-find from hintsData if the dialog stays open.
-      // The original logic re-fetched manually.
-      // Here, React Query will update hintsData. 
-      // We can update selectedHint in a useEffect or just let it be if the dialog relies on selectedHint.
-
       setImageFile(null);
       const input = document.getElementById('level-hint-image-input');
       if (input) {
@@ -315,7 +302,7 @@ const LevelHintManagement = () => {
         <AdminPageHeader
           title={`Hints for Level: ${level?.level_name || levelId}`}
           subtitle="จัดการ Hint ของด่านนี้ (ใช้แสดงระหว่างเล่น)"
-          backPath={`/admin/levels/${numericLevelId}/edit`}
+          backPath={`/admin/levels`}
           onAddClick={() => handleOpenHintDialog()}
           addButtonText="เพิ่ม Hint"
         />
@@ -358,7 +345,7 @@ const LevelHintManagement = () => {
           )}
         </div>
 
-        {/* Simple Hint Form Dialog (ใช้ Dialog ของ browser แทนเพื่อความเร็ว) */}
+        {/* Simple Hint Form Dialog */}
         <Dialog open={hintDialogOpen} onOpenChange={setHintDialogOpen}>
           <DialogContent className="max-w-lg">
             <DialogHeader>
@@ -454,5 +441,3 @@ const LevelHintManagement = () => {
 };
 
 export default LevelHintManagement;
-
-
