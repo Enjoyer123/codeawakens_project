@@ -5,16 +5,16 @@ import TestCaseItem from './TestCaseItem';
 
 const TestResultsTab = ({ testCaseResult }) => {
     return (
-        <TabsContent value="test" className="h-full m-0 p-0 absolute inset-0 z-10 data-[state=inactive]:hidden bg-stone-900 overflow-y-auto">
+        <TabsContent value="test" className="h-full m-0 p-0 absolute inset-0 z-10 data-[state=inactive]:hidden bg-[#0f111a] overflow-y-auto">
             {!testCaseResult ? (
-                <div className="flex flex-col items-center justify-center h-full text-stone-500 gap-4">
+                <div className="flex flex-col items-center justify-center h-full text-purple-500/50 gap-4">
                     <FlaskConical size={48} className="opacity-20" />
-                    <p>Run code to see test results</p>
+                    <p className="font-pixel text-[10px] tracking-widest">Run code to see test results</p>
                 </div>
             ) : (
                 <div className="p-4 space-y-6 max-w-3xl mx-auto">
                     {/* Summary Header */}
-                    <div className={`p-4 rounded-lg border ${testCaseResult.passed ? 'bg-green-900/20 border-green-900/50' : 'bg-red-900/20 border-red-900/50'} flex items-center gap-4`}>
+                    <div className={`p-4 rounded-lg border backdrop-blur-sm ${testCaseResult.passed ? 'bg-green-900/10 border-green-500/20' : 'bg-red-900/10 border-red-500/20'} flex items-center gap-4`}>
                         <div className={`p-3 rounded-full ${testCaseResult.passed ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
                             {testCaseResult.passed ? <CheckCircle2 size={32} /> : <XCircle size={32} />}
                         </div>
@@ -22,7 +22,7 @@ const TestResultsTab = ({ testCaseResult }) => {
                             <h3 className={`text-lg font-bold ${testCaseResult.passed ? 'text-green-400' : 'text-red-400'}`}>
                                 {testCaseResult.passed ? 'All Tests Passed' : 'Test Failed'}
                             </h3>
-                            <p className="text-stone-400 text-sm">
+                            <p className="text-purple-200/60 text-sm">
                                 {testCaseResult.message}
                             </p>
                         </div>

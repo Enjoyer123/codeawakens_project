@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { useProfileTab } from './hooks/useProfileTab';
 import { API_BASE_URL } from '../../../../config/apiConfig';
@@ -11,6 +12,7 @@ const ProfileTab = ({
     onUpdateSuccess,
     getToken
 }) => {
+    const navigate = useNavigate();
     // We pass the whole returned object to the dialog
     const profileData = useProfileTab({ userDetails, getToken, onUpdateSuccess });
 
@@ -105,13 +107,35 @@ const ProfileTab = ({
 
                     {/* Pre-core */}
                     <div className="bg-[#e5d6a1] p-2 rounded-lg border border-[#8B4513]/20 flex flex-col items-center gap-0.5 shadow-sm hover:shadow-md transition-all">
-                        <span className="text-base font-bold text-[#5C4033]">{userDetails.user.pre_score !== null ? userDetails.user.pre_score : 'N/A'}</span>
+                        {userDetails.user.pre_score !== null ? (
+                            <span className="text-base font-bold text-[#5C4033]">{userDetails.user.pre_score}</span>
+                        ) : (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 text-[10px] bg-[#a855f7] text-white hover:scale-105 active:scale-95 px-2 rounded-md font-bold transition-all"
+                                onClick={() => navigate('/test/pre')}
+                            >
+                                ทำแบบทดสอบ
+                            </Button>
+                        )}
                         <span className="text-[9px] font-bold text-[#8B4513]/70 uppercase tracking-widest">Pre-Test</span>
                     </div>
 
                     {/* Post-Score */}
                     <div className="bg-[#e5d6a1] p-2 rounded-lg border border-[#8B4513]/20 flex flex-col items-center gap-0.5 shadow-sm hover:shadow-md transition-all">
-                        <span className="text-base font-bold text-[#5C4033]">{userDetails.user.post_score !== null ? userDetails.user.post_score : 'N/A'}</span>
+                        {userDetails.user.post_score !== null ? (
+                            <span className="text-base font-bold text-[#5C4033]">{userDetails.user.post_score}</span>
+                        ) : (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 text-[10px] bg-[#a855f7] text-white  hover:scale-105 active:scale-95"
+                                onClick={() => navigate('/test/post')}
+                            >
+                                ทำแบบทดสอบ
+                            </Button>
+                        )}
                         <span className="text-[9px] font-bold text-[#8B4513]/70 uppercase tracking-widest">Post-Test</span>
                     </div>
                 </div>

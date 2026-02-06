@@ -20,7 +20,7 @@ const CoinPeopleStateTable = ({ levelData, playerCoins = [], rescuedPeople = [],
             <div
                 className="absolute -inset-3 z-[-1]"
                 style={{
-                    backgroundImage: `url('/scoreccl1.png')`,
+                    backgroundImage: `url(${isMinimized ? '/table/table0.png' : '/table/table2.png'})`,
                     backgroundSize: '100% 100%',
                     backgroundPosition: 'center'
                 }}

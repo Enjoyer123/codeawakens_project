@@ -194,12 +194,19 @@ export function analyzeXmlStructure(xml, workspace = null) {
       }
     }
 
+
     // สำหรับ procedures: เช็ค NAME field
     if (type === 'procedures_defreturn' || type === 'procedures_defnoreturn' ||
       type === 'procedures_callreturn' || type === 'procedures_callnoreturn') {
       const nameField = block.querySelector('field[name="NAME"]');
+      console.log(`  - 🔍 Procedure block ${type}: NAME field exists=${!!nameField}`);
       if (nameField) {
-        blockInfo.procedureName = nameField.textContent || nameField.getAttribute('value') || '';
+        const textContent = nameField.textContent;
+        const valueAttr = nameField.getAttribute('value');
+        blockInfo.procedureName = textContent || valueAttr || '';
+        console.log(`  - ✅ Procedure NAME: textContent="${textContent}", value="${valueAttr}", final="${blockInfo.procedureName}"`);
+      } else {
+        console.log(`  - ⚠️ No NAME field found for ${type} block`);
       }
     }
 

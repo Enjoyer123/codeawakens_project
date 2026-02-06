@@ -8,7 +8,7 @@ export function defineListOperationsBlocks() {
     init: function () {
       this.appendValueInput("LIST")
         .setCheck("Array")
-        .appendField("📝 Add");
+        .appendField("Add");
       this.appendValueInput("ITEM")
         .setCheck(null)
         .appendField("to");
@@ -26,7 +26,7 @@ export function defineListOperationsBlocks() {
     init: function () {
       this.appendValueInput("LIST")
         .setCheck("Array")
-        .appendField("🗑️ Remove Last from List");
+        .appendField("Remove Last from List");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(260);
@@ -39,7 +39,7 @@ export function defineListOperationsBlocks() {
     init: function () {
       this.appendValueInput("LIST")
         .setCheck("Array")
-        .appendField("📤 Pop Last from List");
+        .appendField("Pop Last from List");
       this.setOutput(true, null);
       this.setColour(260);
       this.setTooltip("ดึง item สุดท้ายออกจาก list และลบออก (pop with return)");
@@ -51,7 +51,7 @@ export function defineListOperationsBlocks() {
     init: function () {
       this.appendValueInput("LIST")
         .setCheck("Array")
-        .appendField("📖 Get Last from List");
+        .appendField("Get Last from List");
       this.setOutput(true, null);
       this.setColour(260);
       this.setTooltip("ดึง item สุดท้ายจาก list");
@@ -63,7 +63,7 @@ export function defineListOperationsBlocks() {
     init: function () {
       this.appendValueInput("LIST")
         .setCheck("Array")
-        .appendField("📤 Pop First from List");
+        .appendField("Pop First from List");
       this.setOutput(true, null);
       this.setColour(260);
       this.setTooltip("ดึง item แรกออกจาก list และลบออก (shift with return - สำหรับ queue)");
@@ -75,7 +75,7 @@ export function defineListOperationsBlocks() {
     init: function () {
       this.appendValueInput("LIST")
         .setCheck("Array")
-        .appendField("📖 Get First from List");
+        .appendField("Get First from List");
       this.setOutput(true, null);
       this.setColour(260);
       this.setTooltip("ดึง item แรกจาก list");
@@ -87,7 +87,7 @@ export function defineListOperationsBlocks() {
     init: function () {
       this.appendValueInput("ITEM")
         .setCheck(null)
-        .appendField("🔍 Contains");
+        .appendField("Contains");
       this.appendValueInput("LIST")
         .setCheck("Array")
         .appendField("in List");
@@ -102,7 +102,7 @@ export function defineListOperationsBlocks() {
     init: function () {
       this.appendValueInput("LIST1")
         .setCheck("Array")
-        .appendField("🔗 Concat List");
+        .appendField("Concat List");
       this.appendValueInput("LIST2")
         .setCheck("Array")
         .appendField("with List");
@@ -116,8 +116,8 @@ export function defineListOperationsBlocks() {
   Blockly.Blocks["for_each_in_list"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("🔄 For Each")
-        .appendField(new Blockly.FieldVariable("item"), "VAR")
+        .appendField("For Each")
+        .appendField(new Blockly.FieldVariable("element"), "VAR")
         .appendField("in List");
       this.appendValueInput("LIST")
         .setCheck("Array");
@@ -127,7 +127,7 @@ export function defineListOperationsBlocks() {
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(120);
-      this.setTooltip("วนลูปผ่านแต่ละ item ใน list");
+      this.setTooltip("วนลูปผ่านแต่ละ element ใน list (คลิกที่ตัวแปรเพื่อเปลี่ยนชื่อ)");
 
       this.setOnChange(function (event) {
         if (!event || !this.workspace) return;
@@ -140,12 +140,12 @@ export function defineListOperationsBlocks() {
         if (event.type === Blockly.Events.BLOCK_CREATE && event.blockId === this.id) {
           // เมื่อบล็อกถูกสร้าง ให้ตรวจสอบและสร้างตัวแปร (ถ้ายังไม่มี)
           setTimeout(() => {
-            ensureVariableExists(this, 'VAR', 'item');
+            ensureVariableExists(this, 'VAR', 'element');
           }, 10);
         } else if (event.type === Blockly.Events.BLOCK_CHANGE && event.blockId === this.id) {
           // เมื่อตัวแปรในบล็อกเปลี่ยน ให้ตรวจสอบและสร้างตัวแปรใหม่ (ถ้ายังไม่มี)
           if (event.element === 'field' && event.name === 'VAR') {
-            const newValue = event.newValue || 'item';
+            const newValue = event.newValue || 'element';
             ensureVariableExists(this, 'VAR', newValue);
           }
         }
@@ -158,7 +158,7 @@ export function defineListOperationsBlocks() {
     init: function () {
       this.appendValueInput("LIST")
         .setCheck("Array")
-        .appendField("🔍 Find Index of Min Value in List");
+        .appendField("Find Index of Min Value in List");
       this.appendValueInput("EXCLUDE")
         .setCheck("Array")
 
@@ -176,7 +176,7 @@ export function defineListOperationsBlocks() {
     init: function () {
       this.appendValueInput("LIST")
         .setCheck("Array")
-        .appendField("🔍 Find Index of Max Value in List");
+        .appendField("Find Index of Max Value in List");
       this.appendValueInput("EXCLUDE")
         .setCheck("Array")
 
@@ -194,7 +194,7 @@ export function defineListOperationsBlocks() {
     init: function () {
       this.appendValueInput("LIST")
         .setCheck("Array")
-        .appendField("📖 Get Item at Index");
+        .appendField("Get Item at Index");
       this.appendValueInput("INDEX")
         .setCheck("Number")
         .appendField("from List");
@@ -209,7 +209,7 @@ export function defineListOperationsBlocks() {
     init: function () {
       this.appendValueInput("LIST")
         .setCheck("Array")
-        .appendField("🗑️ Remove Item at Index");
+        .appendField("Remove Item at Index");
       this.appendValueInput("INDEX")
         .setCheck("Number")
         .appendField("from List");
@@ -225,7 +225,7 @@ export function defineListOperationsBlocks() {
     init: function () {
       this.appendValueInput("LIST")
         .setCheck("Array")
-        .appendField("📊 Sort");
+        .appendField("Sort");
       this.appendDummyInput()
         .appendField("by Weight (Ascending)");
       this.setOutput(true, "Array");

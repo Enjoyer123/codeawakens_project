@@ -22,20 +22,11 @@ const StatusPanel = ({ playerHpState, currentWeaponData, characterName = 'main_1
 
   return (
     <div className="flex-shrink-0 bg-black/30 rounded-lg p-3 border border-gray-700/50 min-w-[300px]">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Status</span>
-        {currentWeaponData && (
-          <span className="text-[10px] bg-blue-900/40 text-blue-300 px-2 py-0.5 rounded border border-blue-800/50">
-            {currentWeaponData.name}
-          </span>
-        )}
-      </div>
 
       {/* Container หลัก - ใช้ flex เพื่อจัดวาง Status และอาวุธ */}
-      <div className="flex flex-col gap-1 scale-90 origin-top-left"> {/* ปรับ scale ตรงนี้เพื่อลดขนาดทั้งแผง */}
-
+      <div className="flex flex-col gap-1 scale-110 origin-top-left"> {/* ขยายขนาดเป็น scale-110 */}
         {/* HP Bar & Avatar Unit */}
-        <div className="relative" style={{ width: '200px' }}> {/* กำหนดความกว้างกรอบรวม */}
+        <div className="relative" style={{ width: '250px' }}> {/* ขยายความกว้างเป็น 250px */}
 
           {/* 1. รูปหลอดเลือด (Background) */}
           <img
@@ -68,7 +59,7 @@ const StatusPanel = ({ playerHpState, currentWeaponData, characterName = 'main_1
           </div>
 
           {/* 3. HP Text - วางไว้ใต้หลอดเลือดตามภาพ */}
-          <div className="mt-1 ml-4 text-[11px] font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,1)]">
+          <div className="mt-[-4px] ml-4 text-[11px] font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,1)] text-right">
             {playerHpState} / 100 HP
           </div>
         </div>

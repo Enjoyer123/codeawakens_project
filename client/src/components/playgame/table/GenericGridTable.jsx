@@ -37,7 +37,7 @@ const GenericGridTable = ({
             <div
                 className="absolute -inset-2 z-[-1] rounded-xl shadow-2xl transition-all duration-300"
                 style={{
-                    backgroundImage: `url('/scoreccl1.png')`,
+                    backgroundImage: `url(${isMinimized ? '/table/table0.png' : '/table/table1.png'})`,
                     backgroundSize: '100% 100%',
                     backgroundPosition: 'center'
                 }}

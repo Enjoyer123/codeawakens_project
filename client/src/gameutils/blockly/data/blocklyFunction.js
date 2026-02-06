@@ -5,7 +5,7 @@ export function defineFunctionBlocks() {
   Blockly.Blocks["function_definition"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("🔧 Function")
+        .appendField("Function")
         .appendField(new Blockly.FieldTextInput("myFunction"), "FUNCTION_NAME");
 
       this.appendValueInput("ARGUMENT")
@@ -24,7 +24,7 @@ export function defineFunctionBlocks() {
   Blockly.Blocks["function_call"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("📞 Call Function")
+        .appendField("Call Function")
         .appendField(new Blockly.FieldTextInput("myFunction"), "FUNCTION_NAME");
 
       this.appendValueInput("ARGUMENT")
@@ -43,7 +43,7 @@ export function defineFunctionBlocks() {
     init: function () {
       this.appendValueInput("VALUE")
         .setCheck(null)
-        .appendField("↩️ Return");
+        .appendField("Return");
       this.setPreviousStatement(true, null);
       this.setColour(290);
       this.setTooltip("คืนค่าจากฟังก์ชัน");

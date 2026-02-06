@@ -12,6 +12,7 @@ export function defineNQueenGenerators() {
         }
         return [`await safe(${row}, ${col})`, javascriptGenerator.ORDER_AWAIT];
     };
+    javascriptGenerator.forBlock["is_safe"] = javascriptGenerator.forBlock["nqueen_is_safe"];
 
     // 2. place(row, col)
     javascriptGenerator.forBlock["nqueen_place"] = function (block) {
@@ -23,6 +24,7 @@ export function defineNQueenGenerators() {
         }
         return `await place(${row}, ${col});\n`;
     };
+    javascriptGenerator.forBlock["place"] = javascriptGenerator.forBlock["nqueen_place"];
 
     // 3. remove(row, col)
     javascriptGenerator.forBlock["nqueen_remove"] = function (block) {
@@ -34,4 +36,5 @@ export function defineNQueenGenerators() {
         }
         return `await remove(${row}, ${col});\n`;
     };
+    javascriptGenerator.forBlock["delete"] = javascriptGenerator.forBlock["nqueen_remove"];
 }

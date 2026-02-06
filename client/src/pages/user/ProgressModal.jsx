@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { API_BASE_URL } from '../../config/apiConfig';
 
-const ProgressModal = ({ isOpen, onClose, gameResult, levelData, blocklyXml, textCodeContent, finalScore, hp_remaining, getToken }) => {
+const ProgressModal = ({ isOpen, onClose, gameResult, levelData, blocklyXml, textCodeContent, finalScore, hp_remaining, getToken, userBigO }) => {
   const navigate = useNavigate();
 
   const {
@@ -134,6 +134,12 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, blocklyXml, tex
                       <span>Base Completion:</span>
                       <span>60</span>
                     </div>
+                    {userBigO && (
+                      <div className="flex justify-between text-[#8d6e63] italic">
+                        <span>Selected Big O:</span>
+                        <span className="font-mono font-bold px-1 rounded-sm">{userBigO}</span>
+                      </div>
+                    )}
                     {userProgressData.pattern_bonus_score > 0 && (
                       <div className="flex justify-between text-green-700">
                         <span>Pattern Bonus:</span>

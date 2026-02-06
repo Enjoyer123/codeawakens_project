@@ -5,7 +5,7 @@ import { ensureVariableExists } from '../data/blocklyVariable';
 export function defineCoinBlocks() {
   Blockly.Blocks["collect_coin"] = {
     init: function () {
-      this.appendDummyInput().appendField("🪙 Collect Coin");
+      this.appendDummyInput().appendField("Collect Coin");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(45);
@@ -15,18 +15,21 @@ export function defineCoinBlocks() {
 
   Blockly.Blocks["have_coin"] = {
     init: function () {
-      this.appendDummyInput().appendField("🪙 Has Coin");
+      this.appendDummyInput().appendField("Has Coin");
       this.setOutput(true, "Boolean");
       this.setColour(45);
       this.setTooltip("ตรวจสอบว่ามีเหรียญอยู่ใน node เดียวกับตัวละครหรือไม่");
     },
   };
 
+  // Alias for database consistency
+  Blockly.Blocks["has_coin"] = Blockly.Blocks["have_coin"];
+
   Blockly.Blocks["swap_coins"] = {
     init: function () {
       this.appendValueInput("INDEX1")
         .setCheck("Number")
-        .appendField("🔄 Swap Coins at Index");
+        .appendField("Swap Coins at Index");
       this.appendValueInput("INDEX2")
         .setCheck("Number")
         .appendField("with Index");
@@ -41,7 +44,7 @@ export function defineCoinBlocks() {
     init: function () {
       this.appendValueInput("INDEX1")
         .setCheck("Number")
-        .appendField("⚖️ Coin at Index");
+        .appendField("Coin at Index");
       this.appendDummyInput()
         .appendField(new Blockly.FieldDropdown([
           [">", "GT"],
@@ -64,7 +67,7 @@ export function defineCoinBlocks() {
     init: function () {
       this.appendValueInput("INDEX")
         .setCheck("Number")
-        .appendField("💰 Value of Coin at Index");
+        .appendField("Value of Coin at Index");
       this.setOutput(true, "Number");
       this.setColour(230);
       this.setTooltip("ดูค่าเหรียญในตำแหน่งที่กำหนด");
@@ -73,7 +76,7 @@ export function defineCoinBlocks() {
 
   Blockly.Blocks["coin_count"] = {
     init: function () {
-      this.appendDummyInput().appendField("🔢 Total Coins Count");
+      this.appendDummyInput().appendField("Total Coins Count");
       this.setOutput(true, "Number");
       this.setColour(230);
       this.setTooltip("จำนวนเหรียญที่เก็บมาได้");
@@ -83,7 +86,7 @@ export function defineCoinBlocks() {
   Blockly.Blocks["is_sorted"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("✅ Is Sorted")
+        .appendField("Is Sorted")
         .appendField(new Blockly.FieldDropdown([
           ["Ascending", "ASC"],
           ["Descending", "DESC"]
@@ -97,7 +100,7 @@ export function defineCoinBlocks() {
   Blockly.Blocks["for_each_coin"] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("🔄 For Each Coin")
+        .appendField("For Each Coin")
         .appendField(new Blockly.FieldVariable("coin"), "VAR");
       this.appendStatementInput("DO")
         .setCheck(null)

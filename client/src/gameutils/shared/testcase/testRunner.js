@@ -1401,6 +1401,64 @@ export async function checkTestCases(functionReturnValue, testCases, functionNam
                     console.log("🛠️ FULL TEST CODE DUMP:", testCode); // <--- DEBUG DUMP
 
                     let testExecFunction;
+
+                    // === CUSTOM MAP SUPPORT ===
+                    let effectiveMap = graphMap;
+                    let effectiveAllNodes = allNodes;
+
+                    // Check if input_params has a custom map/graph
+                    // Support both parsed object and string formats
+                    // improved: fallback to 'edges' if map/graph not strictly defined (Smart Inference)
+                    const customMapInput = inputParams.map || inputParams.graph || inputParams.edges;
+
+                    if (customMapInput) {
+                        try {
+                            // If it's a string, try to parse it
+                            effectiveMap = typeof customMapInput === 'string' ? JSON.parse(customMapInput) : customMapInput;
+                            console.log('🔍   [Custom Map] Using custom map from test case input_params:', Array.isArray(effectiveMap) ? 'Edge List (Array)' : 'Adjacency Map (Object)');
+
+                            // If all_nodes is not explicitly provided in input_params, derive it from the map keys or edge list
+                            if (!inputParams.all_nodes) {
+                                let nodesSet = new Set();
+
+                                if (Array.isArray(effectiveMap)) {
+                                    // Extract nodes from Edge List [[u, v, w], ...]
+                                    effectiveMap.forEach(edge => {
+                                        if (Array.isArray(edge)) {
+                                            if (edge.length >= 2) {
+                                                nodesSet.add(Number(edge[0]));
+                                                nodesSet.add(Number(edge[1]));
+                                            }
+                                        } else if (typeof edge === 'object') {
+                                            const u = edge.from !== undefined ? edge.from : edge.u;
+                                            const v = edge.to !== undefined ? edge.to : edge.v;
+                                            if (u !== undefined) nodesSet.add(Number(u));
+                                            if (v !== undefined) nodesSet.add(Number(v));
+                                        }
+                                    });
+                                } else if (typeof effectiveMap === 'object') {
+                                    // Extract nodes from Adjacency Map { "0": [1, 2], ... }
+                                    Object.keys(effectiveMap).forEach(k => nodesSet.add(Number(k)));
+                                    Object.values(effectiveMap).forEach(neighbors => {
+                                        if (Array.isArray(neighbors)) {
+                                            neighbors.forEach(n => {
+                                                if (Array.isArray(n)) nodesSet.add(Number(n[0])); // [neighbor, weight]
+                                                else nodesSet.add(Number(n)); // neighbor ID
+                                            });
+                                        }
+                                    });
+                                }
+
+                                effectiveAllNodes = Array.from(nodesSet).sort((a, b) => a - b);
+                                console.log('🔍   [Custom Map] Auto-generated all_nodes:', effectiveAllNodes);
+                            } else {
+                                effectiveAllNodes = inputParams.all_nodes;
+                            }
+                        } catch (e) {
+                            console.warn('⚠️   [Custom Map] Failed to parse custom map:', e);
+                            effectiveMap = graphMap; // Fallback
+                        }
+                    }
                     try {
                         testExecFunction = new AsyncFunction(
                             "map", "all_nodes",
@@ -1426,8 +1484,8 @@ export async function checkTestCases(functionReturnValue, testCases, functionNam
                     try {
                         actual = await Promise.race([
                             testExecFunction(
-                                graphMap,
-                                allNodes || [],
+                                effectiveMap,
+                                effectiveAllNodes || [],
                                 nParam,
                                 edgesParam,
                                 startParamLocal,

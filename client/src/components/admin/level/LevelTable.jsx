@@ -114,7 +114,8 @@ const LevelTable = ({
                     variant="outline"
                     size="sm"
                     onClick={() => handleNavigate(`/admin/levels/${level.level_id}/test-cases`)}
-                    className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                    disabled={!['DFS', 'BFS', 'Shortest Path', 'Minimum Spanning Tree', 'Backtrack', 'Dynamic Programing', 'Dynamic Programming', 'Greedy'].includes(level.category?.category_name)}
+                    className={`text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 ${!['DFS', 'BFS', 'Shortest Path', 'Minimum Spanning Tree', 'Backtrack', 'Dynamic Programing', 'Dynamic Programming', 'Greedy'].includes(level.category?.category_name) ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <Terminal className="h-4 w-4 mr-2" />
                     Test Cases

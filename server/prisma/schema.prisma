@@ -488,6 +488,7 @@ enum BlockCategory {
   functions
   variables
   operators
+  visuals
 }
 
 enum ItemType {

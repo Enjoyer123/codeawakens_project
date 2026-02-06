@@ -2,7 +2,7 @@ import { Image as ImageIcon } from 'lucide-react';
 import { getImageUrl } from '@/utils/imageUtils';
 
 const BlockSelector = ({ allBlocks, selectedBlocks, onBlocksChange }) => {
-  const blockCategories = ['movement', 'logic', 'conditions', 'loops', 'functions', 'variables', 'operators'];
+  const blockCategories = ['movement', 'logic', 'conditions', 'loops', 'functions', 'variables', 'operators', 'visuals'];
   const groupedBlocks = blockCategories.reduce((acc, category) => {
     acc[category] = allBlocks.filter(b => b.category === category);
     return acc;

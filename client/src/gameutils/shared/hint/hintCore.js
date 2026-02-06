@@ -2,6 +2,7 @@
 import { getWorkspaceXml } from './hintXmlUtils';
 import { calculateXmlMatchScore } from './hintXmlComparison';
 import { calculatePatternMatchPercentage, findCurrentStep } from './hintPatternMatching';
+import { checkThreePartsMatch } from './hintThreeParts';
 
 /**
  * หาคำใบ้ block ถัดไปตาม pattern ที่กำลังสร้าง
@@ -98,9 +99,33 @@ export function getNextBlockHint(workspace, goodPatterns) {
     };
   }
 
-  // หาขั้นตอนปัจจุบันจาก hints (ใช้ workspace เพื่อช่วย resolve ตัวแปร)
-  const currentStep = findCurrentStep(currentXml, bestMatch, workspace);
-  const totalSteps = bestMatch.hints?.length || 0;
+  // หาขั้นตอนปัจจุบันจาก hints
+  // 🎯 CRITICAL: ตรวจสอบว่า pattern ใช้ระบบ 3-part หรือไม่
+  // ถ้า hints มี xmlCheck แสดงว่าเป็นระบบใหม่ที่รองรับ 2-3 parts
+  const hasThreePartSystem = bestMatch.hints && bestMatch.hints.length > 0 &&
+    (bestMatch.hints[0].xmlCheck || bestMatch.hints[0].xmlcheck);
+
+  let currentStep = 0;
+  let totalSteps = bestMatch.hints?.length || 0;
+
+  if (hasThreePartSystem) {
+    console.log('🎯 Using THREE-PART matching system for pattern:', bestMatch.name);
+    // ใช้ระบบ 3-part matching
+    const threePartResult = checkThreePartsMatch(workspace, bestMatch);
+    console.log('🔍 Three-part match result:', threePartResult);
+
+    // matchedParts จะเป็น 0, 1, 2, หรือ 3
+    // แปลงเป็น currentStep (0 = ยังไม่เริ่ม, 1 = part1 เสร็จ, 2 = part2 เสร็จ, 3 = ทั้งหมดเสร็จ)
+    currentStep = threePartResult.matchedParts;
+
+    console.log(`🔍 Three-part current step: ${currentStep} / ${totalSteps}`);
+  } else {
+    console.log('🎯 Using OLD sequential matching system for pattern:', bestMatch.name);
+    // ใช้ระบบเก่า (findCurrentStep) สำหรับ backward compatibility
+    currentStep = findCurrentStep(currentXml, bestMatch, workspace);
+    console.log(`🔍 Old system current step: ${currentStep} / ${totalSteps}`);
+  }
+
   const progress = totalSteps > 0 ? (currentStep / totalSteps) * 100 : 0;
 
   console.log(`🔍 Current step calculation:`, {
@@ -110,7 +135,7 @@ export function getNextBlockHint(workspace, goodPatterns) {
     patternName: bestMatch.name || bestMatch.pattern_name,
     hasHints: !!bestMatch.hints,
     hintsLength: bestMatch.hints?.length,
-    bestMatchHints: bestMatch.hints,
+    usingThreePartSystem: hasThreePartSystem,
     conditionCheck: `${currentStep} > 0 && ${currentStep} <= ${totalSteps} = ${currentStep > 0 && currentStep <= totalSteps}`
   });
 

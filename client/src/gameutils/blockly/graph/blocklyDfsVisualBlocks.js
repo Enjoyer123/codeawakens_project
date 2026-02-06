@@ -7,7 +7,7 @@ export function defineDfsVisualBlocks() {
     init: function () {
       this.appendValueInput("GRAPH")
         .setCheck(null)
-        .appendField("🗺️ Get Neighbors of Node (Visual)");
+        .appendField("Get Neighbors of Node (Visual)");
       this.appendValueInput("NODE")
         .setCheck("Number")
         .appendField("from Graph");
@@ -22,7 +22,7 @@ export function defineDfsVisualBlocks() {
     init: function () {
       this.appendValueInput("NODE")
         .setCheck("Number")
-        .appendField("✅ Mark Node");
+        .appendField("Mark Node");
       this.appendDummyInput()
         .appendField("as Visited (Visual)");
       this.setPreviousStatement(true, null);
@@ -37,7 +37,7 @@ export function defineDfsVisualBlocks() {
     init: function () {
       this.appendValueInput("PATH")
         .setCheck("Array")
-        .appendField("📊 Show Path (Visual)");
+        .appendField("Show Path (Visual)");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(200);

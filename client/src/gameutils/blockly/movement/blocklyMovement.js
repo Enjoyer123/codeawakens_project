@@ -4,7 +4,7 @@ import * as Blockly from "blockly/core";
 export function defineMovementBlocks() {
   Blockly.Blocks["move_forward"] = {
     init: function () {
-      this.appendDummyInput().appendField("🔽 Move Forward");
+      this.appendDummyInput().appendField("Move Forward");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setStyle('loop_blocks'); // Green (Stamina)
@@ -14,7 +14,7 @@ export function defineMovementBlocks() {
 
   Blockly.Blocks["turn_left"] = {
     init: function () {
-      this.appendDummyInput().appendField("↪️ Turn Left");
+      this.appendDummyInput().appendField("Turn Left");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setStyle('loop_blocks'); // Green (Stamina)
@@ -24,7 +24,7 @@ export function defineMovementBlocks() {
 
   Blockly.Blocks["turn_right"] = {
     init: function () {
-      this.appendDummyInput().appendField("↩️ Turn Right");
+      this.appendDummyInput().appendField("Turn Right");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setStyle('loop_blocks'); // Green (Stamina)
@@ -34,7 +34,7 @@ export function defineMovementBlocks() {
 
   Blockly.Blocks["hit"] = {
     init: function () {
-      this.appendDummyInput().appendField("⚔️ Attack");
+      this.appendDummyInput().appendField("Attack");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setStyle('hat_blocks'); // Red (Attack/HP)
@@ -46,7 +46,7 @@ export function defineMovementBlocks() {
     init: function () {
       this.appendValueInput("NODE_ID")
         .setCheck("Number")
-        .appendField("🎯 Go to Node");
+        .appendField("Go to Node");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setStyle('loop_blocks');
@@ -59,7 +59,7 @@ export function defineMovementBlocks() {
     init: function () {
       this.appendValueInput("PATH")
         .setCheck("Array")
-        .appendField("🚶 Follow Path");
+        .appendField("Follow Path");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setStyle('loop_blocks');

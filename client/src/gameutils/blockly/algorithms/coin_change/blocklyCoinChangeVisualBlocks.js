@@ -7,7 +7,7 @@ export function defineCoinChangeVisualBlocks() {
     init: function () {
       this.appendValueInput("WARRIOR_INDEX")
         .setCheck("Number")
-        .appendField("⚔️ Add Warrior to Selection");
+        .appendField("Add Warrior to Selection");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(260);
@@ -20,7 +20,7 @@ export function defineCoinChangeVisualBlocks() {
     init: function () {
       this.appendValueInput("AMOUNT")
         .setCheck("Number")
-        .appendField("📊 Track decision");
+        .appendField("Track decision");
       this.appendValueInput("INDEX")
         .setCheck("Number")
         .appendField("amount");
