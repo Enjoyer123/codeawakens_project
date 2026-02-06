@@ -1,4 +1,27 @@
 // Text Code Parser Functions for Hint System
+/**
+ * Identify condition type from raw code string
+ */
+function identifyConditionType(conditionRaw) {
+  const trimmed = conditionRaw.trim();
+  if (trimmed.startsWith('!')) return 'logic_negate';
+  if (trimmed.includes('.includes(')) return 'lists_contains';
+  if (trimmed.includes('foundMonster()')) return 'found_monster';
+  if (trimmed.includes('canMoveForward()')) return 'can_move_forward';
+  if (trimmed.includes('nearPit()')) return 'near_pit';
+  if (trimmed.includes('atGoal()')) return 'at_goal';
+  if (trimmed.includes('hasPerson()')) return 'has_person';
+  if (trimmed.includes('hasTreasure()')) return 'has_treasure';
+  if (trimmed.includes('haveCoin()')) return 'has_coin';
+  if (trimmed.includes('nqueen_is_safe') || trimmed.includes('isSafe(')) return 'nqueen_is_safe';
+
+  if (trimmed.match(/^\s*\w+\s*\(/)) {
+    // Other function calls
+    return 'procedures_callreturn';
+  }
+
+  return 'logic_compare';
+}
 
 /**
  * Parse if block with condition
@@ -96,15 +119,7 @@ export function parseIfElseBlock(lines, startIndex) {
     }
   }
 
-  let conditionType = 'logic_compare';
-  if (conditionRaw.trim().startsWith('!')) {
-    conditionType = 'logic_negate';
-  } else if (conditionRaw.includes('.includes(')) {
-    conditionType = 'lists_contains';
-  } else if (conditionRaw.match(/^\s*\w+\s*\(/)) {
-    // Function call as condition (e.g., if (subsetSum(...)))
-    conditionType = 'procedures_callreturn';
-  }
+  const conditionType = identifyConditionType(conditionRaw);
 
   ifElseBlock.condition = {
     type: conditionType,
@@ -250,15 +265,7 @@ export function parseIfOnlyBlock(lines, startIndex) {
     }
   }
 
-  let conditionType = 'logic_compare';
-  if (conditionRaw.trim().startsWith('!')) {
-    conditionType = 'logic_negate';
-  } else if (conditionRaw.includes('.includes(')) {
-    conditionType = 'lists_contains';
-  } else if (conditionRaw.match(/^\s*\w+\s*\(/)) {
-    // Function call as condition (e.g., if (subsetSum(...)))
-    conditionType = 'procedures_callreturn';
-  }
+  const conditionType = identifyConditionType(conditionRaw);
 
   ifBlock.condition = {
     type: conditionType,
@@ -395,13 +402,7 @@ export function parseLoopBlock(lines, startIndex, loopType, times = null, condit
   }
 
   if (condition !== null) {
-    let conditionType = 'logic_compare';
-
-    if (condition.trim().startsWith('!')) {
-      conditionType = 'logic_negate';
-    } else if (condition.includes('.includes(')) {
-      conditionType = 'lists_contains';
-    }
+    const conditionType = identifyConditionType(condition);
 
     loopBlock.condition = {
       type: conditionType,

@@ -167,7 +167,7 @@ export function defineListSetIndexGenerator() {
               if (p.type === 'for_loop_dynamic' || p.type === 'for_index' || p.type === 'controls_for') {
                 const varField = p.getFieldValue && p.getFieldValue('VAR');
                 if (varField) {
-                  const resolved = javascriptGenerator.nameDB_.getName(varField, Blockly.Names.NameType.VARIABLE);
+                  const resolved = javascriptGenerator.nameDB_.getName(varField, 'VARIABLE');
                   if (resolved === 'coinIndex') coinIndexVarName = resolved;
                 }
               }
@@ -185,7 +185,7 @@ export function defineListSetIndexGenerator() {
               if (p.type === 'for_loop_dynamic' || p.type === 'for_index' || p.type === 'controls_for') {
                 const varField = p.getFieldValue && p.getFieldValue('VAR');
                 if (varField) {
-                  const resolved = javascriptGenerator.nameDB_.getName(varField, Blockly.Names.NameType.VARIABLE);
+                  const resolved = javascriptGenerator.nameDB_.getName(varField, 'VARIABLE');
                   if (resolved === 'itemIndex') itemVarName = resolved;
                 }
               }
@@ -205,7 +205,7 @@ export function defineListSetIndexGenerator() {
               if (p.type === 'for_loop_dynamic' || p.type === 'for_index' || p.type === 'controls_for') {
                 const varField = p.getFieldValue && p.getFieldValue('VAR');
                 if (varField) {
-                  const resolved = javascriptGenerator.nameDB_.getName(varField, Blockly.Names.NameType.VARIABLE);
+                  const resolved = javascriptGenerator.nameDB_.getName(varField, 'VARIABLE');
                   if (resolved === 'r') rVarName = 'r';
                   if (resolved === 'c') cVarName = 'c';
                 }

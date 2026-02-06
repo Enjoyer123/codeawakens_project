@@ -29,7 +29,18 @@ function checkBlocksSubsequenceMatch(currentAnalysis, targetAnalysis, strict = f
     let isMatch = true;
 
     // type ต้องตรงกัน (เช็คเสมอ)
-    if (cur.type !== tgt.type) {
+    let isTypeMatch = (cur.type === tgt.type);
+
+    // 🔄 Fuzzy Match: lists_create_empty <-> lists_create_with
+    if (!isTypeMatch) {
+      if ((cur.type === 'lists_create_empty' && tgt.type === 'lists_create_with') ||
+        (cur.type === 'lists_create_with' && tgt.type === 'lists_create_empty')) {
+        isTypeMatch = true;
+        console.log(`  - 🔄 [SubsequenceMatch] Fuzzy match accepted: ${cur.type} ~= ${tgt.type}`);
+      }
+    }
+
+    if (!isTypeMatch) {
       isMatch = false;
     }
 

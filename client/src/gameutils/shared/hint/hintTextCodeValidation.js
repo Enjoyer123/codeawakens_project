@@ -709,7 +709,24 @@ function compareConditions(block, code) {
       }
     }
 
-    // Case 3: Block expects 'logic_compare', Code is 'logic_compare' (Already handled by exact match)
+    // Case 6: Generic game functions (Found Monster, Can Move) fallback
+    const gameTypeMapping = {
+      'found_monster': 'foundMonster',
+      'can_move_forward': 'canMoveForward',
+      'near_pit': 'nearPit',
+      'at_goal': 'atGoal',
+      'has_person': 'hasPerson',
+      'has_treasure': 'hasTreasure',
+      'has_coin': 'haveCoin'
+    };
+
+    if (gameTypeMapping[block.condition.type] && (code.condition.type === 'procedures_callreturn' || code.condition.type === 'function_call')) {
+      const raw = code.condition.raw || '';
+      if (raw.includes(gameTypeMapping[block.condition.type])) {
+        console.log(`✅ Fuzzy logic match: Accepted '${raw}' as ${block.condition.type}`);
+        return true;
+      }
+    }
 
     // Strict Type Fail
     // Add specific message for "Expected logic_operation"
@@ -717,6 +734,10 @@ function compareConditions(block, code) {
       if (t === 'logic_operation') return 'ตรรกะซ้อน (AND / OR)';
       if (t === 'logic_negate') return 'นิเสธ (NOT)';
       if (t === 'logic_compare') return 'การเปรียบเทียบ';
+      if (t === 'found_monster') return 'ตรวจพบมอนสเตอร์ (foundMonster)';
+      if (t === 'can_move_forward') return 'ตรวจการเดิน (canMoveForward)';
+      if (t === 'near_pit') return 'ตรวจหลุม (nearPit)';
+      if (t === 'at_goal') return 'ตรวจเป้าหมาย (atGoal)';
       return t;
     };
 
@@ -856,7 +877,14 @@ function mapTypeToThai(type) {
     'coin_change_track_decision': 'บันทึกการตัดสินใจ',
     'nqueen_is_safe': 'ตรวจสอบความปลอดภัย (safe)',
     'nqueen_place': 'วางควีน (place)',
-    'nqueen_remove': 'ยกควีนออก (remove)'
+    'nqueen_remove': 'ยกควีนออก (remove)',
+    'found_monster': 'ตรวจพบมอนสเตอร์ (foundMonster)',
+    'can_move_forward': 'ตรวจการเดิน (canMoveForward)',
+    'near_pit': 'ตรวจหลุม (nearPit)',
+    'at_goal': 'ตรวจเป้าหมาย (atGoal)',
+    'has_person': 'ตรวจคน (hasPerson)',
+    'has_treasure': 'ตรวจสมบัติ (hasTreasure)',
+    'has_coin': 'ตรวจเหรียญ (haveCoin)'
   };
   return map[type] || type;
 }

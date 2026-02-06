@@ -12,6 +12,8 @@ export function defineEntityGenerators() {
         return ['haveCoin()', javascriptGenerator.ORDER_FUNCTION_CALL];
     };
 
+    javascriptGenerator.forBlock["has_coin"] = javascriptGenerator.forBlock["have_coin"];
+
     javascriptGenerator.forBlock["swap_coins"] = function (block) {
         const index1 = javascriptGenerator.valueToCode(block, 'INDEX1', javascriptGenerator.ORDER_ATOMIC) || '0';
         const index2 = javascriptGenerator.valueToCode(block, 'INDEX2', javascriptGenerator.ORDER_ATOMIC) || '0';
@@ -40,7 +42,7 @@ export function defineEntityGenerators() {
     };
 
     javascriptGenerator.forBlock["for_each_coin"] = function (block) {
-        const variable = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
+        const variable = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), 'VARIABLE');
         const branch = javascriptGenerator.statementToCode(block, 'DO');
         return `
     const coins = getPlayerCoins();
@@ -56,6 +58,8 @@ export function defineEntityGenerators() {
         const nodeId = javascriptGenerator.valueToCode(block, 'NODE_ID', javascriptGenerator.ORDER_ATOMIC) || '0';
         return `await rescuePersonAtNode(${nodeId});\n`;
     };
+
+    javascriptGenerator.forBlock["rescue_person"] = javascriptGenerator.forBlock["rescue_person_at_node"];
 
     javascriptGenerator.forBlock["has_person"] = function (block) {
         return [`hasPerson()`, javascriptGenerator.ORDER_FUNCTION_CALL];

@@ -42,7 +42,7 @@ export function defineLoopGenerators() {
 
     javascriptGenerator.forBlock["controls_for"] = function (block) {
         const variable = javascriptGenerator.nameDB_.getName(
-            block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
+            block.getFieldValue('VAR'), 'VARIABLE');
         const from = javascriptGenerator.valueToCode(block, 'FROM',
             javascriptGenerator.isCleanMode ? javascriptGenerator.ORDER_ATOMIC : javascriptGenerator.ORDER_ASSIGNMENT) || '0';
         const to = javascriptGenerator.valueToCode(block, 'TO',
@@ -81,7 +81,7 @@ export function defineLoopGenerators() {
     };
 
     javascriptGenerator.forBlock["for_index"] = function (block) {
-        const variable = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.Type.VARIABLE);
+        const variable = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), 'VARIABLE');
         const from = block.getFieldValue('FROM');
         const to = block.getFieldValue('TO');
         const branch = javascriptGenerator.statementToCode(block, 'DO');
@@ -96,7 +96,7 @@ export function defineLoopGenerators() {
     };
 
     javascriptGenerator.forBlock["for_loop_dynamic"] = function (block) {
-        const variable = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
+        const variable = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), 'VARIABLE');
         const from = javascriptGenerator.valueToCode(block, 'FROM', javascriptGenerator.ORDER_ATOMIC) || '0';
         const to = javascriptGenerator.valueToCode(block, 'TO', javascriptGenerator.ORDER_ATOMIC) || '0';
         const branch = javascriptGenerator.statementToCode(block, 'DO');
@@ -128,7 +128,7 @@ export function defineLoopGenerators() {
 
     javascriptGenerator.forBlock["controls_forEach"] = function (block) {
         const variable = javascriptGenerator.nameDB_.getName(
-            block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
+            block.getFieldValue('VAR'), 'VARIABLE');
         const list = javascriptGenerator.valueToCode(block, 'LIST',
             javascriptGenerator.ORDER_ASSIGNMENT) || '[]';
         const branch = javascriptGenerator.statementToCode(block, 'DO');
@@ -149,7 +149,7 @@ export function defineLoopGenerators() {
     };
 
     javascriptGenerator.forBlock["for_each_in_list"] = function (block) {
-        const variable = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
+        const variable = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), 'VARIABLE');
         const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
         const branch = javascriptGenerator.statementToCode(block, 'DO');
 

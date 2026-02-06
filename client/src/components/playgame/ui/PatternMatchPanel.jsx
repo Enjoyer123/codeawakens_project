@@ -21,23 +21,63 @@ import { API_BASE_URL } from '../../../config/apiConfig';
  */
 const PatternMatchPanel = ({ hintData, idealPattern, weaponProgress, weaponImgSrc, currentWeaponData }) => {
   const [showHelp, setShowHelp] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const helpImages = ['/pattern1.png', '/pattern2.png'];
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % helpImages.length);
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + helpImages.length) % helpImages.length);
+  };
 
   return (
     <div className="flex-1 bg-black/30 rounded-lg p-3 border border-gray-700/50">
-      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+      <Dialog open={showHelp} onOpenChange={(open) => {
+        setShowHelp(open);
+        if (open) setCurrentImageIndex(0); // Reset to first image on open
+      }}>
         <DialogContent className="max-w-4xl bg-transparent border-0 shadow-none p-0 flex justify-center items-center outline-none">
-          <div className="relative">
+          <div className="relative flex items-center justify-center">
             <button
               onClick={() => setShowHelp(false)}
               className="absolute -top-4 -right-4 bg-white text-black rounded-full w-8 h-8 font-bold border-2 border-black z-50 hover:bg-gray-200 flex items-center justify-center shadow-lg"
             >
               X
             </button>
+
+            {/* Previous Button */}
+            <button
+              onClick={prevImage}
+              className="absolute -left-12 bg-white/80 text-black rounded-full w-10 h-10 font-bold border-2 border-black z-40 hover:bg-white flex items-center justify-center shadow-lg transition-transform hover:scale-110"
+            >
+              &lt;
+            </button>
+
             <img
-              src="/PatternDes.png"
-              alt="Pattern Description"
+              src={helpImages[currentImageIndex]}
+              alt={`Pattern Description ${currentImageIndex + 1}`}
               className="max-h-[85vh] w-auto rounded-lg shadow-2xl border-4 border-white"
             />
+
+            {/* Next Button */}
+            <button
+              onClick={nextImage}
+              className="absolute -right-12 bg-white/80 text-black rounded-full w-10 h-10 font-bold border-2 border-black z-40 hover:bg-white flex items-center justify-center shadow-lg transition-transform hover:scale-110"
+            >
+              &gt;
+            </button>
+
+            {/* Page Indicator */}
+            <div className="absolute -bottom-8 flex gap-2">
+              {helpImages.map((_, idx) => (
+                <div
+                  key={idx}
+                  className={`w-3 h-3 rounded-full border border-white ${idx === currentImageIndex ? 'bg-white' : 'bg-transparent'}`}
+                />
+              ))}
+            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -122,7 +162,7 @@ const PatternMatchPanel = ({ hintData, idealPattern, weaponProgress, weaponImgSr
                   </button>
                 </div>
                 <span className="text-[10px] text-gray-300 truncate font-medium leading-tight max-w-full text-center">
-                  {hintData.patternName}
+                  จำนวน Pattern Part
                 </span>
               </div>
 

@@ -267,7 +267,7 @@ export function defineListGenerators() {
 
   // Variable math operations
   javascriptGenerator.forBlock["var_math"] = function (block) {
-    const variable = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
+    const variable = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), 'VARIABLE');
     const operator = block.getFieldValue('OP');
     const value = javascriptGenerator.valueToCode(block, 'VALUE', javascriptGenerator.ORDER_ATOMIC) || '0';
 
@@ -284,7 +284,7 @@ export function defineListGenerators() {
   };
 
   javascriptGenerator.forBlock["get_var_value"] = function (block) {
-    const variable = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
+    const variable = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), 'VARIABLE');
     return [variable, javascriptGenerator.ORDER_ATOMIC];
   };
 

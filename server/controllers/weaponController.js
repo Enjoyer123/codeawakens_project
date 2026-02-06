@@ -165,16 +165,16 @@ exports.updateWeapon = async (req, res) => {
       for (const image of existingImages) {
         const oldFilePath = path.join(__dirname, "..", image.path_file);
         const fileExtension = path.extname(image.path_file) || '.png';
-        
+
         // Generate new filename in format: {new_weaponkey}_{typefile}_{frame}.png
         const newFilename = `${weapon_key}_${image.type_file}_${image.frame}${fileExtension}`;
-        
+
         // Determine directory based on type_animation
         const typeAnimation = image.type_animation === 'effect' ? 'weapons_effect' : 'weapons';
-        const targetDir = image.type_animation === 'effect' 
+        const targetDir = image.type_animation === 'effect'
           ? path.join(__dirname, "..", "uploads", "weapons_effect")
           : path.join(__dirname, "..", "uploads", "weapons");
-        
+
         const newFilePath = path.join(targetDir, newFilename);
         const newPath = `/uploads/${typeAnimation}/${newFilename}`;
 
@@ -183,7 +183,7 @@ exports.updateWeapon = async (req, res) => {
           try {
             fs.renameSync(oldFilePath, newFilePath);
             console.log(`Renamed file from ${oldFilePath} to ${newFilePath}`);
-            
+
             // Update database
             await prisma.weapon_Image.update({
               where: { file_id: image.file_id },
@@ -300,7 +300,7 @@ exports.addWeaponImage = async (req, res) => {
     }
 
     if (!type_file || !type_animation || !frame) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "Missing required fields: type_file, type_animation, frame",
         received: { type_file, type_animation, frame }
       });
@@ -324,23 +324,23 @@ exports.addWeaponImage = async (req, res) => {
 
     // Determine correct destination folder based on type_animation
     const typeAnimation = type_animation === 'effect' ? 'weapons_effect' : 'weapons';
-    const targetDir = type_animation === 'effect' 
+    const targetDir = type_animation === 'effect'
       ? path.join(__dirname, "..", "uploads", "weapons_effect")
       : path.join(__dirname, "..", "uploads", "weapons");
-    
+
     // Ensure target directory exists
     if (!fs.existsSync(targetDir)) {
       fs.mkdirSync(targetDir, { recursive: true });
     }
-    
+
     // Generate new filename in format: {weaponkey}_{typefile}_{frame}.png
     const fileExtension = path.extname(req.file.originalname) || '.png';
     const newFilename = `${weapon.weapon_key}_${type_file}_${frame}${fileExtension}`;
-    
+
     // Move file to correct directory with new filename
     const currentPath = path.resolve(req.file.path);
     const targetPath = path.resolve(path.join(targetDir, newFilename));
-    
+
     // Check if target file already exists
     if (fs.existsSync(targetPath)) {
       // Delete existing file
@@ -351,7 +351,7 @@ exports.addWeaponImage = async (req, res) => {
         console.error("Error deleting existing file:", unlinkError);
       }
     }
-    
+
     // Move and rename file
     try {
       fs.renameSync(currentPath, targetPath);
@@ -366,12 +366,12 @@ exports.addWeaponImage = async (req, res) => {
           console.error("Error deleting file:", unlinkError);
         }
       }
-      return res.status(500).json({ 
-        message: "Error moving file to correct directory", 
-        error: moveError.message 
+      return res.status(500).json({
+        message: "Error moving file to correct directory",
+        error: moveError.message
       });
     }
-    
+
     const path_file = `/uploads/${typeAnimation}/${newFilename}`;
 
     console.log("Creating weapon image with data:", {
@@ -404,7 +404,7 @@ exports.addWeaponImage = async (req, res) => {
     console.error("Error stack:", error.stack);
     console.error("Error code:", error.code);
     console.error("Error meta:", error.meta);
-    
+
     // Delete uploaded file on error
     if (req.file && req.file.path) {
       try {
@@ -414,7 +414,7 @@ exports.addWeaponImage = async (req, res) => {
         console.error("Error deleting file on error:", err);
       }
     }
-    
+
     // Provide more detailed error message
     let errorMessage = "Error adding weapon image";
     if (error.code === 'P2002') {
@@ -424,9 +424,9 @@ exports.addWeaponImage = async (req, res) => {
     } else if (error.message) {
       errorMessage = error.message;
     }
-    
-    res.status(500).json({ 
-      message: errorMessage, 
+
+    res.status(500).json({
+      message: errorMessage,
       error: error.message,
       code: error.code,
       meta: error.meta
@@ -514,10 +514,10 @@ exports.updateWeaponImage = async (req, res) => {
 
     // Determine correct destination folder based on type_animation
     const typeAnimation = (type_animation || existingImage.type_animation) === 'effect' ? 'weapons_effect' : 'weapons';
-    const targetDir = (type_animation || existingImage.type_animation) === 'effect' 
+    const targetDir = (type_animation || existingImage.type_animation) === 'effect'
       ? path.join(__dirname, "..", "uploads", "weapons_effect")
       : path.join(__dirname, "..", "uploads", "weapons");
-    
+
     // Ensure target directory exists
     if (!fs.existsSync(targetDir)) {
       fs.mkdirSync(targetDir, { recursive: true });
@@ -531,14 +531,14 @@ exports.updateWeaponImage = async (req, res) => {
       const fileExtension = path.extname(req.file.originalname) || '.png';
       const finalTypeFile = type_file || existingImage.type_file;
       const finalFrame = frame || existingImage.frame;
-      
+
       // Generate new filename in format: {weaponkey}_{typefile}_{frame}.png
       newFilename = `${weapon.weapon_key}_${finalTypeFile}_${finalFrame}${fileExtension}`;
-      
+
       // Move file to correct directory with new filename
       const currentPath = path.resolve(req.file.path);
       const targetPath = path.resolve(path.join(targetDir, newFilename));
-      
+
       // Delete old file if it exists and is different
       const oldFilePath = path.join(__dirname, "..", existingImage.path_file);
       if (fs.existsSync(oldFilePath) && oldFilePath !== targetPath) {
@@ -549,7 +549,7 @@ exports.updateWeaponImage = async (req, res) => {
           console.error("Error deleting old file:", unlinkError);
         }
       }
-      
+
       // Check if target file already exists (different image)
       if (fs.existsSync(targetPath) && targetPath !== oldFilePath) {
         try {
@@ -559,7 +559,7 @@ exports.updateWeaponImage = async (req, res) => {
           console.error("Error deleting existing file:", unlinkError);
         }
       }
-      
+
       // Move and rename file
       try {
         fs.renameSync(currentPath, targetPath);
@@ -575,9 +575,9 @@ exports.updateWeaponImage = async (req, res) => {
             console.error("Error deleting file:", unlinkError);
           }
         }
-        return res.status(500).json({ 
-          message: "Error moving file to correct directory", 
-          error: moveError.message 
+        return res.status(500).json({
+          message: "Error moving file to correct directory",
+          error: moveError.message
         });
       }
     } else {
@@ -585,23 +585,23 @@ exports.updateWeaponImage = async (req, res) => {
       const finalTypeFile = type_file || existingImage.type_file;
       const finalFrame = frame || existingImage.frame;
       const finalTypeAnimation = type_animation || existingImage.type_animation;
-      
+
       // Check if type_file or frame changed
       if (finalTypeFile !== existingImage.type_file || finalFrame !== existingImage.frame || finalTypeAnimation !== existingImage.type_animation) {
         const fileExtension = path.extname(existingImage.path_file) || '.png';
         newFilename = `${weapon.weapon_key}_${finalTypeFile}_${finalFrame}${fileExtension}`;
-        
+
         const oldFilePath = path.join(__dirname, "..", existingImage.path_file);
-        const newTargetDir = finalTypeAnimation === 'effect' 
+        const newTargetDir = finalTypeAnimation === 'effect'
           ? path.join(__dirname, "..", "uploads", "weapons_effect")
           : path.join(__dirname, "..", "uploads", "weapons");
         const newTargetPath = path.join(newTargetDir, newFilename);
-        
+
         // Ensure new directory exists
         if (!fs.existsSync(newTargetDir)) {
           fs.mkdirSync(newTargetDir, { recursive: true });
         }
-        
+
         // Move and rename existing file
         if (fs.existsSync(oldFilePath)) {
           try {
@@ -610,9 +610,9 @@ exports.updateWeaponImage = async (req, res) => {
             newPath = `/uploads/${finalTypeAnimation === 'effect' ? 'weapons_effect' : 'weapons'}/${newFilename}`;
           } catch (renameError) {
             console.error("Error renaming file:", renameError);
-            return res.status(500).json({ 
-              message: "Error renaming file", 
-              error: renameError.message 
+            return res.status(500).json({
+              message: "Error renaming file",
+              error: renameError.message
             });
           }
         }
@@ -640,7 +640,7 @@ exports.updateWeaponImage = async (req, res) => {
   } catch (error) {
     console.error("Error updating weapon image:", error);
     console.error("Error stack:", error.stack);
-    
+
     // Delete uploaded file on error
     if (req.file && req.file.path) {
       try {
@@ -650,10 +650,10 @@ exports.updateWeaponImage = async (req, res) => {
         console.error("Error deleting file on error:", err);
       }
     }
-    
-    res.status(500).json({ 
-      message: "Error updating weapon image", 
-      error: error.message 
+
+    res.status(500).json({
+      message: "Error updating weapon image",
+      error: error.message
     });
   }
 };

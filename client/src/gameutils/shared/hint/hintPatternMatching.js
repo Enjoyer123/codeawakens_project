@@ -194,29 +194,32 @@ export function calculatePatternMatchPercentage(workspace, goodPatterns) {
       // หาว่ามี pattern blocks เรียงกันกี่ตัวใน user workspace (อนุญาตให้ user มี block แทรกได้)
       // แต่ไม่อนุญาตให้กระโดดข้าม pattern block (ถ้าหาไม่เจอคือหยุด)
 
-      // 🔍 Contiguous Sequential Matching Logic (Strict Substring)
-      // หา user block sequence ที่ตรงกับ pattern prefix ยาวที่สุด
-      // ต้อง **เรียงติดกัน** เท่านั้น (Contiguous) ไม่สามารถข้าม block ได้
-      // แต่สามารถเริ่ม match ที่จุดใดก็ได้ใน workspace (เพื่อรองรับ init blocks)
+      // 🔍 Relaxed Sequential Matching Logic (Subsequence Match)
+      // หาว่ามี pattern blocks เรียงกันกี่ตัวใน user workspace (อนุญาตให้ user มี block แทรกได้)
+      // ไม่จำเป็นต้องเรียงติดกัน (Non-contiguous) แต่ต้องลำดับถูกต้อง
 
       let matchedBlocks = 0;
+      let currentCodeIndex = 0;
 
-      // ลองเริ่ม match ที่ทุกตำแหน่งใน user code (เพื่อหาตำแหน่งเริ่มต้นที่ดีที่สุด)
-      for (let startIdx = 0; startIdx < currentAnalysis.length; startIdx++) {
-        let currentMatchCount = 0;
+      // Iterate through target blocks and try to find them in current analysis
+      for (const targetBlock of targetAnalysis) {
+        let found = false;
 
-        // เช็คความยาวที่ตรงกันเริ่มจาก startIdx
-        for (let offset = 0; offset < targetAnalysis.length; offset++) {
-          const currentIdx = startIdx + offset;
-
-          // ถ้าเกินความยาว user code ก็หยุด
-          if (currentIdx >= currentAnalysis.length) break;
-
-          const currentBlock = currentAnalysis[currentIdx];
-          const targetBlock = targetAnalysis[offset];
+        // Search for this target block in current code starting from where we left off
+        for (let i = currentCodeIndex; i < currentAnalysis.length; i++) {
+          const currentBlock = currentAnalysis[i];
 
           // 1. Check basic type match
           let isTypeMatch = (currentBlock.type === targetBlock.type);
+
+          // 🔄 Fuzzy Match: lists_create_empty <-> lists_create_with
+          if (!isTypeMatch) {
+            if ((currentBlock.type === 'lists_create_empty' && targetBlock.type === 'lists_create_with') ||
+              (currentBlock.type === 'lists_create_with' && targetBlock.type === 'lists_create_empty')) {
+              isTypeMatch = true;
+            }
+          }
+
           let fieldsMatch = true;
 
           if (isTypeMatch) {
@@ -225,8 +228,8 @@ export function calculatePatternMatchPercentage(workspace, goodPatterns) {
               const targetVarName = targetBlock.varName;
               const currentVarName = currentBlock.varName;
               if (targetVarName !== undefined && currentVarName !== undefined && targetVarName !== currentVarName) {
-                // fieldsMatch = false; // RELAXED: Warning only
-                console.log(`    - ⚠️ [RELAXED] Var mismatch at offset ${offset}: ${currentVarName} vs ${targetVarName}`);
+                // fieldsMatch = false; // RELAXED: Warning only, same as previous logic
+                // console.log(`    - ⚠️ [RELAXED] Var mismatch: ${currentVarName} vs ${targetVarName}`);
               }
             }
 
@@ -236,23 +239,34 @@ export function calculatePatternMatchPercentage(workspace, goodPatterns) {
                 fieldsMatch = false;
               }
             }
+
+            // 4. Check statement/value structure (Relaxed - implicitly handled by analysis but good to be careful)
+            // If target expects statement but current doesn't have it, maybe strictly mismatch?
+            // For now, stick to type/fields as primary matching criteria
           }
 
           if (isTypeMatch && fieldsMatch) {
-            currentMatchCount++;
-          } else {
-            // หยุดทันทีเมื่อเจอ mismatch (Contiguous constraint)
-            break;
+            matchedBlocks++;
+            currentCodeIndex = i + 1; // Advance user code pointer
+            found = true;
+            break; // Move to next target block
           }
         }
 
-        // เก็บสถิติที่ดีที่สุด (Longest matching prefix found)
-        if (currentMatchCount > matchedBlocks) {
-          matchedBlocks = currentMatchCount;
+        // If we scanned entirely and didn't find this target block, we stop counting? 
+        // Or do we skip this target block and try to find the next one? 
+        // "Permission to SKIP blocks in Pattern" is unusual. Usually we want to find the whole pattern sequence.
+        // If we can't find block A, we probably can't claim to have matched the sequence A->B.
+        // So breaking here is correct for "Longest Common Subsequence Prefix" effectively.
+        if (!found) {
+          break;
         }
+      }
 
-        // Optimization: ถ้าเจอ match ครบ 100% แล้ว หยุดเลย
-        if (matchedBlocks === targetAnalysis.length) break;
+      // 🛑 SAFETY CAP: Ensure matchedBlocks never exceeds totalBlocks
+      if (matchedBlocks > targetBlocks) {
+        console.warn(`⚠️ [Safety Cap] matchedBlocks (${matchedBlocks}) exceeded targetBlocks (${targetBlocks}) for pattern "${patternName}". Capping at ${targetBlocks}.`);
+        matchedBlocks = targetBlocks;
       }
 
       // คำนวณ percentage
