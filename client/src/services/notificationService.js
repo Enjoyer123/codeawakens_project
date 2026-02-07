@@ -5,7 +5,7 @@ import { API_BASE_URL } from '../config/apiConfig';
 export const fetchAllNotifications = async (getToken, page = 1, limit = 10, search = '') => {
     const token = await getToken();
     try {
-        const response = await axios.get(`${API_BASE_URL}/api/notifications`, {
+        const response = await axios.get(`${API_BASE_URL}/notifications`, {
             params: { page, limit, search },
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -20,7 +20,7 @@ export const fetchAllNotifications = async (getToken, page = 1, limit = 10, sear
 export const getNotificationById = async (getToken, notificationId) => {
     const token = await getToken();
     try {
-        const response = await axios.get(`${API_BASE_URL}/api/notifications/${notificationId}`, {
+        const response = await axios.get(`${API_BASE_URL}/notifications/${notificationId}`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -34,7 +34,7 @@ export const getNotificationById = async (getToken, notificationId) => {
 export const createNotification = async (getToken, notificationData) => {
     const token = await getToken();
     try {
-        const response = await axios.post(`${API_BASE_URL}/api/notifications`, notificationData, {
+        const response = await axios.post(`${API_BASE_URL}/notifications`, notificationData, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -48,7 +48,7 @@ export const createNotification = async (getToken, notificationData) => {
 export const updateNotification = async (getToken, notificationId, notificationData) => {
     const token = await getToken();
     try {
-        const response = await axios.put(`${API_BASE_URL}/api/notifications/${notificationId}`, notificationData, {
+        const response = await axios.put(`${API_BASE_URL}/notifications/${notificationId}`, notificationData, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -62,7 +62,7 @@ export const updateNotification = async (getToken, notificationId, notificationD
 export const deleteNotification = async (getToken, notificationId) => {
     const token = await getToken();
     try {
-        const response = await axios.delete(`${API_BASE_URL}/api/notifications/${notificationId}`, {
+        const response = await axios.delete(`${API_BASE_URL}/notifications/${notificationId}`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -76,7 +76,7 @@ export const deleteNotification = async (getToken, notificationId) => {
 export const fetchUserNotifications = async (getToken) => {
     const token = await getToken();
     try {
-        const response = await axios.get(`${API_BASE_URL}/api/user/notifications`, {
+        const response = await axios.get(`${API_BASE_URL}/user/notifications`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -90,7 +90,7 @@ export const fetchUserNotifications = async (getToken) => {
 export const markNotificationAsRead = async (getToken, notificationId) => {
     const token = await getToken();
     try {
-        const response = await axios.put(`${API_BASE_URL}/api/user/notifications/${notificationId}/read`, {}, {
+        const response = await axios.put(`${API_BASE_URL}/user/notifications/${notificationId}/read`, {}, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },

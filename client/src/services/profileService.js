@@ -7,7 +7,7 @@ export const fetchUserProfile = async (getToken) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/profile/check-profile`, {
+    const response = await fetch(`${API_BASE_URL}/profile/check-profile`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -33,7 +33,7 @@ export const updateUsername = async (getToken, username) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/profile/profile/username`, {
+    const response = await fetch(`${API_BASE_URL}/profile/profile/username`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -64,7 +64,7 @@ export const uploadProfileImage = async (getToken, file) => {
     const formData = new FormData();
     formData.append('profileImage', file);
 
-    const response = await fetch(`${API_BASE_URL}/api/profile/profile/image`, {
+    const response = await fetch(`${API_BASE_URL}/profile/profile/image`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -91,7 +91,7 @@ export const deleteProfileImage = async (getToken) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/profile/profile/image`, {
+    const response = await fetch(`${API_BASE_URL}/profile/profile/image`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -118,7 +118,7 @@ export const getUserByClerkId = async (getToken) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/profile/user`, {
+    const response = await fetch(`${API_BASE_URL}/profile/user`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -144,7 +144,7 @@ export const saveUserProgress = async (getToken, progressData) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/profile/progress`, {
+    const response = await fetch(`${API_BASE_URL}/profile/progress`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -172,7 +172,7 @@ export const checkAndAwardRewards = async (getToken, levelId, totalScore) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/profile/rewards/check`, {
+    const response = await fetch(`${API_BASE_URL}/profile/rewards/check`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,

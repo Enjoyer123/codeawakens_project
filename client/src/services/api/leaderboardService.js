@@ -10,7 +10,7 @@ export const fetchLeaderboard = async (getToken) => {
                 Authorization: `Bearer ${token}`,
             };
         }
-        const response = await axios.get(`${API_BASE_URL}/api/leaderboard`, config);
+        const response = await axios.get(`${API_BASE_URL}/leaderboard`, config);
         return response.data;
     } catch (error) {
         console.error('Error fetching leaderboard:', error);

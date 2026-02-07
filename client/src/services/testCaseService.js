@@ -4,7 +4,7 @@ import { API_BASE_URL } from '../config/apiConfig';
 export const fetchTestCasesByLevel = async (getToken, levelId) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/test-cases/level/${levelId}`, {
+    const response = await fetch(`${API_BASE_URL}/test-cases/level/${levelId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -26,7 +26,7 @@ export const fetchTestCasesByLevel = async (getToken, levelId) => {
 export const createTestCase = async (getToken, data) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/test-cases`, {
+    const response = await fetch(`${API_BASE_URL}/test-cases`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -51,7 +51,7 @@ export const createTestCase = async (getToken, data) => {
 export const updateTestCase = async (getToken, testCaseId, data) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/test-cases/${testCaseId}`, {
+    const response = await fetch(`${API_BASE_URL}/test-cases/${testCaseId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -76,7 +76,7 @@ export const updateTestCase = async (getToken, testCaseId, data) => {
 export const deleteTestCase = async (getToken, testCaseId) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/test-cases/${testCaseId}`, {
+    const response = await fetch(`${API_BASE_URL}/test-cases/${testCaseId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
