@@ -34,7 +34,7 @@ const PreviewLevel = () => {
         // Load pattern data if patternId is provided
         if (patternId) {
           const token = await getToken();
-          const response = await fetch(`${API_BASE_URL}/api/patterns/${patternId}`, {
+          const response = await fetch(`${API_BASE_URL}/patterns/${patternId}`, {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json',

@@ -23,7 +23,7 @@ export async function loadWeaponsData(getToken) {
   try {
     console.log("🔍 Loading weapons data from API...");
     const token = typeof getToken === 'function' ? await getToken().catch(() => null) : null;
-    const response = await fetch(`${API_BASE_URL}/api/weapons`, {
+    const response = await fetch(`${API_BASE_URL}/weapons`, {
       headers: {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {})

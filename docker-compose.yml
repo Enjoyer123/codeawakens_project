@@ -21,6 +21,8 @@ services:
       - CLIENT_URL=${CLIENT_URL}
     depends_on:
       - db
+    volumes:
+      - ./server/uploads:/app/uploads
 
   # 3. Frontend (React)
   client:

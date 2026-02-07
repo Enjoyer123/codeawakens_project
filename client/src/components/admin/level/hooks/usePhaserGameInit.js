@@ -70,7 +70,10 @@ export const usePhaserGameInit = ({
                 if (currentBgUrl) {
                   let imageUrl = currentBgUrl;
                   if (!imageUrl.startsWith('data:') && !imageUrl.startsWith('http')) {
-                    imageUrl = `${API_BASE_URL}${currentBgUrl}`;
+                    // imageUrl = `${API_BASE_URL}${currentBgUrl}`;
+                    imageUrl = imageUrl.replace('/api', '');
+                    imageUrl = imageUrl.replace('//', '/');
+                    imageUrl = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
                   }
 
                   // For data URLs
@@ -226,8 +229,15 @@ export const usePhaserGameInit = ({
     if (scene && currentBgUrl) {
       let imageUrl = currentBgUrl;
       if (!imageUrl.startsWith('data:') && !imageUrl.startsWith('http')) {
-        imageUrl = `${API_BASE_URL}${currentBgUrl}`;
+        // imageUrl = `${API_BASE_URL}${currentBgUrl}`;
+        // ✅ เพิ่มบรรทัดนี้: ถ้ามีคำว่า /api โผล่มา ให้ลบทิ้งทันที!
+        imageUrl = imageUrl.replace('/api', '');
+
+        // จัดการเรื่องเครื่องหมาย / ให้ถูกต้อง (เผื่อลบแล้วเหลือ //)
+        imageUrl = imageUrl.replace('//', '/');
+        imageUrl = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
       }
+      console.log(imageUrl);
 
       // Remove old sprite FIRST before removing texture
       if (currentSprite) {
