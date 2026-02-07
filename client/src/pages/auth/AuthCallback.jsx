@@ -20,7 +20,7 @@ const AuthCallback = () => {
           try {
             const token = await getToken();
             const response = await fetch(
-              `${API_BASE_URL}/api/profile/check-profile`,
+              `${API_BASE_URL}/profile/check-profile`,
               {
                 headers: {
                   Authorization: `Bearer ${token}`,

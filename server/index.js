@@ -33,7 +33,8 @@ app.use(morgan("combined"));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('api/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(clerkMiddleware());
 
 app.use("/api/profile", profileRouter);
