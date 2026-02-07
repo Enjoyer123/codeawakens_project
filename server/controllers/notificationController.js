@@ -104,6 +104,8 @@ exports.createNotification = async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
+        console.log(`[ADMIN] Admin ${clerkId} creating notification "${title}".`);
+
         const notification = await prisma.notification.create({
             data: {
                 title,
@@ -113,6 +115,8 @@ exports.createNotification = async (req, res) => {
                 created_by: user.user_id
             },
         });
+
+        console.log(`[ADMIN] Success: Notification ${notification.notification_id} created by Admin ${clerkId}.`);
 
         res.status(201).json({
             message: "Notification created successfully",
@@ -171,6 +175,9 @@ exports.deleteNotification = async (req, res) => {
             return res.status(404).json({ message: "Notification not found" });
         }
 
+        const adminClerkId = req.user.id;
+        console.log(`[ADMIN] Admin ${adminClerkId} deleting notification ${notificationId}.`);
+
         // Delete associated UserNotifications first to avoid FK constraint errors if cascade isn't automatic
         await prisma.userNotification.deleteMany({
             where: { notification_id: parseInt(notificationId) }
@@ -179,6 +186,8 @@ exports.deleteNotification = async (req, res) => {
         await prisma.notification.delete({
             where: { notification_id: parseInt(notificationId) },
         });
+
+        console.log(`[ADMIN] Success: Notification ${notificationId} deleted by Admin ${adminClerkId}.`);
 
         res.json({
             message: "Notification deleted successfully",
@@ -206,6 +215,8 @@ exports.getUserNotifications = async (req, res) => {
 
         const userId = user.user_id;
         const now = new Date();
+
+        console.log(`[NOTIFICATION] User ${clerkId} viewing notifications.`);
 
         // Fetch all active notifications that haven't expired
         const activeNotifications = await prisma.notification.findMany({
@@ -262,6 +273,8 @@ exports.markAsRead = async (req, res) => {
         });
 
         if (!user) return res.status(404).json({ message: "User not found" });
+
+        console.log(`[NOTIFICATION] User ${clerkId} marking notification ${notificationId} as read.`);
 
         // Upsert UserNotification record
         await prisma.userNotification.upsert({

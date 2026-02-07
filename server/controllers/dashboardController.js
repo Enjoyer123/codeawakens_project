@@ -3,6 +3,8 @@ const prisma = new PrismaClient();
 
 exports.getDashboardStats = async (req, res) => {
     try {
+        const adminClerkId = req.user?.id || 'unknown';
+        console.log(`[ADMIN] Admin ${adminClerkId} viewing dashboard stats.`);
         const totalUsers = await prisma.user.count({
             where: { role: 'user' }
         });
@@ -32,6 +34,8 @@ exports.getDashboardStats = async (req, res) => {
 
 exports.getLevelStats = async (req, res) => {
     try {
+        const adminClerkId = req.user?.id || 'unknown';
+        console.log(`[ADMIN] Admin ${adminClerkId} viewing level statistics.`);
         const levels = await prisma.level.groupBy({
             by: ['category_id'],
             _count: {
@@ -65,6 +69,8 @@ exports.getLevelStats = async (req, res) => {
 
 exports.getUserStats = async (req, res) => {
     try {
+        const adminClerkId = req.user?.id || 'unknown';
+        console.log(`[ADMIN] Admin ${adminClerkId} viewing user statistics.`);
         // Skill Level Distribution
         const skillDistribution = await prisma.user.groupBy({
             by: ['skill_level'],
@@ -95,6 +101,8 @@ exports.getUserStats = async (req, res) => {
 
 exports.getTestStats = async (req, res) => {
     try {
+        const adminClerkId = req.user?.id || 'unknown';
+        console.log(`[ADMIN] Admin ${adminClerkId} viewing test statistics.`);
         const avgScores = await prisma.user.aggregate({
             _avg: {
                 pre_score: true,

@@ -20,12 +20,16 @@ const notificationRouter = require("./routes/NotificationRoute");
 const dashboardRouter = require("./routes/dashboardRoutes");
 const path = require("path");
 const { clerkMiddleware } = require("@clerk/express");
+const morgan = require("morgan");
 
 app.use(
   cors({
     origin: process.env.CLIENT_URL || "*",
   })
 );
+
+// Morgan HTTP request logging for UAT evidence
+app.use(morgan("combined"));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
