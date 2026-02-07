@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@clerk/clerk-react';
 import {
     fetchAllBlocks,
+    fetchPublicBlocks,
     createBlock,
     updateBlock,
     deleteBlock,
@@ -9,7 +10,20 @@ import {
     uploadBlockImage
 } from '../blockService';
 
-// Fetch all blocks
+// Fetch public blocks (for non-admin users)
+export const usePublicBlocks = (page = 1, limit = 10, search = '') => {
+    const { getToken } = useAuth();
+
+    return useQuery({
+        queryKey: ['publicBlocks', page, limit, search],
+        queryFn: () => fetchPublicBlocks(getToken, page, limit, search),
+        enabled: !!getToken,
+        staleTime: 0,
+        gcTime: 0,
+    });
+};
+
+// Fetch all blocks (admin only)
 export const useBlocks = (page = 1, limit = 10, search = '') => {
     const { getToken } = useAuth();
 

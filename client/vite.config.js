@@ -11,4 +11,17 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  esbuild: {
+    // ❌ ลบอันเก่าออก (drop: ['console'])
+    // ✅ ใส่อันนี้แทน: บอกให้ลบเฉพาะ log, debug, info แต่เหลือ error ไว้
+    pure: ['console.log', 'console.debug', 'console.info', 'console.warn'],
+  },
+  preview: {
+    allowedHosts: [
+      'codeawakens.online',
+      'www.codeawakens.online'
+    ],
+    host: true,
+    port: 5173,
+  },
 })
