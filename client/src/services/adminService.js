@@ -14,7 +14,7 @@ export const fetchAllUsers = async (getToken, page = 1, limit = 5, search = '') 
       params.append('search', search);
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/users?${params.toString()}`, {
+    const response = await fetch(`${API_BASE_URL}/users?${params.toString()}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -40,7 +40,7 @@ export const updateUserRole = async (getToken, userId, role) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/users/${userId}/role`, {
+    const response = await fetch(`${API_BASE_URL}/users/${userId}/role`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -68,7 +68,7 @@ export const getUserDetails = async (getToken, userId) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/users/${userId}/details`, {
+    const response = await fetch(`${API_BASE_URL}/users/${userId}/details`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -94,7 +94,7 @@ export const deleteUser = async (getToken, userId) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+    const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -120,7 +120,7 @@ export const resetUserTestScore = async (getToken, userId, type) => {
     const token = await getToken();
     if (!token) throw new Error('No token');
 
-    const response = await fetch(`${API_BASE_URL}/api/users/${userId}/reset-test`, {
+    const response = await fetch(`${API_BASE_URL}/users/${userId}/reset-test`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -145,7 +145,7 @@ export const fetchUserTestHistory = async (getToken, userId) => {
     const token = await getToken();
     if (!token) throw new Error('No token');
 
-    const response = await fetch(`${API_BASE_URL}/api/users/${userId}/tests`, {
+    const response = await fetch(`${API_BASE_URL}/users/${userId}/tests`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',

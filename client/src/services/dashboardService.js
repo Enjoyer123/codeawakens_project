@@ -3,7 +3,7 @@ import { API_BASE_URL } from '../config/apiConfig';
 export const fetchDashboardStats = async (getToken) => {
     try {
         const token = await getToken();
-        const response = await fetch(`${API_BASE_URL}/api/dashboard/stats`, {
+        const response = await fetch(`${API_BASE_URL}/dashboard/stats`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!response.ok) throw new Error('Failed to fetch dashboard stats');
@@ -17,7 +17,7 @@ export const fetchDashboardStats = async (getToken) => {
 export const fetchLevelStats = async (getToken) => {
     try {
         const token = await getToken();
-        const response = await fetch(`${API_BASE_URL}/api/dashboard/levels`, {
+        const response = await fetch(`${API_BASE_URL}/dashboard/levels`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!response.ok) throw new Error('Failed to fetch level stats');
@@ -31,7 +31,7 @@ export const fetchLevelStats = async (getToken) => {
 export const fetchUserStats = async (getToken) => {
     try {
         const token = await getToken();
-        const response = await fetch(`${API_BASE_URL}/api/dashboard/users`, {
+        const response = await fetch(`${API_BASE_URL}/dashboard/users`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!response.ok) throw new Error('Failed to fetch user stats');
@@ -45,7 +45,7 @@ export const fetchUserStats = async (getToken) => {
 export const fetchTestStats = async (getToken) => {
     try {
         const token = await getToken();
-        const response = await fetch(`${API_BASE_URL}/api/dashboard/tests`, {
+        const response = await fetch(`${API_BASE_URL}/dashboard/tests`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!response.ok) throw new Error('Failed to fetch test stats');

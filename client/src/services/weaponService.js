@@ -13,7 +13,7 @@ export const fetchAllWeapons = async (getToken, page = 1, limit = 10, search = '
       params.append('search', search);
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/weapons?${params.toString()}`, {
+    const response = await fetch(`${API_BASE_URL}/weapons?${params.toString()}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -40,7 +40,7 @@ export const fetchWeaponById = async (getToken, weaponId) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/weapons/${weaponId}`, {
+    const response = await fetch(`${API_BASE_URL}/weapons/${weaponId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -67,7 +67,7 @@ export const createWeapon = async (getToken, weaponData) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/weapons`, {
+    const response = await fetch(`${API_BASE_URL}/weapons`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -96,7 +96,7 @@ export const updateWeapon = async (getToken, weaponId, weaponData) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/weapons/${weaponId}`, {
+    const response = await fetch(`${API_BASE_URL}/weapons/${weaponId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -125,7 +125,7 @@ export const deleteWeapon = async (getToken, weaponId) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/weapons/${weaponId}`, {
+    const response = await fetch(`${API_BASE_URL}/weapons/${weaponId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -170,7 +170,7 @@ export const addWeaponImage = async (getToken, weaponId, imageFile, imageData) =
       fileSize: imageFile.size
     });
 
-    const response = await fetch(`${API_BASE_URL}/api/weapons/${weaponId}/images`, {
+    const response = await fetch(`${API_BASE_URL}/weapons/${weaponId}/images`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -231,7 +231,7 @@ export const updateWeaponImage = async (getToken, imageId, imageFile, imageData)
       fileSize: imageFile?.size
     });
 
-    const response = await fetch(`${API_BASE_URL}/api/weapons/images/${imageId}`, {
+    const response = await fetch(`${API_BASE_URL}/weapons/images/${imageId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -268,7 +268,7 @@ export const deleteWeaponImage = async (getToken, imageId) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/weapons/images/${imageId}`, {
+    const response = await fetch(`${API_BASE_URL}/weapons/images/${imageId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,

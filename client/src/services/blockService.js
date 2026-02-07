@@ -13,7 +13,7 @@ export const fetchPublicBlocks = async (getToken, page = 1, limit = 10, search =
       params.append('search', search);
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/blocks/public?${params.toString()}`, {
+    const response = await fetch(`${API_BASE_URL}/blocks/public?${params.toString()}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -46,7 +46,7 @@ export const fetchAllBlocks = async (getToken, page = 1, limit = 10, search = ''
       params.append('search', search);
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/blocks?${params.toString()}`, {
+    const response = await fetch(`${API_BASE_URL}/blocks?${params.toString()}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -70,7 +70,7 @@ export const fetchAllBlocks = async (getToken, page = 1, limit = 10, search = ''
 export const createBlock = async (getToken, blockData) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/blocks`, {
+    const response = await fetch(`${API_BASE_URL}/blocks`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -96,7 +96,7 @@ export const createBlock = async (getToken, blockData) => {
 export const updateBlock = async (getToken, blockId, blockData) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/blocks/${blockId}`, {
+    const response = await fetch(`${API_BASE_URL}/blocks/${blockId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -122,7 +122,7 @@ export const updateBlock = async (getToken, blockId, blockData) => {
 export const deleteBlock = async (getToken, blockId) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/blocks/${blockId}`, {
+    const response = await fetch(`${API_BASE_URL}/blocks/${blockId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -150,7 +150,7 @@ export const deleteBlock = async (getToken, blockId) => {
 export const getBlockById = async (getToken, blockId) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/blocks/${blockId}`, {
+    const response = await fetch(`${API_BASE_URL}/blocks/${blockId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -176,7 +176,7 @@ export const uploadBlockImage = async (getToken, file) => {
     const formData = new FormData();
     formData.append('image', file);
 
-    const response = await fetch(`${API_BASE_URL}/api/blocks/upload-image`, {
+    const response = await fetch(`${API_BASE_URL}/blocks/upload-image`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,

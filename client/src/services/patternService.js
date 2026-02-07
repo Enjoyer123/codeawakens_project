@@ -13,7 +13,7 @@ export const fetchAllPatterns = async (getToken, page = 1, limit = 100, levelId 
       params.append('level_id', levelId.toString());
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/patterns?${params.toString()}`, {
+    const response = await fetch(`${API_BASE_URL}/patterns?${params.toString()}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -37,7 +37,7 @@ export const fetchAllPatterns = async (getToken, page = 1, limit = 100, levelId 
 export const fetchPatternById = async (getToken, patternId) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/patterns/${patternId}`, {
+    const response = await fetch(`${API_BASE_URL}/patterns/${patternId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -61,7 +61,7 @@ export const fetchPatternById = async (getToken, patternId) => {
 export const createPattern = async (getToken, patternData) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/patterns`, {
+    const response = await fetch(`${API_BASE_URL}/patterns`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -94,7 +94,7 @@ export const createPattern = async (getToken, patternData) => {
 export const updatePattern = async (getToken, patternId, patternData) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/patterns/${patternId}`, {
+    const response = await fetch(`${API_BASE_URL}/patterns/${patternId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -120,7 +120,7 @@ export const updatePattern = async (getToken, patternId, patternData) => {
 export const deletePattern = async (getToken, patternId) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/patterns/${patternId}`, {
+    const response = await fetch(`${API_BASE_URL}/patterns/${patternId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -145,7 +145,7 @@ export const deletePattern = async (getToken, patternId) => {
 export const fetchPatternTypes = async (getToken) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/patterns/types`, {
+    const response = await fetch(`${API_BASE_URL}/patterns/types`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -169,7 +169,7 @@ export const fetchPatternTypes = async (getToken) => {
 export const unlockPattern = async (patternId, getToken) => {
   try {
     const token = typeof getToken === 'function' ? await getToken() : getToken;
-    const response = await fetch(`${API_BASE_URL}/api/patterns/${patternId}/unlock`, {
+    const response = await fetch(`${API_BASE_URL}/patterns/${patternId}/unlock`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -194,7 +194,7 @@ export const unlockPattern = async (patternId, getToken) => {
 export const unlockLevel = async (levelId, getToken) => {
   try {
     const token = typeof getToken === 'function' ? await getToken() : getToken;
-    const response = await fetch(`${API_BASE_URL}/api/levels/${levelId}/unlock`, {
+    const response = await fetch(`${API_BASE_URL}/levels/${levelId}/unlock`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,

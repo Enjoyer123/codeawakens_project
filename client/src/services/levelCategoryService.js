@@ -10,7 +10,7 @@ export const fetchAllLevelCategories = async (getToken, search = '') => {
       params.append('search', search);
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/level-categories?${params.toString()}`, {
+    const response = await fetch(`${API_BASE_URL}/level-categories?${params.toString()}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -35,7 +35,7 @@ export const fetchAllLevelCategories = async (getToken, search = '') => {
 export const createLevelCategory = async (getToken, levelCategoryData) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/level-categories`, {
+    const response = await fetch(`${API_BASE_URL}/level-categories`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -61,7 +61,7 @@ export const createLevelCategory = async (getToken, levelCategoryData) => {
 export const updateLevelCategory = async (getToken, categoryId, levelCategoryData) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/level-categories/${categoryId}`, {
+    const response = await fetch(`${API_BASE_URL}/level-categories/${categoryId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -87,7 +87,7 @@ export const updateLevelCategory = async (getToken, categoryId, levelCategoryDat
 export const updateLevelCategoryCoordinates = async (getToken, categoryId, coordinates) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/level-categories/coordinates/${categoryId}`, {
+    const response = await fetch(`${API_BASE_URL}/level-categories/coordinates/${categoryId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -113,7 +113,7 @@ export const updateLevelCategoryCoordinates = async (getToken, categoryId, coord
 export const deleteLevelCategory = async (getToken, categoryId) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/level-categories/${categoryId}`, {
+    const response = await fetch(`${API_BASE_URL}/level-categories/${categoryId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -141,7 +141,7 @@ export const deleteLevelCategory = async (getToken, categoryId) => {
 export const getLevelCategoryById = async (getToken, categoryId) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/level-categories/${categoryId}`, {
+    const response = await fetch(`${API_BASE_URL}/level-categories/${categoryId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -168,7 +168,7 @@ export const uploadCategoryBackground = async (getToken, categoryId, imageFile) 
     const formData = new FormData();
     formData.append('image', imageFile);
 
-    const response = await fetch(`${API_BASE_URL}/api/level-categories/${categoryId}/background`, {
+    const response = await fetch(`${API_BASE_URL}/level-categories/${categoryId}/background`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -194,7 +194,7 @@ export const uploadCategoryBackground = async (getToken, categoryId, imageFile) 
 export const deleteCategoryBackground = async (getToken, categoryId) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/level-categories/${categoryId}/background`, {
+    const response = await fetch(`${API_BASE_URL}/level-categories/${categoryId}/background`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,

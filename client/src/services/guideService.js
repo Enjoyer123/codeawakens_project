@@ -13,7 +13,7 @@ export const fetchAllGuides = async (getToken, page = 1, limit = 10, search = ''
       params.append('search', search);
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/guides?${params.toString()}`, {
+    const response = await fetch(`${API_BASE_URL}/guides?${params.toString()}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -36,7 +36,7 @@ export const fetchAllGuides = async (getToken, page = 1, limit = 10, search = ''
 export const fetchGuidesByLevel = async (getToken, levelId) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/guides/level/${levelId}`, {
+    const response = await fetch(`${API_BASE_URL}/guides/level/${levelId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -62,7 +62,7 @@ export const fetchLevelsForGuide = async (getToken) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/guides/levels`, {
+    const response = await fetch(`${API_BASE_URL}/guides/levels`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -89,7 +89,7 @@ export const fetchGuideById = async (getToken, guideId) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/guides/${guideId}`, {
+    const response = await fetch(`${API_BASE_URL}/guides/${guideId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -118,7 +118,7 @@ export const createGuide = async (getToken, guideData) => {
 
     console.log('Creating guide with data:', guideData);
 
-    const response = await fetch(`${API_BASE_URL}/api/guides`, {
+    const response = await fetch(`${API_BASE_URL}/guides`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -156,7 +156,7 @@ export const updateGuide = async (getToken, guideId, guideData) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/guides/${guideId}`, {
+    const response = await fetch(`${API_BASE_URL}/guides/${guideId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -185,7 +185,7 @@ export const deleteGuide = async (getToken, guideId) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/guides/${guideId}`, {
+    const response = await fetch(`${API_BASE_URL}/guides/${guideId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -223,7 +223,7 @@ export const uploadGuideImage = async (getToken, guideId, imageFile) => {
       fileType: imageFile.type
     });
 
-    const response = await fetch(`${API_BASE_URL}/api/guides/${guideId}/images`, {
+    const response = await fetch(`${API_BASE_URL}/guides/${guideId}/images`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -260,7 +260,7 @@ export const deleteGuideImage = async (getToken, imageId) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/guides/images/${imageId}`, {
+    const response = await fetch(`${API_BASE_URL}/guides/images/${imageId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,

@@ -3,7 +3,7 @@ import { API_BASE_URL } from '../config/apiConfig';
 export const fetchTestsByType = async (getToken, type) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/tests/${type}`, {
+    const response = await fetch(`${API_BASE_URL}/tests/${type}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -29,7 +29,7 @@ export const fetchTestsByType = async (getToken, type) => {
 export const submitTest = async (getToken, type, answers) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/tests/submit`, {
+    const response = await fetch(`${API_BASE_URL}/tests/submit`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -55,8 +55,8 @@ export const fetchAllTests = async (getToken, type = '') => {
   try {
     const token = await getToken();
     const url = type
-      ? `${API_BASE_URL}/api/tests/admin/all?type=${type}`
-      : `${API_BASE_URL}/api/tests/admin/all`;
+      ? `${API_BASE_URL}/tests/admin/all?type=${type}`
+      : `${API_BASE_URL}/tests/admin/all`;
 
     const response = await fetch(url, {
       headers: {
@@ -77,7 +77,7 @@ export const fetchAllTests = async (getToken, type = '') => {
 export const createTest = async (getToken, testData) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/tests`, {
+    const response = await fetch(`${API_BASE_URL}/tests`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -99,7 +99,7 @@ export const createTest = async (getToken, testData) => {
 export const updateTest = async (getToken, id, testData) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/tests/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/tests/${id}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -121,7 +121,7 @@ export const updateTest = async (getToken, id, testData) => {
 export const deleteTest = async (getToken, id) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/tests/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/tests/${id}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -139,7 +139,7 @@ export const deleteTest = async (getToken, id) => {
 export const deleteTestChoice = async (getToken, id) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/tests/choices/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/tests/choices/${id}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -160,7 +160,7 @@ export const uploadTestImage = async (getToken, file) => {
     const formData = new FormData();
     formData.append('image', file);
 
-    const response = await fetch(`${API_BASE_URL}/api/tests/upload-image`, {
+    const response = await fetch(`${API_BASE_URL}/tests/upload-image`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -185,7 +185,7 @@ export const uploadChoiceImage = async (getToken, file) => {
     const formData = new FormData();
     formData.append('image', file);
 
-    const response = await fetch(`${API_BASE_URL}/api/tests/upload-choice-image`, {
+    const response = await fetch(`${API_BASE_URL}/tests/upload-choice-image`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,

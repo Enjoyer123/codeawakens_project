@@ -13,7 +13,7 @@ export const fetchAllLevels = async (getToken, page = 1, limit = 10, search = ''
       params.append('search', search);
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/levels?${params.toString()}`, {
+    const response = await fetch(`${API_BASE_URL}/levels?${params.toString()}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -40,7 +40,7 @@ export const fetchAllCategories = async (getToken) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/levels/categories`, {
+    const response = await fetch(`${API_BASE_URL}/levels/categories`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -67,7 +67,7 @@ export const fetchLevelsForPrerequisite = async (getToken) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/levels/prerequisites`, {
+    const response = await fetch(`${API_BASE_URL}/levels/prerequisites`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -94,7 +94,7 @@ export const fetchLevelById = async (getToken, levelId) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/levels/${levelId}`, {
+    const response = await fetch(`${API_BASE_URL}/levels/${levelId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -121,7 +121,7 @@ export const createLevel = async (getToken, levelData) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/levels`, {
+    const response = await fetch(`${API_BASE_URL}/levels`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -150,7 +150,7 @@ export const updateLevel = async (getToken, levelId, levelData) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/levels/${levelId}`, {
+    const response = await fetch(`${API_BASE_URL}/levels/${levelId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -179,7 +179,7 @@ export const updateLevelCoordinates = async (getToken, levelId, coordinates) => 
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/levels/coordinates/${levelId}`, {
+    const response = await fetch(`${API_BASE_URL}/levels/coordinates/${levelId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -208,7 +208,7 @@ export const deleteLevel = async (getToken, levelId) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/levels/${levelId}`, {
+    const response = await fetch(`${API_BASE_URL}/levels/${levelId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -239,7 +239,7 @@ export const uploadLevelBackgroundImage = async (getToken, imageFile) => {
     const formData = new FormData();
     formData.append('backgroundImage', imageFile);
 
-    const response = await fetch(`${API_BASE_URL}/api/levels/upload-background`, {
+    const response = await fetch(`${API_BASE_URL}/levels/upload-background`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,

@@ -13,7 +13,7 @@ export const fetchAllVictoryConditions = async (getToken, page = 1, limit = 10, 
       params.append('search', search);
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/victory-conditions?${params.toString()}`, {
+    const response = await fetch(`${API_BASE_URL}/victory-conditions?${params.toString()}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -37,7 +37,7 @@ export const fetchAllVictoryConditions = async (getToken, page = 1, limit = 10, 
 export const createVictoryCondition = async (getToken, victoryConditionData) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/victory-conditions`, {
+    const response = await fetch(`${API_BASE_URL}/victory-conditions`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -63,7 +63,7 @@ export const createVictoryCondition = async (getToken, victoryConditionData) => 
 export const updateVictoryCondition = async (getToken, victoryConditionId, victoryConditionData) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/victory-conditions/${victoryConditionId}`, {
+    const response = await fetch(`${API_BASE_URL}/victory-conditions/${victoryConditionId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -89,7 +89,7 @@ export const updateVictoryCondition = async (getToken, victoryConditionId, victo
 export const deleteVictoryCondition = async (getToken, victoryConditionId) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/victory-conditions/${victoryConditionId}`, {
+    const response = await fetch(`${API_BASE_URL}/victory-conditions/${victoryConditionId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -117,7 +117,7 @@ export const deleteVictoryCondition = async (getToken, victoryConditionId) => {
 export const getVictoryConditionById = async (getToken, victoryConditionId) => {
   try {
     const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/api/victory-conditions/${victoryConditionId}`, {
+    const response = await fetch(`${API_BASE_URL}/victory-conditions/${victoryConditionId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',

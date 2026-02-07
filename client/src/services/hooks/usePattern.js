@@ -38,7 +38,7 @@ export const usePatternTypes = () => {
         queryKey: ['patternTypes'],
         queryFn: async () => {
             const token = await getToken();
-            const response = await fetch(`${API_BASE_URL}/api/patterns/types`, {
+            const response = await fetch(`${API_BASE_URL}/patterns/types`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',

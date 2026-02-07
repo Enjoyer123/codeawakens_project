@@ -13,7 +13,7 @@ export const fetchAllRewards = async (getToken, page = 1, limit = 10, search = '
       params.append('search', search);
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/rewards?${params.toString()}`, {
+    const response = await fetch(`${API_BASE_URL}/rewards?${params.toString()}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -40,7 +40,7 @@ export const fetchLevelsForReward = async (getToken) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/rewards/levels`, {
+    const response = await fetch(`${API_BASE_URL}/rewards/levels`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -67,7 +67,7 @@ export const fetchRewardById = async (getToken, rewardId) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/rewards/${rewardId}`, {
+    const response = await fetch(`${API_BASE_URL}/rewards/${rewardId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -94,7 +94,7 @@ export const createReward = async (getToken, rewardData) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/rewards`, {
+    const response = await fetch(`${API_BASE_URL}/rewards`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -123,7 +123,7 @@ export const updateReward = async (getToken, rewardId, rewardData) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/rewards/${rewardId}`, {
+    const response = await fetch(`${API_BASE_URL}/rewards/${rewardId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -152,7 +152,7 @@ export const deleteReward = async (getToken, rewardId) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/rewards/${rewardId}`, {
+    const response = await fetch(`${API_BASE_URL}/rewards/${rewardId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -185,7 +185,7 @@ export const uploadRewardFrame = async (getToken, rewardId, imageFile, frameNumb
     formData.append('frame_number', frameNumber.toString());
     formData.append('reward_id', rewardId.toString());
 
-    const response = await fetch(`${API_BASE_URL}/api/rewards/${rewardId}/frames`, {
+    const response = await fetch(`${API_BASE_URL}/rewards/${rewardId}/frames`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -213,7 +213,7 @@ export const deleteRewardFrame = async (getToken, rewardId, frameNumber) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/rewards/${rewardId}/frames`, {
+    const response = await fetch(`${API_BASE_URL}/rewards/${rewardId}/frames`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
