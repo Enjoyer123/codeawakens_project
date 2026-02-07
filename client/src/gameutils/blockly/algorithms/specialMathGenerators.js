@@ -50,8 +50,8 @@ export function defineSpecialMathGenerators() {
                             if (argNodes && argNodes.length >= 4) {
                                 const iArg = argNodes[2] && argNodes[2].getAttribute ? argNodes[2].getAttribute('name') : null;
                                 const jArg = argNodes[3] && argNodes[3].getAttribute ? argNodes[3].getAttribute('name') : null;
-                                if (iArg) iParamName = javascriptGenerator.nameDB_.getName(iArg, Blockly.Names.NameType.VARIABLE);
-                                if (jArg) jParamName = javascriptGenerator.nameDB_.getName(jArg, Blockly.Names.NameType.VARIABLE);
+                                if (iArg) iParamName = javascriptGenerator.nameDB_.getName(iArg, 'VARIABLE');
+                                if (jArg) jParamName = javascriptGenerator.nameDB_.getName(jArg, 'VARIABLE');
                             }
                         }
                     } catch (e) { }
@@ -64,7 +64,7 @@ export function defineSpecialMathGenerators() {
                             if (p.type === 'for_loop_dynamic' || p.type === 'for_index' || p.type === 'controls_for') {
                                 const varField = p.getFieldValue && p.getFieldValue('VAR');
                                 if (varField) {
-                                    const resolved = javascriptGenerator.nameDB_.getName(varField, Blockly.Names.NameType.VARIABLE);
+                                    const resolved = javascriptGenerator.nameDB_.getName(varField, 'VARIABLE');
                                     if (resolved === 'item') itemVarName = resolved;
                                     if (resolved === 'cap') capVarName = resolved;
                                 }
@@ -88,7 +88,7 @@ export function defineSpecialMathGenerators() {
                     if (p.type === 'for_loop_dynamic' || p.type === 'for_index' || p.type === 'controls_for') {
                         const varField = p.getFieldValue && p.getFieldValue('VAR');
                         if (varField) {
-                            const resolved = javascriptGenerator.nameDB_.getName(varField, Blockly.Names.NameType.VARIABLE);
+                            const resolved = javascriptGenerator.nameDB_.getName(varField, 'VARIABLE');
                             if (resolved === 'r') rVarName = 'r';
                             if (resolved === 'c') cVarName = 'c';
                         }

@@ -4,6 +4,7 @@ import AuthCallback from "../pages/auth/AuthCallback";
 import LandingPage from "../pages/Landing";
 import UserProfile from "../pages/user/UserProfile";
 import Leaderboard from "../pages/user/Leaderboard";
+import BlockManual from "../pages/user/BlockManual";
 import MapSelect from "../pages/user/MapSelect";
 import CategoryLevels from "../pages/user/CategoryLevels";
 import LevelGame from "../pages/user/LevelGame";
@@ -47,6 +48,7 @@ const AppRoutes = () => {
       >
         <Route path="user/profile" element={<UserProfile />} />
         <Route path="user/leaderboard" element={<Leaderboard />} />
+        <Route path="user/block-manual" element={<BlockManual />} />
 
         <Route path="user/mapselect" element={<MapSelect />} />
 

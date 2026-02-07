@@ -156,7 +156,7 @@ export function defineDataGenerators() {
 
         const varName = javascriptGenerator.nameDB_.getName(
             block.getFieldValue('VAR'),
-            Blockly.Names.NameType.VARIABLE
+            'VARIABLE'
         );
         return [varName, javascriptGenerator.ORDER_ATOMIC];
     };
@@ -184,7 +184,7 @@ export function defineDataGenerators() {
 
         const varName = javascriptGenerator.nameDB_.getName(
             block.getFieldValue('VAR'),
-            Blockly.Names.NameType.VARIABLE
+            'VARIABLE'
         );
         let code = varName + ' = ' + argument0 + ';\n';
 

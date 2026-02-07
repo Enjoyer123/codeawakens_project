@@ -6,8 +6,10 @@ const { uploadDir } = require("../middleware/upload");
 const prisma = new PrismaClient();
 
 exports.checkProfile = async (req, res) => {
+  const clerkId = req.user.id;
+  console.log(`[AUTH] User ${clerkId} checking profile.`);
+
   try {
-    const clerkId = req.user.id;
     const firstName = req.user.firstName || "";
     const lastName = req.user.lastName || "";
     const email = req.user.emailAddresses[0]?.emailAddress;
@@ -19,6 +21,7 @@ exports.checkProfile = async (req, res) => {
     });
 
     if (!userInDb) {
+      console.log(`[AUTH] Creating new user for ${clerkId} (${username}).`);
       userInDb = await prisma.user.create({
         data: {
           clerk_user_id: clerkId,
@@ -49,6 +52,7 @@ exports.checkProfile = async (req, res) => {
       }
     }
 
+    console.log(`[AUTH] Success: Profile verified for User ${clerkId}.`);
     res.json({
       loggedIn: true,
       hasProfile: true,
@@ -65,16 +69,19 @@ exports.checkProfile = async (req, res) => {
     });
 
   } catch (err) {
+    console.error(`[ERROR] Failed to check profile for User ${clerkId}:`, err.message);
     res.json({ loggedIn: false, hasProfile: false });
   }
 };
 
 exports.updateUsername = async (req, res) => {
-  try {
-    const { username } = req.body;
-    const clerkId = req.user.id;
+  const clerkId = req.user.id;
+  const { username } = req.body;
+  console.log(`[PROFILE] User ${clerkId} updating username to "${username}".`);
 
+  try {
     if (!username || username.trim().length < 3) {
+      console.warn(`[PROFILE] Warning: Invalid username "${username}" for User ${clerkId}.`);
       return res.status(400).json({ message: "Username must be at least 3 characters" });
     }
 
@@ -83,12 +90,14 @@ exports.updateUsername = async (req, res) => {
       data: { username: username.trim() },
     });
 
+    console.log(`[PROFILE] Success: Username updated for User ${clerkId}.`);
     res.json({
       message: "Username updated successfully",
       user: updatedUser,
     });
 
   } catch (error) {
+    console.error(`[ERROR] Failed to update username for User ${clerkId}:`, error.message);
     if (error.code === "P2025") {
       return res.status(404).json({ message: "User not found" });
     }
@@ -97,10 +106,12 @@ exports.updateUsername = async (req, res) => {
 };
 
 exports.uploadProfileImage = async (req, res) => {
-  try {
-    const clerkId = req.user.id;
+  const clerkId = req.user.id;
+  console.log(`[PROFILE] User ${clerkId} uploading profile image.`);
 
+  try {
     if (!req.file) {
+      console.warn(`[PROFILE] Warning: No file provided by User ${clerkId}.`);
       return res.status(400).json({ message: "No image file provided" });
     }
 
@@ -125,6 +136,7 @@ exports.uploadProfileImage = async (req, res) => {
       data: { profile_image: imageUrl },
     });
 
+    console.log(`[PROFILE] Success: Profile image uploaded for User ${clerkId}.`);
     res.json({
       message: "Profile image uploaded successfully",
       profileImageUrl: imageUrl,
@@ -132,6 +144,7 @@ exports.uploadProfileImage = async (req, res) => {
     });
 
   } catch (error) {
+    console.error(`[ERROR] Failed to upload profile image for User ${clerkId}:`, error.message);
     if (req.file) {
       const filePath = path.join(uploadDir, req.file.filename);
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
@@ -141,9 +154,10 @@ exports.uploadProfileImage = async (req, res) => {
 };
 
 exports.deleteProfileImage = async (req, res) => {
-  try {
-    const clerkId = req.user.id;
+  const clerkId = req.user.id;
+  console.log(`[PROFILE] User ${clerkId} deleting profile image.`);
 
+  try {
     const currentUser = await prisma.user.findUnique({
       where: { clerk_user_id: clerkId },
       select: { profile_image: true }
@@ -167,21 +181,24 @@ exports.deleteProfileImage = async (req, res) => {
       data: { profile_image: clerkImage },
     });
 
+    console.log(`[PROFILE] Success: Profile image deleted for User ${clerkId}.`);
     res.json({
       message: "Profile image deleted successfully",
       profileImageUrl: updatedUser.profile_image,
     });
 
   } catch (error) {
+    console.error(`[ERROR] Failed to delete profile image for User ${clerkId}:`, error.message);
     res.status(500).json({ message: "Failed to delete profile image" });
   }
 };
 
 
 exports.getUserByClerkId = async (req, res) => {
-  try {
-    const clerkId = req.user.id;
+  const clerkId = req.user.id;
+  console.log(`[PROFILE] Fetching details/progress for User ${clerkId}.`);
 
+  try {
     const user = await prisma.user.findUnique({
       where: { clerk_user_id: clerkId },
       select: {
@@ -229,15 +246,20 @@ exports.getUserByClerkId = async (req, res) => {
       user_reward: userRewards,
     };
 
+    console.log(`[PROFILE] Success: Retrieved details for User ${clerkId}.`);
     res.json(responseData);
   } catch (error) {
+    console.error(`[ERROR] Failed to fetch details for User ${clerkId}:`, error.message);
     res.status(500).json({ message: "Error fetching user details" });
   }
 };
 
 exports.saveUserProgress = async (req, res) => {
+  const clerkId = req.user.id;
+  const { blockly_code, text_code, ...logBody } = req.body; // Log info excluding large code strings
+  console.log(`[GAME] User ${clerkId} saving progress. Data:`, JSON.stringify(logBody));
+
   try {
-    const clerkId = req.user.id;
     const {
       level_id,
       status,
@@ -396,22 +418,24 @@ exports.saveUserProgress = async (req, res) => {
       });
     }
 
+    console.log(`[GAME] Success: Progress saved for User ${clerkId}.`);
     res.json({
       message: "User progress saved successfully",
       progress: savedProgress,
     });
   } catch (error) {
-    console.error("Error saving user progress:", error);
+    console.error(`[ERROR] Failed to save progress for User ${clerkId}:`, error.message);
     res.status(500).json({ message: "Error saving user progress", error: error.message });
   }
 };
 
 // Check and award rewards based on score
 exports.checkAndAwardRewards = async (req, res) => {
-  try {
-    const clerkId = req.user.id;
-    const { level_id, total_score } = req.body;
+  const clerkId = req.user.id;
+  const { level_id, total_score } = req.body;
+  console.log(`[GAME] Checking rewards for User ${clerkId} on Level ${level_id} (Score: ${total_score}).`);
 
+  try {
     // Validate required fields
     if (!level_id || total_score === undefined) {
       return res.status(400).json({ message: "level_id and total_score are required" });
@@ -435,6 +459,7 @@ exports.checkAndAwardRewards = async (req, res) => {
     });
 
     if (rewards.length === 0) {
+      console.log(`[GAME] No rewards configured for Level ${level_id}.`);
       return res.json({
         message: "No rewards found for this level",
         awardedRewards: [],
@@ -478,20 +503,22 @@ exports.checkAndAwardRewards = async (req, res) => {
             reward: true,
           },
         });
+        console.log(`[GAME] Awarded reward ${reward.reward_id} to User ${clerkId}.`);
         awardedRewards.push(userReward);
       } catch (error) {
-        console.error(`Error awarding reward ${reward.reward_id}:`, error);
+        console.error(`[ERROR] Failed to award reward ${reward.reward_id} to User ${clerkId}:`, error.message);
         // Continue with other rewards even if one fails
       }
     }
 
+    console.log(`[GAME] Success: Check complete. Awarded ${awardedRewards.length} new rewards to User ${clerkId}.`);
     res.json({
       message: "Rewards checked and awarded successfully",
       awardedRewards: awardedRewards,
       totalAwarded: awardedRewards.length,
     });
   } catch (error) {
-    console.error("Error checking and awarding rewards:", error);
+    console.error(`[ERROR] Failed to check rewards for User ${clerkId}:`, error.message);
     res.status(500).json({ message: "Error checking and awarding rewards", error: error.message });
   }
 };

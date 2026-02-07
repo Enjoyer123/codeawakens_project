@@ -345,7 +345,7 @@ export function createToolboxConfig(enabledBlocks) {
   if (enabledBlocks["procedures_defreturn"] || enabledBlocks["procedures_defnoreturn"]) {
     categories.push({
       kind: "category",
-      name: "🔧 Functions",
+      name: "Functions",
       categorystyle: "procedure_category",
       custom: "PROCEDURE", // Blockly will manage procedure blocks and call blocks automatically
     });
@@ -374,7 +374,7 @@ export function createToolboxConfig(enabledBlocks) {
   if (customFunctionBlocks.length > 0) {
     categories.push({
       kind: "category",
-      name: "🔧 Custom Functions",
+      name: "Custom Functions",
       categorystyle: "procedure_category",
       contents: customFunctionBlocks
     });

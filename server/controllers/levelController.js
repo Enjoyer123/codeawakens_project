@@ -3,10 +3,12 @@ const prisma = new PrismaClient();
 
 // Get all levels with pagination
 exports.getAllLevels = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const search = req.query.search || '';
+  // console.log(`[LEVEL] Fetching levels list. Page: ${page}, Limit: ${limit}, Search: "${search}"`); // Verbose, keeping commented or minimal
+
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const search = req.query.search || '';
     const skip = (page - 1) * limit;
 
     let where = {};
@@ -67,13 +69,14 @@ exports.getAllLevels = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error fetching levels:", error);
+    console.error("[ERROR] Failed to fetch levels:", error.message);
     res.status(500).json({ message: "Error fetching levels", error: error.message });
   }
 };
 
 // Get all categories for dropdown
 exports.getAllCategories = async (req, res) => {
+  console.log("[LEVEL] Fetching all categories for dropdown.");
   try {
     const categories = await prisma.levelCategory.findMany({
       orderBy: {
@@ -105,13 +108,14 @@ exports.getAllCategories = async (req, res) => {
 
     res.json(categoriesWithItem);
   } catch (error) {
-    console.error("Error fetching categories:", error);
+    console.error("[ERROR] Failed to fetch categories:", error.message);
     res.status(500).json({ message: "Error fetching categories", error: error.message });
   }
 };
 
 // Get all levels for prerequisite dropdown
 exports.getLevelsForPrerequisite = async (req, res) => {
+  console.log("[LEVEL] Fetching levels for prerequisite dropdown.");
   try {
     const levels = await prisma.level.findMany({
       select: {
@@ -130,16 +134,20 @@ exports.getLevelsForPrerequisite = async (req, res) => {
 
     res.json(levels);
   } catch (error) {
-    console.error("Error fetching levels for prerequisite:", error);
+    console.error("[ERROR] Failed to fetch levels for prerequisite:", error.message);
     res.status(500).json({ message: "Error fetching levels", error: error.message });
   }
 };
 
 // Get single level by ID
 exports.getLevelById = async (req, res) => {
-  try {
-    const { levelId } = req.params;
+  const { levelId } = req.params;
+  const clerkUserId = req.user?.id;
+  if (clerkUserId) {
+    console.log(`[GAME] User ${clerkUserId} viewing Level ${levelId}.`);
+  }
 
+  try {
     const level = await prisma.level.findUnique({
       where: { level_id: parseInt(levelId) },
       include: {
@@ -206,13 +214,13 @@ exports.getLevelById = async (req, res) => {
     });
 
     if (!level) {
+      console.warn(`[GAME] Warning: Level ${levelId} not found.`);
       return res.status(404).json({ message: "Level not found" });
     }
 
     // Calculate dynamic lock state
     let isPublished = level.is_unlocked;
     let isLocked = false;
-    const clerkUserId = req.user?.id;
 
     if (clerkUserId) {
       const user = await prisma.user.findUnique({
@@ -225,6 +233,7 @@ exports.getLevelById = async (req, res) => {
 
         // Security check: If level is not published, only admin can see it
         if (!isPublished && !isAdmin) {
+          console.warn(`[GAME] Access Denied: User ${clerkUserId} tried to access unpublished Level ${levelId}.`);
           return res.status(403).json({ message: "This level is not published yet." });
         }
 
@@ -292,13 +301,16 @@ exports.getLevelById = async (req, res) => {
       is_locked: isLocked
     });
   } catch (error) {
-    console.error("Error fetching level:", error);
+    console.error(`[ERROR] Failed to fetch Level ${levelId}:`, error.message);
     res.status(500).json({ message: "Error fetching level", error: error.message });
   }
 };
 
 // Create new level
 exports.createLevel = async (req, res) => {
+  const clerkUserId = req.user?.id;
+  console.log(`[ADMIN] User ${clerkUserId} creating new level.`);
+
   try {
     const {
       category_id,
@@ -335,7 +347,6 @@ exports.createLevel = async (req, res) => {
     } = req.body;
 
     // Get user from request (set by authCheck middleware)
-    const clerkUserId = req.user?.id;
     if (!clerkUserId) {
       return res.status(401).json({ message: "User not authenticated" });
     }
@@ -358,6 +369,7 @@ exports.createLevel = async (req, res) => {
     if (!background_image || background_image.trim() === '') missingFields.push('background_image');
 
     if (missingFields.length > 0) {
+      console.warn(`[ADMIN] Create Level Failed: Missing fields [${missingFields.join(', ')}] by User ${clerkUserId}.`);
       return res.status(400).json({
         message: `Missing required fields: ${missingFields.join(', ')}`
       });
@@ -481,20 +493,24 @@ exports.createLevel = async (req, res) => {
       },
     });
 
+    console.log(`[ADMIN] Success: Created Level ${level.level_id} ("${level.level_name}") by User ${clerkUserId}.`);
     res.status(201).json({
       message: "Level created successfully",
       level,
     });
   } catch (error) {
-    console.error("Error creating level:", error);
+    console.error(`[ERROR] Failed to create level by User ${clerkUserId}:`, error.message);
     res.status(500).json({ message: "Error creating level", error: error.message });
   }
 };
 
 // Update level
 exports.updateLevel = async (req, res) => {
+  const { levelId } = req.params;
+  const clerkUserId = req.user?.id;
+  console.log(`[ADMIN] User ${clerkUserId} updating Level ${levelId}.`);
+
   try {
-    const { levelId } = req.params;
     const {
       category_id,
       level_name,
@@ -691,26 +707,30 @@ exports.updateLevel = async (req, res) => {
       });
     });
 
+    console.log(`[ADMIN] Success: Updated Level ${levelId} by User ${clerkUserId}.`);
     res.json({
       message: "Level updated successfully",
       level,
     });
   } catch (error) {
-    console.error("Error updating level:", error);
+    console.error(`[ERROR] Failed to update Level ${levelId} by User ${clerkUserId}:`, error.message);
     res.status(500).json({ message: "Error updating level", error: error.message });
   }
 };
 
 // Delete level
 exports.deleteLevel = async (req, res) => {
-  try {
-    const { levelId } = req.params;
+  const { levelId } = req.params;
+  const clerkUserId = req.user?.id;
+  console.log(`[ADMIN] User ${clerkUserId} deleting Level ${levelId}.`);
 
+  try {
     const level = await prisma.level.findUnique({
       where: { level_id: parseInt(levelId) },
     });
 
     if (!level) {
+      console.warn(`[ADMIN] Warning: Level ${levelId} not found for deletion.`);
       return res.status(404).json({ message: "Level not found" });
     }
 
@@ -718,11 +738,12 @@ exports.deleteLevel = async (req, res) => {
       where: { level_id: parseInt(levelId) },
     });
 
+    console.log(`[ADMIN] Success: Deleted Level ${levelId} by User ${clerkUserId}.`);
     res.json({
       message: "Level deleted successfully",
     });
   } catch (error) {
-    console.error("Error deleting level:", error);
+    console.error(`[ERROR] Failed to delete Level ${levelId} by User ${clerkUserId}:`, error.message);
     res.status(500).json({ message: "Error deleting level", error: error.message });
   }
 };
@@ -730,9 +751,10 @@ exports.deleteLevel = async (req, res) => {
 // Upload level background image
 // Unlock level (set is_unlocked to true)
 exports.unlockLevel = async (req, res) => {
-  try {
-    const { levelId } = req.params;
+  const { levelId } = req.params;
+  console.log(`[ADMIN] Unlocking Level ${levelId}.`);
 
+  try {
     const level = await prisma.level.findUnique({
       where: { level_id: parseInt(levelId) },
     });
@@ -748,11 +770,12 @@ exports.unlockLevel = async (req, res) => {
       },
     });
 
+    console.log(`[ADMIN] Success: Level ${levelId} unlocked.`);
     res.json({
       message: "Level unlocked successfully",
     });
   } catch (error) {
-    console.error("Error unlocking level:", error);
+    console.error(`[ERROR] Failed to unlock Level ${levelId}:`, error.message);
     res.status(500).json({
       message: "Error unlocking level",
       error: error.message
@@ -762,8 +785,10 @@ exports.unlockLevel = async (req, res) => {
 
 // Update only level coordinates
 exports.updateLevelCoordinates = async (req, res) => {
+  const { levelId } = req.params;
+  // console.log(`[ADMIN] Updating coordinates for Level ${levelId}.`); // Verbose
+
   try {
-    const { levelId } = req.params;
     const { coordinates } = req.body;
 
     const level = await prisma.level.findUnique({
@@ -786,12 +811,15 @@ exports.updateLevelCoordinates = async (req, res) => {
       level: updatedLevel,
     });
   } catch (error) {
-    console.error("Error updating level coordinates:", error);
+    console.error(`[ERROR] Failed to update coordinates for Level ${levelId}:`, error.message);
     res.status(500).json({ message: "Error updating level coordinates", error: error.message });
   }
 };
 
 exports.uploadLevelBackgroundImage = async (req, res) => {
+  const clerkUserId = req.user?.id;
+  console.log(`[ADMIN] User ${clerkUserId} uploading level background.`);
+
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No image file provided" });
@@ -799,14 +827,13 @@ exports.uploadLevelBackgroundImage = async (req, res) => {
 
     const imagePath = `/uploads/levels/${req.file.filename}`;
 
+    console.log(`[ADMIN] Success: Level background uploaded by User ${clerkUserId} at ${imagePath}.`);
     res.json({
-      message: "Background image uploaded successfully",
-      imagePath,
-      filename: req.file.filename,
+      message: "Level background image uploaded successfully",
+      imageUrl: imagePath,
     });
   } catch (error) {
-    console.error("Error uploading background image:", error);
-    res.status(500).json({ message: "Error uploading background image", error: error.message });
+    console.error(`[ERROR] Failed to upload level background by User ${clerkUserId}:`, error.message);
+    res.status(500).json({ message: "Failed to upload level background image", error: error.message });
   }
 };
-

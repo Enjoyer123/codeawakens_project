@@ -52,7 +52,7 @@ export function setupAntDp(scene) {
     boardGraphics.setDepth(5);
 
     // Visible debug badge (helps confirm the board is active even if the grid is offscreen or background is dark)
-    const debugBadge = scene.add.text(12, 10, `ðŸœ ANT DP ACTIVE (${rows}Ã—${cols})`, {
+    const debugBadge = scene.add.text(12, 10, `ANT DP (${rows}x${cols})`, {
       fontSize: '16px',
       color: '#ffffff',
       fontStyle: 'bold',

@@ -45,7 +45,7 @@ export function ensureStandardBlocks() {
     // Ensure generator exists
     if (!javascriptGenerator.forBlock['variables_get']) {
       javascriptGenerator.forBlock['variables_get'] = function (block) {
-        const varName = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
+        const varName = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), 'VARIABLE');
         return [varName, javascriptGenerator.ORDER_ATOMIC];
       };
     }
@@ -80,7 +80,7 @@ export function ensureStandardBlocks() {
       javascriptGenerator.forBlock['variables_set'] = function (block) {
         const variable = javascriptGenerator.nameDB_.getName(
           block.getFieldValue('VAR'),
-          Blockly.Names.NameType.VARIABLE
+          'VARIABLE'
         );
         const value = javascriptGenerator.valueToCode(block, 'VALUE', javascriptGenerator.ORDER_ASSIGNMENT) || 'null';
 
@@ -118,7 +118,7 @@ export function ensureStandardBlocks() {
       javascriptGenerator.forBlock['math_change'] = function (block) {
         const variable = javascriptGenerator.nameDB_.getName(
           block.getFieldValue('VAR'),
-          Blockly.Names.NameType.VARIABLE
+          'VARIABLE'
         );
         const delta = javascriptGenerator.valueToCode(block, 'DELTA', javascriptGenerator.ORDER_ADDITION) || '0';
         return `${variable} = (${variable} || 0) + ${delta};\n`;

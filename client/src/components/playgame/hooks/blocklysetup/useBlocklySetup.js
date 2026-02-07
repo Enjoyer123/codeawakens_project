@@ -8,6 +8,7 @@ import "blockly/blocks";
 import "blockly/javascript";
 import "blockly/msg/en";
 import { javascriptGenerator } from "blockly/javascript";
+import ModernTheme from '@blockly/theme-modern';
 import {
   createToolboxConfig,
   ensureStandardBlocks,
@@ -110,41 +111,41 @@ export function useBlocklySetup({
         const toolbox = createToolboxConfig(enabledBlocks);
 
         // Define Custom Theme (Purple & Dark Blue - Website Brand)
-        const rpgTheme = Blockly.Theme.defineTheme('rpg_theme', {
-          base: Blockly.Themes.Classic,
-          blockStyles: {
-            // Midnight Galaxy Palette (Purple/Blue tones)
-            "hat_blocks": { "colourPrimary": "#a855f7", "colourSecondary": "#c084fc", "colourTertiary": "#7e22ce" }, // Purple 500/400/700 (Start)
-            "logic_blocks": { "colourPrimary": "#8b5cf6", "colourSecondary": "#a78bfa", "colourTertiary": "#7c3aed" }, // Violet 500/400/600 (Logic)
-            "loop_blocks": { "colourPrimary": "#6366f1", "colourSecondary": "#818cf8", "colourTertiary": "#4f46e5" }, // Indigo 500/400/600 (Loop)
-            "math_blocks": { "colourPrimary": "#06b6d4", "colourSecondary": "#22d3ee", "colourTertiary": "#0891b2" }, // Cyan 500/400/600 (Math)
-            "procedure_blocks": { "colourPrimary": "#d946ef", "colourSecondary": "#e879f9", "colourTertiary": "#c026d3" }, // Fuchsia 500/400/600 (Function)
-            "list_blocks": { "colourPrimary": "#3b82f6", "colourSecondary": "#60a5fa", "colourTertiary": "#2563eb" }, // Blue 500/400/600 (List)
-            "variable_blocks": { "colourPrimary": "#14b8a6", "colourSecondary": "#2dd4bf", "colourTertiary": "#0d9488" } // Teal 500/400/600 (Var)
-          },
-          componentStyles: {
-            "workspaceBackgroundColour": "#1e1b4b", // Deep Indigo/Purple
-            "toolboxBackgroundColour": "#2e1065", // Dark Purple 950
-            "toolboxForegroundColour": "#ffffff", // White
-            "flyoutBackgroundColour": "#2e1065", // Dark Purple 950
-            "flyoutForegroundColour": "#ffffff",
-            "flyoutOpacity": 0.95,
-            "scrollbarColour": "transparent",
-            "insertionMarkerColour": "#a855f7", // Purple 500
-            "insertionMarkerOpacity": 0.5,
-            "scrollbarOpacity": 0, // Hidden as requested
-            "cursorColour": "#a855f7" // Purple 500
-          },
-          fontStyle: {
-            "family": "'Press Start 2P', cursive", // Match game font
-            "weight": "normal",
-            "size": 10
-          }
-        });
+        // const rpgTheme = Blockly.Theme.defineTheme('rpg_theme', {
+        //   base: Blockly.Themes.Classic,
+        //   blockStyles: {
+        //     // Midnight Galaxy Palette (Purple/Blue tones)
+        //     "hat_blocks": { "colourPrimary": "#a855f7", "colourSecondary": "#c084fc", "colourTertiary": "#7e22ce" }, // Purple 500/400/700 (Start)
+        //     "logic_blocks": { "colourPrimary": "#8b5cf6", "colourSecondary": "#a78bfa", "colourTertiary": "#7c3aed" }, // Violet 500/400/600 (Logic)
+        //     "loop_blocks": { "colourPrimary": "#6366f1", "colourSecondary": "#818cf8", "colourTertiary": "#4f46e5" }, // Indigo 500/400/600 (Loop)
+        //     "math_blocks": { "colourPrimary": "#06b6d4", "colourSecondary": "#22d3ee", "colourTertiary": "#0891b2" }, // Cyan 500/400/600 (Math)
+        //     "procedure_blocks": { "colourPrimary": "#d946ef", "colourSecondary": "#e879f9", "colourTertiary": "#c026d3" }, // Fuchsia 500/400/600 (Function)
+        //     "list_blocks": { "colourPrimary": "#3b82f6", "colourSecondary": "#60a5fa", "colourTertiary": "#2563eb" }, // Blue 500/400/600 (List)
+        //     "variable_blocks": { "colourPrimary": "#14b8a6", "colourSecondary": "#2dd4bf", "colourTertiary": "#0d9488" } // Teal 500/400/600 (Var)
+        //   },
+        //   componentStyles: {
+        //     "workspaceBackgroundColour": "#1e1b4b", // Deep Indigo/Purple
+        //     "toolboxBackgroundColour": "#2e1065", // Dark Purple 950
+        //     "toolboxForegroundColour": "#ffffff", // White
+        //     "flyoutBackgroundColour": "#2e1065", // Dark Purple 950
+        //     "flyoutForegroundColour": "#ffffff",
+        //     "flyoutOpacity": 0.95,
+        //     "scrollbarColour": "transparent",
+        //     "insertionMarkerColour": "#a855f7", // Purple 500
+        //     "insertionMarkerOpacity": 0.5,
+        //     "scrollbarOpacity": 0, // Hidden as requested
+        //     "cursorColour": "#a855f7" // Purple 500
+        //   },
+        //   fontStyle: {
+        //     "family": "'Press Start 2P', cursive", // Match game font
+        //     "weight": "normal",
+        //     "size": 10
+        //   }
+        // });
 
         const workspaceConfig = {
-          theme: rpgTheme,
-          renderer: 'Thrasos',
+          theme: ModernTheme,
+          renderer: 'geras',
           toolbox,
           collapse: true,
           comments: true,

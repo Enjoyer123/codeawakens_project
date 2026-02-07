@@ -61,6 +61,10 @@ const NavbarWrapper = (props) => {
         path: '/user/mapselect'
       },
       {
+        label: 'Block Manual',
+        path: '/user/block-manual'
+      },
+      {
         label: 'Leaderboard',
         path: '/user/leaderboard'
       },
@@ -86,6 +90,10 @@ const NavbarWrapper = (props) => {
       {
         label: 'Play',
         path: '/user/mapselect'
+      },
+      {
+        label: 'Block Manual',
+        path: '/user/block-manual'
       },
       {
         label: 'Leaderboard',

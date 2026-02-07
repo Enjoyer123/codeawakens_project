@@ -22,7 +22,7 @@ export function defineProcedureDefGenerators() {
         console.log('[CUSTOM GENERATOR] procedures_defreturn called');
         const name = javascriptGenerator.nameDB_.getName(
             block.getFieldValue('NAME') || 'unnamed',
-            Blockly.Names.NameType.PROCEDURE
+            'PROCEDURE'
         );
         console.log('[CUSTOM GENERATOR] Function name:', name);
         const args = [];
@@ -40,7 +40,7 @@ export function defineProcedureDefGenerators() {
                         if (argName) {
                             args[i] = javascriptGenerator.nameDB_.getName(
                                 argName,
-                                Blockly.Names.NameType.VARIABLE
+                                'VARIABLE'
                             );
                         }
                     }
@@ -73,9 +73,9 @@ export function defineProcedureDefGenerators() {
         // Add variable declarations for coinChange function
         let localVarDeclarations = '';
         if (name.toLowerCase().includes('coinchange')) {
-            const includeVar = javascriptGenerator.nameDB_.getName('include', Blockly.Names.NameType.VARIABLE);
-            const excludeVar = javascriptGenerator.nameDB_.getName('exclude', Blockly.Names.NameType.VARIABLE);
-            const includeResultVar = javascriptGenerator.nameDB_.getName('includeResult', Blockly.Names.NameType.VARIABLE);
+            const includeVar = javascriptGenerator.nameDB_.getName('include', 'VARIABLE');
+            const excludeVar = javascriptGenerator.nameDB_.getName('exclude', 'VARIABLE');
+            const includeResultVar = javascriptGenerator.nameDB_.getName('includeResult', 'VARIABLE');
             localVarDeclarations = `let ${includeVar}, ${excludeVar}, ${includeResultVar};\n`;
         }
 
