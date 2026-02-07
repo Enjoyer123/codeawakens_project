@@ -185,27 +185,37 @@ export const usePhaserMapRenderer = ({
 
     // Draw people
     if (currentFormData.people && currentFormData.people.length > 0) {
-      const charType = currentFormData.character || 'main_1';
-      let textureKey = 'main_1';
-      if (charType === 'main_2') textureKey = 'main_2';
-      else if (charType === 'main_3') textureKey = 'main_3';
-
       currentFormData.people.forEach(person => {
         const personX = person.x;
         const personY = person.y;
 
         if (personX !== undefined && personY !== undefined) {
           if (currentGraphics.scene) {
-            // Shadow
-            const shadow = currentGraphics.scene.add.image(personX + 2, personY + 2, textureKey);
-            shadow.setDisplaySize(20, 20);
-            shadow.setTint(0x000000);
-            shadow.setAlpha(0.3);
-            coinTextsRef.current.push(shadow);
+            // Create a separate Graphics object for this person with proper depth
+            const personGraphics = currentGraphics.scene.add.graphics();
+            personGraphics.setDepth(100); // Above nodes
 
-            const personSprite = currentGraphics.scene.add.image(personX, personY, textureKey);
-            personSprite.setDisplaySize(20, 20);
-            coinTextsRef.current.push(personSprite);
+            // Shadow
+            personGraphics.fillStyle(0x000000, 0.3);
+            personGraphics.fillCircle(personX + 2, personY + 2, 12);
+
+            // Person circle (blue)
+            personGraphics.fillStyle(0x3b82f6, 1); // Blue color
+            personGraphics.fillCircle(personX, personY, 12);
+
+            // Border
+            personGraphics.lineStyle(2, 0xffffff, 1);
+            personGraphics.strokeCircle(personX, personY, 12);
+
+            coinTextsRef.current.push(personGraphics);
+
+            // Person emoji/icon
+            const personIcon = currentGraphics.scene.add.text(personX, personY, '👤', {
+              fontSize: '14px',
+            });
+            personIcon.setOrigin(0.5);
+            personIcon.setDepth(101); // Above person circle
+            coinTextsRef.current.push(personIcon);
           }
         }
       });
