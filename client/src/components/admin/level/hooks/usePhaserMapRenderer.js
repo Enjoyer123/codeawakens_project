@@ -116,7 +116,6 @@ export const usePhaserMapRenderer = ({
 
     // Draw monsters
     if (currentFormData.monsters && currentFormData.monsters.length > 0) {
-      currentGraphics.fillStyle(0xff0000, 1);
       currentFormData.monsters.forEach(monster => {
         // Draw monster at x, y position
         const monsterX = monster.x || (monster.startNode ? currentFormData.nodes.find(n => n.id === monster.startNode)?.x : 0);
@@ -130,18 +129,19 @@ export const usePhaserMapRenderer = ({
           else if (mType === 'vampire_3') textureKey = 'vampire_3';
           else if (mType === 'slime_1') textureKey = 'slime_1';
 
-          if (currentGraphics.scene) {
-            // Shadow
-            const shadow = currentGraphics.scene.add.image(monsterX + 2, monsterY + 2, textureKey);
-            shadow.setDisplaySize(30, 30);
-            shadow.setTint(0x000000);
-            shadow.setAlpha(0.3);
-            coinTextsRef.current.push(shadow);
 
-            const monsterSprite = currentGraphics.scene.add.image(monsterX, monsterY, textureKey);
-            monsterSprite.setDisplaySize(30, 30);
-            coinTextsRef.current.push(monsterSprite);
-          }
+          // Shadow
+          const shadow = currentGraphics.scene.add.image(monsterX + 2, monsterY + 2, textureKey);
+          shadow.setDisplaySize(50, 50);
+          shadow.setTint(0x000000);
+          shadow.setAlpha(0.3);
+          shadow.setDepth(199); // Below monster sprite
+          coinTextsRef.current.push(shadow);
+
+          const monsterSprite = currentGraphics.scene.add.image(monsterX, monsterY, textureKey);
+          monsterSprite.setDisplaySize(50, 50);
+          monsterSprite.setDepth(200); // Above nodes (nodes are at 150)
+          coinTextsRef.current.push(monsterSprite);
         }
       });
     }

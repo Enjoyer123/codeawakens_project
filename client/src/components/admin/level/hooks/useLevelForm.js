@@ -146,7 +146,7 @@ export const useLevelForm = ({
             if (backgroundImage) {
                 try {
                     const uploadResult = await uploadBackgroundMutation.mutateAsync(backgroundImage);
-                    backgroundImagePath = uploadResult.imagePath;
+                    backgroundImagePath = uploadResult.imageUrl;
                 } catch (err) {
                     toast.error('Failed to upload background image. Please try again.');
                     return;
@@ -157,7 +157,7 @@ export const useLevelForm = ({
                     const blob = await response.blob();
                     const file = new File([blob], 'background-image.png', { type: blob.type });
                     const uploadResult = await uploadBackgroundMutation.mutateAsync(file);
-                    backgroundImagePath = uploadResult.imagePath;
+                    backgroundImagePath = uploadResult.imageUrl;
                 } catch (err) {
                     if (backgroundImageUrl.startsWith('/uploads/')) {
                         backgroundImagePath = backgroundImageUrl;
