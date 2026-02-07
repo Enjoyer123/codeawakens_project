@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useBlocks } from '../../services/hooks/useBlocks';
+import { usePublicBlocks } from '../../services/hooks/useBlocks';
 import PageLoader from '../../components/shared/Loading/PageLoader';
 import PageError from '../../components/shared/Error/PageError';
 import { getImageUrlSafe } from '@/utils/imageUtils';
@@ -118,7 +118,7 @@ const CATEGORIES = [
 
 const BlockManual = () => {
     // Fetch a large number of blocks at once to simplify tab filtering
-    const { data, isLoading, isError, error } = useBlocks(1, 150);
+    const { data, isLoading, isError, error } = usePublicBlocks(1, 150);
     const [activeTab, setActiveTab] = useState('all');
 
     const blocks = data?.blocks || [];

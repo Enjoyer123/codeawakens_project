@@ -1,6 +1,39 @@
 import { API_BASE_URL } from '../config/apiConfig';
 
-// Fetch all blocks with pagination
+// Fetch all blocks with pagination (public endpoint for users)
+export const fetchPublicBlocks = async (getToken, page = 1, limit = 10, search = '') => {
+  try {
+    const token = await getToken();
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+
+    if (search.trim()) {
+      params.append('search', search);
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/blocks/public?${params.toString()}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Failed to fetch blocks' }));
+      throw new Error(errorData.message || 'Failed to fetch blocks');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching blocks:', error);
+    throw error;
+  }
+};
+
+// Fetch all blocks with pagination (admin endpoint)
 export const fetchAllBlocks = async (getToken, page = 1, limit = 10, search = '') => {
   try {
     const token = await getToken();
