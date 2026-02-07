@@ -11,8 +11,12 @@ if (!PUBLISHABLE_KEY) {
   throw new Error('Missing Publishable Key')
 }
 
-// // Disable console.log to reduce noise
-// console.log = () => {};
+// Disable console.log in production
+if (import.meta.env.PROD) {
+  console.log = () => { };
+  console.debug = () => { };
+  console.info = () => { };
+}
 
 import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from '@tanstack/react-query'
 import { toast } from 'sonner'

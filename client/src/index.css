@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -149,7 +150,6 @@
 }
 
 /* Pixel Specific Global Styles moved from Landing.jsx */
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=DotGothic16&display=swap');
 
 .pixel-font {
   font-family: 'Press Start 2P', cursive;

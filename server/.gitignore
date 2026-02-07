@@ -31,6 +31,4 @@ uploads/
 *.sln
 *.sw?
 
-Dockerfile
-
 prisma/migrations/*

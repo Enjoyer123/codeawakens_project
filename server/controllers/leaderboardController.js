@@ -3,6 +3,9 @@ const prisma = new PrismaClient();
 
 exports.getLeaderboard = async (req, res) => {
     try {
+        const clerkId = req.user?.id || 'anonymous';
+        console.log(`[LEADERBOARD] User ${clerkId} viewing leaderboard.`);
+
         const users = await prisma.user.findMany({
             where: {
                 role: 'user',

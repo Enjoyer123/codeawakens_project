@@ -66,6 +66,9 @@ exports.updateUserRole = async (req, res) => {
   try {
     const { userId } = req.params;
     const { role } = req.body;
+    const adminClerkId = req.user.id;
+
+    console.log(`[ADMIN] Admin ${adminClerkId} updating role for User ${userId} to "${role}".`);
 
     if (!role || !["user", "admin"].includes(role)) {
       return res.status(400).json({ message: "Invalid role. Must be 'user' or 'admin'" });
@@ -98,6 +101,8 @@ exports.updateUserRole = async (req, res) => {
         is_active: true,
       },
     });
+
+    console.log(`[ADMIN] Success: User ${userId} role changed to "${role}" by Admin ${adminClerkId}.`);
 
     res.json({
       message: "User role updated successfully",
@@ -169,6 +174,9 @@ exports.getUserDetails = async (req, res) => {
 exports.deleteUser = async (req, res) => {
   try {
     const { userId } = req.params;
+    const adminClerkId = req.user.id;
+
+    console.log(`[ADMIN] Admin ${adminClerkId} attempting to delete User ${userId}.`);
 
     const targetUser = await prisma.user.findUnique({
       where: { user_id: parseInt(userId) },
@@ -186,6 +194,8 @@ exports.deleteUser = async (req, res) => {
       where: { user_id: parseInt(userId) },
     });
 
+    console.log(`[ADMIN] Success: User ${userId} (${targetUser.username}) deleted by Admin ${adminClerkId}.`);
+
     res.json({
       message: "User deleted successfully",
     });
@@ -199,6 +209,9 @@ exports.resetUserTestScore = async (req, res) => {
   try {
     const { userId } = req.params;
     const { type } = req.body; // 'pre' or 'post'
+    const adminClerkId = req.user.id;
+
+    console.log(`[ADMIN] Admin ${adminClerkId} resetting ${type}-test score for User ${userId}.`);
 
     if (!['pre', 'post'].includes(type)) {
       return res.status(400).json({ message: "Invalid test type. Use 'pre' or 'post'." });
@@ -227,6 +240,8 @@ exports.resetUserTestScore = async (req, res) => {
         }
       });
     });
+
+    console.log(`[ADMIN] Success: Reset ${type}-test score for User ${userId} by Admin ${adminClerkId}.`);
 
     res.json({
       message: `Reset ${type}-test score and history successfully`
