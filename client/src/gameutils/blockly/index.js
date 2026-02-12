@@ -7,12 +7,12 @@ import "blockly/blocks";
 import "blockly/javascript";
 
 // Import and run overrides
-import { setupBlocklyOverrides } from './core/blocklyOverrides';
+// import { setupBlocklyOverrides } from './core/blocklyOverrides';
 
 // CRITICAL: Setup overrides IMMEDIATELY after importing Blockly
 // This must happen before any other code uses procedure blocks
-console.log('[blockly/index] Initializing Blockly overrides...');
-setupBlocklyOverrides();
+// console.log('[blockly/index] Initializing Blockly overrides...');
+// setupBlocklyOverrides();
 
 // Re-export from sub-modules
 export { ensureDefaultBlocks } from './core/blocklyDefault';

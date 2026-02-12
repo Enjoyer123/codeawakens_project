@@ -23,21 +23,7 @@ export function defineLoopGenerators() {
             return `while (${cond}) {\n${doCode}}\n`;
         }
 
-        const isPQCheck = condition.includes('PQ') || condition.includes('pq');
-        const logTag = isPQCheck ? '[DEBUG-LOOP-PQ]' : '[DEBUG-LOOP-WHILE]';
-        return `
-    console.log('${logTag} Start condition:', ${condition});
-    let __safety_loop_count = 0;
-    while (${condition}) {
-       __safety_loop_count++;
-       if (__safety_loop_count > 1000) { 
-         console.error('${logTag} Infinite loop detected!');
-         break; 
-       }
-       ${doCode}
-    }
-    console.log('${logTag} End loop');
-    \n`;
+        return `while (${condition}) {\n${doCode}}\n`;
     };
 
     javascriptGenerator.forBlock["controls_for"] = function (block) {
@@ -71,13 +57,7 @@ export function defineLoopGenerators() {
             return `for (let ${variable} = ${from}; ${condition}; ${incCode}) {\n${branch}}\n`;
         }
 
-        return `
-    console.log('[DEBUG-LOOP-FOR] Start:', { var: '${variable}', from: ${from}, to: ${to} });
-    for (let ${variable} = ${from}; ${variable} <= ${to}; ${variable} += ${increment}) {
-       ${branch}
-    }
-    console.log('[DEBUG-LOOP-FOR] End:', { var: '${variable}' });
-    \n`;
+        return `for (let ${variable} = ${from}; ${variable} <= ${to}; ${variable} += ${increment}) {\n${branch}}\n`;
     };
 
     javascriptGenerator.forBlock["for_index"] = function (block) {
@@ -155,68 +135,32 @@ export function defineLoopGenerators() {
 
         // Clean Mode
         if (javascriptGenerator.isCleanMode) {
-            const listCode = list.trim();
-            // In clean mode, we just want "for (let variable of list)" if possible
-            // OR "for (let variable of await list)" if implied
-            // But we made graph.getNeighborsWithWeight sync.
-
-            // Check if listCode is a function call like "graph.getNeighbors(...)"
-            // or variable "all_nodes".
-
-            return `for (let ${variable} of ${listCode}) {\n${branch}}\n`;
+            return `for (let ${variable} of ${list}) {\n${branch}}\n`;
         }
 
-        const listCode = list.trim();
-        const isEdges = listCode.includes('edges') || listCode.includes('Edges');
-        const varName = variable || block.getFieldValue('VAR') || 'item';
-        const isEdgeData = varName.includes('edge') || varName.includes('Edge');
-        const isAsync = list.includes('await');
-
-        if (isAsync) {
-            let code = `
-      const listItems = await (${list});
-      for (let i = 0; i < listItems.length; i++) {
-          const ${variable} = listItems[i];`;
-            if (isEdges && isEdgeData) {
-                code += `
-          if (Array.isArray(${variable}) && ${variable}.length >= 3) {
-            const u = ${variable}[0];
-            const v = ${variable}[1];
-            const weight = ${variable}[2];
-            const currentState = getCurrentGameState();
-            if (currentState && currentState.currentScene) {
-              await highlightKruskalEdge(currentState.currentScene, u, v, weight, 800);
+        // Standard handling with async safety
+        return `
+        const __list = await ${list};
+        if (Array.isArray(__list)) {
+            for (let ${variable} of __list) {
+                // Visualization for Kruskal's Algorithm
+                if (Array.isArray(${variable}) && ${variable}.length >= 3) {
+                     // Check if we should visualize (heuristic: variable name or list name implies edges)
+                     const listName = "${list.replace(/"/g, '\\"')}"; 
+                     if (listName.toLowerCase().includes('edges') || "${variable}".toLowerCase().includes('edge')) {
+                         const u = ${variable}[0];
+                         const v = ${variable}[1];
+                         const weight = ${variable}[2];
+                         const currentState = getCurrentGameState();
+                         if (currentState && currentState.currentScene && typeof highlightKruskalEdge === 'function') {
+                           await highlightKruskalEdge(currentState.currentScene, u, v, weight, 800);
+                         }
+                     }
+                }
+                ${branch}
             }
-          }`;
-            }
-            code += `
-          ${branch}
-      }
-      `;
-            return code;
-        } else {
-            let code = `
-      const listItems = await ${list};
-      for (let i = 0; i < (listItems ? listItems.length : 0); i++) {
-          const ${variable} = listItems[i];`;
-            if (isEdges && isEdgeData) {
-                code += `
-          if (Array.isArray(${variable}) && ${variable}.length >= 3) {
-            const u = ${variable}[0];
-            const v = ${variable}[1];
-            const weight = ${variable}[2];
-            const currentState = getCurrentGameState();
-            if (currentState && currentState.currentScene) {
-              await highlightKruskalEdge(currentState.currentScene, u, v, weight, 800);
-            }
-          }`;
-            }
-            code += `
-          ${branch}
-      }
-      `;
-            return code;
         }
+        `;
     };
     javascriptGenerator.forBlock["controls_flow_statements"] = function (block) {
         if (block.getFieldValue('FLOW') === 'BREAK') {

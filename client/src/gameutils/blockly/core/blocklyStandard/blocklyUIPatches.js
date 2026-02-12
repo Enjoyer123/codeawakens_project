@@ -2,7 +2,6 @@
 import * as Blockly from "blockly/core";
 
 export function applyUIPatches() {
-    console.log("Applying Blockly UI Patches...");
 
     // 1. MenuItem Patch needed for Context Menu
     if (Blockly.MenuItem && Blockly.MenuItem.prototype.createDom) {
@@ -102,7 +101,6 @@ export function applyUIPatches() {
             // Skip dropdown for variable fields - let FieldVariable handle it
             if (this.sourceBlock_ && this.sourceBlock_.type &&
                 (this.sourceBlock_.type.includes('variable') || this.sourceBlock_.type.includes('VAR'))) {
-                console.log('Skipping dropdown for variable field');
                 return;
             }
 
@@ -135,7 +133,7 @@ export function applyUIPatches() {
                 const nextValue = options[nextIndex][1];
                 const nextLabel = options[nextIndex][0];
 
-                console.log(`Changing dropdown from ${currentValue} to ${nextValue} (${nextLabel})`);
+
 
                 try {
                     this.setValue(nextValue);

@@ -8,7 +8,6 @@ import { applyProcedureOverrides } from './blocklyProcedureOverrides';
 
 // Add fallback blocks for missing standard blocks
 export function ensureStandardBlocks() {
-  console.log("Ensuring standard blocks and variables...");
 
   // Apply UI Patches (Menu, MenuItem, Dropdown, Gesture)
   applyUIPatches();
@@ -50,7 +49,7 @@ export function ensureStandardBlocks() {
       };
     }
 
-    console.log('Overridden variables_get block to fix tooltip');
+
   } catch (e) {
     console.error('Failed to override variables_get block:', e);
   }
@@ -90,7 +89,7 @@ export function ensureStandardBlocks() {
         return `${variable} = ${value};\n`;
       };
     }
-    console.log('Overridden variables_set block to fix message format');
+
   } catch (e) {
     console.error('Failed to override variables_set block:', e);
   }
@@ -124,7 +123,7 @@ export function ensureStandardBlocks() {
         return `${variable} = (${variable} || 0) + ${delta};\n`;
       };
     }
-    console.log('Overridden math_change block to fix message format');
+
   } catch (e) {
     console.error('Failed to override math_change block:', e);
   }
@@ -152,14 +151,14 @@ export function ensureStandardBlocks() {
         return [`${list}.length === 0`, javascriptGenerator.ORDER_EQUALITY];
       };
     }
-    console.log('Overridden lists_isEmpty block to fix message format');
+
   } catch (e) {
     console.error('Failed to override lists_isEmpty block:', e);
   }
 
   // Create fallback for math_arithmetic if missing (Standard Override)
   if (!Blockly.Blocks['math_arithmetic']) {
-    console.warn('math_arithmetic block not found, creating fallback...');
+
     try {
       Blockly.Blocks['math_arithmetic'] = {
         init: function () {
@@ -200,7 +199,7 @@ export function ensureStandardBlocks() {
         return [result, javascriptGenerator.ORDER_ATOMIC];
       };
 
-      console.log('Created fallback math_arithmetic block');
+
     } catch (e) {
       console.error('Failed to create fallback math_arithmetic block:', e);
     }

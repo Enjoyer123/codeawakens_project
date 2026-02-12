@@ -142,10 +142,7 @@ const GameCore = ({
   const [currentHint, setCurrentHint] = useState("Loading level data...");
   const [blocklyLoaded, setBlocklyLoaded] = useState(false);
 
-  // Debug: Log blocklyLoaded changes
-  useEffect(() => {
-    console.log("🔍 blocklyLoaded state changed:", blocklyLoaded);
-  }, [blocklyLoaded]);
+
 
   // Progress tracking state (only used in normal mode)
   const [showProgressModal, setShowProgressModal] = useState(false);
@@ -232,45 +229,7 @@ const GameCore = ({
 
   // Sync combat state with combat system
   // NOTE: 10/2/69 This is not used in preview mode
-  // useEffect(() => {
-  //   let lastCombatState = isInCombat();
-  //   setInCombatMode(lastCombatState);
 
-  //   const interval = setInterval(() => {
-  //     const currentCombatState = isInCombat();
-  //     // Only update if state changed to prevent infinite loop
-  //     if (currentCombatState !== lastCombatState) {
-  //       lastCombatState = currentCombatState;
-  //       setInCombatMode(currentCombatState);
-  //     }
-  //   }, 100);
-
-  //   return () => clearInterval(interval);
-  // }, []);
-
-  // // Check HP = 0 and show Progress Modal (only in normal mode)
-  // NOTE: 10/2/69 This is not used in preview mode
-  // useEffect(() => {
-  //   if (!isPreview && playerHpState <= 0 && !isGameOver && !showProgressModal) {
-  //     console.log("HP = 0 detected, showing game over modal");
-
-  //     setIsGameOver(true);
-  //     setGameState("gameOver");
-
-  //     if (gameStartTime.current) {
-  //       const endTime = Date.now();
-  //       setTimeSpent(Math.floor((endTime - gameStartTime.current) / 1000));
-  //     }
-
-  //     setGameResult('gameover');
-  //     setShowProgressModal(true);
-
-  //     const currentState = getCurrentGameState();
-  //     if (currentState.currentScene) {
-  //       showGameOver(currentState.currentScene);
-  //     }
-  //   }
-  // }, [playerHpState, isGameOver, showProgressModal, isPreview]);
 
   // Sync rescued people state
   useEffect(() => {
@@ -293,18 +252,12 @@ const GameCore = ({
   const [codeValidation, setCodeValidation] = useState({ isValid: false, message: "" });
   const [blocklyJavaScriptReady, setBlocklyJavaScriptReady] = useState(false);
 
-  // Debug: Log blocklyJavaScriptReady changes
-  useEffect(() => {
-    console.log("🔍 blocklyJavaScriptReady state changed:", blocklyJavaScriptReady);
-  }, [blocklyJavaScriptReady]);
 
-  // History system state
+
   // History system state - using TanStack Query
   const { userProgress, allLevels: allLevelsData } = useGameHistory();
 
-  // Fetch user progress and all levels on mount
   // Fetch user progress and all levels
-  // No manual history fetching needed
 
   // Ideally, invalidate query here, but for now relies on natural refetch or we can import useQueryClient
   // For simplicity, we assume ProgressModal might trigger refetch internally or just let it be.
@@ -333,11 +286,7 @@ const GameCore = ({
   }, [blocklyLoaded, blocklyJavaScriptReady]);
 
   // Debug: Log codeValidation changes
-  useEffect(() => {
-    if (currentLevel?.textcode) {
-      console.log("🔍 codeValidation state changed:", codeValidation);
-    }
-  }, [codeValidation, currentLevel?.textcode]);
+
 
 
 
@@ -446,11 +395,7 @@ const GameCore = ({
   }, [patternsData, isPreview]);
 
   // Pattern analysis and weapon display - using hook
-  console.log("🛠️ [GameCore] Calling usePatternAnalysis", {
-    blocklyLoaded,
-    hasWorkspace: !!workspaceRef.current,
-    goodPatternsCount: goodPatterns?.length
-  });
+
 
   usePatternAnalysis({
     blocklyLoaded,
@@ -512,7 +457,6 @@ const GameCore = ({
     };
   }, [currentLevel, enabledBlockKeySignature, blocklyRef.current]);
 
-  // Handle victory condition
   // Handle victory - using utils
   const handleVictory = async (matchedPattern = null) => {
     await handleVictoryUtil({
@@ -852,7 +796,6 @@ const GameCore = ({
         </div>
       </div>
 
-      {/* Progress Modal - only show in normal mode */}
       {/* Progress Modal - only show in normal mode */}
       {!isPreview && (
         <>

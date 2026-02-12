@@ -40,24 +40,15 @@ export function defineLogicGenerators() {
         };
         const op = opMap[operator] || '==';
 
-        // Clean Mode for Text Code Generation
         if (javascriptGenerator.isCleanMode) {
             return [`${valueA} ${op} ${valueB}`, javascriptGenerator.ORDER_RELATIONAL];
         }
 
-        const code = `(function() {
-      const _vA = ${valueA};
-      const _vB = ${valueB};
-      const _nA = Number(_vA);
-      const _nB = Number(_vB);
-      const _res = _nA ${op} _nB;
-      if (!isNaN(_nA) && !isNaN(_nB)) {
-        console.log('[DEBUG-COMPARE] ' + _nA + ' ${op} ' + _nB + ' result:', _res);
-      }
-      return _res;
-    })()`;
+        // Standard comparison with Number conversion for safety
+        const code = `Number(${valueA}) ${op} Number(${valueB})`;
         return [code, javascriptGenerator.ORDER_RELATIONAL];
     };
+
 
     javascriptGenerator.forBlock["logic_boolean"] = function (block) {
         const bool = block.getFieldValue('BOOL');

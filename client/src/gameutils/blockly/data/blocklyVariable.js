@@ -168,3 +168,31 @@ export function initializeImprovedVariableHandling() {
 
 export { ensureVariableExists };
 
+/**
+ * Creates a standard onChange handler for blocks that need to auto-create variables.
+ * @param {string} defaultVarName - The default name for the variable (e.g. 'i', 'coin')
+ * @returns {Function} The onChange handler function
+ */
+export function createVariableChangeHandler(defaultVarName) {
+  return function (event) {
+    if (!event || !this.workspace) return;
+
+    // Don't create variables when block is in flyout (toolbox)
+    if (this.isInFlyout) {
+      return;
+    }
+
+    if (event.type === Blockly.Events.BLOCK_CREATE && event.blockId === this.id) {
+      setTimeout(() => {
+        ensureVariableExists(this, 'VAR', defaultVarName);
+      }, 10);
+    } else if (event.type === Blockly.Events.BLOCK_CHANGE && event.blockId === this.id) {
+      if (event.element === 'field' && event.name === 'VAR') {
+        const newValue = event.newValue || defaultVarName;
+        ensureVariableExists(this, 'VAR', newValue);
+      }
+    }
+  };
+}
+
+

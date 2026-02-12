@@ -1,6 +1,6 @@
 // Blockly Loop Block Definitions
 import * as Blockly from "blockly/core";
-import { ensureVariableExists } from '../data/blocklyVariable';
+import { ensureVariableExists, createVariableChangeHandler } from '../data/blocklyVariable';
 
 export function defineLoopBlocks() {
   Blockly.Blocks["repeat"] = {
@@ -48,28 +48,8 @@ export function defineLoopBlocks() {
       this.setColour(120);
       this.setTooltip("วนลูปด้วย index");
 
-      this.setOnChange(this.onVariableChange.bind(this));
+      this.setOnChange(createVariableChangeHandler('i').bind(this));
     },
-
-    onVariableChange: function (event) {
-      if (!event || !this.workspace) return;
-
-      // Don't create variables when block is in flyout (toolbox)
-      if (this.isInFlyout) {
-        return;
-      }
-
-      if (event.type === Blockly.Events.BLOCK_CREATE && event.blockId === this.id) {
-        setTimeout(() => {
-          ensureVariableExists(this, 'VAR', 'i');
-        }, 10);
-      } else if (event.type === Blockly.Events.BLOCK_CHANGE && event.blockId === this.id) {
-        if (event.element === 'field' && event.name === 'VAR') {
-          const newValue = event.newValue || 'i';
-          ensureVariableExists(this, 'VAR', newValue);
-        }
-      }
-    }
   };
 
   Blockly.Blocks["for_loop_dynamic"] = {
@@ -92,28 +72,9 @@ export function defineLoopBlocks() {
       this.setColour(120);
       this.setTooltip("วนลูปด้วยค่าเริ่มต้นและค่าสิ้นสุดที่คำนวณได้");
 
-      this.setOnChange(this.onVariableChange.bind(this));
+      this.setOnChange(createVariableChangeHandler('i').bind(this));
     },
-
-    onVariableChange: function (event) {
-      if (!event || !this.workspace) return;
-
-      // Don't create variables when block is in flyout (toolbox)
-      if (this.isInFlyout) {
-        return;
-      }
-
-      if (event.type === Blockly.Events.BLOCK_CREATE && event.blockId === this.id) {
-        setTimeout(() => {
-          ensureVariableExists(this, 'VAR', 'i');
-        }, 10);
-      } else if (event.type === Blockly.Events.BLOCK_CHANGE && event.blockId === this.id) {
-        if (event.element === 'field' && event.name === 'VAR') {
-          const newValue = event.newValue || 'i';
-          ensureVariableExists(this, 'VAR', newValue);
-        }
-      }
-    }
   };
 }
+
 

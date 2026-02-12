@@ -1,6 +1,6 @@
 // Blockly Coin Block Definitions
 import * as Blockly from "blockly/core";
-import { ensureVariableExists } from '../data/blocklyVariable';
+import { ensureVariableExists, createVariableChangeHandler } from '../data/blocklyVariable';
 
 export function defineCoinBlocks() {
   Blockly.Blocks["collect_coin"] = {
@@ -110,27 +110,7 @@ export function defineCoinBlocks() {
       this.setColour(120);
       this.setTooltip("วนลูปผ่านเหรียญที่เก็บมาทั้งหมด");
 
-      this.setOnChange(this.onVariableChange.bind(this));
-    },
-
-    onVariableChange: function (event) {
-      if (!event || !this.workspace) return;
-
-      // Don't create variables when block is in flyout (toolbox)
-      if (this.isInFlyout) {
-        return;
-      }
-
-      if (event.type === Blockly.Events.BLOCK_CREATE && event.blockId === this.id) {
-        setTimeout(() => {
-          ensureVariableExists(this, 'VAR', 'coin');
-        }, 10);
-      } else if (event.type === Blockly.Events.BLOCK_CHANGE && event.blockId === this.id) {
-        if (event.element === 'field' && event.name === 'VAR') {
-          const newValue = event.newValue || 'coin';
-          ensureVariableExists(this, 'VAR', newValue);
-        }
-      }
+      this.setOnChange(createVariableChangeHandler('coin').bind(this));
     }
   };
 }
