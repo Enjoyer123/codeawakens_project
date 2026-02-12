@@ -231,9 +231,7 @@ const BlockManual = () => {
                     </div>
                 </div>
 
-                <div className="mt-8 text-center text-gray-500 text-xs pixel-font">
-                    &copy; 2026 CodeAwakens System - Powered by Antigravity
-                </div>
+
             </div>
         </div>
     );

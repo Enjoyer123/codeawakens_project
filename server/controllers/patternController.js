@@ -387,12 +387,16 @@ exports.updatePattern = async (req, res) => {
 
     // Evaluate pattern_type_id automatically if not provided or null
     let evaluatedPatternTypeId = pattern_type_id;
-    if (!pattern_type_id) {
-      const xmlToEvaluate = xmlpattern !== undefined ? xmlpattern : existingPattern.xmlpattern;
-      if (xmlToEvaluate) {
-        evaluatedPatternTypeId = await evaluatePatternType(levelId, xmlToEvaluate);
-        console.log(`✅ [updatePattern] Auto-reevaluated pattern_type_id: ${evaluatedPatternTypeId}`);
-      }
+
+    // If xmlpattern is being updated, always re-evaluate the tier
+    if (xmlpattern !== undefined) {
+      evaluatedPatternTypeId = await evaluatePatternType(levelId, xmlpattern);
+      console.log(`✅ [updatePattern] Auto-reevaluated pattern_type_id based on new XML: ${evaluatedPatternTypeId}`);
+    }
+    // If xmlpattern is not being updated but pattern_type_id is missing, re-evaluate with existing XML
+    else if (!pattern_type_id && existingPattern.xmlpattern) {
+      evaluatedPatternTypeId = await evaluatePatternType(levelId, existingPattern.xmlpattern);
+      console.log(`✅ [updatePattern] Auto-reevaluated pattern_type_id based on existing XML: ${evaluatedPatternTypeId}`);
     }
 
     const updateData = {};
