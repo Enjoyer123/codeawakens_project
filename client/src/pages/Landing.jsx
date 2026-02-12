@@ -198,7 +198,7 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-12">
           <div className="text-center md:text-left">
             <p className="pixel-font text-[10px] text-purple-100/30">
-              © 2024 Code Awakens.
+              © 2026 Code Awakens.
             </p>
           </div>
 

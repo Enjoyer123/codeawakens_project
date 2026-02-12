@@ -1,7 +1,7 @@
 // src/components/playegame/GameCore.jsx
 // Core game component that can be reused for both normal play and preview mode
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { updateTrainScheduleVisuals, updateRopePartitionVisuals } from '../../gameutils/phaser';
+// import { updateTrainScheduleVisuals, updateRopePartitionVisuals } from '../../gameutils/phaser';
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import ProgressModal from '../../pages/user/ProgressModal';
@@ -9,7 +9,8 @@ import * as Blockly from "blockly/core";
 import "blockly/blocks";
 import "blockly/javascript";
 
-import { API_BASE_URL } from '../../config/apiConfig';
+// import { API_BASE_URL } from '../../config/apiConfig';
+// NOTE: 11/2/2026 เป็นแบบ golbal ต้องเปลี่ยนเป็นของใครของมัน
 window.Blockly = Blockly;
 
 // Import utilities and data
@@ -230,44 +231,46 @@ const GameCore = ({
   const [activeLevelHint, setActiveLevelHint] = useState(null);
 
   // Sync combat state with combat system
-  useEffect(() => {
-    let lastCombatState = isInCombat();
-    setInCombatMode(lastCombatState);
+  // NOTE: 10/2/69 This is not used in preview mode
+  // useEffect(() => {
+  //   let lastCombatState = isInCombat();
+  //   setInCombatMode(lastCombatState);
 
-    const interval = setInterval(() => {
-      const currentCombatState = isInCombat();
-      // Only update if state changed to prevent infinite loop
-      if (currentCombatState !== lastCombatState) {
-        lastCombatState = currentCombatState;
-        setInCombatMode(currentCombatState);
-      }
-    }, 100);
+  //   const interval = setInterval(() => {
+  //     const currentCombatState = isInCombat();
+  //     // Only update if state changed to prevent infinite loop
+  //     if (currentCombatState !== lastCombatState) {
+  //       lastCombatState = currentCombatState;
+  //       setInCombatMode(currentCombatState);
+  //     }
+  //   }, 100);
 
-    return () => clearInterval(interval);
-  }, []);
+  //   return () => clearInterval(interval);
+  // }, []);
 
-  // Check HP = 0 and show Progress Modal (only in normal mode)
-  useEffect(() => {
-    if (!isPreview && playerHpState <= 0 && !isGameOver && !showProgressModal) {
-      console.log("HP = 0 detected, showing game over modal");
+  // // Check HP = 0 and show Progress Modal (only in normal mode)
+  // NOTE: 10/2/69 This is not used in preview mode
+  // useEffect(() => {
+  //   if (!isPreview && playerHpState <= 0 && !isGameOver && !showProgressModal) {
+  //     console.log("HP = 0 detected, showing game over modal");
 
-      setIsGameOver(true);
-      setGameState("gameOver");
+  //     setIsGameOver(true);
+  //     setGameState("gameOver");
 
-      if (gameStartTime.current) {
-        const endTime = Date.now();
-        setTimeSpent(Math.floor((endTime - gameStartTime.current) / 1000));
-      }
+  //     if (gameStartTime.current) {
+  //       const endTime = Date.now();
+  //       setTimeSpent(Math.floor((endTime - gameStartTime.current) / 1000));
+  //     }
 
-      setGameResult('gameover');
-      setShowProgressModal(true);
+  //     setGameResult('gameover');
+  //     setShowProgressModal(true);
 
-      const currentState = getCurrentGameState();
-      if (currentState.currentScene) {
-        showGameOver(currentState.currentScene);
-      }
-    }
-  }, [playerHpState, isGameOver, showProgressModal, isPreview]);
+  //     const currentState = getCurrentGameState();
+  //     if (currentState.currentScene) {
+  //       showGameOver(currentState.currentScene);
+  //     }
+  //   }
+  // }, [playerHpState, isGameOver, showProgressModal, isPreview]);
 
   // Sync rescued people state
   useEffect(() => {
