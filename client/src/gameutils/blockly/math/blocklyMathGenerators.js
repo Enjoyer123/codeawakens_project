@@ -77,18 +77,8 @@ export function defineMathGenerators() {
             return [`${op}(${a}, ${b})`, javascriptGenerator.ORDER_FUNCTION_CALL];
         }
 
-        const code = `(function() {
-      const _vA = ${a};
-      const _vB = ${b};
-      const _nA = Number(_vA);
-      const _nB = Number(_vB);
-      const _res = ${operator === 'MAX' ? 'Math.max(_nA, _nB)' : 'Math.min(_nA, _nB)'};
-      if (isNaN(_res)) console.warn('[DEBUG-MATH] math_min_max resulted in NaN:', { a: _nA, b: _nB, op: '${operator}' });
-      else if (_nA !== 1000000 || _nB !== 1000000) {
-         console.log('[DEBUG-MATH] ' + ${JSON.stringify(operator)} + '(' + _nA + ', ' + _nB + ') result:', _res);
-      }
-      return _res;
-    })()`;
+        const op = operator === 'MAX' ? 'Math.max' : 'Math.min';
+        const code = `${op}(Number(${a}), Number(${b}))`;
         return [code, javascriptGenerator.ORDER_FUNCTION_CALL];
     };
 
@@ -112,15 +102,7 @@ export function defineMathGenerators() {
             return [`${a} ${op} ${b}`, javascriptGenerator.ORDER_RELATIONAL];
         }
 
-        const code = `(function() {
-      const valA = (typeof ${a} === 'number') ? ${a} : Number(${a});
-      const valB = (typeof ${b} === 'number') ? ${b} : Number(${b});
-      const res = valA ${op} valB;
-      if (!isNaN(valA) && !isNaN(valB)) {
-        console.log('[DEBUG-COMPARE]', { a: valA, b: valB, op: '${op}', result: res });
-      }
-      return res;
-    })()`;
+        const code = `Number(${a}) ${op} Number(${b})`;
         return [code, javascriptGenerator.ORDER_RELATIONAL];
     };
 }

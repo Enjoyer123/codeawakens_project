@@ -38,10 +38,6 @@ export function defineDictionaryGenerators() {
 
         // Clean Mode
         if (javascriptGenerator.isCleanMode) {
-            // Simply dict[key] = value
-            // For parent dict updates in Prim, we might loose visualization, but clean code is priority.
-            // If we want visualization line `showMSTEdges`, we should inject it cleanly?
-            // User wants "clean code".
             return `${dict}[${keyCodeCoerced}] = ${value};\n`;
         }
 
@@ -55,37 +51,22 @@ export function defineDictionaryGenerators() {
     const keyVar = (${keyCodeCoerced});
     if (dictVar && (typeof dictVar === 'object' || typeof dictVar === 'function')) {
       dictVar[keyVar] = (${value});
-      console.log('[DEBUG-MST] Updated parent[' + keyVar + '] = ' + ${value} + '. Showing edges...');
+      
+      // Visualization for Prim's Algorithm
       const currentState = getCurrentGameState();
-      if (currentState && currentState.currentScene) {
+      if (currentState && currentState.currentScene && typeof showMSTEdges === 'function') {
         showMSTEdges(currentState.currentScene, dictVar);
-        await new Promise(resolve => setTimeout(resolve, 500));
-      } else {
-         console.warn('[DEBUG-MST] No scene found for visualization');
+        await new Promise(resolve => setTimeout(resolve, 500)); // Animation delay
       }
-    } else {
-      console.warn('[DEBUG-MST] Invalid parent dict for key: ' + keyVar);
     }
   } catch (e) {
-    console.warn('dict_set (parent) error:', e);
+    console.warn('dict_set (parent) visualization error:', e);
   }
 })();\n`;
         }
 
-        return `(function() {
-  try {
-    const dictVar = (${dict});
-    const keyVar = (${keyCodeCoerced});
-    if (dictVar && (typeof dictVar === 'object' || typeof dictVar === 'function')) {
-      dictVar[keyVar] = (${value});
-      console.log('[DEBUG-DICT-SET] Set ' + keyVar + ' = ' + ${value});
-    } else {
-      console.warn('[DEBUG-DICT-SET] Invalid dict for key: ' + keyVar);
-    }
-  } catch (e) {
-    console.warn('dict_set error:', e);
-  }
-})();\n`;
+        // Standard assignment for other dictionaries
+        return `${dict}[${keyCodeCoerced}] = ${value};\n`;
     };
 
     javascriptGenerator.forBlock["dict_get"] = function (block) {
@@ -93,24 +74,7 @@ export function defineDictionaryGenerators() {
         const key = javascriptGenerator.valueToCode(block, 'KEY', javascriptGenerator.ORDER_MEMBER) || 'null';
         const keyCodeCoerced = coerceRcKeyCode(key);
 
-        // Clean Mode
-        if (javascriptGenerator.isCleanMode) {
-            return [`${dict}[${keyCodeCoerced}]`, javascriptGenerator.ORDER_MEMBER];
-        }
-
-        return [`(function() { 
-  try { 
-    const dictVar = (${dict}); 
-    const keyVar = (${keyCodeCoerced}); 
-    if (dictVar && (typeof dictVar === 'object' || typeof dictVar === 'function')) {
-        return dictVar[keyVar] !== undefined ? dictVar[keyVar] : null;
-    }
-    return null;
-  } catch (e) { 
-    console.warn('dict_get error:', e); 
-    return null; 
-  } 
-})()`, javascriptGenerator.ORDER_FUNCTION_CALL];
+        return [`${dict}[${keyCodeCoerced}]`, javascriptGenerator.ORDER_MEMBER];
     };
 
     javascriptGenerator.forBlock["dict_has_key"] = function (block) {
@@ -161,16 +125,18 @@ export function defineDataGenerators() {
         return [varName, javascriptGenerator.ORDER_ATOMIC];
     };
 
+
+
     javascriptGenerator.forBlock["variables_set"] = function (block) {
         const argument0 = javascriptGenerator.valueToCode(block, 'VALUE', javascriptGenerator.ORDER_ASSIGNMENT) || '0';
 
         // Clean Mode
         if (javascriptGenerator.isCleanMode) {
-            const varId = block.getFieldValue('VAR'); // Get ID
-            const varModel = block.workspace.getVariableById(varId); // Get Model
-            const rawName = varModel ? varModel.name : 'unknown_var'; // Get Name
+            // ... (Keep existing Clean Mode logic, which is fine)
+            const varId = block.getFieldValue('VAR');
+            const varModel = block.workspace.getVariableById(varId);
+            const rawName = varModel ? varModel.name : 'unknown_var';
 
-            // Check if declared
             if (!javascriptGenerator.declaredVariables) {
                 javascriptGenerator.declaredVariables = new Set();
             }
@@ -188,46 +154,14 @@ export function defineDataGenerators() {
         );
         let code = varName + ' = ' + argument0 + ';\n';
 
-        // Check if updating MST_weight
-        // We must check code variable name properly used in the block.
-        // The most robust way is to lookup the variable model by ID.
-        let variableName = '';
-        try {
-            const varId = block.getFieldValue('VAR');
-            const variableModel = block.workspace.getVariableById(varId);
-            if (variableModel) {
-                variableName = variableModel.name;
-            }
-            // Enable logging to debug
-            console.log(`[GEN-DEBUG] variables_set: ID=${varId}, Name=${variableName}, Model Found=${!!variableModel}`);
-        } catch (e) {
-            console.warn('Error looking up variable name:', e);
-        }
+        // Restore MST visualization (Standard Mode only)
+        // Check if the variable is 'MST_weight'
+        const varId = block.getFieldValue('VAR');
+        const varModel = block.workspace.getVariableById(varId);
+        const rawName = varModel ? varModel.name : varName;
 
-        // Fallback if model lookup fails (e.g. during some export processes)
-        if (!variableName) {
-            variableName = block.getField('VAR') ? block.getField('VAR').getText() : '';
-            console.log(`[GEN-DEBUG] Fallback Name=${variableName}`);
-        }
-
-        // Console log to debug what we are seeing
-        // console.log('[DEBUG-GEN] variables_set for:', variableName);
-
-        // Check if updating MST_weight (Case insensitive and trimmed)
-        const normalizedVarName = (variableName || '').trim();
-        const isMST = normalizedVarName.toLowerCase() === 'mst_weight' || normalizedVarName === 'MST_weight';
-
-        if (isMST) {
-            console.log('[GEN-DEBUG] MATCHED MST_weight (Fuzzy)! Injecting update code...');
-            code += `console.log('!!! DEBUG-MST-WEIGHT-BLOCK START !!!');\n`;
-            code += `console.log('Variable used: ${varName}');\n`;
-            code += `if (typeof updateMSTWeight === 'function') { \n`;
-            code += `  console.log('Calling updateMSTWeight...');\n`;
-            code += `  updateMSTWeight(${varName}); \n`;
-            code += `} else { console.warn('updateMSTWeight NOT FOUND'); }\n`;
-            code += `console.log('[DEBUG-MST-WEIGHT] Updated MST_weight = ' + ${varName});\n`;
-        } else {
-            console.log(`[GEN-DEBUG] Ignored variable set: "${variableName}" (ID=${block.getFieldValue('VAR')})`);
+        if (rawName && rawName.trim().toLowerCase() === 'mst_weight') {
+            code += `if (typeof updateMSTWeight === 'function') { updateMSTWeight(${varName}); }\n`;
         }
 
         return code;

@@ -1,357 +1,168 @@
 // Blockly Toolbox Configuration
+// Data-driven and concise
+
+// Alias mappings: [preferred, legacy] — when either is enabled, use whichever is enabled
+const BLOCK_ALIASES = {
+  Movement: [["place", "nqueen_place"], ["delete", "nqueen_remove"]],
+  Logic: [["is_safe", "nqueen_is_safe"]],
+  Coins: [["has_coin", "have_coin"]],
+  Rescue: [["rescue_person", "rescue_person_at_node"]]
+};
+
+// Define category structure and contents
+const CATEGORY_CONFIG = {
+  Movement: {
+    style: "logic_category",
+    blocks: [
+      "move_forward", "turn_left", "turn_right", "hit",
+      "move_to_node", "move_along_path"
+    ]
+  },
+  Logic: {
+    style: "procedure_category",
+    blocks: [
+      "if_else", "if_only", "if_return",
+      "logic_compare", "logic_boolean", "logic_negate",
+      "logic_operation", "logic_not_in",
+      "controls_if", "logic_null"
+    ]
+  },
+  Conditions: {
+    style: "math_category",
+    blocks: ["found_monster", "can_move_forward", "near_pit", "at_goal"]
+  },
+  Loops: {
+    style: "loop_category",
+    blocks: [
+      "repeat", "while_loop", "for_each_coin",
+      "for_index", "for_loop_dynamic",
+      "controls_repeat_ext", "controls_for",
+      "controls_forEach", "controls_flow_statements"
+    ]
+  },
+  Coins: {
+    style: "text_category",
+    blocks: ["collect_coin"]
+  },
+  "Sort Coins": {
+    style: "list_category",
+    blocks: [
+      "swap_coins", "compare_coins", "get_coin_value",
+      "coin_count", "is_sorted"
+    ]
+  },
+  Math: {
+    style: "math_category",
+    blocks: [
+      "math_number", "math_arithmetic",
+      "math_max", "math_min", "math_min_max",
+      "math_single", "math_compare",
+      "var_math", "get_var_value"
+    ]
+  },
+  Text: {
+    style: "text_category",
+    blocks: ["text"]
+  },
+  Visual: {
+    style: "hat_blocks",
+    blocks: [
+      "emei_highlight_peak", "emei_highlight_path", "emei_show_final_result",
+      "coin_change_add_warrior_to_selection", "coin_change_track_decision",
+      "subset_sum_add_warrior_to_side1", "subset_sum_add_warrior_to_side2",
+      "rope_visual_init", "rope_vis_enter", "rope_vis_exit",
+      "rope_vis_status", "rope_target_len", "rope_get_cuts",
+      "assign_train_visual", "get_train_value", "sort_trains"
+    ]
+  },
+  Rescue: {
+    style: "text_category",
+    blocks: [
+      "has_person", "person_rescued", "person_count",
+      "all_people_rescued", "for_each_person"
+    ]
+  },
+  Lists: {
+    style: "list_category",
+    blocks: [
+      "lists_create_empty", "lists_create_with", "lists_length",
+      "lists_isEmpty", "lists_indexOf", "lists_getIndex", "lists_setIndex",
+      "lists_add_item", "lists_remove_last", "lists_get_last",
+      "lists_remove_first_return", "lists_get_first", "lists_contains",
+      "lists_concat", "lists_remove_last_return", "lists_find_min_index",
+      "lists_find_max_index", "lists_get_at_index", "lists_remove_at_index",
+      "lists_sort_by_weight", "for_each_in_list"
+    ]
+  },
+  Stack: {
+    style: "procedure_category",
+    blocks: [
+      "push_node", "pop_node", "keep_item", "has_treasure",
+      "treasure_collected", "stack_empty", "stack_count"
+    ]
+  },
+  Graph: {
+    style: "procedure_category",
+    blocks: [
+      "graph_get_neighbors", "graph_get_neighbors_with_weight",
+      "graph_get_all_edges", "graph_get_node_value", "graph_get_current_node"
+    ]
+  },
+  Dictionary: {
+    style: "variable_category",
+    blocks: [
+      "dict_create", "dict_set", "dict_get", "dict_has_key",
+      "dsu_find", "dsu_union"
+    ]
+  }
+};
+
 export function createToolboxConfig(enabledBlocks) {
-  console.log("🔧 createToolboxConfig called with enabledBlocks:", enabledBlocks);
-  console.log("🔧 enabledBlocks keys:", Object.keys(enabledBlocks || {}));
   const categories = [];
 
-  // Movement category
-  const movementBlocks = [];
-  if (enabledBlocks["move_forward"]) {
-    console.log("✅ Adding move_forward block");
-    movementBlocks.push({ kind: "block", type: "move_forward" });
-  }
-  if (enabledBlocks["turn_left"]) {
-    console.log("✅ Adding turn_left block");
-    movementBlocks.push({ kind: "block", type: "turn_left" });
-  }
-  if (enabledBlocks["turn_right"]) {
-    console.log("✅ Adding turn_right block");
-    movementBlocks.push({ kind: "block", type: "turn_right" });
-  }
-  if (enabledBlocks["hit"]) {
-    console.log("✅ Adding hit block");
-    movementBlocks.push({ kind: "block", type: "hit" });
-  }
-  if (enabledBlocks["move_to_node"]) {
-    console.log("✅ Adding move_to_node block");
-    movementBlocks.push({ kind: "block", type: "move_to_node" });
-  }
-  if (enabledBlocks["move_along_path"]) {
-    console.log("✅ Adding move_along_path block");
-    movementBlocks.push({ kind: "block", type: "move_along_path" });
-  }
-  if (enabledBlocks["nqueen_place"] || enabledBlocks["place"])
-    movementBlocks.push({ kind: "block", type: enabledBlocks["place"] ? "place" : "nqueen_place" });
-  if (enabledBlocks["nqueen_remove"] || enabledBlocks["delete"])
-    movementBlocks.push({ kind: "block", type: enabledBlocks["delete"] ? "delete" : "nqueen_remove" });
+  // 1. Process standard categories
+  Object.entries(CATEGORY_CONFIG).forEach(([name, config]) => {
+    let contents = [];
 
-  console.log("🔧 Movement blocks count:", movementBlocks.length);
-  if (movementBlocks.length > 0) {
-    categories.push({
-      kind: "category",
-      name: "Movement",
-      categorystyle: "logic_category",
-      contents: movementBlocks,
-    });
-  }
+    // Add standard blocks if enabled
+    if (config.blocks) {
+      contents = config.blocks
+        .filter(type => enabledBlocks[type])
+        .map(type => ({ kind: "block", type }));
+    }
 
-  // Logic category
-  const logicBlocks = [];
-  if (enabledBlocks["if_else"])
-    logicBlocks.push({ kind: "block", type: "if_else" });
-  if (enabledBlocks["if_only"])
-    logicBlocks.push({ kind: "block", type: "if_only" });
-  if (enabledBlocks["if_return"])
-    logicBlocks.push({ kind: "block", type: "if_return" });
-  if (enabledBlocks["logic_compare"])
-    logicBlocks.push({ kind: "block", type: "logic_compare" });
-  if (enabledBlocks["logic_boolean"])
-    logicBlocks.push({ kind: "block", type: "logic_boolean" });
-  if (enabledBlocks["logic_negate"])
-    logicBlocks.push({ kind: "block", type: "logic_negate" });
-  if (enabledBlocks["logic_operation"])
-    logicBlocks.push({ kind: "block", type: "logic_operation" });
-  if (enabledBlocks["logic_not_in"])
-    logicBlocks.push({ kind: "block", type: "logic_not_in" });
-  if (enabledBlocks["nqueen_is_safe"] || enabledBlocks["is_safe"])
-    logicBlocks.push({ kind: "block", type: enabledBlocks["is_safe"] ? "is_safe" : "nqueen_is_safe" });
-  if (enabledBlocks["controls_if"])
-    logicBlocks.push({ kind: "block", type: "controls_if" });
-  if (enabledBlocks["logic_null"])
-    logicBlocks.push({ kind: "block", type: "logic_null" });
+    // Add aliased blocks (e.g. "place" / "nqueen_place")
+    const aliases = BLOCK_ALIASES[name];
+    if (aliases) {
+      for (const [preferred, legacy] of aliases) {
+        if (enabledBlocks[preferred] || enabledBlocks[legacy]) {
+          contents.push({
+            kind: "block",
+            type: enabledBlocks[preferred] ? preferred : legacy
+          });
+        }
+      }
+    }
 
-  if (logicBlocks.length > 0) {
-    categories.push({
-      kind: "category",
-      name: "Logic",
-      categorystyle: "procedure_category",
-      contents: logicBlocks,
-    });
-  }
+    if (contents.length > 0) {
+      categories.push({
+        kind: "category",
+        name: name,
+        categorystyle: config.style,
+        contents: contents,
+      });
+    }
+  });
 
-  // Conditions category
-  const conditionBlocks = [];
-  if (enabledBlocks["found_monster"])
-    conditionBlocks.push({ kind: "block", type: "found_monster" });
-  if (enabledBlocks["can_move_forward"])
-    conditionBlocks.push({ kind: "block", type: "can_move_forward" });
-  if (enabledBlocks["near_pit"])
-    conditionBlocks.push({ kind: "block", type: "near_pit" });
-  if (enabledBlocks["at_goal"])
-    conditionBlocks.push({ kind: "block", type: "at_goal" });
-
-  if (conditionBlocks.length > 0) {
-    categories.push({
-      kind: "category",
-      name: "Conditions",
-      categorystyle: "math_category",
-      contents: conditionBlocks,
-    });
-  }
-
-  // Loops category
-  const loopBlocks = [];
-  if (enabledBlocks["repeat"])
-    loopBlocks.push({ kind: "block", type: "repeat" });
-  if (enabledBlocks["while_loop"])
-    loopBlocks.push({ kind: "block", type: "while_loop" });
-  if (enabledBlocks["for_each_coin"])
-    loopBlocks.push({ kind: "block", type: "for_each_coin" });
-  if (enabledBlocks["for_index"])
-    loopBlocks.push({ kind: "block", type: "for_index" });
-  if (enabledBlocks["for_loop_dynamic"])
-    loopBlocks.push({ kind: "block", type: "for_loop_dynamic" });
-  if (enabledBlocks["controls_repeat_ext"])
-    loopBlocks.push({ kind: "block", type: "controls_repeat_ext" });
-  if (enabledBlocks["controls_for"])
-    loopBlocks.push({ kind: "block", type: "controls_for" });
-  if (enabledBlocks["controls_forEach"])
-    loopBlocks.push({ kind: "block", type: "controls_forEach" });
-  if (enabledBlocks["controls_flow_statements"])
-    loopBlocks.push({ kind: "block", type: "controls_flow_statements" });
-
-  if (loopBlocks.length > 0) {
-    categories.push({
-      kind: "category",
-      name: "Loops",
-      categorystyle: "loop_category",
-      contents: loopBlocks,
-    });
-  }
-
-  // Coins category
-  const coinBlocks = [];
-  if (enabledBlocks["collect_coin"])
-    coinBlocks.push({ kind: "block", type: "collect_coin" });
-  if (enabledBlocks["have_coin"] || enabledBlocks["has_coin"])
-    coinBlocks.push({ kind: "block", type: enabledBlocks["has_coin"] ? "has_coin" : "have_coin" });
-
-  if (coinBlocks.length > 0) {
-    categories.push({
-      kind: "category",
-      name: "Coins",
-      categorystyle: "text_category",
-      contents: coinBlocks,
-    });
-  }
-
-  // Coin Sorting category
-  const coinSortingBlocks = [];
-  if (enabledBlocks["swap_coins"])
-    coinSortingBlocks.push({ kind: "block", type: "swap_coins" });
-  if (enabledBlocks["compare_coins"])
-    coinSortingBlocks.push({ kind: "block", type: "compare_coins" });
-  if (enabledBlocks["get_coin_value"])
-    coinSortingBlocks.push({ kind: "block", type: "get_coin_value" });
-  if (enabledBlocks["coin_count"])
-    coinSortingBlocks.push({ kind: "block", type: "coin_count" });
-  if (enabledBlocks["is_sorted"])
-    coinSortingBlocks.push({ kind: "block", type: "is_sorted" });
-
-  if (coinSortingBlocks.length > 0) {
-    categories.push({
-      kind: "category",
-      name: "Sort Coins",
-      categorystyle: "list_category",
-      contents: coinSortingBlocks,
-    });
-  }
-
-  // Math category
-  const mathBlocks = [];
-  if (enabledBlocks["math_number"])
-    mathBlocks.push({ kind: "block", type: "math_number" });
-  if (enabledBlocks["math_arithmetic"])
-    mathBlocks.push({ kind: "block", type: "math_arithmetic" });
-  if (enabledBlocks["math_max"])
-    mathBlocks.push({ kind: "block", type: "math_max" });
-  if (enabledBlocks["math_min"])
-    mathBlocks.push({ kind: "block", type: "math_min" });
-  if (enabledBlocks["math_single"])
-    mathBlocks.push({ kind: "block", type: "math_single" });
-  if (enabledBlocks["math_min_max"])
-    mathBlocks.push({ kind: "block", type: "math_min_max" });
-  if (enabledBlocks["math_compare"])
-    mathBlocks.push({ kind: "block", type: "math_compare" });
-  if (enabledBlocks["var_math"])
-    mathBlocks.push({ kind: "block", type: "var_math" });
-  if (enabledBlocks["get_var_value"])
-    mathBlocks.push({ kind: "block", type: "get_var_value" });
-
-  if (mathBlocks.length > 0) {
-    categories.push({
-      kind: "category",
-      name: "Math",
-      categorystyle: "math_category",
-      contents: mathBlocks,
-    });
-  }
-
-  // Text category
-  const textBlocks = [];
-  if (enabledBlocks["text"])
-    textBlocks.push({ kind: "block", type: "text" });
-
-  if (textBlocks.length > 0) {
-    categories.push({
-      kind: "category",
-      name: "Text",
-      categorystyle: "text_category",
-      contents: textBlocks,
-    });
-  }
-
-  // Visual & Algorithm category
-  const visualBlocks = [];
-  // Emei Visual
-  if (enabledBlocks["emei_highlight_peak"]) visualBlocks.push({ kind: "block", type: "emei_highlight_peak" });
-  if (enabledBlocks["emei_highlight_path"]) visualBlocks.push({ kind: "block", type: "emei_highlight_path" });
-  if (enabledBlocks["emei_show_final_result"]) visualBlocks.push({ kind: "block", type: "emei_show_final_result" });
-
-  // Coin Change / Subset Sum Visual
-  if (enabledBlocks["coin_change_add_warrior_to_selection"]) visualBlocks.push({ kind: "block", type: "coin_change_add_warrior_to_selection" });
-  if (enabledBlocks["coin_change_track_decision"]) visualBlocks.push({ kind: "block", type: "coin_change_track_decision" });
-  if (enabledBlocks["subset_sum_add_warrior_to_side1"]) visualBlocks.push({ kind: "block", type: "subset_sum_add_warrior_to_side1" });
-  if (enabledBlocks["subset_sum_add_warrior_to_side2"]) visualBlocks.push({ kind: "block", type: "subset_sum_add_warrior_to_side2" });
-
-  // Rope Visual
-  if (enabledBlocks["rope_visual_init"]) visualBlocks.push({ kind: "block", type: "rope_visual_init" });
-  if (enabledBlocks["rope_vis_enter"]) visualBlocks.push({ kind: "block", type: "rope_vis_enter" });
-  if (enabledBlocks["rope_vis_exit"]) visualBlocks.push({ kind: "block", type: "rope_vis_exit" });
-  if (enabledBlocks["rope_vis_status"]) visualBlocks.push({ kind: "block", type: "rope_vis_status" });
-  if (enabledBlocks["rope_target_len"]) visualBlocks.push({ kind: "block", type: "rope_target_len" });
-  if (enabledBlocks["rope_get_cuts"]) visualBlocks.push({ kind: "block", type: "rope_get_cuts" });
-
-  // Train Visual
-  if (enabledBlocks["assign_train_visual"]) visualBlocks.push({ kind: "block", type: "assign_train_visual" });
-  if (enabledBlocks["get_train_value"]) visualBlocks.push({ kind: "block", type: "get_train_value" });
-  if (enabledBlocks["sort_trains"]) visualBlocks.push({ kind: "block", type: "sort_trains" });
-
-  if (visualBlocks.length > 0) {
-    categories.push({
-      kind: "category",
-      name: "Visual",
-      categorystyle: "hat_blocks",
-      contents: visualBlocks,
-    });
-  }
-
-  // Person Rescue category
-  const personRescueBlocks = [];
-  if (enabledBlocks["rescue_person_at_node"] || enabledBlocks["rescue_person"])
-    personRescueBlocks.push({ kind: "block", type: enabledBlocks["rescue_person"] ? "rescue_person" : "rescue_person_at_node" });
-  if (enabledBlocks["has_person"]) personRescueBlocks.push({ kind: "block", type: "has_person" });
-  if (enabledBlocks["person_rescued"]) personRescueBlocks.push({ kind: "block", type: "person_rescued" });
-  if (enabledBlocks["person_count"]) personRescueBlocks.push({ kind: "block", type: "person_count" });
-  if (enabledBlocks["all_people_rescued"]) personRescueBlocks.push({ kind: "block", type: "all_people_rescued" });
-  if (enabledBlocks["for_each_person"]) personRescueBlocks.push({ kind: "block", type: "for_each_person" });
-
-  if (personRescueBlocks.length > 0) {
-    categories.push({
-      kind: "category",
-      name: "Rescue",
-      categorystyle: "text_category",
-      contents: personRescueBlocks,
-    });
-  }
-
-  // Lists category (for DFS/BFS)
-  const listBlocks = [];
-  if (enabledBlocks["lists_create_empty"])
-    listBlocks.push({ kind: "block", type: "lists_create_empty" });
-  if (enabledBlocks["lists_create_with"])
-    listBlocks.push({ kind: "block", type: "lists_create_with" });
-  if (enabledBlocks["lists_length"])
-    listBlocks.push({ kind: "block", type: "lists_length" });
-  if (enabledBlocks["lists_isEmpty"])
-    listBlocks.push({ kind: "block", type: "lists_isEmpty" });
-  if (enabledBlocks["lists_indexOf"])
-    listBlocks.push({ kind: "block", type: "lists_indexOf" });
-  if (enabledBlocks["lists_getIndex"])
-    listBlocks.push({ kind: "block", type: "lists_getIndex" });
-  if (enabledBlocks["lists_setIndex"])
-    listBlocks.push({ kind: "block", type: "lists_setIndex" });
-
-  // List Operations (new for DFS)
-  if (enabledBlocks["lists_add_item"])
-    listBlocks.push({ kind: "block", type: "lists_add_item" });
-  if (enabledBlocks["lists_remove_last"])
-    listBlocks.push({ kind: "block", type: "lists_remove_last" });
-  if (enabledBlocks["lists_get_last"])
-    listBlocks.push({ kind: "block", type: "lists_get_last" });
-  if (enabledBlocks["lists_remove_first_return"])
-    listBlocks.push({ kind: "block", type: "lists_remove_first_return" });
-  if (enabledBlocks["lists_get_first"])
-    listBlocks.push({ kind: "block", type: "lists_get_first" });
-  if (enabledBlocks["lists_contains"])
-    listBlocks.push({ kind: "block", type: "lists_contains" });
-  if (enabledBlocks["lists_concat"])
-    listBlocks.push({ kind: "block", type: "lists_concat" });
-  if (enabledBlocks["lists_remove_last_return"])
-    listBlocks.push({ kind: "block", type: "lists_remove_last_return" });
-  if (enabledBlocks["lists_find_min_index"])
-    listBlocks.push({ kind: "block", type: "lists_find_min_index" });
-  if (enabledBlocks["lists_find_max_index"])
-    listBlocks.push({ kind: "block", type: "lists_find_max_index" });
-  if (enabledBlocks["lists_get_at_index"])
-    listBlocks.push({ kind: "block", type: "lists_get_at_index" });
-  if (enabledBlocks["lists_remove_at_index"])
-    listBlocks.push({ kind: "block", type: "lists_remove_at_index" });
-  if (enabledBlocks["lists_sort_by_weight"])
-    listBlocks.push({ kind: "block", type: "lists_sort_by_weight" });
-  if (enabledBlocks["for_each_in_list"])
-    listBlocks.push({ kind: "block", type: "for_each_in_list" });
-
-  if (listBlocks.length > 0) {
-    categories.push({
-      kind: "category",
-      name: "Lists",
-      categorystyle: "list_category",
-      contents: listBlocks,
-    });
-  }
-
-  // Stack category
-  const stackBlocks = [];
-  if (enabledBlocks["push_node"]) stackBlocks.push({ kind: "block", type: "push_node" });
-  if (enabledBlocks["pop_node"]) stackBlocks.push({ kind: "block", type: "pop_node" });
-  if (enabledBlocks["keep_item"]) stackBlocks.push({ kind: "block", type: "keep_item" });
-  if (enabledBlocks["has_treasure"]) stackBlocks.push({ kind: "block", type: "has_treasure" });
-  if (enabledBlocks["treasure_collected"]) stackBlocks.push({ kind: "block", type: "treasure_collected" });
-  if (enabledBlocks["stack_empty"]) stackBlocks.push({ kind: "block", type: "stack_empty" });
-  if (enabledBlocks["stack_count"]) stackBlocks.push({ kind: "block", type: "stack_count" });
-
-  if (stackBlocks.length > 0) {
-    categories.push({
-      kind: "category",
-      name: "Stack",
-      categorystyle: "procedure_category",
-      contents: stackBlocks,
-    });
-  }
-
-  // Function category - use custom: "PROCEDURE" to let Blockly manage procedure blocks
-  // This will automatically show both definition blocks and call blocks dynamically
+  // 2. Special Category: Functions (Dynamic Custom Category)
   if (enabledBlocks["procedures_defreturn"] || enabledBlocks["procedures_defnoreturn"]) {
     categories.push({
       kind: "category",
       name: "Functions",
       categorystyle: "procedure_category",
-      custom: "PROCEDURE", // Blockly will manage procedure blocks and call blocks automatically
+      custom: "PROCEDURE",
     });
 
-    // Add procedures_return block separately since custom PROCEDURE category may not show it
-    // This block is needed inside procedures_defreturn functions
     if (enabledBlocks["procedures_defreturn"]) {
       categories.push({
         kind: "category",
@@ -362,14 +173,10 @@ export function createToolboxConfig(enabledBlocks) {
     }
   }
 
-  // Custom function blocks (if enabled) - separate category
+  // 3. Special Category: Custom Functions (Fixed blocks)
   const customFunctionBlocks = [];
-  if (enabledBlocks["function_definition"]) {
-    customFunctionBlocks.push({ kind: "block", type: "function_definition" });
-  }
-  if (enabledBlocks["function_call"]) {
-    customFunctionBlocks.push({ kind: "block", type: "function_call" });
-  }
+  if (enabledBlocks["function_definition"]) customFunctionBlocks.push({ kind: "block", type: "function_definition" });
+  if (enabledBlocks["function_call"]) customFunctionBlocks.push({ kind: "block", type: "function_call" });
 
   if (customFunctionBlocks.length > 0) {
     categories.push({
@@ -380,7 +187,7 @@ export function createToolboxConfig(enabledBlocks) {
     });
   }
 
-  // Movement to node block - separate category
+  // 4. Special Category: Advanced Movement
   if (enabledBlocks["move_to_node"]) {
     categories.push({
       kind: "category",
@@ -390,53 +197,7 @@ export function createToolboxConfig(enabledBlocks) {
     });
   }
 
-  // Graph Operations category (for DFS/BFS)
-  const graphBlocks = [];
-  if (enabledBlocks["graph_get_neighbors"])
-    graphBlocks.push({ kind: "block", type: "graph_get_neighbors" });
-  if (enabledBlocks["graph_get_neighbors_with_weight"])
-    graphBlocks.push({ kind: "block", type: "graph_get_neighbors_with_weight" });
-  if (enabledBlocks["graph_get_all_edges"])
-    graphBlocks.push({ kind: "block", type: "graph_get_all_edges" });
-  if (enabledBlocks["graph_get_node_value"])
-    graphBlocks.push({ kind: "block", type: "graph_get_node_value" });
-  if (enabledBlocks["graph_get_current_node"])
-    graphBlocks.push({ kind: "block", type: "graph_get_current_node" });
-
-  if (graphBlocks.length > 0) {
-    categories.push({
-      kind: "category",
-      name: "Graph",
-      categorystyle: "procedure_category",
-      contents: graphBlocks,
-    });
-  }
-
-  // Dictionary category
-  const dictBlocks = [];
-  if (enabledBlocks["dict_create"])
-    dictBlocks.push({ kind: "block", type: "dict_create" });
-  if (enabledBlocks["dict_set"])
-    dictBlocks.push({ kind: "block", type: "dict_set" });
-  if (enabledBlocks["dict_get"])
-    dictBlocks.push({ kind: "block", type: "dict_get" });
-  if (enabledBlocks["dict_has_key"])
-    dictBlocks.push({ kind: "block", type: "dict_has_key" });
-  if (enabledBlocks["dsu_find"])
-    dictBlocks.push({ kind: "block", type: "dsu_find" });
-  if (enabledBlocks["dsu_union"])
-    dictBlocks.push({ kind: "block", type: "dsu_union" });
-
-  if (dictBlocks.length > 0) {
-    categories.push({
-      kind: "category",
-      name: "Dictionary",
-      categorystyle: "variable_category",
-      contents: dictBlocks,
-    });
-  }
-
-  // Variables category
+  // 5. Special Category: Variables (Custom Dynamic Category)
   const hasVariableBlocks =
     enabledBlocks["variables_get"] ||
     enabledBlocks["variables_set"] ||
@@ -444,15 +205,12 @@ export function createToolboxConfig(enabledBlocks) {
     enabledBlocks["get_var_value"];
 
   if (hasVariableBlocks) {
-    console.log("✅ Adding Variables category - variable blocks enabled");
     categories.push({
       kind: "category",
       name: "Variables",
       categorystyle: "variable_category",
       custom: "VARIABLE"
     });
-  } else {
-    console.log("⏸️ Skipping Variables category - no variable blocks enabled");
   }
 
   return {
@@ -460,4 +218,3 @@ export function createToolboxConfig(enabledBlocks) {
     contents: categories,
   };
 }
-
