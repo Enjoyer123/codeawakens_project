@@ -94,13 +94,7 @@ const CATEGORY_CONFIG = {
       "lists_sort_by_weight", "for_each_in_list"
     ]
   },
-  Stack: {
-    style: "procedure_category",
-    blocks: [
-      "push_node", "pop_node", "keep_item", "has_treasure",
-      "treasure_collected", "stack_empty", "stack_count"
-    ]
-  },
+
   Graph: {
     style: "procedure_category",
     blocks: [

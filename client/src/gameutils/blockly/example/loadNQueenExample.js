@@ -1,6 +1,7 @@
 // Helper function to load N-Queen example blocks into Blockly workspace
 import * as Blockly from "blockly/core";
 import { addMutationToProcedureDefinitions } from "../../../components/playgame/hooks/blocklysetup/xmlFixers";
+import { setXmlLoading } from "../core/blocklyState";
 
 // N-Queen Example XML - Backtracking recursive solution (FIXED - return solution in base case)
 const nQueenExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
@@ -344,16 +345,12 @@ export function loadNQueenExampleBlocks(workspace) {
     const xmlDom = Blockly.utils.xml.textToDom(processedXml);
 
     // ⚡ Performance: Set flag to skip event processing during load to prevent auto-creation of definitions
-    if (window.__blocklySetLoadingXml) {
-      window.__blocklySetLoadingXml(true);
-    }
+    setXmlLoading(true);
 
     // Load into workspace
     Blockly.Xml.domToWorkspace(xmlDom, workspace);
 
-    if (window.__blocklySetLoadingXml) {
-      window.__blocklySetLoadingXml(false);
-    }
+    setXmlLoading(false);
 
     // Ensure necessary variables exist (use getVariableMap() APIs for Blockly v12+)
     const variableNames = ['row', 'col', 'n', 'result', 'solution', 'i', 'j', 'solveResult', 'board'];

@@ -166,26 +166,6 @@ export function defineDataGenerators() {
 
         return code;
     };
-
-    // Stack operations
-    javascriptGenerator.forBlock["stack_push"] = function (block) {
-        const val = javascriptGenerator.valueToCode(block, 'VALUE', javascriptGenerator.ORDER_NONE) || 'null';
-        return `await pushNode(${val});\n`;
-    };
-
-    javascriptGenerator.forBlock["stack_pop"] = function (block) {
-        return [`await popNode()`, javascriptGenerator.ORDER_FUNCTION_CALL];
-    };
-
-    javascriptGenerator.forBlock["stack_empty"] = function (block) {
-        return [`stackEmpty()`, javascriptGenerator.ORDER_FUNCTION_CALL];
-    };
-
-    javascriptGenerator.forBlock["stack_count"] = function (block) {
-        return [`stackCount()`, javascriptGenerator.ORDER_FUNCTION_CALL];
-    };
-
-    javascriptGenerator.forBlock["stack_clear"] = function (block) {
-        return `clearStack();\n`;
-    };
 }
+
+

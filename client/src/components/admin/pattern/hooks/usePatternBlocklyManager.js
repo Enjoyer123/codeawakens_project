@@ -4,6 +4,7 @@ import { useBlocklyWorkspace } from '../../level/hooks/useBlocklyWorkspace';
 import { useBlocklyCleanup } from '../../level/hooks/useBlocklyCleanup';
 import { removeVariableIdsFromXml, addMutationToProcedureDefinitions, fixWorkspaceProcedures } from '../utils/patternBlocklyUtils';
 import { delay } from '../../level/utils/asyncUtils';
+import { setXmlLoading as setGlobalXmlLoading } from '../../../../gameutils/blockly/core/blocklyState';
 
 export const usePatternBlocklyManager = ({
     levelData,
@@ -134,7 +135,7 @@ export const usePatternBlocklyManager = ({
             xmlToLoad = levelData.starter_xml;
         }
 
-        setXmlLoading(true);
+        setGlobalXmlLoading(true);
 
         try {
             await delay(50);
@@ -155,9 +156,7 @@ export const usePatternBlocklyManager = ({
             const xmlDom = Blockly.utils.xml.textToDom(finalXml);
 
             // ⚡ Performance: Set flag to skip event processing during load
-            if (window.__blocklySetLoadingXml) {
-                window.__blocklySetLoadingXml(true);
-            }
+            setGlobalXmlLoading(true);
 
             Blockly.Xml.domToWorkspace(xmlDom, workspaceRef.current);
 
@@ -170,9 +169,7 @@ export const usePatternBlocklyManager = ({
             }
             // -----------------------------------------------------------
 
-            if (window.__blocklySetLoadingXml) {
-                window.__blocklySetLoadingXml(false);
-            }
+            setGlobalXmlLoading(false);
 
             if (!isViewMode && cleanupDuplicateProcedures) {
                 await delay(50);
@@ -182,7 +179,8 @@ export const usePatternBlocklyManager = ({
         } catch (err) {
             console.error("Error loading XML for step", index, err);
         } finally {
-            setXmlLoading(false);
+            setXmlLoading(false); // Update local state
+            setGlobalXmlLoading(false);
             lastLoadedXmlRef.current = index;
         }
     }, [levelData, cleanupDuplicateProcedures, isViewMode]);
