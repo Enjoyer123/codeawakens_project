@@ -65,15 +65,13 @@ import { setupRopePartitionBridge } from './utils/apiBridges/ropePartitionBridge
 import { updateTrainScheduleVisualsIfNeeded, updateRopePartitionVisualsIfNeeded } from './utils/apiBridges/visualUpdates';
 import ExecutionErrorModal from './ExecutionErrorModal';
 import PageLoader from '../../components/shared/Loading/PageLoader';
-import { resetDijkstraState } from '../../gameutils/blockly/graph/dijkstraStateManager';
-import { resetAntDpTableState } from '../../gameutils/blockly/algorithms/ant_dp/antDpStateManager';
-import { resetCoinChangeTableState } from '../../gameutils/blockly/algorithms/coin_change/coinChangeStateManager';
-import { resetKnapsackTableState } from '../../gameutils/blockly/algorithms/knapsack/knapsackStateManager';
-import { resetSubsetSumTableState } from '../../gameutils/blockly/algorithms/subset_sum/subsetSumStateManager';
+import { resetDijkstraState } from "@/gameutils/blockly";
+import { resetCoinChangeTableState } from "@/gameutils/blockly";
+import { resetKnapsackTableState } from '@/gameutils/blockly';
+import { resetSubsetSumTableState } from '@/gameutils/blockly';
 
 const resetAllGameStates = () => {
   resetDijkstraState();
-  resetAntDpTableState();
   resetCoinChangeTableState();
   resetKnapsackTableState();
   resetSubsetSumTableState();

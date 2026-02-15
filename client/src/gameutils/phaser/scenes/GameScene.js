@@ -15,7 +15,6 @@ import {
     setupKnapsack,
     setupSubsetSum,
     setupCoinChange,
-    setupAntDp,
     setupNQueen,
     setupTrainSchedule,
     setupRopePartition,
@@ -308,7 +307,6 @@ export class GameScene extends Phaser.Scene {
             setupKnapsack(this);
             setupSubsetSum(this);
             setupCoinChange(this);
-            setupAntDp(this);
             setupNQueen(this);
             setupTrainSchedule(this);
             setupRopePartition(this);

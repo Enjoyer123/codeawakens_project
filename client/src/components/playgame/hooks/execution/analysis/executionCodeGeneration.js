@@ -1,10 +1,8 @@
 import { javascriptGenerator } from "blockly/javascript";
 import { setupCustomGenerator, verifyGenerator } from '../utils/executionGenerator';
-import {
-    instrumentSubsetSum,
-    instrumentCoinChange,
-    instrumentNQueen
-} from './executionInstrumentation';
+import { instrumentSubsetSum } from './instrumentSubsetSum';
+import { instrumentCoinChange } from './instrumentCoinChange';
+import { instrumentNQueen } from './instrumentNQueen';
 
 /**
  * Orchestrates the code generation process:

@@ -1,6 +1,3 @@
-import {
-    applyAntDpPatches
-} from './analysis/executionInstrumentation';
 import { initializeLevelState } from './analysis/executionStateInit';
 
 import { generateAndInstrumentCode } from './analysis/executionCodeGeneration';
@@ -191,7 +188,6 @@ export function useCodeExecution({
                 isKnapsack,
                 isNQueen,
                 isTrainSchedule,
-                isAntDp,
                 isEmei,
                 isRopePartition
             } = detectResultVariableName(code, currentLevel);
@@ -362,7 +358,6 @@ export function useCodeExecution({
                     isKnapsack,
                     isNQueen,
                     isTrainSchedule,
-                    isAntDp,
                     isEmei,
                     isRopePartition
                 }, currentLevel, initCodes);
@@ -440,10 +435,7 @@ export function useCodeExecution({
                 // This logic was causing errors for iterative algorithms (Train Schedule) by enforcing recursion rules.
 
 
-                // Inject Ant DP global variables and Safety Patches (Unconditional)
-                // Placed outside fragile brace detection logic to guarantee execution.
-                // Inject Ant DP global variables and Safety Patches (Unconditional)
-                code = applyAntDpPatches(code, isAntDp, initCodes);
+
 
                 const functionName = extractFunctionName(code);
                 console.log("Extracted function name:", functionName);

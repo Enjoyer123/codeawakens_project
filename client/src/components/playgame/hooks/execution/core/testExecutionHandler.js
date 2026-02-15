@@ -5,12 +5,12 @@ import {
     showSubsetSumFinalSolutionVisual,
     showCoinChangeFinalSolution,
     knapsackMaxWithVisual,
-    antMaxWithVisual,
     getGraphNeighbors,
     getGraphNeighborsWithWeight,
     findMinIndex, findMaxIndex, getAllEdges, sortEdgesByWeight, dsuFind, dsuUnion,
+    listPush, listSet, dictSet,
 } from '../../../../../gameutils/blockly';
-import { getGraphNeighbors as getGraphNeighborsNoVisual, getGraphNeighborsWithWeight as getGraphNeighborsWithWeightNoVisual } from '../../../../../gameutils/blockly/core/blocklyHelpers';
+import { getGraphNeighbors as getGraphNeighborsNoVisual, getGraphNeighborsWithWeight as getGraphNeighborsWithWeightNoVisual } from '@/gameutils/blockly';
 import { getCurrentGameState, setCurrentGameState } from '../../../../../gameutils/shared/game'
 /**
  * Builds the game functions context specifically for test case execution.
@@ -94,7 +94,6 @@ const buildTestContext = (overrides = {}) => {
         dsuFind, // Keep this as it's needed for algorithms
         dsuUnion, // Keep this as it's needed for algorithms
         showMSTEdgesFromList: noOpVisualSync,
-        highlightKruskalEdge: noOpVisualSync,
         showKruskalRoot: noOpVisualSync,
         clearKruskalVisuals: noOpVisualSync,
         updateDijkstraVisited: noOpVisualSync,
@@ -105,15 +104,15 @@ const buildTestContext = (overrides = {}) => {
         unselectKnapsackItemVisual: noOpVisualSync,
         resetKnapsackItemsVisual: noOpVisualSync,
         knapsackMaxWithVisual: knapsackMaxWithVisual, // Need this for knapsack test cases
-        antMaxWithVisual: antMaxWithVisual,
         addWarriorToSide1Visual: noOpVisualSync,
         addWarriorToSide2Visual: noOpVisualSync,
         resetSubsetSumWarriorsVisual: noOpVisualSync,
         updateSubsetSumCellVisual: noOpVisualSync,
         updateCoinChangeCellVisual: noOpVisualSync,
-        updateAntDpCellVisual: noOpVisualSync,
         // Coin Change tracking function - needs to work for test cases
         trackCoinChangeDecision: trackCoinChangeDecision,
+        listPush, listSet, dictSet,
+        highlightEmeiPath: noOpVisual,
         getCurrentGameState,
         setCurrentGameState,
         ...overrides
@@ -246,7 +245,6 @@ export const executeTestCases = async ({
             dsuFind, // Keep this as it's needed for algorithms
             dsuUnion, // Keep this as it's needed for algorithms
             showMSTEdgesFromList: noOpVisualSync,
-            highlightKruskalEdge: noOpVisualSync,
             showKruskalRoot: noOpVisualSync,
             clearKruskalVisuals: noOpVisualSync,
             updateDijkstraVisited: noOpVisualSync,
@@ -257,15 +255,15 @@ export const executeTestCases = async ({
             unselectKnapsackItemVisual: noOpVisualSync,
             resetKnapsackItemsVisual: noOpVisualSync,
             knapsackMaxWithVisual: knapsackMaxWithVisual, // Need this for knapsack test cases
-            antMaxWithVisual: antMaxWithVisual,
             addWarriorToSide1Visual: noOpVisualSync,
             addWarriorToSide2Visual: noOpVisualSync,
             resetSubsetSumWarriorsVisual: noOpVisualSync,
             updateSubsetSumCellVisual: noOpVisualSync,
             updateCoinChangeCellVisual: noOpVisualSync,
-            updateAntDpCellVisual: noOpVisualSync,
             // Coin Change tracking function - needs to work for test cases
             trackCoinChangeDecision: trackCoinChangeDecision,
+            listPush, listSet, dictSet,
+            highlightEmeiPath: noOpVisual,
             getCurrentGameState,
             setCurrentGameState
         };

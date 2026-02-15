@@ -1,7 +1,7 @@
 // Helper function to load N-Queen example blocks into Blockly workspace
 import * as Blockly from "blockly/core";
 import { addMutationToProcedureDefinitions } from "../../../components/playgame/hooks/blocklysetup/xmlFixers";
-import { setXmlLoading } from "../core/blocklyState";
+import { setXmlLoading } from "../core/state";
 
 // N-Queen Example XML - Backtracking recursive solution (FIXED - return solution in base case)
 const nQueenExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">

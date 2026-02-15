@@ -23,7 +23,7 @@ import { usePattern, usePatternTypes } from '../../../services/hooks/usePattern'
 import { usePatternForm } from '../../../components/admin/pattern/hooks/usePatternForm';
 import { usePatternBlocklyManager } from '../../../components/admin/pattern/hooks/usePatternBlocklyManager';
 import { useSuppressBlocklyWarnings } from '@/components/admin/level/hooks/useSuppressBlocklyWarnings';
-import { setXmlLoading } from '../../../gameutils/blockly/core/blocklyState';
+import { setXmlLoading } from "@/gameutils/blockly";
 
 const PatternCreateEdit = () => {
   const { levelId, patternId } = useParams();

@@ -248,7 +248,7 @@ const TestCaseManagement = () => {
                                             <option value="KNAPSACK">KNAPSACK</option>
                                             <option value="COINCHANGE">COINCHANGE</option>
                                             <option value="SUBSETSUM">SUBSETSUM</option>
-                                            <option value="ANTDP">ANTDP (Ant Colony)</option>
+
                                         </optgroup>
                                         <optgroup label="Other Algorithms">
                                             <option value="SOLVE">SOLVE (N-Queen)</option>

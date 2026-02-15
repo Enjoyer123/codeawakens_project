@@ -606,15 +606,11 @@ export async function checkTestCases(functionReturnValue, testCases, functionNam
                     let isKnapsack = false;
                     let isSubsetSum = false;
                     let isCoinChange = false;
-                    let isAntDp = false;
+
                     let isNQueen = false;
                     let isRopePartition = false;
 
-                    // Check if this is an Ant DP function (applied dynamic grid DP)
-                    if (functionName?.toUpperCase() === 'ANTDP' || (paramNames.includes('sugarGrid') && paramNames.includes('start') && paramNames.includes('goal'))) {
-                        isAntDp = true;
-                        console.log('🔍   Detected Ant DP function with parameters:', paramNames);
-                    }
+
                     // Check if this is a coinChange function (parameters are amount, coins, index)
                     if (paramNames.length === 3 && paramNames.includes('amount') && paramNames.includes('coins') && paramNames.includes('index')) {
                         isCoinChange = true;
@@ -633,8 +629,8 @@ export async function checkTestCases(functionReturnValue, testCases, functionNam
                         console.log('🔍   [DEBUG] Reasons: params=', paramNames.includes('remaining'), 'code.addCut=', code.includes('addCut'), 'func.addCut=', functionDefinition.includes('addCut'));
                         isRopePartition = true;
                     } else {
-                        // Graph algorithm pattern - only if NOT Ant DP (Ant DP has its own mapping logic)
-                        if (!isAntDp) {
+                        // Graph algorithm pattern
+                        {
                             if (paramNames.length >= 1) {
                                 // First parameter is usually graph (might be named "garph", "graph", or "map")
                                 graphParamName = paramNames[0];
@@ -648,7 +644,7 @@ export async function checkTestCases(functionReturnValue, testCases, functionNam
                         }
                     }
 
-                    console.log('🔍   Using parameters:', { graphParamName, startParamName, goalParamName, isKnapsack, isSubsetSum, isCoinChange, isAntDp, isNQueen });
+                    console.log('🔍   Using parameters:', { graphParamName, startParamName, goalParamName, isKnapsack, isSubsetSum, isCoinChange, isNQueen });
 
                     // Only include the function definition, no other code (no moveAlongPath, no variable declarations)
                     // CRITICAL: Pass parameters in the correct order and ensure variables are available
@@ -1275,80 +1271,14 @@ export async function checkTestCases(functionReturnValue, testCases, functionNam
             }
           `;
 
-                    } else if (actualFuncName === 'antDp' || functionName === 'ANTDP') {
-                        const sg = inputParams.sugarGrid !== undefined ? JSON.stringify(inputParams.sugarGrid) : '[]';
-                        const stObj = inputParams.start !== undefined ? JSON.stringify(inputParams.start) : JSON.stringify({ r: 0, c: 0 });
-                        const glObj = inputParams.goal !== undefined ? JSON.stringify(inputParams.goal) : JSON.stringify({ r: 0, c: 0 });
-                        const rowsFromGrid = (() => { try { const a = inputParams.sugarGrid; return Array.isArray(a) ? a.length : 0; } catch (e) { return 0; } })();
-                        const colsFromGrid = (() => { try { const a = inputParams.sugarGrid; return (Array.isArray(a) && Array.isArray(a[0])) ? a[0].length : 0; } catch (e) { return 0; } })();
 
-                        // Inspect function signature to determine parameter order
-                        const antDpArgsMatch = functionDefinition.match(/(?:async\s+function\s+|function\s+)(?:[\w]+)\s*\(([^)]*)\)/);
-                        let paramNames = antDpArgsMatch ? antDpArgsMatch[1].split(',') : [];
-                        paramNames = paramNames.map(p => p.replace(/\/\*[\s\S]*?\*\//g, '').trim()).filter(p => p !== '');
-
-                        const argMap = {
-                            'sugarGrid': 'sugarGrid', 'start': 'start', 'goal': 'goal',
-                            'grid': 'sugarGrid', 's': 'start', 'g': 'goal',
-                            'st': 'start', 'gl': 'goal', 'rows': 'rows', 'cols': 'cols'
-                        };
-
-                        var orderedArgs = [];
-                        if (paramNames.length > 0) {
-                            orderedArgs = paramNames.map(pName => {
-                                const cleanName = pName.replace(/[^a-zA-Z0-9]/g, '');
-                                if (argMap[cleanName]) return argMap[cleanName];
-                                const lower = cleanName.toLowerCase();
-                                if (lower.includes('sugar') || lower.includes('grid')) return 'sugarGrid';
-                                if (lower.includes('start')) return 'start';
-                                if (lower.includes('goal')) return 'goal';
-                                return 'undefined';
-                            });
-                        } else {
-                            orderedArgs = ['start', 'goal', 'sugarGrid'];
-                        }
-
-                        const mathPatch = `
-                            const _origMax = Math.max;
-                            Math.max = (...args) => _origMax(...args.map(x => (x === null || x === undefined || Number.isNaN(Number(x))) ? 0 : Number(x)));
-                        `;
-
-                        testCode = `
-                            ${globalVars}
-                            ${mathPatch}
-                            var sugarGrid = ${sg};
-                            var start = ${stObj};
-                            var goal = ${glObj};
-                            var rows = ${rowsFromGrid};
-                            var cols = ${colsFromGrid};
-                            var n = rows;
-                            var m = cols;
-                            
-                            // Safety Inits
-                            if(typeof dp === "undefined") { var dp = []; }
-
-                            // Trace result grid inject
-                            ${functionDefinition.replace(/([a-zA-Z0-9_]+)\[[^\]]+\]\[[^\]]+\]\s*=\s*([^;]+);/g, '$&;')} 
-
-                            // Call
-                            var testResult = await ${actualFuncName}(${orderedArgs.join(', ')});
-                            
-                            // Debug fallback if undefined
-                             if ((testResult === undefined || testResult === null) && typeof dp !== 'undefined' && Array.isArray(dp)) {
-                                if (typeof goal !== 'undefined' && dp[goal.r] && dp[goal.r][goal.c] !== undefined) {
-                                    testResult = dp[goal.r][goal.c];
-                                }
-                            }
-                            return testResult;
-                        `;
 
                     } else {
                         // Generic case: just call the function with parameters
                         let argsStr = [];
                         // Basic graph (BFS/DFS) order: graph, start, goal
-                        if (paramNames.includes('sugarGrid')) {
-                            // Ant DP fallback
-                            // handled above
+                        if (false) {
+                            // removed
                         } else {
                             // Map parameters by name if possible, else position
                             const pNames = paramNames;

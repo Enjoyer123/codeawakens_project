@@ -19,7 +19,6 @@ import { loadCoinChangeExampleBlocks } from '../../../gameutils/blockly/example/
 import { loadDynamicCoinChangeExampleBlocks } from '../../../gameutils/blockly/example/loadDynamicCoinChangeExample';
 import { loadGreedyCoinChangeExampleBlocks } from '../../../gameutils/blockly/example/loadGreedyCoinChangeExample';
 import { loadNQueenExampleBlocks } from '../../../gameutils/blockly/example/loadNQueenExample';
-import { loadDynamicAntDpExampleBlocks } from '../../../gameutils/blockly/example/loadDynamicAntDpExample';
 import { loadTrainScheduleExampleBlocks } from '../../../gameutils/blockly/example/loadTrainScheduleExample';
 import { loadRopePartitionExampleBlocks } from '../../../gameutils/blockly/example/loadRopePartitionExample';
 import { loadEmeiMountainExample } from '../../../gameutils/blockly/example/loadEmeiMountainExample';
@@ -161,15 +160,6 @@ export const EXAMPLE_LOADERS = [
         icon: '👑',
         className: 'bg-teal-600/20 border-teal-500/50 hover:bg-teal-600/30 text-teal-200',
         loader: loadNQueenExampleBlocks
-    },
-    {
-        id: 'ant_dp',
-        label: 'Ant DP (Short)',
-        title: 'โหลด Ant DP (แบบสั้น)',
-        description: 'Dynamic Programming',
-        icon: '🐜',
-        className: 'bg-emerald-700/20 border-emerald-600/50 hover:bg-emerald-700/30 text-emerald-200',
-        loader: loadDynamicAntDpExampleBlocks
     },
     {
         id: 'rope_partition',
