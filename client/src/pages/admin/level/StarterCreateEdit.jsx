@@ -12,7 +12,7 @@ import {
 
 // ✅ เพิ่ม import fixWorkspaceProcedures
 import { addMutationToProcedureDefinitions, fixWorkspaceProcedures } from '../../../components/admin/pattern/utils/patternBlocklyUtils';
-import { setXmlLoading } from '../../../gameutils/blockly/core/blocklyState';
+import { setXmlLoading } from "@/gameutils/blockly";
 
 import { useBlocklyCleanup } from '../../../components/admin/level/hooks/useBlocklyCleanup';
 import { useSuppressBlocklyWarnings } from '../../../components/admin/level/hooks/useSuppressBlocklyWarnings';

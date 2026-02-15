@@ -17,7 +17,6 @@ export const detectResultVariableName = (code, currentLevel) => {
     // Fix: Only treat as N-Queen if nqueenData exists OR if specific N-Queen keywords are found. 'solve' is too generic.
     const isNQueen = (/nQueen\d*|NQUEEN\d*/i.test(code)) || ((/solve\d*|SOLVE\d*/i.test(code)) && !!currentLevel?.nqueenData);
     const isTrainSchedule = /train_schedule/i.test(currentLevel?.gameType) || currentLevel?.appliedData?.type === 'GREEDY_TRAIN_SCHEDULE' || code.includes('platform_count');
-    const isAntDp = /antDp\d*|ANTDP\d*|ANT_DP\d*/i.test(code) || !!(currentLevel?.appliedData?.type && String(currentLevel.appliedData.type).toUpperCase().includes('ANT'));
     // Broadened check for Emei/Dijkstra
     const isEmei = currentLevel?.isMaxCapacityLevel ||
         currentLevel?.appliedData?.type === 'GRAPH_MAX_CAPACITY' ||
@@ -25,7 +24,7 @@ export const detectResultVariableName = (code, currentLevel) => {
 
     const isRopePartition = currentLevel?.gameType === 'rope_partition' || currentLevel?.appliedData?.type === 'BACKTRACKING_ROPE_PARTITION';
 
-    console.log('🔍 [VariableDetection] Function type detection:', { isCoinChange, isSubsetSum, isKnapsack, isNQueen, isAntDp, isTrainSchedule, isEmei, isRopePartition });
+    console.log('🔍 [VariableDetection] Function type detection:', { isCoinChange, isSubsetSum, isKnapsack, isNQueen, isTrainSchedule, isEmei, isRopePartition });
 
     // 2. Variable Name Detection Logic
     if (isCoinChange) {
@@ -89,18 +88,6 @@ export const detectResultVariableName = (code, currentLevel) => {
         varName = 'rounds';
         console.log("🔍 Using 'rounds' for Emei Mountain");
     } else {
-        if (isAntDp) {
-            // For Ant DP, default to 'result' (used in example XML)
-            varName = 'result';
-            console.log("🔍 Using default 'result' for Ant DP");
-            const antMatch = code.match(/(?:var\s+)?(\w+)\s*=\s*\(?\s*await\s+antDp\d*\s*\(/i);
-            if (antMatch) {
-                varName = antMatch[1];
-                console.log("🔍 Found Ant DP variable name from code:", varName);
-            } else if (code.match(/var\s+result\s*=/i) || code.match(/result\s*=/i)) {
-                varName = 'result';
-            }
-        }
         // Generic pattern for graph algorithms
         const pathMatch = code.match(/(?:var\s+)?(\w+)\s*=\s*\(?\s*await\s+\w+\s*\(/i);
         if (pathMatch) {
@@ -131,7 +118,6 @@ export const detectResultVariableName = (code, currentLevel) => {
         isKnapsack,
         isNQueen,
         isTrainSchedule,
-        isAntDp,
         isEmei,
         isRopePartition
     };

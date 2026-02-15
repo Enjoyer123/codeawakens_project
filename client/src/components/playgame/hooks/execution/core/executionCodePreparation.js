@@ -1,10 +1,9 @@
 import {
   getNQueenFallbackCall,
-  getAntFallbackCall,
   getMaxCapacityFallbackCall,
   getNQueenCaptureShim,
 } from '../utils/executionFallbacks';
-import { instrumentNQueenVisuals } from '../analysis/executionInstrumentation';
+import { instrumentNQueenVisuals } from '../analysis/instrumentNQueen';
 // Note: instrumentRopePartition will need to be imported or handled. I'll assume it's available or inline it if small.
 // Actually, looking at useCodeExecution, instrumentRopePartition is likely used inline or imported. 
 // I will assume it needs to be imported from executionInstrumentation or defined here if it was extracted.
@@ -33,7 +32,6 @@ export const prepareExecutableCode = (code, analysisResult, currentLevel, initCo
     isKnapsack,
     isNQueen,
     isTrainSchedule,
-    isAntDp,
     isEmei,
     isRopePartition
   } = analysisResult;
@@ -42,7 +40,6 @@ export const prepareExecutableCode = (code, analysisResult, currentLevel, initCo
     knapsack: knapsackInitCode = '',
     subsetSum: subsetSumInitCode = '',
     coinChange: coinChangeInitCode = '',
-    antDp: antDpInitCode = '',
     nqueen: nqueenInitCode = '',
     ropePartition: ropePartitionInitCode = '' // Passed in or generated here? 
     // In useCodeExecution, ropePartitionInitCode was generated inside the block.
@@ -239,7 +236,6 @@ export const prepareExecutableCode = (code, analysisResult, currentLevel, initCo
 
   // 2. Generate Fallback Calls
   const nqueenFallbackCall = getNQueenFallbackCall(code, isNQueen);
-  const antFallbackCall = getAntFallbackCall(code, currentLevel);
   const maxCapacityFallbackCall = getMaxCapacityFallbackCall(isEmei);
 
   // 3. Generate N-Queen Capture Shim
@@ -276,14 +272,12 @@ export const prepareExecutableCode = (code, analysisResult, currentLevel, initCo
         ${knapsackInitCode}
         ${subsetSumInitCode}
         ${coinChangeInitCode}
-        ${antDpInitCode}
         ${nqueenInitCode}
         ${ropePartitionInitCode}
         ${initCodes.helpers || ''}
         ${nqueenCaptureShim}
         ${code}
         ${nqueenFallbackCall}
-        ${antFallbackCall}
         ${maxCapacityFallbackCall}
         ${returnStatement}
       `;
@@ -350,43 +344,7 @@ export const prepareExecutableCode = (code, analysisResult, currentLevel, initCo
     // Note: Fallback logic is now handled in returnStatement construction above
   }
 
-  // 8. Ant DP Patches
-  if (isAntDp) {
-    console.log("🔍 [AntDP Debug] Applying Unconditional Patches...");
-    // Inject Ant DP helper variables
-    // Only inject if not already injected (simple check)
-    if (!codeWithReturnCapture.includes('var sugarGrid =')) {
-      codeWithReturnCapture = antDpInitCode + codeWithReturnCapture;
-    }
 
-    // 1. Math.max/min Override: Treat undefined/NaN as 0
-    const mathPatch = `
-          const _origMax = Math.max;
-          Math.max = (...args) => _origMax(...args.map(x => (x === null || x === undefined || Number.isNaN(Number(x))) ? 0 : Number(x)));
-          const _origMin = Math.min;
-          Math.min = (...args) => _origMin(...args.map(x => (x === null || x === undefined || Number.isNaN(Number(x))) ? 0 : Number(x)));
-        `;
-    // Inject at start of content
-    code = mathPatch + code;
-
-    // FIX FUNCTION SIGNATURE: Ensure 'start, goal, sugarGrid' parameters are present and correctly ordered
-    const funcDefMatch = code.match(/(?:async\s+function\s+|function\s+)(antDp)\s*\(([^)]*)\)/);
-    if (funcDefMatch) {
-      const funcName = funcDefMatch[1];
-      const paramsStr = funcDefMatch[2];
-      const paramNames = paramsStr ? paramsStr.split(',').map(p => p.trim()).filter(p => p) : [];
-
-
-    }
-
-    // Ensure function calls match the (start, goal, sugarGrid) order.
-    // If we see 3 arguments, we ensure they are in the expected order if they were shifted.
-    // Note: We removed the previous 'antDp($2, $3, $1)' swap as it was likely causing issues.
-
-
-
-    console.log('🔍 [AntDP Code Patch Debug] Final Code:', code);
-  }
 
   return codeWithReturnCapture;
 };

@@ -5,7 +5,6 @@ import { useDijkstraTable } from './hooks/tableState/useDijkstraTable';
 import { useKnapsackTable } from './hooks/tableState/useKnapsackTable';
 import { useSubsetSumTable } from './hooks/tableState/useSubsetSumTable';
 import { useCoinChangeTable } from './hooks/tableState/useCoinChangeTable';
-import { useAntDpTable } from './hooks/tableState/useAntDpTable';
 import { useCoinPeopleTable } from './hooks/tableState/useCoinPeopleTable';
 
 // Components (View)
@@ -13,7 +12,6 @@ import DijkstraTable from './table/DijkstraTable';
 import KnapsackTable from './table/KnapsackTable';
 import SubsetSumTable from './table/SubsetSumTable';
 import CoinChangeTable from './table/CoinChangeTable';
-import AntDpTable from './table/AntDpTable';
 import CoinPeopleTable from './table/CoinPeopleTable';
 
 const GameStateVisualization = ({
@@ -34,10 +32,7 @@ const GameStateVisualization = ({
     // 4. Coin Change
     const coinChangeState = useCoinChangeTable(levelData);
 
-    // 5. Ant DP
-    const antDpState = useAntDpTable(levelData);
-
-    // 6. Coin, People & Treasures
+    // 5. Coin, People & Treasures
     const coinPeopleState = useCoinPeopleTable(levelData, playerCoins, rescuedPeople, collectedTreasures);
 
     return (
@@ -46,7 +41,6 @@ const GameStateVisualization = ({
             <KnapsackTable {...knapsackState} />
             <SubsetSumTable {...subsetSumState} />
             <CoinChangeTable {...coinChangeState} />
-            <AntDpTable {...antDpState} />
             <CoinPeopleTable {...coinPeopleState} />
         </>
     );

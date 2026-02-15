@@ -1,5 +1,5 @@
 import React from 'react';
-import { History, Loader2, Play, FolderOpen } from 'lucide-react';
+import { History, Loader2, Play, FolderOpen, Bug } from 'lucide-react';
 
 const GameControls = ({
     runCode,
@@ -12,6 +12,7 @@ const GameControls = ({
     currentLevel,
     onHistoryClick,
     onLoadXml,
+    onShowDebugCode,
     isPreview
 }) => {
     const isRunDisabled =
@@ -51,7 +52,15 @@ const GameControls = ({
                     </button>
                 )}
 
-
+                {isPreview && onShowDebugCode && (
+                    <button
+                        onClick={onShowDebugCode}
+                        className="bg-amber-700 hover:bg-amber-600 text-amber-100 py-2 rounded-lg font-semibold shadow transition active:scale-95 flex items-center justify-center gap-1"
+                        title="ดู Raw Generated Code (Runtime)"
+                    >
+                        <Bug size={18} />
+                    </button>
+                )}
 
                 <button
                     onClick={onHistoryClick}

@@ -14,4 +14,4 @@ export { setupKnapsack } from './algorithms/knapsackVisuals.js';
 export { setupSubsetSum } from './algorithms/subsetSumVisuals.js';
 export { setupCoinChange } from './algorithms/coinChangeVisuals.js';
 export { setupNQueen } from './algorithms/nQueenVisuals.js';
-export { setupAntDp } from './algorithms/antDpVisuals.js';
+

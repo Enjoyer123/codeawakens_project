@@ -3,11 +3,10 @@ import {
     setCurrentGameState
 } from '../../../../../gameutils/shared/game';
 import { calculateFinalScore } from '../../../utils/scoreUtils';
-import { flushKnapsackStepsNow, waitForKnapsackPlaybackDone } from '../../../../../gameutils/blockly/algorithms/knapsack/knapsackStateManager';
-import { flushSubsetSumStepsNow, waitForSubsetSumPlaybackDone } from '../../../../../gameutils/blockly/algorithms/subset_sum/subsetSumStateManager';
-import { flushCoinChangeStepsNow, waitForCoinChangePlaybackDone } from '../../../../../gameutils/blockly/algorithms/coin_change/coinChangeStateManager';
-import { flushAntDpStepsNow, waitForAntDpPlaybackDone, waitForAntDpVisualIdle } from '../../../../../gameutils/blockly/algorithms/ant_dp/antDpStateManager';
-import { showAntDpFinalPath } from '../../../../../gameutils/blockly';
+import { flushKnapsackStepsNow, waitForKnapsackPlaybackDone } from '@/gameutils/blockly';
+import { flushSubsetSumStepsNow, waitForSubsetSumPlaybackDone } from '@/gameutils/blockly';
+import { flushCoinChangeStepsNow, waitForCoinChangePlaybackDone } from '@/gameutils/blockly';
+
 
 /**
  * Ensures all algorithm visualization tables (Knapsack, etc.) are finalized/flushed
@@ -20,10 +19,7 @@ export const finalizeTablesBeforeVictory = async (currentLevel, isTrainSchedule)
         if (currentLevel?.knapsackData) { try { flushKnapsackStepsNow(); } catch (e) { } }
         if (currentLevel?.subsetSumData) { try { flushSubsetSumStepsNow(); } catch (e) { } }
         if (currentLevel?.coinChangeData) { try { flushCoinChangeStepsNow(); } catch (e) { } }
-        if (currentLevel?.appliedData?.type?.includes('ANT')) {
-            try { flushAntDpStepsNow(); } catch (e) { }
-            try { await showAntDpFinalPath(); } catch (e) { }
-        }
+
 
         // Make Victory/visuals wait until the table playback has finished.
         // Do NOT auto-speed-up here; we respect the table's current speed.
@@ -73,16 +69,7 @@ export const finalizeTablesBeforeVictory = async (currentLevel, isTrainSchedule)
                     }
                 };
             }
-            // Ant DP: if debug table is enabled, ensure playback is running so it can finish.
-            if (currentLevel?.appliedData?.type?.includes('ANT') && gs?.antDpState?.playback) {
-                updates.antDpState = {
-                    ...gs.antDpState,
-                    playback: {
-                        ...(gs.antDpState.playback || {}),
-                        requestedIsPlaying: true,
-                    }
-                };
-            }
+
             if (Object.keys(updates).length > 0) setCurrentGameState(updates);
         } catch (e) { }
 
@@ -103,13 +90,7 @@ export const finalizeTablesBeforeVictory = async (currentLevel, isTrainSchedule)
             if (currentLevel?.knapsackData) waits.push(waitForKnapsackPlaybackDone({ timeoutMs: calcTimeoutMs('knapsackState'), pollMs: 40 }));
             if (currentLevel?.subsetSumData) waits.push(waitForSubsetSumPlaybackDone({ timeoutMs: calcTimeoutMs('subsetSumState'), pollMs: 40 }));
             if (currentLevel?.coinChangeData) waits.push(waitForCoinChangePlaybackDone({ timeoutMs: calcTimeoutMs('coinChangeState'), pollMs: 40 }));
-            if (currentLevel?.appliedData?.type?.includes('ANT')) {
-                // Always wait for queued Phaser animations (ant walking / highlights) so they don't continue after Victory.
-                waits.push(waitForAntDpVisualIdle({ timeoutMs: 600000, pollMs: 40 }));
-                // Only wait for Ant DP table playback if the debug table is enabled (it is the only thing that updates cursor).
-                const antPbTotal = Number(getCurrentGameState()?.antDpState?.playback?.total ?? 0);
-                if (antPbTotal > 0) waits.push(waitForAntDpPlaybackDone({ timeoutMs: calcTimeoutMs('antDpState'), pollMs: 40 }));
-            }
+
             if (waits.length) await Promise.allSettled(waits);
         } catch (e) { /* ignore */ }
     } catch (e) { /* ignore */ }

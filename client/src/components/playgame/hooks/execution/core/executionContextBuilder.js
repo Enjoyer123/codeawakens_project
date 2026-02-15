@@ -4,36 +4,35 @@ import {
     getCurrentNode, getGraphNeighbors, getGraphNeighborsWithWeight, getNodeValue,
     getGraphNeighborsWithVisual, getGraphNeighborsWithVisualSync, getGraphNeighborsWithWeightWithVisualSync,
     markVisitedWithVisual, showPathUpdateWithVisual, clearDfsVisuals, showMSTEdges,
-    findMinIndex, findMaxIndex, getAllEdges, sortEdgesByWeight, dsuFind, dsuUnion, showMSTEdgesFromList,
+    findMinIndex, findMaxIndex, findMinIndexWithVisual, findMaxIndexWithVisual,
+    getAllEdges, sortEdgesByWeight, dsuFind, dsuUnion, dsuFindWithVisual, dsuUnionWithVisual, showMSTEdgesFromList,
     updateDijkstraVisited, updateDijkstraPQ, updateMSTWeight, resetDijkstraState,
     selectKnapsackItemVisual, unselectKnapsackItemVisual, resetKnapsackItemsVisual,
-    knapsackMaxWithVisual, antMaxWithVisual, showAntDpFinalPath,
+    knapsackMaxWithVisual,
     resetKnapsackSelectionTracking, startKnapsackSelectionTracking, showKnapsackFinalSelection,
     addWarriorToSide1Visual, addWarriorToSide2Visual, resetSubsetSumWarriorsVisual,
     startSubsetSumTrackingVisual, showSubsetSumFinalSolutionVisual, resetSubsetSumTrackingVisual,
     resetCoinChangeSelectionTracking, startCoinChangeSelectionTracking, trackCoinChangeDecision, showCoinChangeFinalSolution,
     addWarriorToSelectionVisual,
-    sortTrains, assignTrainVisual
+    sortTrains, assignTrainVisual,
+    listPush, createListPushWithVisual, createListSetWithVisual,
+    createHighlightEmeiPath,
+    createDictSetWithVisual
 
 } from '../../../../../gameutils/blockly';
 
 import { highlightPeak, highlightCableCar, showEmeiFinalResult } from '../../../../../gameutils/phaser';
 
 import {
-    highlightKruskalEdge, showKruskalRoot, clearKruskalVisuals
-} from '../../../../../gameutils/blockly/graph/blocklyDfsVisual';
+    showKruskalRoot, clearKruskalVisuals
+} from '@/gameutils/blockly';
 
 import {
-    updateSubsetSumCellVisual
-} from '../../../../../gameutils/blockly/algorithms/subset_sum/subsetSumStateManager';
-
-import {
+    updateSubsetSumCellVisual,
     updateCoinChangeCellVisual
-} from '../../../../../gameutils/blockly/algorithms/coin_change/coinChangeStateManager';
+} from '@/gameutils/blockly';
 
-import {
-    updateAntDpCellVisual
-} from '../../../../../gameutils/blockly/algorithms/ant_dp/antDpStateManager';
+
 
 import {
     getPlayerCoins, addCoinToPlayer, clearPlayerCoins as clearPlayerCoinsUtil,
@@ -96,18 +95,29 @@ export const buildExecutionContext = ({
         moveToNode: wrappedMoveToNode, moveAlongPath: wrappedMoveAlongPath, getCurrentNode, getGraphNeighbors, getGraphNeighborsWithWeight, getNodeValue,
         getGraphNeighborsWithVisual, getGraphNeighborsWithVisualSync, getGraphNeighborsWithWeightWithVisualSync,
         markVisitedWithVisual, showPathUpdateWithVisual, clearDfsVisuals, showMSTEdges,
-        findMinIndex, findMaxIndex, getAllEdges, sortEdgesByWeight, dsuFind, dsuUnion, showMSTEdgesFromList,
-        highlightKruskalEdge, showKruskalRoot, clearKruskalVisuals,
+        findMinIndex: findMinIndexWithVisual, findMaxIndex: findMaxIndexWithVisual,
+        getAllEdges, sortEdgesByWeight,
+        dsuFind: dsuFindWithVisual, dsuUnion: dsuUnionWithVisual, showMSTEdgesFromList,
+        showKruskalRoot, clearKruskalVisuals,
         updateDijkstraVisited, updateDijkstraPQ, updateMSTWeight, resetDijkstraState,
-        selectKnapsackItemVisual, unselectKnapsackItemVisual, resetKnapsackItemsVisual, knapsackMaxWithVisual, antMaxWithVisual,
+        selectKnapsackItemVisual, unselectKnapsackItemVisual, resetKnapsackItemsVisual, knapsackMaxWithVisual,
         addWarriorToSide1Visual, addWarriorToSide2Visual, resetSubsetSumWarriorsVisual,
-        updateSubsetSumCellVisual, updateCoinChangeCellVisual, updateAntDpCellVisual,
+        updateSubsetSumCellVisual, updateCoinChangeCellVisual,
         addWarriorToSelectionVisual, trackCoinChangeDecision,
         sortTrains, assignTrainVisual,
+        listPush: createListPushWithVisual({ markVisitedWithVisual, showPathUpdateWithVisual, updateDijkstraPQ, showMSTEdgesFromList }),
+        listSet: createListSetWithVisual({ updateCoinChangeCellVisual, updateSubsetSumCellVisual }),
+        dictSet: createDictSetWithVisual({ showMSTEdges, getCurrentGameState }),
+        highlightEmeiPath: createHighlightEmeiPath({ clearDfsVisuals, highlightCableCar: (u, v, cap) => highlightCableCar(null, u, v, cap), getCurrentGameState }),
         highlightPeak: (node) => highlightPeak(null, node),
         highlightCableCar: (u, v, cap) => highlightCableCar(null, u, v, cap),
         showEmeiFinalResult: (bn, rounds) => showEmeiFinalResult(null, bn, rounds),
         getCurrentGameState, setCurrentGameState,
+        // Demo: explore effect (จำลองเอฟเฟกต์สำรวจ)
+        playExploreEffect: async () => {
+            console.log('✨ [Explore Effect] สำรวจพื้นที่!');
+            await new Promise(resolve => setTimeout(resolve, 300));
+        },
         // Inject trains for Train Schedule
         trains: (currentLevel?.appliedData?.payload?.trains || currentLevel?.trains || [])
     };

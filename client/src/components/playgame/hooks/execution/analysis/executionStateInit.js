@@ -9,36 +9,27 @@
  * 4. Applying pre-execution code transforms (e.g. AntDP unconditional patches).
  */
 
-import {
-    getSubsetSumInitCode,
-    getKnapsackInitCode,
-    getCoinChangeInitCode,
-    getNQueenInitCode,
-    getAntDpInitCode,
-    instrumentAntDp,
-    getRopePartitionInitCode,
-    instrumentRopePartition,
-    getSimplifiedHelpersInitCode
-} from './executionInstrumentation';
+import { getSubsetSumInitCode } from './instrumentSubsetSum';
+import { getCoinChangeInitCode } from './instrumentCoinChange';
+import { getNQueenInitCode } from './instrumentNQueen';
+import { getKnapsackInitCode, getRopePartitionInitCode, instrumentRopePartition, getSimplifiedHelpersInitCode } from './instrumentOther';
 
 import {
     startCoinChangeSelectionTracking,
-} from '../../../../../gameutils/blockly/algorithms/coin_change/blocklyCoinChangeVisual';
+} from '@/gameutils/blockly';
 
-import { startSubsetSumTrackingVisual } from '../../../../../gameutils/blockly/core/blocklyHelpers';
+import { startSubsetSumTrackingVisual } from '@/gameutils/blockly';
 
 import {
     startKnapsackSelectionTracking,
-} from '../../../../../gameutils/blockly/algorithms/knapsack/blocklyKnapsackVisual';
+} from '@/gameutils/blockly';
 
 
-import { resetCoinChangeTableState } from '../../../../../gameutils/blockly/algorithms/coin_change/coinChangeStateManager';
-import { resetKnapsackTableState } from '../../../../../gameutils/blockly/algorithms/knapsack/knapsackStateManager';
-import { resetSubsetSumTableState } from '../../../../../gameutils/blockly/algorithms/subset_sum/subsetSumStateManager';
+import { resetCoinChangeTableState } from '@/gameutils/blockly';
+import { resetKnapsackTableState } from '@/gameutils/blockly';
+import { resetSubsetSumTableState } from '@/gameutils/blockly';
 
-import {
-    resetAntDpTableState
-} from '../../../../../gameutils/blockly/algorithms/ant_dp/antDpStateManager';
+
 
 
 /**
@@ -60,7 +51,6 @@ export const initializeLevelState = (currentLevel, code) => {
         isKnapsack: !!currentLevel?.knapsackData,
         isSubsetSum: !!currentLevel?.subsetSumData,
         isCoinChange: !!currentLevel?.coinChangeData,
-        isAntDp: false, // Detected via appliedData type
         isNQueen: !!currentLevel?.nqueenData,
         isEmei: !!currentLevel?.n && !!currentLevel?.tourists, // Emei heuristics
         isRopePartition: false, // Detected via type
@@ -71,7 +61,7 @@ export const initializeLevelState = (currentLevel, code) => {
     const applied = currentLevel?.appliedData;
     const appliedType = String(applied?.type || '').toUpperCase();
 
-    if (appliedType.includes('ANT')) flags.isAntDp = true;
+
     if (currentLevel?.type === 'rope_partition') flags.isRopePartition = true; // Use level type or applied type
     if (currentLevel?.type === 'train_schedule') flags.isTrainSchedule = true;
 
@@ -80,7 +70,6 @@ export const initializeLevelState = (currentLevel, code) => {
         knapsack: '',
         subsetSum: '',
         coinChange: '',
-        antDp: '',
         nqueen: '',
         ropePartition: '',
         helpers: ''
@@ -112,18 +101,7 @@ export const initializeLevelState = (currentLevel, code) => {
         if (initCodes.coinChange) console.log('🔍 Initialized coin change variables');
     }
 
-    // --- Ant DP ---
-    if (flags.isAntDp) {
-        try { resetAntDpTableState(); } catch (e) { }
-        initCodes.antDp = getAntDpInitCode(currentLevel);
 
-        // Critical: Apply Ant DP patches immediately to the code
-        try {
-            modifiedCode = instrumentAntDp(modifiedCode, true, initCodes.antDp);
-        } catch (e) {
-            console.warn('[executionStateInit] Error checking Ant DP instrumentation:', e);
-        }
-    }
 
     // --- N-Queen ---
     if (flags.isNQueen) {

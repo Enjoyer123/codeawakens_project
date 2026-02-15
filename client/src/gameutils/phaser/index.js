@@ -16,7 +16,6 @@ export {
     setupKnapsack,
     setupSubsetSum,
     setupCoinChange,
-    setupAntDp,
     setupNQueen,
     drawCinematicMonster
 } from './setup/index.js';

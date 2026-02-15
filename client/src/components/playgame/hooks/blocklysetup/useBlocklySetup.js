@@ -15,11 +15,11 @@ import {
   ensureCommonVariables,
   initializeImprovedVariableHandling
 } from '../../../../gameutils/blockly';
-import { defineAllGenerators } from '../../../../gameutils/blockly/core/blocklyGenerators';
-import { registerRopePartitionBlocks } from '../../../../gameutils/blockly/algorithms/special/blocklyRopePartition';
+import { defineAllGenerators } from '@/gameutils/blockly';
+import { registerRopePartitionBlocks } from '@/gameutils/blockly';
 
 // Refactored State Management
-import { setXmlLoading, isXmlLoading } from '../../../../gameutils/blockly/core/blocklyState';
+import { setXmlLoading, isXmlLoading } from '@/gameutils/blockly';
 
 // Import refactored modules
 import {

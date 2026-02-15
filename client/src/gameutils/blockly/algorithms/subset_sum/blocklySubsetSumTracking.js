@@ -92,7 +92,7 @@ export function reconstructSubsetSumSolution(targetSum) {
  */
 export async function showSubsetSumFinalSolution(targetSum) {
   const { getCurrentGameState } = await import('../../../shared/game');
-  const { addWarriorToSide1, addWarriorToSide2 } = await import('../subset_sum/blocklySubsetSumVisual');
+  const { addWarriorToSide1, addWarriorToSide2, highlightWarrior } = await import('./visuals');
 
   const currentState = getCurrentGameState();
   const scene = currentState.currentScene;
