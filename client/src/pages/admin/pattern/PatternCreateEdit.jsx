@@ -23,6 +23,7 @@ import { usePattern, usePatternTypes } from '../../../services/hooks/usePattern'
 import { usePatternForm } from '../../../components/admin/pattern/hooks/usePatternForm';
 import { usePatternBlocklyManager } from '../../../components/admin/pattern/hooks/usePatternBlocklyManager';
 import { useSuppressBlocklyWarnings } from '@/components/admin/level/hooks/useSuppressBlocklyWarnings';
+import { setXmlLoading } from '../../../gameutils/blockly/core/blocklyState';
 
 const PatternCreateEdit = () => {
   const { levelId, patternId } = useParams();
@@ -109,15 +110,11 @@ const PatternCreateEdit = () => {
         if (blocklyManager.workspaceRef.current) {
           const xmlDom = Blockly.utils.xml.textToDom(xmlText);
 
-          if (window.__blocklySetLoadingXml) {
-            window.__blocklySetLoadingXml(true);
-          }
+          setXmlLoading(true);
 
           Blockly.Xml.domToWorkspace(xmlDom, blocklyManager.workspaceRef.current);
 
-          if (window.__blocklySetLoadingXml) {
-            window.__blocklySetLoadingXml(false);
-          }
+          setXmlLoading(false);
         }
       } catch (e) {
         console.error('[Import XML] Error:', e);

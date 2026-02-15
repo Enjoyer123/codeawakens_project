@@ -6,7 +6,6 @@ import {
     markVisitedWithVisual, showPathUpdateWithVisual, clearDfsVisuals, showMSTEdges,
     findMinIndex, findMaxIndex, getAllEdges, sortEdgesByWeight, dsuFind, dsuUnion, showMSTEdgesFromList,
     updateDijkstraVisited, updateDijkstraPQ, updateMSTWeight, resetDijkstraState,
-    pushNode, popNode, keepItem, hasTreasure, treasureCollected, stackEmpty, stackCount,
     selectKnapsackItemVisual, unselectKnapsackItemVisual, resetKnapsackItemsVisual,
     knapsackMaxWithVisual, antMaxWithVisual, showAntDpFinalPath,
     resetKnapsackSelectionTracking, startKnapsackSelectionTracking, showKnapsackFinalSelection,
@@ -93,7 +92,7 @@ export const buildExecutionContext = ({
         getPlayerCoinValue, getPlayerCoinCount, arePlayerCoinsSorted,
         rescuePersonAtNode, hasPerson, personRescued, getPersonCount, allPeopleRescued,
         getStack, pushToStack, popFromStack, isStackEmpty, getStackCount, hasTreasureAtNode, collectTreasure, isTreasureCollected, clearStack,
-        pushNode, popNode, keepItem, hasTreasure, treasureCollected, stackEmpty, stackCount,
+
         moveToNode: wrappedMoveToNode, moveAlongPath: wrappedMoveAlongPath, getCurrentNode, getGraphNeighbors, getGraphNeighborsWithWeight, getNodeValue,
         getGraphNeighborsWithVisual, getGraphNeighborsWithVisualSync, getGraphNeighborsWithWeightWithVisualSync,
         markVisitedWithVisual, showPathUpdateWithVisual, clearDfsVisuals, showMSTEdges,

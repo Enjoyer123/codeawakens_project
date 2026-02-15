@@ -4,7 +4,8 @@ import { defineLogicBlocks } from '../logic/blocklyLogic';
 import { defineMathBlocks } from '../math/blocklyMath';
 import { defineCoinBlocks } from '../entities/blocklyCoin';
 import { definePersonBlocks } from '../entities/blocklyPerson';
-import { defineStackBlocks } from '../data/blocklyStack';
+
+
 import { defineFunctionBlocks } from '../data/blocklyFunction';
 import { defineLoopBlocks } from '../loop/blocklyLoop';
 import { defineVariableBlocks } from '../data/blocklyVariableBlocks';
@@ -29,7 +30,8 @@ export function defineAllBlocks() {
   defineMathBlocks();
   defineCoinBlocks();
   definePersonBlocks();
-  defineStackBlocks();
+
+
   defineFunctionBlocks();
   defineLoopBlocks();
   defineVariableBlocks();

@@ -12,6 +12,7 @@ import {
 
 // ✅ เพิ่ม import fixWorkspaceProcedures
 import { addMutationToProcedureDefinitions, fixWorkspaceProcedures } from '../../../components/admin/pattern/utils/patternBlocklyUtils';
+import { setXmlLoading } from '../../../gameutils/blockly/core/blocklyState';
 
 import { useBlocklyCleanup } from '../../../components/admin/level/hooks/useBlocklyCleanup';
 import { useSuppressBlocklyWarnings } from '../../../components/admin/level/hooks/useSuppressBlocklyWarnings';
@@ -183,15 +184,11 @@ const StarterCreateEdit = () => {
 
             // Load XML
             try {
-              if (window.__blocklySetLoadingXml) {
-                window.__blocklySetLoadingXml(true);
-              }
+              setXmlLoading(true);
 
               Blockly.Xml.domToWorkspace(xml, workspaceRef.current);
 
-              if (window.__blocklySetLoadingXml) {
-                window.__blocklySetLoadingXml(false);
-              }
+              setXmlLoading(false);
             } catch (loadErr) {
               if (!isLastAttempt) {
                 await delay(500);

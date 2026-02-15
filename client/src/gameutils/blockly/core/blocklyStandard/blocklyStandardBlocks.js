@@ -3,14 +3,10 @@ import * as Blockly from "blockly/core";
 import { javascriptGenerator } from "blockly/javascript";
 import { defineAllBlocks } from '../blocklyBlocks';
 import { defineAllGenerators } from '../blocklyGenerators';
-import { applyUIPatches } from './blocklyUIPatches';
 import { applyProcedureOverrides } from './blocklyProcedureOverrides';
 
 // Add fallback blocks for missing standard blocks
 export function ensureStandardBlocks() {
-
-  // Apply UI Patches (Menu, MenuItem, Dropdown, Gesture)
-  applyUIPatches();
 
   // Apply Procedure Overrides (Fix renaming, N-Queen logic, etc.)
   applyProcedureOverrides();

@@ -12,7 +12,7 @@ export * from './helpers/coinHelpers';
 export * from './helpers/rescueHelpers';
 
 // Stack & Treasure functions (getStack, pushNode, popNode, keepItem, etc.)
-export * from './helpers/stackHelpers';
+
 
 // Graph functions (getGraphNeighbors, findMinIndex, getAllEdges, Kruskal, etc.)
 export * from './helpers/graphHelpers';

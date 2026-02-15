@@ -18,18 +18,18 @@ import {
 import { defineAllGenerators } from '../../../../gameutils/blockly/core/blocklyGenerators';
 import { registerRopePartitionBlocks } from '../../../../gameutils/blockly/algorithms/special/blocklyRopePartition';
 
+// Refactored State Management
+import { setXmlLoading, isXmlLoading } from '../../../../gameutils/blockly/core/blocklyState';
+
 // Import refactored modules
-import { overrideProcedureBlocks } from './procedureOverrides';
 import {
   ensureVariableIds,
-  addMutationToProcedureDefinitions,
-  fixCallBlocks
+  addMutationToProcedureDefinitions
 } from './xmlFixers';
 
-// Verify and register custom blocks immediately
+// Register custom blocks immediately
 try {
   registerRopePartitionBlocks();
-  console.log('✅ Rope Partition blocks registered');
 } catch (e) {
   console.error('Failed to register Rope Partition blocks:', e);
 }
@@ -52,10 +52,7 @@ export function useBlocklySetup({
   onCodeGenerated = null
 }) {
   const initBlocklyAndPhaser = () => {
-    console.log("initBlocklyAndPhaser called");
-
     if (!blocklyRef.current || Object.keys(enabledBlocks).length === 0) {
-      console.log("Early return - missing ref or no enabled blocks");
       return;
     }
 
@@ -64,7 +61,6 @@ export function useBlocklySetup({
         // Clean up existing workspace
         setBlocklyLoaded(false);
         if (workspaceRef.current) {
-          console.log("Disposing existing workspace...");
           try {
             workspaceRef.current.dispose();
           } catch (disposeError) {
@@ -85,63 +81,17 @@ export function useBlocklySetup({
         // Initialize
         initializeImprovedVariableHandling();
 
-        console.log("🔧 Ensuring standard blocks...");
         ensureStandardBlocks();
 
-        // Override BEFORE defining generators
-        overrideProcedureBlocks();
-
-        console.log("🔧 Defining JavaScript generators...");
         defineAllGenerators();
 
-        // CRITICAL: Force override procedures_defreturn generator AFTER defineAllGenerators
-        // This ensures our custom generator is used, not the default one
+        // Force override procedures_defreturn generator AFTER defineAllGenerators
         const customProcGen = javascriptGenerator.forBlock["procedures_defreturn"];
         if (customProcGen) {
           javascriptGenerator.forBlock["procedures_defreturn"] = customProcGen;
-          console.log("✅ Force override procedures_defreturn generator");
         }
 
-        // Verify that custom generator was set
-        console.log("🔍 Verifying procedures_defreturn generator:", typeof javascriptGenerator.forBlock["procedures_defreturn"]);
-        console.log("🔍 Generator is custom:", javascriptGenerator.forBlock["procedures_defreturn"]?.toString().includes('CUSTOM GENERATOR'));
-
-        // Create toolbox
-        console.log("🔧 Creating toolbox");
         const toolbox = createToolboxConfig(enabledBlocks);
-
-        // Define Custom Theme (Purple & Dark Blue - Website Brand)
-        // const rpgTheme = Blockly.Theme.defineTheme('rpg_theme', {
-        //   base: Blockly.Themes.Classic,
-        //   blockStyles: {
-        //     // Midnight Galaxy Palette (Purple/Blue tones)
-        //     "hat_blocks": { "colourPrimary": "#a855f7", "colourSecondary": "#c084fc", "colourTertiary": "#7e22ce" }, // Purple 500/400/700 (Start)
-        //     "logic_blocks": { "colourPrimary": "#8b5cf6", "colourSecondary": "#a78bfa", "colourTertiary": "#7c3aed" }, // Violet 500/400/600 (Logic)
-        //     "loop_blocks": { "colourPrimary": "#6366f1", "colourSecondary": "#818cf8", "colourTertiary": "#4f46e5" }, // Indigo 500/400/600 (Loop)
-        //     "math_blocks": { "colourPrimary": "#06b6d4", "colourSecondary": "#22d3ee", "colourTertiary": "#0891b2" }, // Cyan 500/400/600 (Math)
-        //     "procedure_blocks": { "colourPrimary": "#d946ef", "colourSecondary": "#e879f9", "colourTertiary": "#c026d3" }, // Fuchsia 500/400/600 (Function)
-        //     "list_blocks": { "colourPrimary": "#3b82f6", "colourSecondary": "#60a5fa", "colourTertiary": "#2563eb" }, // Blue 500/400/600 (List)
-        //     "variable_blocks": { "colourPrimary": "#14b8a6", "colourSecondary": "#2dd4bf", "colourTertiary": "#0d9488" } // Teal 500/400/600 (Var)
-        //   },
-        //   componentStyles: {
-        //     "workspaceBackgroundColour": "#1e1b4b", // Deep Indigo/Purple
-        //     "toolboxBackgroundColour": "#2e1065", // Dark Purple 950
-        //     "toolboxForegroundColour": "#ffffff", // White
-        //     "flyoutBackgroundColour": "#2e1065", // Dark Purple 950
-        //     "flyoutForegroundColour": "#ffffff",
-        //     "flyoutOpacity": 0.95,
-        //     "scrollbarColour": "transparent",
-        //     "insertionMarkerColour": "#a855f7", // Purple 500
-        //     "insertionMarkerOpacity": 0.5,
-        //     "scrollbarOpacity": 0, // Hidden as requested
-        //     "cursorColour": "#a855f7" // Purple 500
-        //   },
-        //   fontStyle: {
-        //     "family": "'Press Start 2P', cursive", // Match game font
-        //     "weight": "normal",
-        //     "size": 10
-        //   }
-        // });
 
         const workspaceConfig = {
           theme: ModernTheme,
@@ -187,27 +137,15 @@ export function useBlocklySetup({
           },
         };
 
-        console.log("Creating Blockly workspace...");
         const workspace = Blockly.inject(blocklyRef.current, workspaceConfig);
-        console.log("Blockly workspace created");
-
-        // Override again after workspace creation
-        overrideProcedureBlocks(workspace);
 
         workspaceRef.current = workspace;
         setBlocklyLoaded(true);
         setBlocklyJavaScriptReady(true);
 
-        // Store workspace ready state for useEffect
-        window.__blocklyWorkspaceReady = true;
 
-        // Variable Manager
-        if (workspace.getVariableMap) {
-          const variableMap = workspace.getVariableMap();
-          if (variableMap) {
-            console.log("Variable Map available");
-          }
-        }
+
+
 
         ensureCommonVariables(workspace);
 
@@ -216,15 +154,9 @@ export function useBlocklySetup({
         // CRITICAL: Prevent auto-creation of procedure definitions
         let isCreatingCallBlock = false;
 
-        // ⚡ Performance: Track XML loading state to skip event processing
-        let isLoadingXml = false;
-        // Store reference to workspace for use in XML loader
-        window.__blocklyIsLoadingXml = () => isLoadingXml;
-        window.__blocklySetLoadingXml = (value) => { isLoadingXml = value; };
-
         workspace.addChangeListener((event) => {
           // ⚡ Performance: Skip all processing during XML load
-          if (isLoadingXml) {
+          if (isXmlLoading()) {
             return;
           }
 
@@ -241,7 +173,7 @@ export function useBlocklySetup({
 
             if (block && (block.type === 'procedures_callreturn' || block.type === 'procedures_callnoreturn')) {
               isCreatingCallBlock = true;
-              console.log('📞 Call block created:', event.blockId);
+
 
               // Fix procedure name immediately to prevent getDefinition error
               setTimeout(() => {
@@ -258,7 +190,7 @@ export function useBlocklySetup({
                         const procedures = procedureMap.getProcedures();
                         if (procedures.length > 0) {
                           nameField.setValue(procedures[0].getName());
-                          console.log(`📞 Fixed call block to: ${procedures[0].getName()}`);
+
                         } else {
                           // Check definition blocks directly
                           const definitionBlocks = workspace.getBlocksByType('procedures_defreturn', false)
@@ -267,7 +199,7 @@ export function useBlocklySetup({
                             const firstDefName = definitionBlocks[0].getFieldValue('NAME');
                             if (firstDefName && firstDefName !== 'unnamed' && firstDefName !== 'undefined') {
                               nameField.setValue(firstDefName);
-                              console.log(`📞 Fixed call block using definition: ${firstDefName}`);
+
                             }
                           }
                         }
@@ -284,7 +216,7 @@ export function useBlocklySetup({
             // If a definition block is created while we're creating a call block, delete it
             if (block && (block.type === 'procedures_defreturn' || block.type === 'procedures_defnoreturn')) {
               if (isCreatingCallBlock) {
-                console.log('🚫 Auto-created definition detected, removing:', event.blockId);
+
                 setTimeout(() => {
                   try {
                     if (block && !block.isDisposed()) {
@@ -335,7 +267,7 @@ export function useBlocklySetup({
                   }
                   // If still not found, create it (user explicitly set this variable name)
                   if (!variable) {
-                    console.log(`Creating variable: ${varName}`);
+
                     try {
                       workspace.createVariable(varName);
                     } catch (error) {
@@ -351,14 +283,7 @@ export function useBlocklySetup({
           // Completely skip BLOCK_CREATE events for variable creation
         });
 
-        // Initialize Phaser
-        console.log("Initializing Phaser game...");
         initPhaserGame();
-
-        console.log("🔍 Workspace created, triggering pattern analysis setup");
-        setTimeout(() => {
-          console.log("🔍 Forcing pattern analysis setup after workspace creation");
-        }, 50);
       } catch (error) {
         console.error("Error initializing workspace:", error);
         setCurrentHint("❌ เกิดข้อผิดพลาดในการสร้าง workspace");
@@ -376,19 +301,11 @@ export function useBlocklySetup({
     // Check if workspace is ready - but don't require blocklyLoaded to be true
     // because workspace might be ready before blocklyLoaded is set
     if (!workspaceRef.current) {
-      console.log('⏸️ Waiting for workspace to be ready...', {
-        hasWorkspace: !!workspaceRef.current,
-        blocklyLoaded
-      });
       return;
     }
 
     // Only load if starter_xml is different from last loaded
     if (lastLoadedXmlRef.current === starter_xml) {
-      console.log('⏸️ Starter XML already loaded, skipping...', {
-        lastLoadedXml_preview: lastLoadedXmlRef.current ? lastLoadedXmlRef.current.substring(0, 100) : null,
-        starter_xml_preview: starter_xml ? starter_xml.substring(0, 100) : null
-      });
       return;
     }
 
@@ -401,11 +318,7 @@ export function useBlocklySetup({
         }
 
         try {
-          console.log('📦 Loading starter XML after workspace ready...', {
-            starter_xml_length: starter_xml.length,
-            hasWorkspace: !!workspaceRef.current,
-            workspaceId: workspaceRef.current.id
-          });
+
           // procedures_def* should be registered by imports above; just guard and warn
           if (!Blockly.Blocks['procedures_defreturn'] || !Blockly.Blocks['procedures_defnoreturn']) {
             console.warn('⚠️ procedures_def* not registered even after imports');
@@ -434,15 +347,11 @@ export function useBlocklySetup({
             workspaceRef.current.clear();
 
             // ⚡ Performance: Set flag to skip event processing during XML load
-            if (window.__blocklySetLoadingXml) {
-              window.__blocklySetLoadingXml(true);
-            }
+            setXmlLoading(true);
 
             Blockly.Xml.domToWorkspace(xml, workspaceRef.current);
 
-            if (window.__blocklySetLoadingXml) {
-              window.__blocklySetLoadingXml(false);
-            }
+            setXmlLoading(false);
 
             lastLoadedXmlRef.current = starter_xml;
           } catch (primaryErr) {
@@ -452,54 +361,42 @@ export function useBlocklySetup({
               workspaceRef.current.clear();
 
               // ⚡ Performance: Set flag to skip event processing
-              if (window.__blocklySetLoadingXml) {
-                window.__blocklySetLoadingXml(true);
-              }
+              setXmlLoading(true);
 
               Blockly.Xml.domToWorkspace(xmlRaw, workspaceRef.current);
 
-              if (window.__blocklySetLoadingXml) {
-                window.__blocklySetLoadingXml(false);
-              }
+              setXmlLoading(false);
 
               lastLoadedXmlRef.current = starter_xml;
             } catch (rawErr) {
               // Re-enable event processing even on error
-              if (window.__blocklySetLoadingXml) {
-                window.__blocklySetLoadingXml(false);
-              }
+              setXmlLoading(false);
               console.error('❌ Failed to load starter XML (raw and processed):', rawErr);
               setCurrentHint('⚠️ ไม่สามารถโหลด starter blocks ได้: ' + (rawErr.message || 'invalid XML'));
               return;
             }
           }
 
-          // Verify that function definitions have parameters after loading
-          setTimeout(() => {
-            const defBlocks = workspaceRef.current.getBlocksByType('procedures_defreturn', false)
-              .concat(workspaceRef.current.getBlocksByType('procedures_defnoreturn', false));
-            defBlocks.forEach(defBlock => {
-              try {
-                const name = defBlock.getFieldValue('NAME');
-                const vars = defBlock.getVars();
-                console.log(`🔍 After loading: Function ${name} has ${vars.length} parameters:`, vars);
-              } catch (e) {
-                console.warn('Error checking function definition:', e);
-              }
-            });
-          }, 100);
 
-          console.log('✅ Starter XML loaded successfully', {
-            blockCount: workspaceRef.current.getAllBlocks().length
+
+
+
+          // CRITICAL: Lock starter blocks so users can't delete/move/rename them
+          // This enforces "Guided Learning" where users fill in blanks
+          const allBlocks = workspaceRef.current.getAllBlocks(false);
+          allBlocks.forEach(block => {
+            // 1. Lock movement and deletion
+            block.setMovable(false);
+            block.setDeletable(false);
+
+            // 2. Lock function renaming/mutation (if it's a definition)
+            if (block.type === 'procedures_defreturn' || block.type === 'procedures_defnoreturn') {
+              block.setEditable(false);
+            }
           });
-
-          // CRITICAL: Fix procedure call blocks immediately after loading starter XML
-          // Call imported fixer, passing workspace and setCurrentHint
-          fixCallBlocks(workspaceRef.current, setCurrentHint);
 
           // If text code is enabled, generate code from starter XML
           if (isTextCodeEnabled && onCodeGenerated) {
-            console.log('📝 Generating starter text code from XML...');
             try {
               // Enable Clean Mode
               javascriptGenerator.isCleanMode = true;
@@ -511,7 +408,7 @@ export function useBlocklySetup({
                 // e.g. "var garph, start, goal, path, container, visited, map, node, neighbor;"
                 code = code.replace(/^var\s+[\w,\s]+;\n+/, '');
 
-                console.log('✅ Generated starter code length (Clean):', code.length);
+
                 onCodeGenerated(code);
               }
             } catch (genErr) {
@@ -526,15 +423,9 @@ export function useBlocklySetup({
         }
       }, 200); // Small delay to ensure workspace is ready
     } else {
-      // Reset ref if no starter_xml
       if (lastLoadedXmlRef.current !== null) {
         lastLoadedXmlRef.current = null;
       }
-      console.log('ℹ️ No starter XML provided for this level:', {
-        starter_xml: starter_xml,
-        isString: typeof starter_xml === 'string',
-        trimmed: starter_xml && typeof starter_xml === 'string' ? starter_xml.trim() : null
-      });
     }
   }, [starter_xml, blocklyLoaded, setCurrentHint]);
 
