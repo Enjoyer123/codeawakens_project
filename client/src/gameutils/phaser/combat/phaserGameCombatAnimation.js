@@ -30,18 +30,14 @@ export function playCombatSequence(scene, isWin, onComplete) {
         isSpecial: isSpecialVisualLevel
     });
 
-    // FORCE PLAY: Commenting out the skip logic to debug
-    /*
     // If we have nodes AND a valid start node AND it's not a special visual level -> Skip combat (Standard Graph Level)
     if (hasNodes && startNode && !isSpecialVisualLevel) {
         console.log('⚠️ Skipping combat sequence: Standard Graph Walk Level');
         if (onComplete) onComplete();
         return;
     }
-    */
-    console.log('⚔️ [DEBUG-FORCE] Skip check bypassed. STARTING ANIMATION.');
 
-    console.log('✅ execution proceeding (Cinematic Mode) for result:', isWin ? 'Win' : 'Loss');
+    console.log('✅ Playing cinematic combat for result:', isWin ? 'Win' : 'Loss');
 
     console.log('Starting combat sequence. Result:', isWin ? 'Win' : 'Loss');
 

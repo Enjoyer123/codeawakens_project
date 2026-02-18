@@ -497,7 +497,7 @@ export function loadDijkstraExampleBlocks(workspace) {
   }
 
   try {
-    console.log('📦 Loading Dijkstra example blocks into workspace...');
+    // console.log removed('📦 Loading Dijkstra example blocks into workspace...');
 
     // Clear workspace first
     workspace.clear();
@@ -525,13 +525,13 @@ export function loadDijkstraExampleBlocks(workspace) {
               const existingVar = variableMap.getVariable(varName);
               if (!existingVar) {
                 workspace.createVariable(varName);
-                console.log(`Created variable: ${varName}`);
+                // console.log removed(`Created variable: ${varName}`);
               } else {
                 console.debug(`Variable ${varName} already exists`);
               }
             } else {
               workspace.createVariable(varName);
-              console.log(`Created variable: ${varName} (no variable map)`);
+              // console.log removed(`Created variable: ${varName} (no variable map)`);
             }
           } catch (e) {
             // Variable might already exist
@@ -539,7 +539,7 @@ export function loadDijkstraExampleBlocks(workspace) {
           }
         });
 
-        console.log('✅ Dijkstra example blocks loaded successfully');
+        // console.log removed('✅ Dijkstra example blocks loaded successfully');
       } catch (error) {
         console.error('❌ Error loading Dijkstra example blocks:', error);
       }

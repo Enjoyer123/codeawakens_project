@@ -1,5 +1,6 @@
 /**
  * Hook for Blockly workspace initialization
+ * จัดการการเตรียม Workspace ของ Blockly และเชื่อมต่อกับ Phaser
  */
 
 import React, { useEffect } from 'react';
@@ -9,56 +10,57 @@ import "blockly/javascript";
 import "blockly/msg/en";
 import { javascriptGenerator } from "blockly/javascript";
 import ModernTheme from '@blockly/theme-modern';
+
+// Import Blockly Core Modules
 import {
   createToolboxConfig,
   ensureStandardBlocks,
   ensureCommonVariables,
   initializeImprovedVariableHandling
 } from '../../../../gameutils/blockly';
-import { defineAllGenerators } from '@/gameutils/blockly';
-import { registerRopePartitionBlocks } from '@/gameutils/blockly';
+import { defineAllBlocks } from '@/gameutils/blockly/core/definitions';
+import { defineAllGenerators } from '@/gameutils/blockly/core/generators';
 
-// Refactored State Management
-import { setXmlLoading, isXmlLoading } from '@/gameutils/blockly';
-
-// Import refactored modules
+// Import Modules ที่แยกออกมา (Decoupled Modules)
 import {
-  ensureVariableIds,
-  addMutationToProcedureDefinitions
-} from './xmlFixers';
-
-// Register custom blocks immediately
-try {
-  registerRopePartitionBlocks();
-} catch (e) {
-  console.error('Failed to register Rope Partition blocks:', e);
-}
+  registerProcedureEventHandlers,
+  registerVariableEventHandlers
+} from './blocklyEvents';
+import { loadStarterXml } from './xmlLoader';
 
 /**
- * Hook for Blockly setup
+ * Custom Hook: useBlocklySetup
+ * [Flow A] Initialization: Hook สำหรับจัดการ Setup ทั้งหมด
+ * หน้าที่: สร้างและตั้งค่า Blockly Workspace
  */
 export function useBlocklySetup({
-  blocklyRef,
-  workspaceRef,
-  enabledBlocks,
-  enabledBlockKeySignature,
-  setBlocklyLoaded,
-  setBlocklyJavaScriptReady,
-  setCurrentHint,
-  initPhaserGame,
-  starter_xml = null,
-  blocklyLoaded = false,
-  isTextCodeEnabled = false,
-  onCodeGenerated = null
+  blocklyRef,                  // DOM Element ที่จะใส่ Blockly
+  workspaceRef,                // Ref สำหรับเก็บตัวแปร Workspace
+  enabledBlocks,               // รายชื่อบล็อกที่อนุญาตให้ใช้ในด่านนี้
+  // enabledBlockKeySignature,    // Signature สำหรับเช็คว่า block config เปลี่ยนหรือไม่
+  setBlocklyLoaded,            // State บอกว่าโหลดเสร็จหรือยัง
+  setBlocklyJavaScriptReady,   // State บอกว่า JS Generator พร้อมไหม
+  // setCurrentHint,              // ฟังก์ชันแสดง Hint/Error
+  initPhaserGame,              // ฟังก์ชันเริ่มเกม Phaser
+  starter_xml = null,          // โค้ดเริ่มต้น (XML String)
+  blocklyLoaded = false,       // สถานะปัจจุบัน
+  isTextCodeEnabled = false,   // โหมดพิมพ์โค้ดเอง?
+  onCodeGenerated = null       // Callback เมื่อโค้ดเปลี่ยน
 }) {
+
+  // ============================================================================
+  // [Flow A] Initialization: 2. สร้าง Workspace (Main Logic)
+  // ฟังก์ชันหลัก: สร้าง Workspace และเริ่มระบบ
+  // ============================================================================
   const initBlocklyAndPhaser = () => {
+    // ถ้ายังไม่มี DOM หรือไม่มี Config บล็อก -> ไม่ทำอะไร
     if (!blocklyRef.current || Object.keys(enabledBlocks).length === 0) {
       return;
     }
 
     setTimeout(() => {
       try {
-        // Clean up existing workspace
+        // 1.1 เคลียร์ Workspace เก่า (ถ้ามี)
         setBlocklyLoaded(false);
         if (workspaceRef.current) {
           try {
@@ -69,7 +71,7 @@ export function useBlocklySetup({
           workspaceRef.current = null;
         }
 
-        // Clear container
+        // 1.2 เคลียร์ HTML Container
         if (blocklyRef.current) {
           blocklyRef.current.innerHTML = '';
           if (!blocklyRef.current.parentNode) {
@@ -78,21 +80,21 @@ export function useBlocklySetup({
           }
         }
 
-        // Initialize
-        initializeImprovedVariableHandling();
+        // 1.3 เตรียมระบบภายใน (Definitions & Generators)
+        initializeImprovedVariableHandling(); // ระบบจัดการตัวแปร
+        ensureStandardBlocks();               // โหลดบล็อกมาตรฐาน
+        defineAllGenerators();                // โหลดตัวสร้างโค้ด JS
 
-        ensureStandardBlocks();
-
-        defineAllGenerators();
-
-        // Force override procedures_defreturn generator AFTER defineAllGenerators
+        // Patch: แก้ไข Generator ของฟังก์ชัน (เฉพาะกิจ)
         const customProcGen = javascriptGenerator.forBlock["procedures_defreturn"];
         if (customProcGen) {
           javascriptGenerator.forBlock["procedures_defreturn"] = customProcGen;
         }
 
+        // 1.4 สร้าง Toolbox Config (เมนูด้านซ้าย)
         const toolbox = createToolboxConfig(enabledBlocks);
 
+        // 1.5 กำหนดค่า Workspace (Theme, Grid, Zoom)
         const workspaceConfig = {
           theme: ModernTheme,
           renderer: 'geras',
@@ -108,15 +110,13 @@ export function useBlocklySetup({
           media: "https://blockly-demo.appspot.com/static/media/",
           rtl: false,
           move: {
-            scrollbars: {
-              horizontal: false,
-              vertical: false
-            },
+            scrollbars: { horizontal: false, vertical: false },
             drag: true,
             wheel: true,
           },
           sounds: false,
           oneBasedIndex: true,
+          // เปิดใช้งาน Variables ถ้ามีบล็อกที่เกี่ยวข้อง
           variables: enabledBlocks["variables_get"] ||
             enabledBlocks["variables_set"] ||
             enabledBlocks["var_math"] ||
@@ -137,297 +137,65 @@ export function useBlocklySetup({
           },
         };
 
+        // 1.6 Inject Workspace ลงใน DOM
         const workspace = Blockly.inject(blocklyRef.current, workspaceConfig);
-
         workspaceRef.current = workspace;
+
+        // อัปเดตสถานะว่าพร้อมแล้ว
         setBlocklyLoaded(true);
         setBlocklyJavaScriptReady(true);
 
-
-
-
-
+        // 1.7 เตรียมตัวแปรเริ่มต้น (Common Variables)
         ensureCommonVariables(workspace);
 
-        // Note: Starter XML will be loaded in useEffect after workspace is ready
+        // 1.8 ลงทะเบียน Event Handlers (ดักจับการเปลี่ยนแปลง)
+        registerProcedureEventHandlers(workspace);
+        registerVariableEventHandlers(workspace);
 
-        // CRITICAL: Prevent auto-creation of procedure definitions
-        let isCreatingCallBlock = false;
-
-        workspace.addChangeListener((event) => {
-          // ⚡ Performance: Skip all processing during XML load
-          if (isXmlLoading()) {
-            return;
-          }
-
-          // ⚡ Performance: Skip UI-only events that don't need processing
-          if (event.type === Blockly.Events.UI ||
-            event.type === Blockly.Events.SELECTED ||
-            event.type === Blockly.Events.CLICK) {
-            return;
-          }
-
-          // Track when call blocks are being created
-          if (event.type === Blockly.Events.BLOCK_CREATE) {
-            const block = workspace.getBlockById(event.blockId);
-
-            if (block && (block.type === 'procedures_callreturn' || block.type === 'procedures_callnoreturn')) {
-              isCreatingCallBlock = true;
-
-
-              // Fix procedure name immediately to prevent getDefinition error
-              setTimeout(() => {
-                try {
-                  const nameField = block.getField('NAME');
-                  if (nameField) {
-                    const currentValue = nameField.getValue();
-
-                    // If value is invalid, fix it
-                    if (!currentValue || currentValue === 'unnamed' || currentValue === 'undefined' ||
-                      currentValue === 'temp_procedure' || (typeof currentValue === 'string' && currentValue.trim() === '')) {
-                      const procedureMap = workspace.getProcedureMap();
-                      if (procedureMap) {
-                        const procedures = procedureMap.getProcedures();
-                        if (procedures.length > 0) {
-                          nameField.setValue(procedures[0].getName());
-
-                        } else {
-                          // Check definition blocks directly
-                          const definitionBlocks = workspace.getBlocksByType('procedures_defreturn', false)
-                            .concat(workspace.getBlocksByType('procedures_defnoreturn', false));
-                          if (definitionBlocks.length > 0) {
-                            const firstDefName = definitionBlocks[0].getFieldValue('NAME');
-                            if (firstDefName && firstDefName !== 'unnamed' && firstDefName !== 'undefined') {
-                              nameField.setValue(firstDefName);
-
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                } catch (e) {
-                  console.warn('Error fixing call block name:', e);
-                }
-                isCreatingCallBlock = false;
-              }, 50);
-            }
-
-            // If a definition block is created while we're creating a call block, delete it
-            if (block && (block.type === 'procedures_defreturn' || block.type === 'procedures_defnoreturn')) {
-              if (isCreatingCallBlock) {
-
-                setTimeout(() => {
-                  try {
-                    if (block && !block.isDisposed()) {
-                      block.dispose(false);
-                    }
-                  } catch (e) {
-                    console.warn('Error removing auto-created procedure:', e);
-                  }
-                }, 10);
-              }
-            }
-          }
-
-          // Error handler
-          if (event.type === Blockly.Events.ERROR) {
-            console.warn("Blockly error event:", event);
-          }
-        });
-
-        // Variable management - only create variables when user explicitly interacts with variable field
-        // Don't auto-create variables when blocks are dragged from toolbox
-        workspace.addChangeListener((event) => {
-          // Only handle variable creation on BLOCK_CHANGE when user changes variable field explicitly
-          // Skip BLOCK_CREATE events to prevent auto-creation when blocks are dragged from toolbox
-          if (event.type === Blockly.Events.BLOCK_CHANGE) {
-            const block = workspace.getBlockById(event.blockId);
-            // Skip if block is in flyout (toolbox)
-            if (block && block.isInFlyout) {
-              return;
-            }
-            // Only create variable if the change is to the VAR field (user explicitly changed it)
-            if (event.name === 'VAR' && block && block.getField) {
-              const varField = block.getField('VAR');
-              if (varField && varField.getValue) {
-                const varName = varField.getValue();
-                // Skip if varName is empty or invalid
-                if (!varName || varName.trim() === '') {
-                  return;
-                }
-                // Get variable ID from field value (could be ID or name)
-                let variable;
-                try {
-                  // Try to get by ID first
-                  variable = workspace.getVariableById(varName);
-                  // If not found, try by name
-                  if (!variable) {
-                    variable = workspace.getVariable(varName);
-                  }
-                  // If still not found, create it (user explicitly set this variable name)
-                  if (!variable) {
-
-                    try {
-                      workspace.createVariable(varName);
-                    } catch (error) {
-                      console.error(`Failed to create variable ${varName}:`, error);
-                    }
-                  }
-                } catch (e) {
-                  // Ignore errors
-                }
-              }
-            }
-          }
-          // Completely skip BLOCK_CREATE events for variable creation
-        });
-
+        // 1.9 เริ่มเกม Phaser
         initPhaserGame();
+
       } catch (error) {
         console.error("Error initializing workspace:", error);
-        setCurrentHint("❌ เกิดข้อผิดพลาดในการสร้าง workspace");
       }
     }, 100);
   };
 
-  // Load starter XML when workspace is ready and starter_xml is available
-  // Use a ref to track the last loaded XML to avoid reloading the same XML
+  // ============================================================================
+  // [Flow A] Initialization: 3. โหลด Starter XML (Load Code)
+  // ส่วนจัดการ Starter XML (โหลดโค้ดเริ่มต้น)
+  // ============================================================================
+
+  // ใช้ Ref ป้องกันการโหลดซ้ำ XML เดิม
   const lastLoadedXmlRef = React.useRef(null);
 
-  // Load starter XML when workspace is ready
   useEffect(() => {
+    // ถ้า Workspace ยังไม่พร้อม -> รอไปก่อน
+    if (!workspaceRef.current) return;
 
-    // Check if workspace is ready - but don't require blocklyLoaded to be true
-    // because workspace might be ready before blocklyLoaded is set
-    if (!workspaceRef.current) {
-      return;
-    }
-
-    // Only load if starter_xml is different from last loaded
-    if (lastLoadedXmlRef.current === starter_xml) {
-      return;
-    }
+    // ถ้า XML ตัวนี้โหลดไปแล้ว -> ไม่ต้องโหลดซ้ำ
+    if (lastLoadedXmlRef.current === starter_xml) return;
 
     if (starter_xml && typeof starter_xml === 'string' && starter_xml.trim()) {
-      // Add a small delay to ensure workspace is fully ready
+      // รอแป๊บนึงเพื่อให้ Workspace นิ่ง แล้วค่อยโหลด
       setTimeout(() => {
-        if (!workspaceRef.current) {
-          console.warn('⚠️ Workspace disappeared before loading XML');
-          return;
-        }
-
-        try {
-
-          // procedures_def* should be registered by imports above; just guard and warn
-          if (!Blockly.Blocks['procedures_defreturn'] || !Blockly.Blocks['procedures_defnoreturn']) {
-            console.warn('⚠️ procedures_def* not registered even after imports');
-          }
-
-          // Helper: ensure variables/args have IDs (for malformed starter XML)
-          // Imported from xmlFixers
-          let result = ensureVariableIds(starter_xml);
-
-          // Helper: Add mutation to procedure definitions
-          // Imported from xmlFixers
-          result = addMutationToProcedureDefinitions(result);
-
-          // Use starter_xml as-is; assume ids/mutations already present
-          let cleanedStarterXml = result;
-
-          // Check if XML contains any blocks (not just procedure definitions)
-          // Starter XML can contain regular blocks without functions
-          const hasBlocks = cleanedStarterXml.match(/<block[^>]*type="/);
-          if (!hasBlocks) {
-            console.warn('⚠️ Starter XML contains no blocks; skipping load');
-            return;
-          }
-          try {
-            const xml = Blockly.utils.xml.textToDom(cleanedStarterXml);
-            workspaceRef.current.clear();
-
-            // ⚡ Performance: Set flag to skip event processing during XML load
-            setXmlLoading(true);
-
-            Blockly.Xml.domToWorkspace(xml, workspaceRef.current);
-
-            setXmlLoading(false);
-
-            lastLoadedXmlRef.current = starter_xml;
-          } catch (primaryErr) {
-            console.warn('⚠️ Failed to load processed starter XML, retrying raw starter_xml:', primaryErr);
-            try {
-              const xmlRaw = Blockly.utils.xml.textToDom(starter_xml);
-              workspaceRef.current.clear();
-
-              // ⚡ Performance: Set flag to skip event processing
-              setXmlLoading(true);
-
-              Blockly.Xml.domToWorkspace(xmlRaw, workspaceRef.current);
-
-              setXmlLoading(false);
-
-              lastLoadedXmlRef.current = starter_xml;
-            } catch (rawErr) {
-              // Re-enable event processing even on error
-              setXmlLoading(false);
-              console.error('❌ Failed to load starter XML (raw and processed):', rawErr);
-              setCurrentHint('⚠️ ไม่สามารถโหลด starter blocks ได้: ' + (rawErr.message || 'invalid XML'));
-              return;
-            }
-          }
-
-
-
-
-
-          // CRITICAL: Lock starter blocks so users can't delete/move/rename them
-          // This enforces "Guided Learning" where users fill in blanks
-          const allBlocks = workspaceRef.current.getAllBlocks(false);
-          allBlocks.forEach(block => {
-            // 1. Lock movement and deletion
-            block.setMovable(false);
-            block.setDeletable(false);
-
-            // 2. Lock function renaming/mutation (if it's a definition)
-            if (block.type === 'procedures_defreturn' || block.type === 'procedures_defnoreturn') {
-              block.setEditable(false);
-            }
-          });
-
-          // If text code is enabled, generate code from starter XML
-          if (isTextCodeEnabled && onCodeGenerated) {
-            try {
-              // Enable Clean Mode
-              javascriptGenerator.isCleanMode = true;
-              let code = javascriptGenerator.workspaceToCode(workspaceRef.current);
-              javascriptGenerator.isCleanMode = false;
-
-              if (code && code.trim()) {
-                // Remove auto-generated var declarations specific to Blockly
-                // e.g. "var garph, start, goal, path, container, visited, map, node, neighbor;"
-                code = code.replace(/^var\s+[\w,\s]+;\n+/, '');
-
-
-                onCodeGenerated(code);
-              }
-            } catch (genErr) {
-              javascriptGenerator.isCleanMode = false;
-              console.error('❌ Failed to generate starter text code:', genErr);
-            }
-          }
-
-        } catch (xmlError) {
-          console.error('⚠️ Error loading starter XML:', xmlError);
-          setCurrentHint('⚠️ ไม่สามารถโหลด starter blocks ได้: ' + xmlError.message);
-        }
-      }, 200); // Small delay to ensure workspace is ready
+        loadStarterXml(
+          workspaceRef.current,
+          starter_xml,
+          isTextCodeEnabled,
+          onCodeGenerated,
+          // setCurrentHint
+        );
+        lastLoadedXmlRef.current = starter_xml; // จำไว้ว่าโหลดแล้ว
+      }, 200);
     } else {
+      // ถ้าไม่มี XML ให้รีเซ็ตตัวจำ
       if (lastLoadedXmlRef.current !== null) {
         lastLoadedXmlRef.current = null;
       }
     }
-  }, [starter_xml, blocklyLoaded, setCurrentHint]);
+  }, [starter_xml, blocklyLoaded]);
+  //  }, [starter_xml, blocklyLoaded, setCurrentHint]);
 
   return { initBlocklyAndPhaser };
 }

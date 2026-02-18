@@ -31,7 +31,7 @@ export function startSubsetSumTracking() {
 export function trackIncludeWarrior(index, sum) {
   if (subsetSumTrackingState.isTracking) {
     subsetSumTrackingState.decisions.push({ index, side: 1, sum, action: 'include' });
-    console.log(`📊 Track include: warrior ${index} -> side1, sum: ${sum}`);
+    // console.log removed(`📊 Track include: warrior ${index} -> side1, sum: ${sum}`);
   }
 }
 
@@ -43,7 +43,7 @@ export function trackIncludeWarrior(index, sum) {
 export function trackExcludeWarrior(index, sum) {
   if (subsetSumTrackingState.isTracking) {
     subsetSumTrackingState.decisions.push({ index, side: 2, sum, action: 'exclude' });
-    console.log(`📊 Track exclude: warrior ${index} -> side2, sum: ${sum}`);
+    // console.log removed(`📊 Track exclude: warrior ${index} -> side2, sum: ${sum}`);
   }
 }
 
@@ -55,8 +55,8 @@ export function trackExcludeWarrior(index, sum) {
  * @returns {Array} Array of warrior indices that are in side1 (the solution)
  */
 export function reconstructSubsetSumSolution(targetSum) {
-  console.log('🔍 Reconstructing solution for targetSum:', targetSum);
-  console.log('🔍 All decisions:', subsetSumTrackingState.decisions);
+  // console.log removed('🔍 Reconstructing solution for targetSum:', targetSum);
+  // console.log removed('🔍 All decisions:', subsetSumTrackingState.decisions);
 
   // Since subset sum uses backtracking, we need to find the path that succeeds
   // We'll look for the last decision where sum == targetSum
@@ -74,13 +74,13 @@ export function reconstructSubsetSumSolution(targetSum) {
           solution.push(d.index);
         }
       }
-      console.log('✅ Found solution path:', solution);
+      // console.log removed('✅ Found solution path:', solution);
       return solution;
     }
   }
 
   // If no exact match, return empty solution (let visual blocks handle it)
-  console.log('⚠️ No exact solution path found, decisions may not be tracked correctly');
+  // console.log removed('⚠️ No exact solution path found, decisions may not be tracked correctly');
   return solution;
 }
 
@@ -188,11 +188,11 @@ export async function showSubsetSumFinalSolution(targetSum) {
     await new Promise(resolve => setTimeout(resolve, 200));
   }
 
-  console.log('✅ Ensured all subset sum warriors are placed:', {
-    side1: warriorsInSide1,
-    side2: allIndices.filter(idx => !warriorsInSide1.includes(idx) && !remainingUnplaced.includes(idx)).concat(remainingUnplaced),
-    unplaced: remainingUnplaced
-  });
+  // console.log removed('✅ Ensured all subset sum warriors are placed:', {
+  //   side1: warriorsInSide1,
+  //   side2: allIndices.filter(idx => !warriorsInSide1.includes(idx) && !remainingUnplaced.includes(idx)).concat(remainingUnplaced),
+  //   unplaced: remainingUnplaced
+  // });
 }
 
 /**

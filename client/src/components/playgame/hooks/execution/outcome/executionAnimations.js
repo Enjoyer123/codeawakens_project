@@ -36,12 +36,24 @@ export const playVictorySequence = async (currentLevel, initialScene) => {
 
         // 3. Pre-Banner Animation (Combat or Delay)
         if (isCinematicLevel) {
-            // Cinematic: Wait for combat animation to complete
-            await new Promise((resolve) => {
-                playCombatSequence(currentScene, true, () => {
-                    resolve();
+            // Check if monsters were already defeated by user code (e.g. hit() blocks)
+            const allMonstersDefeated = !currentScene.monsters
+                || currentScene.monsters.length === 0
+                || currentScene.monsters.every(m =>
+                    m.data?.defeated || m.sprite?.getData('defeated') || m.isDefeated
+                );
+
+            if (allMonstersDefeated) {
+                // Monsters already killed during code execution, skip cinematic
+                await new Promise(r => setTimeout(r, 500));
+            } else {
+                // No combat happened yet, play the full cinematic sequence
+                await new Promise((resolve) => {
+                    playCombatSequence(currentScene, true, () => {
+                        resolve();
+                    });
                 });
-            });
+            }
         } else {
             // Graph/Regular: No pre-banner delay needed
             // Visual effects will play naturally

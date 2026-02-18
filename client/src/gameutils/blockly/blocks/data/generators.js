@@ -1,28 +1,24 @@
 // Blockly Data Structure Generators (Variables, Dictionaries, Stack, Lists)
 import * as Blockly from "blockly/core";
 import { javascriptGenerator } from "blockly/javascript";
+import { getVariableSetHook } from "../../core/algorithm_hooks";
 
 /**
  * Define generators for dictionary and DSU blocks
  */
 export function defineDictionaryGenerators() {
 
+    // Normalize dictionary key to 'r' or 'c' for Prim's algorithm (row/column)
+    // Strips parentheses from Blockly codegen and normalizes quote format
     const coerceRcKeyCode = (keyCode) => {
-        try {
-            let s = String(keyCode || '').trim();
-            while (s.startsWith('(') && s.endsWith(')')) {
-                s = s.slice(1, -1).trim();
-            }
-            if (/^['"]r['"]$/i.test(s)) return `'r'`;
-            if (/^['"]c['"]$/i.test(s)) return `'c'`;
-            const m = s.match(/[A-Za-z]/);
-            const letter = m ? String(m[0]).toLowerCase() : null;
-            if (letter === 'r' || letter === 'g' || letter === 'd') return `'r'`;
-            if (letter === 'c') return `'c'`;
-            return keyCode;
-        } catch (e) {
-            return keyCode;
+        let s = String(keyCode || '').trim();
+        // Strip wrapping parentheses from Blockly codegen
+        while (s.startsWith('(') && s.endsWith(')')) {
+            s = s.slice(1, -1).trim();
         }
+        if (/^['"]r['"]$/i.test(s)) return `'r'`;
+        if (/^['"]c['"]$/i.test(s)) return `'c'`;
+        return keyCode;
     };
 
     javascriptGenerator.forBlock["dict_create"] = function (block) {
@@ -135,8 +131,11 @@ export function defineDataGenerators() {
         const varModel = block.workspace.getVariableById(varId);
         const rawName = varModel ? varModel.name : varName;
 
-        if (rawName && rawName.trim().toLowerCase() === 'mst_weight') {
-            code += `if (typeof updateMSTWeight === 'function') { updateMSTWeight(${varName}); }\n`;
+        if (rawName) {
+            const hookCode = getVariableSetHook(rawName);
+            if (hookCode) {
+                code += hookCode;
+            }
         }
 
         return code;

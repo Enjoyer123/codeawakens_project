@@ -26,7 +26,7 @@ export function usePatternAnalysis({
   setHintData,
   setCurrentHint,
   setCurrentWeaponData,
-  setPatternFeedback,
+  // setPatternFeedback,
   setPartialWeaponKey,
   highlightBlocks,
   clearHighlights,
@@ -47,7 +47,7 @@ export function usePatternAnalysis({
     clearHighlights,
     setHintData,
     setCurrentWeaponData,
-    setPatternFeedback,
+    // setPatternFeedback,
     setPartialWeaponKey,
     hintData
   });
@@ -62,7 +62,7 @@ export function usePatternAnalysis({
       clearHighlights,
       setHintData,
       setCurrentWeaponData,
-      setPatternFeedback,
+      // setPatternFeedback,
       setPartialWeaponKey,
       hintData
     };
@@ -74,7 +74,7 @@ export function usePatternAnalysis({
     clearHighlights,
     setHintData,
     setCurrentWeaponData,
-    setPatternFeedback,
+    // setPatternFeedback,
     setPartialWeaponKey,
     hintData
   ]);
@@ -114,7 +114,7 @@ export function usePatternAnalysis({
         clearHighlights,
         setHintData,
         setCurrentWeaponData,
-        setPatternFeedback,
+        // setPatternFeedback,
         setPartialWeaponKey
       } = valuesRef.current;
 
@@ -311,7 +311,7 @@ export function usePatternAnalysis({
         if (weaponKey) {
           const weaponData = getWeaponData(weaponKey);
           setCurrentWeaponData(weaponData);
-          setPatternFeedback(`🎉 Perfect Pattern: ${matchedPattern.name}`);
+          // setPatternFeedback(`🎉 Perfect Pattern: ${matchedPattern.name}`);
           setCurrentGameState({
             weaponKey: weaponKey,
             weaponData: weaponData,
@@ -340,11 +340,11 @@ export function usePatternAnalysis({
 
         setPartialWeaponKey(partialWeaponKey);
         setCurrentWeaponData(defaultWeaponData);
-        setPatternFeedback(
-          patternPercentage.percentage > 0
-            ? `⚠️ ไม่ตรง Pattern ใดๆ (${patternPercentage.percentage}%)`
-            : "วาง blocks เพื่อดูผลลัพธ์"
-        );
+        // setPatternFeedback(
+        //   patternPercentage.percentage > 0
+        //     ? `⚠️ ไม่ตรง Pattern ใดๆ (${patternPercentage.percentage}%)`
+        //     : "วาง blocks เพื่อดูผลลัพธ์"
+        // );
         setCurrentGameState({ weaponKey: defaultWeaponKey, weaponData: defaultWeaponData, patternTypeId: 0 });
 
         const currentScene = currentState.currentScene;

@@ -23,7 +23,7 @@ import { defineEmeiGenerators } from '../algorithms/emei_mountain/generators';
 import { defineNQueenGenerators } from '../algorithms/nqueen/generators';
 
 export const defineAllGenerators = () => {
-  // console.log("Defining all generators...");
+
   defineMovementGenerators();
   defineLogicGenerators();
   defineMathGenerators();

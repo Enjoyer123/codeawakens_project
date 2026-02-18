@@ -268,7 +268,7 @@ export function loadDfsExampleBlocks(workspace) {
   }
 
   try {
-    console.log('📦 Loading DFS example blocks into workspace...');
+    // console.log removed('📦 Loading DFS example blocks into workspace...');
 
     // Clear workspace first
     workspace.clear();
@@ -292,13 +292,13 @@ export function loadDfsExampleBlocks(workspace) {
               const existingVar = variableMap.getVariable(varName);
               if (!existingVar) {
                 workspace.createVariable(varName);
-                console.log(`Created variable: ${varName}`);
+                // console.log removed(`Created variable: ${varName}`);
               } else {
                 console.debug(`Variable ${varName} already exists`);
               }
             } else {
               workspace.createVariable(varName);
-              console.log(`Created variable: ${varName} (no variable map)`);
+              // console.log removed(`Created variable: ${varName} (no variable map)`);
             }
           } catch (e) {
             // Variable might already exist
@@ -306,7 +306,7 @@ export function loadDfsExampleBlocks(workspace) {
           }
         });
 
-        console.log('✅ DFS example blocks loaded successfully');
+        // console.log removed('✅ DFS example blocks loaded successfully');
       } catch (error) {
         console.error('❌ Error loading DFS example blocks:', error);
         alert('เกิดข้อผิดพลาดในการโหลด DFS example blocks: ' + (error.message || 'รูปแบบไม่ถูกต้อง'));

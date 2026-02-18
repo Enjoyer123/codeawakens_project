@@ -599,7 +599,7 @@ export function loadEmeiMountainExample(workspace, type = 'dijkstra') {
       }
     });
 
-    console.log(`✅ Loaded Emei Mountain ${type} template`);
+    // console.log removed(`✅ Loaded Emei Mountain ${type} template`);
   } catch (err) {
     console.error('Error loading Emei Mountain example:', err);
   }

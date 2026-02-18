@@ -263,20 +263,20 @@ export function loadBfsExampleBlocks(workspace) {
   }
 
   try {
-    console.log('📦 Loading BFS example blocks into workspace...');
-    
+    // console.log removed('📦 Loading BFS example blocks into workspace...');
+
     // Clear workspace first
     workspace.clear();
-    
+
     // Wait a bit for workspace to be ready
     setTimeout(() => {
       try {
         // Parse XML
         const xmlDom = Blockly.utils.xml.textToDom(bfsExampleXml);
-        
+
         // Load into workspace
         Blockly.Xml.domToWorkspace(xmlDom, workspace);
-        
+
         // Ensure variables exist
         const variableNames = ['container', 'visited', 'path', 'node', 'neighbor', 'garph', 'start', 'goal', 'map'];
         variableNames.forEach(varName => {
@@ -287,8 +287,8 @@ export function loadBfsExampleBlocks(workspace) {
             console.debug(`Variable ${varName} already exists or error creating:`, e);
           }
         });
-        
-        console.log('✅ BFS example blocks loaded successfully');
+
+        // console.log removed('✅ BFS example blocks loaded successfully');
       } catch (error) {
         console.error('❌ Error loading BFS example blocks:', error);
         alert('เกิดข้อผิดพลาดในการโหลด BFS example blocks: ' + (error.message || 'รูปแบบไม่ถูกต้อง'));

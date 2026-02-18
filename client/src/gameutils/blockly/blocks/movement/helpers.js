@@ -23,13 +23,13 @@ export async function turnRight() {
 export async function moveToNode(targetNodeId) {
     const currentState = getCurrentGameState();
     if (!currentState.currentScene) {
-        console.log("No current scene available");
+        // console.log removed("No current scene available");
         return false;
     }
 
     const player = currentState.currentScene.player;
     if (!player) {
-        console.log("No player found");
+        // console.log removed("No player found");
         return false;
     }
 

@@ -9,20 +9,20 @@ export function loadKruskalExampleBlocks(workspace) {
   }
 
   try {
-    console.log('📦 Loading Kruskal example blocks into workspace...');
-    
+    // console.log removed('📦 Loading Kruskal example blocks into workspace...');
+
     // Clear workspace first
     workspace.clear();
-    
+
     // Wait a bit for workspace to be ready
     setTimeout(() => {
       try {
         // Parse XML
         const xmlDom = Blockly.utils.xml.textToDom(kruskalExampleXml);
-        
+
         // Load into workspace
         Blockly.Xml.domToWorkspace(xmlDom, workspace);
-        
+
         // Ensure variables exist
         const variableNames = ['graph', 'start', 'edges', 'parent', 'rank', 'MST_weight', 'MST_edges', 'edge_data', 'u', 'v', 'weight', 'root_u', 'root_v', 'result', 'map'];
         variableNames.forEach(varName => {
@@ -33,21 +33,21 @@ export function loadKruskalExampleBlocks(workspace) {
               const existingVar = variableMap.getVariable(varName);
               if (!existingVar) {
                 workspace.createVariable(varName);
-                console.log(`Created variable: ${varName}`);
+                // console.log removed(`Created variable: ${varName}`);
               } else {
                 console.debug(`Variable ${varName} already exists`);
               }
             } else {
               workspace.createVariable(varName);
-              console.log(`Created variable: ${varName} (no variable map)`);
+              // console.log removed(`Created variable: ${varName} (no variable map)`);
             }
           } catch (e) {
             // Variable might already exist
             console.debug(`Variable ${varName} already exists or error creating:`, e);
           }
         });
-        
-        console.log('✅ Kruskal example blocks loaded successfully');
+
+        // console.log removed('✅ Kruskal example blocks loaded successfully');
       } catch (error) {
         console.error('❌ Error loading Kruskal example blocks:', error);
         alert('เกิดข้อผิดพลาดในการโหลด Kruskal example blocks: ' + (error.message || 'รูปแบบไม่ถูกต้อง'));

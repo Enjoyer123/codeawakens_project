@@ -264,7 +264,7 @@ export function loadDynamicCoinChangeExampleBlocks(workspace) {
   }
 
   try {
-    console.log('➕ Loading Dynamic Coin Change (DP) example blocks into workspace...');
+    // console.log removed('➕ Loading Dynamic Coin Change (DP) example blocks into workspace...');
     workspace.clear();
 
     setTimeout(() => {
@@ -292,7 +292,7 @@ export function loadDynamicCoinChangeExampleBlocks(workspace) {
           }
         });
 
-        console.log('✅ Dynamic Coin Change (DP) example blocks loaded successfully');
+        // console.log removed('✅ Dynamic Coin Change (DP) example blocks loaded successfully');
       } catch (error) {
         console.error('❌ Error loading Dynamic Coin Change example blocks:', error);
         alert('เกิดข้อผิดพลาดในการโหลด Dynamic Coin Change example blocks: ' + (error.message || 'รูปแบบไม่ถูกต้อง'));
