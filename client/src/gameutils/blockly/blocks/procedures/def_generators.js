@@ -2,31 +2,10 @@
 import * as Blockly from "blockly/core";
 import { javascriptGenerator } from "blockly/javascript";
 
-// Algorithm-specific hooks for procedure definitions
-const PROCEDURE_HOOKS = {
-    knapsack: {
-        argsCount: 4,
-        paramValidation: (args) => `
-        // Validate knapsack parameters
-        if (!Array.isArray(${args[0]}) || !Array.isArray(${args[1]}) || 
-            typeof ${args[2]} !== 'number' || isNaN(${args[2]}) ||
-            typeof ${args[3]} !== 'number' || isNaN(${args[3]})) {
-          console.error('knapsack: Invalid parameters', { w: ${args[0]}, v: ${args[1]}, i: ${args[2]}, j: ${args[3]} });
-          return 0;
-        }
-      `
-    },
-    coinchange: {
-        localVars: ['include', 'exclude', 'includeResult']
-    }
-};
+import { PROCEDURE_DEFINITION_HOOKS, CLEAN_MODE_RETURNS } from "../../core/algorithm_hooks";
 
-// Clean mode return value fallbacks for known algorithms
-const CLEAN_MODE_RETURNS = {
-    PRIM: 'MST_weight',
-    subsetSum: 'false',
-    knapsack: '0'
-};
+// Algorithm hooks allow specific procedure definitions to have custom validation or variables
+// without hardcoding them here.
 
 export function defineProcedureDefGenerators() {
     // Simple function definition/call generators
@@ -74,13 +53,14 @@ export function defineProcedureDefGenerators() {
         let paramValidation = '';
         let localVarDeclarations = '';
 
-        const hook = Object.entries(PROCEDURE_HOOKS)
+        const hook = Object.entries(PROCEDURE_DEFINITION_HOOKS)
             .find(([key]) => name.toLowerCase().includes(key));
 
         if (hook) {
             const [, config] = hook;
-            if (config.paramValidation && (!config.argsCount || args.length === config.argsCount)) {
-                paramValidation = config.paramValidation(args);
+            // Use getValidationCode from hook
+            if (config.getValidationCode && (!config.argsCount || args.length === config.argsCount)) {
+                paramValidation = config.getValidationCode(args);
             }
             if (config.localVars) {
                 const vars = config.localVars.map(v =>

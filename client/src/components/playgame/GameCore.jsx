@@ -2,13 +2,12 @@
 // Core game component that can be reused for both normal play and preview mode
 import React, { useEffect, useMemo, useRef, useState } from "react";
 // import { updateTrainScheduleVisuals, updateRopePartitionVisuals } from '../../gameutils/phaser';
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import ProgressModal from '../../pages/user/ProgressModal';
 import * as Blockly from "blockly/core";
 import "blockly/blocks";
 import "blockly/javascript";
-
 // import { API_BASE_URL } from '../../config/apiConfig';
 // NOTE: 11/2/2026 เป็นแบบ golbal ต้องเปลี่ยนเป็นของใครของมัน
 window.Blockly = Blockly;
@@ -26,10 +25,8 @@ import {
 import {
   getCurrentGameState,
 } from '../../gameutils/shared/game';
-import {
-  isInCombat
-} from '../../gameutils/shared/combat';
-import { clearGameOverScreen, showGameOver, showVictory } from '../../gameutils/phaser';
+
+import { clearGameOverScreen } from '../../gameutils/phaser';
 
 // Import components
 import GameArea from './GameArea';
@@ -50,14 +47,9 @@ import { useLevelInitializer } from './hooks/useLevelLoader';
 import { usePatternAnalysis } from './hooks/usePatternAnalysis';
 import { useTextCodeValidation } from './hooks/useTextCodeValidation';
 import { useGuideSystem } from '../../hooks/useGuideSystem';
-import { getUserByClerkId } from '../../services/profileService';
-import { fetchAllLevels } from '../../services/levelService';
-
 
 // Import utils
-import { calculateFinalScore } from './utils/scoreUtils';
-import { highlightBlocks as highlightBlocksUtil, clearHighlights as clearHighlightsUtil } from './utils/visualGuide';
-import { handleRestartGame as handleRestartGameUtil, handleVictory as handleVictoryUtil } from './utils/gameHandlers';
+import { handleRestartGame as handleRestartGameUtil } from './utils/gameHandlers';
 // Import example loaders configuration
 import { EXAMPLE_LOADERS } from './constants/exampleLoaders';
 // Import API bridges
@@ -70,6 +62,7 @@ import { resetCoinChangeTableState } from "@/gameutils/blockly";
 import { resetKnapsackTableState } from '@/gameutils/blockly';
 import { resetSubsetSumTableState } from '@/gameutils/blockly';
 
+import { useSuppressBlocklyWarnings } from '../../components/admin/level/hooks/useSuppressBlocklyWarnings';
 const resetAllGameStates = () => {
   resetDijkstraState();
   resetCoinChangeTableState();
@@ -90,7 +83,6 @@ const resetAllGameStates = () => {
  * @param {string} props.levelId - Level ID to load
  * @param {boolean} props.isPreview - Whether this is preview mode (default: false)
  * @param {number} props.patternId - Pattern ID for preview mode (optional)
- * @param {Function} props.onSaveProgress - Callback function to save progress (optional, only used in normal mode)
  * @param {Function} props.onUnlockPattern - Callback function when pattern is unlocked (optional, for preview mode)
  * @param {Function} props.onUnlockLevel - Callback function when level is unlocked (optional, for preview mode)
  */
@@ -98,64 +90,37 @@ const GameCore = ({
   levelId: propLevelId,
   isPreview = false,
   patternId = null,
-  onSaveProgress = null,
   onUnlockPattern = null,
   onUnlockLevel = null
 }) => {
   const { levelId: paramLevelId } = useParams();
-  const navigate = useNavigate();
   const { getToken } = useAuth();
 
   // Use prop levelId if provided, otherwise use param from route
   const levelId = propLevelId || paramLevelId;
 
-  // Suppress Blockly deprecation warnings globally for this component
-  useEffect(() => {
-    const originalConsoleWarn = console.warn;
-    console.warn = function (...args) {
-      const message = args.join(' ');
-      if (message.includes('getAllVariables was deprecated') ||
-        message.includes('Use Blockly.Workspace.getVariableMap().getAllVariables instead') ||
-        message.includes('Blockly.Workspace.getAllVariables was deprecated')) {
-        return;
-      }
-      originalConsoleWarn.apply(console, args);
-    };
-
-    return () => {
-      console.warn = originalConsoleWarn;
-    };
-  }, []);
-
-
-
   const gameRef = useRef(null);
   const blocklyRef = useRef(null);
   const workspaceRef = useRef(null);
   const phaserGameRef = useRef(null);
-  const highlightOverlaysRef = useRef({});
-
-
   const [gameState, setGameState] = useState("loading");
   const [currentHint, setCurrentHint] = useState("Loading level data...");
   const [blocklyLoaded, setBlocklyLoaded] = useState(false);
 
-
-
   // Progress tracking state (only used in normal mode)
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [gameResult, setGameResult] = useState(null);
-  const [attempts, setAttempts] = useState(0);
-  const [timeSpent, setTimeSpent] = useState(0);
+  // const [attempts, setAttempts] = useState(0);
+  // const [timeSpent, setTimeSpent] = useState(0);
   const gameStartTime = useRef(null);
 
   // State for API data
   const [currentLevel, setCurrentLevel] = useState(null);
   const [enabledBlocks, setEnabledBlocks] = useState({});
-  const enabledBlockKeySignature = useMemo(
-    () => Object.keys(enabledBlocks).sort().join(','),
-    [enabledBlocks]
-  );
+  // const enabledBlockKeySignature = useMemo(
+  //   () => Object.keys(enabledBlocks).sort().join(','),
+  //   [enabledBlocks]
+  // );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -174,12 +139,10 @@ const GameCore = ({
   const [currentWeaponData, setCurrentWeaponData] = useState(null);
   const [patternFeedback, setPatternFeedback] = useState("วาง blocks เพื่อดูผลลัพธ์");
   const [partialWeaponKey, setPartialWeaponKey] = useState(null);
-  const [earnedWeaponKey, setEarnedWeaponKey] = useState(null);
 
   // Big O complexity state
   const [userBigO, setUserBigO] = useState(null);
   const [showBigOQuiz, setShowBigOQuiz] = useState(false);
-
 
 
   const handleBigOSelect = (value) => {
@@ -196,15 +159,12 @@ const GameCore = ({
     progress: 0
   });
 
-
-
   // Score system state
   const [finalScore, setFinalScore] = useState(null);
 
   // Hint open / count state
   const [hintOpen, setHintOpen] = useState(false);
   const [hintOpenCount, setHintOpenCount] = useState(0);
-  const hintOpenAtStepRef = useRef(null);
 
   // Ensure finalScore is set when game is over
   useEffect(() => {
@@ -255,38 +215,22 @@ const GameCore = ({
   // History system state - using TanStack Query
   const { userProgress, allLevels: allLevelsData } = useGameHistory();
 
-  // Fetch user progress and all levels
 
-  // Ideally, invalidate query here, but for now relies on natural refetch or we can import useQueryClient
-  // For simplicity, we assume ProgressModal might trigger refetch internally or just let it be.
-  // Actually, useGameHistory relies on useUserProfile which has staleTime 5 mins.
-  // We should invalidate 'userProfile' when level is completed/saved.
-  // ProgressModal saves data. We can pass a refetch function if needed,
-  // or better, handle invalidation in the mutation that saves progress (which is likely in ProgressModal or passed down).
-  // Current GameCore doesn't have the save mutation visible here (passed as prop or handled inside logic).
   const handleCloseProgressModal = () => {
     setShowProgressModal(false);
   };
 
   // Set blocklyJavaScriptReady when blocklyLoaded becomes true
   useEffect(() => {
-    console.log("🔍 useEffect for blocklyJavaScriptReady:", {
-      blocklyLoaded,
-      hasWorkspace: !!workspaceRef.current,
-      blocklyJavaScriptReady,
-      shouldSet: blocklyLoaded && workspaceRef.current && !blocklyJavaScriptReady
-    });
-
     if (blocklyLoaded && workspaceRef.current && !blocklyJavaScriptReady) {
-      console.log("✅ blocklyLoaded is true, setting blocklyJavaScriptReady to true");
       setBlocklyJavaScriptReady(true);
     }
   }, [blocklyLoaded, blocklyJavaScriptReady]);
 
   // Debug: Log codeValidation changes
 
-
-
+  // Suppress Blockly deprecation warnings
+  useSuppressBlocklyWarnings();
 
   // Text code validation - using hook
   const { handleTextCodeChange } = useTextCodeValidation({
@@ -313,7 +257,7 @@ const GameCore = ({
     setIsGameOver,
     setGameState,
     setShowProgressModal,
-    setTimeSpent,
+    // setTimeSpent,
     setGameResult,
     gameStartTime,
     isPreview
@@ -346,7 +290,7 @@ const GameCore = ({
     setIsCompleted,
     setIsGameOver,
     setCurrentWeaponData,
-    setPatternFeedback,
+    // setPatternFeedback,
     setGameState,
     setCurrentLevelState: setCurrentLevel // Mapping back to the state setter
   });
@@ -366,7 +310,7 @@ const GameCore = ({
   // Reset text code state when level changes
   useEffect(() => {
     if (levelId) {
-      console.log("🔄 Resetting text code state for new level:", levelId);
+
       setTextCode("");
       setCodeValidation({ isValid: false, message: "" });
       setBlocklyJavaScriptReady(false);
@@ -400,46 +344,43 @@ const GameCore = ({
     workspaceRef,
     goodPatterns,
     setHintData,
-    setCurrentHint, // <- Added
+    // setCurrentHint, // <- Added
     setCurrentWeaponData,
-    setPatternFeedback,
+    // setPatternFeedback,
     setPartialWeaponKey,
 
     hintOpen,        // <- Added
     hintData         // <- Added
   });
 
+
   // Initialize Blockly and Phaser when ready
+  // [Flow A] Initialization: 1. จุดเริ่มต้น (Entry Point)
+  // GameCore เรียกใช้ initBlocklyAndPhaser เมื่อ DOM และ Config พร้อม
   useEffect(() => {
-    console.log("🔧 useEffect for initBlocklyAndPhaser triggered", {
-      gameState,
-      enabledBlockKeySignature,
-      enabledBlocksCount: Object.keys(enabledBlocks).length
-    });
     if (!currentLevel || !blocklyRef.current) {
-      console.log("⏸️ Waiting for currentLevel or blocklyRef");
       return;
     }
-    if (!enabledBlockKeySignature || Object.keys(enabledBlocks).length === 0) {
-      console.log("⏸️ Waiting for enabledBlocks");
+    // if (!enabledBlockKeySignature || Object.keys(enabledBlocks).length === 0) {
+    //   return;
+    // }
+    console.log("enabledBlocks", enabledBlocks);
+    if (Object.keys(enabledBlocks).length === 0) {
       return;
     }
-    console.log("✅ All conditions met, calling initBlocklyAndPhaser");
+
     initBlocklyAndPhaser();
 
     // Cleanup function
     return () => {
-      console.log("🧹 Cleanup: Destroying Phaser game and Blockly workspace...");
-
       resetAllGameStates(); // Reset algorithm visual state
 
       if (phaserGameRef.current) {
         try {
           phaserGameRef.current.destroy(true);
           phaserGameRef.current = null;
-          console.log("✅ Phaser game destroyed");
         } catch (e) {
-          console.error("❌ Error destroying Phaser game:", e);
+          console.error("Error destroying Phaser game:", e);
         }
       }
 
@@ -447,41 +388,13 @@ const GameCore = ({
         try {
           workspaceRef.current.dispose();
           workspaceRef.current = null;
-          console.log("✅ Blockly workspace disposed");
         } catch (e) {
           console.warn("Error disposing workspace:", e);
         }
       }
     };
-  }, [currentLevel, enabledBlockKeySignature, blocklyRef.current]);
-
-  // Handle victory - using utils
-  const handleVictory = async (matchedPattern = null) => {
-    await handleVictoryUtil({
-      isCompleted,
-      setIsCompleted,
-      setIsRunning,
-      setGameState,
-      showVictory,
-      calculateFinalScore,
-      setFinalScore,
-      gameStartTime,
-      setTimeSpent,
-      setGameResult,
-      isPreview,
-      onUnlockPattern,
-      onUnlockLevel,
-      patternId,
-      currentLevel,
-      setShowProgressModal,
-      hintOpenCount,
-      matchedPattern,
-      userBigO // Pass userBigO state
-    });
-  };
-
-  // Rest of the component implementation...
-  // (This is a large component, so I'll continue with the key parts)
+  }, [currentLevel, blocklyRef.current]);
+  // }, [currentLevel, enabledBlockKeySignature, blocklyRef.current]);
 
   // Test result state
   const [testCaseResult, setTestCaseResult] = useState(null);
@@ -510,21 +423,6 @@ const GameCore = ({
     })
   });
 
-  // Initialize Blockly
-  const { initBlocklyAndPhaser } = useBlocklySetup({
-    blocklyRef,
-    workspaceRef,
-    enabledBlocks,
-    enabledBlockKeySignature,
-    setBlocklyLoaded,
-    setBlocklyJavaScriptReady,
-    setCurrentHint,
-    initPhaserGame,
-    starter_xml: currentLevel?.starter_xml || null,
-    blocklyLoaded,
-    isTextCodeEnabled: currentLevel?.textcode || false,
-    onCodeGenerated: handleTextCodeChangeWithState
-  });
 
   // Code execution
   const { runCode, executionError, clearExecutionError } = useCodeExecution({
@@ -539,11 +437,11 @@ const GameCore = ({
     setGameState,
     setCurrentHint,
     setShowProgressModal,
-    setTimeSpent,
+    // setTimeSpent,
     setGameResult,
     setFinalScore,
     gameStartTime,
-    setAttempts,
+    // setAttempts,
     setRescuedPeople,
     blocklyJavaScriptReady,
     codeValidation,
@@ -573,7 +471,7 @@ const GameCore = ({
   // Hook to run code after BigO selection
   useEffect(() => {
     if (shouldRunAfterBigO && userBigO) {
-      console.log('Running code after BigO selection');
+
       runCode();
       setShouldRunAfterBigO(false);
     }
@@ -625,7 +523,21 @@ const GameCore = ({
     }
   }, [currentLevel]);
 
-
+  // Initialize Blockly
+  const { initBlocklyAndPhaser } = useBlocklySetup({
+    blocklyRef,
+    workspaceRef,
+    enabledBlocks,
+    // enabledBlockKeySignature,
+    setBlocklyLoaded,
+    setBlocklyJavaScriptReady,
+    // setCurrentHint,
+    initPhaserGame,
+    starter_xml: currentLevel?.starter_xml || null,
+    blocklyLoaded,
+    isTextCodeEnabled: currentLevel?.textcode || false,
+    onCodeGenerated: handleTextCodeChangeWithState
+  });
 
   // Visual updates for Train Schedule and Rope Partition
   useEffect(() => {
@@ -709,10 +621,7 @@ const GameCore = ({
                   .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
                 : [];
 
-              console.log('🔔 [GameCore] Need Hint clicked (preview)', {
-                levelHintsLength: baseHints.length,
-                levelHintIndex,
-              });
+
 
               if (!baseHints || baseHints.length === 0) return;
 
@@ -723,7 +632,7 @@ const GameCore = ({
               }
 
               const nextHint = baseHints[targetIndex];
-              console.log('🔔 [GameCore] Next level hint selected:', nextHint);
+
               setActiveLevelHint(nextHint);
               // Set next index (if we just showed 0, next is 1)
               setLevelHintIndex(targetIndex + 1);
@@ -802,8 +711,7 @@ const GameCore = ({
             onClose={handleCloseProgressModal}
             gameResult={gameResult}
             levelData={currentLevel}
-            attempts={attempts}
-            timeSpent={timeSpent}
+            // timeSpent={timeSpent}
             blocklyXml={workspaceRef.current ? Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspaceRef.current)) : null}
             textCodeContent={currentLevel?.textcode ? textCode || '' : null}
             finalScore={finalScore}

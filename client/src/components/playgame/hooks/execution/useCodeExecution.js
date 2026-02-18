@@ -45,11 +45,11 @@ export function useCodeExecution({
     setGameState,
     setCurrentHint,
     setShowProgressModal,
-    setTimeSpent,
+    // setTimeSpent,
     setGameResult,
     setFinalScore,
     gameStartTime,
-    setAttempts,
+    // setAttempts,
     setRescuedPeople,
     blocklyJavaScriptReady,
     codeValidation,
@@ -141,7 +141,7 @@ export function useCodeExecution({
 
             await resetGameExecutionState({
                 gameStartTime,
-                setAttempts,
+                // setAttempts,
                 setPlayerHp,
                 setRescuedPeople,
                 setPlayerNodeId,
@@ -149,7 +149,8 @@ export function useCodeExecution({
                 currentLevel
             });
 
-            // 2. Generate and Instrument Code (Step 7 Refactoring)
+            // [Flow B] 1. Generate Code
+            // Blockly แปลงบล็อกเป็น JavaScript String ผ่าน javascriptGenerator.workspaceToCode
             let code = await generateAndInstrumentCode(workspaceRef, currentLevel);
 
             if (!code.trim()) {
@@ -351,6 +352,8 @@ export function useCodeExecution({
                 // Install runtime interceptors (N-Queen visual capture)
                 installRuntimeInterceptors(isNQueen);
 
+                // [Flow B] 2. Wait & Async
+                // โค้ดที่ได้จะเป็น async function ที่มี await คั่นในแต่ละคำสั่ง (เช่น await moveForward())
                 const codeWithReturnCapture = prepareExecutableCode(code, {
                     varName,
                     isCoinChange,
@@ -368,6 +371,9 @@ export function useCodeExecution({
 
 
                 // Prepare context for execution (all API functions and variables)
+                // [Flow B] 4. Visual Feedback (Injection)
+                // Inject Functions (เช่น moveForward, turnLeft) เข้าไปใน Scope
+                // ฟังก์ชัน moveForward ในโค้ด จะไปเรียก Phaser ให้เล่น Animation เดิน
                 const context = buildExecutionContext({
                     map,
                     all_nodes,
@@ -388,6 +394,9 @@ export function useCodeExecution({
                 // Execute code ONCE with return capture
                 let functionReturnValue = null;
                 try {
+                    // [Flow B] 3. Execute (eval)
+                    // useCodeExecution จะนำโค้ด String ไปรันจริง
+                    // ระบบจะรอ (await) จนกว่า Animation จบ ถึงจะทำบรรทัดต่อไป
                     functionReturnValue = await executeUserCode(finalExecutableCode, context, timeoutPromise);
                     console.log("Function execution completed with return capture");
 
@@ -482,7 +491,7 @@ export function useCodeExecution({
                         setIsGameOver,
                         setGameState,
                         setIsRunning,
-                        setTimeSpent,
+                        // setTimeSpent,
                         setGameResult,
                         setFinalScore,
                         setShowProgressModal,
@@ -514,7 +523,7 @@ export function useCodeExecution({
                         setIsGameOver,
                         setGameState,
                         setIsRunning,
-                        setTimeSpent,
+                        // setTimeSpent,
                         setGameResult,
                         setFinalScore,
                         setShowProgressModal,

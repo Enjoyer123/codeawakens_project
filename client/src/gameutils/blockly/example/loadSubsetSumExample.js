@@ -260,11 +260,11 @@ export function loadSubsetSumExampleBlocks(workspace) {
   }
 
   try {
-    console.log('📦 Loading Subset Sum example blocks...');
-    
+    // console.log removed('📦 Loading Subset Sum example blocks...');
+
     // Parse XML
     const xml = Blockly.utils.xml.textToDom(subsetSumExampleXml);
-    
+
     // Ensure necessary variables exist
     const variableNames = ['arr', 'index', 'sum', 'target_sum', 'warriors', 'result'];
     variableNames.forEach(varName => {
@@ -272,11 +272,11 @@ export function loadSubsetSumExampleBlocks(workspace) {
         workspace.createVariable(varName);
       }
     });
-    
+
     // Load blocks into workspace
     Blockly.Xml.domToWorkspace(xml, workspace);
-    
-    console.log('✅ Subset Sum example blocks loaded successfully');
+
+    // console.log removed('✅ Subset Sum example blocks loaded successfully');
   } catch (error) {
     console.error('❌ Error loading Subset Sum example blocks:', error);
     alert(`เกิดข้อผิดพลาดในการโหลด Subset Sum example blocks: ${error.message}`);

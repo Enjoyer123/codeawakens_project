@@ -6,7 +6,7 @@
  */
 
 import { getCurrentGameState } from '../../../shared/game';
-import { getGraphNeighborsWithWeight } from './logic';
+import { getGraphNeighborsWithWeight, getGraphNeighbors } from './logic';
 import {
     highlightNode,
     highlightEdge,
@@ -16,17 +16,7 @@ import {
     getDfsVisualState
 } from './drawing';
 
-/**
- * Local getGraphNeighbors (simple dictionary lookup)
- */
-function getGraphNeighborsLocal(graph, node) {
-    if (!graph || typeof graph !== 'object') {
-        console.warn('Invalid graph:', graph);
-        return [];
-    }
-    const nodeKey = String(node);
-    return graph[nodeKey] || graph[node] || [];
-}
+// getGraphNeighbors imported from ./logic (supports both edge-list and adjacency-list)
 
 /**
  * Get graph neighbors with visual feedback (synchronous version)
@@ -36,13 +26,13 @@ export function getGraphNeighborsWithVisualSync(graph, node) {
     const scene = currentState.currentScene;
 
     if (!scene) {
-        return getGraphNeighborsLocal(graph, node);
+        return getGraphNeighbors(graph, node);
     }
 
     highlightNode(scene, node, 0x00ff00, 600);
     getDfsVisualState().currentScanningNode = node;
 
-    const neighbors = getGraphNeighborsLocal(graph, node);
+    const neighbors = getGraphNeighbors(graph, node);
 
     if (neighbors.length > 0) {
         highlightNeighborNodes(scene, neighbors, 0xff0000, 600);
@@ -96,7 +86,7 @@ export async function getGraphNeighborsWithVisual(graph, node) {
 
     if (!scene) {
         console.warn('No scene available for visual feedback');
-        return getGraphNeighborsLocal(graph, node);
+        return getGraphNeighbors(graph, node);
     }
 
     if (scene.dfsEdgeHighlightGraphics) {
@@ -108,7 +98,7 @@ export async function getGraphNeighborsWithVisual(graph, node) {
 
     await new Promise(resolve => setTimeout(resolve, 600));
 
-    const neighbors = getGraphNeighborsLocal(graph, node);
+    const neighbors = getGraphNeighbors(graph, node);
 
     if (neighbors.length > 0) {
         highlightNeighborNodes(scene, neighbors, 0xff0000, 600);
@@ -155,22 +145,6 @@ export async function markVisitedWithVisual(node) {
 }
 
 /**
- * Check if item is being added to visited list (for visual feedback)
- */
-export function isAddingToVisitedList(listVar) {
-    const varName = String(listVar || '').toLowerCase();
-    return varName.includes('visited') || varName.includes('visit');
-}
-
-/**
- * Check if item is being added to container list (for visual feedback)
- */
-export function isAddingToContainerList(listVar) {
-    const varName = String(listVar || '').toLowerCase();
-    return varName.includes('container') || varName.includes('stack');
-}
-
-/**
  * Show path update with visual feedback
  */
 export async function showPathUpdateWithVisual(path) {
@@ -188,11 +162,4 @@ export async function showPathUpdateWithVisual(path) {
 
         dfsState.currentPath = pathArray;
     }
-}
-
-/**
- * Get graph neighbors (simple dictionary lookup, re-exported for backward compatibility)
- */
-export function getGraphNeighbors(graph, node) {
-    return getGraphNeighborsLocal(graph, node);
 }

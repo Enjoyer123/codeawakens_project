@@ -65,7 +65,7 @@ function ensureVariableExists(block, fieldName, defaultName) {
   let variable = variableMap.getVariable(varName);
 
   if (!variable) {
-    console.log(`[Variable Safety] Creating missing variable: "${varName}"`);
+    // console.log removed for production
     try {
       variable = variableMap.createVariable(varName);
     } catch (error) {
@@ -98,7 +98,7 @@ export function ensureCommonVariables(workspace) {
   COMMON_VARIABLES.forEach(varName => {
     const variable = variableMap.getVariable(varName);
     if (!variable) {
-      // console.log(`[Init] Pre-creating common variable: "${varName}"`);
+
       variableMap.createVariable(varName);
     }
   });
@@ -163,7 +163,7 @@ function improveFieldVariableHandling() {
 // ==========================================
 export function initializeImprovedVariableHandling() {
   improveFieldVariableHandling();
-  console.log("[Blockly] Improved Variable Handling Initialized");
+
 }
 
 export { ensureVariableExists };

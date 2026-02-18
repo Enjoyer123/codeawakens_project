@@ -35,8 +35,5 @@ export {
   getGraphNeighborsWithWeightWithVisualSync,
   getGraphNeighborsWithVisual,
   markVisitedWithVisual,
-  isAddingToVisitedList,
-  isAddingToContainerList,
-  showPathUpdateWithVisual,
-  getGraphNeighbors
+  showPathUpdateWithVisual
 } from './api';

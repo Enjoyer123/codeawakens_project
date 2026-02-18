@@ -1,6 +1,7 @@
 // Blockly List setIndex Generator with DP Table Hooks
 import * as Blockly from "blockly/core";
 import { javascriptGenerator } from "blockly/javascript";
+import { DP_META_EXPR } from "../../../core/algorithm_hooks";
 
 export function defineListSetIndexGenerator() {
   // Override lists_setIndex to use 0-based indexing and add DP table hooks
@@ -45,11 +46,10 @@ export function defineListSetIndexGenerator() {
       if (where === 'FROM_START') {
         // Runtime: delegate to context-injected listSet (handles DP visuals)
         const listTrim = String(list || '').trim();
-        const metaExpr = `{ coinIndex: typeof coinIndex !== 'undefined' ? coinIndex : 0, itemIndex: typeof itemIndex !== 'undefined' ? itemIndex : 0, r: typeof r !== 'undefined' ? r : 0, c: typeof c !== 'undefined' ? c : 0 }`;
         if (mode === 'INSERT') {
           return `${list}.splice(${at}, 0, ${value});\n`;
         }
-        return `await listSet(${list}, ${at}, ${value}, '${listTrim}', ${metaExpr});\n`;
+        return `await listSet(${list}, ${at}, ${value}, '${listTrim}', ${DP_META_EXPR});\n`;
       } else if (where === 'FROM_END') {
         return `${list}[${list}.length - 1 - ${at}] = ${value};\n`;
       } else {

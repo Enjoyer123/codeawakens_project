@@ -66,8 +66,6 @@ export {
     dsuUnionWithVisual
 } from './algorithms/graph/helpers';
 
-
-
 export {
     getGraphNeighborsWithVisual,
     getGraphNeighborsWithVisualSync,
@@ -115,8 +113,6 @@ export {
     startKnapsackSelectionTracking,
     showKnapsackFinalSelection
 } from './algorithms/knapsack/visuals';
-
-
 
 export {
     addWarriorToSide1 as addWarriorToSide1Visual,
@@ -168,9 +164,3 @@ export {
     flushCoinChangeStepsNow,
     waitForCoinChangePlaybackDone
 } from './algorithms/coin_change/state';
-
-
-// Re-export Tracking/Start Visuals (for Execution Context) - Deduped above
-// export { startSubsetSumTracking as startSubsetSumTrackingVisual } from './algorithms/subset_sum/blocklySubsetSumTracking';
-// export { startCoinChangeSelectionTracking } from './algorithms/coin_change/visuals';
-// export { showKruskalRoot, clearKruskalVisuals } from './algorithms/graph/dfs_visual';

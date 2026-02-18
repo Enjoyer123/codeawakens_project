@@ -16,7 +16,7 @@ export async function addWarriorToSide1(warriorIndex) {
     return;
   }
 
-  console.log(`🔍 [addWarriorToSide1] Called with warriorIndex: ${warriorIndex}`);
+  // console.log removed(`🔍 [addWarriorToSide1] Called with warriorIndex: ${warriorIndex}`);
   const warrior = scene.subsetSum.warriors[warriorIndex];
   if (!warrior || !warrior.sprite) {
     console.warn(`⚠️ Warrior at index ${warriorIndex} not found`);
@@ -66,7 +66,7 @@ export async function addWarriorToSide1(warriorIndex) {
     duration: 500,
     ease: 'Power2',
     onComplete: () => {
-      console.log(`✅ Warrior ${warriorIndex} moved to side1 at (${offsetX}, ${offsetY})`);
+      // console.log removed(`✅ Warrior ${warriorIndex} moved to side1 at (${offsetX}, ${offsetY})`);
     }
   });
 
@@ -87,7 +87,7 @@ export async function addWarriorToSide2(warriorIndex) {
     return;
   }
 
-  console.log(`🔍 [addWarriorToSide2] Called with warriorIndex: ${warriorIndex}`);
+  // console.log removed(`🔍 [addWarriorToSide2] Called with warriorIndex: ${warriorIndex}`);
   const warrior = scene.subsetSum.warriors[warriorIndex];
   if (!warrior || !warrior.sprite) {
     console.warn(`⚠️ Warrior at index ${warriorIndex} not found`);
@@ -137,7 +137,7 @@ export async function addWarriorToSide2(warriorIndex) {
     duration: 500,
     ease: 'Power2',
     onComplete: () => {
-      console.log(`✅ Warrior ${warriorIndex} moved to side2 at (${offsetX}, ${offsetY})`);
+      // console.log removed(`✅ Warrior ${warriorIndex} moved to side2 at (${offsetX}, ${offsetY})`);
     }
   });
 
@@ -172,6 +172,6 @@ export function resetSubsetSumWarriors() {
     }
   });
 
-  console.log('🔄 Reset all subset sum warriors to original positions');
+  // console.log removed('🔄 Reset all subset sum warriors to original positions');
 }
 

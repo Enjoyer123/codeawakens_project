@@ -44,7 +44,7 @@ const ExecutionErrorModal = ({ open, error, onClose }) => {
             onClick={onClose}
             className="w-full sm:w-auto px-8 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg shadow-sm transition-colors focus:ring-4 focus:ring-red-100"
           >
-            ตกลง, ฉันจะแก้ไขฟห
+            ตกลง, ฉันจะแก้ไข
           </button>
         </div>
       </DialogContent>

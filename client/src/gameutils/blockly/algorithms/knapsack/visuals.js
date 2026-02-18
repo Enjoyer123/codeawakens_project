@@ -41,7 +41,7 @@ export function trackKnapsackItemSelection(i, j) {
   if (knapsackSelectionState.isTracking) {
     const key = `${i},${j}`;
     knapsackSelectionState.decisionMap.set(key, true);
-    console.log(`📊 Track selection: state (${i}, ${j}) -> selected`);
+    // console.log removed(`📊 Track selection: state (${i}, ${j}) -> selected`);
   }
 }
 
@@ -55,7 +55,7 @@ export function trackKnapsackItemUnselection(i, j) {
   if (knapsackSelectionState.isTracking) {
     const key = `${i},${j}`;
     knapsackSelectionState.decisionMap.set(key, false);
-    console.log(`📊 Track unselection: state (${i}, ${j}) -> not selected`);
+    // console.log removed(`📊 Track unselection: state (${i}, ${j}) -> not selected`);
   }
 }
 
@@ -71,34 +71,34 @@ function reconstructSelectedItems(weights, capacity, n) {
   let i = n - 1;
   let j = capacity;
 
-  console.log('🔍 Starting trace back from state:', { i, j, capacity, n, weights });
-  console.log('🔍 Decision map entries:', Array.from(knapsackSelectionState.decisionMap.entries()));
+  // console.log removed('🔍 Starting trace back from state:', { i, j, capacity, n, weights });
+  // console.log removed('🔍 Decision map entries:', Array.from(knapsackSelectionState.decisionMap.entries()));
 
   // Trace back from (n-1, capacity) to (0, 0)
   while (i >= 0 && j > 0) {
     const key = `${i},${j}`;
     const decision = knapsackSelectionState.decisionMap.get(key);
 
-    console.log(`🔍 Checking state (${i}, ${j}): decision =`, decision);
+    // console.log removed(`🔍 Checking state (${i}, ${j}): decision =`, decision);
 
     if (decision === true) {
       // Item i was selected in the optimal solution
       selected.add(i);
-      console.log(`✅ Item ${i} was selected, moving from (i=${i}, cap=${j}) to (i=${i - 1}, cap=${j - weights[i]})`);
+      // console.log removed(`✅ Item ${i} was selected, moving from (i=${i}, cap=${j}) to (i=${i - 1}, cap=${j - weights[i]})`);
       j = j - weights[i];
       i = i - 1; // 0/1 knapsack: move to previous item after selecting
     } else if (decision === false) {
       // Item i was not selected
-      console.log(`❌ Item ${i} was not selected, moving to previous item`);
+      // console.log removed(`❌ Item ${i} was not selected, moving to previous item`);
       i = i - 1; // Move to previous item
     } else {
       // Decision not found - might be a base case or missing decision
-      console.log(`⚠️ No decision found for state (${i}, ${j}), trying previous item`);
+      // console.log removed(`⚠️ No decision found for state (${i}, ${j}), trying previous item`);
       i = i - 1; // Move to previous item
     }
   }
 
-  console.log('✅ Final selected items:', Array.from(selected));
+  // console.log removed('✅ Final selected items:', Array.from(selected));
   return selected;
 }
 
@@ -142,11 +142,11 @@ export async function showKnapsackFinalSelection() {
     }
   }
 
-  console.log('✅ Showed final knapsack selection step-by-step:', selectedArray);
-  console.log('✅ Decision map size:', knapsackSelectionState.decisionMap.size);
-  console.log('✅ All decision map entries:');
+  // console.log removed('✅ Showed final knapsack selection step-by-step:', selectedArray);
+  // console.log removed('✅ Decision map size:', knapsackSelectionState.decisionMap.size);
+  // console.log removed('✅ All decision map entries:');
   Array.from(knapsackSelectionState.decisionMap.entries()).forEach(([key, value]) => {
-    console.log(`   ${key}: ${value ? 'selected' : 'not selected'}`);
+    // console.log removed(`   ${key}: ${value ? 'selected' : 'not selected'}`);
   });
 }
 
@@ -216,7 +216,7 @@ export async function selectKnapsackItem(itemIndex) {
   // Wait for animation to complete
   await new Promise(resolve => setTimeout(resolve, 500));
 
-  console.log(`✅ Item ${itemIndex} selected and moved to bag`);
+  // console.log removed(`✅ Item ${itemIndex} selected and moved to bag`);
 }
 
 /**
@@ -269,7 +269,7 @@ export async function unselectKnapsackItem(itemIndex) {
   // Wait for animation to complete
   await new Promise(resolve => setTimeout(resolve, 500));
 
-  console.log(`✅ Item ${itemIndex} unselected and moved back`);
+  // console.log removed(`✅ Item ${itemIndex} unselected and moved back`);
 }
 
 /**
@@ -317,7 +317,7 @@ export function resetKnapsackItems() {
     }
   });
 
-  console.log('✅ All knapsack items reset to original positions');
+  // console.log removed('✅ All knapsack items reset to original positions');
 }
 
 /**

@@ -25,11 +25,11 @@ export function resetCoinChangeSelectionTracking() {
  * Start tracking coin change selections
  */
 export function startCoinChangeSelectionTracking() {
-  console.log('🔍 startCoinChangeSelectionTracking called');
+  // console.log removed('🔍 startCoinChangeSelectionTracking called');
   coinChangeSelectionState.isTracking = true;
   coinChangeSelectionState.selectedWarriors = [];
   coinChangeSelectionState.decisionMap.clear();
-  console.log('✅ Coin change tracking started:', coinChangeSelectionState);
+  // console.log removed('✅ Coin change tracking started:', coinChangeSelectionState);
 }
 
 /**
@@ -59,7 +59,7 @@ export function trackCoinChangeDecision(amount, index, include, exclude) {
   }
 
   coinChangeSelectionState.decisionMap.set(key, { include, exclude, chosen });
-  console.log(`📊 Track decision: state (${amount}, ${index}) -> include=${include}, exclude=${exclude}, chosen=${chosen}`);
+  // console.log removed(`📊 Track decision: state (${amount}, ${index}) -> include=${include}, exclude=${exclude}, chosen=${chosen}`);
 }
 
 /**
@@ -67,8 +67,8 @@ export function trackCoinChangeDecision(amount, index, include, exclude) {
  * @param {number} warriorIndex - Index of warrior (0-based)
  */
 export async function addWarriorToSelection(warriorIndex) {
-  console.log('🔍 addWarriorToSelection called with index:', warriorIndex);
-  console.log('🔍 Tracking state:', coinChangeSelectionState.isTracking);
+  // console.log removed('🔍 addWarriorToSelection called with index:', warriorIndex);
+  // console.log removed('🔍 Tracking state:', coinChangeSelectionState.isTracking);
 
   // Note: isTracking may be false when showing final solution, but that's okay
   // We still want to add warriors to the display
@@ -80,8 +80,8 @@ export async function addWarriorToSelection(warriorIndex) {
   const currentState = getCurrentGameState();
   const scene = currentState.currentScene;
 
-  console.log('🔍 Scene exists:', !!scene);
-  console.log('🔍 coinChange exists:', !!scene?.coinChange);
+  // console.log removed('🔍 Scene exists:', !!scene);
+  // console.log removed('🔍 coinChange exists:', !!scene?.coinChange);
 
   if (!scene || !scene.coinChange) {
     console.warn('❌ Coin change scene not found');
@@ -215,7 +215,7 @@ export async function addWarriorToSelection(warriorIndex) {
     powerText: powerText
   });
 
-  console.log(`✅ Added warrior ${warriorIndex} (power: ${warrior.power}) to selection box`);
+  // console.log removed(`✅ Added warrior ${warriorIndex} (power: ${warrior.power}) to selection box`);
 }
 
 /**
@@ -257,16 +257,16 @@ function reconstructCoinChangeSolution(amount, coins, index) {
   let iterations = 0;
   const maxIterations = 1000; // Safety limit to prevent infinite loops
 
-  console.log('🔍 Starting reconstruction from:', { currentAmount, currentIndex, coins });
-  console.log('🔍 Decision map size:', coinChangeSelectionState.decisionMap.size);
-  console.log('🔍 Decision map entries:', Array.from(coinChangeSelectionState.decisionMap.entries()).slice(0, 10));
+  // console.log removed('🔍 Starting reconstruction from:', { currentAmount, currentIndex, coins });
+  // console.log removed('🔍 Decision map size:', coinChangeSelectionState.decisionMap.size);
+  // console.log removed('🔍 Decision map entries:', Array.from(coinChangeSelectionState.decisionMap.entries()).slice(0, 10));
 
   while (currentAmount > 0 && currentIndex < coins.length && iterations < maxIterations) {
     iterations++;
     const key = `${currentAmount},${currentIndex}`;
     const decision = coinChangeSelectionState.decisionMap.get(key);
 
-    console.log(`🔍 Iteration ${iterations}: Checking state (${currentAmount}, ${currentIndex}):`, decision);
+    // console.log removed(`🔍 Iteration ${iterations}: Checking state (${currentAmount}, ${currentIndex}):`, decision);
 
     if (!decision) {
       console.warn(`⚠️ No decision found for state (${currentAmount}, ${currentIndex}), stopping reconstruction`);
@@ -278,12 +278,12 @@ function reconstructCoinChangeSolution(amount, coins, index) {
       solution.push(currentIndex);
       currentAmount = currentAmount - coins[currentIndex];
       // Keep same index to allow selecting same coin again (this is the key for Coin Change!)
-      console.log(`✅ Coin ${currentIndex} (value ${coins[currentIndex]}) selected, new amount: ${currentAmount}, keeping index: ${currentIndex}`);
+      // console.log removed(`✅ Coin ${currentIndex} (value ${coins[currentIndex]}) selected, new amount: ${currentAmount}, keeping index: ${currentIndex}`);
     } else if (decision.chosen === 'exclude') {
       // Coin at currentIndex was not selected, move to next
       const prevIndex = currentIndex;
       currentIndex = currentIndex + 1;
-      console.log(`❌ Coin ${prevIndex} not selected, moving to index ${currentIndex}`);
+      // console.log removed(`❌ Coin ${prevIndex} not selected, moving to index ${currentIndex}`);
     } else {
       // Both invalid or no decision
       console.warn(`⚠️ Invalid decision for state (${currentAmount}, ${currentIndex}), stopping reconstruction`);
@@ -301,8 +301,8 @@ function reconstructCoinChangeSolution(amount, coins, index) {
     console.warn(`⚠️ Reconstruction reached max iterations (${maxIterations}), stopping`);
   }
 
-  console.log('✅ Final solution:', solution);
-  console.log(`   Remaining amount: ${currentAmount}, Final index: ${currentIndex}`);
+  // console.log removed('✅ Final solution:', solution);
+  // console.log removed(`   Remaining amount: ${currentAmount}, Final index: ${currentIndex}`);
   return solution;
 }
 
@@ -330,15 +330,15 @@ export async function showCoinChangeFinalSolution() {
   const coins = coinChangeData.warriors || [1, 5, 10, 25];
   const initialIndex = 0;
 
-  console.log('🔍 [showCoinChangeFinalSolution] Decision map before reconstruction:');
-  console.log('   Size:', coinChangeSelectionState.decisionMap.size);
-  console.log('   Sample entries:', Array.from(coinChangeSelectionState.decisionMap.entries()).slice(0, 20));
+  // console.log removed('🔍 [showCoinChangeFinalSolution] Decision map before reconstruction:');
+  // console.log removed('   Size:', coinChangeSelectionState.decisionMap.size);
+  // console.log removed('   Sample entries:', Array.from(coinChangeSelectionState.decisionMap.entries()).slice(0, 20));
 
   if (coinChangeSelectionState.decisionMap.size === 0) {
     // Greedy solutions often animate selections during execution (using addWarriorToSelection).
     // In that case, we should NOT replay again here, otherwise the user sees the same sequence twice.
     if (coinChangeSelectionState.selectedWarriors.length > 0) {
-      console.log('✅ Coin Change already displayed during execution (no decisionMap). Skipping final replay.');
+      // console.log removed('✅ Coin Change already displayed during execution (no decisionMap). Skipping final replay.');
       return;
     }
 
@@ -394,7 +394,7 @@ export async function showCoinChangeFinalSolution() {
       await new Promise(resolve => setTimeout(resolve, 200));
     }
 
-    console.log('✅ Coin change final solution displayed (DP fallback)');
+    // console.log removed('✅ Coin change final solution displayed (DP fallback)');
     return;
   }
 
@@ -404,8 +404,8 @@ export async function showCoinChangeFinalSolution() {
   // Reconstruct solution from decision map
   const solution = reconstructCoinChangeSolution(initialAmount, coins, initialIndex);
 
-  console.log('🔍 [showCoinChangeFinalSolution] Reconstructed solution:', solution);
-  console.log('   Solution length:', solution.length);
+  // console.log removed('🔍 [showCoinChangeFinalSolution] Reconstructed solution:', solution);
+  // console.log removed('   Solution length:', solution.length);
 
   if (solution.length === 0) {
     console.warn('⚠️ Reconstructed solution is empty');
@@ -415,13 +415,13 @@ export async function showCoinChangeFinalSolution() {
   // Display each coin in the solution
   for (let i = 0; i < solution.length; i++) {
     const coinIndex = solution[i];
-    console.log(`🔍 [showCoinChangeFinalSolution] Adding coin at index ${coinIndex} (${i + 1}/${solution.length})`);
+    // console.log removed(`🔍 [showCoinChangeFinalSolution] Adding coin at index ${coinIndex} (${i + 1}/${solution.length})`);
     await addWarriorToSelection(coinIndex);
     // Small delay between each addition for better visual effect
     await new Promise(resolve => setTimeout(resolve, 200));
   }
 
-  console.log('✅ Coin change final solution displayed');
-  console.log(`   Total coins selected: ${solution.length}`);
+  // console.log removed('✅ Coin change final solution displayed');
+  // console.log removed(`   Total coins selected: ${solution.length}`);
 }
 

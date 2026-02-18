@@ -204,9 +204,10 @@ const ropePartitionExampleXml = `<xml xmlns="https://developers.google.com/block
 
 export const loadRopePartitionExampleBlocks = (workspace) => {
   try {
+    workspace.clear();
     const xml = Blockly.utils.xml.textToDom(ropePartitionExampleXml);
     Blockly.Xml.domToWorkspace(xml, workspace);
-    console.log("✅ Rope Partition XML Loaded! [CLEAN_REWRITE]");
+    // console.log removed("✅ Rope Partition XML Loaded! [CLEAN_REWRITE]");
   } catch (e) {
     console.error("Failed to load Rope Partition example:", e);
   }

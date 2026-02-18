@@ -37,7 +37,7 @@ export const useGameActions = ({
   setIsGameOver,
   setGameState,
   setShowProgressModal,
-  setTimeSpent,
+  // setTimeSpent,
   setGameResult,
   gameStartTime,
   isPreview = false
@@ -139,10 +139,10 @@ export const useGameActions = ({
             setShowProgressModal(true);
 
             // Calculate time spent and show progress modal for game over
-            if (gameStartTime?.current) {
-              const endTime = Date.now();
-              setTimeSpent(Math.floor((endTime - gameStartTime.current) / 1000));
-            }
+            // if (gameStartTime?.current) {
+            //   const endTime = Date.now();
+            //   setTimeSpent(Math.floor((endTime - gameStartTime.current) / 1000));
+            // }
             setGameResult('gameover');
             setShowProgressModal(true);
           }
@@ -169,10 +169,10 @@ export const useGameActions = ({
               showGameOver(getCurrentGameState().currentScene);
               setShowProgressModal(true);
 
-              if (gameStartTime?.current) {
-                const endTime = Date.now();
-                setTimeSpent(Math.floor((endTime - gameStartTime.current) / 1000));
-              }
+              // if (gameStartTime?.current) {
+              //   const endTime = Date.now();
+              //   setTimeSpent(Math.floor((endTime - gameStartTime.current) / 1000));
+              // }
               setGameResult('gameover');
             }, 500);
           }
@@ -201,10 +201,10 @@ export const useGameActions = ({
                 showGameOver(getCurrentGameState().currentScene);
                 setShowProgressModal(true);
 
-                if (gameStartTime?.current) {
-                  const endTime = Date.now();
-                  setTimeSpent(Math.floor((endTime - gameStartTime.current) / 1000));
-                }
+                // if (gameStartTime?.current) {
+                //   const endTime = Date.now();
+                //   setTimeSpent(Math.floor((endTime - gameStartTime.current) / 1000));
+                // }
                 setGameResult('gameover');
               }, 500);
             }

@@ -19,13 +19,13 @@ export async function collectCoin() {
     const currentState = getCurrentGameState();
     if (currentState.goalReached || currentState.isGameOver) return;
 
-    console.log("Collect coin function called");
+    // console.log removed("Collect coin function called");
     await new Promise((resolve) => setTimeout(resolve, 200));
 
     const scene = getCurrentScene();
 
     if (scene && scene.player) {
-        console.log(`collectCoin called - player at (${scene.player.x}, ${scene.player.y})`);
+        // console.log removed(`collectCoin called - player at (${scene.player.x}, ${scene.player.y})`);
         const collected = collectCoinByPlayer(scene, scene.player.x, scene.player.y);
 
         if (collected) {

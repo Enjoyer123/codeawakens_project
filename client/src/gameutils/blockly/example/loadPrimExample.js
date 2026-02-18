@@ -9,7 +9,7 @@ export function loadPrimExampleBlocks(workspace) {
   }
 
   try {
-    console.log('📦 Loading Prim example blocks into workspace...');
+    // console.log removed('📦 Loading Prim example blocks into workspace...');
 
     // Clear workspace first
     workspace.clear();
@@ -33,13 +33,13 @@ export function loadPrimExampleBlocks(workspace) {
               const existingVar = variableMap.getVariable(varName);
               if (!existingVar) {
                 workspace.createVariable(varName);
-                console.log(`Created variable: ${varName}`);
+                // console.log removed(`Created variable: ${varName}`);
               } else {
                 console.debug(`Variable ${varName} already exists`);
               }
             } else {
               workspace.createVariable(varName);
-              console.log(`Created variable: ${varName} (no variable map)`);
+              // console.log removed(`Created variable: ${varName} (no variable map)`);
             }
           } catch (e) {
             // Variable might already exist
@@ -47,7 +47,7 @@ export function loadPrimExampleBlocks(workspace) {
           }
         });
 
-        console.log('✅ Prim example blocks loaded successfully');
+        // console.log removed('✅ Prim example blocks loaded successfully');
       } catch (error) {
         console.error('❌ Error loading Prim example blocks:', error);
         alert('เกิดข้อผิดพลาดในการโหลด Prim example blocks: ' + (error.message || 'รูปแบบไม่ถูกต้อง'));

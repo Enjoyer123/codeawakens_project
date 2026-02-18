@@ -168,11 +168,11 @@ const handleFailure = async ({
         setGameState("gameOver");
         setIsRunning(false);
 
-        // Calculate time spent
-        if (gameStartTime.current) {
-            const endTime = Date.now();
-            setTimeSpent(Math.floor((endTime - gameStartTime.current) / 1000));
-        }
+        // // Calculate time spent
+        // if (gameStartTime.current) {
+        //     const endTime = Date.now();
+        //     setTimeSpent(Math.floor((endTime - gameStartTime.current) / 1000));
+        // }
 
         setGameResult('gameover');
 
@@ -265,10 +265,10 @@ const handleSuccess = async ({
         setCurrentHint(`${completionMessage} (${weaponInfo?.name || ''}) - คะแนน: ${scoreData.totalScore} ⭐${scoreData.stars}`);
     }
 
-    if (gameStartTime?.current) {
-        const endTime = Date.now();
-        setTimeSpent(Math.floor((endTime - gameStartTime.current) / 1000));
-    }
+    // if (gameStartTime?.current) {
+    //     const endTime = Date.now();
+    //     setTimeSpent(Math.floor((endTime - gameStartTime.current) / 1000));
+    // }
     setGameResult('victory');
 
     // In preview mode, unlock pattern and level

@@ -232,7 +232,7 @@ export function loadGreedyCoinChangeExampleBlocks(workspace) {
   }
 
   try {
-    console.log('➕ Loading Greedy Coin Change example blocks into workspace...');
+    // console.log removed('➕ Loading Greedy Coin Change example blocks into workspace...');
     workspace.clear();
 
     setTimeout(() => {
@@ -260,7 +260,7 @@ export function loadGreedyCoinChangeExampleBlocks(workspace) {
           }
         });
 
-        console.log('✅ Greedy Coin Change example blocks loaded successfully');
+        // console.log removed('✅ Greedy Coin Change example blocks loaded successfully');
       } catch (error) {
         console.error('❌ Error loading Greedy Coin Change example blocks:', error);
         alert('เกิดข้อผิดพลาดในการโหลด Greedy Coin Change example blocks: ' + (error.message || 'รูปแบบไม่ถูกต้อง'));

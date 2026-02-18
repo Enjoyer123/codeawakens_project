@@ -21,6 +21,7 @@ import { defineCoinChangeVisualBlocks } from '../algorithms/coin_change/blocks';
 import { defineTrainScheduleBlocks } from '../algorithms/train_schedule/blocks';
 import { defineEmeiVisualBlocks } from '../algorithms/emei_mountain/blocks';
 import { defineNQueenBlocks } from '../algorithms/nqueen/blocks';
+import { registerRopePartitionBlocks } from '../algorithms/rope_partition/definitions';
 
 
 export function defineAllBlocks() {
@@ -47,6 +48,7 @@ export function defineAllBlocks() {
   defineTrainScheduleBlocks();
   defineEmeiVisualBlocks();
   defineNQueenBlocks();
+  registerRopePartitionBlocks(); // Added for consistency
 }
 
 

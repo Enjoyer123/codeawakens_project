@@ -55,8 +55,7 @@ export function getCurrentNode() {
  * Returns array of [neighbor, weight] tuples
  */
 export function getGraphNeighborsWithWeight(graph, node) {
-    // console.log('[getGraphNeighborsWithWeight] ===== CALLED =====');
-    // ... logging kept to minimum for performance, or can be re-enabled if needed
+
 
     if (!graph || typeof graph !== 'object') {
         console.warn('Invalid graph:', graph);
@@ -96,7 +95,7 @@ export function getGraphNeighborsWithWeight(graph, node) {
 
     // Check if graph is an edge list format: [[u, v, weight], ...] or [{from, to, value}, ...]
     if (Array.isArray(graph)) {
-        // console.log('[getGraphNeighborsWithWeight] Using custom Array graph');
+
         const neighbors = [];
 
         for (const edge of graph) {
@@ -171,7 +170,7 @@ export function getGraphNeighborsWithWeight(graph, node) {
  * @returns {Array} Array of edges: [[u, v, weight], ...]
  */
 export function getAllEdges(graph) {
-    // console.log('[getAllEdges] Graph input type:', Array.isArray(graph) ? 'Array' : typeof graph);
+
 
     // Support Edge List input (Array of edges) for custom test cases
     if (Array.isArray(graph)) {
@@ -194,7 +193,7 @@ export function getAllEdges(graph) {
                 }
             }
         });
-        // console.log('[getAllEdges] Extracted', edges.length, 'edges from custom graph');
+
         return edges;
     }
 

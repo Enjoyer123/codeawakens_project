@@ -216,7 +216,7 @@ export function loadDynamicKnapsackExampleBlocks(workspace) {
   }
 
   try {
-    console.log('📦 Loading Dynamic Knapsack (DP) example blocks into workspace...');
+    // console.log removed('📦 Loading Dynamic Knapsack (DP) example blocks into workspace...');
     workspace.clear();
 
     setTimeout(() => {
@@ -244,7 +244,7 @@ export function loadDynamicKnapsackExampleBlocks(workspace) {
           }
         });
 
-        console.log('✅ Dynamic Knapsack (DP) example blocks loaded successfully');
+        // console.log removed('✅ Dynamic Knapsack (DP) example blocks loaded successfully');
       } catch (error) {
         console.error('❌ Error loading Dynamic Knapsack example blocks:', error);
         alert('เกิดข้อผิดพลาดในการโหลด Dynamic Knapsack example blocks: ' + (error.message || 'รูปแบบไม่ถูกต้อง'));

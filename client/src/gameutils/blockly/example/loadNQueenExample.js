@@ -338,7 +338,7 @@ export function loadNQueenExampleBlocks(workspace) {
   }
 
   try {
-    console.log('🔍 Loading N-Queen example blocks (FIXED)...');
+    // console.log removed('🔍 Loading N-Queen example blocks (FIXED)...');
 
     // Process XML to fix definitions and deduplicate
     const processedXml = addMutationToProcedureDefinitions(nQueenExampleXml);
@@ -380,8 +380,8 @@ export function loadNQueenExampleBlocks(workspace) {
       }
     });
 
-    console.log('✅ N-Queen example blocks loaded successfully');
-    console.log('⚠️ Note: Functions safe(row, col), place(row, col), and remove(row, col) will be initialized by nqueenInitCode');
+    // console.log removed('✅ N-Queen example blocks loaded successfully');
+    // console.log removed('⚠️ Note: Functions safe(row, col), place(row, col), and remove(row, col) will be initialized by nqueenInitCode');
   } catch (error) {
     console.error('❌ Error loading N-Queen example blocks:', error);
   }

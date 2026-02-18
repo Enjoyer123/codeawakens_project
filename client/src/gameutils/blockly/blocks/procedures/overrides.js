@@ -1,9 +1,10 @@
 // Blockly Procedure Block Overrides
 // Consolidated: safe rename, loadExtraState, name fixing, tooltips, N-Queen support
 import * as Blockly from "blockly/core";
+import { SPECIAL_PROCEDURE_NAMES } from "../../core/algorithm_hooks";
 
 // Algorithm helper functions that need special procedure name resolution
-const ALGO_HELPER_FUNCTIONS = ['safe', 'place', 'remove'];
+// Now imported from algorithm_hooks for decoupling
 
 // ==========================================
 // Shared Helpers
@@ -47,6 +48,11 @@ function isInvalidName(name) {
 
 // ==========================================
 // Override Factories
+// These factories create wrapper functions to safely modify standard Blockly behavior.
+// They are necessary to:
+// 1. Handle Thai language tooltips
+// 2. Prevent crashes from invalid procedure names
+// 3. Support specific algorithm helpers (N-Queen)
 // ==========================================
 
 /** Safe renameProcedure — guards against undefined/null but allows empty oldName (flyout initial assign) */
@@ -134,13 +140,13 @@ function createSafeGetProcParam(original) {
         if (this.mutationToDom) {
             try {
                 const name = this.mutationToDom()?.getAttribute?.('name');
-                if (ALGO_HELPER_FUNCTIONS.includes(name)) return name;
+                if (SPECIAL_PROCEDURE_NAMES.has(name)) return name;
             } catch (e) { /* ignore */ }
         }
 
         // Check NAME field
         const nameFromField = this.getField('NAME')?.getValue();
-        if (ALGO_HELPER_FUNCTIONS.includes(nameFromField)) return nameFromField;
+        if (SPECIAL_PROCEDURE_NAMES.has(nameFromField)) return nameFromField;
 
         // Fallback to original
         return original.call(this);

@@ -1,6 +1,6 @@
 // Blockly List Operations Block Definitions (for DFS/BFS)
 import * as Blockly from "blockly/core";
-import { ensureVariableExists } from "../variables/definitions";
+import { ensureVariableExists, createVariableChangeHandler } from "../variables/definitions";
 
 export function defineListOperationsBlocks() {
   // Add item to list
@@ -129,27 +129,7 @@ export function defineListOperationsBlocks() {
       this.setColour(120);
       this.setTooltip("วนลูปผ่านแต่ละ element ใน list (คลิกที่ตัวแปรเพื่อเปลี่ยนชื่อ)");
 
-      this.setOnChange(function (event) {
-        if (!event || !this.workspace) return;
-
-        // Don't create variables when block is in flyout (toolbox)
-        if (this.isInFlyout) {
-          return;
-        }
-
-        if (event.type === Blockly.Events.BLOCK_CREATE && event.blockId === this.id) {
-          // เมื่อบล็อกถูกสร้าง ให้ตรวจสอบและสร้างตัวแปร (ถ้ายังไม่มี)
-          setTimeout(() => {
-            ensureVariableExists(this, 'VAR', 'element');
-          }, 10);
-        } else if (event.type === Blockly.Events.BLOCK_CHANGE && event.blockId === this.id) {
-          // เมื่อตัวแปรในบล็อกเปลี่ยน ให้ตรวจสอบและสร้างตัวแปรใหม่ (ถ้ายังไม่มี)
-          if (event.element === 'field' && event.name === 'VAR') {
-            const newValue = event.newValue || 'element';
-            ensureVariableExists(this, 'VAR', newValue);
-          }
-        }
-      });
+      this.setOnChange(createVariableChangeHandler('element').bind(this));
     },
   };
 

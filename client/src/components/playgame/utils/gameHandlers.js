@@ -131,81 +131,81 @@ export function handleRestartGame({
  * @param {number} params.hintOpenCount - Number of times hints were opened
  * @param {Object} params.matchedPattern - Matched pattern object
  */
-export async function handleVictory({
-  isCompleted,
-  setIsCompleted,
-  setIsRunning,
-  setGameState,
-  showVictory,
-  calculateFinalScore,
-  setFinalScore,
-  gameStartTime,
-  setTimeSpent,
-  setGameResult,
-  isPreview,
-  onUnlockPattern,
-  onUnlockLevel,
-  patternId,
-  currentLevel,
-  setShowProgressModal,
-  hintOpenCount,
-  matchedPattern = null,
-  userBigO = null // Receive userBigO
-}) {
-  if (isCompleted) return;
+// export async function handleVictory({
+//   isCompleted,
+//   setIsCompleted,
+//   setIsRunning,
+//   setGameState,
+//   showVictory,
+//   calculateFinalScore,
+//   setFinalScore,
+//   gameStartTime,
+//   setTimeSpent,
+//   setGameResult,
+//   isPreview,
+//   onUnlockPattern,
+//   onUnlockLevel,
+//   patternId,
+//   currentLevel,
+//   setShowProgressModal,
+//   hintOpenCount,
+//   matchedPattern = null,
+//   userBigO = null // Receive userBigO
+// }) {
+//   if (isCompleted) return;
 
-  setIsCompleted(true);
-  setIsRunning(false);
-  setGameState("victory");
+//   setIsCompleted(true);
+//   setIsRunning(false);
+//   setGameState("victory");
 
-  const currentState = getCurrentGameState();
-  if (currentState.currentScene) {
-    showVictory(currentState.currentScene);
-  }
+//   const currentState = getCurrentGameState();
+//   if (currentState.currentScene) {
+//     showVictory(currentState.currentScene);
+//   }
 
-  // Calculate score
-  const patternTypeId = matchedPattern?.pattern_type_id || null;
+//   // Calculate score
+//   const patternTypeId = matchedPattern?.pattern_type_id || null;
 
-  // Get target Big O from hintData explicitly first, then pattern or level
-  const targetBigO = hintData?.bestPatternBigO || matchedPattern?.big_o || matchedPattern?.bigO || currentLevel?.big_o || currentLevel?.bigO || null;
+//   // Get target Big O from hintData explicitly first, then pattern or level
+//   const targetBigO = hintData?.bestPatternBigO || matchedPattern?.big_o || matchedPattern?.bigO || currentLevel?.big_o || currentLevel?.bigO || null;
 
-  console.log('🏆 [handleVictory] Score Calc Debug:', {
-    userBigO,
-    targetBigO,
-    explicitHintBigO: hintData?.bestPatternBigO,
-    patternTypeId,
-    matchedPatternBigO: matchedPattern?.big_o,
-    currentLevelBigO: currentLevel?.big_o
-  });
+//   console.log('🏆 [handleVictory] Score Calc Debug:', {
+//     userBigO,
+//     targetBigO,
+//     explicitHintBigO: hintData?.bestPatternBigO,
+//     patternTypeId,
+//     matchedPatternBigO: matchedPattern?.big_o,
+//     currentLevelBigO: currentLevel?.big_o
+//   });
 
-  const score = calculateFinalScore(false, patternTypeId, hintOpenCount, userBigO, targetBigO);
-  setFinalScore(score);
+//   const score = calculateFinalScore(false, patternTypeId, hintOpenCount, userBigO, targetBigO);
+//   setFinalScore(score);
 
-  // Calculate time spent
-  if (gameStartTime.current) {
-    const endTime = Date.now();
-    setTimeSpent(Math.floor((endTime - gameStartTime.current) / 1000));
-  }
+//   // Calculate time spent
+//   if (gameStartTime.current) {
+//     const endTime = Date.now();
+//     setTimeSpent(Math.floor((endTime - gameStartTime.current) / 1000));
+//   }
 
-  setGameResult('victory');
+//   setGameResult('victory');
 
-  // In preview mode, unlock pattern and level
-  if (isPreview && matchedPattern) {
-    try {
-      if (onUnlockPattern) {
-        await onUnlockPattern(patternId || matchedPattern.pattern_id);
-      }
-      if (onUnlockLevel && currentLevel) {
-        await onUnlockLevel(currentLevel.level_id);
-      }
-    } catch (error) {
-      console.error('Error unlocking pattern/level:', error);
-    }
-  }
+//   // In preview mode, unlock pattern and level
+//   if (isPreview && matchedPattern) {
+//     try {
+//       if (onUnlockPattern) {
+//         await onUnlockPattern(patternId || matchedPattern.pattern_id);
+//       }
+//       if (onUnlockLevel && currentLevel) {
+//         await onUnlockLevel(currentLevel.level_id);
+//       }
+//     } catch (error) {
+//       console.error('Error unlocking pattern/level:', error);
+//     }
+//   }
 
-  // In normal mode, show progress modal (which will save progress)
-  if (!isPreview) {
-    setShowProgressModal(true);
-  }
-}
+//   // In normal mode, show progress modal (which will save progress)
+//   if (!isPreview) {
+//     setShowProgressModal(true);
+//   }
+// }
 

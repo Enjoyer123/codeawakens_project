@@ -327,20 +327,20 @@ export function loadKnapsackExampleBlocks(workspace) {
   }
 
   try {
-    console.log('📦 Loading Knapsack example blocks into workspace...');
-    
+    // console.log removed('📦 Loading Knapsack example blocks into workspace...');
+
     // Clear workspace first
     workspace.clear();
-    
+
     // Wait a bit for workspace to be ready
     setTimeout(() => {
       try {
         // Parse XML
         const xmlDom = Blockly.utils.xml.textToDom(knapsackExampleXml);
-        
+
         // Load into workspace
         Blockly.Xml.domToWorkspace(xmlDom, workspace);
-        
+
         // Ensure variables exist
         const variableNames = ['w', 'v', 'i', 'j', 'weights', 'values', 'n', 'capacity', 'result'];
         variableNames.forEach(varName => {
@@ -351,21 +351,21 @@ export function loadKnapsackExampleBlocks(workspace) {
               const existingVar = variableMap.getVariable(varName);
               if (!existingVar) {
                 workspace.createVariable(varName);
-                console.log(`Created variable: ${varName}`);
+                // console.log removed(`Created variable: ${varName}`);
               } else {
                 console.debug(`Variable ${varName} already exists`);
               }
             } else {
               workspace.createVariable(varName);
-              console.log(`Created variable: ${varName} (no variable map)`);
+              // console.log removed(`Created variable: ${varName} (no variable map)`);
             }
           } catch (e) {
             // Variable might already exist
             console.debug(`Variable ${varName} already exists or error creating:`, e);
           }
         });
-        
-        console.log('✅ Knapsack example blocks loaded successfully');
+
+        // console.log removed('✅ Knapsack example blocks loaded successfully');
       } catch (error) {
         console.error('❌ Error loading Knapsack example blocks:', error);
         alert('เกิดข้อผิดพลาดในการโหลด Knapsack example blocks: ' + (error.message || 'รูปแบบไม่ถูกต้อง'));

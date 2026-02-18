@@ -51,7 +51,7 @@ export function useLevelInitializer({
   setIsCompleted,
   setIsGameOver,
   setCurrentWeaponData,
-  setPatternFeedback,
+  // setPatternFeedback,
   setGameState,
   setCurrentLevelState // Renamed to clarify it sets the state in parent
 }) {
@@ -283,7 +283,7 @@ export function useLevelInitializer({
         const weaponKey = formattedLevelData.defaultWeaponKey || "stick";
         const weaponData = getWeaponData(weaponKey);
         setCurrentWeaponData(weaponData);
-        setPatternFeedback("วาง blocks เพื่อดูผลลัพธ์");
+        // setPatternFeedback("วาง blocks เพื่อดูผลลัพธ์");
         setGameState("ready");
 
       } catch (err) {
