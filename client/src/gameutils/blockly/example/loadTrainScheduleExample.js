@@ -14,7 +14,7 @@ const trainScheduleExampleXml = `<xml xmlns="https://developers.google.com/block
     <variable id="platforms">platforms</variable>
     <variable id="j">j</variable>
     <variable id="assigned_index">assigned_index</variable>
-    <variable id="platform_count">platform_count</variable>
+    <variable id="result">result</variable>
   </variables>
   <block type="procedures_defreturn" x="50" y="50">
     <mutation>
@@ -282,7 +282,7 @@ const trainScheduleExampleXml = `<xml xmlns="https://developers.google.com/block
     </value>
   </block>
   <block type="variables_set" x="50" y="800">
-    <field name="VAR" id="platform_count">platform_count</field>
+    <field name="VAR" id="result">result</field>
     <value name="VALUE">
       <block type="procedures_callreturn">
         <mutation name="solve">

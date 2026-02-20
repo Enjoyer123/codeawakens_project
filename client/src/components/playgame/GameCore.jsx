@@ -428,41 +428,27 @@ const GameCore = ({
   const { runCode, executionError, clearExecutionError } = useCodeExecution({
     workspaceRef,
     currentLevel,
-    setPlayerNodeId,
-    setPlayerDirection,
-    setPlayerHp,
-    setIsCompleted,
-    setIsRunning,
-    setIsGameOver,
-    setGameState,
-    setCurrentHint,
-    setShowProgressModal,
-    // setTimeSpent,
-    setGameResult,
-    setFinalScore,
-    gameStartTime,
-    // setAttempts,
-    setRescuedPeople,
     blocklyJavaScriptReady,
     codeValidation,
     isPreview,
     patternId,
     onUnlockPattern,
     onUnlockLevel,
-    goodPatterns,
-    hintOpenCount,
-    moveForward,
-    turnLeft,
-    turnRight,
-    hit,
-    foundMonster,
-    canMoveForward,
-    nearPit,
-    atGoal,
-    setHintData, // Pass setHintData to allow visualization updates from execution
-    setTestCaseResult, // Pass setTestCaseResult to update UI with test results
-    userBigO, // Pass userBigO for scoring
-    hintData // Pass hintData for pattern matching info in scoring
+    gameStartTime,
+    gameActions: {
+      moveForward, turnLeft, turnRight, hit,
+      foundMonster, canMoveForward, nearPit, atGoal
+    },
+    setters: {
+      setPlayerNodeId, setPlayerDirection, setPlayerHp,
+      setIsCompleted, setIsRunning, setIsGameOver,
+      setGameState, setCurrentHint, setShowProgressModal,
+      setGameResult, setFinalScore, setRescuedPeople,
+      setHintData, setTestCaseResult
+    },
+    scoring: {
+      goodPatterns, hintOpenCount, userBigO, hintData
+    }
   });
 
   // Trigger Big O Quiz logic moved to handleRunClick

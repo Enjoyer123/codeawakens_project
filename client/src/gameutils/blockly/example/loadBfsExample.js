@@ -57,9 +57,9 @@ const bfsExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                   </block>
                 </value>
                 <statement name="DO">
-                  <!-- path = ดึงและลบตัวแรกจาก container (FIFO - queue) -->
+                  <!-- result = ดึงและลบตัวแรกจาก container (FIFO - queue) -->
                   <block type="variables_set" id="set_path">
-                    <field name="VAR">path</field>
+                    <field name="VAR">result</field>
                     <value name="VALUE">
                       <block type="lists_remove_first_return" id="shift_container">
                         <value name="LIST">
@@ -77,7 +77,7 @@ const bfsExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                           <block type="lists_get_last" id="get_last_node">
                             <value name="LIST">
                               <block type="variables_get" id="path_var">
-                                <field name="VAR">path</field>
+                                <field name="VAR">result</field>
                               </block>
                             </value>
                           </block>
@@ -104,7 +104,7 @@ const bfsExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                               <block type="procedures_return" id="return_path">
                                 <value name="VALUE">
                                   <block type="variables_get" id="path_var2">
-                                    <field name="VAR">path</field>
+                                    <field name="VAR">result</field>
                                   </block>
                                 </value>
                               </block>
@@ -169,7 +169,7 @@ const bfsExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                                               <block type="lists_concat" id="concat_path_neighbor">
                                                 <value name="LIST1">
                                                   <block type="variables_get" id="path_var3">
-                                                    <field name="VAR">path</field>
+                                                    <field name="VAR">result</field>
                                                   </block>
                                                 </value>
                                                 <value name="LIST2">
@@ -215,9 +215,9 @@ const bfsExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
     </statement>
   </block>
   
-  <!-- Main code: path = BFS(map, 0, 7) -->
+  <!-- Main code: result = BFS(map, 0, 7) -->
   <block type="variables_set" id="main_path_set" x="50" y="600">
-    <field name="VAR">path</field>
+    <field name="VAR">result</field>
     <value name="VALUE">
       <block type="procedures_callreturn" id="call_bfs">
         <mutation name="BFS">
@@ -248,7 +248,7 @@ const bfsExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
       <block type="move_along_path" id="move_path">
         <value name="PATH">
           <block type="variables_get" id="path_var_main">
-            <field name="VAR">path</field>
+            <field name="VAR">result</field>
           </block>
         </value>
       </block>
@@ -278,7 +278,7 @@ export function loadBfsExampleBlocks(workspace) {
         Blockly.Xml.domToWorkspace(xmlDom, workspace);
 
         // Ensure variables exist
-        const variableNames = ['container', 'visited', 'path', 'node', 'neighbor', 'garph', 'start', 'goal', 'map'];
+        const variableNames = ['container', 'visited', 'result', 'node', 'neighbor', 'garph', 'start', 'goal', 'map'];
         variableNames.forEach(varName => {
           try {
             workspace.createVariable(varName);

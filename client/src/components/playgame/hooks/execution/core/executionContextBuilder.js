@@ -115,12 +115,119 @@ export const buildExecutionContext = ({
         getCurrentGameState, setCurrentGameState,
         // Demo: explore effect (จำลองเอฟเฟกต์สำรวจ)
         playExploreEffect: async () => {
-            console.log('✨ [Explore Effect] สำรวจพื้นที่!');
             await new Promise(resolve => setTimeout(resolve, 300));
         },
         // Inject trains for Train Schedule
         trains: (currentLevel?.appliedData?.payload?.trains || currentLevel?.trains || [])
     };
+
+    // --- Inject Algorithm Init Variables (Phase 1) ---
+
+    // Knapsack
+    if (currentLevel?.knapsackData) {
+        const { items = [], capacity = 0 } = currentLevel.knapsackData;
+        context.weights = items.map(item => item.weight);
+        context.values = items.map(item => item.price);
+        context.n = items.length;
+        context.capacity = capacity;
+    }
+
+    // Subset Sum
+    if (currentLevel?.subsetSumData) {
+        const { warriors = [], target_sum = 0 } = currentLevel.subsetSumData;
+        context.warriors = warriors;
+        context.target_sum = target_sum;
+    }
+
+    // Coin Change
+    if (currentLevel?.coinChangeData) {
+        const { monster_power = 32, warriors = [1, 5, 10, 25] } = currentLevel.coinChangeData;
+        context.monster_power = Math.round(Number(monster_power));
+        // Use a different name if warriors conflicts with SubsetSum (though usually mutually exclusive)
+        // Check if warriors is already set by SubsetSum? (Levels don't mix usually)
+        context.warriors = warriors.map(w => Math.round(Number(w)));
+    }
+
+    // N-Queen
+    if (currentLevel?.nqueenData) {
+        const nVal = currentLevel.nqueenData.n || 4;
+        context.n = nVal;
+
+        // Initialize board (2D array: 0 = empty, 1 = queen)
+        const boardArr = [];
+        for (let i = 0; i < nVal; i++) {
+            boardArr[i] = [];
+            for (let j = 0; j < nVal; j++) {
+                boardArr[i][j] = 0;
+            }
+        }
+        context.board = boardArr;
+        context.solution = [];
+
+        // Helper: Check if placing queen at (row, col) is safe
+        context.safe = async (row, col) => {
+            try { if (globalThis.__nqueenVisual_api?.onConsider) globalThis.__nqueenVisual_api.onConsider(row, col, true); } catch (e) { }
+            await new Promise(r => setTimeout(r, 400));
+
+            let isSafe = true;
+            for (let i = 0; i < row; i++) {
+                if (context.board[i][col] === 1) isSafe = false;
+            }
+            for (let i = row - 1, j = col - 1; i >= 0 && j >= 0; i--, j--) {
+                if (context.board[i][j] === 1) isSafe = false;
+            }
+            for (let i = row - 1, j = col + 1; i >= 0 && j < context.n; i--, j++) {
+                if (context.board[i][j] === 1) isSafe = false;
+            }
+
+            try { if (globalThis.__nqueenVisual_api?.onConsider) globalThis.__nqueenVisual_api.onConsider(row, col, isSafe); } catch (e) { }
+            await new Promise(r => setTimeout(r, isSafe ? 200 : 500));
+            return isSafe;
+        };
+
+        // Helper: Place queen at (row, col)
+        context.place = async (row, col) => {
+            context.board[row][col] = 1;
+            try { if (globalThis.__nqueenVisual_api?.onPlace) globalThis.__nqueenVisual_api.onPlace(row, col); } catch (e) { }
+            await new Promise(r => setTimeout(r, 300));
+        };
+
+        // Helper: Remove queen from (row, col)
+        context.remove = async (row, col) => {
+            context.board[row][col] = 0;
+            try { if (globalThis.__nqueenVisual_api?.onRemove) globalThis.__nqueenVisual_api.onRemove(row, col); } catch (e) { }
+            await new Promise(r => setTimeout(r, 300));
+        };
+
+        // Expose to globalThis for Blockly-generated code that uses globalThis.safe etc.
+        try {
+            globalThis.safe = context.safe;
+            globalThis.place = context.place;
+            globalThis.remove = context.remove;
+        } catch (e) { }
+    }
+
+    // Rope Partition
+    if (currentLevel?.gameType === 'rope_partition' || currentLevel?.appliedData?.type === 'BACKTRACKING_ROPE_PARTITION') {
+        context.cuts = [];
+
+        context.addCut = async (len) => {
+            context.cuts.push(len);
+            if (globalThis.__ropePartition_api && typeof globalThis.__ropePartition_api.updateCuts === 'function') {
+                globalThis.__ropePartition_api.updateCuts(context.cuts);
+                await new Promise(r => setTimeout(r, globalThis.__ropePartition_delay || 300));
+            }
+        };
+
+        context.removeCut = async () => {
+            context.cuts.pop();
+            if (globalThis.__ropePartition_api && typeof globalThis.__ropePartition_api.updateCuts === 'function') {
+                globalThis.__ropePartition_api.updateCuts(context.cuts);
+                await new Promise(r => setTimeout(r, globalThis.__ropePartition_delay || 300));
+            }
+        };
+    }
+
 
     // Add Emei Mountain specific parameters if applicable
     if (emeiParams) {

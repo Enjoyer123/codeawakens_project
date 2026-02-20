@@ -211,8 +211,8 @@ const emeiDijkstraXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                                     <field name="VAR">C</field>
                                     <value name="VALUE"><block type="lists_get_at_index"><value name="LIST"><block type="variables_get"><field name="VAR">capacities</field></block></value><value name="INDEX"><block type="variables_get"><field name="VAR">end</field></block></value></block></value>
                                     <next>
-                                      <block type="variables_set" id="calc_rounds">
-                                        <field name="VAR">rounds</field>
+                                    <block type="variables_set" id="calc_rounds">
+                                        <field name="VAR">result</field>
                                         <value name="VALUE">
                                           <block type="math_single">
                                             <field name="OP">CEIL</field>
@@ -239,7 +239,7 @@ const emeiDijkstraXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                                             <next>
                                               <block type="emei_show_final_result">
                                                 <value name="BOTTLENECK"><block type="variables_get"><field name="VAR">C</field></block></value>
-                                                <value name="ROUNDS"><block type="variables_get"><field name="VAR">rounds</field></block></value>
+                                            <value name="ROUNDS"><block type="variables_get"><field name="VAR">result</field></block></value>
                                               </block>
                                             </next>
                                           </block>
@@ -264,7 +264,7 @@ const emeiDijkstraXml = `<xml xmlns="https://developers.google.com/blockly/xml">
     </statement>
     <value name="RETURN">
       <block type="variables_get" id="ret_rounds">
-        <field name="VAR">rounds</field>
+        <field name="VAR">result</field>
       </block>
     </value>
   </block>
@@ -504,7 +504,7 @@ const emeiPrimXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                                 </value>
                                 <next>
                                   <block type="variables_set">
-                                    <field name="VAR">rounds</field>
+                                    <field name="VAR">result</field>
                                     <value name="VALUE">
                                       <block type="math_single">
                                         <field name="OP">CEIL</field>
@@ -531,7 +531,7 @@ const emeiPrimXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                                         <next>
                                           <block type="emei_show_final_result">
                                             <value name="BOTTLENECK"><block type="variables_get"><field name="VAR">C</field></block></value>
-                                            <value name="ROUNDS"><block type="variables_get"><field name="VAR">rounds</field></block></value>
+                                            <value name="ROUNDS"><block type="variables_get"><field name="VAR">result</field></block></value>
                                           </block>
                                         </next>
                                       </block>
@@ -553,7 +553,7 @@ const emeiPrimXml = `<xml xmlns="https://developers.google.com/blockly/xml">
       </block>
     </statement>
     <value name="RETURN">
-      <block type="variables_get"><field name="VAR">rounds</field></block>
+      <block type="variables_get"><field name="VAR">result</field></block>
     </value>
   </block>
   <block type="procedures_callreturn" id="p_call_max_prim" x="20" y="1100">
@@ -588,7 +588,7 @@ export function loadEmeiMountainExample(workspace, type = 'dijkstra') {
 
     // Create necessary variables
     const vars = [
-      'capacities', 'PQ', 'neighbor_data', 'rounds', 'C', 'u', 'v', 'min_cap', 'idx', 'top',
+      'capacities', 'PQ', 'neighbor_data', 'result', 'C', 'u', 'v', 'min_cap', 'idx', 'top',
       'n', 'edges', 'start', 'end', 'tourists', 'parent', 'visited', 'edge', 'w'
     ];
     vars.forEach(v => {

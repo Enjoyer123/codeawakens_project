@@ -40,7 +40,6 @@ export const handleLevelCompletion = async ({
         setIsGameOver,
         setGameState,
         setIsRunning,
-        setTimeSpent,
         setGameResult,
         setFinalScore,
         setShowProgressModal,
@@ -48,9 +47,6 @@ export const handleLevelCompletion = async ({
     }
 }) => {
     // 1. Prepare Victory Conditions
-    console.log("🔍 CHECKING VICTORY CONDITIONS");
-    console.log("🔍 Current Level ID:", currentLevel.id);
-    console.log("🔍 Victory Conditions (Original):", currentLevel.victoryConditions);
 
     // Polyfill victory conditions for Rope Partition if missing (Critical Fix)
     let victoryConditions = currentLevel.victoryConditions;
@@ -60,7 +56,6 @@ export const handleLevelCompletion = async ({
             type: 'function_return_test',
             description: 'ผ่าน Test Cases ทั้งหมด'
         }];
-        console.log("🔍 ⚠️ Polyfilled Victory Conditions for Rope Partition:", victoryConditions);
     }
 
     // 2. Build Fresh State for Verification
@@ -70,14 +65,14 @@ export const handleLevelCompletion = async ({
         testCaseResult: testCaseResult // Use the local variable directly!
     };
 
-    console.log("🔍 State for victory check:", freshState);
+
 
     // 3. Check Victory
     const victoryResult = checkVictoryConditions(victoryConditions, currentLevel, freshState);
     const levelCompleted = victoryResult.completed;
     const completionMessage = victoryResult.message;
 
-    console.log("🔍 VICTORY RESULT:", victoryResult);
+
 
     // 4. Handle Outcome
     if (!levelCompleted) {
@@ -90,7 +85,7 @@ export const handleLevelCompletion = async ({
                 setIsGameOver,
                 setGameState,
                 setIsRunning,
-                setTimeSpent,
+                // setTimeSpent,
                 setGameResult,
                 setFinalScore,
                 setShowProgressModal
@@ -115,7 +110,7 @@ export const handleLevelCompletion = async ({
                 setGameState,
                 setFinalScore,
                 setCurrentHint,
-                setTimeSpent,
+                // setTimeSpent,
                 setShowProgressModal,
                 setIsRunning,
                 setGameResult
@@ -143,7 +138,6 @@ const handleFailure = async ({
         setIsGameOver,
         setGameState,
         setIsRunning,
-        setTimeSpent,
         setGameResult,
         setFinalScore,
         setShowProgressModal
@@ -155,34 +149,16 @@ const handleFailure = async ({
         setCurrentHint(hintMessage);
     }
 
-    // Check if Game Over (HP <= 0 or other conditions if any, though here we rely on HP check usually happening elsewhere, 
-    // but the original code checked HP>0 to triggers logic if NOT dead? Wait, original code:
-    // if (getPlayerHp() > 0 && !currentState.isGameOver) { game over logic } -> This means if you FAILED conditions but are ALIVE, it's a Logic Game Over?
-    // Yes, for puzzle failure.
-
+    // Check if Game Over (HP <= 0 or puzzle failure)
     const currentState = getCurrentGameState();
     if (getPlayerHp() > 0 && !currentState.isGameOver) {
-        console.log("Code execution completed but victory conditions not met - Game Over");
-
         setIsGameOver(true);
         setGameState("gameOver");
-        setIsRunning(false);
-
-        // // Calculate time spent
-        // if (gameStartTime.current) {
-        //     const endTime = Date.now();
-        //     setTimeSpent(Math.floor((endTime - gameStartTime.current) / 1000));
-        // }
-
         setGameResult('gameover');
-
-        // Set final score to 0
         setFinalScore({ totalScore: 0, stars: 0, pattern_bonus_score: 0 });
 
-        // Show game over screen
-        const currentState = getCurrentGameState();
-        // Start combat sequence before showing game over
-        const scene = currentState.currentScene;
+        // Show game over screen + combat sequence
+        const scene = getCurrentGameState().currentScene;
         if (scene) {
             const isCinematicLevel = !currentLevel.nodes || currentLevel.nodes.length === 0;
             if (isCinematicLevel) {
@@ -231,7 +207,7 @@ const handleSuccess = async ({
         setGameState,
         setFinalScore,
         setCurrentHint,
-        setTimeSpent,
+        // setTimeSpent,
         setShowProgressModal,
         setIsRunning,
         setGameResult
@@ -265,10 +241,7 @@ const handleSuccess = async ({
         setCurrentHint(`${completionMessage} (${weaponInfo?.name || ''}) - คะแนน: ${scoreData.totalScore} ⭐${scoreData.stars}`);
     }
 
-    // if (gameStartTime?.current) {
-    //     const endTime = Date.now();
-    //     setTimeSpent(Math.floor((endTime - gameStartTime.current) / 1000));
-    // }
+
     setGameResult('victory');
 
     // In preview mode, unlock pattern and level
@@ -283,19 +256,8 @@ const handleSuccess = async ({
                 String(matchedPattern.pattern_id) === String(patternId) &&
                 hintData?.patternPercentage === 100;
 
-            console.log(`🔐 [Preview] Unlock Check:`, {
-                previewPatternId: patternId,
-                matchedPatternId: matchedPattern?.pattern_id,
-                matchedPatternName: matchedPattern?.name,
-                percentage: hintData?.patternPercentage,
-                isExactMatch
-            });
-
             if (isExactMatch) {
                 await onUnlockPattern(patternId);
-                console.log(`🔓 [Preview] Unlocked pattern ${patternId} because it was successfully used (100% match).`);
-            } else {
-                console.log(`🔒 [Preview] Did NOT unlock pattern ${patternId}. Match failed or < 100%.`);
             }
         } else if (onUnlockPattern && matchedPattern && hintData?.patternPercentage === 100) {
             // Fallback: If no specific patternId was passed pattern (100% match only)

@@ -57,9 +57,9 @@ const dfsExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                   </block>
                 </value>
                 <statement name="DO">
-                  <!-- path = ดึงและลบตัวสุดท้ายจาก container -->
+                  <!-- result = ดึงและลบตัวสุดท้ายจาก container -->
                   <block type="variables_set" id="set_path">
-                    <field name="VAR">path</field>
+                    <field name="VAR">result</field>
                     <value name="VALUE">
                       <block type="lists_remove_last_return" id="pop_container">
                         <value name="LIST">
@@ -77,7 +77,7 @@ const dfsExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                           <block type="lists_get_last" id="get_last_node">
                             <value name="LIST">
                               <block type="variables_get" id="path_var">
-                                <field name="VAR">path</field>
+                                <field name="VAR">result</field>
                               </block>
                             </value>
                           </block>
@@ -104,7 +104,7 @@ const dfsExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                               <block type="procedures_return" id="return_path">
                                 <value name="VALUE">
                                   <block type="variables_get" id="path_var2">
-                                    <field name="VAR">path</field>
+                                    <field name="VAR">result</field>
                                   </block>
                                 </value>
                               </block>
@@ -169,7 +169,7 @@ const dfsExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                                               <block type="lists_concat" id="concat_path_neighbor">
                                                 <value name="LIST1">
                                                   <block type="variables_get" id="path_var3">
-                                                    <field name="VAR">path</field>
+                                                    <field name="VAR">result</field>
                                                   </block>
                                                 </value>
                                                 <value name="LIST2">
@@ -216,9 +216,9 @@ const dfsExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
     </statement>
   </block>
   
-  <!-- Main code: path = DFS(map, 0, 5) -->
+  <!-- Main code: result = DFS(map, 0, 5) -->
   <block type="variables_set" id="main_path_set" x="50" y="600">
-    <field name="VAR">path</field>
+    <field name="VAR">result</field>
     <value name="VALUE">
       <block type="procedures_callreturn" id="call_dfs">
         <mutation name="DFS">
@@ -249,7 +249,7 @@ const dfsExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
       <block type="move_along_path" id="move_path">
         <value name="PATH">
           <block type="variables_get" id="path_var_main">
-            <field name="VAR">path</field>
+            <field name="VAR">result</field>
           </block>
         </value>
       </block>
@@ -283,7 +283,7 @@ export function loadDfsExampleBlocks(workspace) {
         Blockly.Xml.domToWorkspace(xmlDom, workspace);
 
         // Ensure variables exist
-        const variableNames = ['container', 'visited', 'path', 'node', 'neighbor', 'garph', 'start', 'goal', 'map'];
+        const variableNames = ['container', 'visited', 'result', 'node', 'neighbor', 'garph', 'start', 'goal', 'map'];
         variableNames.forEach(varName => {
           try {
             // Check if variable already exists
