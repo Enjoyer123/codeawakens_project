@@ -95,7 +95,7 @@ const dynamicCoinChangeExampleXml = `<xml xmlns="https://developers.google.com/b
                                     <field name="MODE">SET</field>
                                     <field name="WHERE">FROM_START</field>
                                     <value name="LIST"><block type="variables_get" id="cc_dp_dp_get0"><field name="VAR">dp</field></block></value>
-                                    <value name="AT"><block type="math_number" id="cc_dp_at0"><field name="NUM">0</field></block></value>
+                                    <value name="AT"><block type="math_number" id="cc_dp_at0_adj"><field name="NUM">0</field></block></value>
                                     <value name="TO"><block type="math_number" id="cc_dp_zero_dp"><field name="NUM">0</field></block></value>
                                     <next>
                                       <!-- for coinIndex=index..n-1 -->

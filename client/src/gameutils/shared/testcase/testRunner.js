@@ -72,7 +72,6 @@ export async function checkTestCases(functionReturnValue, testCases, functionNam
     console.log('🔍 Function return value is array:', Array.isArray(functionReturnValue));
 
     // Early detection for Rope Partition to force re-execution
-    // Early detection for Rope Partition to force re-execution
     // We do this because Primary Test Case usually reuses functionReturnValue (which is just 'true' from visual run)
     // But for Rope Partition tests, we need to run the wrapped code (with mock addCut) to get the array result
     let preDetectedRopePartition = code.includes('addCut') || code.includes('rope_add_cut') || code.includes('pushRopeNode') || code.includes('rope_vis_enter');
@@ -81,8 +80,13 @@ export async function checkTestCases(functionReturnValue, testCases, functionNam
         console.log('🔍 [DEBUG] Pre-detected Rope Partition! Will force re-execution to capture cuts array.');
     }
 
+    // Early detection for Coin Change to force re-execution when visual-run return is null/undefined
+    // (Visual runs sometimes focus on animations and forget to set/return the numeric result deterministically.)
+    const preDetectedCoinChange = /coinChange|COINCHANGE|COIN_CHANGE/i.test(code) || code.includes('trackCoinChangeDecision');
+
     // Extract function definition from code
-    const functionDefMatch = code.match(/async\s+function\s+(\w+)\s*\([^)]*\)\s*\{[\s\S]*?\n\}/);
+    // IMPORTANT: Blockly may generate either `async function name(...)` OR plain `function name(...)`.
+    const functionDefMatch = code.match(/(?:async\s+)?function\s+(\w+)\s*\([^)]*\)\s*\{[\s\S]*?\n\}/);
     const hasFunctionDef = !!functionDefMatch;
     console.log('🔍 Has function definition in code:', hasFunctionDef);
 
@@ -94,14 +98,22 @@ export async function checkTestCases(functionReturnValue, testCases, functionNam
 
         let actual;
 
-        // Primary test case: use return value from the code that was already executed (with visual feedback)
-        // EXCEPTION: If Rope Partition, force re-execution to capture 'cuts' array instead of boolean 'true'
-        if (testCase.is_primary && !preDetectedRopePartition) {
+        // Primary test case: by default, use return value from the code that was already executed (with visual feedback)
+        // EXCEPTIONS:
+        // - Rope Partition: force re-execution to capture 'cuts' array instead of boolean 'true'
+        // - Coin Change: ALWAYS force re-execution because Blockly declares variables globally,
+        //   which corrupts recursive calls (e.g. coin, include, exclude get overwritten by child frames).
+        //   The visual run returns wrong values, so we must re-execute with localized variables.
+        const shouldForceReexecPrimary =
+            (testCase.is_primary && (functionReturnValue === undefined || functionReturnValue === null) && hasFunctionDef && gameFunctions)
+            || (testCase.is_primary && preDetectedCoinChange);
+
+        if (testCase.is_primary && !preDetectedRopePartition && !shouldForceReexecPrimary) {
             actual = functionReturnValue;
             console.log('🔍   Using primary return value (from executed code):', actual);
         }
         // Secondary test cases: call the function with different parameters (no visual feedback)
-        else if (hasFunctionDef && gameFunctions && (graphMap !== undefined || functionName?.toUpperCase() === 'ANTDP')) {
+        else if (hasFunctionDef && gameFunctions && (graphMap !== undefined || functionName?.toUpperCase() === 'ANTDP' || functionName?.toUpperCase() === 'COINCHANGE')) {
             console.log('🔍   Calling function with test case parameters (no visual feedback)...');
             try {
                 // Extract function name from code (might be DFS, DFS2, etc.)
@@ -490,7 +502,7 @@ export async function checkTestCases(functionReturnValue, testCases, functionNam
                     actual = undefined;
                 } else {
                     // Extract parameter names from function definition to understand the order
-                    const paramMatch = functionDefinition.match(/async\s+function\s+\w+\s*\(([^)]*)\)/);
+                    const paramMatch = functionDefinition.match(/(?:async\s+)?function\s+\w+\s*\(([^)]*)\)/);
                     let paramNames = paramMatch ? paramMatch[1].split(',').map(p => p.trim()) : [];
                     console.log('🔍   Function parameters:', paramNames);
                     console.log('🔍   Function definition preview (first 200 chars):', functionDefinition.substring(0, 200));
@@ -691,10 +703,28 @@ export async function checkTestCases(functionReturnValue, testCases, functionNam
           async function showResult(res) { return; }
         `;
 
+                        // FIX: Blockly declares all variables globally (e.g. var coin, include, exclude;)
+                        // In recursive functions, these get clobbered by child recursive calls.
+                        // We must inject local `var` declarations inside the function body.
+                        let fixedFunctionDef = functionDefinition;
+                        const funcBodyStart = fixedFunctionDef.indexOf('{');
+                        if (funcBodyStart !== -1) {
+                            // Find variables used in the function body that aren't parameters
+                            const localVarCandidates = ['coin', 'include', 'exclude', 'n', 'count', 'bestIndex', 'bestValue', 'i', 'dp', 'INF', 'coinIndex', 'cand', 'result'];
+                            const varsToLocalize = localVarCandidates.filter(v =>
+                                fixedFunctionDef.includes(v) && !paramNames.includes(v)
+                            );
+                            if (varsToLocalize.length > 0) {
+                                const localDecl = `\n  var ${varsToLocalize.join(', ')};`;
+                                fixedFunctionDef = fixedFunctionDef.substring(0, funcBodyStart + 1) + localDecl + fixedFunctionDef.substring(funcBodyStart + 1);
+                                console.log('🔍   [CoinChange Fix] Localized variables inside function:', varsToLocalize);
+                            }
+                        }
+
                         testCode = `
           ${coinChangeMocks}
           ${implFunction}
-          ${functionDefinition}
+          ${fixedFunctionDef}
           // Call coinChange function with test case parameters (no visual feedback)
           var testResult = await ${actualFuncName}(${amountParam}, ${coinsParam}, ${coinIndexParam});
           return testResult;

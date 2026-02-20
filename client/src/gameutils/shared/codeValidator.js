@@ -42,10 +42,23 @@ export const validateWorkspace = (workspace) => {
             }
         }
 
-        // Check If-Only and If-Else
+        // Check If-Only, If-Else,
         if (block.type === 'if_only' || block.type === 'if_else') {
             // Check 'CONDITION' input
             const condition = block.getInputTargetBlock('CONDITION');
+            if (!condition) {
+                console.warn("Validation failed: IF missing condition");
+                return {
+                    isValid: false,
+                    error: "พบเงื่อนไข IF ที่ว่างเปล่า! กรุณาใส่เงื่อนไขให้ครบถ้วน"
+                };
+            }
+        }
+
+        // Check Controls-If
+        if (block.type === 'controls_if') {
+            // Check 'CONDITION' input
+            const condition = block.getInputTargetBlock('IF0');
             if (!condition) {
                 console.warn("Validation failed: IF missing condition");
                 return {

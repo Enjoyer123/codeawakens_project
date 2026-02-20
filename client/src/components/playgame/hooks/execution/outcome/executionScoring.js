@@ -100,7 +100,6 @@ export const finalizeTablesBeforeVictory = async (currentLevel, isTrainSchedule)
         const assignments = globalThis.assignments || [];
         if (assignments.length > 0) {
             const trainAnimDuration = assignments.length * 600 + 1500;
-            console.log(`⏳ Waiting ${trainAnimDuration}ms for Train Schedule animation...`);
             await new Promise(r => setTimeout(r, trainAnimDuration));
         }
     }
@@ -138,7 +137,6 @@ export const calculateLevelScore = (
         if (secondaryTests.length > 0) {
             const passedCount = secondaryTests.filter(t => t.passed).length;
             testCaseBonus = (passedCount / secondaryTests.length) * 20;
-            console.log(`[Score] Bonus: ${passedCount}/${secondaryTests.length} passed -> +${testCaseBonus}`);
         }
     }
 

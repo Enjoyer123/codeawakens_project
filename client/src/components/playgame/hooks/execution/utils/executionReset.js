@@ -3,7 +3,6 @@ import {
     setCurrentGameState,
     resetPlayerHp,
     getPlayerHp,
-
 } from '../../../../../gameutils/shared/game';
 
 import {
@@ -11,25 +10,20 @@ import {
     clearRescuedPeople,
     resetAllPeople,
     clearStack,
-
-    getStack // imported but maybe not used in reset directly, strictly checking usage}
 } from '../../../../../gameutils/shared/items';
 
-import { updatePlayer } from '../../../../../gameutils/phaser';
-import { resetEnemy } from '../../../../../gameutils/phaser';
-import {
-    updateTreasureDisplay,
-} from '../../../../../gameutils/phaser';
+import { updatePlayer, resetEnemy, updateTreasureDisplay, highlightPeak, highlightCableCar, showEmeiFinalResult } from '../../../../../gameutils/phaser';
 import {
     resetKnapsackItemsVisual,
     resetSubsetSumWarriorsVisual,
     clearDfsVisuals,
-
     resetDijkstraState,
-
+    resetCoinChangeTableState,
+    resetCoinChangeVisual,
+    resetCoinChangeSelectionTracking,
+    resetSubsetSumTableState,
+    resetSubsetSumTrackingVisual,
 } from '../../../../../gameutils/blockly';
-
-import { highlightPeak, highlightCableCar, showEmeiFinalResult } from '../../../../../gameutils/phaser';
 
 
 export const setupEmeiApi = (currentLevel) => {
@@ -45,7 +39,6 @@ export const setupEmeiApi = (currentLevel) => {
             highlightCableCar: (u, v, capacity) => highlightCableCar(u, v, capacity),
             showFinalResult: (bottleneck, rounds) => showEmeiFinalResult(bottleneck, rounds)
         };
-        console.log('✅ __emei_api initialized');
     }
 };
 
@@ -74,17 +67,14 @@ export const resetGameExecutionState = async ({
 
     // IMPORTANT: Reset HP และ sync กับ React state
     resetPlayerHp(setPlayerHp);
-    console.log("Game reset - HP set to:", getPlayerHp());
 
     // ล้างเหรียญที่เก็บไว้
     clearPlayerCoins();
-    console.log("Game reset - Coins cleared");
 
     // ล้างข้อมูลคนที่ช่วยแล้ว
     clearRescuedPeople();
     if (setRescuedPeople) setRescuedPeople([]);
     await resetAllPeople();
-    console.log("Game reset - Rescued people cleared");
 
     // ล้างข้อมูล stack และสมบัติ
     clearStack();
@@ -92,30 +82,32 @@ export const resetGameExecutionState = async ({
     // Reset knapsack items to original positions
     if (currentLevel?.knapsackData) {
         resetKnapsackItemsVisual();
-        console.log("Game reset - Knapsack items reset");
     }
 
     // Reset subset sum warriors to original positions
     if (currentLevel?.subsetSumData) {
         resetSubsetSumWarriorsVisual();
-        console.log("Game reset - Subset Sum warriors reset");
+        try { resetSubsetSumTableState(); } catch (e) { }
+        try { resetSubsetSumTrackingVisual(); } catch (e) { }
     }
 
-    console.log("Game reset - Stack and treasure cleared");
-
-    // Reset Dijkstra state
+    // Reset coin change state
+    if (currentLevel?.coinChangeData) {
+        const scene = getCurrentGameState().currentScene;
+        if (scene) {
+            try { resetCoinChangeVisual(scene, true); } catch (e) { }
+        }
+        try { resetCoinChangeTableState(); } catch (e) { }
+        try { resetCoinChangeSelectionTracking(); } catch (e) { }
+    }
     resetDijkstraState();
-    console.log("Game reset - Dijkstra state cleared");
 
     // อัปเดตการแสดงผลสมบัติหลังจาก reset
     if (getCurrentGameState().currentScene) {
-        // NOTE: Dynamic import was in original, but here we can import directly or keep dynamic if circular dependency feared. 
-        // Original: import('../../../../gameutils/phaser/setup/phaserCollection').then(({ updateTreasureDisplay }) => { updateTreasureDisplay(...) });
-        // We imported updateTreasureDisplay at top level, so we use it directly.
         try {
             updateTreasureDisplay(getCurrentGameState().currentScene);
         } catch (e) {
-            console.warn("Failed to update treasure display:", e);
+            // Non-critical
         }
     }
 
@@ -131,7 +123,6 @@ export const resetGameExecutionState = async ({
                 if (valueText) valueText.setVisible(true);
                 if (glow) glow.setVisible(true);
             });
-            console.log("Game reset - Coins reset in scene (showing all coins)");
         }
 
         // รีเซ็ตคนที่ถูกช่วยไว้ให้กลับมาแสดง
@@ -145,7 +136,6 @@ export const resetGameExecutionState = async ({
                     person.rescueEffect.setVisible(true);
                 }
             });
-            console.log("Game reset - People reset in scene (showing all people)");
         }
 
         // รีเซ็ตสมบัติที่เก็บไว้ให้กลับมาแสดง
@@ -159,7 +149,6 @@ export const resetGameExecutionState = async ({
                     treasure.glowEffect.setVisible(true);
                 }
             });
-            console.log("Game reset - Treasures reset in scene (showing all treasures)");
         }
     }
 

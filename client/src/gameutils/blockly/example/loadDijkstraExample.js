@@ -445,9 +445,9 @@ const dijkstraExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
     </statement>
   </block>
   
-  <!-- Main code: path = DIJ(map, 0, 7) -->
+  <!-- Main code: result = DIJ(map, 0, 7) -->
   <block type="variables_set" id="main_path_set" x="50" y="800">
-    <field name="VAR">path</field>
+    <field name="VAR">result</field>
     <value name="VALUE">
       <block type="procedures_callreturn" id="call_dijkstra">
         <mutation name="DIJ">
@@ -478,7 +478,7 @@ const dijkstraExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
       <block type="move_along_path" id="move_path">
         <value name="PATH">
           <block type="variables_get" id="path_var_main">
-            <field name="VAR">path</field>
+            <field name="VAR">result</field>
           </block>
         </value>
       </block>
@@ -514,7 +514,7 @@ export function loadDijkstraExampleBlocks(workspace) {
         // Ensure variables exist
         const variableNames = [
           'PQ', 'visited', 'dist', 'node', 'neighbor', 'neighbor_data', 'weight',
-          'new_dist', 'min_index', 'graph', 'start', 'goal', 'map', 'path', 'result',
+          'new_dist', 'min_index', 'graph', 'start', 'goal', 'map', 'result',
           'distance_start', 'distance_neighbor', 'pq_item', 'current_path', 'new_path'
         ];
         variableNames.forEach(varName => {
