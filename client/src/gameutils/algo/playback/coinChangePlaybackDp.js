@@ -23,23 +23,35 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
         return;
     }
 
+    // Guard against destroyed scene (causes drawImage null error)
+    if (!scene.sys || scene.sys.isDestroyed || !scene.add || !scene.sys.canvas) {
+        console.warn('⚠️ [coinChangePlayback] Scene is destroyed or canvas is null');
+        return;
+    }
+
     console.log(`🎬 [coinChangePlayback] Playing DP Spreadsheet Display at ${speed}x speed`);
 
     const warriors = scene.coinChange.warriors || [];
     const targetAmount = scene.levelData?.coinChangeData?.monster_power || 32;
     const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
-    const statusText = scene.add.text(
-        400, 30,
-        'สร้างกระดาน DP Spreadsheet (1D Array)',
-        { fontSize: '24px', color: '#FFFF00', fontStyle: 'bold', stroke: '#000', strokeThickness: 4, align: 'center' }
-    ).setOrigin(0.5).setDepth(20);
+    let statusText, detailText;
+    try {
+        statusText = scene.add.text(
+            400, 30,
+            'สร้างกระดาน DP Spreadsheet (1D Array)',
+            { fontSize: '24px', color: '#FFFF00', fontStyle: 'bold', stroke: '#000', strokeThickness: 4, align: 'center' }
+        ).setOrigin(0.5).setDepth(20);
 
-    const detailText = scene.add.text(
-        400, 70,
-        'เตรียมตาราง dp[amount]...',
-        { fontSize: '18px', color: '#FFFFFF', fontStyle: 'bold', stroke: '#000', strokeThickness: 3, align: 'center' }
-    ).setOrigin(0.5).setDepth(20);
+        detailText = scene.add.text(
+            400, 70,
+            'เตรียมตาราง dp[amount]...',
+            { fontSize: '18px', color: '#FFFFFF', fontStyle: 'bold', stroke: '#000', strokeThickness: 3, align: 'center' }
+        ).setOrigin(0.5).setDepth(20);
+    } catch (err) {
+        console.warn('⚠️ [coinChangePlayback] Failed to create text objects (scene canvas may be null):', err.message);
+        return;
+    }
 
     // ==========================================
     // UI: DP Table Array (Spreadsheet)

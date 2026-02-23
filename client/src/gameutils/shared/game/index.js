@@ -12,13 +12,9 @@ export {
     getPlayerHp,
     setPlayerHp,
     resetPlayerHp,
+    // Navigation and direction states
     directions
 } from './gameState';
-
-// Movement utilities
-export {
-    moveToNode
-} from './movementUtils';
 
 // Victory conditions
 export {

@@ -1,5 +1,5 @@
 import { generateAndInstrumentCode, prepareExecutableCode } from '@/gameutils/blockly/core/executionCodeGeneration';
-import { getCurrentGameState } from '@/gameutils/shared/game';
+import { getCurrentGameState, setCurrentGameState } from '@/gameutils/shared/game';
 import { useState } from 'react';
 import { validateWorkspace, mapRuntimeErrorToMessage } from '@/gameutils/shared/codeValidator';
 import { extractFunctionName } from '@/gameutils/algo';
@@ -13,6 +13,10 @@ import {
 
 // --- Record & Playback System ---
 import { executeAlgoCode, checkAlgoTestCases, playAlgoAnimation, isAlgoLevel, detectAlgoType } from '../../../../gameutils/algo';
+import { calculateMoveForward, calculateTurnLeft, calculateTurnRight } from '../../../../gameutils/movement/movementCore';
+import { playMoveAnimation, playTurnAnimation } from '../../../../gameutils/movement/movementPlayback';
+import { calculateHit } from '../../../../gameutils/combat/combatLogic';
+import { playHitAnimation } from '../../../../gameutils/combat/combatPlayback';
 
 const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
 
@@ -40,7 +44,6 @@ export function useCodeExecution({
 }) {
     // Destructure groups for use inside runCode
     const {
-        moveForward, turnLeft, turnRight, hit,
         foundMonster, canMoveForward, nearPit, atGoal
     } = gameActions;
 
@@ -55,9 +58,85 @@ export function useCodeExecution({
     const { goodPatterns, hintOpenCount, userBigO, hintData } = scoring;
     const [executionError, setExecutionError] = useState(null);
 
+    // Provide decoupled combat wrapper
+    const hit = async () => {
+        const scene = getCurrentGameState().currentScene;
+        const result = calculateHit(scene);
+
+        if (!result.success) {
+            setCurrentHint("❌ ไม่มีศัตรูในระยะโจมตี");
+            return false;
+        }
+
+        if (scene) {
+            const playbackResult = await playHitAnimation(scene, result);
+            if (playbackResult.status === 'enemy_defeated') {
+                setCurrentHint("⚔️ ศัตรูตายแล้ว! เดินต่อได้");
+            } else if (playbackResult.status === 'missed') {
+                setCurrentHint("❌ โจมตีไม่สำเร็จ");
+            }
+        }
+        return true;
+    };
+
+    // Provide decoupled movement wrappers using the new Playback Architecture
+    const moveForward = async () => {
+        console.log("🚀 [NEW ARCH] Blockly calling decoupled moveForward!");
+        const scene = getCurrentGameState().currentScene;
+        const result = calculateMoveForward(scene);
+
+        if (!result.success) return false;
+
+        if (scene) {
+            const playbackResult = await playMoveAnimation(scene, result);
+            if (playbackResult && playbackResult.status === 'game_over') {
+                setIsGameOver(true);
+                setGameState("gameOver");
+                if (!isPreview) {
+                    setShowProgressModal(true);
+                    setGameResult('gameover');
+                }
+                return false; // Stop further execution
+            }
+        }
+
+        // ⭐ ALWAYS update the global mathematical state whether we had a scene or not
+        setCurrentGameState({
+            currentNodeId: result.targetNode.id,
+            goalReached: result.goalReached
+        });
+
+        if (result.targetNode) {
+            setPlayerNodeId(result.targetNode.id);
+        }
+        return false;
+    };
+
+    const turnLeft = async () => {
+        const result = calculateTurnLeft();
+        if (result.success) {
+            setPlayerDirection(result.newDirection);
+            setCurrentGameState({ direction: result.newDirection });
+            const scene = getCurrentGameState().currentScene;
+            if (scene) {
+                await playTurnAnimation(scene, result);
+            }
+        }
+    };
+
+    const turnRight = async () => {
+        const result = calculateTurnRight();
+        if (result.success) {
+            setPlayerDirection(result.newDirection);
+            setCurrentGameState({ direction: result.newDirection });
+            const scene = getCurrentGameState().currentScene;
+            if (scene) {
+                await playTurnAnimation(scene, result);
+            }
+        }
+    };
+
     const runCode = async () => {
-
-
         // Block Validation
         if (!currentLevel?.textcode && workspaceRef.current) {
             const validation = validateWorkspace(workspaceRef.current, currentLevel);

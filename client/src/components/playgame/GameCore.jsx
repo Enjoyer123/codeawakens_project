@@ -20,13 +20,13 @@ import {
   getCollectedTreasures,
   clearPlayerCoins,
   clearRescuedPeople,
-  clearStack
-} from '../../gameutils/shared/items';
+  resetTreasures
+} from '../../gameutils/entities';
 import {
   getCurrentGameState,
 } from '../../gameutils/shared/game';
 
-import { clearGameOverScreen } from '../../gameutils/phaser';
+import { clearGameOverScreen } from '../../gameutils/effects/gameEffects';
 
 // Import components
 import GameArea from './GameArea';
@@ -35,7 +35,6 @@ import GameWithGuide from './GameWithGuide';
 import LoadXmlModal from './LoadXmlModal';
 
 // Import custom hooks
-import { useGameActions } from './hooks/useGameActions';
 import { useGameConditions } from './hooks/useGameConditions';
 import { usePhaserGame } from './hooks/usePhaserGame';
 import { useBlocklySetup } from './hooks/blocklysetup/useBlocklySetup';
@@ -67,7 +66,7 @@ const resetAllGameStates = () => {
   // Clear shared game state (Coins, People, Treasures)
   clearPlayerCoins();
   clearRescuedPeople();
-  clearStack();
+  resetTreasures();
 };
 
 
@@ -243,20 +242,6 @@ const GameCore = ({
     handleTextCodeChange(newCode);
   };
 
-  // Initialize game action and condition hooks
-  const { moveForward, turnLeft, turnRight, hit } = useGameActions({
-    currentLevel,
-    setPlayerNodeId,
-    setPlayerDirection,
-    setCurrentHint,
-    setIsGameOver,
-    setGameState,
-    setShowProgressModal,
-    // setTimeSpent,
-    setGameResult,
-    gameStartTime,
-    isPreview
-  });
 
   const { foundMonster, canMoveForward, nearPit, atGoal } = useGameConditions({
     currentLevel
@@ -431,7 +416,6 @@ const GameCore = ({
     onUnlockLevel,
     gameStartTime,
     gameActions: {
-      moveForward, turnLeft, turnRight, hit,
       foundMonster, canMoveForward, nearPit, atGoal
     },
     setters: {

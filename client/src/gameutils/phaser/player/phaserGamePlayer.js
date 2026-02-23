@@ -1,15 +1,15 @@
 // Phaser Game Player Functions
 import {
   updateWeaponPosition
-} from '../../shared/items';
+} from '../../entities/weaponUtils';
 
 import { getCurrentGameState, setCurrentGameState, getPlayerHp } from '../../shared/game';
 
-import { checkObstacleCollisionWithRadius } from '../../shared/collision';
-import { isInCombat } from '../../shared/combat/core/combatCore';
-import { playIdle, playWalk } from '../player/playerAnimation';
-import { moveToPosition } from '../player/playerMovement';
-import { updatePlayerArrow } from '../effects/phaserGameArrow';
+import { checkObstacleCollisionWithRadius } from '../../movement/collisionUtils';
+import { isInCombat } from '../../combat/combatCore';
+import { playIdle, playWalk } from '../../movement/playerAnimation';
+import { moveToPosition } from '../../movement/playerMovement';
+import { updatePlayerArrow } from '../../effects/arrow';
 
 export function updatePlayer(scene, nodeId, direction) {
   // ตรวจสอบว่ามี nodes หรือไม่

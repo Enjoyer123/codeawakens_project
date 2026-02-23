@@ -6,14 +6,15 @@ import {
 } from '../game';
 import {
     showGameOver,
-    showVictory,
-    playCombatSequence
-} from '../../phaser';
+    showVictory
+} from '../../effects/gameEffects';
+import { updatePlayer } from '../../phaser/player/phaserGamePlayer';
+import { resetEnemy } from '../../combat/enemyUtils';
 import {
     finalizeTablesBeforeVictory,
     calculateLevelScore
 } from './executionScoring';
-import { playVictorySequence } from '../../phaser/effects/executionAnimations';
+import { playVictorySequence } from '../../effects/executionAnimations';
 
 /**
  * Handles the logic for checking victory conditions and processing the level outcome.

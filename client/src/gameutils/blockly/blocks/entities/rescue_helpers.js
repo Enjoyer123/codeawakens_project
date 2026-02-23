@@ -9,7 +9,7 @@ import {
     getRescuedPeople as gameGetRescuedPeople,
     clearRescuedPeople as gameClearRescuedPeople,
     resetAllPeople as gameResetAllPeople
-} from '../../../shared/items';
+} from '../../../entities/personUtils';
 
 
 export function rescuePerson() {

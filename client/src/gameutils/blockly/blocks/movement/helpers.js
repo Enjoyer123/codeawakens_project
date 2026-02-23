@@ -3,7 +3,7 @@ import {
     getCurrentGameState,
     setCurrentGameState
 } from '../../../shared/game';
-import { moveToNode as phaserMoveToNode } from '../../../phaser/player/playerMovement';
+import { moveToNode as phaserMoveToNode } from '../../../movement/playerMovement';
 
 export async function turnLeft() {
     const currentState = getCurrentGameState();

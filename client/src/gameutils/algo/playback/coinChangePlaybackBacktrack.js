@@ -6,7 +6,7 @@
 export async function playCoinChangeBacktrackAnimation(scene, trace, options = {}) {
     // เปลยนไปใช Tree Display ไดถาเพม options.tree
     // return playBarDisplay(scene, trace, options);
-    return playTreeDisplay(scene, trace, options);
+    return playBarDisplay(scene, trace, options);
 }
 
 /**

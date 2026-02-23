@@ -11,7 +11,7 @@ import {
   loadWeaponsData,
   getWeaponData,
   getWeaponsData
-} from '../../../gameutils/shared/items';
+} from '../../../gameutils/entities/weaponUtils';
 
 import { ensureDefaultBlocks } from '../../../gameutils/blockly';
 import {

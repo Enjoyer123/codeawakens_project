@@ -7,12 +7,14 @@ import {
     getPlayerCoins, addCoinToPlayer, clearPlayerCoins as clearPlayerCoinsUtil,
     swapPlayerCoins, comparePlayerCoins, getPlayerCoinValue, getPlayerCoinCount,
     arePlayerCoinsSorted, allPeopleRescued
-} from '../items';
+} from '../../entities';
 
 import {
-    getStack, pushToStack, popFromStack, isStackEmpty, getStackCount,
-    hasTreasureAtNode, collectTreasure, isTreasureCollected, clearStack
-} from '../items';
+    hasTreasureAtNode, collectTreasure, isTreasureCollected, resetTreasures,
+    hasTreasure, treasureCollected, getCollectedTreasures
+} from '../../entities';
+
+import { playRescueAnimation, playCollectAnimation } from '../../entities/actionPlayback';
 
 import {
     getCurrentGameState,
@@ -56,8 +58,23 @@ export const buildExecutionContext = ({
         collectCoin, haveCoin, getCoinCount, getCoinValue, swapCoins, compareCoins, isSorted,
         getPlayerCoins, addCoinToPlayer, clearPlayerCoins: clearPlayerCoinsUtil, swapPlayerCoins, comparePlayerCoins,
         getPlayerCoinValue, getPlayerCoinCount, arePlayerCoinsSorted,
-        rescuePersonAtNode, hasPerson, personRescued, getPersonCount, allPeopleRescued,
-        getStack, pushToStack, popFromStack, isStackEmpty, getStackCount, hasTreasureAtNode, collectTreasure, isTreasureCollected, clearStack,
+        rescuePersonAtNode: async (nodeId) => {
+            const result = await rescuePersonAtNode(nodeId);
+            if (result && result.success && getCurrentGameState().currentScene) {
+                await playRescueAnimation(getCurrentGameState().currentScene, result);
+            }
+            return result;
+        },
+        hasPerson, personRescued, getPersonCount, allPeopleRescued,
+        hasTreasureAtNode,
+        collectTreasure: async (nodeId) => {
+            const result = await collectTreasure(nodeId);
+            if (result && result.success && getCurrentGameState().currentScene) {
+                await playCollectAnimation(getCurrentGameState().currentScene, result);
+            }
+            return result;
+        },
+        isTreasureCollected, hasTreasure, treasureCollected,
 
         moveToNode: wrappedMoveToNode, moveAlongPath: wrappedMoveAlongPath,
 

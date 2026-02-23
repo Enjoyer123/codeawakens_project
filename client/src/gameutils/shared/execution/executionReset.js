@@ -9,8 +9,8 @@ import {
     clearPlayerCoins,
     clearRescuedPeople,
     resetAllPeople,
-    clearStack,
-} from '../items';
+    resetTreasures,
+} from '../../entities';
 
 
 import {
@@ -23,7 +23,8 @@ import {
     resetSubsetSumTrackingVisual,
 } from '../../blockly';
 
-import { updatePlayer, resetEnemy } from '../../phaser';
+import { updatePlayer } from '../../phaser/player/phaserGamePlayer';
+import { resetEnemy } from '../../combat/enemyUtils';
 
 
 
@@ -61,8 +62,8 @@ export const resetGameExecutionState = async ({
     if (setRescuedPeople) setRescuedPeople([]);
     await resetAllPeople();
 
-    // ล้างข้อมูล stack และสมบัติ
-    clearStack();
+    // ล้างข้อมูลสมบัติ
+    resetTreasures();
 
     // Reset knapsack items to original positions
     if (currentLevel?.knapsackData) {

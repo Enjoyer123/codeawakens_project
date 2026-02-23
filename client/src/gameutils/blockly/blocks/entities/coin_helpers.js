@@ -9,10 +9,10 @@ import {
     getPlayerCoinValue,
     getPlayerCoinCount,
     arePlayerCoinsSorted
-} from '../../../shared/items';
+} from '../../../entities/coinUtils';
 
 import { getCurrentGameState, getCurrentScene } from '../../../shared/game';
-import { collectCoinByPlayer, haveCoinAtPosition } from '../../../phaser/setup/phaserCollection';
+import { collectCoinByPlayer, haveCoinAtPosition } from '../../../entities/collection';
 
 // Coin collection functions
 export async function collectCoin() {
