@@ -15,10 +15,7 @@ import {
     setupKnapsack,
     setupSubsetSum,
     setupCoinChange,
-    setupNQueen,
-    setupTrainSchedule,
-    setupRopePartition,
-    setupEmeiMountain,
+
     drawPlayer,
     updateMonsters,
     drawCinematicMonster
@@ -307,10 +304,6 @@ export class GameScene extends Phaser.Scene {
             setupKnapsack(this);
             setupSubsetSum(this);
             setupCoinChange(this);
-            setupNQueen(this);
-            setupTrainSchedule(this);
-            setupRopePartition(this);
-            setupEmeiMountain(this);
 
             const currentState = getCurrentGameState();
 

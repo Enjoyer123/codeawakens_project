@@ -1,18 +1,18 @@
-import { generateAndInstrumentCode, prepareExecutableCode } from './analysis/executionCodeGeneration';
-import { detectAlgorithmFlags } from './analysis/algorithmDetector';
-import { handlePostExecutionVisuals } from './outcome/executionResultProcessing';
-import { getCurrentGameState } from '../../../../gameutils/shared/game';
+import { generateAndInstrumentCode, prepareExecutableCode } from '@/gameutils/blockly/core/executionCodeGeneration';
+import { getCurrentGameState } from '@/gameutils/shared/game';
 import { useState } from 'react';
-import { validateWorkspace, mapRuntimeErrorToMessage } from '../../../../gameutils/shared/codeValidator';
-import { extractFunctionName } from '../../../../gameutils/shared/testcase';
-import { buildExecutionContext } from './core/executionContextBuilder';
-import * as TestHandler from './core/testExecutionHandler';
-import { handleLevelCompletion } from './outcome/levelCompletionHandler';
-import { resetGameExecutionState, setupEmeiApi } from './utils/executionReset';
-import { createGraphMap, buildEmeiParams, createExecutionWrappers } from './utils/executionHelpers';
+import { validateWorkspace, mapRuntimeErrorToMessage } from '@/gameutils/shared/codeValidator';
+import { extractFunctionName } from '@/gameutils/algo';
+import { buildExecutionContext } from '@/gameutils/shared/execution/executionContextBuilder';
+import { handleLevelCompletion } from '@/gameutils/shared/execution/levelCompletionHandler';
+import { resetGameExecutionState } from '@/gameutils/shared/execution/executionReset';
+import { createGraphMap, createExecutionWrappers } from '@/gameutils/shared/execution/executionHelpers';
 import {
     resetKnapsackSelectionTracking, startKnapsackSelectionTracking
 } from '../../../../gameutils/blockly/algorithms/knapsack/visuals';
+
+// --- Record & Playback System ---
+import { executeAlgoCode, checkAlgoTestCases, playAlgoAnimation, isAlgoLevel, detectAlgoType } from '../../../../gameutils/algo';
 
 const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
 
@@ -56,15 +56,11 @@ export function useCodeExecution({
     const [executionError, setExecutionError] = useState(null);
 
     const runCode = async () => {
-        // Check if system is ready (Phaser scene OR React-based level)
-        // For React-based levels (like train_schedule), we don't need a Phaser scene
-        const isRopePartition = currentLevel?.gameType === 'rope_partition' || currentLevel?.appliedData?.type === 'BACKTRACKING_ROPE_PARTITION';
-        const isReactLevel = currentLevel?.gameType === 'train_schedule' ||
-            currentLevel?.appliedData?.type === 'GREEDY_TRAIN_SCHEDULE' || isRopePartition;
+
 
         // Block Validation
         if (!currentLevel?.textcode && workspaceRef.current) {
-            const validation = validateWorkspace(workspaceRef.current);
+            const validation = validateWorkspace(workspaceRef.current, currentLevel);
             if (!validation.isValid) {
                 setExecutionError({
                     title: "พบข้อผิดพลาดในบล็อกคำสั่ง",
@@ -74,7 +70,7 @@ export function useCodeExecution({
             }
         }
 
-        if (!workspaceRef.current || (!getCurrentGameState().currentScene && !isReactLevel)) {
+        if (!workspaceRef.current || !getCurrentGameState().currentScene) {
             setCurrentHint("⚠️ ระบบไม่พร้อมใช้งาน");
             return;
         }
@@ -101,9 +97,105 @@ export function useCodeExecution({
                 setTestCaseResult(null);
             }
 
+            // ========================================
+            // Record & Playback Path (Algo Levels)
+            // ========================================
+            if (isAlgoLevel(currentLevel)) {
+                try {
+                    let code = await generateAndInstrumentCode(workspaceRef, currentLevel);
+                    if (!code.trim()) {
+                        setCurrentHint("❌ ไม่พบ Blocks! กรุณาลาก Blocks จาก Toolbox");
+                        setGameState("ready");
+                        setIsRunning(false);
+                        return;
+                    }
+
+                    setCurrentHint("⚙️ กำลังคำนวณผลลัพธ์...");
+                    await new Promise(r => setTimeout(r, 300));
+
+                    // Phase 1: Execute pure logic (no visuals)
+                    const { result, trace, error } = await executeAlgoCode(code, currentLevel);
+
+                    if (error) {
+                        const friendlyMsg = mapRuntimeErrorToMessage(error);
+                        setCurrentHint(`❌ ${friendlyMsg}`);
+                        setExecutionError({ title: 'เกิดข้อผิดพลาดขณะทำงาน', message: friendlyMsg });
+                        setGameState('ready');
+                        setIsRunning(false);
+                        return;
+                    }
+
+                    // Phase 2: Check test cases
+                    const functionName = extractFunctionName(code);
+                    const testCaseResult = await checkAlgoTestCases(
+                        result, currentLevel.test_cases || [], functionName, code, currentLevel
+                    );
+
+                    if (setTestCaseResult) setTestCaseResult(testCaseResult);
+                    setCurrentHint(testCaseResult.message);
+
+                    // Phase 3: Play animation if ALL test cases passed
+                    if (testCaseResult.passed && testCaseResult.failedTests.length === 0) {
+                        const scene = getCurrentGameState().currentScene;
+                        const algoType = detectAlgoType(currentLevel);
+
+                        // Auto-add move_along_path from the result (final path) for graph levels
+                        // Because we removed the explicit block from the UI to hide this logic from students.
+                        if (Array.isArray(result) && result.length > 0 && ['DFS', 'BFS', 'DIJKSTRA'].includes(algoType)) {
+                            trace.push({ action: 'move_along_path', path: [...result] });
+                        }
+
+                        if (scene && trace.length > 0) {
+                            setCurrentHint('🎬 กำลังแสดง Animation...');
+
+                            // Reset UI state cleanly immediately before playback starts
+                            await resetGameExecutionState({
+                                gameStartTime,
+                                setPlayerHp,
+                                setRescuedPeople,
+                                setPlayerNodeId,
+                                setPlayerDirection,
+                                currentLevel
+                            });
+
+                            await playAlgoAnimation(scene, algoType, trace, { result });
+                        }
+                    }
+
+                    // Phase 4: Handle level completion
+                    await handleLevelCompletion({
+                        currentLevel,
+                        testCaseResult,
+                        isPreview,
+                        gameStartTime,
+                        hintData,
+                        goodPatterns,
+                        hintOpenCount,
+                        userBigO,
+                        patternId,
+                        onUnlockPattern,
+                        onUnlockLevel,
+                        setters: {
+                            setCurrentHint, setIsGameOver, setGameState, setIsRunning,
+                            setGameResult, setFinalScore, setShowProgressModal, setIsCompleted
+                        }
+                    });
+
+                } catch (algoError) {
+                    console.error('🔴 [Algo System] Error:', algoError);
+                    setExecutionError({ title: 'Algo System Error', message: algoError.message });
+                    setIsRunning(false);
+                }
+                return; // ออกจาก runCode (ไม่ตกไประบบเดิม)
+            }
+
+            // ========================================
+            // Legacy Path (Simple Levels: Move/Turn)
+            // ========================================
+
             // 1. Reset Game State
 
-            setupEmeiApi(currentLevel);
+
 
             await resetGameExecutionState({
                 gameStartTime,
@@ -131,16 +223,8 @@ export function useCodeExecution({
             setCurrentHint("⚙️ กำลังประมวลผล...");
             await new Promise(resolve => setTimeout(resolve, 1000));
 
-            // Detect algorithm flags (before AsyncFunction creation)
-            const {
-                isCoinChange,
-                isSubsetSum,
-                isKnapsack,
-                isNQueen,
-                isTrainSchedule,
-                isEmei,
-                isRopePartition
-            } = detectAlgorithmFlags(code, currentLevel);
+            // Simple level flags
+            const isKnapsack = !!currentLevel?.knapsackData;
 
             const varName = 'result';
 
@@ -151,7 +235,6 @@ export function useCodeExecution({
             try {
                 const map = createGraphMap(currentLevel?.nodes || [], currentLevel?.edges || []);
                 const all_nodes = (currentLevel?.nodes || []).map(node => node.id);
-                const maxCapacityParams = isEmei ? buildEmeiParams(currentLevel) : { n: 0, edges: [], start: 0, end: 0, tourists: 0 };
 
                 // SANITIZE: Avoid duplicate-declaration SyntaxErrors for `listItems`
                 if ((code.match(/\b(?:const|let)\s+listItems\b/g) || []).length > 1) {
@@ -176,12 +259,10 @@ export function useCodeExecution({
                         wrappedMoveToNode,
                         wrappedMoveAlongPath
                     },
-                    currentLevel,
-                    emeiParams: isEmei ? maxCapacityParams : undefined
+                    currentLevel
                 });
 
-                const finalExecutableCode = (isEmei ? "globalThis.__useZeroBasedIndexing = true;\n" : "") +
-                    prepareExecutableCode(code, { varName, isNQueen, isTrainSchedule }, currentLevel);
+                const finalExecutableCode = prepareExecutableCode(code, { varName }, currentLevel);
 
                 // Execute code ONCE with return capture
                 let functionReturnValue = null;
@@ -199,23 +280,6 @@ export function useCodeExecution({
                     const argValues = argNames.map(name => context[name]);
                     const executionFn = new AsyncFunction(...argNames, '"use strict";\n' + finalExecutableCode);
                     functionReturnValue = await Promise.race([executionFn(...argValues), timeoutPromise]);
-
-                    await handlePostExecutionVisuals(functionReturnValue, isNQueen);
-
-                    const functionName = extractFunctionName(code);
-
-                    testCaseResult = await TestHandler.executeTestCases({
-                        functionReturnValue,
-                        currentLevel,
-                        functionName,
-                        code,
-                        map,
-                        all_nodes,
-                        setTestCaseResult,
-                        setCurrentHint,
-                        setHintData,
-                        isTrainSchedule
-                    });
 
                 } catch (error) {
                     executionErrorLocal = error;
@@ -238,8 +302,6 @@ export function useCodeExecution({
                 const { levelCompleted } = await handleLevelCompletion({
                     currentLevel,
                     testCaseResult,
-                    isTrainSchedule,
-                    isRopePartitionCheck: currentLevel.gameType === 'rope_partition' || currentLevel.appliedData?.type === 'BACKTRACKING_ROPE_PARTITION',
                     isPreview,
                     gameStartTime,
                     hintData,

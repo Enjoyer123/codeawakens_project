@@ -57,11 +57,6 @@ export async function moveAlongPath(path) {
 
     // Clear scanning highlights before moving (keep only path)
     const currentState = getCurrentGameState();
-    if (currentState.currentScene) {
-        // Dynamic import to avoid circular dependency if possible, or just adjust path
-        const { clearScanningHighlights } = await import('../../algorithms/graph/dfs_visual');
-        clearScanningHighlights(currentState.currentScene);
-    }
 
     // Move to each node in the path sequentially
     for (let i = 0; i < path.length; i++) {
@@ -74,9 +69,7 @@ export async function moveAlongPath(path) {
             if (state.currentScene && state.currentScene.levelData) {
                 const goalNodeId = state.currentScene.levelData.goalNodeId;
                 if (Number(nodeId) === goalNodeId) {
-                    // Reached goal - clear scanning highlights, keep only path
-                    const { clearScanningHighlights } = await import('../../algorithms/graph/dfs_visual');
-                    clearScanningHighlights(state.currentScene);
+                    // Reached goal (Highlights could be cleared via standard victory flow)
                 }
             }
 

@@ -110,8 +110,16 @@ const bfsExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                               </block>
                             </statement>
                             <next>
-                              <!-- สำหรับแต่ละ neighbor ใน neighbors -->
-                              <block type="for_each_in_list" id="for_each_neighbor">
+                              <!-- แสดงเส้นทางปัจจุบันให้ผู้เล่นเห็นด้วยสีเหลือง -->
+                              <block type="show_path_visual" id="emit_path">
+                                <value name="PATH">
+                                  <block type="variables_get" id="emit_path_var">
+                                    <field name="VAR">result</field>
+                                  </block>
+                                </value>
+                                <next>
+                                  <!-- สำหรับแต่ละ neighbor ใน neighbors -->
+                                  <block type="for_each_in_list" id="for_each_neighbor">
                                 <field name="VAR">neighbor</field>
                                 <value name="LIST">
                                   <block type="graph_get_neighbors" id="get_neighbors">
@@ -189,7 +197,7 @@ const bfsExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                                       </block>
                                     </statement>
                                   </block>
-                                </statement>
+                                </next>
                               </block>
                             </next>
                           </block>
@@ -232,27 +240,17 @@ const bfsExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
           </block>
         </value>
         <value name="ARG1">
-          <block type="math_number" id="start_num">
-            <field name="NUM">0</field>
+          <block type="variables_get" id="start_var_main">
+            <field name="VAR">start</field>
           </block>
         </value>
         <value name="ARG2">
-          <block type="math_number" id="goal_num">
-            <field name="NUM">7</field>
+          <block type="variables_get" id="goal_var_main">
+            <field name="VAR">goal</field>
           </block>
         </value>
       </block>
     </value>
-    <next>
-      <!-- move_along_path(path) -->
-      <block type="move_along_path" id="move_path">
-        <value name="PATH">
-          <block type="variables_get" id="path_var_main">
-            <field name="VAR">result</field>
-          </block>
-        </value>
-      </block>
-    </next>
   </block>
 </xml>`;
 

@@ -28,7 +28,6 @@ import TestManagement from "../pages/admin/test/TestManagement";
 import NotificationManagement from "../pages/admin/notification/NotificationManagement";
 import NavLayout from "../layouts/NavLayout";
 import RequirePreTest from "../components/shared/RequirePreTest";
-
 const AppRoutes = () => {
   return (
     <Routes>

@@ -1,9 +1,10 @@
 /**
  * Validates the Blockly workspace for common errors before execution.
  * @param {object} workspace - The Blockly workspace instance
+ * @param {object} levelData - Optional level data containing constraints (maxBlocks, restrictedBlocks)
  * @returns {object} { isValid: boolean, error: string | null }
  */
-export const validateWorkspace = (workspace) => {
+export const validateWorkspace = (workspace, levelData = {}) => {
     if (!workspace) return { isValid: true, error: null };
 
     const topBlocks = workspace.getTopBlocks(false);
@@ -23,10 +24,31 @@ export const validateWorkspace = (workspace) => {
     // For now, let's skip strict orphaned check as it might be annoying, 
     // but we SHOULD check if the main `start_game` block exists if required.
 
-    // 3. Iterate all blocks to check for empty inputs/fields
+    // 3. Check for Block Constraints (Max Blocks)
     const allBlocks = workspace.getAllBlocks(false);
 
+    if (levelData && levelData.maxBlocks && typeof levelData.maxBlocks === 'number' && levelData.maxBlocks > 0) {
+        // Exclude system/setup blocks like start_game if applicable, but for simplicity we count all generated blocks
+        if (allBlocks.length > levelData.maxBlocks) {
+            return {
+                isValid: false,
+                error: `ใช้บล็อกเกินโควต้า! (ใช้จำกัด ${levelData.maxBlocks} บล็อก)`
+            };
+        }
+    }
+
+    // 4. Iterate all blocks to check for restricted blocks and empty inputs/fields
     for (const block of allBlocks) {
+        // Check for Restricted Blocks
+        if (levelData && levelData.restrictedBlocks && Array.isArray(levelData.restrictedBlocks)) {
+            if (levelData.restrictedBlocks.includes(block.type)) {
+                return {
+                    isValid: false,
+                    error: `ด่านนี้ไม่อนุญาตให้ใช้งานบล็อก: ${block.type}`
+                };
+            }
+        }
+
         // Skip disabled blocks
         if (!block.isEnabled()) continue;
 

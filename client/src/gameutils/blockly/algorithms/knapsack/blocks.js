@@ -1,30 +1,61 @@
-// Blockly Knapsack Visual Feedback Block Definitions
+// Blockly Knapsack Trace Feedback Block Definitions
 import * as Blockly from "blockly/core";
 
 export function defineKnapsackVisualBlocks() {
-  // Select knapsack item (move it into the bag)
-  Blockly.Blocks["knapsack_select_item"] = {
+  // Pick an item (put into bag)
+  Blockly.Blocks["knapsack_pick_item"] = {
     init: function () {
       this.appendValueInput("ITEM_INDEX")
         .setCheck("Number")
-        .appendField("Select Item");
+        .appendField("Pick item into bag");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(260);
-      this.setTooltip("เลือกสมบัติและขยับเข้าไปในกระเป๋า (แสดงผล)");
+      this.setTooltip("หยิบสิ่งของใส่กระเป๋า (บันทึก Track)");
     },
   };
 
-  // Unselect knapsack item (move it back to original position)
-  Blockly.Blocks["knapsack_unselect_item"] = {
+  // Remove an item (take out of bag)
+  Blockly.Blocks["knapsack_remove_item"] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("Remove last item from bag");
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setColour(0);
+      this.setTooltip("เอาสิ่งของล่าสุดออกจากกระเป๋าคืนที่เดิม (Backtrack)");
+    },
+  };
+
+  // Consider an item (flash temporarily)
+  Blockly.Blocks["knapsack_consider_item"] = {
     init: function () {
       this.appendValueInput("ITEM_INDEX")
         .setCheck("Number")
-        .appendField("Unselect Item");
+        .appendField("Consider item");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour(260);
-      this.setTooltip("ไม่เลือกสมบัติและขยับกลับไปตำแหน่งเดิม (แสดงผล)");
+      this.setColour(45);
+      this.setTooltip("แสดงแอนิเมชันกำลังพิจารณาสิ่งของชิ้นนี้");
+    },
+  };
+
+  // DP Update Block
+  Blockly.Blocks["knapsack_dp_update"] = {
+    init: function () {
+      this.appendValueInput("ITEM_INDEX")
+        .setCheck("Number")
+        .appendField("DP Update Row (item idx)");
+      this.appendValueInput("CAPACITY")
+        .setCheck("Number")
+        .appendField("Col (capacity)");
+      this.appendValueInput("VALUE")
+        .setCheck("Number")
+        .appendField("with Max Value");
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setColour(120);
+      this.setTooltip("บันทึกค่าลงตาราง DP");
     },
   };
 }

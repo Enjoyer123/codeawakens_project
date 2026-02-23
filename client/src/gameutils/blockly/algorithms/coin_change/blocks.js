@@ -36,5 +36,43 @@ export function defineCoinChangeVisualBlocks() {
       this.setTooltip("ติดตามการตัดสินใจสำหรับอัลกอริทึมแลกเหรียญ");
     },
   };
+
+  // Remove warrior from selection (Backtrack visual)
+  Blockly.Blocks["coin_change_remove_warrior"] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("Remove last warrior from selection");
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setColour(0);
+      this.setTooltip("ดึงนักรบตัวสุดท้ายออกจากกรอบเลือก (Backtrack)");
+    },
+  };
+
+  // Consider a coin visually (flash highlight)
+  Blockly.Blocks["coin_change_consider"] = {
+    init: function () {
+      this.appendValueInput("COIN_INDEX")
+        .setCheck("Number")
+        .appendField("Consider coin");
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setColour(45);
+      this.setTooltip("แสดงว่ากำลังพิจารณาเหรียญตัวนี้");
+    },
+  };
+
+  // Memoization hit visual
+  Blockly.Blocks["coin_change_memo_hit"] = {
+    init: function () {
+      this.appendValueInput("AMOUNT")
+        .setCheck("Number")
+        .appendField("Memo Cache Hit for Amount");
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setColour(120);
+      this.setTooltip("ดึงค่าจาก Cache (Memoization Hit)");
+    }
+  };
 }
 

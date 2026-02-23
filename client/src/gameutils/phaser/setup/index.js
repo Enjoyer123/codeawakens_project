@@ -10,8 +10,8 @@ export { drawPlayer, drawCinematicMonster } from './characters/playerSetup.js';
 export { setupMonsters } from './characters/monsterSetup.js';
 
 // Algorithm visualization functions
-export { setupKnapsack } from './algorithms/knapsackVisuals.js';
-export { setupSubsetSum } from './algorithms/subsetSumVisuals.js';
-export { setupCoinChange } from './algorithms/coinChangeVisuals.js';
-export { setupNQueen } from './algorithms/nQueenVisuals.js';
+export { setupKnapsack } from '../../algo/setup/knapsackSetup.js';
+export { setupSubsetSum } from '../../algo/setup/subsetSumSetup.js';
+export { setupCoinChange } from '../../algo/setup/coinChangeSetup.js';
+
 

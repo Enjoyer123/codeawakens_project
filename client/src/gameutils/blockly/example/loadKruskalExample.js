@@ -184,7 +184,19 @@ const kruskalExampleXml = `<?xml version="1.0" encoding="UTF-8"?>
                                           </block>
                                         </value>
                                         <next>
-                                          <!-- root_u = find(u) -->
+                                          <!-- TRACE: kruskal_visit(u, v, weight) -->
+                                          <block type="kruskal_visit" id="trace_kruskal_visit">
+                                            <value name="FROM">
+                                              <block type="variables_get"><field name="VAR">u</field></block>
+                                            </value>
+                                            <value name="TO">
+                                              <block type="variables_get"><field name="VAR">v</field></block>
+                                            </value>
+                                            <value name="WEIGHT">
+                                              <block type="variables_get"><field name="VAR">weight</field></block>
+                                            </value>
+                                            <next>
+                                              <!-- root_u = find(u) -->
                                           <block type="variables_set" id="set_root_u">
                                             <field name="VAR">root_u</field>
                                             <value name="VALUE">
@@ -307,8 +319,22 @@ const kruskalExampleXml = `<?xml version="1.0" encoding="UTF-8"?>
                                                                     </value>
                                                                   </block>
                                                                 </value>
-                                                              </block>
-                                                            </next>
+ 
+                                                              <next>
+                                                                <!-- TRACE: kruskal_add_edge(u, v, weight) -->
+                                                                <block type="kruskal_add_edge" id="trace_kruskal_add">
+                                                                  <value name="FROM">
+                                                                    <block type="variables_get"><field name="VAR">u</field></block>
+                                                                  </value>
+                                                                  <value name="TO">
+                                                                    <block type="variables_get"><field name="VAR">v</field></block>
+                                                                  </value>
+                                                                  <value name="WEIGHT">
+                                                                    <block type="variables_get"><field name="VAR">weight</field></block>
+                                                                  </value>
+                                                                </block>
+                                                              </next>
+                                                            </block>
                                                           </block>
                                                         </next>
                                                       </block>
@@ -324,7 +350,9 @@ const kruskalExampleXml = `<?xml version="1.0" encoding="UTF-8"?>
                                   </block>
                                 </next>
                               </block>
-                            </statement>
+                            </next>
+                          </block>
+                        </statement>
                             <next>
                               <!-- Return MST_weight, parent -->
                               <block type="procedures_return" id="return_result">
@@ -365,8 +393,8 @@ const kruskalExampleXml = `<?xml version="1.0" encoding="UTF-8"?>
           </block>
         </value>
         <value name="ARG1">
-          <block type="math_number" id="start_num">
-            <field name="NUM">0</field>
+          <block type="variables_get" id="start_num_var">
+            <field name="VAR">start</field>
           </block>
         </value>
       </block>

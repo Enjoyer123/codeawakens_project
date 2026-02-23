@@ -48,13 +48,9 @@ export function defineProcedureCallGenerators() {
 
         const argsString = args.join(', ');
 
-        // Clean mode: direct call
-        if (javascriptGenerator.isCleanMode) {
-            return [`${procedureName}(${argsString})`, javascriptGenerator.ORDER_FUNCTION_CALL];
-        }
-
-        // Async mode: await call
-        return [`(await ${procedureName}(${argsString}))`, javascriptGenerator.ORDER_FUNCTION_CALL];
+        // ต้องมี await เสมอ เพราะทุก function ในระบบเกมเราถูกเปลี่ยนเป็น async หมดแล้ว
+        // การมี return ค่าก็ต้อง await เพื่อเอาค่าจริงๆ ออกมาจาก Promise
+        return [`await ${procedureName}(${argsString})`, javascriptGenerator.ORDER_NONE];
     };
 
     // Override procedures_callnoreturn
@@ -75,10 +71,7 @@ export function defineProcedureCallGenerators() {
 
         const argsString = args.join(', ');
 
-        if (javascriptGenerator.isCleanMode) {
-            return `${procedureName}(${argsString});\n`;
-        }
-        return `await ${procedureName}(${argsString});\n`;
+        return `${procedureName}(${argsString});\n`;
     };
 }
 

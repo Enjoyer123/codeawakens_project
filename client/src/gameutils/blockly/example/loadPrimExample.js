@@ -324,10 +324,25 @@ const primExampleXml = `<?xml version="1.0" encoding="UTF-8"?>
                                                               <!-- ถ้า node อยู่ใน visited แล้ว: ไม่ทำอะไร (skip) -->
                                                             </statement>
                                                             <statement name="ELSE_DO">
-                                                              <!-- MST_weight = MST_weight + dist -->
-                                                              <block type="variables_set" id="update_mst_weight">
-                                                                <field name="VAR">MST_weight</field>
-                                                                <value name="VALUE">
+                                                              <!-- TRACE: prim_visit(node, parent[node], dist) -->
+                                                              <block type="prim_visit" id="trace_prim_visit">
+                                                                <value name="NODE">
+                                                                  <block type="variables_get"><field name="VAR">node</field></block>
+                                                                </value>
+                                                                <value name="PARENT">
+                                                                  <block type="dict_get" id="get_parent_node">
+                                                                    <value name="DICT"><block type="variables_get"><field name="VAR">parent</field></block></value>
+                                                                    <value name="KEY"><block type="variables_get"><field name="VAR">node</field></block></value>
+                                                                  </block>
+                                                                </value>
+                                                                <value name="DIST">
+                                                                  <block type="variables_get"><field name="VAR">dist</field></block>
+                                                                </value>
+                                                                <next>
+                                                                  <!-- MST_weight = MST_weight + dist -->
+                                                                  <block type="variables_set" id="update_mst_weight">
+                                                                    <field name="VAR">MST_weight</field>
+                                                                    <value name="VALUE">
                                                                   <block type="math_arithmetic" id="add_mst_weight">
                                                                     <field name="OP">ADD</field>
                                                                     <value name="A">
@@ -495,14 +510,20 @@ const primExampleXml = `<?xml version="1.0" encoding="UTF-8"?>
                                                                                               </block>
                                                                                             </value>
                                                                                             <next>
-                                                                                              <!-- PQ push(distance[neighbor], neighbor) -->
-                                                                                              <block type="lists_add_item" id="add_to_pq">
-                                                                                                <value name="LIST">
-                                                                                                  <block type="variables_get" id="pq_var_add">
-                                                                                                    <field name="VAR">PQ</field>
-                                                                                                  </block>
-                                                                                                </value>
-                                                                                                <value name="ITEM">
+                                                                                              <!-- TRACE: prim_relax(node, neighbor, weight) -->
+                                                                                              <block type="prim_relax" id="trace_prim_relax">
+                                                                                                <value name="FROM"><block type="variables_get"><field name="VAR">node</field></block></value>
+                                                                                                <value name="TO"><block type="variables_get"><field name="VAR">neighbor</field></block></value>
+                                                                                                <value name="NEW_DIST"><block type="variables_get"><field name="VAR">weight</field></block></value>
+                                                                                                <next>
+                                                                                                  <!-- PQ push(distance[neighbor], neighbor) -->
+                                                                                                  <block type="lists_add_item" id="add_to_pq">
+                                                                                                    <value name="LIST">
+                                                                                                      <block type="variables_get" id="pq_var_add">
+                                                                                                        <field name="VAR">PQ</field>
+                                                                                                      </block>
+                                                                                                    </value>
+                                                                                                    <value name="ITEM">
                                                                                                   <block type="lists_create_with" id="pq_tuple_new">
                                                                                                     <mutation items="2"></mutation>
                                                                                                     <value name="ADD0">
@@ -538,14 +559,16 @@ const primExampleXml = `<?xml version="1.0" encoding="UTF-8"?>
                                                                             </next>
                                                                           </block>
                                                                         </statement>
-                                                                      </block>
-                                                                    </next>
-                                                                  </block>
-                                                                </next>
-                                                              </block>
-                                                            </statement>
-                                                          </block>
-                                                        </next>
+                                                                        </block>
+                                                                      </next>
+                                                                    </block>
+                                                                  </next>
+                                                                </block>
+                                                              </next>
+                                                            </block>
+                                                          </statement>
+                                                        </block>
+                                                      </next>
                                                       </block>
                                                     </next>
                                                   </block>
@@ -599,8 +622,8 @@ const primExampleXml = `<?xml version="1.0" encoding="UTF-8"?>
           </block>
         </value>
         <value name="ARG1">
-          <block type="math_number" id="start_num">
-            <field name="NUM">0</field>
+          <block type="variables_get" id="start_num_var">
+            <field name="VAR">start</field>
           </block>
         </value>
       </block>

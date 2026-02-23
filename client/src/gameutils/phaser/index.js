@@ -16,13 +16,9 @@ export {
     setupKnapsack,
     setupSubsetSum,
     setupCoinChange,
-    setupNQueen,
     drawCinematicMonster
 } from './setup/index.js';
 
-export { setupTrainSchedule, updateTrainScheduleVisuals } from './setup/trainSchedulePhaser';
-export { setupRopePartition, updateRopePartitionVisuals } from './setup/ropePartitionPhaser';
-export { setupEmeiMountain, highlightPeak, highlightCableCar, showEmeiFinalResult } from './setup/emeiMountainPhaser';
 
 export {
     updatePersonDisplay,

@@ -48,53 +48,10 @@ export {
     resetAllPeople
 } from './blocks/entities/rescue_helpers';
 
-// Re-export Graph Logic & Visuals
-export {
-    getGraphNeighbors,
-    getGraphNeighborsWithWeight,
-    getNodeValue,
-    findMinIndex,
-    findMaxIndex,
-    getAllEdges,
-    sortEdgesByWeight,
-    dsuFind,
-    dsuUnion,
-    getCurrentNode,
-    findMinIndexWithVisual,
-    findMaxIndexWithVisual,
-    dsuFindWithVisual,
-    dsuUnionWithVisual
-} from './algorithms/graph/helpers';
-
-export {
-    getGraphNeighborsWithVisual,
-    getGraphNeighborsWithVisualSync,
-    markVisitedWithVisual,
-    showPathUpdateWithVisual,
-    clearDfsVisuals,
-    getGraphNeighborsWithWeightWithVisualSync,
-    highlightNode,
-    highlightEdge,
-    markNodeAsVisited,
-    showCurrentPath,
-    showMSTEdges,
-    showKruskalRoot,
-    clearKruskalVisuals
-} from './algorithms/graph/dfs_visual';
-
-export { showMSTEdgesFromList } from './algorithms/graph/helpers';
-
-export {
-    updateDijkstraVisited,
-    updateDijkstraPQ,
-    updateMSTWeight,
-    resetDijkstraState
-} from './algorithms/graph/dijkstra_state';
-
 // Re-export List Operations & Helpers
 export {
     listPush, listSet,
-    createListPushWithVisual, createListSetWithVisual
+    // createListPushWithVisual, createListSetWithVisual
 } from './blocks/data/lists/helpers';
 
 // Re-export Shared Visual Wrappers (Emei, Dict)
@@ -108,7 +65,6 @@ export {
     selectKnapsackItem as selectKnapsackItemVisual,
     unselectKnapsackItem as unselectKnapsackItemVisual,
     resetKnapsackItems as resetKnapsackItemsVisual,
-    knapsackMaxWithVisual,
     resetKnapsackSelectionTracking,
     startKnapsackSelectionTracking,
     showKnapsackFinalSelection
@@ -135,13 +91,6 @@ export {
     addWarriorToSelection as addWarriorToSelectionVisual
 } from './algorithms/coin_change/visuals';
 
-export {
-    sortTrains,
-    assignTrainVisual
-} from './algorithms/train_schedule/helpers';
-
-// Re-export Specific Algorithm Definitions
-export { registerRopePartitionBlocks } from './algorithms/rope_partition/definitions';
 export { defineAllGenerators } from './core/generators';
 export { setXmlLoading, isXmlLoading } from './core/state';
 

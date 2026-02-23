@@ -52,19 +52,14 @@ import { useGuideSystem } from '../../hooks/useGuideSystem';
 import { handleRestartGame as handleRestartGameUtil } from './utils/gameHandlers';
 // Import example loaders configuration
 import { EXAMPLE_LOADERS } from './constants/exampleLoaders';
-// Import API bridges
-import { setupRopePartitionBridge } from './utils/apiBridges/ropePartitionBridge';
-import { updateTrainScheduleVisualsIfNeeded, updateRopePartitionVisualsIfNeeded } from './utils/apiBridges/visualUpdates';
 import ExecutionErrorModal from './ExecutionErrorModal';
 import PageLoader from '../../components/shared/Loading/PageLoader';
-import { resetDijkstraState } from "@/gameutils/blockly";
 import { resetCoinChangeTableState } from "@/gameutils/blockly";
 import { resetKnapsackTableState } from '@/gameutils/blockly';
 import { resetSubsetSumTableState } from '@/gameutils/blockly';
 
 import { useSuppressBlocklyWarnings } from '../../components/admin/level/hooks/useSuppressBlocklyWarnings';
 const resetAllGameStates = () => {
-  resetDijkstraState();
   resetCoinChangeTableState();
   resetKnapsackTableState();
   resetSubsetSumTableState();
@@ -493,21 +488,6 @@ const GameCore = ({
 
   // Game action and condition functions are now provided by custom hooks (useGameActions, useGameConditions)
 
-  // ============================================================================
-  // EFFECTS - API Bridges
-  // ============================================================================
-
-  // Rope Partition Visual API Bridge
-  useEffect(() => {
-    if (!currentLevel) return;
-
-    const isRopePartition = currentLevel.gameType === 'rope_partition' ||
-      (currentLevel.appliedData && currentLevel.appliedData.type === 'BACKTRACKING_ROPE_PARTITION');
-
-    if (isRopePartition) {
-      return setupRopePartitionBridge(currentLevel, setHintData);
-    }
-  }, [currentLevel]);
 
   // Initialize Blockly
   const { initBlocklyAndPhaser } = useBlocklySetup({
@@ -524,12 +504,6 @@ const GameCore = ({
     isTextCodeEnabled: currentLevel?.textcode || false,
     onCodeGenerated: handleTextCodeChangeWithState
   });
-
-  // Visual updates for Train Schedule and Rope Partition
-  useEffect(() => {
-    updateTrainScheduleVisualsIfNeeded(currentLevel, hintData);
-    updateRopePartitionVisualsIfNeeded(currentLevel, hintData);
-  }, [currentLevel, hintData, hintData?.assignments]);
 
   // Update player weapon display
   const updatePlayerWeaponDisplay = () => {

@@ -1,261 +1,173 @@
-// Helper function to load Knapsack example blocks into Blockly workspace
 import * as Blockly from "blockly/core";
 
-// Knapsack Example XML - Backtracking recursive solution
 const knapsackExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
-  <!-- Knapsack Function Definition -->
-  <block type="procedures_defreturn" id="knapsack_function" x="50" y="50">
+  <block type="procedures_defreturn" id="knapsack_bt" x="50" y="50">
+    <mutation>
+      <arg name="w"></arg>
+      <arg name="v"></arg>
+      <arg name="i"></arg>
+      <arg name="j"></arg>
+    </mutation>
     <field name="NAME">knapsack</field>
-    <comment pinned="false" h="80" w="200">Backtracking recursive solution for Knapsack problem. Returns maximum value that can be achieved.</comment>
+    <comment pinned="false" h="80" w="200">Knapsack Backtracking with Trace</comment>
     <statement name="STACK">
-      <!-- Base case: if i < 0 or j <= 0, return 0 -->
-      <block type="controls_if" id="base_case">
-        <value name="IF0">
-          <block type="logic_operation" id="i_or_j_zero">
-            <field name="OP">OR</field>
-            <value name="A">
-              <block type="logic_compare" id="i_less_zero">
-                <value name="A">
-                  <block type="variables_get" id="i_var_base">
-                    <field name="VAR">i</field>
-                  </block>
-                </value>
-                <field name="OP">LT</field>
-                <value name="B">
-                  <block type="math_number" id="zero_1">
-                    <field name="NUM">0</field>
-                  </block>
-                </value>
-              </block>
-            </value>
-            <value name="B">
-              <block type="logic_compare" id="j_less_equal_zero">
-                <value name="A">
-                  <block type="variables_get" id="j_var_base">
-                    <field name="VAR">j</field>
-                  </block>
-                </value>
-                <field name="OP">LTE</field>
-                <value name="B">
-                  <block type="math_number" id="zero_2">
-                    <field name="NUM">0</field>
-                  </block>
-                </value>
-              </block>
-            </value>
-          </block>
-        </value>
-        <statement name="DO0">
-          <block type="procedures_return" id="return_zero">
-            <value name="VALUE">
-              <block type="math_number" id="zero_return">
-                <field name="NUM">0</field>
-              </block>
-            </value>
-          </block>
-        </statement>
+      <block type="knapsack_consider_item">
+        <value name="ITEM_INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
         <next>
-          <!-- If weight[i] > j, skip item -->
-          <block type="controls_if" id="weight_too_heavy">
+          <block type="controls_if">
             <value name="IF0">
-              <block type="logic_compare" id="weight_compare">
+              <block type="logic_operation">
+                <field name="OP">OR</field>
                 <value name="A">
-                  <block type="lists_get_at_index" id="get_weight">
-                    <value name="LIST">
-                      <block type="variables_get" id="w_var">
-                        <field name="VAR">w</field>
-                      </block>
-                    </value>
-                    <value name="INDEX">
-                      <block type="variables_get" id="i_var_weight">
-                        <field name="VAR">i</field>
-                      </block>
-                    </value>
+                  <block type="logic_compare">
+                    <field name="OP">LT</field>
+                    <value name="A"><block type="variables_get"><field name="VAR">i</field></block></value>
+                    <value name="B"><block type="math_number"><field name="NUM">0</field></block></value>
                   </block>
                 </value>
-                <field name="OP">GT</field>
                 <value name="B">
-                  <block type="variables_get" id="j_var_weight">
-                    <field name="VAR">j</field>
+                  <block type="logic_compare">
+                    <field name="OP">LTE</field>
+                    <value name="A"><block type="variables_get"><field name="VAR">j</field></block></value>
+                    <value name="B"><block type="math_number"><field name="NUM">0</field></block></value>
                   </block>
                 </value>
               </block>
             </value>
             <statement name="DO0">
-              <!-- Return knapsack(w, v, i-1, j) -->
-              <block type="procedures_return" id="return_skip">
-                <value name="VALUE">
-                  <block type="procedures_callreturn" id="call_skip">
-                    <mutation name="knapsack">
-                      <arg name="w"></arg>
-                      <arg name="v"></arg>
-                      <arg name="i"></arg>
-                      <arg name="j"></arg>
-                    </mutation>
-                    <field name="NAME">knapsack</field>
-                    <value name="ARG0">
-                      <block type="variables_get" id="w_var_skip">
-                        <field name="VAR">w</field>
-                      </block>
-                    </value>
-                    <value name="ARG1">
-                      <block type="variables_get" id="v_var_skip">
-                        <field name="VAR">v</field>
-                      </block>
-                    </value>
-                    <value name="ARG2">
-                      <block type="math_arithmetic" id="i_minus_one_skip">
-                        <value name="A">
-                          <block type="variables_get" id="i_var_skip">
-                            <field name="VAR">i</field>
-                          </block>
-                        </value>
-                        <field name="OP">MINUS</field>
-                        <value name="B">
-                          <block type="math_number" id="one_skip">
-                            <field name="NUM">1</field>
-                          </block>
-                        </value>
-                      </block>
-                    </value>
-                    <value name="ARG3">
-                      <block type="variables_get" id="j_var_skip">
-                        <field name="VAR">j</field>
-                      </block>
-                    </value>
-                  </block>
-                </value>
+              <block type="procedures_return">
+                <value name="VALUE"><block type="math_number"><field name="NUM">0</field></block></value>
               </block>
             </statement>
             <next>
-              <!-- Else: return MAX(knapsack(w, v, i-1, j), v[i] + knapsack(w, v, i-1, j-w[i])) -->
-              <block type="procedures_return" id="return_max">
-                <value name="VALUE">
-                  <block type="math_max" id="max_value">
+              <block type="controls_if">
+                <value name="IF0">
+                  <block type="logic_compare">
+                    <field name="OP">GT</field>
                     <value name="A">
-                      <!-- knapsack(w, v, i-1, j) -->
-                      <block type="procedures_callreturn" id="call_without_item">
-                        <mutation name="knapsack">
-                          <arg name="w"></arg>
-                          <arg name="v"></arg>
-                          <arg name="i"></arg>
-                          <arg name="j"></arg>
-                        </mutation>
-                        <field name="NAME">knapsack</field>
-                        <value name="ARG0">
-                          <block type="variables_get" id="w_var_without">
-                            <field name="VAR">w</field>
-                          </block>
-                        </value>
-                        <value name="ARG1">
-                          <block type="variables_get" id="v_var_without">
-                            <field name="VAR">v</field>
-                          </block>
-                        </value>
-                        <value name="ARG2">
-                          <block type="math_arithmetic" id="i_minus_one_without">
-                            <value name="A">
-                              <block type="variables_get" id="i_var_without">
-                                <field name="VAR">i</field>
-                              </block>
-                            </value>
-                            <field name="OP">MINUS</field>
-                            <value name="B">
-                              <block type="math_number" id="one_without">
-                                <field name="NUM">1</field>
-                              </block>
-                            </value>
-                          </block>
-                        </value>
-                        <value name="ARG3">
-                          <block type="variables_get" id="j_var_without">
-                            <field name="VAR">j</field>
-                          </block>
-                        </value>
+                      <block type="lists_get_at_index">
+                        <mutation statement="false" at="true"></mutation>
+                        <field name="MODE">GET</field>
+                        <field name="WHERE">FROM_START</field>
+                        <value name="LIST"><block type="variables_get"><field name="VAR">w</field></block></value>
+                        <value name="INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
                       </block>
                     </value>
-                    <value name="B">
-                      <!-- v[i] + knapsack(w, v, i-1, j-w[i]) -->
-                      <block type="math_arithmetic" id="add_value">
-                        <value name="A">
-                          <block type="lists_get_at_index" id="get_value">
-                            <value name="LIST">
-                              <block type="variables_get" id="v_var_add">
-                                <field name="VAR">v</field>
-                              </block>
-                            </value>
-                            <value name="INDEX">
-                              <block type="variables_get" id="i_var_add">
-                                <field name="VAR">i</field>
-                              </block>
-                            </value>
+                    <value name="B"><block type="variables_get"><field name="VAR">j</field></block></value>
+                  </block>
+                </value>
+                <statement name="DO0">
+                  <block type="procedures_return">
+                    <value name="VALUE">
+                      <block type="procedures_callreturn">
+                        <mutation name="knapsack">
+                          <arg name="w"></arg><arg name="v"></arg><arg name="i"></arg><arg name="j"></arg>
+                        </mutation>
+                        <value name="ARG0"><block type="variables_get"><field name="VAR">w</field></block></value>
+                        <value name="ARG1"><block type="variables_get"><field name="VAR">v</field></block></value>
+                        <value name="ARG2">
+                          <block type="math_arithmetic">
+                            <field name="OP">MINUS</field>
+                            <value name="A"><block type="variables_get"><field name="VAR">i</field></block></value>
+                            <value name="B"><block type="math_number"><field name="NUM">1</field></block></value>
                           </block>
                         </value>
-                        <field name="OP">ADD</field>
-                        <value name="B">
-                          <block type="procedures_callreturn" id="call_with_item">
-                            <mutation name="knapsack">
-                              <arg name="w"></arg>
-                              <arg name="v"></arg>
-                              <arg name="i"></arg>
-                              <arg name="j"></arg>
-                            </mutation>
-                            <field name="NAME">knapsack</field>
-                            <value name="ARG0">
-                              <block type="variables_get" id="w_var_with">
-                                <field name="VAR">w</field>
-                              </block>
-                            </value>
-                            <value name="ARG1">
-                              <block type="variables_get" id="v_var_with">
-                                <field name="VAR">v</field>
-                              </block>
-                            </value>
-                            <value name="ARG2">
-                              <block type="math_arithmetic" id="i_minus_one_with">
-                                <value name="A">
-                                  <block type="variables_get" id="i_var_with">
-                                    <field name="VAR">i</field>
-                                  </block>
-                                </value>
-                                <field name="OP">MINUS</field>
-                                <value name="B">
-                                  <block type="math_number" id="one_with">
-                                    <field name="NUM">1</field>
-                                  </block>
-                                </value>
-                              </block>
-                            </value>
-                            <value name="ARG3">
-                              <block type="math_arithmetic" id="j_minus_weight">
-                                <value name="A">
-                                  <block type="variables_get" id="j_var_minus">
-                                    <field name="VAR">j</field>
-                                  </block>
-                                </value>
-                                <field name="OP">MINUS</field>
-                                <value name="B">
-                                  <block type="lists_get_at_index" id="get_weight_minus">
-                                    <value name="LIST">
-                                      <block type="variables_get" id="w_var_minus">
-                                        <field name="VAR">w</field>
-                                      </block>
-                                    </value>
-                                    <value name="INDEX">
-                                      <block type="variables_get" id="i_var_minus">
-                                        <field name="VAR">i</field>
-                                      </block>
-                                    </value>
-                                  </block>
-                                </value>
-                              </block>
-                            </value>
-                          </block>
-                        </value>
+                        <value name="ARG3"><block type="variables_get"><field name="VAR">j</field></block></value>
                       </block>
                     </value>
                   </block>
-                </value>
+                </statement>
+                <next>
+                  <block type="variables_set">
+                    <field name="VAR">without_item</field>
+                    <value name="VALUE">
+                      <block type="procedures_callreturn">
+                        <mutation name="knapsack">
+                          <arg name="w"></arg><arg name="v"></arg><arg name="i"></arg><arg name="j"></arg>
+                        </mutation>
+                        <value name="ARG0"><block type="variables_get"><field name="VAR">w</field></block></value>
+                        <value name="ARG1"><block type="variables_get"><field name="VAR">v</field></block></value>
+                        <value name="ARG2">
+                          <block type="math_arithmetic">
+                            <field name="OP">MINUS</field>
+                            <value name="A"><block type="variables_get"><field name="VAR">i</field></block></value>
+                            <value name="B"><block type="math_number"><field name="NUM">1</field></block></value>
+                          </block>
+                        </value>
+                        <value name="ARG3"><block type="variables_get"><field name="VAR">j</field></block></value>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="knapsack_pick_item">
+                        <value name="ITEM_INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
+                        <next>
+                          <block type="variables_set">
+                            <field name="VAR">with_item</field>
+                            <value name="VALUE">
+                              <block type="math_arithmetic">
+                                <field name="OP">ADD</field>
+                                <value name="A">
+                                  <block type="lists_get_at_index">
+                                    <mutation statement="false" at="true"></mutation>
+                                    <field name="MODE">GET</field>
+                                    <field name="WHERE">FROM_START</field>
+                                    <value name="LIST"><block type="variables_get"><field name="VAR">v</field></block></value>
+                                    <value name="INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
+                                  </block>
+                                </value>
+                                <value name="B">
+                                  <block type="procedures_callreturn">
+                                    <mutation name="knapsack">
+                                      <arg name="w"></arg><arg name="v"></arg><arg name="i"></arg><arg name="j"></arg>
+                                    </mutation>
+                                    <value name="ARG0"><block type="variables_get"><field name="VAR">w</field></block></value>
+                                    <value name="ARG1"><block type="variables_get"><field name="VAR">v</field></block></value>
+                                    <value name="ARG2">
+                                      <block type="math_arithmetic">
+                                        <field name="OP">MINUS</field>
+                                        <value name="A"><block type="variables_get"><field name="VAR">i</field></block></value>
+                                        <value name="B"><block type="math_number"><field name="NUM">1</field></block></value>
+                                      </block>
+                                    </value>
+                                    <value name="ARG3">
+                                      <block type="math_arithmetic">
+                                        <field name="OP">MINUS</field>
+                                        <value name="A"><block type="variables_get"><field name="VAR">j</field></block></value>
+                                        <value name="B">
+                                          <block type="lists_get_at_index">
+                                            <mutation statement="false" at="true"></mutation>
+                                            <field name="MODE">GET</field>
+                                            <field name="WHERE">FROM_START</field>
+                                            <value name="LIST"><block type="variables_get"><field name="VAR">w</field></block></value>
+                                            <value name="INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
+                                          </block>
+                                        </value>
+                                      </block>
+                                    </value>
+                                  </block>
+                                </value>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="knapsack_remove_item">
+                                <next>
+                                  <block type="procedures_return">
+                                    <value name="VALUE">
+                                      <block type="math_max">
+                                        <value name="A"><block type="variables_get"><field name="VAR">without_item</field></block></value>
+                                        <value name="B"><block type="variables_get"><field name="VAR">with_item</field></block></value>
+                                      </block>
+                                    </value>
+                                  </block>
+                                </next>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
               </block>
             </next>
           </block>
@@ -263,124 +175,373 @@ const knapsackExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
       </block>
     </statement>
   </block>
-  
-  <!-- Main code: result = knapsack(weights, values, n-1, capacity) -->
-  <!-- Note: You need to define these variables before running:
-       - weights: array of weights [weight1, weight2, ...]
-       - values: array of values [value1, value2, ...]
-       - n: number of items
-       - capacity: maximum weight capacity -->
-  <block type="variables_set" id="main_result_set" x="50" y="600">
+
+  <block type="variables_set" x="50" y="600">
     <field name="VAR">result</field>
     <value name="VALUE">
-      <block type="procedures_callreturn" id="call_main">
+      <block type="procedures_callreturn">
         <mutation name="knapsack">
-          <arg name="w"></arg>
-          <arg name="v"></arg>
-          <arg name="i"></arg>
-          <arg name="j"></arg>
+          <arg name="w"></arg><arg name="v"></arg><arg name="i"></arg><arg name="j"></arg>
         </mutation>
-        <field name="NAME">knapsack</field>
-        <value name="ARG0">
-          <block type="variables_get" id="weights_var">
-            <field name="VAR">weights</field>
-          </block>
-        </value>
-        <value name="ARG1">
-          <block type="variables_get" id="values_var">
-            <field name="VAR">values</field>
-          </block>
-        </value>
+        <value name="ARG0"><block type="variables_get"><field name="VAR">weights</field></block></value>
+        <value name="ARG1"><block type="variables_get"><field name="VAR">values</field></block></value>
         <value name="ARG2">
-          <block type="math_arithmetic" id="n_minus_one">
-            <value name="A">
-              <block type="variables_get" id="n_var">
-                <field name="VAR">n</field>
-              </block>
-            </value>
+          <block type="math_arithmetic">
             <field name="OP">MINUS</field>
-            <value name="B">
-              <block type="math_number" id="one_main">
-                <field name="NUM">1</field>
-              </block>
-            </value>
+            <value name="A"><block type="variables_get"><field name="VAR">n</field></block></value>
+            <value name="B"><block type="math_number"><field name="NUM">1</field></block></value>
           </block>
         </value>
-        <value name="ARG3">
-          <block type="variables_get" id="capacity_var">
-            <field name="VAR">capacity</field>
-          </block>
-        </value>
+        <value name="ARG3"><block type="variables_get"><field name="VAR">capacity</field></block></value>
       </block>
     </value>
   </block>
 </xml>`;
 
-/**
- * Load Knapsack example blocks into Blockly workspace
- * @param {Blockly.Workspace} workspace - The Blockly workspace to load blocks into
- */
-export function loadKnapsackExampleBlocks(workspace) {
-  if (!workspace) {
-    console.error('Cannot load Knapsack example blocks: workspace is null');
-    return;
-  }
+const knapsackDpExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
+  <block type="procedures_defreturn" id="knapsack_dp" x="50" y="50">
+    <field name="NAME">knapsackDP</field>
+    <statement name="STACK">
+      <block type="variables_set">
+        <field name="VAR">dp</field>
+        <value name="VALUE">
+          <block type="lists_create_empty"></block>
+        </value>
+        <next>
+          <!-- Init DP 2D array -->
+          <block type="controls_for">
+            <field name="VAR">r</field>
+            <value name="FROM"><block type="math_number"><field name="NUM">0</field></block></value>
+            <value name="TO"><block type="variables_get"><field name="VAR">n</field></block></value>
+            <value name="BY"><block type="math_number"><field name="NUM">1</field></block></value>
+            <statement name="DO">
+              <block type="variables_set">
+                <field name="VAR">rowArr</field>
+                <value name="VALUE"><block type="lists_create_empty"></block></value>
+                <next>
+                  <block type="controls_for">
+                    <field name="VAR">c</field>
+                    <value name="FROM"><block type="math_number"><field name="NUM">0</field></block></value>
+                    <value name="TO"><block type="variables_get"><field name="VAR">capacity</field></block></value>
+                    <value name="BY"><block type="math_number"><field name="NUM">1</field></block></value>
+                    <statement name="DO">
+                      <block type="lists_setIndex">
+                        <mutation at="true"></mutation>
+                        <field name="MODE">SET</field>
+                        <field name="WHERE">FROM_START</field>
+                        <value name="LIST"><block type="variables_get"><field name="VAR">rowArr</field></block></value>
+                        <value name="AT"><block type="variables_get"><field name="VAR">c</field></block></value>
+                        <value name="TO"><block type="math_number"><field name="NUM">0</field></block></value>
+                      </block>
+                    </statement>
+                    <next>
+                      <block type="lists_setIndex">
+                        <mutation at="true"></mutation>
+                        <field name="MODE">SET</field>
+                        <field name="WHERE">FROM_START</field>
+                        <value name="LIST"><block type="variables_get"><field name="VAR">dp</field></block></value>
+                        <value name="AT"><block type="variables_get"><field name="VAR">r</field></block></value>
+                        <value name="TO"><block type="variables_get"><field name="VAR">rowArr</field></block></value>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </statement>
+            <next>
+              <!-- DP Logic -->
+              <block type="controls_for">
+                <field name="VAR">i</field>
+                <value name="FROM"><block type="math_number"><field name="NUM">1</field></block></value>
+                <value name="TO"><block type="variables_get"><field name="VAR">n</field></block></value>
+                <value name="BY"><block type="math_number"><field name="NUM">1</field></block></value>
+                <statement name="DO">
+                  <block type="knapsack_consider_item">
+                    <value name="ITEM_INDEX">
+                      <block type="math_arithmetic">
+                        <field name="OP">MINUS</field>
+                        <value name="A"><block type="variables_get"><field name="VAR">i</field></block></value>
+                        <value name="B"><block type="math_number"><field name="NUM">1</field></block></value>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="variables_set">
+                        <field name="VAR">wi</field>
+                        <value name="VALUE">
+                          <block type="lists_get_at_index">
+                            <mutation statement="false" at="true"></mutation>
+                            <field name="MODE">GET</field>
+                            <field name="WHERE">FROM_START</field>
+                            <value name="LIST"><block type="variables_get"><field name="VAR">weights</field></block></value>
+                            <value name="INDEX">
+                              <block type="math_arithmetic">
+                                <field name="OP">MINUS</field>
+                                <value name="A"><block type="variables_get"><field name="VAR">i</field></block></value>
+                                <value name="B"><block type="math_number"><field name="NUM">1</field></block></value>
+                              </block>
+                            </value>
+                          </block>
+                        </value>
+                        <next>
+                          <block type="variables_set">
+                            <field name="VAR">vi</field>
+                            <value name="VALUE">
+                              <block type="lists_get_at_index">
+                                <mutation statement="false" at="true"></mutation>
+                                <field name="MODE">GET</field>
+                                <field name="WHERE">FROM_START</field>
+                                <value name="LIST"><block type="variables_get"><field name="VAR">values</field></block></value>
+                                <value name="INDEX">
+                                  <block type="math_arithmetic">
+                                    <field name="OP">MINUS</field>
+                                    <value name="A"><block type="variables_get"><field name="VAR">i</field></block></value>
+                                    <value name="B"><block type="math_number"><field name="NUM">1</field></block></value>
+                                  </block>
+                                </value>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="controls_for">
+                                <field name="VAR">w</field>
+                                <value name="FROM"><block type="math_number"><field name="NUM">1</field></block></value>
+                                <value name="TO"><block type="variables_get"><field name="VAR">capacity</field></block></value>
+                                <value name="BY"><block type="math_number"><field name="NUM">1</field></block></value>
+                                <statement name="DO">
+                                  <!-- Extract dp[i-1][w] -->
+                                  <block type="variables_set">
+                                    <field name="VAR">prevRow</field>
+                                    <value name="VALUE">
+                                      <block type="lists_get_at_index">
+                                        <mutation statement="false" at="true"></mutation>
+                                        <field name="MODE">GET</field>
+                                        <field name="WHERE">FROM_START</field>
+                                        <value name="LIST"><block type="variables_get"><field name="VAR">dp</field></block></value>
+                                        <value name="INDEX">
+                                          <block type="math_arithmetic">
+                                            <field name="OP">MINUS</field>
+                                            <value name="A"><block type="variables_get"><field name="VAR">i</field></block></value>
+                                            <value name="B"><block type="math_number"><field name="NUM">1</field></block></value>
+                                          </block>
+                                        </value>
+                                      </block>
+                                    </value>
+                                    <next>
+                                      <block type="variables_set">
+                                        <field name="VAR">dp_i1_w</field>
+                                        <value name="VALUE">
+                                          <block type="lists_get_at_index">
+                                            <mutation statement="false" at="true"></mutation>
+                                            <field name="MODE">GET</field>
+                                            <field name="WHERE">FROM_START</field>
+                                            <value name="LIST"><block type="variables_get"><field name="VAR">prevRow</field></block></value>
+                                            <value name="INDEX"><block type="variables_get"><field name="VAR">w</field></block></value>
+                                          </block>
+                                        </value>
+                                        <next>
+                                          <block type="controls_if">
+                                            <mutation else="1"></mutation>
+                                            <value name="IF0">
+                                              <block type="logic_compare">
+                                                <field name="OP">LTE</field>
+                                                <value name="A"><block type="variables_get"><field name="VAR">wi</field></block></value>
+                                                <value name="B"><block type="variables_get"><field name="VAR">w</field></block></value>
+                                              </block>
+                                            </value>
+                                            <!-- DO: dp[i][w] = max(dp[i-1][w], v[i-1] + dp[i-1][w-wi]) -->
+                                            <statement name="DO0">
+                                              <block type="variables_set">
+                                                <field name="VAR">dp_i1_w_wi</field>
+                                                <value name="VALUE">
+                                                  <block type="lists_get_at_index">
+                                                    <mutation statement="false" at="true"></mutation>
+                                                    <field name="MODE">GET</field>
+                                                    <field name="WHERE">FROM_START</field>
+                                                    <value name="LIST"><block type="variables_get"><field name="VAR">prevRow</field></block></value>
+                                                    <value name="INDEX">
+                                                      <block type="math_arithmetic">
+                                                        <field name="OP">MINUS</field>
+                                                        <value name="A"><block type="variables_get"><field name="VAR">w</field></block></value>
+                                                        <value name="B"><block type="variables_get"><field name="VAR">wi</field></block></value>
+                                                      </block>
+                                                    </value>
+                                                  </block>
+                                                </value>
+                                                <next>
+                                                  <block type="variables_set">
+                                                    <field name="VAR">currRow</field>
+                                                    <value name="VALUE">
+                                                      <block type="lists_get_at_index">
+                                                        <mutation statement="false" at="true"></mutation>
+                                                        <field name="MODE">GET</field>
+                                                        <field name="WHERE">FROM_START</field>
+                                                        <value name="LIST"><block type="variables_get"><field name="VAR">dp</field></block></value>
+                                                        <value name="INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
+                                                      </block>
+                                                    </value>
+                                                    <next>
+                                                      <block type="lists_setIndex">
+                                                        <mutation at="true"></mutation>
+                                                        <field name="MODE">SET</field>
+                                                        <field name="WHERE">FROM_START</field>
+                                                        <value name="LIST"><block type="variables_get"><field name="VAR">currRow</field></block></value>
+                                                        <value name="AT"><block type="variables_get"><field name="VAR">w</field></block></value>
+                                                        <value name="TO">
+                                                          <block type="math_max">
+                                                            <value name="A"><block type="variables_get"><field name="VAR">dp_i1_w</field></block></value>
+                                                            <value name="B">
+                                                              <block type="math_arithmetic">
+                                                                <field name="OP">ADD</field>
+                                                                <value name="A"><block type="variables_get"><field name="VAR">vi</field></block></value>
+                                                                <value name="B"><block type="variables_get"><field name="VAR">dp_i1_w_wi</field></block></value>
+                                                              </block>
+                                                            </value>
+                                                          </block>
+                                                        </value>
+                                                      </block>
+                                                    </next>
+                                                  </block>
+                                                </next>
+                                              </block>
+                                            </statement>
+                                            <!-- ELSE: dp[i][w] = dp[i-1][w] -->
+                                            <statement name="ELSE">
+                                              <block type="variables_set">
+                                                <field name="VAR">currRow</field>
+                                                <value name="VALUE">
+                                                  <block type="lists_get_at_index">
+                                                    <mutation statement="false" at="true"></mutation>
+                                                    <field name="MODE">GET</field>
+                                                    <field name="WHERE">FROM_START</field>
+                                                    <value name="LIST"><block type="variables_get"><field name="VAR">dp</field></block></value>
+                                                    <value name="INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
+                                                  </block>
+                                                </value>
+                                                <next>
+                                                  <block type="lists_setIndex">
+                                                    <mutation at="true"></mutation>
+                                                    <field name="MODE">SET</field>
+                                                    <field name="WHERE">FROM_START</field>
+                                                    <value name="LIST"><block type="variables_get"><field name="VAR">currRow</field></block></value>
+                                                    <value name="AT"><block type="variables_get"><field name="VAR">w</field></block></value>
+                                                    <value name="TO"><block type="variables_get"><field name="VAR">dp_i1_w</field></block></value>
+                                                  </block>
+                                                </next>
+                                              </block>
+                                            </statement>
+                                            <next>
+                                              <block type="knapsack_dp_update">
+                                                <value name="ITEM_INDEX">
+                                                  <block type="math_arithmetic">
+                                                    <field name="OP">MINUS</field>
+                                                    <value name="A"><block type="variables_get"><field name="VAR">i</field></block></value>
+                                                    <value name="B"><block type="math_number"><field name="NUM">1</field></block></value>
+                                                  </block>
+                                                </value>
+                                                <value name="CAPACITY"><block type="variables_get"><field name="VAR">w</field></block></value>
+                                                <value name="VALUE">
+                                                  <block type="lists_get_at_index">
+                                                    <mutation statement="false" at="true"></mutation>
+                                                    <field name="MODE">GET</field>
+                                                    <field name="WHERE">FROM_START</field>
+                                                    <value name="LIST">
+                                                      <block type="lists_get_at_index">
+                                                        <mutation statement="false" at="true"></mutation>
+                                                        <field name="MODE">GET</field>
+                                                        <field name="WHERE">FROM_START</field>
+                                                        <value name="LIST"><block type="variables_get"><field name="VAR">dp</field></block></value>
+                                                        <value name="INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
+                                                      </block>
+                                                    </value>
+                                                    <value name="INDEX"><block type="variables_get"><field name="VAR">w</field></block></value>
+                                                  </block>
+                                                </value>
+                                              </block>
+                                            </next>
+                                          </block>
+                                        </next>
+                                      </block>
+                                    </next>
+                                  </block>
+                                </statement>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </statement>
+                <next>
+                  <block type="procedures_return">
+                    <value name="VALUE">
+                      <block type="lists_get_at_index">
+                        <mutation statement="false" at="true"></mutation>
+                        <field name="MODE">GET</field>
+                        <field name="WHERE">FROM_START</field>
+                        <value name="LIST">
+                          <block type="lists_get_at_index">
+                            <mutation statement="false" at="true"></mutation>
+                            <field name="MODE">GET</field>
+                            <field name="WHERE">FROM_START</field>
+                            <value name="LIST"><block type="variables_get"><field name="VAR">dp</field></block></value>
+                            <value name="INDEX"><block type="variables_get"><field name="VAR">n</field></block></value>
+                          </block>
+                        </value>
+                        <value name="INDEX"><block type="variables_get"><field name="VAR">capacity</field></block></value>
+                      </block>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
 
+  <block type="variables_set" x="50" y="800">
+    <field name="VAR">result</field>
+    <value name="VALUE">
+      <block type="procedures_callreturn">
+        <mutation name="knapsackDP"></mutation>
+      </block>
+    </value>
+  </block>
+</xml>`;
+
+export function loadKnapsackExampleBlocks(workspace, type = 'BACKTRACK') {
+  if (!workspace) return;
   try {
-    // console.log removed('📦 Loading Knapsack example blocks into workspace...');
-
-    // Clear workspace first
     workspace.clear();
-
-    // Wait a bit for workspace to be ready
     setTimeout(() => {
       try {
-        // Parse XML
-        const xmlDom = Blockly.utils.xml.textToDom(knapsackExampleXml);
-
-        // Load into workspace
+        const xmlToLoad = type === 'DP' ? knapsackDpExampleXml : knapsackExampleXml;
+        const xmlDom = Blockly.utils.xml.textToDom(xmlToLoad);
         Blockly.Xml.domToWorkspace(xmlDom, workspace);
 
-        // Ensure variables exist
-        const variableNames = ['w', 'v', 'i', 'j', 'weights', 'values', 'n', 'capacity', 'result'];
-        variableNames.forEach(varName => {
-          try {
-            // Check if variable already exists
-            const variableMap = workspace.getVariableMap();
-            if (variableMap) {
-              const existingVar = variableMap.getVariable(varName);
-              if (!existingVar) {
-                workspace.createVariable(varName);
-                // console.log removed(`Created variable: ${varName}`);
-              } else {
-                console.debug(`Variable ${varName} already exists`);
-              }
-            } else {
-              workspace.createVariable(varName);
-              // console.log removed(`Created variable: ${varName} (no variable map)`);
-            }
-          } catch (e) {
-            // Variable might already exist
-            console.debug(`Variable ${varName} already exists or error creating:`, e);
+        const varNames = ['w', 'v', 'i', 'j', 'weights', 'values', 'n', 'capacity', 'result', 'without_item', 'with_item', 'dp', 'r', 'c', 'rowArr', 'currRow', 'prevRow', 'wi', 'vi', 'dp_i1_w', 'dp_i1_w_wi'];
+        varNames.forEach(v => {
+          if (workspace.getVariableMap()) {
+            if (!workspace.getVariable(v)) workspace.createVariable(v);
+          } else {
+            workspace.createVariable(v);
           }
         });
-
-        // console.log removed('✅ Knapsack example blocks loaded successfully');
       } catch (error) {
-        console.error('❌ Error loading Knapsack example blocks:', error);
-        alert('เกิดข้อผิดพลาดในการโหลด Knapsack example blocks: ' + (error.message || 'รูปแบบไม่ถูกต้อง'));
+        console.error('Error loading Knapsack example blocks:', error);
       }
     }, 100);
   } catch (error) {
-    console.error('❌ Error in loadKnapsackExampleBlocks:', error);
+    console.error('Error in loadKnapsackExampleBlocks:', error);
   }
 }
 
-/**
- * Get Knapsack example XML as string
- * @returns {string} XML string
- */
 export function getKnapsackExampleXml() {
   return knapsackExampleXml;
+}
+
+export function getKnapsackDpExampleXml() {
+  return knapsackDpExampleXml;
 }
 

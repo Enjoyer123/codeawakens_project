@@ -89,6 +89,9 @@ const coinChangeExampleXml = `<xml xmlns="https://developers.google.com/blockly/
                               </block>
                             </value>
                             <statement name="DO">
+                              <block type="coin_change_add_warrior_to_selection" id="cc_pick_coin">
+                                <value name="WARRIOR_INDEX"><block type="variables_get" id="cc_index_get_pick"><field name="VAR">index</field></block></value>
+                                <next>
                               <block type="variables_set" id="cc_set_include_call">
                                 <field name="VAR">include</field>
                                 <value name="VALUE">
@@ -129,33 +132,38 @@ const coinChangeExampleXml = `<xml xmlns="https://developers.google.com/blockly/
                                         </value>
                                       </block>
                                     </statement>
+                                    <next>
+                                      <block type="coin_change_remove_warrior" id="cc_remove_coin"></block>
+                                    </next>
                                   </block>
                                 </next>
                               </block>
-                            </statement>
-                            <next>
-                              <!-- exclude = coinChange(amount, coins, index+1) -->
-                              <block type="variables_set" id="cc_set_exclude_call">
-                                <field name="VAR">exclude</field>
-                                <value name="VALUE">
-                                  <block type="procedures_callreturn" id="cc_call_exclude">
-                                    <mutation name="coinChange">
-                                      <arg name="amount"></arg><arg name="coins"></arg><arg name="index"></arg>
-                                    </mutation>
-                                    <field name="NAME">coinChange</field>
-                                    <value name="ARG0"><block type="variables_get" id="cc_amount_get_exc"><field name="VAR">amount</field></block></value>
-                                    <value name="ARG1"><block type="variables_get" id="cc_coins_get_exc"><field name="VAR">coins</field></block></value>
-                                    <value name="ARG2">
-                                      <block type="math_arithmetic" id="cc_index_plus1">
-                                        <value name="A"><block type="variables_get" id="cc_index_get_add1"><field name="VAR">index</field></block></value>
-                                        <field name="OP">ADD</field>
-                                        <value name="B"><block type="math_number" id="cc_one_add1"><field name="NUM">1</field></block></value>
-                                      </block>
-                                    </value>
+                            </next>
+                          </block>
+                        </statement>
+                        <next>
+                          <!-- exclude = coinChange(amount, coins, index+1) -->
+                          <block type="variables_set" id="cc_set_exclude_call">
+                            <field name="VAR">exclude</field>
+                            <value name="VALUE">
+                              <block type="procedures_callreturn" id="cc_call_exclude">
+                                <mutation name="coinChange">
+                                  <arg name="amount"></arg><arg name="coins"></arg><arg name="index"></arg>
+                                </mutation>
+                                <field name="NAME">coinChange</field>
+                                <value name="ARG0"><block type="variables_get" id="cc_amount_get_exc"><field name="VAR">amount</field></block></value>
+                                <value name="ARG1"><block type="variables_get" id="cc_coins_get_exc"><field name="VAR">coins</field></block></value>
+                                <value name="ARG2">
+                                  <block type="math_arithmetic" id="cc_index_plus1">
+                                    <value name="A"><block type="variables_get" id="cc_index_get_add1"><field name="VAR">index</field></block></value>
+                                    <field name="OP">ADD</field>
+                                    <value name="B"><block type="math_number" id="cc_one_add1"><field name="NUM">1</field></block></value>
                                   </block>
                                 </value>
-                                <next>
-                                  <!-- track decision once -->
+                              </block>
+                            </value>
+                            <next>
+                              <!-- track decision once -->
                                   <block type="coin_change_track_decision" id="cc_track_decision">
                                     <value name="AMOUNT"><block type="variables_get" id="cc_amount_get_track"><field name="VAR">amount</field></block></value>
                                     <value name="INDEX"><block type="variables_get" id="cc_index_get_track"><field name="VAR">index</field></block></value>

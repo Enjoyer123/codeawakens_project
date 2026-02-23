@@ -6,140 +6,73 @@ import { setXmlLoading } from "../core/state";
 // N-Queen Example XML - Backtracking recursive solution (FIXED - return solution in base case)
 const nQueenExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
   <!-- N-Queen Solve Function Definition -->
-  <block type="procedures_defreturn" id="solve_function" x="50" y="50">
+  <block type="procedures_defnoreturn" id="solve_function" x="50" y="50">
     <field name="NAME">solve</field>
-    <comment pinned="false" h="80" w="200">Backtracking recursive solution for N-Queen problem. Places n queens on n×n board so no two queens attack each other. Returns solution array if found, null otherwise.</comment>
+    <comment pinned="false" h="80" w="200">Backtracking recursive solution for N-Queen. Collects all solutions into solutions_list.</comment>
     <statement name="STACK">
-      <!-- Base case: if row == n, build and return solution array -->
-      <block type="if_only" id="base_case_row_equals_n">
+      <block type="if_else" id="base_case_row_equals_n">
         <value name="CONDITION">
           <block type="logic_compare" id="row_equals_n">
-            <value name="A">
-              <block type="variables_get" id="row_var_base">
-                <field name="VAR">row</field>
-              </block>
-            </value>
+            <value name="A"><block type="variables_get" id="row_var_base"><field name="VAR">row</field></block></value>
             <field name="OP">EQ</field>
-            <value name="B">
-              <block type="variables_get" id="n_value">
-                <field name="VAR">n</field>
-              </block>
-            </value>
+            <value name="B"><block type="variables_get" id="n_value"><field name="VAR">n</field></block></value>
           </block>
         </value>
-        <statement name="DO">
-          <!-- Build solution array from board -->
+        <statement name="IF_DO">
           <block type="variables_set" id="init_solution">
             <field name="VAR">solution</field>
             <value name="VALUE">
-              <block type="lists_create_with" id="solution_list">
-                <mutation items="0"></mutation>
-              </block>
+              <block type="lists_create_with" id="solution_list"><mutation items="0"></mutation></block>
             </value>
             <next>
-              <!-- Loop through rows to build solution -->
               <block type="for_loop_dynamic" id="build_solution_loop">
                 <field name="VAR">i</field>
-                <value name="FROM">
-                  <block type="math_number" id="i_start">
-                    <field name="NUM">0</field>
-                  </block>
-                </value>
+                <value name="FROM"><block type="math_number"><field name="NUM">0</field></block></value>
                 <value name="TO">
-                  <block type="math_arithmetic" id="n_minus_one_solution">
-                    <value name="A">
-                      <block type="variables_get" id="n_var_solution">
-                        <field name="VAR">n</field>
-                      </block>
-                    </value>
+                  <block type="math_arithmetic">
+                    <value name="A"><block type="variables_get"><field name="VAR">n</field></block></value>
                     <field name="OP">MINUS</field>
-                    <value name="B">
-                      <block type="math_number" id="one_solution">
-                        <field name="NUM">1</field>
-                      </block>
-                    </value>
+                    <value name="B"><block type="math_number"><field name="NUM">1</field></block></value>
                   </block>
                 </value>
                 <statement name="DO">
-                  <!-- Loop through cols to find queen -->
                   <block type="for_loop_dynamic" id="find_queen_loop">
                     <field name="VAR">j</field>
-                    <value name="FROM">
-                      <block type="math_number" id="j_start">
-                        <field name="NUM">0</field>
-                      </block>
-                    </value>
+                    <value name="FROM"><block type="math_number"><field name="NUM">0</field></block></value>
                     <value name="TO">
-                      <block type="math_arithmetic" id="n_minus_one_queen">
-                        <value name="A">
-                          <block type="variables_get" id="n_var_queen">
-                            <field name="VAR">n</field>
-                          </block>
-                        </value>
+                      <block type="math_arithmetic">
+                        <value name="A"><block type="variables_get"><field name="VAR">n</field></block></value>
                         <field name="OP">MINUS</field>
-                        <value name="B">
-                          <block type="math_number" id="one_queen">
-                            <field name="NUM">1</field>
-                          </block>
-                        </value>
+                        <value name="B"><block type="math_number"><field name="NUM">1</field></block></value>
                       </block>
                     </value>
                     <statement name="DO">
-                      <!-- if board[i][j] == 1, add [i, j] to solution -->
                       <block type="if_only" id="check_queen">
                         <value name="CONDITION">
-                          <block type="logic_compare" id="board_equals_one">
+                          <block type="logic_compare">
                             <value name="A">
-                              <block type="lists_get_at_index" id="get_board_i">
+                              <block type="lists_get_at_index">
                                 <value name="LIST">
-                                  <block type="lists_get_at_index" id="get_board">
-                                    <value name="LIST">
-                                      <block type="variables_get" id="board_var_solution">
-                                        <field name="VAR">board</field>
-                                      </block>
-                                    </value>
-                                    <value name="INDEX">
-                                      <block type="variables_get" id="i_var_solution">
-                                        <field name="VAR">i</field>
-                                      </block>
-                                    </value>
+                                  <block type="lists_get_at_index">
+                                    <value name="LIST"><block type="variables_get"><field name="VAR">board</field></block></value>
+                                    <value name="INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
                                   </block>
                                 </value>
-                                <value name="INDEX">
-                                  <block type="variables_get" id="j_var_solution">
-                                    <field name="VAR">j</field>
-                                  </block>
-                                </value>
+                                <value name="INDEX"><block type="variables_get"><field name="VAR">j</field></block></value>
                               </block>
                             </value>
                             <field name="OP">EQ</field>
-                            <value name="B">
-                              <block type="math_number" id="one_value">
-                                <field name="NUM">1</field>
-                              </block>
-                            </value>
+                            <value name="B"><block type="math_number"><field name="NUM">1</field></block></value>
                           </block>
                         </value>
                         <statement name="DO">
-                          <block type="lists_add_item" id="add_to_solution">
-                            <value name="LIST">
-                              <block type="variables_get" id="solution_var">
-                                <field name="VAR">solution</field>
-                              </block>
-                            </value>
+                          <block type="lists_add_item">
+                            <value name="LIST"><block type="variables_get"><field name="VAR">solution</field></block></value>
                             <value name="ITEM">
-                              <block type="lists_create_with" id="queen_position">
+                              <block type="lists_create_with">
                                 <mutation items="2"></mutation>
-                                <value name="ADD0">
-                                  <block type="variables_get" id="i_var_pos">
-                                    <field name="VAR">i</field>
-                                  </block>
-                                </value>
-                                <value name="ADD1">
-                                  <block type="variables_get" id="j_var_pos">
-                                    <field name="VAR">j</field>
-                                  </block>
-                                </value>
+                                <value name="ADD0"><block type="variables_get"><field name="VAR">i</field></block></value>
+                                <value name="ADD1"><block type="variables_get"><field name="VAR">j</field></block></value>
                               </block>
                             </value>
                           </block>
@@ -149,181 +82,90 @@ const nQueenExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml"
                   </block>
                 </statement>
                 <next>
-                  <!-- ✅ CRITICAL FIX: Return solution INSIDE base case, AFTER building solution (after for i loop completes) -->
-                  <block type="procedures_return" id="return_solution_base">
-                    <value name="VALUE">
-                      <block type="variables_get" id="solution_var_return">
-                        <field name="VAR">solution</field>
-                      </block>
-                    </value>
+                  <!-- Add built solution to solutions_list -->
+                  <block type="lists_add_item">
+                    <value name="LIST"><block type="variables_get"><field name="VAR">solutions_list</field></block></value>
+                    <value name="ITEM"><block type="variables_get"><field name="VAR">solution</field></block></value>
                   </block>
                 </next>
               </block>
             </next>
           </block>
         </statement>
-        <!-- ❌ REMOVED: return solution was here (outside base case) -->
-      <next>
-        <block type="for_loop_dynamic" id="for_col_loop">
-          <field name="VAR">col</field>
-          <value name="FROM">
-            <block type="math_number" id="col_start">
-              <field name="NUM">0</field>
-            </block>
-          </value>
-          <value name="TO">
-            <block type="math_arithmetic" id="n_minus_one">
-              <value name="A">
-                <block type="variables_get" id="n_var">
-                  <field name="VAR">n</field>
-                </block>
-              </value>
-              <field name="OP">MINUS</field>
-              <value name="B">
-                <block type="math_number" id="one_for">
-                  <field name="NUM">1</field>
-                </block>
-              </value>
-            </block>
-          </value>
-          <statement name="DO">
-            <!-- Inner if: if safe(row, col) -->
-            <block type="if_only" id="if_safe">
-              <value name="CONDITION">
-                <block type="nqueen_is_safe" id="call_safe">
-                  <value name="ROW">
-                    <block type="variables_get" id="row_var_safe">
-                      <field name="VAR">row</field>
-                    </block>
-                  </value>
-                  <value name="COL">
-                    <block type="variables_get" id="col_var_safe">
-                      <field name="VAR">col</field>
-                    </block>
-                  </value>
-                </block>
-              </value>
-              <statement name="DO">
-                <!-- place(row, col) -->
-                <block type="nqueen_place" id="call_place">
-                  <value name="ROW">
-                    <block type="variables_get" id="row_var_place">
-                      <field name="VAR">row</field>
-                    </block>
-                  </value>
-                  <value name="COL">
-                    <block type="variables_get" id="col_var_place">
-                      <field name="VAR">col</field>
-                    </block>
-                  </value>
-                  <next>
-                    <!-- if solve(row + 1) returns solution, return it; else remove(row, col) -->
-                    <block type="variables_set" id="store_solve_result">
-                      <field name="VAR">solveResult</field>
-                      <value name="VALUE">
-                        <block type="procedures_callreturn" id="call_solve_next">
-                          <mutation name="solve">
-                            <arg name="row"></arg>
-                          </mutation>
-                          <field name="NAME">solve</field>
-                          <value name="ARG0">
-                            <block type="math_arithmetic" id="row_plus_one">
-                              <value name="A">
-                                <block type="variables_get" id="row_var_solve">
-                                  <field name="VAR">row</field>
-                                </block>
-                              </value>
-                              <field name="OP">ADD</field>
-                              <value name="B">
-                                <block type="math_number" id="one_solve">
-                                  <field name="NUM">1</field>
-                                </block>
-                              </value>
-                            </block>
-                          </value>
-                        </block>
-                      </value>
-                      <next>
-                        <!-- if solveResult is not null, return it; else remove(row, col) -->
-                        <block type="if_else" id="if_solve_result">
-                          <value name="CONDITION">
-                            <block type="logic_compare" id="solve_result_not_null">
-                              <value name="A">
-                                <block type="variables_get" id="solve_result_var">
-                                  <field name="VAR">solveResult</field>
-                                </block>
-                              </value>
-                              <field name="OP">NEQ</field>
-                              <value name="B">
-                                <block type="logic_null" id="null_check"></block>
-                              </value>
-                            </block>
-                          </value>
-                          <statement name="IF_DO">
-                            <block type="procedures_return" id="return_solve_result">
-                              <value name="VALUE">
-                                <block type="variables_get" id="solve_result_var_return">
-                                  <field name="VAR">solveResult</field>
-                                </block>
-                              </value>
-                            </block>
-                          </statement>
-                          <statement name="ELSE_DO">
-                            <!-- remove(row, col) and continue loop -->
-                            <block type="nqueen_remove" id="call_remove">
-                              <value name="ROW">
-                                <block type="variables_get" id="row_var_remove">
-                                  <field name="VAR">row</field>
-                                </block>
-                              </value>
-                              <value name="COL">
-                                <block type="variables_get" id="col_var_remove">
-                                  <field name="VAR">col</field>
-                                </block>
-                              </value>
-                            </block>
-                          </statement>
-                        </block>
-                      </next>
-                    </block>
-                  </next>
-                </block>
-              </statement>
-            </block>
-          </statement>
-          <next>
-            <!-- Return null (if loop completes without finding solution) -->
-            <block type="procedures_return" id="return_null">
-              <value name="VALUE">
-                <block type="logic_null" id="null_return"></block>
-              </value>
-            </block>
-          </next>
-        </block>
-      </next>
-    </block>
+        <statement name="ELSE_DO">
+          <block type="for_loop_dynamic" id="for_col_loop">
+            <field name="VAR">col</field>
+            <value name="FROM"><block type="math_number"><field name="NUM">0</field></block></value>
+            <value name="TO">
+              <block type="math_arithmetic">
+                <value name="A"><block type="variables_get"><field name="VAR">n</field></block></value>
+                <field name="OP">MINUS</field>
+                <value name="B"><block type="math_number"><field name="NUM">1</field></block></value>
+              </block>
+            </value>
+            <statement name="DO">
+              <block type="if_only" id="if_safe">
+                <value name="CONDITION">
+                  <block type="nqueen_is_safe">
+                    <value name="ROW"><block type="variables_get"><field name="VAR">row</field></block></value>
+                    <value name="COL"><block type="variables_get"><field name="VAR">col</field></block></value>
+                  </block>
+                </value>
+                <statement name="DO">
+                  <block type="nqueen_place">
+                    <value name="ROW"><block type="variables_get"><field name="VAR">row</field></block></value>
+                    <value name="COL"><block type="variables_get"><field name="VAR">col</field></block></value>
+                    <next>
+                      <block type="procedures_callnoreturn">
+                        <mutation name="solve"><arg name="row"></arg></mutation>
+                        <field name="NAME">solve</field>
+                        <value name="ARG0">
+                          <block type="math_arithmetic">
+                            <value name="A"><block type="variables_get"><field name="VAR">row</field></block></value>
+                            <field name="OP">ADD</field>
+                            <value name="B"><block type="math_number"><field name="NUM">1</field></block></value>
+                          </block>
+                        </value>
+                        <next>
+                          <block type="nqueen_remove">
+                            <value name="ROW"><block type="variables_get"><field name="VAR">row</field></block></value>
+                            <value name="COL"><block type="variables_get"><field name="VAR">col</field></block></value>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </statement>
+              </block>
+            </statement>
+          </block>
+        </statement>
+      </block>
     </statement>
-    <mutation>
-      <arg name="row"></arg>
-    </mutation>
+    <mutation><arg name="row"></arg></mutation>
   </block>
 
-  <!-- Main code: result = solve(0) -->
-  <block type="variables_set" id="main_result_set" x="50" y="600">
-    <field name="VAR">result</field>
+  <!-- Main code: init solutions_list, call solve(0), set result = solutions_list -->
+  <block type="variables_set" id="init_solutions_list" x="50" y="720">
+    <field name="VAR">solutions_list</field>
     <value name="VALUE">
-      <block type="procedures_callreturn" id="call_main">
-        <mutation name="solve">
-          <arg name="row"></arg>
-        </mutation>
+      <block type="lists_create_with"><mutation items="0"></mutation></block>
+    </value>
+    <next>
+      <block type="procedures_callnoreturn" id="call_main">
+        <mutation name="solve"><arg name="row"></arg></mutation>
         <field name="NAME">solve</field>
         <value name="ARG0">
-          <block type="math_number" id="zero_index">
-            <field name="NUM">0</field>
-          </block>
+          <block type="math_number"><field name="NUM">0</field></block>
         </value>
+        <next>
+          <block type="variables_set" id="main_result_set">
+            <field name="VAR">result</field>
+            <value name="VALUE"><block type="variables_get"><field name="VAR">solutions_list</field></block></value>
+          </block>
+        </next>
       </block>
-    </value>
+    </next>
   </block>
 </xml>`;
 
