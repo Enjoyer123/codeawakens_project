@@ -90,15 +90,7 @@ const VERIFIED_SYNTAX = {
     "is_safe": "await safe(row, col)",
 
     // Visuals & Algo Specials
-    "rope_visual_init": "await initRopeTree()",
-    "rope_get_cuts": "getCuts()",
-    "rope_target_len": "getTarget()",
-    "rope_vis_enter": "await pushNode(cut, sum);",
-    "rope_vis_exit": "await popNode();",
-    "rope_vis_status": "await updateStatus(status);",
-    "sort_trains": "sortTrains(trains)",
-    "get_train_value": "train.key",
-    "assign_train_visual": "assignTrainVisual(train, platform)",
+
     "highlightPeak": "await highlightPeak(node)",
     "highlightPath": "await highlightPath(parent, end, bottleneck)",
     "showResult": "await showFinalResult(bottleneck, rounds)",

@@ -7,11 +7,11 @@
  */
 
 import { loadDfsExampleBlocks } from '../../../gameutils/blockly/example/loadDfsExample';
+import { loadDfsPlaybackExample } from '../../../gameutils/blockly/example/loadDfsPlaybackExample';
 import { loadBfsExampleBlocks } from '../../../gameutils/blockly/example/loadBfsExample';
 import { loadDijkstraExampleBlocks } from '../../../gameutils/blockly/example/loadDijkstraExample';
 import { loadPrimExampleBlocks } from '../../../gameutils/blockly/example/loadPrimExample';
 import { loadKnapsackExampleBlocks } from '../../../gameutils/blockly/example/loadKnapsackExample';
-import { loadDynamicKnapsackExampleBlocks } from '../../../gameutils/blockly/example/loadDynamicKnapsackExample';
 import { loadKruskalExampleBlocks } from '../../../gameutils/blockly/example/loadKruskalExample';
 import { loadSubsetSumExampleBlocks } from '../../../gameutils/blockly/example/loadSubsetSumExample';
 import { loadDynamicSubsetSumExampleBlocks } from '../../../gameutils/blockly/example/loadDynamicSubsetSumExample';
@@ -19,8 +19,6 @@ import { loadCoinChangeExampleBlocks } from '../../../gameutils/blockly/example/
 import { loadDynamicCoinChangeExampleBlocks } from '../../../gameutils/blockly/example/loadDynamicCoinChangeExample';
 import { loadGreedyCoinChangeExampleBlocks } from '../../../gameutils/blockly/example/loadGreedyCoinChangeExample';
 import { loadNQueenExampleBlocks } from '../../../gameutils/blockly/example/loadNQueenExample';
-import { loadTrainScheduleExampleBlocks } from '../../../gameutils/blockly/example/loadTrainScheduleExample';
-import { loadRopePartitionExampleBlocks } from '../../../gameutils/blockly/example/loadRopePartitionExample';
 import { loadEmeiMountainExample } from '../../../gameutils/blockly/example/loadEmeiMountainExample';
 
 /**
@@ -35,6 +33,15 @@ import { loadEmeiMountainExample } from '../../../gameutils/blockly/example/load
  * - loader: function to load the example blocks
  */
 export const EXAMPLE_LOADERS = [
+    {
+        id: 'dfs_playback',
+        label: 'DFS (Playback)',
+        title: 'โหลด DFS Record & Playback example',
+        description: 'DFS แบบ Record & Playback ใหม่',
+        icon: '🎬',
+        className: 'bg-emerald-600/20 border-emerald-500/50 hover:bg-emerald-600/30 text-emerald-200',
+        loader: loadDfsPlaybackExample
+    },
     {
         id: 'dfs',
         label: 'DFS',
@@ -87,7 +94,7 @@ export const EXAMPLE_LOADERS = [
         description: 'Normal Knapsack Algorithm',
         icon: '🎒',
         className: 'bg-yellow-600/20 border-yellow-500/50 hover:bg-yellow-600/30 text-yellow-200',
-        loader: loadKnapsackExampleBlocks
+        loader: (workspace) => loadKnapsackExampleBlocks(workspace, 'BACKTRACK')
     },
     {
         id: 'knapsack_dp',
@@ -96,17 +103,9 @@ export const EXAMPLE_LOADERS = [
         description: 'Dynamic Programming',
         icon: '🎒',
         className: 'bg-yellow-700/20 border-yellow-600/50 hover:bg-yellow-700/30 text-yellow-200',
-        loader: loadDynamicKnapsackExampleBlocks
+        loader: (workspace) => loadKnapsackExampleBlocks(workspace, 'DP')
     },
-    {
-        id: 'train_schedule',
-        label: 'Train Schedule',
-        title: 'โหลด Train Schedule',
-        description: 'Scheduling Algorithm',
-        icon: '🚂',
-        className: 'bg-pink-700/20 border-pink-600/50 hover:bg-pink-700/30 text-pink-200',
-        loader: loadTrainScheduleExampleBlocks
-    },
+
     {
         id: 'subset_sum',
         label: 'Subset Sum',
@@ -161,15 +160,7 @@ export const EXAMPLE_LOADERS = [
         className: 'bg-teal-600/20 border-teal-500/50 hover:bg-teal-600/30 text-teal-200',
         loader: loadNQueenExampleBlocks
     },
-    {
-        id: 'rope_partition',
-        label: 'Rope Partition',
-        title: 'โหลด Rope Partition',
-        description: 'Backtracking',
-        icon: '🪢',
-        className: 'bg-cyan-600/20 border-cyan-500/50 hover:bg-cyan-600/30 text-cyan-200',
-        loader: loadRopePartitionExampleBlocks
-    },
+
     {
         id: 'dijkstra_emei',
         label: 'Dijkstra (Emei)',

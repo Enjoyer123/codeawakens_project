@@ -29,9 +29,9 @@ export function defineEmeiGenerators() {
         if (javascriptGenerator.isCleanMode) {
             const safeBn = (bottleneck === 'undefined' || bottleneck === '(undefined)') ? '0' : bottleneck;
             const safeRounds = (rounds === 'undefined' || rounds === '(undefined)') ? '0' : rounds;
-            return `showFinalResult(${safeBn}, ${safeRounds});\n`;
+            return `return [${safeBn}, ${safeRounds}];\n`;
         }
-        return `await showEmeiFinalResult(${bottleneck}, ${rounds});\n`;
+        return `return [${bottleneck}, ${rounds}];\n`;
     };
 
     javascriptGenerator.forBlock["emei_highlight_path"] = function (block) {

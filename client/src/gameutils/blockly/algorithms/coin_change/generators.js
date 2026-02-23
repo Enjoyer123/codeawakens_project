@@ -13,4 +13,21 @@ export function defineCoinChangeGenerators() {
         const exclude = javascriptGenerator.valueToCode(block, 'EXCLUDE', javascriptGenerator.ORDER_NONE) || '-1';
         return `trackCoinChangeDecision(${amount}, ${index}, ${include}, ${exclude});\n`;
     };
+
+    // Remove warrior from selection (Backtrack visual)
+    javascriptGenerator.forBlock["coin_change_remove_warrior"] = function (block) {
+        return `await removeWarriorFromSelectionVisual();\n`;
+    };
+
+    // Consider a coin visually (flash highlight)
+    javascriptGenerator.forBlock["coin_change_consider"] = function (block) {
+        const coinIndex = javascriptGenerator.valueToCode(block, 'COIN_INDEX', javascriptGenerator.ORDER_NONE) || '0';
+        return `await considerCoinVisual(${coinIndex});\n`;
+    };
+
+    // Memo hit visual
+    javascriptGenerator.forBlock["coin_change_memo_hit"] = function (block) {
+        const amount = javascriptGenerator.valueToCode(block, 'AMOUNT', javascriptGenerator.ORDER_NONE) || '0';
+        return `await memoHitVisual(${amount});\n`;
+    };
 }

@@ -1,0 +1,453 @@
+/**
+ * coinChangePlaybackBacktrack.js
+ * เลน Animation แบบ Backtracking (Stacking Bar / Tree)
+ */
+
+export async function playCoinChangeBacktrackAnimation(scene, trace, options = {}) {
+    // เปลยนไปใช Tree Display ไดถาเพม options.tree
+    // return playBarDisplay(scene, trace, options);
+    return playBarDisplay(scene, trace, options);
+}
+
+/**
+ * Display Mode 1: แบบ Stacking Bar (ต่อเลโก้ลงหลอดเลือด)
+ * (รูปแบบปัจจุบันที่ใช้งานอยู่)
+ */
+async function playBarDisplay(scene, trace, options) {
+    const { speed = 1.0 } = options;
+    const baseDelay = 800 / speed;
+
+    if (!scene || !scene.coinChange || !trace || trace.length === 0) {
+        console.warn('⚠️ [coinChangePlayback] No scene.coinChange or trace');
+        return;
+    }
+
+    console.log(`🎬 [coinChangePlayback] Playing ${trace.length} steps at ${speed}x speed`);
+
+    const warriors = scene.coinChange.warriors;
+    const targetAmount = scene.levelData?.coinChangeData?.monster_power || 32;
+
+    // Helper
+    const sleep = (ms) => new Promise(res => setTimeout(res, ms));
+
+    // UI: Status Text
+    const statusText = scene.add.text(
+        400, 50,
+        'เริ่มเจาะเกราะบอส...',
+        { fontSize: '24px', color: '#FFFF00', fontStyle: 'bold', stroke: '#000', strokeThickness: 4, align: 'center' }
+    ).setOrigin(0.5).setDepth(20);
+
+    // ==========================================
+    // UI: Boss HP Bar (1D Grid Stacking)
+    // ==========================================
+    const unitWidth = 20; // 1 พลัง = กว้าง 20 px
+    const barWidth = targetAmount * unitWidth;
+    const barHeight = 80;
+    const startX = 400 - (barWidth / 2);
+    const startY = 220;
+
+    // Slot Background (พื้นที่บอส)
+    const slotBg = scene.add.rectangle(400, startY, barWidth, barHeight, 0x000000, 0.7);
+    slotBg.setStrokeStyle(4, 0xFF0000);
+    slotBg.setDepth(10);
+
+    // เส้นตีตาราง (Grid Lines) สร้างความเป็นระเบียบเหมือนช่องกระดาน
+    for (let i = 1; i < targetAmount; i++) {
+        const lx = startX + (i * unitWidth);
+        const lColor = (i % 5 === 0) ? 0xFFFFFF : 0x888888; // ขีดหลักทุกๆ 5 หน่วย
+        const lAlpha = (i % 5 === 0) ? 0.6 : 0.3;
+        const line = scene.add.line(0, 0, lx, startY - barHeight / 2, lx, startY + barHeight / 2, lColor, lAlpha);
+        line.setOrigin(0, 0).setDepth(11);
+    }
+
+    // Text: แสดง HP บอสที่เหลือ
+    const hpText = scene.add.text(400, startY - 70, `👾 เลือดบอส: ${targetAmount}`, {
+        fontSize: '32px', color: '#FFF', fontStyle: 'bold', stroke: '#000', strokeThickness: 6
+    }).setOrigin(0.5).setDepth(20);
+
+    const getBlockColor = (index) => {
+        const colors = [0x3498db, 0x2ecc71, 0x9b59b6, 0xf1c40f];
+        return colors[index % colors.length] || 0xe74c3c;
+    };
+
+    // ตัวแปรเก็บสถานะการต่อตัว
+    const stack = [];
+    let currentX = startX;
+    let currentSum = 0;
+
+    const updateHpText = () => {
+        const remain = targetAmount - currentSum;
+        if (remain < 0) {
+            hpText.setText(`❌ พลังเกิน! เกินไป ${Math.abs(remain)}`);
+            hpText.setColor('#FF5555');
+        } else if (remain === 0) {
+            hpText.setText(`✅ โค่นบอสสำเร็จ!`);
+            hpText.setColor('#00FF00');
+        } else {
+            hpText.setText(`👾 เลือดบอส: ${remain}`);
+            hpText.setColor('#FFFFFF');
+        }
+    };
+
+    for (let i = 0; i < trace.length; i++) {
+        const step = trace[i];
+
+        switch (step.action) {
+            case 'consider_coin': {
+                const idx = step.coin;
+                if (idx >= 0 && idx < warriors.length) {
+                    const w = warriors[idx];
+                    const blockW = w.power * unitWidth;
+                    const projectedSum = currentSum + w.power;
+
+                    if (projectedSum > targetAmount) {
+                        statusText.setText(`💡 คิดจะหยิบ [พลัง ${w.power}]...\nแต่มันน่าจะยาวเกินหลอดเลือดแน่ๆ!`);
+                        statusText.setColor('#FFA500');
+                    } else {
+                        statusText.setText(`💡 คิดจะหยิบ [พลัง ${w.power}]...\nน่าจะยัดลงหลอดได้แฮะ ทดลองดู!`);
+                        statusText.setColor('#FFFF00');
+                    }
+
+                    // สร้างกรอบกระพริบที่ตัวนักรบ
+                    const flash = scene.add.rectangle(w.x, w.y, 60, 60, 0xFFA500, 0.8);
+                    flash.setDepth(12);
+
+                    // สร้าง Ghost Block สีเทาๆ โปร่งใสเพื่อแสดง "Preview ตำแหน่งที่มันจะไปตก"
+                    let ghost = null;
+                    if (projectedSum <= targetAmount + w.power && currentSum <= targetAmount) {
+                        ghost = scene.add.rectangle(currentX, startY, blockW, barHeight - 8, getBlockColor(w.index), 0.4);
+                        ghost.setOrigin(0, 0.5);
+                        ghost.setStrokeStyle(3, 0xFFFFFF);
+                        ghost.setDepth(14); // อยู่ใต้บล็อกจริงนิดนึง
+
+                        // ถ้าล้นหลอด ให้ Ghost โผล่ทะลุออกไปเลย
+                        if (projectedSum > targetAmount) {
+                            ghost.setStrokeStyle(6, 0xFF0000);
+                            ghost.setFillStyle(0xFF0000, 0.5);
+                        }
+                    }
+
+                    scene.tweens.add({
+                        targets: ghost ? [flash, ghost] : [flash],
+                        alpha: 0,
+                        duration: 800 / speed, // ให้นานพอที่จะมองเห็น Preview ชัดๆ
+                        onComplete: () => {
+                            flash.destroy();
+                            if (ghost) ghost.destroy();
+                        }
+                    });
+                }
+                await sleep(baseDelay * 0.8);
+                break;
+            }
+
+            case 'select_coin': {
+                const idx = step.coin;
+                if (idx < 0 || idx >= warriors.length) break;
+
+                const w = warriors[idx];
+                const blockW = w.power * unitWidth;
+
+                const remainAfter = targetAmount - (currentSum + w.power);
+
+                if (remainAfter < 0) {
+                    statusText.setText(`❌ หยิบ [พลัง ${w.power}] มาใส่...\nยัดไม่ลง! ทะลุหลอดเลือด! (เกินไป ${Math.abs(remainAfter)})`);
+                    statusText.setColor('#FF5555');
+                } else if (remainAfter === 0) {
+                    statusText.setText(`✅ หยิบ [พลัง ${w.power}] มาใส่...\nพอดีเป๊ะ! โค่นบอสสำเร็จ 1 วิธี!`);
+                    statusText.setColor('#00FF00');
+                } else {
+                    statusText.setText(`⚔️ หยิบ [พลัง ${w.power}] มาใส่ได้สำเร็จ!\n(หลอดเลือดบอสยังเหลือที่ให้ยัดอีก ${remainAfter})`);
+                    statusText.setColor('#00FFFF');
+                }
+
+                // สร้าง Block สีแทนนักรบ
+                const color = getBlockColor(w.index);
+                const block = scene.add.rectangle(w.x, w.y, blockW, barHeight - 8, color, 0.9);
+                block.setOrigin(0, 0.5); // ให้จุดหมุนอยู่ซ้ายมือ เพื่อขยายตัวไปทางขวา
+                block.setStrokeStyle(3, 0xFFFFFF);
+                block.setDepth(15);
+
+                // สร้างตัวเลขกำกับป้าย
+                const label = scene.add.text(w.x + blockW / 2, w.y, w.power.toString(), {
+                    fontSize: '24px', color: '#FFF', fontStyle: 'bold', stroke: '#000', strokeThickness: 4
+                }).setOrigin(0.5).setDepth(16);
+
+                // Animate บินเข้าไปในช่องว่าง
+                scene.tweens.add({
+                    targets: block,
+                    x: currentX,
+                    y: startY,
+                    duration: 400 / speed,
+                    ease: 'Power2'
+                });
+
+                scene.tweens.add({
+                    targets: label,
+                    x: currentX + blockW / 2,
+                    y: startY,
+                    duration: 400 / speed,
+                    ease: 'Power2'
+                });
+
+                // อัปเดตสถานะความกว้าง
+                stack.push({ block, label, power: w.power, blockW, oriX: w.x, oriY: w.y });
+                currentX += blockW;
+                currentSum += w.power;
+
+                updateHpText();
+
+                // ถ้าล้นหลอด ให้เกิด Flash สีแดงแรงๆ
+                if (currentSum > targetAmount) {
+                    const overFlash = scene.add.rectangle(400, startY, barWidth + 60, barHeight + 20, 0xFF0000, 0.5);
+                    scene.tweens.add({
+                        targets: overFlash,
+                        alpha: 0,
+                        duration: 400 / speed,
+                        onComplete: () => overFlash.destroy()
+                    });
+                }
+
+                await sleep(baseDelay * 0.8);
+                break;
+            }
+
+            case 'remove_coin': {
+                const last = stack.pop();
+                if (!last) break;
+
+                statusText.setText(`🔙 ถอยหลัง 1 ก้าว (Backtrack)\nดึงพลัง ${last.power} ตัวล่าสุดออก เพื่อกลับไปหาทางแยกอื่น...`);
+                statusText.setColor('#FFA500');
+
+                currentX -= last.blockW;
+                currentSum -= last.power;
+
+                updateHpText();
+
+                // Animate บินกลับที่เดิมแล้วจางหาย
+                scene.tweens.add({
+                    targets: last.block,
+                    x: last.oriX,
+                    y: last.oriY,
+                    alpha: 0,
+                    scale: 0.5,
+                    duration: 400 / speed,
+                    ease: 'Power2',
+                    onComplete: () => last.block.destroy()
+                });
+                scene.tweens.add({
+                    targets: last.label,
+                    x: last.oriX,
+                    y: last.oriY,
+                    alpha: 0,
+                    scale: 0.5,
+                    duration: 400 / speed,
+                    ease: 'Power2',
+                    onComplete: () => last.label.destroy()
+                });
+
+                await sleep(baseDelay * 0.6);
+                break;
+            }
+
+            case 'coin_decision':
+                break;
+
+            case 'memo_hit': {
+                const amount = step.amount;
+                if (amount <= 0) break; // ไม่ต้องทำอะไรใหญ่ๆ ถ้าเลือดเหลือน้อยกว่า 0 หรือ 0 (พอดี)
+
+                statusText.setText(`🌟 [Memo Hit] เลือด ${amount} เคยคิดผลลัพธ์ไปแล้ว!\nดึงคำตอบเดิมมาใช้เลย การันตีไม่ต้องคิดซ้ำให้เสียเวลาลูป!`);
+                statusText.setColor('#FFD700');
+
+                // สร้างรูปกระพริบคลุมโซนที่เป็นหลอดเลือดที่เหลือ (amount)
+                // คำนวณความกว้างหลอดเลือดที่เหลือ (amount * unitWidth)
+                const hitWidth = Math.max(amount * unitWidth, 40);
+                const hitX = currentX + (hitWidth / 2); // จุดศูนย์กลางของโซนเลือดที่เหลือ
+
+                const flash = scene.add.rectangle(hitX, startY, hitWidth + 20, barHeight + 20, 0xFFD700, 0.7).setDepth(16);
+                scene.tweens.add({
+                    targets: flash, alpha: 0, scaleX: 1.1, scaleY: 1.2, duration: 800 / speed,
+                    onComplete: () => flash.destroy()
+                });
+
+                const memoText = scene.add.text(hitX, startY, 'MEMO HIT!\nจำได้!', {
+                    fontSize: '28px', color: '#FFD700', fontStyle: 'bold', stroke: '#000', strokeThickness: 6, align: 'center'
+                }).setOrigin(0.5).setDepth(25);
+
+                scene.tweens.add({
+                    targets: memoText, y: startY - 40, alpha: 0, duration: 900 / speed, ease: 'Power2',
+                    onComplete: () => memoText.destroy()
+                });
+
+                await sleep(baseDelay * 1.5);
+                break;
+            }
+        }
+    }
+
+    statusText.setText('✅ จบกระบวนการ (Greedy/Backtracking)!');
+    statusText.setColor('#00FFFF');
+    console.log('✅ [coinChangePlaybackBacktrack] Animation complete');
+}
+
+/**
+ * Display Mode 2: แบบวาดต้นไม้ (Recursion Tree)
+ * เตรียมไว้เผื่อตอนสอบอาจารย์สั่งให้วาดเป็น Tree ย้อนรอย
+ */
+async function playTreeDisplay(scene, trace, options) {
+    const { speed = 1.0 } = options;
+    const baseDelay = 800 / speed;
+
+    if (!scene || !scene.coinChange || !trace || trace.length === 0) return;
+
+    const warriors = scene.coinChange.warriors;
+    const targetAmount = scene.levelData?.coinChangeData?.monster_power || 32;
+    const sleep = (ms) => new Promise(res => setTimeout(res, ms));
+
+    const statusText = scene.add.text(
+        400, 50,
+        'เริ่มสร้าง Tree...',
+        { fontSize: '24px', color: '#FFFF00', fontStyle: 'bold', stroke: '#000', strokeThickness: 4, align: 'center' }
+    ).setOrigin(0.5).setDepth(20);
+
+    const treeContainer = scene.add.container(0, 0).setDepth(15);
+
+    // Helper: สร้างปม (Node)
+    const createNode = (x, y, hp, isError = false, isSuccess = false) => {
+        const color = isError ? 0xFF0000 : (isSuccess ? 0x00FF00 : 0x0033CC);
+        const circle = scene.add.circle(x, y, 22, color);
+        circle.setStrokeStyle(3, 0xFFFFFF);
+        const text = scene.add.text(x, y, hp.toString(), {
+            fontSize: '18px', color: '#FFF', fontStyle: 'bold'
+        }).setOrigin(0.5);
+        treeContainer.add([circle, text]);
+        return { circle, text, x, y, hp };
+    };
+
+    const rootNode = createNode(400, 150, targetAmount);
+    const activePath = [rootNode];
+    let maxHistoricalY = 500;
+
+    // Helper: ซูมกล้องไม่ให้เด้ง
+    const focusCamera = (targetY, duration = 400) => {
+        if (targetY > maxHistoricalY) maxHistoricalY = targetY;
+        let desiredScale = 1.0;
+        if (maxHistoricalY > 500) {
+            desiredScale = 350 / (maxHistoricalY - 150);
+        }
+        const desiredX = 400 - (400 * desiredScale);
+        const desiredY = 150 - (150 * desiredScale);
+        scene.tweens.add({
+            targets: treeContainer, scale: desiredScale, x: desiredX, y: desiredY,
+            duration: duration / speed, ease: 'Power2'
+        });
+        return desiredScale;
+    };
+
+    // Helper: วาดตัวนักรบบินไปที่กิ่ง
+    const createTinyWarriorFx = (warrior, targetX, targetY) => {
+        const spriteKeys = ['bot_slime1', 'org1', 'org2', 'org3'];
+        const tex = spriteKeys[warrior.index % spriteKeys.length] || 'bot_slime1';
+        const fx = scene.add.image(warrior.x, warrior.y, tex).setDepth(30).setScale(1.0);
+        scene.tweens.add({
+            targets: fx, x: targetX, y: targetY, scale: 0.3, alpha: 0,
+            duration: 600 / speed, ease: 'Power2', onComplete: () => fx.destroy()
+        });
+    };
+
+    for (let i = 0; i < trace.length; i++) {
+        const step = trace[i];
+        switch (step.action) {
+            case 'consider_coin': {
+                const idx = step.coin;
+                if (idx >= 0 && idx < warriors.length) {
+                    const w = warriors[idx];
+                    statusText.setText(`💡 แตกกิ่งทดสอบ [พลัง ${w.power}]`);
+                    const flash = scene.add.rectangle(w.x, w.y, 60, 60, 0xFFA500, 0.6).setDepth(12);
+                    scene.tweens.add({
+                        targets: flash, alpha: 0, duration: 400 / speed,
+                        onComplete: () => flash.destroy()
+                    });
+                }
+                await sleep(baseDelay * 0.5);
+                break;
+            }
+            case 'select_coin': {
+                const idx = step.coin;
+                if (idx < 0 || idx >= warriors.length) break;
+
+                const parentNode = activePath[activePath.length - 1];
+                const depth = activePath.length;
+                const w = warriors[idx];
+                const newHp = parentNode.hp - w.power;
+
+                statusText.setText(`⚔️ สร้างกิ่งใหม่! (ดาเมจ ${w.power})`);
+
+                // กางกิ่งออกให้เป็น Tree
+                const nodeSpread = Math.max(30, 120 - (depth * 10));
+                const childX = parentNode.x + ((idx - 1.5) * nodeSpread);
+                const childY = parentNode.y + 70;
+
+                // ลากเส้นเชื่อมกิ่ง
+                const line = scene.add.line(0, 0, parentNode.x, parentNode.y + 22, childX, childY - 22, 0xFFFFFF, 0.8).setOrigin(0, 0);
+                treeContainer.add(line);
+
+                const dmgText = scene.add.text((parentNode.x + childX) / 2, ((parentNode.y + childY) / 2) - 10, `-${w.power}`, {
+                    fontSize: '14px', color: '#FFDD00', fontStyle: 'bold', stroke: '#000', strokeThickness: 3
+                }).setOrigin(0.5);
+                treeContainer.add(dmgText);
+
+                const childNode = createNode(childX, childY, newHp, newHp < 0, newHp === 0);
+                childNode.line = line;
+                childNode.dmgText = dmgText;
+
+                activePath.push(childNode);
+                const currentScale = focusCamera(childY);
+
+                const screenTargetX = childX * currentScale + treeContainer.x;
+                const screenTargetY = childY * currentScale + treeContainer.y;
+                createTinyWarriorFx(w, screenTargetX, screenTargetY);
+
+                await sleep(baseDelay * 0.8);
+                break;
+            }
+            case 'remove_coin': {
+                const deadNode = activePath.pop();
+                const parentNode = activePath[activePath.length - 1];
+
+                statusText.setText(`🔙 ทางตันหรือลองครบแล้ว! (Backtrack)`);
+                // ย้อมสีกิ่งที่ตายให้เป็นสีเทาจางๆ (Dead Branch)
+                deadNode.circle.setFillStyle(0x333333);
+                deadNode.circle.setStrokeStyle(2, 0x555555);
+                deadNode.text.setAlpha(0.4);
+                if (deadNode.line) deadNode.line.setAlpha(0.3);
+                if (deadNode.dmgText) deadNode.dmgText.setAlpha(0.3);
+
+                focusCamera(parentNode.y);
+                await sleep(baseDelay * 0.6);
+                break;
+            }
+
+            case 'memo_hit': {
+                const amount = step.amount;
+                statusText.setText(`🌟 Memo Cache Hit! (พลัง ${amount})\nเคยคำนวณกิ่งนี้ไปแล้ว ข้ามได้เลย!`);
+                statusText.setColor('#FFD700');
+
+                if (activePath.length > 0) {
+                    const currentNode = activePath[activePath.length - 1];
+                    currentNode.circle.setStrokeStyle(4, 0xFFD700);
+                    const flash = scene.add.circle(currentNode.x, currentNode.y, 30, 0xFFD700, 0.8).setDepth(20);
+                    scene.tweens.add({
+                        targets: flash, alpha: 0, scale: 2, duration: 600 / speed,
+                        onComplete: () => flash.destroy()
+                    });
+                }
+
+                await sleep(baseDelay);
+                break;
+            }
+        }
+    }
+    statusText.setText('✅ วาด Tree สำเร็จ!');
+}

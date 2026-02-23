@@ -233,27 +233,17 @@ const dfsExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
           </block>
         </value>
         <value name="ARG1">
-          <block type="math_number" id="start_num">
-            <field name="NUM">0</field>
+          <block type="variables_get" id="start_var_main">
+            <field name="VAR">start</field>
           </block>
         </value>
         <value name="ARG2">
-          <block type="math_number" id="goal_num">
-            <field name="NUM">3</field>
+          <block type="variables_get" id="goal_var_main">
+            <field name="VAR">goal</field>
           </block>
         </value>
       </block>
     </value>
-    <next>
-      <!-- move_along_path(path) -->
-      <block type="move_along_path" id="move_path">
-        <value name="PATH">
-          <block type="variables_get" id="path_var_main">
-            <field name="VAR">result</field>
-          </block>
-        </value>
-      </block>
-    </next>
   </block>
 </xml>`;
 

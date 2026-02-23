@@ -20,13 +20,13 @@ import {
   getCollectedTreasures,
   clearPlayerCoins,
   clearRescuedPeople,
-  clearStack
-} from '../../gameutils/shared/items';
+  resetTreasures
+} from '../../gameutils/entities';
 import {
   getCurrentGameState,
 } from '../../gameutils/shared/game';
 
-import { clearGameOverScreen } from '../../gameutils/phaser';
+import { clearGameOverScreen } from '../../gameutils/effects/gameEffects';
 
 // Import components
 import GameArea from './GameArea';
@@ -35,7 +35,6 @@ import GameWithGuide from './GameWithGuide';
 import LoadXmlModal from './LoadXmlModal';
 
 // Import custom hooks
-import { useGameActions } from './hooks/useGameActions';
 import { useGameConditions } from './hooks/useGameConditions';
 import { usePhaserGame } from './hooks/usePhaserGame';
 import { useBlocklySetup } from './hooks/blocklysetup/useBlocklySetup';
@@ -52,19 +51,14 @@ import { useGuideSystem } from '../../hooks/useGuideSystem';
 import { handleRestartGame as handleRestartGameUtil } from './utils/gameHandlers';
 // Import example loaders configuration
 import { EXAMPLE_LOADERS } from './constants/exampleLoaders';
-// Import API bridges
-import { setupRopePartitionBridge } from './utils/apiBridges/ropePartitionBridge';
-import { updateTrainScheduleVisualsIfNeeded, updateRopePartitionVisualsIfNeeded } from './utils/apiBridges/visualUpdates';
 import ExecutionErrorModal from './ExecutionErrorModal';
 import PageLoader from '../../components/shared/Loading/PageLoader';
-import { resetDijkstraState } from "@/gameutils/blockly";
 import { resetCoinChangeTableState } from "@/gameutils/blockly";
 import { resetKnapsackTableState } from '@/gameutils/blockly';
 import { resetSubsetSumTableState } from '@/gameutils/blockly';
 
 import { useSuppressBlocklyWarnings } from '../../components/admin/level/hooks/useSuppressBlocklyWarnings';
 const resetAllGameStates = () => {
-  resetDijkstraState();
   resetCoinChangeTableState();
   resetKnapsackTableState();
   resetSubsetSumTableState();
@@ -72,7 +66,7 @@ const resetAllGameStates = () => {
   // Clear shared game state (Coins, People, Treasures)
   clearPlayerCoins();
   clearRescuedPeople();
-  clearStack();
+  resetTreasures();
 };
 
 
@@ -248,20 +242,6 @@ const GameCore = ({
     handleTextCodeChange(newCode);
   };
 
-  // Initialize game action and condition hooks
-  const { moveForward, turnLeft, turnRight, hit } = useGameActions({
-    currentLevel,
-    setPlayerNodeId,
-    setPlayerDirection,
-    setCurrentHint,
-    setIsGameOver,
-    setGameState,
-    setShowProgressModal,
-    // setTimeSpent,
-    setGameResult,
-    gameStartTime,
-    isPreview
-  });
 
   const { foundMonster, canMoveForward, nearPit, atGoal } = useGameConditions({
     currentLevel
@@ -436,7 +416,6 @@ const GameCore = ({
     onUnlockLevel,
     gameStartTime,
     gameActions: {
-      moveForward, turnLeft, turnRight, hit,
       foundMonster, canMoveForward, nearPit, atGoal
     },
     setters: {
@@ -493,21 +472,6 @@ const GameCore = ({
 
   // Game action and condition functions are now provided by custom hooks (useGameActions, useGameConditions)
 
-  // ============================================================================
-  // EFFECTS - API Bridges
-  // ============================================================================
-
-  // Rope Partition Visual API Bridge
-  useEffect(() => {
-    if (!currentLevel) return;
-
-    const isRopePartition = currentLevel.gameType === 'rope_partition' ||
-      (currentLevel.appliedData && currentLevel.appliedData.type === 'BACKTRACKING_ROPE_PARTITION');
-
-    if (isRopePartition) {
-      return setupRopePartitionBridge(currentLevel, setHintData);
-    }
-  }, [currentLevel]);
 
   // Initialize Blockly
   const { initBlocklyAndPhaser } = useBlocklySetup({
@@ -524,12 +488,6 @@ const GameCore = ({
     isTextCodeEnabled: currentLevel?.textcode || false,
     onCodeGenerated: handleTextCodeChangeWithState
   });
-
-  // Visual updates for Train Schedule and Rope Partition
-  useEffect(() => {
-    updateTrainScheduleVisualsIfNeeded(currentLevel, hintData);
-    updateRopePartitionVisualsIfNeeded(currentLevel, hintData);
-  }, [currentLevel, hintData, hintData?.assignments]);
 
   // Update player weapon display
   const updatePlayerWeaponDisplay = () => {

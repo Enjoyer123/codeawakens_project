@@ -13,14 +13,7 @@ export function defineListGenerators() {
     const list = javascriptGenerator.valueToCode(block, 'LIST', javascriptGenerator.ORDER_MEMBER) || '[]';
     const item = javascriptGenerator.valueToCode(block, 'ITEM', javascriptGenerator.ORDER_NONE) || 'null';
 
-    // Clean Mode: simple push
-    if (javascriptGenerator.isCleanMode) {
-      return `${list}.push(${item});\n`;
-    }
-
-    // Runtime: delegate to context-injected listPush (handles visuals)
-    const listName = list.trim();
-    return `await listPush(${list}, ${item}, '${listName}');\n`;
+    return `${list}.push(${item});\n`;
   };
 
   javascriptGenerator.forBlock["lists_remove_last"] = function (block) {

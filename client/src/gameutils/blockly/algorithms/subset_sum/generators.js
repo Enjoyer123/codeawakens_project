@@ -1,19 +1,30 @@
 import { javascriptGenerator } from "blockly/javascript";
 
 export function defineSubsetSumGenerators() {
-    javascriptGenerator.forBlock["subset_sum_add_warrior_to_side1"] = function (block) {
-        const warriorIndex = javascriptGenerator.valueToCode(block, 'WARRIOR_INDEX', javascriptGenerator.ORDER_NONE) || '0';
-        if (javascriptGenerator.isCleanMode) {
-            return `subset_sum_add_warrior_to_side1(${warriorIndex});\n`;
-        }
-        return `await addWarriorToSide1Visual(${warriorIndex});\n`;
+    javascriptGenerator.forBlock["subset_sum_consider"] = function (block) {
+        const index = javascriptGenerator.valueToCode(block, 'WARRIOR_INDEX', javascriptGenerator.ORDER_NONE) || '0';
+        return `if (typeof trace !== 'undefined') trace.push({ action: 'consider', index: ${index} });\n`;
     };
 
-    javascriptGenerator.forBlock["subset_sum_add_warrior_to_side2"] = function (block) {
-        const warriorIndex = javascriptGenerator.valueToCode(block, 'WARRIOR_INDEX', javascriptGenerator.ORDER_NONE) || '0';
-        if (javascriptGenerator.isCleanMode) {
-            return `subset_sum_add_warrior_to_side2(${warriorIndex});\n`;
-        }
-        return `await addWarriorToSide2Visual(${warriorIndex});\n`;
+    javascriptGenerator.forBlock["subset_sum_include"] = function (block) {
+        const index = javascriptGenerator.valueToCode(block, 'WARRIOR_INDEX', javascriptGenerator.ORDER_NONE) || '0';
+        return `if (typeof trace !== 'undefined') trace.push({ action: 'include', index: ${index} });\n`;
+    };
+
+    javascriptGenerator.forBlock["subset_sum_exclude"] = function (block) {
+        const index = javascriptGenerator.valueToCode(block, 'WARRIOR_INDEX', javascriptGenerator.ORDER_NONE) || '0';
+        return `if (typeof trace !== 'undefined') trace.push({ action: 'exclude', index: ${index} });\n`;
+    };
+
+    javascriptGenerator.forBlock["subset_sum_reset"] = function (block) {
+        const index = javascriptGenerator.valueToCode(block, 'WARRIOR_INDEX', javascriptGenerator.ORDER_NONE) || '0';
+        return `if (typeof trace !== 'undefined') trace.push({ action: 'reset', index: ${index} });\n`;
+    };
+
+    javascriptGenerator.forBlock["subset_sum_dp_update"] = function (block) {
+        const index = javascriptGenerator.valueToCode(block, 'INDEX', javascriptGenerator.ORDER_NONE) || '0';
+        const sum = javascriptGenerator.valueToCode(block, 'SUM', javascriptGenerator.ORDER_NONE) || '0';
+        const valueCode = javascriptGenerator.valueToCode(block, 'VALUE', javascriptGenerator.ORDER_NONE) || 'false';
+        return `if (typeof trace !== 'undefined') trace.push({ action: 'dp_update', index: ${index}, sum: ${sum}, value: ${valueCode} });\n`;
     };
 }

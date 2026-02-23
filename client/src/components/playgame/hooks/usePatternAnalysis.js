@@ -5,7 +5,7 @@ import {
   getWeaponData,
   displayPlayerWeapon,
   displayPlayerEffect
-} from '../../../gameutils/shared/items';
+} from '../../../gameutils/entities/weaponUtils';
 
 import { getCurrentGameState, setCurrentGameState } from '../../../gameutils/shared/game';
 

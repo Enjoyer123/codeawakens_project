@@ -50,7 +50,7 @@ export function defineMovementBlocks() {
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setStyle('loop_blocks');
-      this.setTooltip("เดินไปที่ node ที่กำหนด");
+      this.setTooltip("เดินไปที่ node ที่กำหนดs");
     },
   };
 

@@ -69,10 +69,11 @@ const CATEGORY_CONFIG = {
     blocks: [
       "emei_highlight_peak", "emei_highlight_path", "emei_show_final_result",
       "coin_change_add_warrior_to_selection", "coin_change_track_decision",
-      "subset_sum_add_warrior_to_side1", "subset_sum_add_warrior_to_side2",
-      "rope_visual_init", "rope_vis_enter", "rope_vis_exit",
-      "rope_vis_status", "rope_target_len", "rope_get_cuts",
-      "assign_train_visual", "get_train_value", "sort_trains"
+      "coin_change_memo_hit",
+      "knapsack_pick_item", "knapsack_remove_item", "knapsack_consider_item", "knapsack_dp_update",
+      "subset_sum_consider", "subset_sum_include", "subset_sum_exclude", "subset_sum_reset", "subset_sum_dp_update",
+      "dijkstra_visit", "dijkstra_relax", "prim_visit", "prim_relax",
+      "kruskal_visit", "kruskal_add_edge"
     ]
   },
   Rescue: {

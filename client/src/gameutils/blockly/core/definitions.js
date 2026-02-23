@@ -18,10 +18,8 @@ import { defineDictionaryBlocks } from '../blocks/data/dicts/definitions';
 import { defineKnapsackVisualBlocks } from '../algorithms/knapsack/blocks';
 import { defineSubsetSumVisualBlocks } from '../algorithms/subset_sum/blocks';
 import { defineCoinChangeVisualBlocks } from '../algorithms/coin_change/blocks';
-import { defineTrainScheduleBlocks } from '../algorithms/train_schedule/blocks';
 import { defineEmeiVisualBlocks } from '../algorithms/emei_mountain/blocks';
 import { defineNQueenBlocks } from '../algorithms/nqueen/blocks';
-import { registerRopePartitionBlocks } from '../algorithms/rope_partition/definitions';
 
 
 export function defineAllBlocks() {
@@ -45,10 +43,8 @@ export function defineAllBlocks() {
   defineKnapsackVisualBlocks();
   defineSubsetSumVisualBlocks();
   defineCoinChangeVisualBlocks();
-  defineTrainScheduleBlocks();
   defineEmeiVisualBlocks();
   defineNQueenBlocks();
-  registerRopePartitionBlocks(); // Added for consistency
 }
 
 

@@ -16,24 +16,20 @@ export {
     setupKnapsack,
     setupSubsetSum,
     setupCoinChange,
-    setupNQueen,
     drawCinematicMonster
-} from './setup/index.js';
+} from '../setup';
 
-export { setupTrainSchedule, updateTrainScheduleVisuals } from './setup/trainSchedulePhaser';
-export { setupRopePartition, updateRopePartitionVisuals } from './setup/ropePartitionPhaser';
-export { setupEmeiMountain, highlightPeak, highlightCableCar, showEmeiFinalResult } from './setup/emeiMountainPhaser';
 
 export {
-    updatePersonDisplay,
+
     updateTreasureDisplay,
     collectTreasureVisual,
-    rescuePersonAtPosition,
+
     rescuePersonVisual,
     collectCoinByPlayer,
     showCoinCollectionEffect,
     haveCoinAtPosition
-} from './setup/phaserCollection';
+} from '../entities/collection';
 
 // Player functions
 export {
@@ -45,23 +41,23 @@ export {
     rotatePlayer,
     moveToPosition,
 
-} from './player/playerMovement';
+} from '../movement/playerMovement';
 
 export {
     playIdle as playerPlayIdle,
     playWalk as playerPlayWalk,
     playIdle,
     playWalk,
-} from './player/playerAnimation';
+} from '../movement/playerAnimation';
 
 export {
     attackPlayer
-} from './enemies/enemyBehavior';
+} from '../combat/enemyBehavior';
 
 // Enemy functions
 export {
     checkPlayerInRange
-} from './enemies/enemyBehavior';
+} from '../combat/enemyBehavior';
 
 // export {
 //     attackEnemy as enemyAttackPlayer
@@ -70,24 +66,24 @@ export {
 export {
     resetEnemy,
     isDefeat
-} from './enemies/enemyUtils';
+} from '../combat/enemyUtils';
 
 // Effects
 export {
     updatePlayerArrow
-} from './effects/phaserGameArrow';
+} from '../effects/arrow';
 
 export {
     createPitFallEffect,
     showGameOver,
     clearGameOverScreen,
     showVictory
-} from './effects/phaserGameEffects';
+} from '../effects/gameEffects';
 
 export {
     createRescueEffect,
     createFirework
-} from './effects/phaserGameVictory';
+} from '../effects/victory';
 
 // Combat
 export {
@@ -96,15 +92,15 @@ export {
     showCombatUI,
     hideCombatUI,
     cleanupMonsterUI
-} from './combat/phaserGameCombatUI';
+} from '../combat/battleUI';
 
 export {
     startBattle,
     updateMonsters
-} from './combat/phaserGameBattle';
+} from '../combat/battle';
 
 export {
     playCombatSequence
-} from './combat/phaserGameCombatAnimation';
+} from '../combat/battleAnimation';
 
 

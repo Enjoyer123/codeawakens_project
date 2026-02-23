@@ -3,7 +3,7 @@ import {
 
     getWeaponData,
     displayPlayerWeapon
-} from '../../shared/items';
+} from '../../entities/weaponUtils';
 import { getCurrentGameState, setCurrentGameState, setCurrentScene } from '../../shared/game';
 import {
     drawLevel,
@@ -15,14 +15,10 @@ import {
     setupKnapsack,
     setupSubsetSum,
     setupCoinChange,
-    setupNQueen,
-    setupTrainSchedule,
-    setupRopePartition,
-    setupEmeiMountain,
     drawPlayer,
-    updateMonsters,
     drawCinematicMonster
-} from '..';
+} from '../../setup';
+import { updateMonsters } from '../../combat/battle';
 // Removed Legacy Anims
 import { createVampire_1Anims } from '../../../anims/Vampire_1Anims';
 import { createSlime1Anims } from '../../../anims/Slime_1Anims';
@@ -31,7 +27,7 @@ import { createMain_2Anims } from '../../../anims/Main_2Anims';
 import { createMain_3Anims } from '../../../anims/Main_3Anims';
 import { createVampire_2Anims } from '../../../anims/Vampire_2Anims';
 import { createVampire_3Anims } from '../../../anims/Vampire_3Anims';
-import { preloadAllWeaponEffects } from '../../shared/combat';
+import { preloadAllWeaponEffects } from '../../combat/combatPreload';
 
 import { API_BASE_URL } from '../../../config/apiConfig';
 
@@ -307,10 +303,6 @@ export class GameScene extends Phaser.Scene {
             setupKnapsack(this);
             setupSubsetSum(this);
             setupCoinChange(this);
-            setupNQueen(this);
-            setupTrainSchedule(this);
-            setupRopePartition(this);
-            setupEmeiMountain(this);
 
             const currentState = getCurrentGameState();
 

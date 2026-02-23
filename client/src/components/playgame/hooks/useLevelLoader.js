@@ -11,7 +11,7 @@ import {
   loadWeaponsData,
   getWeaponData,
   getWeaponsData
-} from '../../../gameutils/shared/items';
+} from '../../../gameutils/entities/weaponUtils';
 
 import { ensureDefaultBlocks } from '../../../gameutils/blockly';
 import {
@@ -231,7 +231,7 @@ export function useLevelInitializer({
           category_id: levelResponse.category_id || null,
           // Custom data for special levels like Train Schedule
           customData: levelResponse.custom_data || null,
-          gameType: levelResponse.game_type || (safeParse(levelResponse.applied_data)?.type === 'GREEDY_TRAIN_SCHEDULE' ? 'train_schedule' : null),
+          gameType: levelResponse.game_type,
           isMaxCapacityLevel: (levelResponse.level_name && (
             levelResponse.level_name.toLowerCase().includes('ง้อไบ๊') ||
             levelResponse.level_name.toLowerCase().includes('emei') ||

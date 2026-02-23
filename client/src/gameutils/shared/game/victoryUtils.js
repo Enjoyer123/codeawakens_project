@@ -1,7 +1,7 @@
 // Victory conditions system
 import { getCurrentGameState } from './gameState';
-import { getPlayerCoins } from '../items/coinUtils';
-import { allPeopleRescued, getRescuedPeople } from '../items/personUtils';
+import { getPlayerCoins } from '../../entities/coinUtils';
+import { allPeopleRescued, getRescuedPeople } from '../../entities/personUtils';
 
 /**
  * ตรวจสอบเงื่อนไขชนะตาม victoryConditions ที่กำหนดใน level

@@ -1,7 +1,7 @@
 // Custom hook for game condition functions (foundMonster, canMoveForward, nearPit, atGoal)
 import { getCurrentGameState } from '../../../gameutils/shared/game';
-import { nearPit as checkNearPit } from '../../../gameutils/shared/collision';
-import { haveEnemy } from '../../../gameutils/phaser/player/playerCombat';
+import { nearPit as checkNearPit } from '../../../gameutils/movement/collisionUtils';
+import { haveEnemy } from '../../../gameutils/combat/playerCombat';
 
 /**
  * Custom hook for game condition functions
