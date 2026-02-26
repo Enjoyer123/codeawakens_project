@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { directions } from '../../gameutils/shared/game';
 import { fetchLevelById } from '../../services/levelService';
-import GameStateVisualization from './GameStateVisualization';
 import { getCurrentGameState } from '../../gameutils/shared/game';
 // UI Components
 import StatusPanel from './ui/StatusPanel';
@@ -37,9 +36,6 @@ const GameArea = ({
   hintOpenCount,
   finalScore,
   inCombatMode,
-  playerCoins = [],
-  rescuedPeople = [],
-  collectedTreasures = [],
   workspaceRef,
   userBigO,
   onUserBigOChange,
@@ -156,18 +152,11 @@ const GameArea = ({
           className="w-full h-full"
           style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
         />
-        {/* Game State Visualization (Unified) */}
-        <GameStateVisualization
-          levelData={levelData}
-          playerCoins={playerCoins}
-          rescuedPeople={rescuedPeople}
-          collectedTreasures={collectedTreasures}
-        />
       </div>
 
       {/* Compact Bottom UI Bar */}
       <div className="flex-shrink-0 bg-[#1e1b4b]/95 backdrop-blur-md border-t border-purple-500/30 shadow-2xl z-30">
-        <div className="flex items-center gap-4 p-3 text-purple-100">
+        <div className="flex flex-wrap items-center gap-2 p-2 lg:p-3 text-purple-100">
 
           {/* STATUS: HP & Weapon */}
           <StatusPanel
@@ -185,23 +174,23 @@ const GameArea = ({
             currentWeaponData={currentWeaponData}
           />
 
-          {/* Block Count */}
-          <BlockCountPanel
-            currentBlockCount={currentBlockCount}
-            patternBlockCount={patternBlockCount}
-          />
-
-          {/* Hint Button */}
-          <HintButton
-            onNeedHintClick={onNeedHintClick}
-            needHintDisabled={needHintDisabled}
-          />
-
-          {/* Guide Button */}
-          <GuideButton
-            onOpenGuide={onOpenGuide}
-            disabled={!hasGuides}
-          />
+          {/* Block Count + Guide/Hint grouped */}
+          <div className="flex flex-col gap-1 flex-shrink-0">
+            <BlockCountPanel
+              currentBlockCount={currentBlockCount}
+              patternBlockCount={patternBlockCount}
+            />
+            <div className="flex gap-1">
+              <GuideButton
+                onOpenGuide={onOpenGuide}
+                disabled={!hasGuides}
+              />
+              <HintButton
+                onNeedHintClick={onNeedHintClick}
+                needHintDisabled={needHintDisabled}
+              />
+            </div>
+          </div>
 
         </div>
       </div>

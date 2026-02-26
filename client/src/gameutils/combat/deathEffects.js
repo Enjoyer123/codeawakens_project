@@ -1,4 +1,5 @@
 // Combat Death Effects
+import { API_BASE_URL } from '../../config/apiConfig';
 import * as Phaser from 'phaser';
 import { checkImageExistsSafe } from './combatPreload';
 import { animateTextureFrames } from './animationUtils';

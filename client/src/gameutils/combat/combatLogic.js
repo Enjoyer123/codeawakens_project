@@ -41,11 +41,14 @@ export function calculateHit(scene) {
 
     console.log(`🧠 [combatCore] คำนวณเสร็จสิ้น! พบเป้าหมายที่ระยะ ${nearestDistance.toFixed(2)}`);
 
+    const weaponKey = currentState.weaponKey || 'stick';
+    const damage = currentState.weaponData?.combat_power || 50;
+
     return {
         success: true,
         action: 'hit',
         targetEnemy: nearestMonster,
-        damage: 50,
-        weaponKey: currentState.weaponKey || 'stick'
+        damage: damage,
+        weaponKey: weaponKey
     };
 }

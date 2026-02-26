@@ -3,9 +3,7 @@ import {
     setCurrentGameState
 } from '../game';
 import { calculateFinalScore } from '@/components/playgame/utils/scoreUtils';
-import { flushKnapsackStepsNow, waitForKnapsackPlaybackDone } from '@/gameutils/blockly';
-import { flushSubsetSumStepsNow, waitForSubsetSumPlaybackDone } from '@/gameutils/blockly';
-import { flushCoinChangeStepsNow, waitForCoinChangePlaybackDone } from '@/gameutils/blockly';
+
 
 
 /**
@@ -16,9 +14,6 @@ import { flushCoinChangeStepsNow, waitForCoinChangePlaybackDone } from '@/gameut
 export const finalizeTablesBeforeVictory = async (currentLevel) => {
     try {
         // Flush any buffered steps into game state
-        if (currentLevel?.knapsackData) { try { flushKnapsackStepsNow(); } catch (e) { } }
-        if (currentLevel?.subsetSumData) { try { flushSubsetSumStepsNow(); } catch (e) { } }
-        if (currentLevel?.coinChangeData) { try { flushCoinChangeStepsNow(); } catch (e) { } }
 
 
         // Make Victory/visuals wait until the table playback has finished.
@@ -72,65 +67,20 @@ export const finalizeTablesBeforeVictory = async (currentLevel) => {
 
             if (Object.keys(updates).length > 0) setCurrentGameState(updates);
         } catch (e) { }
-
-        // Wait for the playback cursor to reach the end (guarded by timeout)
-        try {
-            const waits = [];
-            const calcTimeoutMs = (stateKey) => {
-                const st = getCurrentGameState()?.[stateKey];
-                const total = Array.isArray(st?.steps) ? st.steps.length : 0;
-                const cursor = Number(st?.playback?.cursor ?? 0);
-                const remaining = Math.max(0, total - cursor);
-                const speed = Number(st?.playback?.requestedSpeedMs ?? st?.playback?.speedMs ?? 250);
-                const estimated = remaining * (Number.isFinite(speed) && speed > 0 ? speed : 250) + 800;
-                // allow long enough for the user to actually watch the table; still cap to prevent hanging forever
-                return Math.max(1500, Math.min(600000, estimated));
-            };
-
-            if (currentLevel?.knapsackData) waits.push(waitForKnapsackPlaybackDone({ timeoutMs: calcTimeoutMs('knapsackState'), pollMs: 40 }));
-            if (currentLevel?.subsetSumData) waits.push(waitForSubsetSumPlaybackDone({ timeoutMs: calcTimeoutMs('subsetSumState'), pollMs: 40 }));
-            if (currentLevel?.coinChangeData) waits.push(waitForCoinChangePlaybackDone({ timeoutMs: calcTimeoutMs('coinChangeState'), pollMs: 40 }));
-
-            if (waits.length) await Promise.allSettled(waits);
-        } catch (e) { /* ignore */ }
     } catch (e) { /* ignore */ }
 };
 
 /**
- * Calculates the final score including test case bonuses, Big O bonuses, etc.
+ * Calculates the final score based on pattern match and Big O correctness.
+ * Formula: 60 (base) + patternBonus (0/20/40) - bigOPenalty (0/20)
  */
 export const calculateLevelScore = (
     finalState,
     currentLevel,
     hintData,
     goodPatterns,
-    hintOpenCount,
-    userBigO,
-    testCaseResultLocal = null
+    userBigO
 ) => {
-    // Calculate Test Case Bonus
-    let testCaseBonus = 0;
-    const resultToCheck = testCaseResultLocal || finalState.testCaseResult;
-
-    if (resultToCheck) {
-        const secondaryTests = [];
-        if (resultToCheck.passedTests) {
-            resultToCheck.passedTests.forEach(tc => {
-                if (!tc.is_primary) secondaryTests.push({ passed: true });
-            });
-        }
-        if (resultToCheck.failedTests) {
-            resultToCheck.failedTests.forEach(tc => {
-                if (!tc.is_primary) secondaryTests.push({ passed: false });
-            });
-        }
-
-        if (secondaryTests.length > 0) {
-            const passedCount = secondaryTests.filter(t => t.passed).length;
-            testCaseBonus = (passedCount / secondaryTests.length) * 20;
-        }
-    }
-
     // Determine Pattern Type ID
     let patternTypeId = finalState.patternTypeId;
     if (!patternTypeId) patternTypeId = 0;
@@ -158,10 +108,8 @@ export const calculateLevelScore = (
     const scoreData = calculateFinalScore(
         finalState.isGameOver,
         patternTypeId,
-        hintOpenCount,
         userBigO,
-        targetBigO,
-        testCaseBonus
+        targetBigO
     );
 
     return scoreData;

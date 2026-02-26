@@ -1,5 +1,5 @@
 import { playWalk, playIdle } from './playerAnimation';
-import { updateWeaponPosition } from '../entities/weaponUtils';
+import { updateWeaponPosition } from '../combat';
 import { setCurrentGameState } from '../shared/game';
 import { updatePlayerArrow } from '../effects/arrow';
 
@@ -135,9 +135,6 @@ export async function moveToPosition(player, x, y, directionIndex = null) {
     player.directionIndex = directionIndex;
     setCurrentGameState({ direction: directionIndex });
 
-    // Debug: Log direction to verify it's correct
-    console.log('moveToPosition - directionIndex:', directionIndex, 'direction:', player.directions[directionIndex]);
-
     // Play walk animation with correct direction (directionIndex is already set)
     playWalk(player);
 
@@ -213,6 +210,4 @@ export function rotatePlayer(scene, newDirection) {
 
     // Update visual sprite (animation & flip)
     playIdle(scene.player);
-
-    console.log("rotatePlayer: Rotated to", newDirection);
 }

@@ -1,12 +1,12 @@
 import Phaser from 'phaser';
 import { showEffectWeaponFixed } from './combatEffects';
 import { getCurrentGameState } from '../shared/game';
+import { getWeaponData } from '../entities/weaponUtils';
 import {
     createWeaponRing,
     animateWeaponAttack,
-    getWeaponData
-} from '../entities/weaponUtils';
-import { getPlayerWeaponSprite } from '../entities/weaponUtils';
+    getPlayerWeaponSprite
+} from './weaponEffects';
 export function playCombatSequence(scene, isWin, onComplete) {
     // Check condition: Only play if level has no nodes (OR if it falls back to cinematic mode like drawPlayer)
     const hasNodes = scene.levelData?.nodes && scene.levelData.nodes.length > 0;
@@ -87,44 +87,16 @@ export function playCombatSequence(scene, isWin, onComplete) {
 
 
     // Spawn Cinematic Player
-    // Spawn Cinematic Player
     const characterType = scene.levelData.character || 'main_1';
-    let playerTexture = 'main_1';
-    let animPrefix = 'main_1';
-    let moveAnim = 'main_1-walk_right';
-    let standAnim = 'main_1-idle_right';
-    let attackAnim = 'main_1-attack_right';
-    let deathAnim = 'main_1-death_right';
 
-    if (characterType === 'slime') {
-        playerTexture = 'slime_1';
-        animPrefix = 'slime'; // Note: actual keys use slime_1 prefix often
-        moveAnim = 'slime_1-walk_right';
-        standAnim = 'slime_1-idle_right'; // Assuming idle exists now
-        attackAnim = 'slime_1-attack_right';
-        deathAnim = 'slime_1-death_right';
-    } else if (characterType === 'main_1') {
-        playerTexture = 'main_1';
-        animPrefix = 'main_1';
-        moveAnim = 'main_1-walk_right';
-        standAnim = 'main_1-idle_right';
-        attackAnim = 'main_1-attack_right';
-        deathAnim = 'main_1-death_right';
-    } else if (characterType === 'main_2') {
-        playerTexture = 'main_2';
-        animPrefix = 'main_2';
-        moveAnim = 'main_2-walk_right';
-        standAnim = 'main_2-idle_right';
-        attackAnim = 'main_2-attack_right';
-        deathAnim = 'main_2-death_right';
-    } else if (characterType === 'main_3') {
-        playerTexture = 'main_3';
-        animPrefix = 'main_3';
-        moveAnim = 'main_3-walk_right';
-        standAnim = 'main_3-idle_right';
-        attackAnim = 'main_3-attack_right';
-        deathAnim = 'main_3-death_right';
-    }
+    // Slime_1 relies on "slime" as character type in some older configurations, 
+    // but its sprites uses slime_1. Default to characterType if not a special mapped name.
+    const playerPrefix = characterType === 'slime' ? 'slime_1' : characterType;
+    const playerTexture = playerPrefix;
+    const moveAnim = `${playerPrefix}-walk_right`;
+    const standAnim = `${playerPrefix}-idle_right`;
+    const attackAnim = `${playerPrefix}-attack_right`;
+    const deathAnim = `${playerPrefix}-death_right`;
 
     const player = scene.add.sprite(100, centerY, playerTexture);
     // Store anim props for later use in this file
@@ -166,42 +138,25 @@ export function playCombatSequence(scene, isWin, onComplete) {
     // Spawn Cinematic Monster
     // Determine texture and animation based on the first monster in levelData if available
     let textureKey = 'Vampire_1';
-    // Use Left for all to ensure consistency with "Walk Left" being correct
-    let idleAnim = 'vampire_1-idle_left';
-    let walkAnim = 'vampire_1-walk_left';
-    let monsterAttackAnim = 'vampire_1-attack-left';
-    let monsterDeathAnim = 'vampire_1-death-left'; // Default
+    let monsterPrefix = 'vampire_1';
 
     if (scene.levelData.monsters && scene.levelData.monsters.length > 0) {
         const monsterData = scene.levelData.monsters[0];
         const monsterType = monsterData.type || 'vampire_1';
+        monsterPrefix = monsterType;
 
-        if (monsterType === 'vampire_1') {
-            textureKey = 'Vampire_1';
-            idleAnim = 'vampire_1-idle_left';
-            walkAnim = 'vampire_1-walk_left';
-            monsterAttackAnim = 'vampire_1-attack-left';
-            monsterDeathAnim = 'vampire_1-death-left';
-        } else if (monsterType === 'vampire_2') {
-            textureKey = 'Vampire_2';
-            idleAnim = 'vampire_2-idle_left';
-            walkAnim = 'vampire_2-walk_left';
-            monsterAttackAnim = 'vampire_2-attack-left';
-            monsterDeathAnim = 'vampire_2-death-left';
-        } else if (monsterType === 'vampire_3') {
-            textureKey = 'Vampire_3';
-            idleAnim = 'vampire_3-idle_left';
-            walkAnim = 'vampire_3-walk_left';
-            monsterAttackAnim = 'vampire_3-attack-left';
-            monsterDeathAnim = 'vampire_3-death-left';
-        } else if (monsterType === 'slime_1') {
-            textureKey = 'slime_1';
-            idleAnim = 'slime_1-idle_left';
-            walkAnim = 'slime_1-walk_left';
-            monsterAttackAnim = 'slime_1-attack-left';
-            monsterDeathAnim = 'slime_1-death-left'; // Slime might not have death-left? Check later, but standardizing naming is safe if key missing
+        // Capitalize first letter for texture key (e.g. vampire_1 -> Vampire_1)
+        if (monsterPrefix.startsWith('vampire_')) {
+            textureKey = monsterPrefix.charAt(0).toUpperCase() + monsterPrefix.slice(1);
+        } else {
+            textureKey = monsterPrefix; // e.g. slime_1
         }
     }
+
+    const idleAnim = `${monsterPrefix}-idle_left`;
+    const walkAnim = `${monsterPrefix}-walk_left`;
+    const monsterAttackAnim = `${monsterPrefix}-attack-left`;
+    const monsterDeathAnim = `${monsterPrefix}-death-left`;
 
     const monster = scene.add.sprite(width - 100, centerY, textureKey);
     monster.setScale(scale);
@@ -283,7 +238,7 @@ function performCombatAction(scene, player, monster, isWin, monsterAttackAnim, m
             if (onComplete) onComplete();
         }
     };
-    // Force complete after 5 seconds max (Combat shouldn't take longer than this)
+    // Force complete after 5 seconds max
     scene.time.delayedCall(5000, () => {
         if (!completed) {
             console.warn('⚠️ Combat animation timed out. Forcing completion.');
@@ -297,157 +252,157 @@ function performCombatAction(scene, player, monster, isWin, monsterAttackAnim, m
 
         try {
             if (isWin) {
-                // --- PLAYER WINS ---
-                // 1. Lunge Tween (Enhanced impact feel)
-                scene.tweens.add({
-                    targets: player,
-                    x: player.x + 30, // Lunge towards monster
-                    duration: 200,
-                    yoyo: true,
-                    ease: 'Power2',
-                    onYoyo: () => {
-                        // HIT FRAME (Middle of lunge)
-
-                        // 2. Player Attack Animation
-                        const attackAnimKey = player.customAnims ? player.customAnims.attack : 'actack-side';
-                        if (player.anims && scene.anims.exists(attackAnimKey)) {
-                            player.play(attackAnimKey);
-                        }
-
-                        // 3. Trigger Weapon Ring Attack
-                        const state = getCurrentGameState();
-                        const weaponKey = (state && state.weaponKey) ? state.weaponKey : 'stick';
-                        const wData = getWeaponData(weaponKey);
-                        const wType = wData ? wData.weaponType : 'melee';
-
-                        // Use the passed weaponRing container
-                        if (weaponRing && weaponRing.active) {
-                            animateWeaponAttack(scene, wType, weaponRing);
-                        }
-
-                        // 4. Show Damage Text
-                        const dmgText = scene.add.text(monster.x, monster.y - 60, '-100', {
-                            fontSize: '48px',
-                            color: '#ffcc00',
-                            fontStyle: 'bold',
-                            stroke: '#000000',
-                            strokeThickness: 6
-                        }).setOrigin(0.5).setDepth(200);
-
-                        scene.tweens.add({
-                            targets: dmgText,
-                            y: dmgText.y - 40,
-                            alpha: 0,
-                            duration: 800,
-                            onComplete: () => dmgText.destroy()
-                        });
-
-                        // 5. Impact Effect
-                        try {
-                            showEffectWeaponFixed({ sprite: monster }, 10, weaponKey, player);
-                        } catch (e) { console.error('Error showing impact:', e); }
-
-                        // 6. Monster Death Sequence
-                        monster.setTint(0xff0000);
-                        scene.cameras.main.shake(100, 0.01);
-
-                        const onDeathDone = () => {
-                            monster.destroy();
-                            // Victory Jump
-                            scene.tweens.add({
-                                targets: player,
-                                y: player.y - 50,
-                                duration: 300,
-                                yoyo: true,
-                                repeat: 2,
-                                onComplete: safeComplete
-                            });
-                        };
-
-                        if (monster.anims && scene.anims.exists(monsterDeathAnim)) {
-                            monster.play(monsterDeathAnim);
-                            monster.once('animationcomplete', onDeathDone);
-                        } else {
-                            scene.tweens.add({
-                                targets: monster,
-                                alpha: 0,
-                                scale: 0,
-                                angle: 180,
-                                duration: 500,
-                                onComplete: onDeathDone
-                            });
-                        }
-                    }
-                });
+                playVictorySequence(scene, player, monster, weaponRing, monsterDeathAnim, safeComplete);
             } else {
-                // --- PLAYER LOSES ---
-                const attackCount = 3;
-                let currentAttack = 0;
-
-                const performMonsterAttack = () => {
-                    currentAttack++;
-
-                    // Trigger Monster Animation
-                    if (monster.anims && scene.anims.exists(monsterAttackAnim)) {
-                        monster.play(monsterAttackAnim);
-                    }
-
-                    // Move toggle for visual impact
-                    scene.tweens.add({
-                        targets: monster,
-                        x: monster.x - 40,
-                        duration: 300,
-                        yoyo: true,
-                        onYoyo: () => {
-                            // Hit Frame: No star impact, just tint
-                            player.setTint(0xff0000);
-
-                            // Shake camera slightly
-                            scene.cameras.main.shake(100, 0.01);
-
-                            if (currentAttack >= attackCount) {
-                                scene.time.delayedCall(200, () => {
-                                    const deathAnimKey = player.customAnims ? player.customAnims.death : 'die';
-                                    if (player.anims && scene.anims.exists(deathAnimKey)) {
-                                        player.play(deathAnimKey);
-                                    } else {
-                                        player.setAlpha(0.5);
-                                        player.setAngle(90);
-                                    }
-
-                                    scene.tweens.add({
-                                        targets: player,
-                                        alpha: 0,
-                                        duration: 800,
-                                        delay: 500,
-                                        onComplete: () => {
-                                            player.destroy();
-                                            scene.tweens.add({
-                                                targets: monster,
-                                                scaleX: 3,
-                                                scaleY: 3,
-                                                duration: 300,
-                                                yoyo: true,
-                                                repeat: 2,
-                                                onComplete: safeComplete
-                                            });
-                                        }
-                                    });
-                                });
-                            } else {
-                                scene.time.delayedCall(300, () => {
-                                    player.clearTint();
-                                    performMonsterAttack();
-                                });
-                            }
-                        }
-                    });
-                };
-                performMonsterAttack();
+                playDefeatSequence(scene, player, monster, monsterAttackAnim, safeComplete);
             }
         } catch (err) {
             console.error('❌ Error in combat action:', err);
             safeComplete();
         }
     });
+}
+
+function playVictorySequence(scene, player, monster, weaponRing, monsterDeathAnim, onComplete) {
+    // 1. Lunge Tween (Enhanced impact feel)
+    scene.tweens.add({
+        targets: player,
+        x: player.x + 30, // Lunge towards monster
+        duration: 200,
+        yoyo: true,
+        ease: 'Power2',
+        onYoyo: () => {
+            // HIT FRAME (Middle of lunge)
+
+            // 2. Player Attack Animation
+            const attackAnimKey = player.customAnims ? player.customAnims.attack : 'actack-side';
+            if (player.anims && scene.anims.exists(attackAnimKey)) {
+                player.play(attackAnimKey);
+            }
+
+            // 3. Trigger Weapon Ring Attack
+            const state = getCurrentGameState();
+            const weaponKey = (state && state.weaponKey) ? state.weaponKey : 'stick';
+            const wData = getWeaponData(weaponKey);
+            const wType = wData ? wData.weaponType : 'melee';
+
+            if (weaponRing && weaponRing.active) {
+                animateWeaponAttack(scene, wType, weaponRing);
+            }
+
+            // 4. Show Damage Text
+            const dmgText = scene.add.text(monster.x, monster.y - 60, '-100', {
+                fontSize: '48px',
+                color: '#ffcc00',
+                fontStyle: 'bold',
+                stroke: '#000000',
+                strokeThickness: 6
+            }).setOrigin(0.5).setDepth(200);
+
+            scene.tweens.add({
+                targets: dmgText,
+                y: dmgText.y - 40,
+                alpha: 0,
+                duration: 800,
+                onComplete: () => dmgText.destroy()
+            });
+
+            // 5. Impact Effect
+            try {
+                showEffectWeaponFixed({ sprite: monster }, 10, weaponKey, player);
+            } catch (e) { console.error('Error showing impact:', e); }
+
+            // 6. Monster Death Sequence
+            monster.setTint(0xff0000);
+            scene.cameras.main.shake(100, 0.01);
+
+            const onDeathDone = () => {
+                monster.destroy();
+                // Victory Jump
+                scene.tweens.add({
+                    targets: player,
+                    y: player.y - 50,
+                    duration: 300,
+                    yoyo: true,
+                    repeat: 2,
+                    onComplete: onComplete
+                });
+            };
+
+            if (monster.anims && scene.anims.exists(monsterDeathAnim)) {
+                monster.play(monsterDeathAnim);
+                monster.once('animationcomplete', onDeathDone);
+            } else {
+                scene.tweens.add({
+                    targets: monster,
+                    alpha: 0,
+                    scale: 0,
+                    angle: 180,
+                    duration: 500,
+                    onComplete: onDeathDone
+                });
+            }
+        }
+    });
+}
+
+function playDefeatSequence(scene, player, monster, monsterAttackAnim, onComplete) {
+    const attackCount = 3;
+    let currentAttack = 0;
+
+    const performMonsterAttack = () => {
+        currentAttack++;
+
+        if (monster.anims && scene.anims.exists(monsterAttackAnim)) {
+            monster.play(monsterAttackAnim);
+        }
+
+        scene.tweens.add({
+            targets: monster,
+            x: monster.x - 40,
+            duration: 300,
+            yoyo: true,
+            onYoyo: () => {
+                player.setTint(0xff0000);
+                scene.cameras.main.shake(100, 0.01);
+
+                if (currentAttack >= attackCount) {
+                    scene.time.delayedCall(200, () => {
+                        const deathAnimKey = player.customAnims ? player.customAnims.death : 'die';
+                        if (player.anims && scene.anims.exists(deathAnimKey)) {
+                            player.play(deathAnimKey);
+                        } else {
+                            player.setAlpha(0.5);
+                            player.setAngle(90);
+                        }
+
+                        scene.tweens.add({
+                            targets: player,
+                            alpha: 0,
+                            duration: 800,
+                            delay: 500,
+                            onComplete: () => {
+                                player.destroy();
+                                scene.tweens.add({
+                                    targets: monster,
+                                    scaleX: 3,
+                                    scaleY: 3,
+                                    duration: 300,
+                                    yoyo: true,
+                                    repeat: 2,
+                                    onComplete: onComplete
+                                });
+                            }
+                        });
+                    });
+                } else {
+                    scene.time.delayedCall(300, () => {
+                        player.clearTint();
+                        performMonsterAttack();
+                    });
+                }
+            }
+        });
+    };
+    performMonsterAttack();
 }

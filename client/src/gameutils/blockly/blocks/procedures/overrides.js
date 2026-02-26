@@ -1,10 +1,11 @@
 // Blockly Procedure Block Overrides
 // Consolidated: safe rename, loadExtraState, name fixing, tooltips, N-Queen support
 import * as Blockly from "blockly/core";
-import { SPECIAL_PROCEDURE_NAMES } from "../../core/algorithm_hooks";
-
-// Algorithm helper functions that need special procedure name resolution
-// Now imported from algorithm_hooks for decoupling
+// 1. N-Queen: Helper functions that need special procedure name handling
+const SPECIAL_PROCEDURE_NAMES = new Set([
+    'safe', 'place', 'remove',  // N-Queen
+    'nqueen_is_safe', 'nqueen_place', 'nqueen_remove' // Aliases
+]);
 
 // ==========================================
 // Shared Helpers

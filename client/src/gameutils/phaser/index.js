@@ -50,19 +50,7 @@ export {
     playWalk,
 } from '../movement/playerAnimation';
 
-export {
-    attackPlayer
-} from '../combat/enemyBehavior';
-
 // Enemy functions
-export {
-    checkPlayerInRange
-} from '../combat/enemyBehavior';
-
-// export {
-//     attackEnemy as enemyAttackPlayer
-// } from '.';
-
 export {
     resetEnemy,
     isDefeat
@@ -86,14 +74,6 @@ export {
 } from '../effects/victory';
 
 // Combat
-export {
-    updateCombatUI,
-    updateAllCombatUIs,
-    showCombatUI,
-    hideCombatUI,
-    cleanupMonsterUI
-} from '../combat/battleUI';
-
 export {
     startBattle,
     updateMonsters

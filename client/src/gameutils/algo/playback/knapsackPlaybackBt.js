@@ -1,6 +1,14 @@
 // Knapsack Backtracking Animation Playback
 
 export async function playKnapsackBacktrackAnimation(scene, trace, options = {}) {
+    // สลับ Display Mode ตรงนี้:
+    return playClassicDisplay(scene, trace, options);
+}
+
+// ============================================================================
+// Display Mode 1: Classic Display (self-contained)
+// ============================================================================
+async function playClassicDisplay(scene, trace, options = {}) {
     if (!scene.knapsack || !scene.knapsack.items || !scene.knapsack.bag) return;
 
     const { speed = 1.0 } = options;
@@ -23,6 +31,10 @@ export async function playKnapsackBacktrackAnimation(scene, trace, options = {})
     }).setOrigin(0.5).setDepth(20);
 
     let currentValue = 0;
+
+    // Track best combination during the trace to show at the end
+    let maxFoundSoFar = -1;
+    let bestCombinationIndices = [];
 
     const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -72,6 +84,12 @@ export async function playKnapsackBacktrackAnimation(scene, trace, options = {})
                 currentValue += item.price;
                 currentBagText.setText(`Value: $${currentValue}`);
 
+                // --- NEW: Track the best sequence if we found a new max ---
+                if (currentValue >= maxFoundSoFar) {
+                    maxFoundSoFar = currentValue;
+                    bestCombinationIndices = bagContents.map(i => items.indexOf(i));
+                }
+
                 // Animate to bag
                 const offset = (bagContents.length - 1) * -20; // Stack slightly upwards
                 scene.tweens.add({
@@ -118,6 +136,32 @@ export async function playKnapsackBacktrackAnimation(scene, trace, options = {})
 
     updateInfo("จบการค้นหา Backtracking", 0x333333);
 
+    // --- NEW: Draw final optimal items into the bag ---
+    if (bestCombinationIndices.length > 0) {
+        updateInfo("นำผลลัพธ์ที่ดีที่สุดใส่กระเป๋า", 0x27ae60);
+        let finalValue = 0;
+        for (let i = 0; i < bestCombinationIndices.length; i++) {
+            const item = items[bestCombinationIndices[i]];
+            finalValue += item.price;
+            currentBagText.setText(`Value: $${finalValue}`);
+
+            const offset = i * -20;
+            if (item.sprite) {
+                scene.tweens.add({
+                    targets: item.sprite,
+                    x: bagX,
+                    y: bagY + offset,
+                    scaleX: 0.8,
+                    scaleY: 0.8,
+                    duration: 500 / speed,
+                    ease: 'Power2'
+                });
+            }
+            if (item.labelText) item.labelText.setVisible(false);
+            await sleep(400 / speed);
+        }
+    }
+
     if (options.result !== undefined) {
         scene.add.text(400, 300, `Max Value: $${options.result}`, {
             fontSize: '48px',
@@ -130,3 +174,4 @@ export async function playKnapsackBacktrackAnimation(scene, trace, options = {})
 
     await sleep(2000);
 }
+

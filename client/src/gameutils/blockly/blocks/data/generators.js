@@ -1,7 +1,6 @@
 // Blockly Data Structure Generators (Variables, Dictionaries, Stack, Lists)
 import * as Blockly from "blockly/core";
 import { javascriptGenerator } from "blockly/javascript";
-import { getVariableSetHook } from "../../core/algorithm_hooks";
 
 /**
  * Define generators for dictionary and DSU blocks
@@ -124,21 +123,7 @@ export function defineDataGenerators() {
             block.getFieldValue('VAR'),
             'VARIABLE'
         );
-        let code = varName + ' = ' + argument0 + ';\n';
-
-        // Special case: MST algorithms need to track weight updates visually
-        const varId = block.getFieldValue('VAR');
-        const varModel = block.workspace.getVariableById(varId);
-        const rawName = varModel ? varModel.name : varName;
-
-        if (rawName) {
-            const hookCode = getVariableSetHook(rawName);
-            if (hookCode) {
-                code += hookCode;
-            }
-        }
-
-        return code;
+        return varName + ' = ' + argument0 + ';\n';
     };
 }
 

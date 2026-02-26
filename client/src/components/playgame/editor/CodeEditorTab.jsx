@@ -1,13 +1,71 @@
-import React from 'react';
+import React, { useCallback, useRef, useEffect } from 'react';
+import * as Blockly from 'blockly/core';
+import { javascriptGenerator } from 'blockly/javascript';
 import Editor from '@monaco-editor/react';
 import { TabsContent } from "@/components/ui/tabs";
+import { RefreshCw, RotateCcw } from 'lucide-react';
 
 const CodeEditorTab = ({
     textCode,
     handleTextCodeChange,
     blocklyJavaScriptReady,
-    codeValidation
+    codeValidation,
+    isPreview = false,
+    starterTextCode = ''
 }) => {
+    const editorRef = useRef(null);
+    const isInternalChange = useRef(false); // Prevent echo loop
+
+    // When textCode changes from OUTSIDE (e.g. starter XML load, reset),
+    // sync it into Monaco without disrupting cursor during normal typing.
+    useEffect(() => {
+        if (editorRef.current && !isInternalChange.current) {
+            const currentValue = editorRef.current.getValue();
+            if (textCode !== currentValue) {
+                editorRef.current.setValue(textCode || '');
+            }
+        }
+        isInternalChange.current = false;
+    }, [textCode]);
+
+    // [Admin only] Generate clean code from current workspace blocks
+    const handleGenerateFromBlocks = useCallback(() => {
+        try {
+            const workspace = Blockly.getMainWorkspace();
+            if (!workspace) return;
+
+            javascriptGenerator.declaredVariables = new Set();
+            javascriptGenerator.isCleanMode = true;
+
+            let code;
+            try {
+                code = javascriptGenerator.workspaceToCode(workspace);
+            } finally {
+                javascriptGenerator.isCleanMode = false;
+            }
+
+            if (code && code.trim()) {
+                code = code.replace(/^var\s+[\w,\s]+;\n+/, '');
+                if (editorRef.current) {
+                    editorRef.current.setValue(code);
+                }
+                handleTextCodeChange(code);
+            }
+        } catch (err) {
+            console.error('❌ Failed to generate clean code:', err);
+        }
+    }, [handleTextCodeChange]);
+
+    // [User] Reset to starter text code
+    const handleResetStarter = useCallback(() => {
+        if (starterTextCode) {
+            if (editorRef.current) {
+                editorRef.current.setValue(starterTextCode);
+            }
+            handleTextCodeChange(starterTextCode);
+        }
+    }, [starterTextCode, handleTextCodeChange]);
+
     return (
         <TabsContent value="text" className="h-full m-0 p-0 absolute inset-0 z-10 data-[state=inactive]:hidden bg-[#0f111a]">
             <div className="flex flex-col h-full">
@@ -29,14 +87,43 @@ const CodeEditorTab = ({
                             </span>
                         )}
                     </div>
+                    {/* Toolbar buttons */}
+                    <div className="flex items-center gap-1">
+                        {/* Admin only: Generate from current workspace */}
+                        {isPreview && (
+                            <button
+                                onClick={handleGenerateFromBlocks}
+                                className="flex items-center gap-1 px-2 py-0.5 rounded bg-yellow-700/60 hover:bg-yellow-600 text-yellow-100 text-[10px] font-bold transition-colors"
+                                title="[Admin] แปลง Blocks ปัจจุบันเป็นโค้ด"
+                            >
+                                <RefreshCw size={11} />
+                                <span>Blocks → Code</span>
+                            </button>
+                        )}
+                        {/* User: Reset to starter code */}
+                        {starterTextCode && (
+                            <button
+                                onClick={handleResetStarter}
+                                className="flex items-center gap-1 px-2 py-0.5 rounded bg-purple-700/60 hover:bg-purple-600 text-purple-100 text-[10px] font-bold transition-colors"
+                                title="รีเซ็ตโค้ดกลับไปเป็นต้นฉบับ"
+                            >
+                                <RotateCcw size={11} />
+                                <span>Reset</span>
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 <div className="flex-1 bg-[#0f111a]">
                     <Editor
                         height="100%"
                         defaultLanguage="javascript"
-                        value={textCode}
-                        onChange={(value) => handleTextCodeChange(value || '')}
+                        defaultValue={textCode || ''}
+                        onChange={(value) => {
+                            // Mark as internal so the useEffect doesn't echo it back
+                            isInternalChange.current = true;
+                            handleTextCodeChange(value || '');
+                        }}
                         theme="codeawakens-purple"
                         options={{
                             fontSize: 14,
@@ -51,6 +138,8 @@ const CodeEditorTab = ({
                             backgroundColor: '#0f111a',
                         }}
                         onMount={(editor, monaco) => {
+                            editorRef.current = editor;
+
                             // Define custom purple theme
                             monaco.editor.defineTheme('codeawakens-purple', {
                                 base: 'vs-dark',
@@ -100,3 +189,4 @@ const CodeEditorTab = ({
 };
 
 export default CodeEditorTab;
+

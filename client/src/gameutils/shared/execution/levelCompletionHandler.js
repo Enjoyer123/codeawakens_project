@@ -29,7 +29,6 @@ export const handleLevelCompletion = async ({
     gameStartTime,
     hintData,
     goodPatterns,
-    hintOpenCount,
     userBigO,
     patternId,
     onUnlockPattern,
@@ -87,9 +86,7 @@ export const handleLevelCompletion = async ({
             completionMessage,
             hintData,
             goodPatterns,
-            hintOpenCount,
             userBigO,
-            testCaseResult,
             patternId,
             onUnlockPattern,
             onUnlockLevel,
@@ -178,9 +175,7 @@ const handleSuccess = async ({
     completionMessage,
     hintData,
     goodPatterns,
-    hintOpenCount,
     userBigO,
-    testCaseResult,
     patternId,
     onUnlockPattern,
     onUnlockLevel,
@@ -215,9 +210,7 @@ const handleSuccess = async ({
         currentLevel,
         hintData,
         goodPatterns,
-        hintOpenCount,
-        userBigO,
-        testCaseResult
+        userBigO
     );
     setFinalScore(scoreData);
 

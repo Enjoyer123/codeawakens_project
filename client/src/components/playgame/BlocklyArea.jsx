@@ -25,7 +25,8 @@ const BlocklyArea = ({
   userProgress,
   allLevels,
   onLoadXml,
-  isPreview
+  isPreview,
+  starterTextCode
 }) => {
   const [activeTab, setActiveTab] = useState("blocks");
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -110,6 +111,8 @@ const BlocklyArea = ({
               handleTextCodeChange={handleTextCodeChange}
               blocklyJavaScriptReady={blocklyJavaScriptReady}
               codeValidation={codeValidation}
+              isPreview={isPreview}
+              starterTextCode={starterTextCode}
             />
           )}
 

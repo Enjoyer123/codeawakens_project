@@ -7,9 +7,7 @@ import { buildExecutionContext } from '@/gameutils/shared/execution/executionCon
 import { handleLevelCompletion } from '@/gameutils/shared/execution/levelCompletionHandler';
 import { resetGameExecutionState } from '@/gameutils/shared/execution/executionReset';
 import { createGraphMap, createExecutionWrappers } from '@/gameutils/shared/execution/executionHelpers';
-import {
-    resetKnapsackSelectionTracking, startKnapsackSelectionTracking
-} from '../../../../gameutils/blockly/algorithms/knapsack/visuals';
+// Obsolete knapsack imports removed
 
 // --- Record & Playback System ---
 import { executeAlgoCode, checkAlgoTestCases, playAlgoAnimation, isAlgoLevel, detectAlgoType } from '../../../../gameutils/algo';
@@ -25,7 +23,7 @@ const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
  * @param {Object} params - Parameters object
  * @param {Object} params.gameActions - Movement/sensor functions { moveForward, turnLeft, ... }
  * @param {Object} params.setters - React state setters { setPlayerNodeId, setIsRunning, ... }
- * @param {Object} params.scoring - Scoring data { goodPatterns, hintOpenCount, userBigO, hintData }
+ * @param {Object} params.scoring - Scoring data { goodPatterns, userBigO, hintData }
  * @returns {{ runCode: Function, executionError: Object|null, clearExecutionError: Function }}
  */
 export function useCodeExecution({
@@ -55,7 +53,7 @@ export function useCodeExecution({
         setHintData, setTestCaseResult
     } = setters;
 
-    const { goodPatterns, hintOpenCount, userBigO, hintData } = scoring;
+    const { goodPatterns, userBigO, hintData } = scoring;
     const [executionError, setExecutionError] = useState(null);
 
     // Provide decoupled combat wrapper
@@ -231,7 +229,6 @@ export function useCodeExecution({
                             await resetGameExecutionState({
                                 gameStartTime,
                                 setPlayerHp,
-                                setRescuedPeople,
                                 setPlayerNodeId,
                                 setPlayerDirection,
                                 currentLevel
@@ -249,7 +246,6 @@ export function useCodeExecution({
                         gameStartTime,
                         hintData,
                         goodPatterns,
-                        hintOpenCount,
                         userBigO,
                         patternId,
                         onUnlockPattern,
@@ -278,9 +274,7 @@ export function useCodeExecution({
 
             await resetGameExecutionState({
                 gameStartTime,
-                // setAttempts,
                 setPlayerHp,
-                setRescuedPeople,
                 setPlayerNodeId,
                 setPlayerDirection,
                 currentLevel
@@ -348,10 +342,13 @@ export function useCodeExecution({
                 let executionErrorLocal = null;
 
                 try {
-                    // Initialize knapsack selection tracking before execution
-                    if (isKnapsack) {
-                        resetKnapsackSelectionTracking();
-                        startKnapsackSelectionTracking();
+                    // Initialize tracking logic for specific Algos
+                    if (currentLevel.knapsackData) {
+                        // Obsolete knapsack table tracking removed
+                    } else if (currentLevel.subsetSumData) {
+                        // Add subset sum tracking here if needed
+                    } else if (currentLevel.coinChangeData) {
+                        // Add coin change tracking here if needed
                     }
 
                     // [Flow B] 3. Execute code via AsyncFunction
@@ -385,7 +382,6 @@ export function useCodeExecution({
                     gameStartTime,
                     hintData,
                     goodPatterns,
-                    hintOpenCount,
                     userBigO,
                     patternId,
                     onUnlockPattern,

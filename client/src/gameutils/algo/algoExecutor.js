@@ -248,7 +248,6 @@ function buildAlgoContext(levelData, trace, code = "") {
         memoHitVisual: async (amount) => {
             trace.push({ action: 'memo_hit', amount });
         },
-        updateCoinChangeCellVisual: () => { },
         highlightCoin: async () => { },
         showResult: async () => { },
 
@@ -257,9 +256,8 @@ function buildAlgoContext(levelData, trace, code = "") {
         addWarriorToSide2Visual: async () => { },
         resetSubsetSumWarriorsVisual: () => { },
         startSubsetSumTrackingVisual: () => { },
-        showSubsetSumFinalSolutionVisual: async () => { },
         resetSubsetSumTrackingVisual: () => { },
-        updateSubsetSumCellVisual: () => { },
+        // Removed updateSubsetSumCellVisual stub
 
         // --- MST stubs ---
         findMinIndex: async (list, ex) => {

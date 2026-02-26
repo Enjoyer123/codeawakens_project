@@ -10,6 +10,11 @@ import "blockly/javascript";
 import "blockly/msg/en";
 import { javascriptGenerator } from "blockly/javascript";
 import ModernTheme from '@blockly/theme-modern';
+import {
+  ScrollOptions,
+  ScrollBlockDragger,
+  ScrollMetricsManager,
+} from '@blockly/plugin-scroll-options';
 
 // Import Blockly Core Modules
 import {
@@ -110,9 +115,13 @@ export function useBlocklySetup({
           media: "https://blockly-demo.appspot.com/static/media/",
           rtl: false,
           move: {
-            scrollbars: { horizontal: false, vertical: false },
+            scrollbars: { horizontal: true, vertical: true },
             drag: true,
             wheel: true,
+          },
+          plugins: {
+            blockDragger: ScrollBlockDragger,
+            metricsManager: ScrollMetricsManager,
           },
           sounds: false,
           oneBasedIndex: true,
@@ -137,9 +146,16 @@ export function useBlocklySetup({
           },
         };
 
-        // 1.6 Inject Workspace ลงใน DOM
+        // 1.6 Set scrollbar thickness (thinner, hugs the edge)
+        Blockly.Scrollbar.scrollbarThickness = 8;
+
+        // 1.7 Inject Workspace ลงใน DOM
         const workspace = Blockly.inject(blocklyRef.current, workspaceConfig);
         workspaceRef.current = workspace;
+
+        // Initialize scroll-options plugin (edge scrolling + wheel scroll while dragging)
+        const scrollOptions = new ScrollOptions(workspace);
+        scrollOptions.init();
 
         // อัปเดตสถานะว่าพร้อมแล้ว
         setBlocklyLoaded(true);

@@ -16,7 +16,6 @@ window.Blockly = Blockly;
 import {
   getWeaponData,
   getRescuedPeople,
-  displayPlayerWeapon,
   getCollectedTreasures,
   clearPlayerCoins,
   clearRescuedPeople,
@@ -25,13 +24,14 @@ import {
 import {
   getCurrentGameState,
 } from '../../gameutils/shared/game';
+import { displayPlayerWeapon } from '../../gameutils/combat';
 
 import { clearGameOverScreen } from '../../gameutils/effects/gameEffects';
 
 // Import components
 import GameArea from './GameArea';
 import BlocklyArea from './BlocklyArea';
-import GameWithGuide from './GameWithGuide';
+import GuidePopup from './GuidePopup';
 import LoadXmlModal from './LoadXmlModal';
 
 // Import custom hooks
@@ -53,15 +53,9 @@ import { handleRestartGame as handleRestartGameUtil } from './utils/gameHandlers
 import { EXAMPLE_LOADERS } from './constants/exampleLoaders';
 import ExecutionErrorModal from './ExecutionErrorModal';
 import PageLoader from '../../components/shared/Loading/PageLoader';
-import { resetCoinChangeTableState } from "@/gameutils/blockly";
-import { resetKnapsackTableState } from '@/gameutils/blockly';
-import { resetSubsetSumTableState } from '@/gameutils/blockly';
 
 import { useSuppressBlocklyWarnings } from '../../components/admin/level/hooks/useSuppressBlocklyWarnings';
 const resetAllGameStates = () => {
-  resetCoinChangeTableState();
-  resetKnapsackTableState();
-  resetSubsetSumTableState();
 
   // Clear shared game state (Coins, People, Treasures)
   clearPlayerCoins();
@@ -170,11 +164,6 @@ const GameCore = ({
   // Combat system state
   const [inCombatMode, setInCombatMode] = useState(false);
 
-  // Person rescue state
-  const [rescuedPeople, setRescuedPeople] = useState([]);
-  // Treasure collection state
-  const [collectedTreasures, setCollectedTreasures] = useState([]);
-
   // Level-based hints (from DB) state for Need Hint button
   const [levelHintIndex, setLevelHintIndex] = useState(0);
   const [activeLevelHint, setActiveLevelHint] = useState(null);
@@ -183,24 +172,14 @@ const GameCore = ({
   // NOTE: 10/2/69 This is not used in preview mode
 
 
-  // Sync rescued people state
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const currentRescued = getRescuedPeople();
-      setRescuedPeople(currentRescued);
-
-      // Also sync collected treasures
-      const currentTreasures = getCollectedTreasures();
-      setCollectedTreasures(currentTreasures);
-    }, 500);
-    return () => clearInterval(interval);
-  }, []);
+  // sync interval removed because UI is now fully in Phaser
 
   // Admin pattern management
   const [goodPatterns, setGoodPatterns] = useState([]);
 
   // Text code editor state
   const [textCode, setTextCode] = useState("");
+  const [starterTextCode, setStarterTextCode] = useState("");
   const [codeValidation, setCodeValidation] = useState({ isValid: false, message: "" });
   const [blocklyJavaScriptReady, setBlocklyJavaScriptReady] = useState(false);
 
@@ -240,6 +219,12 @@ const GameCore = ({
   const handleTextCodeChangeWithState = (newCode) => {
     setTextCode(newCode);
     handleTextCodeChange(newCode);
+  };
+
+  // Called only once when starter XML is generating its initial code
+  const handleInitialCodeGenerated = (newCode) => {
+    setStarterTextCode(newCode);
+    handleTextCodeChangeWithState(newCode);
   };
 
 
@@ -422,11 +407,11 @@ const GameCore = ({
       setPlayerNodeId, setPlayerDirection, setPlayerHp,
       setIsCompleted, setIsRunning, setIsGameOver,
       setGameState, setCurrentHint, setShowProgressModal,
-      setGameResult, setFinalScore, setRescuedPeople,
+      setGameResult, setFinalScore,
       setHintData, setTestCaseResult
     },
     scoring: {
-      goodPatterns, hintOpenCount, userBigO, hintData
+      goodPatterns, userBigO, hintData
     }
   });
 
@@ -486,7 +471,7 @@ const GameCore = ({
     starter_xml: currentLevel?.starter_xml || null,
     blocklyLoaded,
     isTextCodeEnabled: currentLevel?.textcode || false,
-    onCodeGenerated: handleTextCodeChangeWithState
+    onCodeGenerated: handleInitialCodeGenerated
   });
 
   // Update player weapon display
@@ -526,18 +511,26 @@ const GameCore = ({
   // Initialize Blockly and Phaser when ready
 
   return (
-    <GameWithGuide
-      levelData={currentLevel}
-
-      // Guide props
-      showGuide={showGuide}
-      guides={guides}
-      closeGuide={closeGuide}
-    >
+    <>
+      {/* Guide Popup - auto-opens when entering level */}
+      {showGuide && (
+        <GuidePopup
+          guides={guides}
+          onClose={closeGuide}
+          levelName={currentLevel?.name || 'ด่าน'}
+        />
+      )}
       <div className={`flex ${isPreview ? 'h-full' : 'h-screen'} bg-[#0f111a]`}>
         {/* Game Area - 65% ของหน้าจอ */}
 
         <div className="w-[50%] relative bg-[#0f111a]">
+          {/* Floating Level Name */}
+          <div className="absolute top-4 left-4 z-40 pointer-events-none">
+            <h2 className="text-xl font-bold text-white/90 drop-shadow-md bg-[#2e1065]/80 backdrop-blur-md px-3 py-1 rounded-lg border border-purple-500/30">
+              {currentLevel?.level_name || `ด่าน ${levelId}`}
+              {isPreview && <span className="ml-2 text-yellow-400 text-sm">(Preview)</span>}
+            </h2>
+          </div>
           <GameArea
             gameRef={gameRef}
             gameState={gameState}
@@ -588,9 +581,6 @@ const GameCore = ({
             }
             finalScore={finalScore}
             inCombatMode={inCombatMode}
-            playerCoins={getCurrentGameState().playerCoins || []}
-            rescuedPeople={rescuedPeople}
-            collectedTreasures={collectedTreasures}
             workspaceRef={workspaceRef}
             userBigO={userBigO}
             onUserBigOChange={handleBigOSelect} // Update to use handleBigOSelect
@@ -598,6 +588,7 @@ const GameCore = ({
             onCloseBigOQuiz={() => setShowBigOQuiz(false)}
             userProgress={userProgress}
             hasGuides={hasGuides}
+            onOpenGuide={openGuide}
           />
         </div>
 
@@ -614,13 +605,7 @@ const GameCore = ({
         >
           <div className="flex flex-col h-full relative">
 
-            {/* Floating Level Name */}
-            <div className="absolute top-4 right-8 z-10 pointer-events-none">
-              <h2 className="text-xl font-bold text-white/90 drop-shadow-md bg-[#2e1065]/80 backdrop-blur-md px-3 py-1 rounded-lg border border-purple-500/30">
-                {currentLevel?.level_name || `ด่าน ${levelId}`}
-                {isPreview && <span className="ml-2 text-yellow-400 text-sm">(Preview)</span>}
-              </h2>
-            </div>
+
             <div className="flex-1 min-h-0 relative shadow-2xl rounded-lg overflow-hidden">
 
               <BlocklyArea
@@ -640,6 +625,7 @@ const GameCore = ({
                 allLevels={allLevelsData}
                 onLoadXml={() => setShowLoadXmlModal(true)}
                 isPreview={isPreview}
+                starterTextCode={starterTextCode}
               />
             </div>
           </div>
@@ -711,7 +697,7 @@ const GameCore = ({
         error={executionError}
         onClose={clearExecutionError}
       />
-    </GameWithGuide>
+    </>
   );
 };
 

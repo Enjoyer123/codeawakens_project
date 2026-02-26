@@ -13,15 +13,6 @@ import {
 } from '../../entities';
 
 
-import {
-    resetKnapsackItemsVisual,
-    resetSubsetSumWarriorsVisual,
-    resetCoinChangeTableState,
-    resetCoinChangeVisual,
-    resetCoinChangeSelectionTracking,
-    resetSubsetSumTableState,
-    resetSubsetSumTrackingVisual,
-} from '../../blockly';
 
 import { updatePlayer } from '../../phaser/player/phaserGamePlayer';
 import { resetEnemy } from '../../combat/enemyUtils';
@@ -32,7 +23,6 @@ export const resetGameExecutionState = async ({
     gameStartTime,
     setAttempts,
     setPlayerHp,
-    setRescuedPeople,
     setPlayerNodeId,
     setPlayerDirection,
     currentLevel
@@ -59,7 +49,6 @@ export const resetGameExecutionState = async ({
 
     // ล้างข้อมูลคนที่ช่วยแล้ว
     clearRescuedPeople();
-    if (setRescuedPeople) setRescuedPeople([]);
     await resetAllPeople();
 
     // ล้างข้อมูลสมบัติ
@@ -67,24 +56,16 @@ export const resetGameExecutionState = async ({
 
     // Reset knapsack items to original positions
     if (currentLevel?.knapsackData) {
-        resetKnapsackItemsVisual();
+        // Obsolete table visual logic removed
     }
 
     // Reset subset sum warriors to original positions
     if (currentLevel?.subsetSumData) {
-        resetSubsetSumWarriorsVisual();
-        try { resetSubsetSumTableState(); } catch (e) { }
-        try { resetSubsetSumTrackingVisual(); } catch (e) { }
+        // Obsolete subset sum tracking visual removed
     }
 
-    // Reset coin change state
     if (currentLevel?.coinChangeData) {
-        const scene = getCurrentGameState().currentScene;
-        if (scene) {
-            try { resetCoinChangeVisual(scene, true); } catch (e) { }
-        }
-        try { resetCoinChangeTableState(); } catch (e) { }
-        try { resetCoinChangeSelectionTracking(); } catch (e) { }
+        // Obsolete coin change visual logic removed
     }
     // อัปเดตการแสดงผลสมบัติหลังจาก reset
     if (getCurrentGameState().currentScene) {

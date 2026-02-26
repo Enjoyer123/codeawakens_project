@@ -1,6 +1,14 @@
 // Subset Sum Backtracking Animation Playback
 
 export async function playSubsetSumBacktrackAnimation(scene, trace, options = {}) {
+    // สลับ Display Mode ตรงนี้:
+    return playClassicDisplay(scene, trace, options);
+}
+
+// ============================================================================
+// Display Mode 1: Classic Display (self-contained)
+// ============================================================================
+async function playClassicDisplay(scene, trace, options = {}) {
     if (!scene.subsetSum || !scene.subsetSum.warriors) return;
 
     const { speed = 1.0 } = options;

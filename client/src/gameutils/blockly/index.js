@@ -1,4 +1,4 @@
-// Blockly - Re-export hub
+﻿// Blockly - Re-export hub
 // Central export point for all Blockly-related functionality
 
 // Core Blockly imports
@@ -60,56 +60,12 @@ export {
     dictSet, createDictSetWithVisual
 } from './algorithms/shared/visual_wrappers';
 
-// Re-export Algorithm Visuals
-export {
-    selectKnapsackItem as selectKnapsackItemVisual,
-    unselectKnapsackItem as unselectKnapsackItemVisual,
-    resetKnapsackItems as resetKnapsackItemsVisual,
-    resetKnapsackSelectionTracking,
-    startKnapsackSelectionTracking,
-    showKnapsackFinalSelection
-} from './algorithms/knapsack/visuals';
+// Removed obsolete knapsack visual exports
 
-export {
-    addWarriorToSide1 as addWarriorToSide1Visual,
-    addWarriorToSide2 as addWarriorToSide2Visual,
-    resetSubsetSumWarriors as resetSubsetSumWarriorsVisual
-} from './algorithms/subset_sum/visuals';
+// Removed obsolete subset sum and coin change visual exports
 
-export {
-    startSubsetSumTracking as startSubsetSumTrackingVisual,
-    showSubsetSumFinalSolution as showSubsetSumFinalSolutionVisual,
-    resetSubsetSumTracking as resetSubsetSumTrackingVisual
-} from './algorithms/subset_sum/blocklySubsetSumTracking';
-
-export {
-    resetCoinChangeVisual,
-    resetCoinChangeSelectionTracking,
-    startCoinChangeSelectionTracking,
-    trackCoinChangeDecision,
-    showCoinChangeFinalSolution,
-    addWarriorToSelection as addWarriorToSelectionVisual
-} from './algorithms/coin_change/visuals';
+// Removed old coin change visuals export
 
 export { defineAllGenerators } from './core/generators';
 export { setXmlLoading, isXmlLoading } from './core/state';
 
-// Re-export State Managers (for GameCore/Resets)
-export {
-    resetKnapsackTableState,
-    updateKnapsackCell,
-    flushKnapsackStepsNow,
-    waitForKnapsackPlaybackDone
-} from './algorithms/knapsack/state';
-export {
-    resetSubsetSumTableState,
-    updateSubsetSumCellVisual,
-    flushSubsetSumStepsNow,
-    waitForSubsetSumPlaybackDone
-} from './algorithms/subset_sum/state';
-export {
-    resetCoinChangeTableState,
-    updateCoinChangeCellVisual,
-    flushCoinChangeStepsNow,
-    waitForCoinChangePlaybackDone
-} from './algorithms/coin_change/state';

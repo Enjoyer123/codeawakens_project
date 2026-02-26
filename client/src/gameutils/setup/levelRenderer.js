@@ -18,19 +18,14 @@ export function drawLevel(scene) {
         return;
     }
 
-    // 🎨 วาด Background Image ก่อน
-    console.log('🎨 Drawing background image...');
     if (scene.textures && scene.textures.exists('bg')) {
         try {
             const bg = scene.add.image(600, 450, 'bg');
             bg.setDisplaySize(scene.scale.width, scene.scale.height);
             bg.setPosition(scene.scale.width / 2, scene.scale.height / 2);
-            console.log('✅ Background image drawn successfully');
         } catch (error) {
             console.error('❌ Error creating background image:', error);
         }
-    } else {
-        console.warn('⚠️ Background texture "bg" not found!');
     }
 
     let graphics;
@@ -69,11 +64,6 @@ export function drawLevel(scene) {
     }
 
     // Draw edges FIRST (behind nodes)
-    if (!scene.levelData.edges || !Array.isArray(scene.levelData.edges)) {
-        console.warn('⚠️ Edges is not an array:', scene.levelData.edges);
-    } else {
-        console.log(`🎨 Drawing ${scene.levelData.edges.length} edges...`);
-    }
 
     graphics.lineStyle(3, 0xF5E6D3, 0.6); // Soft cream color with reduced opacity
     if (scene.levelData.edges && Array.isArray(scene.levelData.edges)) {
@@ -109,7 +99,6 @@ export function drawLevel(scene) {
                 console.error(`❌ Error drawing edge ${index}:`, error, edge);
             }
         });
-        console.log(`✅ Drawn ${scene.levelData.edges.length} edges successfully`);
     }
 
     // Draw nodes AFTER edges (on top)

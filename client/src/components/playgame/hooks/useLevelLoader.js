@@ -155,7 +155,7 @@ export function useLevelInitializer({
               // If weapon_id exists but weapon object is not loaded, try to get from weaponsData
               const weaponsData = getWeaponsData();
               if (weaponsData) {
-                const weapon = Object.values(weaponsData).find(w => w.weaponId === pattern.weapon_id);
+                const weapon = Object.values(weaponsData).find(w => String(w.weaponId) === String(pattern.weapon_id));
                 if (weapon) {
                   weaponKey = weapon.weaponKey;
                 }

@@ -1,9 +1,6 @@
 import Phaser from "phaser";
-import {
-
-    getWeaponData,
-    displayPlayerWeapon
-} from '../../entities/weaponUtils';
+import { getWeaponData } from '../../entities/weaponUtils';
+import { displayPlayerWeapon, displayPlayerEffect } from '../../combat/weaponEffects';
 import { getCurrentGameState, setCurrentGameState, setCurrentScene } from '../../shared/game';
 import {
     drawLevel,
@@ -18,7 +15,8 @@ import {
     drawPlayer,
     drawCinematicMonster
 } from '../../setup';
-import { updateMonsters } from '../../combat/battle';
+import { setupGoalUI } from '../../setup/uiManager';
+import { updateMonsters } from '../../combat/enemyMovement';
 // Removed Legacy Anims
 import { createVampire_1Anims } from '../../../anims/Vampire_1Anims';
 import { createSlime1Anims } from '../../../anims/Slime_1Anims';
@@ -43,6 +41,8 @@ export class GameScene extends Phaser.Scene {
             setCurrentHint: null,
             setCurrentWeaponData: null
         };
+        // Use custom property to track currently rendered state
+        this.renderedEffectsJson = "[]";
     }
 
     init(data) {
@@ -304,6 +304,9 @@ export class GameScene extends Phaser.Scene {
             setupSubsetSum(this);
             setupCoinChange(this);
 
+            // Setup new Goal UI for tracking items
+            setupGoalUI(this);
+
             const currentState = getCurrentGameState();
 
             // Display default weapon
@@ -348,5 +351,32 @@ export class GameScene extends Phaser.Scene {
             this.externalHandlers.setIsGameOver,
             this.externalHandlers.setCurrentHint
         );
+
+        // State-driven Visual Effects sync
+        this.syncEffectsWithState(currentState);
+    }
+
+    syncEffectsWithState(state) {
+        if (!state.activeEffects) return;
+
+        const effectsJson = JSON.stringify(state.activeEffects);
+        if (this.renderedEffectsJson !== effectsJson) {
+            // State has changed, update visuals!
+            this.renderedEffectsJson = effectsJson;
+
+            try {
+                // Clear existing effects first
+                displayPlayerEffect(null, this);
+
+                // Draw new effects
+                if (state.activeEffects.length > 0) {
+                    state.activeEffects.forEach(effectKey => {
+                        displayPlayerEffect(effectKey, this, true);
+                    });
+                }
+            } catch (error) {
+                console.error("❌ Error syncing effects with state:", error);
+            }
+        }
     }
 }

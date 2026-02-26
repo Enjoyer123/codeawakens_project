@@ -57,7 +57,7 @@ const HintPopup = ({ hints, isOpen, onClose, initialHintIndex = 0 }) => {
                     }}
                 >
                     {/* Header Section */}
-                    <div className="h-[14%] w-full flex items-center justify-between px-8 pt-1">
+                    <div className="h-[14%] w-full flex items-center justify-between px-8 pt-4">
                         <h2 className="text-[#0f172a] font-bold text-xl sm:text-2xl tracking-widest font-pixel uppercase"
                             style={{ fontFamily: '"Press Start 2P", monospace' }}>
                             Hint
@@ -74,54 +74,67 @@ const HintPopup = ({ hints, isOpen, onClose, initialHintIndex = 0 }) => {
                             <img src="/arrow.png" alt="prev" className="w-8 h-10 rotate-180" style={{ imageRendering: 'pixelated' }} />
                         </button>
 
-                        {/* Main Layout Grid */}
-                        <div className={`flex-1 ${hintImage ? 'grid grid-cols-2 gap-8' : 'flex justify-start p-8'} h-full w-full`}>
+                        {/* Main Layout Grid - Single Column now */}
+                        <div className="flex-1 flex justify-center items-center px-12 sm:px-16 pb-8 pt-2 h-[86%] w-full">
 
-                            {/* === LEFT COLUMN: Wooden Frame & Image === */}
-                            {hintImage && (
-                                <div className="flex flex-col justify-center h-full">
-                                    <div
-                                        className="flex-1 flex flex-col p-8 relative"
-                                        style={{
-                                            backgroundImage: "url('/guide-brown.png')",
-                                            backgroundSize: '100% 100%',
-                                            imageRendering: 'pixelated'
-                                        }}
-                                    >
-                                        {/* Image Area - คลิกเพื่อเปิดในแท็บใหม่ */}
-                                        <div className="flex-1 relative w-full h-full bg-black/10 overflow-hidden flex items-center justify-center">
-                                            <img
-                                                src={imageUrl}
-                                                alt="Hint"
-                                                onClick={handleImageClick}
-                                                className="w-full h-[250px] object-contain cursor-pointer hover:opacity-90 transition-opacity"
-                                                style={{ imageRendering: 'pixelated' }}
-                                                title="คลิกเพื่อดูรูปใหญ่ในแท็บใหม่"
-                                            />
-                                            {/* Hint counter badge */}
-                                            {hints.length > 1 && (
-                                                <div className="absolute top-2 right-2 bg-black/70 text-white text-[10px] px-2 py-0.5 font-mono">
-                                                    {currentHintIndex + 1}/{hints.length}
-                                                </div>
-                                            )}
-                                        </div>
+                            {hintImage ? (
+                                <div
+                                    className="w-full h-full flex flex-col p-4 sm:p-6 relative transition-all duration-300"
+                                    style={{
+                                        backgroundImage: "url('/guide-brown.png')",
+                                        backgroundSize: '100% 100%',
+                                        imageRendering: 'pixelated'
+                                    }}
+                                >
+                                    {/* Image Area - คลิกเพื่อเปิดในแท็บใหม่ */}
+                                    <div className="flex-1 relative w-full h-full overflow-hidden flex flex-col justify-center items-center rounded shadow-inner">
+                                        <img
+                                            src={imageUrl}
+                                            alt="Hint"
+                                            onClick={handleImageClick}
+                                            className="max-w-full max-h-full object-contain cursor-pointer transition-transform duration-500 hover:scale-[1.01]"
+                                            style={{ imageRendering: 'pixelated' }}
+                                            title="คลิกเพื่อดูรูปใหญ่ในแท็บใหม่"
+                                        />
+
+                                        {/* Hint Counter Badge */}
+                                        {hints.length > 1 && (
+                                            <div className="absolute top-2 right-2 bg-black/80 backdrop-blur-sm border border-white/20 text-white text-[10px] sm:text-[12px] px-2 sm:px-3 py-1 font-mono rounded-full font-bold shadow-lg">
+                                                {currentHintIndex + 1} / {hints.length}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ) : (
+                                /* Fallback if no images - Text only centered */
+                                <div className="w-full h-full flex flex-col justify-center items-center text-center p-8 bg-[#2d1b0e]/90 rounded-xl border-4 border-[#5c3a21] shadow-2xl">
+                                    <h3 className="text-2xl font-bold mb-6 text-yellow-500 uppercase shrink-0" style={{ fontFamily: '"Press Start 2P", monospace' }}>
+                                        {currentHint.title}
+                                    </h3>
+                                    <div className="overflow-y-auto max-h-[80%] px-4 w-full" style={{
+                                        scrollbarWidth: 'thin',
+                                        scrollbarColor: '#8b5a2b rgba(0,0,0,0.3)'
+                                    }}>
+                                        <style>{`
+                                            .overflow-y-auto::-webkit-scrollbar {
+                                                width: 10px;
+                                            }
+                                            .overflow-y-auto::-webkit-scrollbar-track {
+                                                background: rgba(0,0,0,0.3);
+                                                border-radius: 5px;
+                                            }
+                                            .overflow-y-auto::-webkit-scrollbar-thumb {
+                                                background-color: #8b5a2b;
+                                                border-radius: 5px;
+                                                border: 2px solid rgba(0,0,0,0.3);
+                                            }
+                                        `}</style>
+                                        <p className="text-lg text-white/90 leading-relaxed font-medium text-left whitespace-pre-wrap">
+                                            {currentHint.description || 'ไม่มีรายละเอียด'}
+                                        </p>
                                     </div>
                                 </div>
                             )}
-
-                            {/* === RIGHT COLUMN: Content Text === */}
-                            <div className={`flex flex-col justify-start pt-4 text-[#2d1b0e] ${!hintImage ? 'max-w-2xl' : ''}`}>
-                                <h3 className="text-xl font-bold mb-4 uppercase" style={{ fontFamily: '"Press Start 2P", monospace' }}>
-                                    {currentHint.title}
-                                </h3>
-                                <div className="overflow-y-auto max-h-[65%] pr-2">
-                                    <p className="text-sm sm:text-base font-bold leading-relaxed whitespace-pre-line" style={{ fontFamily: 'monospace' }}>
-                                        {currentHint.description || 'ไม่มีรายละเอียด'}
-                                    </p>
-                                </div>
-
-
-                            </div>
                         </div>
 
                         {/* Hint Arrows: Next */}

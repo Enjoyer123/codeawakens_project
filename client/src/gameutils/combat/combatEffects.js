@@ -3,8 +3,6 @@
 
 export { attackEnemy, showEffectWeaponFixed } from './weaponEffects';
 export {
-  createSingleSpriteEffect,
-  loadSingleSpriteEffect,
   createCanvasBasedEffect,
   animateTextureFrames,
   showFallbackEffect

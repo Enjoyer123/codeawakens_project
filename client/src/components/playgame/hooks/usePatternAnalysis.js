@@ -1,17 +1,11 @@
 import { useEffect, useRef } from 'react';
 import * as Blockly from "blockly/core";
-import {
-
-  getWeaponData,
-  displayPlayerWeapon,
-  displayPlayerEffect
-} from '../../../gameutils/entities/weaponUtils';
-
+import { getWeaponData } from '../../../gameutils/entities/weaponUtils';
+import { displayPlayerWeapon } from '../../../gameutils/combat/weaponEffects';
 import { getCurrentGameState, setCurrentGameState } from '../../../gameutils/shared/game';
 
 import {
   getNextBlockHint,
-  checkPatternMatch,
   calculatePatternMatchPercentage
 } from '../../../gameutils/shared/hint';
 import { findBestThreePartsMatch, checkThreePartsMatch } from '../../../gameutils/shared/hint';
@@ -131,26 +125,20 @@ export function usePatternAnalysis({
         const defaultWeaponKey = currentState.levelData?.defaultWeaponKey || "stick";
         const defaultWeaponData = getWeaponData(defaultWeaponKey);
         setCurrentWeaponData(defaultWeaponData);
-        setCurrentGameState({ weaponKey: defaultWeaponKey, weaponData: defaultWeaponData, patternTypeId: 0 });
-
-        const currentScene = currentState.currentScene;
-        if (currentScene && currentScene.add && currentScene.player) {
-          try {
-            displayPlayerWeapon(defaultWeaponKey, currentScene);
-          } catch (error) {
-            console.warn("Error displaying default weapon:", error);
-          }
-
-          // Debug: Log goodPatterns to check for BigO
-          if (goodPatterns && goodPatterns.length > 0) {
-            console.log("🔍 [usePatternAnalysis] goodPatterns check:", goodPatterns.map(p => ({
-              id: p.pattern_id,
-              name: p.name,
-              type_id: p.pattern_type_id,
-              bigO: p.bigO,
-              big_o: p.big_o
-            })));
-          }
+        setCurrentGameState({
+          weaponKey: defaultWeaponKey,
+          weaponData: defaultWeaponData,
+          patternTypeId: 0,
+          activeEffects: [] // Clear effects
+        });
+        if (goodPatterns && goodPatterns.length > 0) {
+          console.log("🔍 [usePatternAnalysis] goodPatterns check:", goodPatterns.map(p => ({
+            id: p.pattern_id,
+            name: p.name,
+            type_id: p.pattern_type_id,
+            bigO: p.bigO,
+            big_o: p.big_o
+          })));
         }
 
         // Update hintData even when no blocks
@@ -171,10 +159,8 @@ export function usePatternAnalysis({
           setCurrentHintRef.current(newHintData.hint);
         }
 
-        // Also clear any lingering effects
-        if (currentScene) {
-          try { displayPlayerEffect(null, currentScene); } catch (e) { }
-        }
+        // Also clear any lingering effects by ensuring activeEffects is empty
+        setCurrentGameState({ activeEffects: [] });
         return;
       }
 
@@ -254,29 +240,25 @@ export function usePatternAnalysis({
         currentBlockCount
       };
 
-      // --- New Logic: Display Part-based Effects (Cumulative) ---
+      // --- New Logic: State-Driven Part-based Effects (Cumulative) ---
       try {
         const currentPart = threePartsMatch.matchedParts; // 0, 1, 2, or 3
-        const currentScene = getCurrentGameState().currentScene;
+        let activeEffects = [];
 
-        if (currentPart > 0 && threePartsMatch.bestPattern && currentScene) {
-          // เคลียร์เอฟเฟกต์ทั้งหมดก่อนเริ่มลูป (เพื่อความสะอาด)
-          displayPlayerEffect(null, currentScene);
-
-          // ลูปแสดงเอฟเฟกต์ของทุกพาร์ทที่ผ่านแล้ว
+        if (currentPart > 0 && threePartsMatch.bestPattern) {
+          // เก็บเอฟเฟกต์ทั้งหมดของพาร์ทที่ผ่านแล้วเข้าไปใน Array
           for (let i = 0; i < currentPart; i++) {
             const effect = threePartsMatch.bestPattern.hints?.[i]?.effect;
             if (effect) {
-              // ใช้ keepExisting = true เพื่อให้แสดงรวมกัน
-              displayPlayerEffect(effect, currentScene, true);
+              activeEffects.push(effect);
             }
           }
-        } else if (currentPart === 0 && currentScene) {
-          // ถ้าไม่ตรงเลย ให้ล้างเอฟเฟกต์ออก
-          displayPlayerEffect(null, currentScene);
         }
+
+        // อัปเดต state ให้ phaser scene ไปเรนเดอร์เอง
+        setCurrentGameState({ activeEffects });
       } catch (effectError) {
-        console.error("❌ [usePatternAnalysis] Error in effect logic:", effectError);
+        console.error("❌ [usePatternAnalysis] Error in effect state logic:", effectError);
       }
       // ----------------------------------------------------------
 
@@ -306,23 +288,36 @@ export function usePatternAnalysis({
       if (isExactMatch && patternPercentage.bestPattern) {
         // Exact match → แสดง weapon ของ pattern
         const matchedPattern = patternPercentage.bestPattern;
-        const weaponKey = matchedPattern.weaponKey || matchedPattern.weapon?.weapon_key || null;
+        // Support weaponKey, weapon object, and fallback to weapon_id
+        const weaponKey = matchedPattern.weapon?.weapon_key || matchedPattern.weaponKey;
+
+        console.log("🔍 [usePatternAnalysis] Exact Match Found. Weapon Info:", {
+          patternId: matchedPattern.pattern_id,
+          weaponKeyRef: matchedPattern.weaponKey,
+          weaponObj: matchedPattern.weapon,
+          weaponIdRef: matchedPattern.weapon_id,
+          resolvedWeaponKey: weaponKey
+        });
 
         if (weaponKey) {
           const weaponData = getWeaponData(weaponKey);
+          console.log("🔍 [usePatternAnalysis] Resolved weapon data:", weaponData);
           setCurrentWeaponData(weaponData);
-          // setPatternFeedback(`🎉 Perfect Pattern: ${matchedPattern.name}`);
+
+          const currentState = getCurrentGameState();
+
           setCurrentGameState({
             weaponKey: weaponKey,
             weaponData: weaponData,
             patternTypeId: matchedPattern.pattern_type_id
           });
-          const currentScene = getCurrentGameState().currentScene;
-          if (currentScene && currentScene.add && currentScene.player) {
+
+          // Force visual update in Phaser
+          if (currentState.currentScene) {
             try {
-              displayPlayerWeapon(weaponKey, currentScene);
-            } catch (error) {
-              console.error("❌ Error displaying weapon:", error);
+              displayPlayerWeapon(weaponKey, currentState.currentScene);
+            } catch (e) {
+              console.warn("Failed to update weapon visual in Phaser:", e);
             }
           }
         }
@@ -335,28 +330,27 @@ export function usePatternAnalysis({
 
         // ถ้ามี partial match ให้เก็บ weaponKey สำหรับแสดงใน UI
         const partialWeaponKey = patternPercentage.percentage > 0 && patternPercentage.bestPattern
-          ? (patternPercentage.bestPattern.weaponKey || patternPercentage.bestPattern.weapon?.weapon_key || null)
+          ? (patternPercentage.bestPattern.weapon?.weapon_key || patternPercentage.bestPattern.weaponKey)
           : null;
 
         setPartialWeaponKey(partialWeaponKey);
         setCurrentWeaponData(defaultWeaponData);
-        // setPatternFeedback(
-        //   patternPercentage.percentage > 0
-        //     ? `⚠️ ไม่ตรง Pattern ใดๆ (${patternPercentage.percentage}%)`
-        //     : "วาง blocks เพื่อดูผลลัพธ์"
-        // );
-        setCurrentGameState({ weaponKey: defaultWeaponKey, weaponData: defaultWeaponData, patternTypeId: 0 });
+        setCurrentGameState({
+          weaponKey: defaultWeaponKey,
+          weaponData: defaultWeaponData,
+          patternTypeId: 0
+        });
 
-        const currentScene = currentState.currentScene;
-        if (currentScene && currentScene.add && currentScene.player) {
+        // Ensure default weapon is displayed if broken
+        if (currentState.currentScene) {
           try {
-            displayPlayerWeapon(defaultWeaponKey, currentScene);
-          } catch (error) {
-            console.warn("Error displaying default weapon:", error);
+            displayPlayerWeapon(defaultWeaponKey, currentState.currentScene);
+          } catch (e) {
+            console.warn("Failed to default weapon visual in Phaser:", e);
           }
         }
       }
-    };
+    }; // Close analyzePattern
 
     // Debounce logic for pattern analysis
     const onWorkspaceChange = (event) => {
@@ -395,9 +389,6 @@ export function usePatternAnalysis({
       if (workspace && workspace.removeChangeListener) {
         workspace.removeChangeListener(onWorkspaceChange);
       }
-      if (processingRef.current) {
-        clearTimeout(processingRef.current);
-      }
     };
-  }, [blocklyLoaded, workspaceRef.current, hintOpen, goodPatterns]);
+  }, [blocklyLoaded, workspaceRef, hintOpen, goodPatterns]);
 }
