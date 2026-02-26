@@ -687,7 +687,12 @@ const GameCore = ({
           onClose={() => setShowLoadXmlModal(false)}
           options={EXAMPLE_LOADERS.map(loader => ({
             ...loader,
-            onClick: () => workspaceRef.current && loader.loader(workspaceRef.current)
+            onClick: () => {
+              if (workspaceRef.current) {
+                workspaceRef.current.clear();
+                loader.loader(workspaceRef.current);
+              }
+            }
           }))}
         />
       )}
