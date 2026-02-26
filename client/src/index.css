@@ -227,3 +227,43 @@
   /* Use centralized primary color */
   border: 2px solid #120a1f;
 }
+
+/* Fix for Blockly Flyout Scrollbar persisting on screen */
+.blocklyFlyoutScrollbar {
+  display: none !important;
+}
+
+/* Ensure it only shows when actively interacting or when blockly says it's visible */
+.blocklyFlyoutScrollbar.blocklyFlyoutScrollbarVisible,
+.blocklyFlyout:hover .blocklyFlyoutScrollbar {
+  display: block !important;
+}
+
+/* For main workspace scrollbars overriding our custom ::-webkit-scrollbar */
+.blocklyScrollbarBackground {
+  fill: #120a1f !important;
+  stroke: none !important;
+}
+
+.blocklyScrollbarHandle {
+  fill: var(--primary) !important;
+}
+
+/* Make Blockly scrollbars thinner */
+.blocklyScrollbarHorizontal {
+  height: 8px !important;
+}
+
+.blocklyScrollbarVertical {
+  width: 8px !important;
+}
+
+.blocklyScrollbarHorizontal .blocklyScrollbarHandle {
+  height: 6px !important;
+  rx: 3 !important;
+}
+
+.blocklyScrollbarVertical .blocklyScrollbarHandle {
+  width: 6px !important;
+  rx: 3 !important;
+}

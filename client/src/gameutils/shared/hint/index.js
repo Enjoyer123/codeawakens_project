@@ -9,21 +9,10 @@ export {
 
 export {
     getWorkspaceXml,
-    analyzeXmlStructure
-} from './hintXmlUtils';
-
-export {
-    calculateXmlMatchScore,
-    checkExactXmlMatch,
-    isXmlStructureMatch,
-    isXmlStructureEqual
-} from './hintXmlComparison';
-
-export {
+    analyzeXmlStructure,
     findCurrentStep,
-    calculatePatternMatchPercentage,
-    checkPatternMatch
-} from './hintPatternMatching';
+    calculatePatternMatchPercentage
+} from './hintMatcher';
 
 export {
     validateTextCode

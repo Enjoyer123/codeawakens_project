@@ -126,16 +126,33 @@ export async function playAlgoAnimation(scene, algoType, trace, options = {}) {
             return playNQueenAnimation(scene, trace, { speed, result: options.result });
 
         case 'COINCHANGE': {
-            const isDP = trace.some(step => step.action === 'dp_update' || step.action === 'memo_hit');
+            const levelData = scene.levelData || {};
+            const catName = (levelData.category?.category_name || '').toLowerCase();
+            const catId = levelData.category_id;
+            const appliedType = (levelData.appliedData?.type || '').toLowerCase();
+            const gameType = (levelData.gameType || '').toLowerCase();
+
+            const isDP = catName.includes('dynamic') || catId === 6 || appliedType.includes('dp') || gameType.includes('dp');
+            const isGreedy = catName.includes('greedy') || catId === 4 || appliedType.includes('greedy') || gameType.includes('greedy');
+
             if (isDP) {
                 return playCoinChangeDpAnimation(scene, trace, { speed });
+            } else if (isGreedy) {
+                return playCoinChangeBacktrackAnimation(scene, trace, { speed, isGreedy: true });
             } else {
-                return playCoinChangeBacktrackAnimation(scene, trace, { speed });
+                return playCoinChangeBacktrackAnimation(scene, trace, { speed, isGreedy: false });
             }
         }
 
         case 'KNAPSACK': {
-            const isDP = trace.some(step => step.action === 'dp_update' || step.action === 'memo_hit');
+            const levelData = scene.levelData || {};
+            const catName = (levelData.category?.category_name || '').toLowerCase();
+            const catId = levelData.category_id;
+            const appliedType = (levelData.appliedData?.type || '').toLowerCase();
+            const gameType = (levelData.gameType || '').toLowerCase();
+
+            const isDP = catName.includes('dynamic') || catId === 6 || appliedType.includes('dp') || gameType.includes('dp');
+
             if (isDP) {
                 return playKnapsackDpAnimation(scene, trace, { speed, result: options.result });
             } else {
@@ -144,7 +161,14 @@ export async function playAlgoAnimation(scene, algoType, trace, options = {}) {
         }
 
         case 'SUBSETSUM': {
-            const isDP = trace.some(step => step.action === 'dp_update' || step.action === 'memo_hit');
+            const levelData = scene.levelData || {};
+            const catName = (levelData.category?.category_name || '').toLowerCase();
+            const catId = levelData.category_id;
+            const appliedType = (levelData.appliedData?.type || '').toLowerCase();
+            const gameType = (levelData.gameType || '').toLowerCase();
+
+            const isDP = catName.includes('dynamic') || catId === 6 || appliedType.includes('dp') || gameType.includes('dp');
+
             if (isDP) {
                 return playSubsetSumDpAnimation(scene, trace, { speed, result: options.result });
             } else {

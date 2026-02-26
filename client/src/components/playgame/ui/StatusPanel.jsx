@@ -21,12 +21,12 @@ const StatusPanel = ({ playerHpState, currentWeaponData, characterName = 'main_1
   const hpLevel = Math.floor(playerHpState / 10) * 10;
 
   return (
-    <div className="flex-shrink-0 bg-black/30 rounded-lg p-3 border border-gray-700/50 min-w-[300px]">
+    <div className="flex-1 bg-black/30 rounded-lg p-3 border border-gray-700/50">
 
       {/* Container หลัก - ใช้ flex เพื่อจัดวาง Status และอาวุธ */}
-      <div className="flex flex-col gap-1 scale-110 origin-top-left"> {/* ขยายขนาดเป็น scale-110 */}
+      <div className="flex flex-col gap-1"> {/* Removed scale-110 for responsive */}
         {/* HP Bar & Avatar Unit */}
-        <div className="relative" style={{ width: '250px' }}> {/* ขยายความกว้างเป็น 250px */}
+        <div className="relative w-full max-w-[250px]"> {/* Responsive: max-w instead of fixed */}
 
           {/* 1. รูปหลอดเลือด (Background) */}
           <img

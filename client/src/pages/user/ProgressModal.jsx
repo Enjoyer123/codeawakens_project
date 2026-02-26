@@ -99,7 +99,6 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, blocklyXml, tex
 
                 {/* ⭐ STAR SECTION ⭐ */}
                 <div className="flex justify-center py-2">
-                  {console.log("stars_earned", userProgressData.stars_earned)}
                   <img
                     // ✅ Logic: ถ้าไม่ชนะ = star0 | ถ้าชนะ = star + เลขดาว (1,2,3)
                     src={gameResult !== 'victory' ? '/star0.png' : `/star${userProgressData.stars_earned || 0}.png`}
@@ -146,12 +145,7 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, blocklyXml, tex
                         <span>+{userProgressData.pattern_bonus_score}</span>
                       </div>
                     )}
-                    {finalScore?.testCaseBonus > 0 && (
-                      <div className="flex justify-between text-green-700">
-                        <span>Test Case Bonus:</span>
-                        <span>+{Math.round(finalScore.testCaseBonus)}</span>
-                      </div>
-                    )}
+
                     {finalScore?.bigOPenalty > 0 && (
                       <div className="flex justify-between text-red-600 font-bold">
                         <span>Big O Penalty:</span>

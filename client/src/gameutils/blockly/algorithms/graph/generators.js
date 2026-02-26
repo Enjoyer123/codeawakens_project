@@ -5,7 +5,7 @@ export function defineGraphGenerators() {
     javascriptGenerator.forBlock["graph_get_neighbors"] = function (block) {
         const graph = javascriptGenerator.valueToCode(block, 'GRAPH', javascriptGenerator.ORDER_MEMBER) || '{}';
         const node = javascriptGenerator.valueToCode(block, 'NODE', javascriptGenerator.ORDER_MEMBER) || '0';
-        return [`getGraphNeighbors(${node})`, javascriptGenerator.ORDER_FUNCTION_CALL];
+        return [`getGraphNeighborsWithVisualSync(${node})`, javascriptGenerator.ORDER_FUNCTION_CALL];
     };
 
     javascriptGenerator.forBlock["graph_get_node_value"] = function (block) {
@@ -37,8 +37,8 @@ export function defineGraphGenerators() {
     javascriptGenerator.forBlock["graph_get_neighbors_visual"] = function (block) {
         const graph = javascriptGenerator.valueToCode(block, 'GRAPH', javascriptGenerator.ORDER_NONE) || 'null';
         const node = javascriptGenerator.valueToCode(block, 'NODE', javascriptGenerator.ORDER_NONE) || '0';
-        // Treated the same as non-visual since algoExecutor handles tracing automatically
-        return [`getGraphNeighbors(${node})`, javascriptGenerator.ORDER_FUNCTION_CALL];
+        // Changed to use the visual sync version to append the 'visit' action to the trace
+        return [`getGraphNeighborsWithVisualSync(${node})`, javascriptGenerator.ORDER_FUNCTION_CALL];
     };
 
     javascriptGenerator.forBlock["mark_visited_visual"] = function (block) {
@@ -55,6 +55,9 @@ export function defineGraphGenerators() {
     javascriptGenerator.forBlock["dijkstra_visit"] = function (block) {
         const node = javascriptGenerator.valueToCode(block, 'NODE', javascriptGenerator.ORDER_NONE) || '0';
         const dist = javascriptGenerator.valueToCode(block, 'DIST', javascriptGenerator.ORDER_NONE) || '0';
+        if (javascriptGenerator.isCleanMode) {
+            return `trace.push({ action: 'dijkstra_visit', node: ${node}, dist: ${dist} });\n`;
+        }
         return `if (typeof trace !== 'undefined') trace.push({ action: 'dijkstra_visit', node: ${node}, dist: ${dist} });\n`;
     };
 
@@ -62,6 +65,9 @@ export function defineGraphGenerators() {
         const from = javascriptGenerator.valueToCode(block, 'FROM', javascriptGenerator.ORDER_NONE) || '0';
         const to = javascriptGenerator.valueToCode(block, 'TO', javascriptGenerator.ORDER_NONE) || '0';
         const newDist = javascriptGenerator.valueToCode(block, 'NEW_DIST', javascriptGenerator.ORDER_NONE) || '0';
+        if (javascriptGenerator.isCleanMode) {
+            return `trace.push({ action: 'dijkstra_relax', from: ${from}, to: ${to}, newDist: ${newDist} });\n`;
+        }
         return `if (typeof trace !== 'undefined') trace.push({ action: 'dijkstra_relax', from: ${from}, to: ${to}, newDist: ${newDist} });\n`;
     };
 
@@ -70,6 +76,9 @@ export function defineGraphGenerators() {
         const node = javascriptGenerator.valueToCode(block, 'NODE', javascriptGenerator.ORDER_NONE) || '0';
         const parent = javascriptGenerator.valueToCode(block, 'PARENT', javascriptGenerator.ORDER_NONE) || 'null';
         const dist = javascriptGenerator.valueToCode(block, 'DIST', javascriptGenerator.ORDER_NONE) || '0';
+        if (javascriptGenerator.isCleanMode) {
+            return `trace.push({ action: 'prim_visit', node: ${node}, parent: ${parent}, dist: ${dist} });\n`;
+        }
         return `if (typeof trace !== 'undefined') trace.push({ action: 'prim_visit', node: ${node}, parent: ${parent}, dist: ${dist} });\n`;
     };
 
@@ -77,6 +86,9 @@ export function defineGraphGenerators() {
         const from = javascriptGenerator.valueToCode(block, 'FROM', javascriptGenerator.ORDER_NONE) || '0';
         const to = javascriptGenerator.valueToCode(block, 'TO', javascriptGenerator.ORDER_NONE) || '0';
         const newDist = javascriptGenerator.valueToCode(block, 'NEW_DIST', javascriptGenerator.ORDER_NONE) || '0';
+        if (javascriptGenerator.isCleanMode) {
+            return `trace.push({ action: 'prim_relax', from: ${from}, to: ${to}, newDist: ${newDist} });\n`;
+        }
         return `if (typeof trace !== 'undefined') trace.push({ action: 'prim_relax', from: ${from}, to: ${to}, newDist: ${newDist} });\n`;
     };
 
@@ -85,6 +97,9 @@ export function defineGraphGenerators() {
         const from = javascriptGenerator.valueToCode(block, 'FROM', javascriptGenerator.ORDER_NONE) || '0';
         const to = javascriptGenerator.valueToCode(block, 'TO', javascriptGenerator.ORDER_NONE) || '0';
         const weight = javascriptGenerator.valueToCode(block, 'WEIGHT', javascriptGenerator.ORDER_NONE) || '0';
+        if (javascriptGenerator.isCleanMode) {
+            return `trace.push({ action: 'kruskal_visit', from: ${from}, to: ${to}, weight: ${weight} });\n`;
+        }
         return `if (typeof trace !== 'undefined') trace.push({ action: 'kruskal_visit', from: ${from}, to: ${to}, weight: ${weight} });\n`;
     };
 
@@ -92,6 +107,9 @@ export function defineGraphGenerators() {
         const from = javascriptGenerator.valueToCode(block, 'FROM', javascriptGenerator.ORDER_NONE) || '0';
         const to = javascriptGenerator.valueToCode(block, 'TO', javascriptGenerator.ORDER_NONE) || '0';
         const weight = javascriptGenerator.valueToCode(block, 'WEIGHT', javascriptGenerator.ORDER_NONE) || '0';
+        if (javascriptGenerator.isCleanMode) {
+            return `trace.push({ action: 'kruskal_add_edge', from: ${from}, to: ${to}, weight: ${weight} });\n`;
+        }
         return `if (typeof trace !== 'undefined') trace.push({ action: 'kruskal_add_edge', from: ${from}, to: ${to}, weight: ${weight} });\n`;
     };
 }

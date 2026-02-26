@@ -10,7 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@blockly/plugin-scroll-options": "^7.0.8",
+    "@blockly/plugin-workspace-search": "^10.1.7",
     "@blockly/theme-modern": "^7.0.4",
+    "@blockly/toolbox-search": "^3.1.8",
     "@clerk/clerk-react": "^5.56.0",
     "@monaco-editor/react": "^4.7.0",
     "@radix-ui/react-avatar": "^1.1.1",

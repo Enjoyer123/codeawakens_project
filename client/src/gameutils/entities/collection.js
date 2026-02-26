@@ -1,5 +1,6 @@
 // Phaser collection and interaction functions
 import Phaser from "phaser";
+import { updateGoalUI } from '../setup/uiManager';
 
 
 // Function to update treasure display
@@ -46,6 +47,11 @@ export function collectTreasureVisual(scene, nodeId) {
 
     // Play collection effect similar to coins
     showCoinCollectionEffect(scene, treasure.x, treasure.y, 100); // Assume 100 points for treasure for visual effect
+
+    // Update Phaser UI
+    if (treasureData) treasureData.collected = true;
+    const collectedCount = scene.levelData.treasures.filter(t => t.collected).length;
+    updateGoalUI(scene, 'treasures', collectedCount);
   } else {
     console.warn(`⚠️ Visual update: Treasure at node ${nodeId} not found in scene`);
   }
@@ -106,6 +112,11 @@ export function rescuePersonVisual(scene, nodeId) {
       onComplete: () => effect.destroy()
     });
 
+    // Update Phaser UI
+    if (scene.rescuedPeopleSet) scene.rescuedPeopleSet.add(nodeId);
+    else scene.rescuedPeopleSet = new Set([nodeId]);
+    updateGoalUI(scene, 'people', scene.rescuedPeopleSet.size);
+
   } else {
     console.warn(`⚠️ Visual update: Person at node ${nodeId} not found in scene`);
   }
@@ -165,6 +176,7 @@ export function collectCoinByPlayer(scene, playerX, playerY) {
     // Show collection effect
     showCoinCollectionEffect(scene, coin.sprite.x, coin.sprite.y, coin.value);
 
+    // Update Phaser UI is now handled inside addCoinToPlayer (coinUtils.js)
     console.log(`🎯 Collecting coin ${coin.id} (${coin.value} points) at distance ${distance.toFixed(2)}!`);
   }
 

@@ -1,7 +1,9 @@
 // Hint Core Functions
-import { getWorkspaceXml } from './hintXmlUtils';
-import { calculateXmlMatchScore } from './hintXmlComparison';
-import { calculatePatternMatchPercentage, findCurrentStep } from './hintPatternMatching';
+import {
+  getWorkspaceXml,
+  calculatePatternMatchPercentage,
+  findCurrentStep
+} from './hintMatcher';
 import { checkThreePartsMatch } from './hintThreeParts';
 
 /**
@@ -54,37 +56,18 @@ export function getNextBlockHint(workspace, goodPatterns) {
     };
   }
 
-  // หา pattern ที่ตรงกับที่กำลังสร้างมากที่สุด (จาก sorted patterns)
-  let bestMatch = null;
-  let bestMatchScore = 0;
+  // คำนวณ pattern percentage (ใช้ sorted patterns)
+  const patternPercentage = calculatePatternMatchPercentage(workspace, sortedPatterns);
+  console.log("🔍 Pattern percentage result:", patternPercentage);
 
-  console.log("🔍 Starting pattern matching with", sortedPatterns.length, "patterns");
-
-  sortedPatterns.forEach((pattern, index) => {
-    const patternName = pattern.name || pattern.pattern_name || `Pattern ${index + 1}`;
-    console.log(`🔍 Checking pattern ${index + 1}: ${patternName} (type_id: ${pattern.pattern_type_id})`);
-    const patternXml = pattern.xmlPattern || pattern.xmlpattern;
-    console.log(`🔍 Pattern XML:`, patternXml?.substring(0, 100) + "...");
-
-    const score = calculateXmlMatchScore(currentXml, patternXml);
-    console.log(`🔍 Pattern ${patternName} score:`, score);
-
-    if (score > bestMatchScore) {
-      bestMatchScore = score;
-      bestMatch = pattern;
-      console.log(`✅ New best match: ${patternName} (type_id: ${pattern.pattern_type_id}) with score ${score}`);
-    }
-  });
+  const bestMatch = patternPercentage.bestPattern;
+  const bestMatchScore = patternPercentage.percentage;
 
   console.log("🔍 Final best match:", {
     pattern: bestMatch?.name || bestMatch?.pattern_name,
     pattern_type_id: bestMatch?.pattern_type_id,
     score: bestMatchScore
   });
-
-  // คำนวณ pattern percentage (ใช้ sorted patterns)
-  const patternPercentage = calculatePatternMatchPercentage(workspace, sortedPatterns);
-  console.log("🔍 Pattern percentage result:", patternPercentage);
 
   if (!bestMatch || bestMatchScore === 0) {
     return {

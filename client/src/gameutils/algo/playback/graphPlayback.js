@@ -8,6 +8,7 @@
  */
 
 import Phaser from 'phaser';
+import { updateWeaponPosition } from '../../combat/weaponEffects';
 
 /**
  * เล่น DFS/BFS Animation จาก trace array (Router Function)
@@ -62,8 +63,8 @@ async function playDfsBfsDisplay(scene, trace, options = {}) {
                     const backtrackTo = findCommonPrefixLength(prevPath, newPath);
 
                     if (backtrackTo < backtrackFrom) {
-                        // เจอจุดย้อน ทิ้งรอยเส้นสีเทาเข้ม (Dead end)
-                        drawPath(deadEndGraphics, scene, prevPath.slice(Math.max(0, backtrackTo - 1)), 0x555555, 0.6, 5);
+                        // เจอจุดย้อน ทิ้งรอยเส้นสีแดง (Dead end, เปลี่ยนจากสีเทาเพื่อความชัดเจน)
+                        drawPath(deadEndGraphics, scene, prevPath.slice(Math.max(0, backtrackTo - 1)), 0xff4444, 0.8, 5);
                         await sleep(baseDelay * 0.4);
                     }
                 }
@@ -90,8 +91,8 @@ async function playDfsBfsDisplay(scene, trace, options = {}) {
                 // แสดง neighbors (flash สั้นๆ)
                 if (step.neighbors && step.neighbors.length > 0) {
                     for (const neighbor of step.neighbors) {
-                        // ลากเส้นพิจารณาด้วยสีส้มสว่าง
-                        drawEdge(explorationGraphics, scene, tipNode, neighbor, 0xff8c00, 0.8, 5);
+                        // ลากเส้นพิจารณาด้วยสีม่วงสว่าง (bright purple/magenta)
+                        drawEdge(explorationGraphics, scene, tipNode, neighbor, 0xff00ff, 0.8, 5);
                     }
                     await sleep(baseDelay * 0.6);
 
@@ -175,7 +176,7 @@ function findCommonPrefixLength(pathA, pathB) {
 // ============================================================================
 
 function getNodePos(scene, nodeId) {
-    const node = scene.levelData?.nodes?.find(n => n.id === nodeId);
+    const node = scene.levelData?.nodes?.find(n => String(n.id) === String(nodeId));
     return node ? { x: node.x, y: node.y } : null;
 }
 
@@ -252,6 +253,9 @@ async function playMoveAlongPath(scene, path, speed = 1.0) {
                 y: pos.y,
                 duration: moveDuration,
                 ease: 'Power2.easeInOut',
+                onUpdate: () => {
+                    try { updateWeaponPosition(scene); } catch (e) { }
+                },
                 onComplete: () => {
                     hero.currentNodeId = nodeId;
                     if (scene.gameState) {
@@ -365,7 +369,8 @@ function markNodeAsVisited(scene, nodeId) {
     if (!scene.graphVisitedGraphics) {
         scene.graphVisitedGraphics = scene.add.graphics().setDepth(2);
     }
-    scene.graphVisitedGraphics.fillStyle(0x888888, 0.5);
+    // เปลี่ยนจากเทาเป็นสีม่วงสว่างเพื่อความชัดเจน
+    scene.graphVisitedGraphics.fillStyle(0x9933ff, 0.7);
     scene.graphVisitedGraphics.fillCircle(node.x, node.y, 15);
 }
 

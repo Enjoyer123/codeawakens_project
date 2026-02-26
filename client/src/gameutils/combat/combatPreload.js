@@ -13,8 +13,6 @@ export async function preloadAllWeaponEffects(scene) {
     'axe', 'hammer', 'dagger', 'spear', 'staff', 'magic_sword'
   ];
 
-  console.log('Starting to preload all weapon effects...');
-
   const promises = weaponsToPreload.map(weapon => {
     return preloadWeaponEffectSafe(scene, weapon);
   });
@@ -22,7 +20,6 @@ export async function preloadAllWeaponEffects(scene) {
   try {
     const results = await Promise.all(promises);
     const total = results.reduce((sum, count) => sum + count, 0);
-    console.log(`Preloaded ${total} weapon effect frames total`);
     return total;
   } catch (error) {
     console.error('Error preloading weapon effects:', error);
@@ -31,7 +28,6 @@ export async function preloadAllWeaponEffects(scene) {
 }
 
 export async function preloadWeaponEffectSafe(scene, weaponKey, effectType = '') {
-  console.log(`Safely preloading effect for weapon: ${weaponKey}${effectType ? ` (${effectType})` : ''}`);
 
   // ตรวจสอบว่า scene และ scene.load มีอยู่จริง
   if (!scene) {
@@ -49,7 +45,6 @@ export async function preloadWeaponEffectSafe(scene, weaponKey, effectType = '')
 
   // SPECIAL CASE: Circle weapon
   if (weaponKey.toLowerCase() === 'circle') {
-    console.log('Preloading Circle special frames...');
     for (let i = 1; i <= 10; i++) {
       const customKey = `Circle_${i}`;
       // Try multiple potential paths for Circle images
@@ -104,7 +99,6 @@ export async function preloadWeaponEffectSafe(scene, weaponKey, effectType = '')
     const exists = await checkImageExistsSafe(singleFileUrl);
     if (exists) {
       framesToLoad.push({ key: singleFileKey, url: singleFileUrl });
-      console.log(`Found single effect file: ${singleFileUrl}`);
     }
   }
 
@@ -127,7 +121,7 @@ export async function preloadWeaponEffectSafe(scene, weaponKey, effectType = '')
     }
   }
 
-  console.log(`Found ${framesToLoad.length} effect frames to preload`);
+
 
   if (framesToLoad.length === 0) {
     return 0;
@@ -202,7 +196,6 @@ export async function preloadWeaponEffectSafe(scene, weaponKey, effectType = '')
           }
         });
 
-        console.log(`Preloaded ${validCount}/${framesToLoad.length} valid textures for ${weaponKey}`);
         resolve(validCount);
       };
 
@@ -260,56 +253,4 @@ export function checkImageExistsSafe(url) {
   });
 }
 
-export function validateTextureState(scene, textureKey) {
-  if (!scene.textures.exists(textureKey)) {
-    return {
-      exists: false,
-      loaded: false,
-      valid: false,
-      error: 'Texture does not exist'
-    };
-  }
-
-  const texture = scene.textures.get(textureKey);
-  const source = texture.source[0];
-
-  const result = {
-    exists: true,
-    loaded: source?.image?.complete === true,
-    valid: false,
-    width: source?.width || 0,
-    height: source?.height || 0,
-    naturalWidth: source?.image?.naturalWidth || 0,
-    naturalHeight: source?.image?.naturalHeight || 0,
-    hasImage: !!source?.image,
-    error: null
-  };
-
-  // ตรวจสอบว่า valid หรือไม่
-  if (result.loaded &&
-    result.naturalWidth > 0 &&
-    result.naturalHeight > 0 &&
-    result.width > 0 &&
-    result.height > 0) {
-    result.valid = true;
-  } else {
-    result.error = 'Texture loaded but invalid dimensions';
-  }
-
-  return result;
-}
-
-// Helper function เช็คว่าไฟล์รูปมีจริงหรือไม่
-export function checkImageExists(url) {
-  return new Promise((resolve) => {
-    const img = new Image();
-
-    img.onload = () => resolve(true);
-    img.onerror = () => resolve(false);
-
-    setTimeout(() => resolve(false), 3000);
-
-    img.src = url;
-  });
-}
 

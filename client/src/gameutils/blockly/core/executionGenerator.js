@@ -47,19 +47,7 @@ export const setupCustomGenerator = (currentLevel) => {
             argsString = args.join(', ');
         }
 
-        // Add parameter validation for knapsack function
-        let paramValidation = '';
-        if (name.toLowerCase().includes('knapsack') && args.length === 4) {
-            const capacityVar = args[0];
-            paramValidation = `
-  if (${capacityVar} === undefined || ${capacityVar} === null) { 
-      console.warn('Knapsack called with undefined/null capacity, returning 0');
-      return 0; 
-  }
-`;
-        }
-
-
+        // Parameter validation has been removed per user request
 
         let branch = javascriptGenerator.statementToCode(block, 'STACK');
 
@@ -83,62 +71,8 @@ export const setupCustomGenerator = (currentLevel) => {
         let finalBranch = branch;
         let finalReturnValue = returnValue;
 
-        // Subset Sum
-        if (/subsetSum\d*/.test(name)) {
-            const indexArg = args[1] || 'index';
-            const sumArg = args[2] || 'curr_sum';
-            const targetArg = args[3] || 'target_sum';
-
-            // Visit Hook
-            finalBranch = `
-    try { 
-        if (typeof updateSubsetSumCellVisual === 'function') {
-            updateSubsetSumCellVisual(${indexArg}, ${targetArg} - ${sumArg}, null, { kind: 'visit' }); 
-        }
-    } catch (e) {}
-    ${finalBranch}`;
-
-            // Return Hook
-            if (finalReturnValue) {
-                finalReturnValue = `(function() {
-    const __res = ${finalReturnValue};
-    try { 
-         if (typeof updateSubsetSumCellVisual === 'function') {
-            updateSubsetSumCellVisual(${indexArg}, ${targetArg} - ${sumArg}, __res, { kind: 'return' }); 
-         }
-    } catch (e) {}
-    return __res;
-})()`;
-            }
-        }
-
-        // Coin Change
-        if (/coinChange\d*/.test(name)) {
-            const amountArg = args[0] || 'amount';
-            const indexArg = args[2] || 'index';
-
-            // Visit Hook
-            finalBranch = `
-    try { 
-        if (typeof updateCoinChangeCellVisual === 'function') {
-            updateCoinChangeCellVisual(${indexArg}, ${amountArg}, null, { kind: 'visit' }); 
-        }
-    } catch (e) {}
-    ${finalBranch}`;
-
-            // Return Hook
-            if (finalReturnValue) {
-                finalReturnValue = `(function() {
-    const __res = ${finalReturnValue};
-    try { 
-         if (typeof updateCoinChangeCellVisual === 'function') {
-            updateCoinChangeCellVisual(${indexArg}, ${amountArg}, __res, { kind: 'return' }); 
-         }
-    } catch (e) {}
-    return __res;
-})()`;
-            }
-        }
+        // Note: Visual Hooks (updateSubsetSumCellVisual, updateCoinChangeCellVisual) 
+        // have been removed as they are obsolete with the new playback system.
 
         const returnStatement = finalReturnValue ? `  return ${finalReturnValue};\n` : '';
 
@@ -147,7 +81,7 @@ export const setupCustomGenerator = (currentLevel) => {
 
         // Safety Step Limit: Increment and check counter
         const stepLimitCode = "if (typeof globalThis !== 'undefined') { globalThis.__stepCount = (globalThis.__stepCount || 0) + 1; if (globalThis.__stepCount > 5000000) throw new Error('Infinite Loop / Recursion Limit Exceeded (5M steps)'); }";
-        const code = `async function ${name}(${argsString}) {\n  if (typeof globalThis !== 'undefined' && globalThis.__isVisualRun !== false) await new Promise(r => setTimeout(r, 0));\n  ${stepLimitCode}\n${paramValidation}${finalBranch}${returnStatement}}`;
+        const code = `async function ${name}(${argsString}) {\n  if (typeof globalThis !== 'undefined' && globalThis.__isVisualRun !== false) await new Promise(r => setTimeout(r, 0));\n  ${stepLimitCode}\n${finalBranch}${returnStatement}}`;
         return code;
     };
 

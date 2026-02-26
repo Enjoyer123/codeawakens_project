@@ -16,7 +16,7 @@ import React from 'react';
  */
 const HintButton = ({ onNeedHintClick, needHintDisabled }) => {
   return (
-    <div className="flex-shrink-0 bg-black/30 rounded-lg p-3 border border-gray-700/50">
+    <div className="flex-1 bg-black/30 rounded-lg p-2 border border-gray-700/50 flex items-center justify-center">
       <button
         onClick={() => {
           console.log('🟡 [HintButton] Need Hint button clicked');
@@ -27,11 +27,10 @@ const HintButton = ({ onNeedHintClick, needHintDisabled }) => {
           }
         }}
         disabled={needHintDisabled}
-        className={`w-10 h-10 p-1 rounded-full transition-all duration-300 transform hover:scale-110 active:scale-95 ${
-          needHintDisabled
+        className={`w-10 h-10 p-1 rounded-full transition-all duration-300 transform hover:scale-110 active:scale-95 ${needHintDisabled
             ? 'opacity-40 grayscale cursor-not-allowed'
             : 'opacity-100 hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] cursor-pointer'
-        }`}
+          }`}
         title="Need Hints"
       >
         <img

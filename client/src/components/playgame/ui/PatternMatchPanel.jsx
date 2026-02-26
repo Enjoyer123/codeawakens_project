@@ -93,7 +93,7 @@ const PatternMatchPanel = ({ hintData, idealPattern, weaponProgress, weaponImgSr
 
           {idealPattern && (
             <div className="flex flex-col items-center gap-1">
-              <div className="relative w-16 h-16 bg-white/90 rounded border border-gray-700/50 overflow-hidden flex items-center justify-center flex-shrink-0">
+              <div className="relative w-11 h-11 bg-white/90 rounded border border-gray-700/50 overflow-hidden flex items-center justify-center flex-shrink-0">
                 {/* Background (Locked/Dimmed) */}
                 <img
                   src={weaponImgSrc}

@@ -16,7 +16,7 @@ export async function playCoinChangeDpAnimation(scene, trace, options = {}) {
  */
 export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
     const { speed = 1.0 } = options;
-    const baseDelay = 1000 / speed;
+    const baseDelay = 100 / speed;
 
     if (!scene || !scene.coinChange || !trace || trace.length === 0) {
         console.warn('⚠️ [coinChangePlayback] No scene.coinChange or trace');
@@ -61,7 +61,7 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
     const cellW = 55;
     const cellH = 50;
     const paddingX = 400 - ((Math.min(targetAmount + 1, cols) * cellW) / 2) + (cellW / 2);
-    const startY = 160;
+    const startY = 340; // ย้ายลงมาตรงกลางจอ ไม่ให้ทับจุดด้านบน
 
     const cells = [];
 
@@ -78,12 +78,12 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
 
         // ตัวเลข Index กำกับบนหัว (โชว์จำนวนเลือด Amount)
         scene.add.text(cx, cy - (cellH / 2) - 10, i.toString(), {
-            fontSize: '12px', color: '#888888', fontStyle: 'bold'
+            fontSize: '14px', color: '#ffffff', fontStyle: 'bold'
         }).setOrigin(0.5).setDepth(11);
 
         // ค่าในช่องเริ่มต้นที่ ∞ ยกเว้นช่อง 0
         const textVal = scene.add.text(cx, cy, i === 0 ? '0' : '∞', {
-            fontSize: i === 0 ? '20px' : '26px', color: i === 0 ? '#00FF00' : '#FFFFFF', fontStyle: 'bold'
+            fontSize: i === 0 ? '24px' : '30px', color: i === 0 ? '#00FF00' : '#FFFFFF', fontStyle: 'bold', stroke: '#000000', strokeThickness: 4
         }).setOrigin(0.5).setDepth(11);
 
         cells.push({ bg, text: textVal, cx, cy, minCoins: i === 0 ? 0 : 999999, combo: [] });
@@ -118,9 +118,9 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
             if (currentAmount <= targetAmount && currentAmount >= 0) {
                 const c = cells[currentAmount];
                 pointerDest.setVisible(true).setPosition(c.cx, c.cy);
-                statusText.setText(`🔄 หาคำตอบให้ช่อง dp[${currentAmount}]`);
+                statusText.setText(`ค้นหาคำตอบสำหรับกระดานช่อง dp[${currentAmount}]`);
                 statusText.setColor('#FFFF00');
-                detailText.setText('เริ่มลองเทียบจากดาเมจนักรบแต่ละตัว...');
+                detailText.setText('เริ่มประเมินกำลังพลแต่ละรูปแบบ...');
                 lineGraphics.clear();
                 await sleep(baseDelay * 0.5);
             }
@@ -129,7 +129,7 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
             const w = warriors[step.coin];
             if (!w) continue;
 
-            detailText.setText(`💡 พิจารณานักรบดาเมจ [${w.power}]`);
+            detailText.setText(`พิจารณากำลังพลหน่วยที่สร้างพลัง [${w.power}]`);
 
             // Flash on warrior sprite UI
             const flash = scene.add.rectangle(w.x, w.y, 60, 60, 0x00FFFF, 0.6).setDepth(12);
@@ -142,10 +142,10 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
                 pointerSrc.setVisible(true).setPosition(prevCell.cx, prevCell.cy);
 
                 if (prevCell.minCoins === 999999) {
-                    detailText.setText(`💡 ลองดึง dp[${prevAmount}] แต่มันไปต่อไม่ได้ (∞)`);
+                    detailText.setText(`อ้างอิง dp[${prevAmount}] แต่ไม่มีเส้นทางที่เป็นไปได้ (∞)`);
                 } else {
                     const expectedVal = prevCell.minCoins + 1;
-                    detailText.setText(`💡 สมการ: dp[${currentAmount}] = min(ตัวเอง, dp[${prevAmount}] + 1) -> ใส่ ${expectedVal} คน?`);
+                    detailText.setText(`สมการ: dp[${currentAmount}] = min(ค่าเริ่ม, dp[${prevAmount}] + 1) -> เปลี่ยนแปลงเป็น ${expectedVal}`);
                 }
 
                 // วาดเส้นโค้งเชื่อมโยงช่อง (โยงขึ้นข้างบนเพื่อไม่เกะกะข้อความล่าง)
@@ -181,7 +181,7 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
             } else {
                 pointerSrc.setVisible(false);
                 lineGraphics.clear();
-                detailText.setText(`💡 นักรบ [${w.power}]: ดาเมจเกินรอยแตก เกินช่องในตาราง (ข้าม)`);
+                detailText.setText(`กำลังพล [${w.power}]: สร้างพลังเกินความจุกระดานตาราง (ข้าม)`);
             }
             await sleep(baseDelay * 0.8);
         }
@@ -199,7 +199,7 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
                     c.combo = [coinUsed];
                 }
 
-                detailText.setText(`✨ อัปเดตช่อง! dp[${amount}] = ${minCoins}`);
+                detailText.setText(`อัปเดตตารางค่าใหม่! dp[${amount}] = ${minCoins}`);
                 c.text.setText(minCoins.toString());
                 c.text.setColor('#00FF00');
 
@@ -223,9 +223,9 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
     // 3. ฉากจบบริบูรณ์ ดึง Combo มาแสดงให้จับต้องได้
     const finalCell = cells[targetAmount];
     if (finalCell && finalCell.minCoins !== 999999) {
-        statusText.setText(`✅ สร้างตารางเสร็จสิ้น! บอสใช้ ${finalCell.minCoins} คน`);
+        statusText.setText(`ตารางการประเมินเสร็จสิ้น เป้าหมายใช้กำลังพลอย่างน้อย ${finalCell.minCoins} ยูนิต`);
         statusText.setColor('#00FF00');
-        detailText.setText('คำตอบที่ดีที่สุดถูกแกะออกจากตารางแล้ว!');
+        detailText.setText('ตรวจพบคำตอบที่ดีที่สุดจากตาราง!');
         finalCell.bg.setStrokeStyle(4, 0x00FF00);
         scene.tweens.add({ targets: finalCell.bg, scaleX: 1.2, scaleY: 1.2, yoyo: true, repeat: -1, duration: 600 / speed });
 
@@ -237,7 +237,7 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
         const spacing = 50;
         const startHeroX = 400 - ((totalCoins * spacing) / 2) + (spacing / 2);
 
-        statusText.setText('⚔️ ระดมทัพนักรบเข้าโจมตี!');
+        statusText.setText('ระดมกำลังพลเพื่อปฏิบัติการ');
 
         for (let idx = 0; idx < finalCell.combo.length; idx++) {
             const coinPower = finalCell.combo[idx];
@@ -246,10 +246,15 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
                 const px = startHeroX + (idx * spacing);
                 const py = centerSpawnY;
 
-                // สร้างร่างเงาและให้ซูมเข้าที่
+                // สร้างร่างเงาและให้ซูมเข้าที่ — ขนาดใหญ่ขึ้นเป็น 80x80
                 const ghost = scene.add.sprite(finalCell.cx, finalCell.cy, origSprite.texture.key)
-                    .setDisplaySize(50, 50).setDepth(30).setAlpha(0);
+                    .setDisplaySize(80, 80).setDepth(30).setAlpha(0);
                 if (origSprite.frame && origSprite.frame.name) ghost.setFrame(origSprite.frame.name);
+
+                // ตัวเลขพลัง — อยู่เหนือตัวละคร
+                const powerLabel = scene.add.text(px, py - 55, coinPower.toString(), {
+                    fontSize: '22px', color: '#FFD700', fontStyle: 'bold', stroke: '#000', strokeThickness: 5
+                }).setOrigin(0.5).setDepth(31).setAlpha(0);
 
                 scene.tweens.add({
                     targets: ghost,
@@ -257,19 +262,28 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
                     duration: 800 / speed,
                     ease: 'Power2',
                     onComplete: () => {
-                        // โดดขย่มฉลองชัยชนะ
+                        // โดดขย่มฉลองชัยชนะ (ตัวละครเท่านั้น)
                         scene.tweens.add({
-                            targets: ghost, y: '-=20',
-                            yoyo: true, repeat: -1, duration: 300
+                            targets: ghost, y: '-=15',
+                            yoyo: true, repeat: -1, duration: 350
                         });
                     }
                 });
+
+                // ตัวเลข fade in แยกต่างหาก ตำแหน่งคงที่เหนือตัวละคร
+                scene.tweens.add({
+                    targets: powerLabel,
+                    alpha: 1,
+                    duration: 500 / speed,
+                    delay: 400 / speed
+                });
+
                 await sleep(150 / speed); // หน่วงนิดนึงให้ออกมาทีละตัว
             }
         }
 
     } else {
-        statusText.setText(`❌ สร้างตารางเสร็จสิ้น! ช่องสุดท้ายเป็น ∞ ไปไม่รอด!`);
+        statusText.setText(`ตารางประเมินเสร็จสิ้น ไม่พบวิธีการใด (ผลลัพธ์ ∞)`);
         statusText.setColor('#FF5555');
         detailText.setText('');
     }

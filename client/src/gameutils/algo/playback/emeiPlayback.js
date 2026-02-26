@@ -10,6 +10,14 @@
 // All visual methods are now internal to playback.
 
 export async function playEmeiAnimation(scene, trace, options = {}) {
+    // สลับ Display Mode ตรงนี้:
+    return playClassicDisplay(scene, trace, options);
+}
+
+// ============================================================================
+// Display Mode 1: Classic Display (self-contained)
+// ============================================================================
+async function playClassicDisplay(scene, trace, options = {}) {
     const { speed = 1.0 } = options;
     const baseDelay = 700 / speed;
     const sleep = ms => new Promise(r => setTimeout(r, Math.max(0, ms)));

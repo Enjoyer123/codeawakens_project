@@ -1,100 +1,5 @@
 // Combat Animation Utilities
-import { checkImageExistsSafe } from './combatPreload';
-
-export function createSingleSpriteEffect(scene, weaponSprite, textureKey) {
-    console.log(`Creating single sprite effect: ${textureKey}`);
-
-    const offsetX = weaponSprite.width * weaponSprite.scaleX * 0.5 + 10;
-    // shift down to compensate larger player scale
-    const offsetY = 3;
-
-    // ตรวจสอบ texture
-    if (!scene.textures.exists(textureKey)) {
-        console.warn(`Single sprite texture ${textureKey} not found`);
-        showFallbackEffect(scene, weaponSprite);
-        return;
-    }
-
-    const texture = scene.textures.get(textureKey);
-    const source = texture.source[0];
-
-    if (!source?.image?.complete || source.image.naturalWidth <= 0) {
-        console.warn(`Single sprite texture not ready`);
-        showFallbackEffect(scene, weaponSprite);
-        return;
-    }
-
-    console.log(`Single sprite validated: ${textureKey} (${source.width}x${source.height})`);
-
-    // สร้าง effect sprite
-    const effect = scene.add.image(
-        weaponSprite.x + offsetX,
-        weaponSprite.y + offsetY,
-        textureKey
-    );
-
-    effect.setScale(0.5);
-    effect.setDepth(weaponSprite.depth + 1);
-
-    console.log(`Single sprite effect created`);
-
-    // แทนที่จะเล่น frame animation ให้ใช้ tween animation
-    scene.tweens.add({
-        targets: effect,
-        scaleX: { from: 0.3, to: 0.8 },
-        scaleY: { from: 0.3, to: 0.8 },
-        alpha: { from: 0.8, to: 0 },
-        angle: { from: 0, to: 45 },
-        duration: 400,
-        ease: 'Power2',
-        onComplete: () => {
-            effect.destroy();
-            console.log(`Single sprite effect completed`);
-        }
-    });
-
-    // เพิ่ม secondary animation
-    scene.tweens.add({
-        targets: effect,
-        scaleX: { from: 0.5, to: 0.7 },
-        scaleY: { from: 0.5, to: 0.7 },
-        duration: 200,
-        yoyo: true,
-        ease: 'Sine.easeInOut'
-    });
-}
-
-export function loadSingleSpriteEffect(scene, weaponSprite, weaponKey) {
-    const textureKey = `effect_${weaponKey}`;
-    const url = `/weapons_effect/${weaponKey}.png`;
-
-    console.log(`Loading single sprite effect: ${textureKey} from ${url}`);
-
-    // ตรวจสอบว่าไฟล์มีจริงหรือไม่ก่อนโหลด
-    checkImageExistsSafe(url).then(exists => {
-        if (exists) {
-            scene.load.image(textureKey, url);
-
-            scene.load.once('complete', () => {
-                console.log(`Single sprite loaded: ${textureKey}`);
-                // รอให้ texture พร้อมแล้วค่อยสร้าง effect
-                scene.time.delayedCall(100, () => {
-                    createSingleSpriteEffect(scene, weaponSprite, textureKey);
-                });
-            });
-
-            scene.load.once('loaderror', (fileObj) => {
-                console.error(`Failed to load single sprite:`, fileObj.key);
-                showFallbackEffect(scene, weaponSprite);
-            });
-
-            scene.load.start();
-        } else {
-            console.warn(`Single sprite file ${url} not found, using fallback`);
-            showFallbackEffect(scene, weaponSprite);
-        }
-    });
-}
+import { preloadWeaponEffectSafe, checkImageExistsSafe } from './combatPreload';
 
 export function createCanvasBasedEffect(scene, posOrSprite, validFrames, weaponKey) {
     // console.log(`🔍 DEEP DEBUG: Creating texture effect for ${weaponKey}`);
@@ -140,7 +45,7 @@ export function createCanvasBasedEffect(scene, posOrSprite, validFrames, weaponK
     effect.setAlpha(1);
 
     // Animate frames
-    animateTextureFrames(scene, effect, validFrames, null);
+    animateTextureFrames(scene, effect, validFrames);
 
     // Add outward movement if it's a radial effect (inferred from config object)
     if (!posOrSprite.scene && posOrSprite.moveOutward) {
@@ -182,7 +87,7 @@ export function createCanvasBasedEffect(scene, posOrSprite, validFrames, weaponK
 
 
 
-export function animateTextureFrames(scene, effect, validFrames, debugBorder = null) {
+export function animateTextureFrames(scene, effect, validFrames) {
     let frameIndex = 0;
 
     const nextFrame = () => {
@@ -205,13 +110,11 @@ export function animateTextureFrames(scene, effect, validFrames, debugBorder = n
                 } else {
                     console.warn(`Frame ${frameKey} became invalid, stopping`);
                     if (effect.active) effect.destroy();
-                    if (debugBorder?.active) debugBorder.destroy();
                     return;
                 }
             } else {
                 console.warn(`Frame ${frameKey} no longer exists, stopping`);
                 if (effect.active) effect.destroy();
-                if (debugBorder?.active) debugBorder.destroy();
                 return;
             }
 
@@ -223,12 +126,11 @@ export function animateTextureFrames(scene, effect, validFrames, debugBorder = n
                 console.log(`Texture animation completed`);
                 // Fade out
                 scene.tweens.add({
-                    targets: [effect, debugBorder].filter(Boolean),
+                    targets: effect,
                     alpha: { from: 1, to: 0 },
                     duration: 200,
                     onComplete: () => {
                         if (effect?.active) effect.destroy();
-                        if (debugBorder?.active) debugBorder.destroy();
                         console.log(`Texture effect destroyed with fade out`);
                     }
                 });

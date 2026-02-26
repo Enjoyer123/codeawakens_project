@@ -2,6 +2,14 @@
 // 2D Spreadsheet Display Mode
 
 export async function playSubsetSumDpAnimation(scene, trace, options = {}) {
+    // สลับ Display Mode ตรงนี้:
+    return playClassicDisplay(scene, trace, options);
+}
+
+// ============================================================================
+// Display Mode 1: Classic Display (self-contained)
+// ============================================================================
+async function playClassicDisplay(scene, trace, options = {}) {
     const { speed = 1.0 } = options;
     const baseDelay = 1000 / speed;
 
@@ -35,29 +43,29 @@ export async function playSubsetSumDpAnimation(scene, trace, options = {}) {
     const cellW = Math.min(50, 800 / (cols + 2)); // Dynamic scaling if table is too wide
     const cellH = 40;
 
-    // Center the table
+    // Center the table, shifted to the right to avoid overlapping warriors
     const tableWidth = cols * cellW;
-    const startX = 400 - (tableWidth / 2) + (cellW / 2);
-    const startY = 160;
+    const startX = 750 - (tableWidth / 2) + (cellW / 2);
+    const startY = 300; // Moved down to avoid overlapping the warrior scale
 
     const cells = []; // 2D array of cells
 
     // Column Headers (Target Sums)
     for (let c = 0; c <= targetSum; c++) {
         scene.add.text(startX + (c * cellW), startY - 30, c.toString(), {
-            fontSize: '14px', color: '#888888', fontStyle: 'bold'
+            fontSize: '14px', color: '#ffffff', fontStyle: 'bold'
         }).setOrigin(0.5).setDepth(11);
     }
 
     // Row Headers (Warriors)
     scene.add.text(startX - 40, startY, '0', {
-        fontSize: '14px', color: '#888888', fontStyle: 'bold'
+        fontSize: '14px', color: '#ffffff', fontStyle: 'bold'
     }).setOrigin(0.5).setDepth(11);
 
     for (let r = 1; r <= numItems; r++) {
         const warrior = warriors[r - 1];
         scene.add.text(startX - 60, startY + (r * cellH), `W[${r}]: ${warrior.power}`, {
-            fontSize: '12px', color: '#888888', fontStyle: 'bold'
+            fontSize: '12px', color: '#ffffff', fontStyle: 'bold'
         }).setOrigin(0.5).setDepth(11);
     }
 
@@ -74,7 +82,7 @@ export async function playSubsetSumDpAnimation(scene, trace, options = {}) {
             // Base case initialization
             const initVal = (c === 0) ? 'T' : 'F';
             const textVal = scene.add.text(cx, cy, initVal, {
-                fontSize: '18px', color: initVal === 'T' ? '#2ecc71' : '#555555', fontStyle: 'bold'
+                fontSize: '18px', color: initVal === 'T' ? '#2ecc71' : '#ffffff', fontStyle: 'bold'
             }).setOrigin(0.5).setDepth(11);
 
             cells[r][c] = { bg, text: textVal, cx, cy, val: initVal === 'T' ? true : false };
@@ -180,10 +188,14 @@ export async function playSubsetSumDpAnimation(scene, trace, options = {}) {
             currentCell.bg.setFillStyle(0xffff00, 0.5); // Highlight traceback path
 
             // Check if it came from top (excluded) or from top-left (included)
-            // dp[i][j] equals dp[i-1][j] ?
             const prevCellAbove = cells[currR - 1][currC];
-            if (prevCellAbove && prevCellAbove.val === true && currentCell.val === prevCellAbove.val) {
-                // Excluded
+
+            // Type-safe boolean parse (Blockly might send "true", "false", 1, 0, or actual booleans)
+            const currentVal = currentCell.val === true || currentCell.val === 'true' || currentCell.val === 1;
+            const aboveVal = prevCellAbove && (prevCellAbove.val === true || prevCellAbove.val === 'true' || prevCellAbove.val === 1);
+
+            if (aboveVal) {
+                // We can achieve this sum without the current item (Excluded)
                 currR--;
             } else {
                 // Included!

@@ -2,6 +2,14 @@
 // 2D Spreadsheet Display Mode
 
 export async function playKnapsackDpAnimation(scene, trace, options = {}) {
+    // สลับ Display Mode ตรงนี้:
+    return playClassicDisplay(scene, trace, options);
+}
+
+// ============================================================================
+// Display Mode 1: Classic Display (self-contained)
+// ============================================================================
+async function playClassicDisplay(scene, trace, options = {}) {
     const { speed = 1.0 } = options;
     const baseDelay = 1000 / speed;
 
@@ -35,30 +43,32 @@ export async function playKnapsackDpAnimation(scene, trace, options = {}) {
     const cellW = 50;
     const cellH = 40;
 
-    // Center the table
+    // Position table on the middle-right side of the screen (game width is 800)
     const tableWidth = cols * cellW;
     const tableHeight = rows * cellH;
-    const startX = 400 - (tableWidth / 2) + (cellW / 2);
-    const startY = 160;
+
+    // Push further to the right by adding an offset (e.g., +80px)
+    const startX = 800 - tableWidth + (cellW / 2) + 80;
+    const startY = 400; // Moved further down from 260
 
     const cells = []; // 2D array of cells
 
     // Column Headers (Capacity)
     for (let c = 0; c <= capacity; c++) {
         scene.add.text(startX + (c * cellW), startY - 30, c.toString(), {
-            fontSize: '14px', color: '#888888', fontStyle: 'bold'
+            fontSize: '16px', color: '#DDDDDD', fontStyle: 'bold'
         }).setOrigin(0.5).setDepth(11);
     }
 
     // Row Headers (Items)
     scene.add.text(startX - 40, startY, '0', {
-        fontSize: '14px', color: '#888888', fontStyle: 'bold'
+        fontSize: '16px', color: '#DDDDDD', fontStyle: 'bold'
     }).setOrigin(0.5).setDepth(11);
 
     for (let r = 1; r <= numItems; r++) {
         const item = items[r - 1];
         scene.add.text(startX - 60, startY + (r * cellH), `W:${item.weight} V:${item.price}`, {
-            fontSize: '12px', color: '#888888', fontStyle: 'bold'
+            fontSize: '14px', color: '#FFFFFF', fontStyle: 'bold'
         }).setOrigin(0.5).setDepth(11);
     }
 
@@ -96,13 +106,23 @@ export async function playKnapsackDpAnimation(scene, trace, options = {}) {
 
     await sleep(baseDelay);
 
+    // --- NEW: Detect if DP table loop is 0-indexed or 1-indexed ---
+    let minItemIdx = 999;
+    for (let i = 0; i < trace.length; i++) {
+        const step = trace[i];
+        if (step.action === 'dp_update' && step.index !== undefined) {
+            if (step.index < minItemIdx) minItemIdx = step.index;
+        }
+    }
+    const idxOffset = (minItemIdx === 0) ? 1 : 0;
+
     // 2. ลุยรัน Trace เติมตาราง
     for (let i = 0; i < trace.length; i++) {
         if (!scene || !scene.scene.isActive(scene.scene.key)) break;
         const step = trace[i];
 
         if (step.action === 'dp_update') {
-            const r = step.index; // itemIndex (1-based in DP formulation usually, but blockly handles this)
+            const r = step.index + idxOffset; // mapped index (1-based internally)
             const c = step.capacity;
             const val = step.value;
 
@@ -146,15 +166,87 @@ export async function playKnapsackDpAnimation(scene, trace, options = {}) {
         if (item.labelText) item.labelText.setAlpha(1);
     });
 
-    // Show Result
+    // Show Result Text first
     if (options.result !== undefined) {
-        scene.add.text(400, 500, `Max Value: $${options.result}`, {
+        scene.add.text(400, 250, `Max Value: $${options.result}`, {
             fontSize: '48px',
             color: '#2ecc71',
             fontStyle: 'bold',
             stroke: '#000',
             strokeThickness: 8
         }).setOrigin(0.5).setDepth(30);
+    }
+
+    // --- NEW: Trace back DP table to find chosen items and animate them to bag ---
+    statusText.setText('กำลังคำนวณย้อนกลับ (Traceback) เพื่อหยิบของใส่เป้...');
+    await sleep(baseDelay);
+
+    let currC = capacity;
+    let currR = numItems;
+    const chosenItems = [];
+
+    // Find items
+    while (currR > 0 && currC > 0) {
+        // Ensure values are numbers for comparison. Unfilled cells are 0.
+        const currentVal = Number(cells[currR][currC].val) || 0;
+        const aboveVal = Number(cells[currR - 1][currC].val) || 0;
+
+        // If value came from the cell above, item R was NOT included
+        if (currentVal === aboveVal) {
+            currR--;
+        } else {
+            // Item R was included
+            const item = items[currR - 1]; // items array is 0-indexed
+            chosenItems.push(item);
+            currC -= item.weight;
+            currR--;
+        }
+    }
+
+    // Animate items moving to bag
+    if (chosenItems.length > 0) {
+        const bagX = scene.knapsack.bag.x;
+        const bagY = scene.knapsack.bag.y;
+        let currentValue = 0;
+
+        const currentBagText = scene.add.text(bagX, bagY + 80, '', {
+            fontSize: '24px',
+            color: '#ffd700',
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 5
+        }).setOrigin(0.5).setDepth(20);
+
+        for (let i = chosenItems.length - 1; i >= 0; i--) { // Reverse to pick from smallest row first
+            const item = chosenItems[i];
+
+            statusText.setText(`หยิบสมบัติ W:${item.weight} V:${item.price} ใส่กระเป๋า`);
+
+            // Highlight table row? (Optional)
+
+            currentValue += item.price;
+            currentBagText.setText(`Value: $${currentValue}`);
+
+            const offset = ((chosenItems.length - 1) - i) * -20;
+            if (item.sprite) {
+                scene.tweens.add({
+                    targets: item.sprite,
+                    x: bagX,
+                    y: bagY + offset,
+                    scaleX: 0.8,
+                    scaleY: 0.8,
+                    duration: 600 / speed,
+                    ease: 'Power2'
+                });
+            }
+            if (item.labelText) item.labelText.setVisible(false);
+
+            await sleep(800 / speed);
+        }
+
+        statusText.setText('หยิบของใส่เป้เสร็จสมบูรณ์!');
+    } else {
+        statusText.setText('ไม่มีของชิ้นไหนถูกหยิบใส่เป้เลย');
     }
 
     await sleep(2000);

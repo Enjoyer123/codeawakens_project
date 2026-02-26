@@ -1,12 +1,9 @@
 // Phaser Game Player Functions
-import {
-  updateWeaponPosition
-} from '../../entities/weaponUtils';
+import { updateWeaponPosition } from '../../combat';
 
 import { getCurrentGameState, setCurrentGameState, getPlayerHp } from '../../shared/game';
 
 import { checkObstacleCollisionWithRadius } from '../../movement/collisionUtils';
-import { isInCombat } from '../../combat/combatCore';
 import { playIdle, playWalk } from '../../movement/playerAnimation';
 import { moveToPosition } from '../../movement/playerMovement';
 import { updatePlayerArrow } from '../../effects/arrow';
@@ -149,8 +146,8 @@ export function movePlayerWithCollisionDetection(scene, fromNode, toNode, forced
         // Update arrow position during movement
         updatePlayerArrow(scene, scene.player.x, scene.player.y, directionIndex);
 
-        // เช็ค HP และ isGameOver ในระหว่างการเคลื่อนที่ (เฉพาะเมื่อไม่ได้อยู่ใน combat mode)
-        if (!hpDepleted && !isInCombat()) {
+        // เช็ค HP และ isGameOver ในระหว่างการเคลื่อนที่
+        if (!hpDepleted) {
           const currentState = getCurrentGameState();
           const playerHP = getPlayerHp();
 
@@ -159,7 +156,7 @@ export function movePlayerWithCollisionDetection(scene, fromNode, toNode, forced
             stopX = scene.player.x;
             stopY = scene.player.y;
 
-            // Movement stopped: Player HP is 0 or game over (not in combat mode)
+            // Movement stopped: Player HP is 0 or game over
             moveTween.stop();
 
             // หยุดที่ตำแหน่งปัจจุบัน
@@ -202,13 +199,13 @@ export function movePlayerWithCollisionDetection(scene, fromNode, toNode, forced
         }
       },
       onComplete: () => {
-        // เช็ค HP อีกครั้งก่อนจบการเคลื่อนที่ (เฉพาะเมื่อไม่ได้อยู่ใน combat mode)
-        if (!hpDepleted && !isInCombat()) {
+        // เช็ค HP อีกครั้งก่อนจบการเคลื่อนที่
+        if (!hpDepleted) {
           const currentState = getCurrentGameState();
           const playerHP = getPlayerHp();
 
           if (playerHP <= 0 || currentState.isGameOver) {
-            // Movement completed but HP is 0 or game over (not in combat mode)
+            // Movement completed but HP is 0 or game over
             resolve({
               success: false,
               hitObstacle: false,

@@ -4,18 +4,251 @@
  */
 
 export async function playCoinChangeBacktrackAnimation(scene, trace, options = {}) {
-    // เปลยนไปใช Tree Display ไดถาเพม options.tree
-    // return playBarDisplay(scene, trace, options);
+    // สลับ Display Mode อัตโนมัติ: Greedy ใช้ Character, Backtrack ใช้ Bar
+    if (options.isGreedy) {
+        return playCharacterDisplay(scene, trace, options);
+    }
     return playBarDisplay(scene, trace, options);
+}
+
+// ============================================================================
+// Display Mode 3: แบบ Character Display (เอานักรบบินไปต่อคิวตีบอส)
+// ============================================================================
+async function playCharacterDisplay(scene, trace, options) {
+    const { speed = 1.0 } = options;
+    const baseDelay = 800 / speed;
+
+    if (!scene || !scene.coinChange || !trace || trace.length === 0) {
+        console.warn('⚠️ [coinChangePlayback] No scene.coinChange or trace');
+        return;
+    }
+
+    console.log(`🎬 [coinChangePlayback] Playing Character Display Mode: ${trace.length} steps at ${speed}x speed`);
+
+    const warriors = scene.coinChange.warriors;
+    const targetAmount = scene.levelData?.coinChangeData?.monster_power || 32;
+
+    const sleep = (ms) => new Promise(res => setTimeout(res, ms));
+
+    const statusText = scene.add.text(
+        400, 50,
+        'เริ่มการค้นหาแบบสายข้าม (Greedy)',
+        { fontSize: '24px', color: '#FFFF00', fontStyle: 'bold', stroke: '#000', strokeThickness: 4, align: 'center' }
+    ).setOrigin(0.5).setDepth(20);
+
+    // ==========================================
+    // UI: Boss HP & Position setup
+    // ==========================================
+    const startX = 150; // เริ่มต่อคิวจากซ้ายไปขวา
+    const startY = 380; // เลื่อนให้ลงมาอยู่กลางจอ ไม่ทับกับจุดยืนข้างบน
+    const paddingX = 80; // ระยะห่างแต่ละตัวที่รุมตี
+
+    // Text: แสดง HP บอสที่เหลือ
+    const hpText = scene.add.text(400, startY - 80, `พลังชีวิตเป้าหมาย: ${targetAmount}`, {
+        fontSize: '28px', color: '#FFF', fontStyle: 'bold', stroke: '#000', strokeThickness: 6
+    }).setOrigin(0.5).setDepth(20);
+
+    const stack = [];
+    let currentX = startX;
+    let currentSum = 0;
+
+    const updateHpText = () => {
+        const remain = targetAmount - currentSum;
+        if (remain < 0) {
+            hpText.setText(`พลังรวมเกินเป้าหมาย! (ส่วนต่าง: ${Math.abs(remain)})`);
+            hpText.setColor('#FF5555');
+        } else if (remain === 0) {
+            hpText.setText(`จัดการเป้าหมายสำเร็จ!`);
+            hpText.setColor('#00FF00');
+        } else {
+            hpText.setText(`พลังชีวิตเป้าหมาย: ${remain}`);
+            hpText.setColor('#FFFFFF');
+        }
+    };
+
+    for (let i = 0; i < trace.length; i++) {
+        if (!scene?.scene?.isActive(scene.scene.key)) break;
+        const step = trace[i];
+
+        switch (step.action) {
+            case 'consider_coin': {
+                const idx = step.coin;
+                if (idx >= 0 && idx < warriors.length) {
+                    const w = warriors[idx];
+                    const projectedSum = currentSum + w.power;
+
+                    if (projectedSum > targetAmount) {
+                        statusText.setText(`พิจารณา [นักรบพลัง ${w.power}]...\nพลังรวมจะเกินเป้าหมายแน่นอน`);
+                        statusText.setColor('#FFA500');
+                    } else {
+                        statusText.setText(`พิจารณา [นักรบพลัง ${w.power}]...\nน่าจะสามารถยัดเข้ากลุ่มได้ ขอทดสอบ`);
+                        statusText.setColor('#FFFF00');
+                    }
+
+                    // สร้างกรอบกระพริบที่ตัวนักรบฐาน
+                    const flash = scene.add.rectangle(w.x, w.y, 60, 60, 0xFFA500, 0.8).setDepth(12);
+
+                    // Ghost Clone ไปแสดงจุดหมาย
+                    let ghost = null;
+                    if (projectedSum <= targetAmount + w.power && currentSum <= targetAmount) {
+                        const tex = w.powerSquare?.texture?.key || 'bot_slime1';
+                        ghost = scene.add.image(currentX, startY, tex).setAlpha(0.4).setDepth(14);
+                        if (projectedSum > targetAmount) {
+                            ghost.setTint(0xFF0000);
+                        }
+                    }
+
+                    scene.tweens.add({
+                        targets: ghost ? [flash, ghost] : [flash],
+                        alpha: 0,
+                        duration: 800 / speed,
+                        onComplete: () => {
+                            flash.destroy();
+                            if (ghost) ghost.destroy();
+                        }
+                    });
+                }
+                await sleep(baseDelay * 0.8);
+                break;
+            }
+
+            case 'select_coin': {
+                const idx = step.coin;
+                if (idx < 0 || idx >= warriors.length) break;
+
+                const w = warriors[idx];
+                const remainAfter = targetAmount - (currentSum + w.power);
+
+                if (remainAfter < 0) {
+                    statusText.setText(`เลือก [นักรบพลัง ${w.power}] เข้าร่วม...\nเป้าหมายทะลุ (เกิน ${Math.abs(remainAfter)})`);
+                    statusText.setColor('#FF5555');
+                } else if (remainAfter === 0) {
+                    statusText.setText(`เลือก [นักรบพลัง ${w.power}] เข้าร่วม...\nสำเร็จ! พิชิตเป้าหมายได้พอดี`);
+                    statusText.setColor('#00FF00');
+                } else {
+                    statusText.setText(`เลือก [นักรบพลัง ${w.power}] เข้าร่วมสำเร็จ\n(ยังขาดอีก ${remainAfter})`);
+                    statusText.setColor('#00FFFF');
+                }
+
+                // สร้าง Clone
+                const tex = w.powerSquare?.texture?.key || 'bot_slime1';
+                const clone = scene.add.image(w.x, w.y, tex).setDepth(15);
+
+                // สร้างตัวเลขกำกับป้าย
+                const label = scene.add.text(w.x, w.y - 30, w.power.toString(), {
+                    fontSize: '20px', color: '#FFF', fontStyle: 'bold', stroke: '#000', strokeThickness: 4
+                }).setOrigin(0.5).setDepth(16);
+
+                // Animate บินเข้าไปในตำแหน่ง
+                scene.tweens.add({
+                    targets: clone,
+                    x: currentX,
+                    y: startY,
+                    duration: 400 / speed,
+                    ease: 'Power2'
+                });
+
+                scene.tweens.add({
+                    targets: label,
+                    x: currentX,
+                    y: startY - 30,
+                    duration: 400 / speed,
+                    ease: 'Power2'
+                });
+
+                stack.push({ clone, label, power: w.power, oriX: w.x, oriY: w.y });
+                currentX += paddingX; // ขยับไปทางขวาให้ตัวต่อไปยืนคิว
+                currentSum += w.power;
+
+                updateHpText();
+
+                if (currentSum > targetAmount) {
+                    clone.setTint(0xFF5555);
+                    const overFlash = scene.add.rectangle(400, startY, 600, 100, 0xFF0000, 0.4).setDepth(18);
+                    scene.tweens.add({
+                        targets: overFlash,
+                        alpha: 0,
+                        duration: 400 / speed,
+                        onComplete: () => overFlash.destroy()
+                    });
+                }
+
+                await sleep(baseDelay * 0.8);
+                break;
+            }
+
+            case 'remove_coin': {
+                const last = stack.pop();
+                if (!last) break;
+
+                statusText.setText(`ถอยกลับ (Backtrack)\nนำนักรบพลัง ${last.power} ตัวล่าสุดออก เพื่อพิจารณาเส้นทางอื่น`);
+                statusText.setColor('#FFA500');
+
+                currentX -= paddingX;
+                currentSum -= last.power;
+
+                updateHpText();
+
+                // Animate บินกลับที่เดิมแล้วจางหาย
+                scene.tweens.add({
+                    targets: [last.clone, last.label],
+                    x: last.oriX,
+                    y: last.oriY,
+                    alpha: 0,
+                    scale: 0.5,
+                    duration: 400 / speed,
+                    ease: 'Power2',
+                    onComplete: () => {
+                        last.clone.destroy();
+                        last.label.destroy();
+                    }
+                });
+
+                await sleep(baseDelay * 0.6);
+                break;
+            }
+
+            case 'memo_hit': {
+                const amount = step.amount;
+                if (amount <= 0) break;
+
+                statusText.setText(`[Memo Hit] ค่าพลัง ${amount} เคยถูกประมวลผลแล้ว\nดึงผลลัพธ์จากหน่วยความจำมาใช้`);
+                statusText.setColor('#FFD700');
+
+                const hitX = currentX + (paddingX * (amount / 10)); // Approximate width flash
+                const flash = scene.add.rectangle(hitX, startY, 120, 100, 0xFFD700, 0.6).setDepth(16);
+                scene.tweens.add({
+                    targets: flash, alpha: 0, scaleX: 1.2, scaleY: 1.2, duration: 800 / speed,
+                    onComplete: () => flash.destroy()
+                });
+
+                const memoText = scene.add.text(hitX, startY, 'MEMO HIT!\nจำได้!', {
+                    fontSize: '28px', color: '#FFD700', fontStyle: 'bold', stroke: '#000', strokeThickness: 6, align: 'center'
+                }).setOrigin(0.5).setDepth(25);
+
+                scene.tweens.add({
+                    targets: memoText, y: startY - 40, alpha: 0, duration: 900 / speed, ease: 'Power2',
+                    onComplete: () => memoText.destroy()
+                });
+
+                await sleep(baseDelay * 1.5);
+                break;
+            }
+        }
+    }
+
+    statusText.setText('กระบวนการค้นหาเสร็จสิ้น (Backtracking)');
+    statusText.setColor('#00FFFF');
+    console.log('✅ [coinChangePlaybackBacktrack] Animation complete');
 }
 
 /**
  * Display Mode 1: แบบ Stacking Bar (ต่อเลโก้ลงหลอดเลือด)
- * (รูปแบบปัจจุบันที่ใช้งานอยู่)
+ * (รูปแบบดั้งเดิม)
  */
 async function playBarDisplay(scene, trace, options) {
     const { speed = 1.0 } = options;
-    const baseDelay = 800 / speed;
+    const baseDelay = 1000 / speed;
 
     if (!scene || !scene.coinChange || !trace || trace.length === 0) {
         console.warn('⚠️ [coinChangePlayback] No scene.coinChange or trace');
@@ -33,7 +266,7 @@ async function playBarDisplay(scene, trace, options) {
     // UI: Status Text
     const statusText = scene.add.text(
         400, 50,
-        'เริ่มเจาะเกราะบอส...',
+        'เริ่มการค้นหาแบบตีดะ (Backtracking)',
         { fontSize: '24px', color: '#FFFF00', fontStyle: 'bold', stroke: '#000', strokeThickness: 4, align: 'center' }
     ).setOrigin(0.5).setDepth(20);
 
@@ -44,7 +277,7 @@ async function playBarDisplay(scene, trace, options) {
     const barWidth = targetAmount * unitWidth;
     const barHeight = 80;
     const startX = 400 - (barWidth / 2);
-    const startY = 220;
+    const startY = 380; // เลื่อนให้ลงมาอยู่กลางจอ ไม่ทับกับจุดยืนข้างบน
 
     // Slot Background (พื้นที่บอส)
     const slotBg = scene.add.rectangle(400, startY, barWidth, barHeight, 0x000000, 0.7);
@@ -61,7 +294,7 @@ async function playBarDisplay(scene, trace, options) {
     }
 
     // Text: แสดง HP บอสที่เหลือ
-    const hpText = scene.add.text(400, startY - 70, `👾 เลือดบอส: ${targetAmount}`, {
+    const hpText = scene.add.text(400, startY - 70, `พลังชีวิตเป้าหมาย: ${targetAmount}`, {
         fontSize: '32px', color: '#FFF', fontStyle: 'bold', stroke: '#000', strokeThickness: 6
     }).setOrigin(0.5).setDepth(20);
 
@@ -74,17 +307,18 @@ async function playBarDisplay(scene, trace, options) {
     const stack = [];
     let currentX = startX;
     let currentSum = 0;
+    let bestSolution = null; // snapshot ของ stack เมื่อเจอ solution ที่ดีที่สุด
 
     const updateHpText = () => {
         const remain = targetAmount - currentSum;
         if (remain < 0) {
-            hpText.setText(`❌ พลังเกิน! เกินไป ${Math.abs(remain)}`);
+            hpText.setText(`พลังรวมเกินเป้าหมาย! (ส่วนต่าง: ${Math.abs(remain)})`);
             hpText.setColor('#FF5555');
         } else if (remain === 0) {
-            hpText.setText(`✅ โค่นบอสสำเร็จ!`);
+            hpText.setText(`จัดการเป้าหมายสำเร็จ!`);
             hpText.setColor('#00FF00');
         } else {
-            hpText.setText(`👾 เลือดบอส: ${remain}`);
+            hpText.setText(`พลังชีวิตเป้าหมาย: ${remain}`);
             hpText.setColor('#FFFFFF');
         }
     };
@@ -101,10 +335,10 @@ async function playBarDisplay(scene, trace, options) {
                     const projectedSum = currentSum + w.power;
 
                     if (projectedSum > targetAmount) {
-                        statusText.setText(`💡 คิดจะหยิบ [พลัง ${w.power}]...\nแต่มันน่าจะยาวเกินหลอดเลือดแน่ๆ!`);
+                        statusText.setText(`พิจารณา [พลัง ${w.power}]...\nแต่มันน่าจะยาวเกินไปแน่ๆ!`);
                         statusText.setColor('#FFA500');
                     } else {
-                        statusText.setText(`💡 คิดจะหยิบ [พลัง ${w.power}]...\nน่าจะยัดลงหลอดได้แฮะ ทดลองดู!`);
+                        statusText.setText(`พิจารณา [พลัง ${w.power}]...\nน่าจะสามารถเติมตัวเลขได้ ขอทดสอบ`);
                         statusText.setColor('#FFFF00');
                     }
 
@@ -130,7 +364,7 @@ async function playBarDisplay(scene, trace, options) {
                     scene.tweens.add({
                         targets: ghost ? [flash, ghost] : [flash],
                         alpha: 0,
-                        duration: 800 / speed, // ให้นานพอที่จะมองเห็น Preview ชัดๆ
+                        duration: baseDelay * 0.8,
                         onComplete: () => {
                             flash.destroy();
                             if (ghost) ghost.destroy();
@@ -151,13 +385,13 @@ async function playBarDisplay(scene, trace, options) {
                 const remainAfter = targetAmount - (currentSum + w.power);
 
                 if (remainAfter < 0) {
-                    statusText.setText(`❌ หยิบ [พลัง ${w.power}] มาใส่...\nยัดไม่ลง! ทะลุหลอดเลือด! (เกินไป ${Math.abs(remainAfter)})`);
+                    statusText.setText(`เลือก [พลัง ${w.power}] มาใส่...\nบรรจุไม่ลง! พลังเกินเป้าหมาย! (เกิน ${Math.abs(remainAfter)})`);
                     statusText.setColor('#FF5555');
                 } else if (remainAfter === 0) {
-                    statusText.setText(`✅ หยิบ [พลัง ${w.power}] มาใส่...\nพอดีเป๊ะ! โค่นบอสสำเร็จ 1 วิธี!`);
+                    statusText.setText(`เลือก [พลัง ${w.power}] มาใส่...\nพอดีเป๊ะ! จัดการเป้าหมายสำเร็จ!`);
                     statusText.setColor('#00FF00');
                 } else {
-                    statusText.setText(`⚔️ หยิบ [พลัง ${w.power}] มาใส่ได้สำเร็จ!\n(หลอดเลือดบอสยังเหลือที่ให้ยัดอีก ${remainAfter})`);
+                    statusText.setText(`เลือก [พลัง ${w.power}] มาใส่สำเร็จ!\n(เป้าหมายยังขาดพลังอีก ${remainAfter})`);
                     statusText.setColor('#00FFFF');
                 }
 
@@ -178,7 +412,7 @@ async function playBarDisplay(scene, trace, options) {
                     targets: block,
                     x: currentX,
                     y: startY,
-                    duration: 400 / speed,
+                    duration: baseDelay * 0.4,
                     ease: 'Power2'
                 });
 
@@ -186,16 +420,24 @@ async function playBarDisplay(scene, trace, options) {
                     targets: label,
                     x: currentX + blockW / 2,
                     y: startY,
-                    duration: 400 / speed,
+                    duration: baseDelay * 0.4,
                     ease: 'Power2'
                 });
 
                 // อัปเดตสถานะความกว้าง
-                stack.push({ block, label, power: w.power, blockW, oriX: w.x, oriY: w.y });
+                stack.push({ block, label, power: w.power, blockW, oriX: w.x, oriY: w.y, warriorIdx: idx });
                 currentX += blockW;
                 currentSum += w.power;
 
                 updateHpText();
+
+                // เจอ solution ที่ดีที่สุด: บันทึก snapshot ไว้
+                if (currentSum === targetAmount) {
+                    const currentCount = stack.length;
+                    if (!bestSolution || currentCount < bestSolution.length) {
+                        bestSolution = stack.map(s => s.warriorIdx);
+                    }
+                }
 
                 // ถ้าล้นหลอด ให้เกิด Flash สีแดงแรงๆ
                 if (currentSum > targetAmount) {
@@ -203,7 +445,7 @@ async function playBarDisplay(scene, trace, options) {
                     scene.tweens.add({
                         targets: overFlash,
                         alpha: 0,
-                        duration: 400 / speed,
+                        duration: baseDelay * 0.4,
                         onComplete: () => overFlash.destroy()
                     });
                 }
@@ -216,7 +458,7 @@ async function playBarDisplay(scene, trace, options) {
                 const last = stack.pop();
                 if (!last) break;
 
-                statusText.setText(`🔙 ถอยหลัง 1 ก้าว (Backtrack)\nดึงพลัง ${last.power} ตัวล่าสุดออก เพื่อกลับไปหาทางแยกอื่น...`);
+                statusText.setText(`ถอยกลับ (Backtrack)\nถอดยูนิตพลัง ${last.power} ล่าสุดออก เพื่อพิจารณาเส้นทางอื่น`);
                 statusText.setColor('#FFA500');
 
                 currentX -= last.blockW;
@@ -231,7 +473,7 @@ async function playBarDisplay(scene, trace, options) {
                     y: last.oriY,
                     alpha: 0,
                     scale: 0.5,
-                    duration: 400 / speed,
+                    duration: baseDelay * 0.4,
                     ease: 'Power2',
                     onComplete: () => last.block.destroy()
                 });
@@ -241,7 +483,7 @@ async function playBarDisplay(scene, trace, options) {
                     y: last.oriY,
                     alpha: 0,
                     scale: 0.5,
-                    duration: 400 / speed,
+                    duration: baseDelay * 0.4,
                     ease: 'Power2',
                     onComplete: () => last.label.destroy()
                 });
@@ -257,7 +499,7 @@ async function playBarDisplay(scene, trace, options) {
                 const amount = step.amount;
                 if (amount <= 0) break; // ไม่ต้องทำอะไรใหญ่ๆ ถ้าเลือดเหลือน้อยกว่า 0 หรือ 0 (พอดี)
 
-                statusText.setText(`🌟 [Memo Hit] เลือด ${amount} เคยคิดผลลัพธ์ไปแล้ว!\nดึงคำตอบเดิมมาใช้เลย การันตีไม่ต้องคิดซ้ำให้เสียเวลาลูป!`);
+                statusText.setText(`[Memo Hit] พลังเป้าหมาย ${amount} เคยถูกพิจารณาแล้ว\nดึงผลลัพธ์จากหน่วยความจำมาใช้`);
                 statusText.setColor('#FFD700');
 
                 // สร้างรูปกระพริบคลุมโซนที่เป็นหลอดเลือดที่เหลือ (amount)
@@ -267,7 +509,7 @@ async function playBarDisplay(scene, trace, options) {
 
                 const flash = scene.add.rectangle(hitX, startY, hitWidth + 20, barHeight + 20, 0xFFD700, 0.7).setDepth(16);
                 scene.tweens.add({
-                    targets: flash, alpha: 0, scaleX: 1.1, scaleY: 1.2, duration: 800 / speed,
+                    targets: flash, alpha: 0, scaleX: 1.1, scaleY: 1.2, duration: baseDelay * 0.8,
                     onComplete: () => flash.destroy()
                 });
 
@@ -276,7 +518,7 @@ async function playBarDisplay(scene, trace, options) {
                 }).setOrigin(0.5).setDepth(25);
 
                 scene.tweens.add({
-                    targets: memoText, y: startY - 40, alpha: 0, duration: 900 / speed, ease: 'Power2',
+                    targets: memoText, y: startY - 40, alpha: 0, duration: baseDelay * 0.9, ease: 'Power2',
                     onComplete: () => memoText.destroy()
                 });
 
@@ -286,8 +528,70 @@ async function playBarDisplay(scene, trace, options) {
         }
     }
 
-    statusText.setText('✅ จบกระบวนการ (Greedy/Backtracking)!');
+    statusText.setText('กระบวนการค้นหาเสร็จสิ้น (Backtracking)');
     statusText.setColor('#00FFFF');
+
+    // แสดงตัวละครที่ถูกเลือกมาในคำตอบที่ดีที่สุด (เหมือน DP mode)
+    if (bestSolution && bestSolution.length > 0) {
+        await sleep(baseDelay * 0.5);
+        statusText.setText(`คำตอบที่ดีที่สุด: ใช้ ${bestSolution.length} เหรียญ\nระดมกำลังพลออกมา!`);
+        statusText.setColor('#00FF00');
+
+        const spawnY = startY + barHeight + 80;
+        const spacing = 60;
+        const startHeroX = 400 - ((bestSolution.length * spacing) / 2) + (spacing / 2);
+
+        for (let idx = 0; idx < bestSolution.length; idx++) {
+            const warriorIdx = bestSolution[idx];
+            const w = warriors[warriorIdx];
+            if (!w) continue;
+
+            const origSprite = w.powerSquare;
+            if (!origSprite) continue;
+
+            const px = startHeroX + (idx * spacing);
+
+            // Clone ตัวละครจาก powerSquare — ขนาดใหญ่ขึ้นเป็น 80x80
+            const tex = origSprite.texture?.key || 'bot_slime1';
+            const ghost = scene.add.image(400, startY, tex)
+                .setDisplaySize(80, 80).setDepth(30).setAlpha(0);
+            if (origSprite.frame?.name) ghost.setFrame(origSprite.frame.name);
+
+            // ตัวเลขพลัง — อยู่เหนือตัวละคร (spawnY - 55)
+            const labelY = spawnY - 55;
+            const powerLabel = scene.add.text(px, labelY, w.power.toString(), {
+                fontSize: '22px', color: '#FFD700', fontStyle: 'bold', stroke: '#000', strokeThickness: 5
+            }).setOrigin(0.5).setDepth(31).setAlpha(0);
+
+            // Tween ตัวละครบินเข้ามา
+            scene.tweens.add({
+                targets: ghost,
+                alpha: 1, x: px, y: spawnY,
+                duration: 600 / speed,
+                ease: 'Power2',
+                onComplete: () => {
+                    // โดดขย่มฉลองชัยชนะ (ตัวละครเท่านั้น)
+                    scene.tweens.add({
+                        targets: ghost, y: '-=15',
+                        yoyo: true, repeat: -1, duration: 350
+                    });
+                }
+            });
+
+            // ตัวเลข fade in แยกต่างหาก ตำแหน่งคงที่เหนือตัวละคร
+            scene.tweens.add({
+                targets: powerLabel,
+                alpha: 1,
+                duration: 500 / speed,
+                delay: 300 / speed
+            });
+
+            await sleep(150 / speed);
+        }
+
+        await sleep(baseDelay * 1.5);
+    }
+
     console.log('✅ [coinChangePlaybackBacktrack] Animation complete');
 }
 

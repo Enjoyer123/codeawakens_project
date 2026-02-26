@@ -1,3 +1,6 @@
+import Phaser from 'phaser';
+import { updateWeaponPosition } from '../../combat/weaponEffects';
+
 /**
  * dijkstraPlayback.js — Dijkstra's Algorithm Animation Playback
  *
@@ -9,6 +12,14 @@
  */
 
 export async function playDijkstraAnimation(scene, trace, options = {}) {
+    // สลับ Display Mode ตรงนี้:
+    return playClassicDisplay(scene, trace, options);
+}
+
+// ============================================================================
+// Display Mode 1: Classic Display (self-contained)
+// ============================================================================
+async function playClassicDisplay(scene, trace, options = {}) {
     const { speed = 1.0 } = options;
     const baseDelay = 700 / speed;
     const sleep = ms => new Promise(r => setTimeout(r, Math.max(0, ms)));
@@ -228,6 +239,9 @@ async function playMoveAlongPath(scene, path, speed = 1.0) {
             scene.tweens.add({
                 targets: hero, x: pos.x, y: pos.y,
                 duration: moveDuration, ease: 'Power2.easeInOut',
+                onUpdate: () => {
+                    try { updateWeaponPosition(scene); } catch (e) { }
+                },
                 onComplete: () => { hero.currentNodeId = nodeId; resolve(); }
             });
         });

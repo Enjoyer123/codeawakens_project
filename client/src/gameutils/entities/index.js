@@ -23,10 +23,7 @@ export {
 
 // Weapon utils
 export {
-    getWeaponsData, loadWeaponsData, getWeaponData, calculateDamage,
-    createWeaponRing, displayPlayerWeapon, animateWeaponAttack,
-    displayPlayerEffect, updateWeaponPosition, getPlayerWeaponSprite,
-    updatePlayerWeaponDisplay, foundMonster
+    getWeaponsData, loadWeaponsData, getWeaponData, calculateDamage
 } from './weaponUtils';
 
 // Collection visuals

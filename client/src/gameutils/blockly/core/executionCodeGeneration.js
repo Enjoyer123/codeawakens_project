@@ -44,7 +44,7 @@ export const generateAndInstrumentCode = async (workspaceRef, currentLevel) => {
  * @returns {string} The final executable code string.
  */
 export const prepareExecutableCode = (code, analysisResult, currentLevel) => {
-    const { varName, isNQueen, isTrainSchedule } = analysisResult;
+    const { varName } = analysisResult;
 
     const returnStatement = `try { return ${varName}; } catch(e) { return undefined; }`;
 
@@ -57,11 +57,6 @@ export const prepareExecutableCode = (code, analysisResult, currentLevel) => {
         ${code}
         ${returnStatement}
     `;
-
-    // Train Schedule: ensure solve() is awaited
-    if (isTrainSchedule) {
-        finalCode = finalCode.replace(/=\s*solve\s*\(/g, '= await solve(');
-    }
 
     return finalCode;
 };

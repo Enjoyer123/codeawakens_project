@@ -1,5 +1,6 @@
 // Helper to get animation key based on prefix
-import { animateWeaponAttack, getWeaponData } from '../entities/weaponUtils';
+import { getWeaponData } from '../entities/weaponUtils';
+import { animateWeaponAttack } from '../combat';
 import { getCurrentGameState } from '../shared/game/gameState';
 
 function getAnimKey(prefix, type, dir, hasDirectionalAnims) {

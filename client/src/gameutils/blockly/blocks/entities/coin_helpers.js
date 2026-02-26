@@ -17,7 +17,7 @@ import { collectCoinByPlayer, haveCoinAtPosition } from '../../../entities/colle
 // Coin collection functions
 export async function collectCoin() {
     const currentState = getCurrentGameState();
-    if (currentState.goalReached || currentState.isGameOver) return;
+    if (currentState.isGameOver) return;
 
     // console.log removed("Collect coin function called");
     await new Promise((resolve) => setTimeout(resolve, 200));
@@ -73,7 +73,7 @@ export async function collectCoin() {
 
 export function haveCoin() {
     const currentState = getCurrentGameState();
-    if (currentState.goalReached || currentState.isGameOver) return false;
+    if (currentState.isGameOver) return false;
 
     const scene = getCurrentScene();
 
@@ -87,7 +87,7 @@ export function haveCoin() {
 // Coin sorting functions
 export async function swapCoins(index1, index2) {
     const currentState = getCurrentGameState();
-    if (currentState.goalReached || currentState.isGameOver) return;
+    if (currentState.isGameOver) return;
 
     await new Promise((resolve) => setTimeout(resolve, 200));
     swapPlayerCoins(index1, index2);
