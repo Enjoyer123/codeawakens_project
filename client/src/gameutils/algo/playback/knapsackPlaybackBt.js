@@ -40,12 +40,11 @@ async function playClassicDisplay(scene, trace, options = {}) {
 
     // Draw event text box
     let infoGraphics = scene.add.graphics().setDepth(15);
-    let infoText = scene.add.text(400, 50, '', { fontSize: '20px', color: '#fff' }).setOrigin(0.5).setDepth(16);
+    let infoText = scene.add.text(400, 650, '', { fontSize: '20px', color: '#fff' }).setOrigin(0.5).setDepth(16);
 
     const updateInfo = (text, color = 0x000000) => {
         infoGraphics.clear();
         infoGraphics.fillStyle(color, 0.7);
-        infoGraphics.fillRoundedRect(150, 25, 500, 50, 10);
         infoText.setText(text);
     };
 

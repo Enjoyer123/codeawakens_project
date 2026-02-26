@@ -11,6 +11,7 @@ const CodeEditorTab = ({
     blocklyJavaScriptReady,
     codeValidation,
     isPreview = false,
+    isAdmin = false,
     starterTextCode = ''
 }) => {
     const editorRef = useRef(null);
@@ -90,7 +91,7 @@ const CodeEditorTab = ({
                     {/* Toolbar buttons */}
                     <div className="flex items-center gap-1">
                         {/* Admin only: Generate from current workspace */}
-                        {isPreview && (
+                        {(isPreview || isAdmin) && (
                             <button
                                 onClick={handleGenerateFromBlocks}
                                 className="flex items-center gap-1 px-2 py-0.5 rounded bg-yellow-700/60 hover:bg-yellow-600 text-yellow-100 text-[10px] font-bold transition-colors"

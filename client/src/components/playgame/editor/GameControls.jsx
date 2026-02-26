@@ -13,7 +13,8 @@ const GameControls = ({
     onHistoryClick,
     onLoadXml,
     onShowDebugCode,
-    isPreview
+    isPreview,
+    isAdmin
 }) => {
     const isRunDisabled =
         gameState === "running" ||
@@ -42,7 +43,7 @@ const GameControls = ({
                     )}
                 </button>
 
-                {isPreview && onLoadXml && (
+                {(isPreview || isAdmin) && onLoadXml && (
                     <button
                         onClick={onLoadXml}
                         className="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-semibold shadow transition active:scale-95 flex items-center justify-center gap-1"
@@ -52,7 +53,7 @@ const GameControls = ({
                     </button>
                 )}
 
-                {isPreview && onShowDebugCode && (
+                {(isPreview || isAdmin) && onShowDebugCode && (
                     <button
                         onClick={onShowDebugCode}
                         className="bg-amber-700 hover:bg-amber-600 text-amber-100 py-2 rounded-lg font-semibold shadow transition active:scale-95 flex items-center justify-center gap-1"

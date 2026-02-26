@@ -58,10 +58,10 @@ const GuidePopup = ({ guides, onClose }) => {
   return (
     <Dialog open={true} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent
-        className="w-full max-w-[850px] aspect-[1.9/1] p-0 bg-transparent border-none shadow-none overflow-hidden"
+        className="w-full max-w-[850px] min-h-[450px] max-h-[90vh] flex flex-col p-0 bg-transparent border-none shadow-none overflow-hidden"
       >
         <div
-          className="w-full h-full relative flex flex-col"
+          className="w-full flex-1 min-h-0 relative flex flex-col"
           style={{
             backgroundImage: "url('/guide.png')",
             backgroundSize: '100% 100%',
@@ -70,25 +70,25 @@ const GuidePopup = ({ guides, onClose }) => {
           }}
         >
           {/* Header Section */}
-          <div className="h-[14%] w-full flex items-center justify-between px-8 pt-4">
+          <div className="pt-8 pb-4 shrink-0 w-full flex items-center justify-between px-8">
             <h2 className="text-[#0f172a] font-bold text-xl sm:text-2xl tracking-widest font-pixel uppercase"
               style={{ fontFamily: '"Press Start 2P", monospace' }}>
               Guide
             </h2>
           </div>
 
-          <div className="flex-1 flex items-center px-10 pb-8 relative">
+          <div className="flex-1 min-h-0 flex items-stretch px-10 pb-8 pt-4 relative">
             {/* Guide Arrows: Previous */}
             <button
               onClick={handlePreviousGuide}
               disabled={isFirstGuide}
-              className={`absolute left-2 z-10 p-1 transition-transform hover:scale-110 ${isFirstGuide ? 'opacity-0' : 'opacity-100'}`}
+              className={`absolute left-2 top-1/2 -translate-y-1/2 z-10 p-1 transition-transform hover:scale-110 ${isFirstGuide ? 'opacity-0' : 'opacity-100'}`}
             >
               <img src="/arrow.png" alt="prev" className="w-8 h-10 rotate-180" style={{ imageRendering: 'pixelated' }} />
             </button>
 
             {/* Main Layout Grid - Single Column now */}
-            <div className="flex-1 flex justify-center items-center px-12 sm:px-16 pb-8 pt-2 h-[86%] w-full">
+            <div className="flex-1 min-h-0 flex justify-center items-stretch px-12 sm:px-16 pb-8 pt-2 w-full">
 
               {hasImages ? (
                 <div
@@ -143,11 +143,11 @@ const GuidePopup = ({ guides, onClose }) => {
                 </div>
               ) : (
                 /* Fallback if no images - Text only centered */
-                <div className="w-full h-full flex flex-col justify-center items-center text-center p-8 bg-[#2d1b0e]/90 rounded-xl border-4 border-[#5c3a21] shadow-2xl">
+                <div className="w-full flex flex-col justify-center items-center text-center p-8 bg-[#2d1b0e]/90 rounded-xl border-4 border-[#5c3a21] shadow-2xl">
                   <h3 className="text-2xl font-bold mb-6 text-yellow-500 uppercase shrink-0" style={{ fontFamily: '"Press Start 2P", monospace' }}>
                     {currentGuide.title}
                   </h3>
-                  <div className="overflow-y-auto max-h-[80%] px-4 w-full" style={{
+                  <div className="flex-1 min-h-0 overflow-y-auto px-4 w-full" style={{
                     scrollbarWidth: 'thin',
                     scrollbarColor: '#8b5a2b rgba(0,0,0,0.3)'
                   }}>
@@ -165,7 +165,7 @@ const GuidePopup = ({ guides, onClose }) => {
                         border: 2px solid rgba(0,0,0,0.3);
                       }
                     `}</style>
-                    <p className="text-lg text-white/90 leading-relaxed font-medium text-left whitespace-pre-wrap">
+                    <p className="text-lg text-white/90 leading-relaxed font-medium text-left whitespace-pre-wrap pb-4">
                       {currentGuide.description}
                     </p>
                   </div>
@@ -177,7 +177,7 @@ const GuidePopup = ({ guides, onClose }) => {
             <button
               onClick={handleNextGuide}
               disabled={isLastGuide}
-              className={`absolute right-2 z-10 p-1 transition-transform hover:scale-110 ${isLastGuide ? 'opacity-0' : 'opacity-100'}`}
+              className={`absolute right-2 top-1/2 -translate-y-1/2 z-10 p-1 transition-transform hover:scale-110 ${isLastGuide ? 'opacity-0' : 'opacity-100'}`}
             >
               <img src="/arrow.png" alt="next" className="w-8 h-10" style={{ imageRendering: 'pixelated' }} />
             </button>

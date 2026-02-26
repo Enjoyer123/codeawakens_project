@@ -38,13 +38,13 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
     let statusText, detailText;
     try {
         statusText = scene.add.text(
-            400, 30,
+            400, 750,
             'สร้างกระดาน DP Spreadsheet (1D Array)',
             { fontSize: '24px', color: '#FFFF00', fontStyle: 'bold', stroke: '#000', strokeThickness: 4, align: 'center' }
         ).setOrigin(0.5).setDepth(20);
 
         detailText = scene.add.text(
-            400, 70,
+            400, 780,
             'เตรียมตาราง dp[amount]...',
             { fontSize: '18px', color: '#FFFFFF', fontStyle: 'bold', stroke: '#000', strokeThickness: 3, align: 'center' }
         ).setOrigin(0.5).setDepth(20);
