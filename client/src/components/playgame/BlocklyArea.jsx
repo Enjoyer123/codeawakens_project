@@ -26,6 +26,7 @@ const BlocklyArea = ({
   allLevels,
   onLoadXml,
   isPreview,
+  isAdmin,
   starterTextCode
 }) => {
   const [activeTab, setActiveTab] = useState("blocks");
@@ -112,6 +113,7 @@ const BlocklyArea = ({
               blocklyJavaScriptReady={blocklyJavaScriptReady}
               codeValidation={codeValidation}
               isPreview={isPreview}
+              isAdmin={isAdmin}
               starterTextCode={starterTextCode}
             />
           )}
@@ -134,6 +136,7 @@ const BlocklyArea = ({
         onLoadXml={onLoadXml}
         onShowDebugCode={handleShowDebugCode}
         isPreview={isPreview}
+        isAdmin={isAdmin}
       />
 
       <HistoryModal

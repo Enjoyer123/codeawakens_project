@@ -20,7 +20,7 @@ export async function playNQueenAnimation(scene, trace, options = {}) {
 // ============================================================================
 async function playClassicDisplay(scene, trace, options = {}) {
     const { speed = 1.0 } = options;
-    const baseDelay = 50 / speed;
+    const baseDelay = 200 / speed;
 
     if (!scene || !trace || trace.length === 0) {
         console.warn('⚠️ [nqueenPlayback] No scene or trace');

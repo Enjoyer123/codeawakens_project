@@ -32,7 +32,7 @@ async function playClassicDisplay(scene, trace, options = {}) {
     const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
     const statusText = scene.add.text(
-        400, 30,
+        660, 650,
         'สร้างกระดาน DP Spreadsheet (2D Array)',
         { fontSize: '24px', color: '#FFFF00', fontStyle: 'bold', stroke: '#000', strokeThickness: 4, align: 'center' }
     ).setOrigin(0.5).setDepth(20);
@@ -178,6 +178,7 @@ async function playClassicDisplay(scene, trace, options = {}) {
     }
 
     // --- NEW: Trace back DP table to find chosen items and animate them to bag ---
+    statusText.setPosition(400, 750); // Move below the table
     statusText.setText('กำลังคำนวณย้อนกลับ (Traceback) เพื่อหยิบของใส่เป้...');
     await sleep(baseDelay);
 

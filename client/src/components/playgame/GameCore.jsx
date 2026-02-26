@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 // import { updateTrainScheduleVisuals, updateRopePartitionVisuals } from '../../gameutils/phaser';
 import { useParams } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
+import useUserStore from '../../store/useUserStore';
 import ProgressModal from '../../pages/user/ProgressModal';
 import * as Blockly from "blockly/core";
 import "blockly/blocks";
@@ -83,6 +84,8 @@ const GameCore = ({
 }) => {
   const { levelId: paramLevelId } = useParams();
   const { getToken } = useAuth();
+  const { role } = useUserStore();
+  const isAdmin = role === 'admin';
 
   // Use prop levelId if provided, otherwise use param from route
   const levelId = propLevelId || paramLevelId;
@@ -625,6 +628,7 @@ const GameCore = ({
                 allLevels={allLevelsData}
                 onLoadXml={() => setShowLoadXmlModal(true)}
                 isPreview={isPreview}
+                isAdmin={isAdmin}
                 starterTextCode={starterTextCode}
               />
             </div>
@@ -681,7 +685,7 @@ const GameCore = ({
       )}
 
       {/* Load XML Modal */}
-      {isPreview && (
+      {(isPreview || isAdmin) && (
         <LoadXmlModal
           isOpen={showLoadXmlModal}
           onClose={() => setShowLoadXmlModal(false)}
