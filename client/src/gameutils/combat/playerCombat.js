@@ -68,65 +68,6 @@ export function hitEnemyWithDamage(player, targetMonster = null, damage = 50) {
     return true;
 }
 
-// ฟังก์ชันใหม่สำหรับการป้องกันความเสียหายจากศัตรู
-export function defendFromEnemy(player, enemyDamage) {
-    // ตรวจสอบว่าผู้เล่นมีอาวุธหรือไม่
-    const currentState = player.scene?.game?.registry?.get('currentGameState');
-    if (!currentState || !currentState.weaponData) {
-        return enemyDamage; // ไม่มีอาวุธ โดนความเสียหายเต็ม
-    }
-
-    const weaponData = currentState.weaponData;
-    const defense = weaponData.defense || 0;
-
-    if (defense >= enemyDamage) {
-        // ป้องกันได้ทั้งหมด
-        showDefenseEffect(player, enemyDamage, true);
-        return 0;
-    } else {
-        // ป้องกันได้บางส่วน
-        const actualDamage = enemyDamage - defense;
-        showDefenseEffect(player, defense, false);
-        return actualDamage;
-    }
-}
-
-function showDefenseEffect(player, defenseAmount, fullDefense) {
-    const effectEmoji = fullDefense ? '🛡️' : '⚔️';
-    const effectColor = fullDefense ? '#00ff00' : '#ffaa00';
-
-    const effect = player.scene.add.text(player.x, player.y - 40, effectEmoji, {
-        fontSize: '24px'
-    });
-    effect.setDepth(30);
-
-    const defenseText = player.scene.add.text(player.x + 15, player.y - 25,
-        fullDefense ? 'BLOCKED!' : `-${defenseAmount}`, {
-        fontSize: '16px',
-        color: effectColor,
-        fontStyle: 'bold',
-        stroke: '#000000',
-        strokeThickness: 1
-    });
-    defenseText.setDepth(30);
-
-    // Animations
-    player.scene.tweens.add({
-        targets: effect,
-        alpha: 0,
-        y: player.y - 60,
-        duration: 500,
-        onComplete: () => effect.destroy()
-    });
-
-    player.scene.tweens.add({
-        targets: defenseText,
-        alpha: 0,
-        y: defenseText.y - 30,
-        duration: 800,
-        onComplete: () => defenseText.destroy()
-    });
-}
 
 function updateEnemyHealthBar(enemySprite, currentHealth) {
     const healthBar = enemySprite.getData('healthBar');

@@ -1,7 +1,7 @@
 // src/components/playegame/GameCore.jsx
 // Core game component that can be reused for both normal play and preview mode
 import React, { useEffect, useMemo, useRef, useState } from "react";
-// import { updateTrainScheduleVisuals, updateRopePartitionVisuals } from '../../gameutils/phaser';
+
 import { useParams } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import useUserStore from '../../store/useUserStore';
@@ -14,18 +14,12 @@ import "blockly/javascript";
 window.Blockly = Blockly;
 
 // Import utilities and data
-import {
-  getWeaponData,
-  getRescuedPeople,
-  getCollectedTreasures,
-  clearPlayerCoins,
-  clearRescuedPeople,
-  resetTreasures
-} from '../../gameutils/entities';
-import {
-  getCurrentGameState,
-} from '../../gameutils/shared/game';
-import { displayPlayerWeapon } from '../../gameutils/combat';
+import { getWeaponData } from '../../gameutils/entities/weaponUtils';
+import { getRescuedPeople, clearRescuedPeople } from '../../gameutils/entities/personUtils';
+import { getCollectedTreasures, resetTreasures } from '../../gameutils/entities/treasureUtils';
+import { clearPlayerCoins } from '../../gameutils/entities/coinUtils';
+import { getCurrentGameState } from '../../gameutils/shared/game';
+import { displayPlayerWeapon } from '../../gameutils/combat/weaponEffects';
 
 import { clearGameOverScreen } from '../../gameutils/effects/gameEffects';
 
@@ -128,8 +122,6 @@ const GameCore = ({
 
   // Simplified weapon tracking
   const [currentWeaponData, setCurrentWeaponData] = useState(null);
-  const [patternFeedback, setPatternFeedback] = useState("วาง blocks เพื่อดูผลลัพธ์");
-  const [partialWeaponKey, setPartialWeaponKey] = useState(null);
 
   // Big O complexity state
   const [userBigO, setUserBigO] = useState(null);
@@ -312,13 +304,7 @@ const GameCore = ({
     workspaceRef,
     goodPatterns,
     setHintData,
-    // setCurrentHint, // <- Added
     setCurrentWeaponData,
-    // setPatternFeedback,
-    setPartialWeaponKey,
-
-    hintOpen,        // <- Added
-    hintData         // <- Added
   });
 
 
@@ -547,7 +533,7 @@ const GameCore = ({
             playerHpState={playerHpState}
             isCompleted={isCompleted}
             currentWeaponData={currentWeaponData}
-            currentHint={currentHint}
+
             hintData={hintData}
             hintOpen={hintOpen}
             onToggleHint={() => setHintOpen(false)}
