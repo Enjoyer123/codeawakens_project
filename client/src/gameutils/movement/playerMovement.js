@@ -1,5 +1,5 @@
 import { playWalk, playIdle } from './playerAnimation';
-import { updateWeaponPosition } from '../combat';
+import { updateWeaponPosition } from '../combat/weaponEffects';
 import { setCurrentGameState } from '../shared/game';
 import { updatePlayerArrow } from '../effects/arrow';
 

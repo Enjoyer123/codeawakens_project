@@ -8,8 +8,6 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 
-import { API_BASE_URL } from '../../../config/apiConfig';
-
 /**
  * PatternMatchPanel - Displays pattern matching information and weapon progress
  * 

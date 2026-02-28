@@ -5,12 +5,10 @@ import {
     getPlayerHp,
 } from '../game';
 
-import {
-    clearPlayerCoins,
-    clearRescuedPeople,
-    resetAllPeople,
-    resetTreasures,
-} from '../../entities';
+import { clearPlayerCoins } from '../../entities/coinUtils';
+import { clearRescuedPeople, resetAllPeople } from '../../entities/personUtils';
+import { resetTreasures } from '../../entities/treasureUtils';
+import { updateTreasureDisplay } from '../../entities/collection';
 
 
 

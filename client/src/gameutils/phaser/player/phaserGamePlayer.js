@@ -1,5 +1,5 @@
 // Phaser Game Player Functions
-import { updateWeaponPosition } from '../../combat';
+import { updateWeaponPosition } from '../../combat/weaponEffects';
 
 import { getCurrentGameState, setCurrentGameState, getPlayerHp } from '../../shared/game';
 

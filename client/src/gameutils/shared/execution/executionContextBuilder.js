@@ -6,13 +6,15 @@ import {
 import {
     getPlayerCoins, addCoinToPlayer, clearPlayerCoins as clearPlayerCoinsUtil,
     swapPlayerCoins, comparePlayerCoins, getPlayerCoinValue, getPlayerCoinCount,
-    arePlayerCoinsSorted, allPeopleRescued
-} from '../../entities';
+    arePlayerCoinsSorted
+} from '../../entities/coinUtils';
+
+import { allPeopleRescued } from '../../entities/personUtils';
 
 import {
     hasTreasureAtNode, collectTreasure, isTreasureCollected, resetTreasures,
     hasTreasure, treasureCollected, getCollectedTreasures
-} from '../../entities';
+} from '../../entities/treasureUtils';
 
 import { playRescueAnimation, playCollectAnimation } from '../../entities/actionPlayback';
 

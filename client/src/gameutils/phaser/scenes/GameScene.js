@@ -2,19 +2,13 @@ import Phaser from "phaser";
 import { getWeaponData } from '../../entities/weaponUtils';
 import { displayPlayerWeapon, displayPlayerEffect } from '../../combat/weaponEffects';
 import { getCurrentGameState, setCurrentGameState, setCurrentScene } from '../../shared/game';
-import {
-    drawLevel,
-    setupObstacles,
-    setupMonsters,
-    setupCoins,
-    setupPeople,
-    setupTreasures,
-    setupKnapsack,
-    setupSubsetSum,
-    setupCoinChange,
-    drawPlayer,
-    drawCinematicMonster
-} from '../../setup';
+import { drawLevel, setupObstacles } from '../../setup/levelRenderer';
+import { setupMonsters } from '../../setup/monsterSetup';
+import { setupCoins, setupPeople, setupTreasures } from '../../setup/entitySetup';
+import { drawPlayer, drawCinematicMonster } from '../../setup/playerSetup';
+import { setupKnapsack } from '../../algo/setup/knapsackSetup';
+import { setupSubsetSum } from '../../algo/setup/subsetSumSetup';
+import { setupCoinChange } from '../../algo/setup/coinChangeSetup';
 import { setupGoalUI } from '../../setup/uiManager';
 import { updateMonsters } from '../../combat/enemyMovement';
 // Removed Legacy Anims

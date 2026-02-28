@@ -1,9 +1,5 @@
 // src/components/GameArea.jsx
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '@clerk/clerk-react';
-import { directions } from '../../gameutils/shared/game';
-import { fetchLevelById } from '../../services/levelService';
-import { getCurrentGameState } from '../../gameutils/shared/game';
+import React, { useState } from 'react';
 // UI Components
 import StatusPanel from './ui/StatusPanel';
 import BlockCountPanel from './ui/BlockCountPanel';
@@ -25,7 +21,6 @@ const GameArea = ({
   isCompleted,
   isGameOver,
   currentWeaponData,
-  currentHint,
   hintData,
   hintOpen,
   levelHints,
@@ -46,8 +41,6 @@ const GameArea = ({
   onOpenGuide,
   hasGuides,
 }) => {
-  const { getToken } = useAuth();
-  const [viewerLoading, setViewerLoading] = useState(false);
   const currentBlockCount = hintData?.currentBlockCount || 0;
 
   // ใช้ bestPattern.count ถ้ามี หรือใช้ totalBlocks เป็น fallback
@@ -95,53 +88,7 @@ const GameArea = ({
 
   const weaponImgSrc = getWeaponImage(idealPattern);
 
-  const closeDetail = () => setViewerData(null);
 
-  // Open detail: try to fetch full level details from API, otherwise use adapter fallback
-  const openDetail = async () => {
-    // If we already have viewer data, just show it
-    if (viewerData) return;
-
-    const adapter = () => ({
-      level: levelData || {},
-      enabledBlocks: levelData?.enabledBlocks || levelData?.enabled_blocks || [],
-      patterns: levelData?.patterns || levelData?.goodPatterns || [],
-      victoryConditions: levelData?.victoryConditions || levelData?.victory_conditions || [],
-      guides: levelData?.guides || [],
-      weaponImages: levelData?.weaponImages || []
-    });
-
-    // If level has an id, try fetching full details used by Admin
-    const levelId = levelData?.id || levelData?.level_id || levelData?.level?.id;
-    if (!levelId || !getToken) {
-      setViewerData(adapter());
-      return;
-    }
-
-    setViewerLoading(true);
-    try {
-      const fullLevel = await fetchLevelById(getToken, levelId);
-      if (fullLevel && fullLevel.level_id) {
-        setViewerData({
-          level: fullLevel,
-          enabledBlocks: (fullLevel.level_blocks || []).map((lb) => lb.block),
-          patterns: fullLevel.patterns || [],
-          victoryConditions: (fullLevel.level_victory_conditions || []).map(
-            (vc) => vc.victory_condition
-          ),
-          guides: fullLevel.guides || [],
-          weaponImages: fullLevel.weaponImages || []
-        });
-      } else {
-        setViewerData(adapter());
-      }
-    } catch (err) {
-      console.warn('Failed to fetch full level details:', err);
-      setViewerData(adapter());
-    } finally {
-      setViewerLoading(false);
-    }
-  };
 
   return (
     <div className="flex flex-col h-full overflow-hidden relative">

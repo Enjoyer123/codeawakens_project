@@ -9,11 +9,8 @@ import {
 
 } from '../../../gameutils/shared/game';
 
-import {
-  clearPlayerCoins,
-  clearRescuedPeople,
-  resetAllPeople,
-} from '../../../gameutils/entities';
+import { clearPlayerCoins } from '../../../gameutils/entities/coinUtils';
+import { clearRescuedPeople, resetAllPeople } from '../../../gameutils/entities/personUtils';
 import { updatePlayer } from '../../../gameutils/phaser/player/phaserGamePlayer';
 import { showGameOver, showVictory, clearGameOverScreen } from '../../../gameutils/effects/gameEffects';
 import { resetEnemy } from '../../../gameutils/combat/enemyUtils';
