@@ -1,5 +1,5 @@
-// List Operation Helpers — Pure logic + WithVisual wrappers
-// Used by lists_add_item and lists_setIndex generators
+// Data Operation Helpers — Pure logic (list + dict mutations)
+// Used by lists_add_item, lists_setIndex, and dict_set generators
 
 /**
  * Pure list push — no visuals
@@ -16,3 +16,11 @@ export function listSet(list, index, value) {
     list[index] = value;
 }
 
+/**
+ * Pure dictSet — no visuals
+ */
+export function dictSet(dict, key, value) {
+    if (dict && (typeof dict === 'object' || typeof dict === 'function')) {
+        dict[key] = value;
+    }
+}

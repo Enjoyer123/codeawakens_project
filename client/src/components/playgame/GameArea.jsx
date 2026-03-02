@@ -1,93 +1,33 @@
 // src/components/GameArea.jsx
-import React, { useState } from 'react';
+import React from 'react';
 // UI Components
-import StatusPanel from './ui/StatusPanel';
-import BlockCountPanel from './ui/BlockCountPanel';
-import HintButton from './ui/HintButton';
-import GuideButton from './ui/GuideButton';
-import PatternMatchPanel from './ui/PatternMatchPanel';
-import BigOSelector from './ui/BigOSelector';
-import BigOQuizModal from './ui/BigOQuizModal';
-import HintPopup from './HintPopup';
+import StatusPanel from './panels/StatusPanel';
+import BlockCountPanel from './panels/BlockCountPanel';
+import HintButton from './panels/HintButton';
+import GuideButton from './panels/GuideButton';
+import PatternMatchPanel from './panels/PatternMatchPanel';
+import BigOQuizModal from './panels/BigOQuizModal';
+import HintPopup from './modals/HintPopup';
 
-import { API_BASE_URL } from '../../config/apiConfig';
 
 const GameArea = ({
   gameRef,
-  levelData,
-  playerNodeId,
-  playerDirection,
+  currentLevel,
   playerHpState,
-  isCompleted,
-  isGameOver,
   currentWeaponData,
   hintData,
   hintOpen,
   levelHints,
-  activeLevelHint,
   onNeedHintClick,
   needHintDisabled,
   onToggleHint,
   hintOpenCount,
-  finalScore,
-  inCombatMode,
-  workspaceRef,
-  userBigO,
   onUserBigOChange,
   showBigOQuiz,
   onCloseBigOQuiz,
-  userProgress,
-  allLevels,
   onOpenGuide,
   hasGuides,
 }) => {
-  const currentBlockCount = hintData?.currentBlockCount || 0;
-
-  // ใช้ bestPattern.count ถ้ามี หรือใช้ totalBlocks เป็น fallback
-  const patternBlockCount = hintData?.bestPattern?.count || hintData?.totalBlocks || null;
-
-  // --- Logic: ค้นหารูปอาวุธระดับดีที่สุดของด่านนี้ ---
-  const allPatterns = [...(levelData?.goodPatterns || []), ...(levelData?.patterns || [])];
-  const idealPattern = allPatterns.find(p => p.pattern_type_id === 1) ||
-    allPatterns.find(p => p.pattern_type_id === 2);
-
-  const currentBestPattern = hintData?.bestPattern;
-  let weaponProgress = 0;
-
-  if (idealPattern) {
-    // OLD LOGIC: Checked exact ID/Name match, which failed for alternative patterns of same tier
-    // const isMatchingIdeal = currentBestPattern?.pattern_id === idealPattern.pattern_id ||
-    //   currentBestPattern?.name === idealPattern.name;
-
-    // NEW LOGIC: Check if the current pattern is of the same Tier (type_id) as the ideal pattern
-    // e.g. If both are Gold (type 1), show the progress.
-    const isMatchingTier = currentBestPattern?.pattern_type_id === idealPattern.pattern_type_id;
-
-    if (isMatchingTier) {
-      weaponProgress = hintData.patternPercentage || 0;
-    } else if (currentBestPattern?.pattern_type_id === 2 && idealPattern.pattern_type_id === 1) {
-      // ด่านมีระดับดี (Gold) แต่เราเขียนระดับกลาง (Silver) ให้ค้างที่ 66% ตามที่ตกลงกัน
-      weaponProgress = 66;
-    } else if (currentBestPattern?.pattern_type_id < idealPattern.pattern_type_id) {
-      // Rare case: User found a BETTER pattern than what we thought was ideal?
-      // Should show progress too.
-      weaponProgress = hintData.patternPercentage || 0;
-    } else {
-      // กรณีอื่นๆ เช่น ยังเขียนไม่ถึง หรือเขียนคนละตัว
-      weaponProgress = 0;
-    }
-  }
-
-  // Helper to get weapon image path
-  const getWeaponImage = (pattern) => {
-    if (!pattern) return null;
-    const key = pattern.weaponKey || pattern.weapon?.weapon_key || 'stick';
-    // ลองหาหลายๆ path: uploads, weapons (local), หรือ default stick
-    return `${API_BASE_URL}/uploads/weapons/${key}_idle_1.png`;
-  };
-
-  const weaponImgSrc = getWeaponImage(idealPattern);
-
 
 
   return (
@@ -109,24 +49,19 @@ const GameArea = ({
           <StatusPanel
             playerHpState={playerHpState}
             currentWeaponData={currentWeaponData}
-            characterName={levelData?.character || 'main_1'}
+            characterName={currentLevel?.character || 'main_1'}
           />
 
           {/* Pattern Match */}
           <PatternMatchPanel
             hintData={hintData}
-            idealPattern={idealPattern}
-            weaponProgress={weaponProgress}
-            weaponImgSrc={weaponImgSrc}
+            currentLevel={currentLevel}
             currentWeaponData={currentWeaponData}
           />
 
           {/* Block Count + Guide/Hint grouped */}
           <div className="flex flex-col gap-1 flex-shrink-0">
-            <BlockCountPanel
-              currentBlockCount={currentBlockCount}
-              patternBlockCount={patternBlockCount}
-            />
+            <BlockCountPanel hintData={hintData} />
             <div className="flex gap-1">
               <GuideButton
                 onOpenGuide={onOpenGuide}

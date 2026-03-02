@@ -48,7 +48,7 @@ async function playClassicDisplay(scene, trace, options = {}) {
     await sleep(baseWait);
 
     for (let step of trace) {
-        if (!scene.scene.isActive(scene.scene.key)) break;
+        if (!scene || !scene.scene || !scene.scene.isActive(scene.scene.key)) break;
 
         const idx = step.index; // Trace uses 0-based indexing
         if (idx < 0 || idx >= warriors.length) continue;

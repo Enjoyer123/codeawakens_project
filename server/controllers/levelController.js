@@ -331,7 +331,6 @@ exports.createLevel = async (req, res) => {
       obstacles,
       coin_positions,
       people,
-      treasures,
       knapsack_data,
       subset_sum_data,
       coin_change_data,
@@ -439,7 +438,6 @@ exports.createLevel = async (req, res) => {
         obstacles: parseJsonField(obstacles),
         coin_positions: parseJsonField(coin_positions),
         people: parseJsonField(people),
-        treasures: parseJsonField(treasures),
         knapsack_data: parseJsonField(knapsack_data),
         subset_sum_data: parseJsonField(subset_sum_data),
         coin_change_data: parseJsonField(coin_change_data),
@@ -530,7 +528,6 @@ exports.updateLevel = async (req, res) => {
       obstacles,
       coin_positions,
       people,
-      treasures,
       knapsack_data,
       subset_sum_data,
       coin_change_data,
@@ -616,7 +613,6 @@ exports.updateLevel = async (req, res) => {
     if (obstacles !== undefined) updateData.obstacles = parseJsonField(obstacles);
     if (coin_positions !== undefined) updateData.coin_positions = parseJsonField(coin_positions);
     if (people !== undefined) updateData.people = parseJsonField(people);
-    if (treasures !== undefined) updateData.treasures = parseJsonField(treasures);
     if (knapsack_data !== undefined) updateData.knapsack_data = parseJsonField(knapsack_data);
     if (subset_sum_data !== undefined) updateData.subset_sum_data = parseJsonField(subset_sum_data);
     if (coin_change_data !== undefined) updateData.coin_change_data = parseJsonField(coin_change_data);

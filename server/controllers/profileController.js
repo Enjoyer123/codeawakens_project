@@ -359,20 +359,27 @@ exports.saveUserProgress = async (req, res) => {
         updateData.pattern_bonus_score = pattern_bonus_score || 0;
         updateData.is_correct = is_correct || false;
         updateData.stars_earned = stars_earned || 0;
+
+        // ⭐ Update code and execution metadata ONLY when score is improved or equal
+        updateData.blockly_code = blockly_code || existingProgress.blockly_code;
+        updateData.text_code = text_code || existingProgress.text_code;
+        updateData.execution_time = execution_time !== undefined ? execution_time : existingProgress.execution_time;
+        updateData.hp_remaining = hp_remaining !== undefined ? hp_remaining : existingProgress.hp_remaining;
+        updateData.user_big_o = user_big_o !== undefined ? user_big_o : existingProgress.user_big_o;
       } else {
         // Keep existing scores
         updateData.best_score = existingProgress.best_score;
         updateData.pattern_bonus_score = existingProgress.pattern_bonus_score;
         updateData.is_correct = existingProgress.is_correct;
         updateData.stars_earned = existingProgress.stars_earned;
-      }
 
-      // Always update code and execution time (latest attempt)
-      updateData.blockly_code = blockly_code || existingProgress.blockly_code;
-      updateData.text_code = text_code || existingProgress.text_code;
-      updateData.execution_time = execution_time !== undefined ? execution_time : existingProgress.execution_time;
-      updateData.hp_remaining = hp_remaining !== undefined ? hp_remaining : existingProgress.hp_remaining;
-      updateData.user_big_o = user_big_o !== undefined ? user_big_o : existingProgress.user_big_o;
+        // ⭐ Preserve existing best code and metadata
+        updateData.blockly_code = existingProgress.blockly_code;
+        updateData.text_code = existingProgress.text_code;
+        updateData.execution_time = existingProgress.execution_time;
+        updateData.hp_remaining = existingProgress.hp_remaining;
+        updateData.user_big_o = existingProgress.user_big_o;
+      }
 
       // Keep first_attempt from existing record
       updateData.first_attempt = existingProgress.first_attempt;

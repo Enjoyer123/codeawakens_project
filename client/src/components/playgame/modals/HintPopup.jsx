@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent } from '../ui/dialog';
-
-import { API_BASE_URL } from '../../config/apiConfig';
+import { Dialog, DialogContent } from '../../ui/dialog';
+import { API_BASE_URL } from '../../../config/apiConfig';
 
 const HintPopup = ({ hints, isOpen, onClose, initialHintIndex = 0 }) => {
     const [currentHintIndex, setCurrentHintIndex] = useState(initialHintIndex);

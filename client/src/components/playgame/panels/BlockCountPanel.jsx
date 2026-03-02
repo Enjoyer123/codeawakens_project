@@ -14,7 +14,10 @@ import React from 'react';
  * @param {number} props.currentBlockCount - Current number of blocks placed
  * @param {number|null} props.patternBlockCount - Target pattern block count (or null if unknown)
  */
-const BlockCountPanel = ({ currentBlockCount, patternBlockCount }) => {
+const BlockCountPanel = ({ hintData }) => {
+  const currentBlockCount = hintData?.currentBlockCount || 0;
+  const patternBlockCount = hintData?.bestPattern?.count || hintData?.totalBlocks || null;
+
   return (
     <div className="flex-shrink-0 bg-black/30 rounded-lg p-3 border border-gray-700/50 flex items-center gap-3">
       <div className="w-10 h-10 flex-shrink-0">

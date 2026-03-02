@@ -111,6 +111,7 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
 
     // 2. ลุยรัน Trace เติมตาราง
     for (let i = 0; i < trace.length; i++) {
+        if (!scene || !scene.scene || !scene.scene.isActive(scene.scene.key)) break;
         const step = trace[i];
 
         if (step.action === 'memo_hit') { // ถือเป็นสัญญาณเริ่ม Outer Loop สำหรับ Amount นีั

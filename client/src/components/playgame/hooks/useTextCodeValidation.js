@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useCallback } from 'react';
-import { validateTextCode } from '../../../gameutils/shared/hint';
+import { validateTextCode } from '../../../gameutils/shared/hint/hintTextCodeValidation';
 
 export function useTextCodeValidation({
   currentLevel,

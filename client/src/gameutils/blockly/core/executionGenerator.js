@@ -63,8 +63,10 @@ export const setupCustomGenerator = (currentLevel) => {
             console.warn('[Generator] Function body is empty:', name);
         }
 
-        // Generate return statement if any
-        const returnValue = javascriptGenerator.valueToCode(block, 'RETURN', javascriptGenerator.ORDER_NONE) || '';
+        // Generate return statement (only for procedures_defreturn)
+        const returnValue = block.type === 'procedures_defreturn'
+            ? (javascriptGenerator.valueToCode(block, 'RETURN', javascriptGenerator.ORDER_NONE) || '')
+            : '';
 
         // --- 2. Inject Visual Hooks (Phase 2) ---
 
@@ -76,10 +78,12 @@ export const setupCustomGenerator = (currentLevel) => {
 
         const returnStatement = finalReturnValue ? `  return ${finalReturnValue};\n` : '';
 
-        // Generate async function with Safety Yield (conditional)
-        // Skip yield if __isVisualRun is false (background testing)
+        // Clean Mode: simple function for display (no async, no safety code)
+        if (javascriptGenerator.isCleanMode) {
+            return `function ${name}(${argsString}) {\n${finalBranch}${returnStatement}}`;
+        }
 
-        // Safety Step Limit: Increment and check counter
+        // Runtime Mode: async function with Safety Yield + Step Limit
         const stepLimitCode = "if (typeof globalThis !== 'undefined') { globalThis.__stepCount = (globalThis.__stepCount || 0) + 1; if (globalThis.__stepCount > 5000000) throw new Error('Infinite Loop / Recursion Limit Exceeded (5M steps)'); }";
         const code = `async function ${name}(${argsString}) {\n  if (typeof globalThis !== 'undefined' && globalThis.__isVisualRun !== false) await new Promise(r => setTimeout(r, 0));\n  ${stepLimitCode}\n${finalBranch}${returnStatement}}`;
         return code;
@@ -88,8 +92,9 @@ export const setupCustomGenerator = (currentLevel) => {
     // 1. First, define all standard generators (this sets a generic procedures_defreturn)
     defineAllGenerators();
 
-    // 2. Then override with our custom version (must come AFTER defineAllGenerators)
+    // 2. Then override with our custom async version (must come AFTER defineAllGenerators)
     javascriptGenerator.forBlock["procedures_defreturn"] = customProcGen;
+    javascriptGenerator.forBlock["procedures_defnoreturn"] = customProcGen;
 
     return customProcGen;
 };

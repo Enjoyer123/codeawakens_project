@@ -1,23 +1,31 @@
 /**
  * PatternMatchPanel Component
  * 
- * Displays pattern matching progress, weapon unlock progress, and three-parts matching indicator.
- * This is a complex UI component extracted from GameArea.jsx for better organization.
+ * Displays pattern matching progress and three-parts matching indicator.
  */
 
 import React, { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 
-/**
- * PatternMatchPanel - Displays pattern matching information and weapon progress
- * 
- * @param {Object} props
- * @param {Object} props.hintData - Hint data containing pattern matching information
- * @param {Object} props.idealPattern - The ideal pattern for this level
- * @param {number} props.weaponProgress - Weapon unlock progress (0-100)
- * @param {string} props.weaponImgSrc - URL to weapon image
- */
-const PatternMatchPanel = ({ hintData, idealPattern, weaponProgress, weaponImgSrc, currentWeaponData }) => {
+const PatternMatchPanel = ({ hintData, currentLevel, currentWeaponData }) => {
+  // หา idealPattern (Gold > Silver)
+  const allPatterns = [...(currentLevel?.goodPatterns || []), ...(currentLevel?.patterns || [])];
+  const idealPattern = allPatterns.find(p => p.pattern_type_id === 1) ||
+    allPatterns.find(p => p.pattern_type_id === 2);
+
+  // คำนวณ weapon progress ตาม tier
+  let weaponProgress = 0;
+  const currentBestPattern = hintData?.bestPattern;
+  if (idealPattern && currentBestPattern) {
+    if (currentBestPattern.pattern_type_id === idealPattern.pattern_type_id) {
+      weaponProgress = hintData.patternPercentage || 0;
+    } else if (currentBestPattern.pattern_type_id === 2 && idealPattern.pattern_type_id === 1) {
+      weaponProgress = 66; // Silver ในด่าน Gold → ค้างที่ 66%
+    } else if (currentBestPattern.pattern_type_id < idealPattern.pattern_type_id) {
+      weaponProgress = hintData.patternPercentage || 0;
+    }
+  }
+
   const [showHelp, setShowHelp] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const helpImages = ['/pattern1.png', '/pattern2.png'];
@@ -30,11 +38,19 @@ const PatternMatchPanel = ({ hintData, idealPattern, weaponProgress, weaponImgSr
     setCurrentImageIndex((prev) => (prev - 1 + helpImages.length) % helpImages.length);
   };
 
+  // Progress bar color based on percentage
+  const getProgressColor = (pct) => {
+    if (pct >= 100) return 'bg-green-500';
+    if (pct >= 66) return 'bg-yellow-400';
+    if (pct > 0) return 'bg-blue-400';
+    return 'bg-gray-600';
+  };
+
   return (
     <div className="flex-1 bg-black/30 rounded-lg p-3 border border-gray-700/50">
       <Dialog open={showHelp} onOpenChange={(open) => {
         setShowHelp(open);
-        if (open) setCurrentImageIndex(0); // Reset to first image on open
+        if (open) setCurrentImageIndex(0);
       }}>
         <DialogContent className="max-w-4xl bg-transparent border-0 shadow-none p-0 flex justify-center items-center outline-none">
           <div className="relative flex items-center justify-center">
@@ -45,7 +61,6 @@ const PatternMatchPanel = ({ hintData, idealPattern, weaponProgress, weaponImgSr
               X
             </button>
 
-            {/* Previous Button */}
             <button
               onClick={prevImage}
               className="absolute -left-12 bg-white/80 text-black rounded-full w-10 h-10 font-bold border-2 border-black z-40 hover:bg-white flex items-center justify-center shadow-lg transition-transform hover:scale-110"
@@ -59,7 +74,6 @@ const PatternMatchPanel = ({ hintData, idealPattern, weaponProgress, weaponImgSr
               className="max-h-[85vh] w-auto rounded-lg shadow-2xl border-4 border-white"
             />
 
-            {/* Next Button */}
             <button
               onClick={nextImage}
               className="absolute -right-12 bg-white/80 text-black rounded-full w-10 h-10 font-bold border-2 border-black z-40 hover:bg-white flex items-center justify-center shadow-lg transition-transform hover:scale-110"
@@ -67,7 +81,6 @@ const PatternMatchPanel = ({ hintData, idealPattern, weaponProgress, weaponImgSr
               &gt;
             </button>
 
-            {/* Page Indicator */}
             <div className="absolute -bottom-8 flex gap-2">
               {helpImages.map((_, idx) => (
                 <div
@@ -79,8 +92,9 @@ const PatternMatchPanel = ({ hintData, idealPattern, weaponProgress, weaponImgSr
           </div>
         </DialogContent>
       </Dialog>
+
       <div className="flex items-stretch h-full">
-        {/* Left: Weapon & Stats (50%) */}
+        {/* Left: Progress Bar & Stats (50%) */}
         <div className="w-1/2 flex flex-col items-center gap-2 pr-2 border-r border-gray-700/50">
           <div className="flex flex-col items-center">
             <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">MATCH</span>
@@ -90,52 +104,40 @@ const PatternMatchPanel = ({ hintData, idealPattern, weaponProgress, weaponImgSr
           </div>
 
           {idealPattern && (
-            <div className="flex flex-col items-center gap-1">
-              <div className="relative w-11 h-11 bg-white/90 rounded border border-gray-700/50 overflow-hidden flex items-center justify-center flex-shrink-0">
-                {/* Background (Locked/Dimmed) */}
-                <img
-                  src={weaponImgSrc}
-                  alt="Weapon"
-                  className="absolute w-full h-full object-contain brightness-50 grayscale scale-[5.0]"
-                  onError={(e) => {
-                    if (!e.target.src.includes('_idle_1')) {
-                      const key = idealPattern.weaponKey || idealPattern.weapon?.weapon_key || 'stick';
-                      e.target.src = `/weapons/${key}.png`;
-                    } else {
-                      e.target.style.display = 'none';
-                    }
-                  }}
-                />
-                {/* Foreground (Progress Fill) */}
+            <div className="flex flex-col items-center gap-1.5 w-full max-w-[120px]">
+              {/* Weapon Progress Bar (อิง tier) */}
+              <div className="w-full bg-gray-700/50 rounded-full h-3 overflow-hidden border border-gray-600/50">
                 <div
-                  className="absolute inset-0 overflow-hidden flex items-center justify-center pointer-events-none"
-                  style={{
-                    clipPath: `inset(${100 - weaponProgress}% 0 0 0)`
-                  }}
-                >
-                  <img
-                    src={weaponImgSrc}
-                    alt="Weapon Progress"
-                    className="w-full h-full object-contain scale-[5.0]"
-                    onError={(e) => {
-                      if (!e.target.src.includes('_idle_1')) {
-                        const key = idealPattern.weaponKey || idealPattern.weapon?.weapon_key || 'stick';
-                        e.target.src = `/weapons/${key}.png`;
-                      } else {
-                        e.target.style.display = 'none';
-                      }
-                    }}
-                  />
-                </div>
+                  className={`h-full rounded-full transition-all duration-500 ${getProgressColor(weaponProgress)}`}
+                  style={{ width: `${Math.min(weaponProgress, 100)}%` }}
+                />
               </div>
 
-              {/* Rank & Progress Text (Below Image) */}
-              <div className="flex items-center justify-between gap-1.5 bg-black/40 px-2 py-1 rounded text-[10px] font-bold leading-none w-full max-w-[120px]">
+              {/* Weapon Name & Percentage */}
+              <div className="flex items-center justify-between gap-1 w-full text-[10px] font-bold leading-none">
                 <span className="text-yellow-400 truncate flex-1 text-left">
                   {(currentWeaponData?.name || '').toUpperCase().replace(/🏭|✨/g, '').trim()}
                 </span>
                 <span className="text-white bg-white/10 px-1 rounded-sm text-[9px] shrink-0">
                   {weaponProgress}%
+                </span>
+              </div>
+
+              {/* Pattern Match Progress Bar (ตรง Pattern จริงกี่ %) */}
+              <div className="w-full bg-gray-700/50 rounded-full h-2 overflow-hidden border border-gray-600/50 mt-1">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${getProgressColor(hintData?.patternPercentage || 0)}`}
+                  style={{ width: `${Math.min(hintData?.patternPercentage || 0, 100)}%` }}
+                />
+              </div>
+
+              {/* Pattern Name & Percentage */}
+              <div className="flex items-center justify-between gap-1 w-full text-[10px] font-bold leading-none">
+                <span className="text-blue-300 truncate flex-1 text-left text-[8px]">
+                  {hintData?.bestPattern?.pattern_name || 'Pattern'}
+                </span>
+                <span className="text-white bg-blue-500/20 px-1 rounded-sm text-[9px] shrink-0">
+                  {hintData?.patternPercentage || 0}%
                 </span>
               </div>
             </div>
@@ -159,6 +161,9 @@ const PatternMatchPanel = ({ hintData, idealPattern, weaponProgress, weaponImgSr
                     ?
                   </button>
                 </div>
+                <span className="text-[10px] text-blue-300 truncate font-bold leading-tight max-w-full text-center mb-1">
+                  {hintData?.bestPattern?.pattern_name || hintData?.bestPattern?.pattern_type?.type_name || 'กำลังวิเคราะห์...'}
+                </span>
                 <span className="text-[10px] text-gray-300 truncate font-medium leading-tight max-w-full text-center">
                   จำนวน Pattern Part
                 </span>
@@ -173,16 +178,10 @@ const PatternMatchPanel = ({ hintData, idealPattern, weaponProgress, weaponImgSr
                   <div className="flex gap-1 w-full h-1.5 px-1">
                     {[1, 2, 3].map((part) => {
                       const matchedParts = hintData.threePartsMatch.matchedParts || 0;
-                      let bgColor = 'bg-gray-700'; // Default gray
-
-                      if (part <= matchedParts) {
-                        bgColor = 'bg-green-500'; // Completed
-                      }
-
                       return (
                         <div
                           key={part}
-                          className={`flex-1 ${bgColor} rounded-full transition-colors duration-300 shadow-[0_0_5px_rgba(0,0,0,0.5)]`}
+                          className={`flex-1 ${part <= matchedParts ? 'bg-green-500' : 'bg-gray-700'} rounded-full transition-colors duration-300 shadow-[0_0_5px_rgba(0,0,0,0.5)]`}
                         />
                       );
                     })}

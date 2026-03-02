@@ -224,23 +224,45 @@ const handleSuccess = async ({
 
     // In preview mode, unlock pattern and level
     if (isPreview) {
+        console.log('🔍 [Preview] Pattern unlock check:', {
+            patternId,
+            matchedPatternId: hintData?.bestPattern?.pattern_id,
+            percentage: hintData?.patternPercentage,
+        });
+
         const matchedPattern = hintData?.bestPattern;
+        const isPerfectMatch = hintData?.patternPercentage === 100;
 
-        if (patternId && onUnlockPattern) {
-            const isExactMatch = matchedPattern &&
-                String(matchedPattern.pattern_id) === String(patternId) &&
-                hintData?.patternPercentage === 100;
+        if (isPerfectMatch) {
+            let patternUnlocked = false;
 
-            if (isExactMatch) {
-                await onUnlockPattern(patternId);
+            // Unlock specific pattern if provided and matched
+            if (patternId && onUnlockPattern) {
+                const isExactMatch = matchedPattern && String(matchedPattern.pattern_id) === String(patternId);
+                if (isExactMatch) {
+                    await onUnlockPattern(patternId);
+                    patternUnlocked = true;
+                }
             }
-        } else if (onUnlockPattern && matchedPattern && hintData?.patternPercentage === 100) {
-            await onUnlockPattern(matchedPattern.pattern_id);
+            // Otherwise unlock whatever 100% pattern was matched
+            else if (onUnlockPattern && matchedPattern) {
+                await onUnlockPattern(matchedPattern.pattern_id);
+                patternUnlocked = true;
+            }
+
+            // Only unlock the level if a pattern was successfully validated at 100%
+            // and the level is not already published/unlocked
+            if (patternUnlocked && onUnlockLevel && currentLevel) {
+                if (!currentLevel.is_unlocked) {
+                    await onUnlockLevel(currentLevel.level_id);
+                } else {
+                    console.log('🔍 [Preview] Level is already published. Skipping level unlock.');
+                }
+            }
+        } else {
+            console.log('🔍 [Preview] Pattern not 100% matched. Skipping unlock (Test Play Only).');
         }
 
-        if (onUnlockLevel && currentLevel) {
-            await onUnlockLevel(currentLevel.level_id);
-        }
     } else {
         setShowProgressModal(true);
     }

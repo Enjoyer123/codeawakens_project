@@ -1,5 +1,5 @@
 // Entity setup functions
-// Handles coins, people (NPCs), and treasures
+// Handles coins and people (NPCs)
 import Phaser from "phaser";
 
 /**
@@ -124,67 +124,4 @@ export function setupPeople(scene) {
     console.log(`Setup ${scene.people.length} people`);
 }
 
-/**
- * Setup treasure items
- * @param {Phaser.Scene} scene - Phaser scene instance
- */
-export function setupTreasures(scene) {
-    if (!scene.levelData.treasures) return;
 
-    scene.treasures = [];
-
-    scene.levelData.treasures.forEach((treasureData) => {
-        // ใช้ตำแหน่งเดิมของสมบัติ
-        const treasureX = treasureData.x;
-        const treasureY = treasureData.y;
-
-        // Create treasure sprite as crown image
-        const treasure = scene.add.image(treasureX, treasureY, 'crown-1');
-        treasure.setScale(1.2);
-        treasure.setDepth(8);
-
-        // Add treasure data
-        treasure.setData({
-            nodeId: treasureData.nodeId,
-            treasureName: treasureData.name,
-            collected: false,
-            id: treasureData.id
-        });
-
-        // Create treasure name label
-        const nameLabel = scene.add.text(treasureX, treasureY - 25, treasureData.name, {
-            fontSize: '10px',
-            color: '#ffffff',
-            fontStyle: 'bold',
-            backgroundColor: '#000000',
-            padding: { x: 3, y: 1 }
-        });
-        nameLabel.setOrigin(0.5, 0.5);
-        nameLabel.setDepth(9);
-
-        // Create glow effect
-        const glowEffect = scene.add.circle(treasureX, treasureY, 25, 0xffd700, 0.3);
-        glowEffect.setStrokeStyle(2, 0xffd700);
-        glowEffect.setDepth(7);
-
-        // Add pulsing animation
-        scene.tweens.add({
-            targets: [treasure, glowEffect],
-            scaleX: 1.2,
-            scaleY: 1.2,
-            duration: 1000,
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.easeInOut'
-        });
-
-        // Store references
-        treasure.nameLabel = nameLabel;
-        treasure.glowEffect = glowEffect;
-        treasure.setData('glowEffect', glowEffect);
-
-        scene.treasures.push(treasure);
-    });
-
-    console.log(`Setup ${scene.treasures.length} treasures`);
-}

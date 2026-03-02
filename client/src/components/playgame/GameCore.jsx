@@ -1,6 +1,6 @@
-// src/components/playegame/GameCore.jsx
+// src/components/playgame/GameCore.jsx
 // Core game component that can be reused for both normal play and preview mode
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import { useParams } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
@@ -9,33 +9,28 @@ import ProgressModal from '../../pages/user/ProgressModal';
 import * as Blockly from "blockly/core";
 import "blockly/blocks";
 import "blockly/javascript";
-// import { API_BASE_URL } from '../../config/apiConfig';
-// NOTE: 11/2/2026 เป็นแบบ golbal ต้องเปลี่ยนเป็นของใครของมัน
 window.Blockly = Blockly;
 
 // Import utilities and data
 import { getWeaponData } from '../../gameutils/entities/weaponUtils';
 import { getRescuedPeople, clearRescuedPeople } from '../../gameutils/entities/personUtils';
-import { getCollectedTreasures, resetTreasures } from '../../gameutils/entities/treasureUtils';
 import { clearPlayerCoins } from '../../gameutils/entities/coinUtils';
 import { getCurrentGameState } from '../../gameutils/shared/game';
 import { displayPlayerWeapon } from '../../gameutils/combat/weaponEffects';
-
 import { clearGameOverScreen } from '../../gameutils/effects/gameEffects';
 
 // Import components
 import GameArea from './GameArea';
 import BlocklyArea from './BlocklyArea';
-import GuidePopup from './GuidePopup';
-import LoadXmlModal from './LoadXmlModal';
+import GuidePopup from './modals/GuidePopup';
+import LoadXmlModal from './modals/LoadXmlModal';
 
 // Import custom hooks
-import { useGameConditions } from './hooks/useGameConditions';
 import { usePhaserGame } from './hooks/usePhaserGame';
 import { useBlocklySetup } from './hooks/blocklysetup/useBlocklySetup';
 import { useCodeExecution } from './hooks/execution/useCodeExecution';
-import { useGameHistory } from './hooks/useGameData';
-import { useLevel } from '../../services/hooks/useLevel';
+import { useProfile } from '../../services/hooks/useProfile';
+import { useLevel, useLevels } from '../../services/hooks/useLevel';
 import { usePatterns } from '../../services/hooks/usePattern';
 import { useLevelInitializer } from './hooks/useLevelLoader';
 import { usePatternAnalysis } from './hooks/usePatternAnalysis';
@@ -44,35 +39,31 @@ import { useGuideSystem } from '../../hooks/useGuideSystem';
 
 // Import utils
 import { handleRestartGame as handleRestartGameUtil } from './utils/gameHandlers';
-// Import example loaders configuration
 import { EXAMPLE_LOADERS } from './constants/exampleLoaders';
-import ExecutionErrorModal from './ExecutionErrorModal';
+import ExecutionErrorModal from './modals/ExecutionErrorModal';
 import PageLoader from '../../components/shared/Loading/PageLoader';
-
 import { useSuppressBlocklyWarnings } from '../../components/admin/level/hooks/useSuppressBlocklyWarnings';
-const resetAllGameStates = () => {
 
-  // Clear shared game state (Coins, People, Treasures)
+const resetAllGameStates = () => {
   clearPlayerCoins();
   clearRescuedPeople();
-  resetTreasures();
 };
-
 
 /**
  * GameCore Component
- * 
+ *
  * @param {Object} props
  * @param {string} props.levelId - Level ID to load
  * @param {boolean} props.isPreview - Whether this is preview mode (default: false)
  * @param {number} props.patternId - Pattern ID for preview mode (optional)
- * @param {Function} props.onUnlockPattern - Callback function when pattern is unlocked (optional, for preview mode)
- * @param {Function} props.onUnlockLevel - Callback function when level is unlocked (optional, for preview mode)
+ * @param {Function} props.onUnlockPattern - Callback when pattern is unlocked (optional)
+ * @param {Function} props.onUnlockLevel - Callback when level is unlocked (optional)
  */
 const GameCore = ({
   levelId: propLevelId,
   isPreview = false,
   patternId = null,
+  patternXml = null,
   onUnlockPattern = null,
   onUnlockLevel = null
 }) => {
@@ -81,35 +72,29 @@ const GameCore = ({
   const { role } = useUserStore();
   const isAdmin = role === 'admin';
 
-  // Use prop levelId if provided, otherwise use param from route
   const levelId = propLevelId || paramLevelId;
 
   const gameRef = useRef(null);
   const blocklyRef = useRef(null);
   const workspaceRef = useRef(null);
   const phaserGameRef = useRef(null);
-  const [gameState, setGameState] = useState("loading");
-  const [currentHint, setCurrentHint] = useState("Loading level data...");
-  const [blocklyLoaded, setBlocklyLoaded] = useState(false);
-
-  // Progress tracking state (only used in normal mode)
-  const [showProgressModal, setShowProgressModal] = useState(false);
-  const [gameResult, setGameResult] = useState(null);
-  // const [attempts, setAttempts] = useState(0);
-  // const [timeSpent, setTimeSpent] = useState(0);
   const gameStartTime = useRef(null);
 
-  // State for API data
+  const [gameState, setGameState] = useState("loading");
+  const [currentHint, setCurrentHint] = useState("Loading level data...");
+  const [blocklyLoaded, setBlocklyLoaded] = useState(0);
+  const [blocklyJavaScriptReady, setBlocklyJavaScriptReady] = useState(false);
+
+  // Progress tracking
+  const [showProgressModal, setShowProgressModal] = useState(false);
+  const [gameResult, setGameResult] = useState(null);
+
+  // Level data
   const [currentLevel, setCurrentLevel] = useState(null);
   const [enabledBlocks, setEnabledBlocks] = useState({});
-  // const enabledBlockKeySignature = useMemo(
-  //   () => Object.keys(enabledBlocks).sort().join(','),
-  //   [enabledBlocks]
-  // );
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Load XML Modal state
+  // Load XML Modal
   const [showLoadXmlModal, setShowLoadXmlModal] = useState(false);
 
   // Game state
@@ -120,20 +105,14 @@ const GameCore = ({
   const [isRunning, setIsRunning] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
 
-  // Simplified weapon tracking
+  // Weapon tracking
   const [currentWeaponData, setCurrentWeaponData] = useState(null);
 
-  // Big O complexity state
+  // Big O complexity
   const [userBigO, setUserBigO] = useState(null);
   const [showBigOQuiz, setShowBigOQuiz] = useState(false);
 
-
-  const handleBigOSelect = (value) => {
-    setUserBigO(value);
-    setShowBigOQuiz(false);
-  };
-
-  // Hint system state
+  // Hint system
   const [hintData, setHintData] = useState({
     hint: "วาง blocks เพื่อเริ่มต้น",
     showHint: false,
@@ -142,12 +121,16 @@ const GameCore = ({
     progress: 0
   });
 
-  // Score system state
+  // Score system
   const [finalScore, setFinalScore] = useState(null);
 
-  // Hint open / count state
+  // Hint open / count
   const [hintOpen, setHintOpen] = useState(false);
   const [hintOpenCount, setHintOpenCount] = useState(0);
+
+  // Level-based hints
+  const [levelHintIndex, setLevelHintIndex] = useState(0);
+  const [activeLevelHint, setActiveLevelHint] = useState(null);
 
   // Ensure finalScore is set when game is over
   useEffect(() => {
@@ -156,37 +139,25 @@ const GameCore = ({
     }
   }, [isGameOver, finalScore]);
 
-  // Combat system state
+  // Combat mode
   const [inCombatMode, setInCombatMode] = useState(false);
-
-  // Level-based hints (from DB) state for Need Hint button
-  const [levelHintIndex, setLevelHintIndex] = useState(0);
-  const [activeLevelHint, setActiveLevelHint] = useState(null);
-
-  // Sync combat state with combat system
-  // NOTE: 10/2/69 This is not used in preview mode
-
-
-  // sync interval removed because UI is now fully in Phaser
 
   // Admin pattern management
   const [goodPatterns, setGoodPatterns] = useState([]);
 
-  // Text code editor state
+  // Text code editor
   const [textCode, setTextCode] = useState("");
   const [starterTextCode, setStarterTextCode] = useState("");
   const [codeValidation, setCodeValidation] = useState({ isValid: false, message: "" });
-  const [blocklyJavaScriptReady, setBlocklyJavaScriptReady] = useState(false);
 
+  // Test result
+  const [testCaseResult, setTestCaseResult] = useState(null);
 
-
-  // History system state - using TanStack Query
-  const { userProgress, allLevels: allLevelsData } = useGameHistory();
-
-
-  const handleCloseProgressModal = () => {
-    setShowProgressModal(false);
-  };
+  // History system (reuse existing service hooks)
+  const { data: userProfileData } = useProfile();
+  const { data: allLevelsRaw } = useLevels(1, 1000);
+  const userProgress = userProfileData?.user_progress || [];
+  const allLevelsData = allLevelsRaw?.levels || [];
 
   // Set blocklyJavaScriptReady when blocklyLoaded becomes true
   useEffect(() => {
@@ -195,12 +166,10 @@ const GameCore = ({
     }
   }, [blocklyLoaded, blocklyJavaScriptReady]);
 
-  // Debug: Log codeValidation changes
-
   // Suppress Blockly deprecation warnings
   useSuppressBlocklyWarnings();
 
-  // Text code validation - using hook
+  // Text code validation
   const { handleTextCodeChange } = useTextCodeValidation({
     currentLevel,
     textCode,
@@ -210,37 +179,22 @@ const GameCore = ({
     setCodeValidation
   });
 
-  // Handle text code changes with state update
   const handleTextCodeChangeWithState = (newCode) => {
     setTextCode(newCode);
     handleTextCodeChange(newCode);
   };
 
-  // Called only once when starter XML is generating its initial code
   const handleInitialCodeGenerated = (newCode) => {
     setStarterTextCode(newCode);
     handleTextCodeChangeWithState(newCode);
   };
 
-
-  const { foundMonster, canMoveForward, nearPit, atGoal } = useGameConditions({
-    currentLevel
-  });
-
-
-
-
-
   const { data: levelData, isLoading: isLevelLoading, isError: isLevelError, error: levelError } = useLevel(levelId);
 
-  // Initialize level data when levelData is available
   useLevelInitializer({
-    levelData, // Pass the data from useLevel
+    levelData,
     getToken,
     isPreview,
-    // setLoading, // No longer passed, state handled here
-    // setError,   // No longer passed
-    // setCurrentLevel, // No longer passed, we only set it here via local effect if needed or rely on levelData
     setEnabledBlocks,
     setGoodPatterns,
     setCurrentHint,
@@ -250,55 +204,48 @@ const GameCore = ({
     setIsCompleted,
     setIsGameOver,
     setCurrentWeaponData,
-    // setPatternFeedback,
     setGameState,
-    setCurrentLevelState: setCurrentLevel // Mapping back to the state setter
+    setCurrentLevelState: setCurrentLevel
   });
 
-  // Sync loading and error states
-  useEffect(() => {
-    setLoading(isLevelLoading);
-  }, [isLevelLoading]);
-
+  // Sync error state from query
   useEffect(() => {
     if (isLevelError && levelError) {
       setError(levelError.message || "Failed to load level");
     }
   }, [isLevelError, levelError]);
 
-
   // Reset text code state when level changes
   useEffect(() => {
     if (levelId) {
-
       setTextCode("");
       setCodeValidation({ isValid: false, message: "" });
       setBlocklyJavaScriptReady(false);
-      resetAllGameStates(); // Reset algorithm visual state
+      resetAllGameStates();
     }
   }, [levelId]);
 
-  // Load patterns for the level using TanStack Query
+  // Load patterns for the level
   const { data: patternsData } = usePatterns(currentLevel?.level_id || currentLevel?.id);
 
   useEffect(() => {
     if (patternsData) {
-      // Handle both array and object with patterns property
       const patterns = Array.isArray(patternsData) ? patternsData : (patternsData.patterns || []);
-
-      // In preview mode, use all patterns (including is_available = false)
-      // In normal mode, only use patterns with is_available = true
-      const filteredPatterns = isPreview
+      let filteredPatterns = isPreview
         ? patterns
         : patterns.filter(p => p.is_available === true);
 
+      // If a specific pattern is selected in preview mode, ONLY test against that pattern
+      if (isPreview && patternId !== null) {
+        filteredPatterns = filteredPatterns.filter(p => String(p.pattern_id) === String(patternId));
+      }
+
       setGoodPatterns(filteredPatterns);
+      console.log('🟡 [GameCore] setGoodPatterns:', filteredPatterns.length, 'patterns, patternId:', patternId, 'blocklyLoaded:', blocklyLoaded);
     }
-  }, [patternsData, isPreview]);
+  }, [patternsData, isPreview, patternId]);
 
-  // Pattern analysis and weapon display - using hook
-
-
+  // Pattern analysis and weapon display
   usePatternAnalysis({
     blocklyLoaded,
     workspaceRef,
@@ -307,27 +254,51 @@ const GameCore = ({
     setCurrentWeaponData,
   });
 
+  // Load pattern XML if provided (Admin Preview Pattern Selector)
+  // ใช้ ref เพื่อจำค่าเก่า ป้องกันไม่ให้ยิงตอนเข้าด่านครั้งแรก (useBlocklySetup จัดการเองแล้ว)
+  const prevPatternXmlRef = React.useRef(undefined);
+
+  useEffect(() => {
+    if (!isPreview || !workspaceRef.current || !blocklyLoaded) return;
+
+    const prev = prevPatternXmlRef.current;
+    prevPatternXmlRef.current = patternXml;
+
+    // ถ้าเลือก Pattern → โหลด XML ของ Pattern นั้น
+    if (patternXml) {
+      try {
+        workspaceRef.current.clear();
+        const xmlDom = Blockly.utils.xml.textToDom(patternXml);
+        Blockly.Xml.domToWorkspace(xmlDom, workspaceRef.current);
+      } catch (e) {
+        console.error("Error loading pattern XML into workspace:", e);
+      }
+    }
+    // ถ้ายกเลิกเลือก (จาก Pattern กลับมา "เล่นเฉยๆ") → โหลด starter XML ของด่าน
+    else if (prev) {
+      try {
+        workspaceRef.current.clear();
+        if (currentLevel?.starter_xml) {
+          const xmlDom = Blockly.utils.xml.textToDom(currentLevel.starter_xml);
+          Blockly.Xml.domToWorkspace(xmlDom, workspaceRef.current);
+        }
+      } catch (e) {
+        console.error("Error loading starter XML into workspace:", e);
+      }
+    }
+    // ถ้าทั้ง patternXml และ prev เป็น null/undefined → เพิ่งเข้าด่าน, ไม่ต้องทำอะไร (useBlocklySetup จัดการแล้ว)
+  }, [patternXml, blocklyLoaded, isPreview]);
 
   // Initialize Blockly and Phaser when ready
-  // [Flow A] Initialization: 1. จุดเริ่มต้น (Entry Point)
-  // GameCore เรียกใช้ initBlocklyAndPhaser เมื่อ DOM และ Config พร้อม
   useEffect(() => {
-    if (!currentLevel || !blocklyRef.current) {
-      return;
-    }
-    // if (!enabledBlockKeySignature || Object.keys(enabledBlocks).length === 0) {
-    //   return;
-    // }
-    console.log("enabledBlocks", enabledBlocks);
-    if (Object.keys(enabledBlocks).length === 0) {
+    if (!currentLevel || !blocklyRef.current || Object.keys(enabledBlocks).length === 0) {
       return;
     }
 
     initBlocklyAndPhaser();
 
-    // Cleanup function
     return () => {
-      resetAllGameStates(); // Reset algorithm visual state
+      resetAllGameStates();
 
       if (phaserGameRef.current) {
         try {
@@ -348,120 +319,6 @@ const GameCore = ({
       }
     };
   }, [currentLevel, blocklyRef.current]);
-  // }, [currentLevel, enabledBlockKeySignature, blocklyRef.current]);
-
-  // Test result state
-  const [testCaseResult, setTestCaseResult] = useState(null);
-
-  // Initialize Phaser game
-  const { initPhaserGame } = usePhaserGame({
-    gameRef,
-    phaserGameRef,
-    currentLevel,
-    setCurrentWeaponData,
-    setPlayerHp,
-    setIsGameOver,
-    setCurrentHint,
-    isRunning,
-    handleRestartGame: () => handleRestartGameUtil({
-      currentLevel,
-      setPlayerNodeId,
-      setPlayerDirection,
-      setPlayerHp,
-      setIsCompleted,
-      setIsGameOver,
-      setGameState,
-      setCurrentHint,
-      clearGameOverScreen,
-      updatePlayerWeaponDisplay
-    })
-  });
-
-
-  // Code execution
-  const { runCode, executionError, clearExecutionError } = useCodeExecution({
-    workspaceRef,
-    currentLevel,
-    blocklyJavaScriptReady,
-    codeValidation,
-    isPreview,
-    patternId,
-    onUnlockPattern,
-    onUnlockLevel,
-    gameStartTime,
-    gameActions: {
-      foundMonster, canMoveForward, nearPit, atGoal
-    },
-    setters: {
-      setPlayerNodeId, setPlayerDirection, setPlayerHp,
-      setIsCompleted, setIsRunning, setIsGameOver,
-      setGameState, setCurrentHint, setShowProgressModal,
-      setGameResult, setFinalScore,
-      setHintData, setTestCaseResult
-    },
-    scoring: {
-      goodPatterns, userBigO, hintData
-    }
-  });
-
-  // Trigger Big O Quiz logic moved to handleRunClick
-  const [shouldRunAfterBigO, setShouldRunAfterBigO] = useState(false);
-
-  // Hook to run code after BigO selection
-  useEffect(() => {
-    if (shouldRunAfterBigO && userBigO) {
-
-      runCode();
-      setShouldRunAfterBigO(false);
-    }
-  }, [shouldRunAfterBigO, userBigO, runCode]);
-
-  const handleRunClick = () => {
-    // Check if pattern matched 100% AND BigO is required (bestPatternBigO exists) AND BigO not yet provided
-    // Also ensure we are not already running
-    if (hintData?.patternPercentage === 100 && hintData?.bestPatternBigO && !userBigO) {
-      setShowBigOQuiz(true);
-      setShouldRunAfterBigO(true);
-      return;
-    }
-    runCode();
-  };
-
-  // Handle restart game - using utils
-  const handleRestartGame = () => {
-    handleRestartGameUtil({
-      currentLevel,
-      setPlayerNodeId,
-      setPlayerDirection,
-      setPlayerHp,
-      setIsCompleted,
-      setIsGameOver,
-      setGameState,
-      setCurrentHint,
-      clearGameOverScreen,
-      updatePlayerWeaponDisplay
-    });
-    setTestCaseResult(null); // Clear test results on restart
-  };
-
-  // Game action and condition functions are now provided by custom hooks (useGameActions, useGameConditions)
-
-
-  // Initialize Blockly
-  const { initBlocklyAndPhaser } = useBlocklySetup({
-    blocklyRef,
-    workspaceRef,
-    enabledBlocks,
-    // enabledBlockKeySignature,
-    setBlocklyLoaded,
-    setBlocklyJavaScriptReady,
-    // setCurrentHint,
-    initPhaserGame,
-    starter_xml: currentLevel?.starter_xml || null,
-    blocklyLoaded,
-    isTextCodeEnabled: currentLevel?.textcode || false,
-    onCodeGenerated: handleInitialCodeGenerated
-  });
 
   // Update player weapon display
   const updatePlayerWeaponDisplay = () => {
@@ -480,13 +337,119 @@ const GameCore = ({
     }
   };
 
+  // Handle restart game
+  const handleRestartGame = () => {
+    handleRestartGameUtil({
+      currentLevel,
+      setPlayerNodeId,
+      setPlayerDirection,
+      setPlayerHp,
+      setIsCompleted,
+      setIsGameOver,
+      setGameState,
+      setCurrentHint,
+      clearGameOverScreen,
+      updatePlayerWeaponDisplay
+    });
+    setTestCaseResult(null);
+  };
 
+  // Initialize Phaser game
+  const { initPhaserGame } = usePhaserGame({
+    gameRef,
+    phaserGameRef,
+    currentLevel,
+    setCurrentWeaponData,
+    setPlayerHp,
+    setIsGameOver,
+    setCurrentHint,
+    isRunning,
+    handleRestartGame
+  });
 
-  // Guide system state (Called unconditionally for React Hook rules)
-  // Handles null currentLevel internally
+  // Code execution
+  const { runCode, executionError, clearExecutionError } = useCodeExecution({
+    workspaceRef,
+    currentLevel,
+    blocklyJavaScriptReady,
+    codeValidation,
+    isPreview,
+    patternId,
+    onUnlockPattern,
+    onUnlockLevel,
+    gameStartTime,
+    getToken,
+    textCode,
+    setters: {
+      setPlayerNodeId, setPlayerDirection, setPlayerHp,
+      setIsCompleted, setIsRunning, setIsGameOver,
+      setGameState, setCurrentHint, setShowProgressModal,
+      setGameResult, setFinalScore,
+      setHintData, setTestCaseResult
+    },
+    scoring: {
+      goodPatterns, userBigO, hintData
+    }
+  });
+
+  // Big O selection — runs code immediately after selection if pending
+  const handleBigOSelect = (value) => {
+    setUserBigO(value);
+    setShowBigOQuiz(false);
+  };
+
+  const handleRunClick = () => {
+    if (hintData?.patternPercentage === 100 && hintData?.bestPatternBigO && !userBigO) {
+      setShowBigOQuiz(true);
+      return;
+    }
+    runCode();
+  };
+
+  // After BigO is set (via quiz), run code
+  useEffect(() => {
+    // Only trigger if we have a BigO selected, no quiz is showing, 
+    // and the game is currently 'ready' (preventing repeated runs if already completed/gameOver)
+    if (userBigO && showBigOQuiz === false && gameState === 'ready') {
+      // Only trigger this if we just closed the quiz and had hit "Run" before
+      runCode();
+    }
+  }, [userBigO, showBigOQuiz]);
+
+  // Initialize Blockly
+  const { initBlocklyAndPhaser } = useBlocklySetup({
+    blocklyRef,
+    workspaceRef,
+    enabledBlocks,
+    setBlocklyLoaded,
+    setBlocklyJavaScriptReady,
+    initPhaserGame,
+    starter_xml: currentLevel?.starter_xml || null,
+    blocklyLoaded,
+    isTextCodeEnabled: currentLevel?.textcode || false,
+    onCodeGenerated: handleInitialCodeGenerated
+  });
+
+  // Guide system
   const { showGuide, guides, closeGuide, openGuide, hasGuides } = useGuideSystem(currentLevel);
 
-  if (loading) {
+  // Handle need hint click
+  const handleNeedHintClick = () => {
+    const baseHints = Array.isArray(currentLevel?.hints)
+      ? [...currentLevel.hints]
+        .filter(h => h.is_active !== false)
+        .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+      : [];
+
+    if (baseHints.length === 0) return;
+
+    let targetIndex = levelHintIndex >= baseHints.length ? 0 : levelHintIndex;
+    setActiveLevelHint(baseHints[targetIndex]);
+    setLevelHintIndex(targetIndex + 1);
+    setHintOpen(true);
+  };
+
+  if (!levelData && isLevelLoading) {
     return <PageLoader message="Loading level..." />;
   }
 
@@ -494,14 +457,8 @@ const GameCore = ({
     return <div className="flex items-center justify-center h-screen text-red-500">Error: {error}</div>;
   }
 
-  // Guide system state
-  // (Moved to top level)
-
-  // Initialize Blockly and Phaser when ready
-
   return (
     <>
-      {/* Guide Popup - auto-opens when entering level */}
       {showGuide && (
         <GuidePopup
           guides={guides}
@@ -510,8 +467,7 @@ const GameCore = ({
         />
       )}
       <div className={`flex ${isPreview ? 'h-full' : 'h-screen'} bg-[#0f111a]`}>
-        {/* Game Area - 65% ของหน้าจอ */}
-
+        {/* Game Area - 50% */}
         <div className="w-[50%] relative bg-[#0f111a]">
           {/* Floating Level Name */}
           <div className="absolute top-4 left-4 z-40 pointer-events-none">
@@ -526,44 +482,19 @@ const GameCore = ({
             isRunning={isRunning}
             isGameOver={isGameOver}
             onRestart={handleRestartGame}
-            levelData={currentLevel}
             currentLevel={currentLevel}
             playerNodeId={playerNodeId}
             playerDirection={playerDirection}
             playerHpState={playerHpState}
             isCompleted={isCompleted}
             currentWeaponData={currentWeaponData}
-
             hintData={hintData}
             hintOpen={hintOpen}
             onToggleHint={() => setHintOpen(false)}
             hintOpenCount={hintOpenCount}
             levelHints={Array.isArray(currentLevel?.hints) ? currentLevel.hints : []}
             activeLevelHint={activeLevelHint}
-            onNeedHintClick={() => {
-              const baseHints = Array.isArray(currentLevel?.hints)
-                ? [...currentLevel.hints]
-                  .filter(h => h.is_active !== false)
-                  .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
-                : [];
-
-
-
-              if (!baseHints || baseHints.length === 0) return;
-
-              // Logic change: Loop back to start if we reached the end
-              let targetIndex = levelHintIndex;
-              if (targetIndex >= baseHints.length) {
-                targetIndex = 0;
-              }
-
-              const nextHint = baseHints[targetIndex];
-
-              setActiveLevelHint(nextHint);
-              // Set next index (if we just showed 0, next is 1)
-              setLevelHintIndex(targetIndex + 1);
-              setHintOpen(true);
-            }}
+            onNeedHintClick={handleNeedHintClick}
             needHintDisabled={
               !Array.isArray(currentLevel?.hints) ||
               currentLevel.hints.filter(h => h.is_active !== false).length === 0
@@ -572,7 +503,7 @@ const GameCore = ({
             inCombatMode={inCombatMode}
             workspaceRef={workspaceRef}
             userBigO={userBigO}
-            onUserBigOChange={handleBigOSelect} // Update to use handleBigOSelect
+            onUserBigOChange={handleBigOSelect}
             showBigOQuiz={showBigOQuiz}
             onCloseBigOQuiz={() => setShowBigOQuiz(false)}
             userProgress={userProgress}
@@ -581,22 +512,10 @@ const GameCore = ({
           />
         </div>
 
-        {/* Blockly Area - 35% ของหน้าจอ */}
-        <div
-          className="w-[50%] border-l border-black flex flex-col backdrop-blur-sm overflow-hidden"
-          style={{
-            // backgroundImage: "url('/blocklyBg.png')",
-            backgroundSize: "100% 100%",
-            backgroundPosition: "center",
-            backgroundRepeat: "no-repeat",
-            imageRendering: "pixelated"
-          }}
-        >
+        {/* Blockly Area - 50% */}
+        <div className="w-[50%] border-l border-black flex flex-col backdrop-blur-sm overflow-hidden">
           <div className="flex flex-col h-full relative">
-
-
             <div className="flex-1 min-h-0 relative shadow-2xl rounded-lg overflow-hidden">
-
               <BlocklyArea
                 blocklyRef={blocklyRef}
                 blocklyLoaded={blocklyLoaded}
@@ -619,19 +538,17 @@ const GameCore = ({
               />
             </div>
           </div>
-
         </div>
       </div>
 
-      {/* Progress Modal - only show in normal mode */}
+      {/* Progress Modal - normal mode only */}
       {!isPreview && (
         <>
           <ProgressModal
             isOpen={showProgressModal}
-            onClose={handleCloseProgressModal}
+            onClose={() => setShowProgressModal(false)}
             gameResult={gameResult}
             levelData={currentLevel}
-            // timeSpent={timeSpent}
             blocklyXml={workspaceRef.current ? Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspaceRef.current)) : null}
             textCodeContent={currentLevel?.textcode ? textCode || '' : null}
             finalScore={finalScore}
@@ -641,27 +558,23 @@ const GameCore = ({
             targetBigO={hintData?.bestPatternBigO || hintData?.bestPattern?.big_o || hintData?.bestPattern?.bigO}
           />
 
-          {/* Floating "Show Results" button - appears when modal is minimized */}
           {!showProgressModal && (isCompleted || isGameOver) && (
             <button
               onClick={() => setShowProgressModal(true)}
               className="fixed top-20 right-4 z-50 group transition-transform hover:scale-105 active:translate-y-1 w-48"
             >
-              {/* 1. Base Button Image */}
               <img
                 src="/button.png"
                 alt="Show Results"
                 className="w-full h-auto block select-none"
                 style={{ imageRendering: 'pixelated' }}
               />
-              {/* 2. Hover Image */}
               <img
                 src="/buttonhover.png"
                 alt="Show Results Hover"
                 className="absolute inset-0 w-full h-full opacity-0 group-hover:opacity-100 transition-opacity duration-100 select-none"
                 style={{ imageRendering: 'pixelated' }}
               />
-              {/* 3. Text Overlay */}
               <div className="absolute inset-0 flex items-center justify-center gap-2 pb-1 text-[#fdf6e3] group-hover:text-white font-bold font-pixel text-[10px] sm:text-xs tracking-wider uppercase drop-shadow-md">
                 <span>SHOW RESULTS</span>
               </div>

@@ -7,8 +7,7 @@ import {
 
 import { clearPlayerCoins } from '../../entities/coinUtils';
 import { clearRescuedPeople, resetAllPeople } from '../../entities/personUtils';
-import { resetTreasures } from '../../entities/treasureUtils';
-import { updateTreasureDisplay } from '../../entities/collection';
+
 
 
 
@@ -49,8 +48,7 @@ export const resetGameExecutionState = async ({
     clearRescuedPeople();
     await resetAllPeople();
 
-    // ล้างข้อมูลสมบัติ
-    resetTreasures();
+
 
     // Reset knapsack items to original positions
     if (currentLevel?.knapsackData) {
@@ -65,15 +63,6 @@ export const resetGameExecutionState = async ({
     if (currentLevel?.coinChangeData) {
         // Obsolete coin change visual logic removed
     }
-    // อัปเดตการแสดงผลสมบัติหลังจาก reset
-    if (getCurrentGameState().currentScene) {
-        try {
-            updateTreasureDisplay(getCurrentGameState().currentScene);
-        } catch (e) {
-            // Non-critical
-        }
-    }
-
     // รีเซ็ตเหรียญในเกมให้กลับมาแสดง
     if (getCurrentGameState().currentScene) {
         // รีเซ็ตเหรียญที่เก็บไว้แล้วให้กลับมาแสดง
@@ -97,19 +86,6 @@ export const resetGameExecutionState = async ({
                 }
                 if (person.rescueEffect) {
                     person.rescueEffect.setVisible(true);
-                }
-            });
-        }
-
-        // รีเซ็ตสมบัติที่เก็บไว้ให้กลับมาแสดง
-        if (getCurrentGameState().currentScene.treasures) {
-            getCurrentGameState().currentScene.treasures.forEach(treasure => {
-                treasure.setVisible(true);
-                if (treasure.nameLabel) {
-                    treasure.nameLabel.setVisible(true);
-                }
-                if (treasure.glowEffect) {
-                    treasure.glowEffect.setVisible(true);
                 }
             });
         }

@@ -4,7 +4,7 @@ import { displayPlayerWeapon, displayPlayerEffect } from '../../combat/weaponEff
 import { getCurrentGameState, setCurrentGameState, setCurrentScene } from '../../shared/game';
 import { drawLevel, setupObstacles } from '../../setup/levelRenderer';
 import { setupMonsters } from '../../setup/monsterSetup';
-import { setupCoins, setupPeople, setupTreasures } from '../../setup/entitySetup';
+import { setupCoins, setupPeople } from '../../setup/entitySetup';
 import { drawPlayer, drawCinematicMonster } from '../../setup/playerSetup';
 import { setupKnapsack } from '../../algo/setup/knapsackSetup';
 import { setupSubsetSum } from '../../algo/setup/subsetSumSetup';
@@ -51,8 +51,6 @@ export class GameScene extends Phaser.Scene {
 
     preload() {
         const backgroundPath = this.currentLevel?.background_image;
-        console.log('Loading background image from:', backgroundPath);
-        console.log('Current level data:', this.currentLevel);
 
         // Error handler
         this.load.on('loaderror', (file) => {
@@ -60,10 +58,7 @@ export class GameScene extends Phaser.Scene {
             this.load.nextFile(file, true);
         });
 
-        // Success handler
-        this.load.on('filecomplete', (key) => {
-            console.log('✅ File loaded successfully:', key);
-        });
+
 
         if (backgroundPath) {
             this.load.image('bg', backgroundPath);
@@ -93,7 +88,7 @@ export class GameScene extends Phaser.Scene {
         this.load.image('org2', '/bot/org2.png');
         this.load.image('org3', '/bot/org3.png');
 
-        this.load.image('weapon_stick', `${API_BASE_URL}/uploads/weapons/stick_idle_1.png`);
+        // this.load.image('weapon_stick', `${API_BASE_URL}/uploads/weapons/stick_idle_1.png`);
 
         // Load bag object
         this.load.image('bag', '/object/bag.png');
@@ -126,7 +121,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     create() {
-        console.log("Phaser scene create() called");
+
 
         // Create aura animation
         if (this.textures.exists('aura_1_1')) {
@@ -145,7 +140,7 @@ export class GameScene extends Phaser.Scene {
                 frameRate: 8,
                 repeat: -1
             });
-            console.log("✅ Aura animation created");
+
         }
 
         // Create aura_2 animation
@@ -160,7 +155,7 @@ export class GameScene extends Phaser.Scene {
                 frameRate: 12,
                 repeat: -1
             });
-            console.log("✅ Aura 2 animation created");
+
         }
 
         // Create circle_1 animation
@@ -193,11 +188,7 @@ export class GameScene extends Phaser.Scene {
 
         setCurrentScene(this);
         this.levelData = this.currentLevel;
-        console.log('🔍 Level data assigned to scene:', {
-            hasLevelData: !!this.levelData,
-            hasKnapsackData: !!this.levelData?.knapsackData,
-            knapsackData: this.levelData?.knapsackData
-        });
+
 
         // Create animations
         // Legacy Animation Creators Removed
@@ -211,21 +202,7 @@ export class GameScene extends Phaser.Scene {
         createVampire_2Anims(this.anims);
         createVampire_3Anims(this.anims);
 
-        // Debug: Verify Slime animations
-        const testKey = 'slime_1-walk_right';
-        console.log(`🐛 Debug Animation Check: ${testKey} exists?`, this.anims.exists(testKey));
-        if (this.anims.exists(testKey)) {
-            const anim = this.anims.get(testKey);
-            console.log(`🐛 Animation ${testKey} has ${anim.frames.length} frames.`);
-        } else {
-            console.error(`❌ Animation ${testKey} FAILED to create!`);
-            // Check if texture exists
-            console.log(`🐛 Texture 'slime_1' exists?`, this.textures.exists('slime_1'));
-            if (this.textures.exists('slime_1')) {
-                const frames = this.textures.get('slime_1').getFrameNames();
-                console.log(`🐛 Texture 'slime_1' has ${frames.length} frames. First few:`, frames.slice(0, 10));
-            }
-        }
+
 
         // Helper for safe setup
         const safeSetupGame = (retryCount = 0, maxRetries = 20) => {
@@ -249,7 +226,7 @@ export class GameScene extends Phaser.Scene {
         this.time.delayedCall(200, () => {
             if (this.load && this.load.list) {
                 preloadAllWeaponEffects(this).then(() => {
-                    console.log("All weapon effects preloaded, setting up game...");
+
                     safeSetupGame();
                 }).catch((error) => {
                     console.error("Error preloading weapon effects:", error);
@@ -283,7 +260,7 @@ export class GameScene extends Phaser.Scene {
             return;
         }
 
-        console.log('✅ Scene is ready, starting game setup');
+
 
         try {
             drawLevel(this);
@@ -293,7 +270,7 @@ export class GameScene extends Phaser.Scene {
             setupObstacles(this);
             setupCoins(this);
             setupPeople(this);
-            setupTreasures(this);
+
             setupKnapsack(this);
             setupSubsetSum(this);
             setupCoinChange(this);
@@ -313,9 +290,14 @@ export class GameScene extends Phaser.Scene {
                 }
 
                 setCurrentGameState({
-                    weaponKey: defaultWeaponKey,
-                    weaponData: defaultWeaponData
+                    weaponKey: currentState.weaponKey || defaultWeaponKey,
+                    weaponData: currentState.weaponData || defaultWeaponData,
+                    activeEffects: currentState.activeEffects || [],
+                    patternTypeId: currentState.patternTypeId || 0
                 });
+
+                // Clear renderedEffectsJson to force a re-sync on the first update()
+                this.renderedEffectsJson = "[]";
 
                 this.time.delayedCall(300, () => {
                     if (this && this.add && this.player) {

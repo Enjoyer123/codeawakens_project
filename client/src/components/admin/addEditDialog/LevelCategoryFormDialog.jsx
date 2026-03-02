@@ -68,6 +68,7 @@ const LevelCategoryFormDialog = ({
   };
 
   const handleSaveClick = async () => {
+    console.log('🟡 [LevelCategoryFormDialog] handleSaveClick: formData', formData);
     // Client-side validation
     if (!formData.category_name?.trim()) {
       return { success: false, error: 'กรุณากรอก Category Name' };
@@ -88,6 +89,8 @@ const LevelCategoryFormDialog = ({
     }
 
     const result = await onSave();
+    console.log('🟡 [LevelCategoryFormDialog] handleSaveClick: result', result);
+
     return result;
   };
 

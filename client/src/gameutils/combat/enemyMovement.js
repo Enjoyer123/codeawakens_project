@@ -2,15 +2,13 @@ import Phaser from "phaser";
 import { setPlayerHp as setGlobalPlayerHp } from '../shared/game';
 import { isDefeat } from './enemyUtils';
 import { showGameOver } from '../effects/gameEffects';
-import { updateAllCombatUIs } from './battleUI';
 import { getDirectionFromAngle } from './combatHelpers';
 import { startBattle } from './battle';
 
 export function updateMonsters(scene, delta, isRunning, setPlayerHp, setIsGameOver, setCurrentHint) {
     if (!scene.monsters) return;
 
-    // Update combat UIs for all nearby enemies
-    updateAllCombatUIs(scene);
+
 
     scene.monsters.forEach((monster) => {
         // ตรวจสอบว่าศัตรูตายแล้วหรือไม่ (Remove inBattle check to allow Flee Detection to run)
@@ -23,7 +21,7 @@ export function updateMonsters(scene, delta, isRunning, setPlayerHp, setIsGameOv
             monster.sprite.y
         );
 
-        // Update combat UI based on distance (handled by updateAllCombatUIs)
+
 
         // Check if should start chasing
         if (distToPlayer < monster.data.detectionRange && !monster.data.isChasing) {

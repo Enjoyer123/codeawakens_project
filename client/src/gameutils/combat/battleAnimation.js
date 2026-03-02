@@ -5,7 +5,9 @@ import { getWeaponData } from '../entities/weaponUtils';
 import {
     createWeaponRing,
     animateWeaponAttack,
-    getPlayerWeaponSprite
+    getPlayerWeaponSprite,
+    getPlayerAuraSprite,
+    getPlayerCircleSprite
 } from './weaponEffects';
 export function playCombatSequence(scene, isWin, onComplete) {
     // Check condition: Only play if level has no nodes (OR if it falls back to cinematic mode like drawPlayer)
@@ -128,8 +130,26 @@ export function playCombatSequence(scene, isWin, onComplete) {
     }
 
     const updateWeaponPos = () => {
-        if (weaponRing && player) {
-            weaponRing.setPosition(player.x, player.y);
+        if (player) {
+            // ⭐ Sync underlying player position so aura/circle effects follow properly
+            if (scene.player) {
+                scene.player.setPosition(player.x, player.y);
+            }
+
+            if (weaponRing) {
+                weaponRing.setPosition(player.x, player.y);
+            }
+
+            // Sync Aura/Circle effects manually just in case
+            const aura = getPlayerAuraSprite();
+            if (aura && aura.active) {
+                aura.setPosition(player.x, player.y);
+            }
+
+            const circle = getPlayerCircleSprite();
+            if (circle && circle.active) {
+                circle.setPosition(player.x, player.y);
+            }
         }
     };
     // Initial position sync

@@ -65,8 +65,9 @@ export function useBlocklySetup({
 
     setTimeout(() => {
       try {
-        // 1.1 เคลียร์ Workspace เก่า (ถ้ามี)
-        setBlocklyLoaded(false);
+        // หมายเหตุ: ไม่ reset blocklyLoaded เป็น 0 ที่นี่ เพราะ React 18 จะ batch กับ
+        // setBlocklyLoaded(v => v + 1) ด้านล่าง ทำให้ผลลัพธ์เป็น 1 ซ้ำทุกรอบ
+        // ปล่อยให้ increment อย่างเดียว เพื่อให้ค่าเปลี่ยนจริงทุกครั้ง (1, 2, 3, ...)
         if (workspaceRef.current) {
           try {
             workspaceRef.current.dispose();
@@ -75,6 +76,8 @@ export function useBlocklySetup({
           }
           workspaceRef.current = null;
         }
+        // รีเซ็ตตัวจำ XML เพื่อให้โหลด starter_xml ใหม่ได้หลังสร้าง workspace ใหม่
+        lastLoadedXmlRef.current = null;
 
         // 1.2 เคลียร์ HTML Container
         if (blocklyRef.current) {
@@ -158,7 +161,7 @@ export function useBlocklySetup({
         scrollOptions.init();
 
         // อัปเดตสถานะว่าพร้อมแล้ว
-        setBlocklyLoaded(true);
+        setBlocklyLoaded(v => v + 1);
         setBlocklyJavaScriptReady(true);
 
         // 1.7 เตรียมตัวแปรเริ่มต้น (Common Variables)
@@ -168,7 +171,13 @@ export function useBlocklySetup({
         registerProcedureEventHandlers(workspace);
         registerVariableEventHandlers(workspace);
 
-        // 1.9 เริ่มเกม Phaser
+        // 1.9 โหลด Starter XML ทันที (ไม่ต้องรอ useEffect ที่อาจโดน React batch)
+        if (starter_xml && typeof starter_xml === 'string' && starter_xml.trim()) {
+          loadStarterXml(workspace, starter_xml, isTextCodeEnabled, onCodeGenerated);
+          lastLoadedXmlRef.current = starter_xml;
+        }
+
+        // 1.10 เริ่มเกม Phaser
         initPhaserGame();
 
       } catch (error) {

@@ -361,6 +361,7 @@ exports.updateLevelCategory = async (req, res) => {
       color_code,
       block_key,
       background_image,
+      coordinates,
     } = req.body;
 
     if (!category_name || !description || !difficulty_order || !color_code) {
@@ -408,7 +409,6 @@ exports.updateLevelCategory = async (req, res) => {
         description: description.trim(),
         item_enable: item_enable === true || item_enable === 'true',
         difficulty_order: parseInt(difficulty_order),
-        color_code: color_code.trim(),
         color_code: color_code.trim(),
         block_key: (block_key && block_key !== 'null' && block_key !== '') ? block_key : null,
         background_image: background_image !== undefined ? background_image : undefined,
