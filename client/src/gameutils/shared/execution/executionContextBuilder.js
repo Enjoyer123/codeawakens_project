@@ -11,10 +11,7 @@ import {
 
 import { allPeopleRescued } from '../../entities/personUtils';
 
-import {
-    hasTreasureAtNode, collectTreasure, isTreasureCollected, resetTreasures,
-    hasTreasure, treasureCollected, getCollectedTreasures
-} from '../../entities/treasureUtils';
+
 
 import { playRescueAnimation, playCollectAnimation } from '../../entities/actionPlayback';
 
@@ -68,15 +65,7 @@ export const buildExecutionContext = ({
             return result;
         },
         hasPerson, personRescued, getPersonCount, allPeopleRescued,
-        hasTreasureAtNode,
-        collectTreasure: async (nodeId) => {
-            const result = await collectTreasure(nodeId);
-            if (result && result.success && getCurrentGameState().currentScene) {
-                await playCollectAnimation(getCurrentGameState().currentScene, result);
-            }
-            return result;
-        },
-        isTreasureCollected, hasTreasure, treasureCollected,
+
 
         moveToNode: wrappedMoveToNode, moveAlongPath: wrappedMoveAlongPath,
 

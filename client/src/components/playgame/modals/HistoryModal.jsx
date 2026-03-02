@@ -3,9 +3,9 @@ import {
     Dialog,
     DialogContent,
     DialogDescription,
-} from "../ui/dialog";
-import HistorySidebar from './history/HistorySidebar';
-import HistoryViewer from './history/HistoryViewer';
+} from "../../ui/dialog";
+import HistorySidebar from '../history/HistorySidebar';
+import HistoryViewer from '../history/HistoryViewer';
 
 const HistoryModal = ({ isOpen, onClose, userProgress, levels, currentLevelId }) => {
     const [selectedLevelId, setSelectedLevelId] = useState(null);

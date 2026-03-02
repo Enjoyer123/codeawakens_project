@@ -42,7 +42,7 @@ async function playClassicDisplay(scene, trace, options = {}) {
 
     // -------------------------------------------------------------------------
     for (let i = 0; i < trace.length; i++) {
-        if (!scene?.scene?.isActive(scene.scene.key)) break;
+        if (!scene || !scene.scene || !scene.scene.isActive(scene.scene.key)) break;
         const step = trace[i];
 
         switch (step.action) {

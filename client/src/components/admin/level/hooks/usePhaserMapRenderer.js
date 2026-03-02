@@ -221,36 +221,6 @@ export const usePhaserMapRenderer = ({
       });
     }
 
-    // Draw treasures
-    if (currentFormData.treasures && currentFormData.treasures.length > 0) {
-      currentFormData.treasures.forEach(treasure => {
-        const treasureX = treasure.x;
-        const treasureY = treasure.y;
-
-        if (treasureX !== undefined && treasureY !== undefined) {
-          // Shadow
-          currentGraphics.fillStyle(0x000000, 0.3);
-          currentGraphics.fillCircle(treasureX + 2, treasureY + 2, 10);
-
-          // Treasure circle (purple)
-          currentGraphics.fillStyle(0x9333ea, 1);
-          currentGraphics.fillCircle(treasureX, treasureY, 10);
-
-          // Border
-          currentGraphics.lineStyle(2, 0xffffff, 1);
-          currentGraphics.strokeCircle(treasureX, treasureY, 10);
-
-          // Treasure emoji
-          if (currentGraphics.scene) {
-            const text = currentGraphics.scene.add.text(treasureX, treasureY, '💎', {
-              fontSize: '12px',
-            });
-            text.setOrigin(0.5);
-          }
-        }
-      });
-    }
-
     // Draw obstacles
     if (currentFormData.obstacles && currentFormData.obstacles.length > 0) {
       currentFormData.obstacles.forEach((obstacle, index) => {

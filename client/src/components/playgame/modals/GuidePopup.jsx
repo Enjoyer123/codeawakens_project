@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent } from '../ui/dialog';
-
-import { API_BASE_URL } from '../../config/apiConfig';
+import { Dialog, DialogContent } from '../../ui/dialog';
+import { API_BASE_URL } from '../../../config/apiConfig';
 
 const GuidePopup = ({ guides, onClose }) => {
   const [currentGuideIndex, setCurrentGuideIndex] = useState(0);
@@ -49,7 +48,7 @@ const GuidePopup = ({ guides, onClose }) => {
     }
   };
 
-  const fullImageUrl = guideImagePath ? `${API_BASE_URL}${guideImagePath.startsWith('/') ? '' : '/'}${guideImagePath}` : '/placeholder-guide.svg';
+  const fullImageUrl = guideImagePath ? `${API_BASE_URL}${guideImagePath.startsWith('/') ? '' : '/'}${guideImagePath} ` : '/placeholder-guide.svg';
 
   const handleImageClick = () => {
     window.open(fullImageUrl, '_blank');
@@ -82,7 +81,7 @@ const GuidePopup = ({ guides, onClose }) => {
             <button
               onClick={handlePreviousGuide}
               disabled={isFirstGuide}
-              className={`absolute left-2 top-1/2 -translate-y-1/2 z-10 p-1 transition-transform hover:scale-110 ${isFirstGuide ? 'opacity-0' : 'opacity-100'}`}
+              className={`absolute left - 2 top - 1 / 2 - translate - y - 1 / 2 z - 10 p - 1 transition - transform hover: scale - 110 ${isFirstGuide ? 'opacity-0' : 'opacity-100'} `}
             >
               <img src="/arrow.png" alt="prev" className="w-8 h-10 rotate-180" style={{ imageRendering: 'pixelated' }} />
             </button>
@@ -124,7 +123,7 @@ const GuidePopup = ({ guides, onClose }) => {
                       <button
                         onClick={handlePreviousImage}
                         disabled={currentImageIndex === 0}
-                        className={`relative w-32 h-full transition-all active:scale-95 ${currentImageIndex === 0 ? 'opacity-30 grayscale cursor-not-allowed' : 'hover:brightness-110 drop-shadow-md'}`}
+                        className={`relative w - 32 h - full transition - all active: scale - 95 ${currentImageIndex === 0 ? 'opacity-30 grayscale cursor-not-allowed' : 'hover:brightness-110 drop-shadow-md'} `}
                       >
                         <img src="/button.png" alt="prev" className="w-full h-full object-fill" style={{ imageRendering: 'pixelated' }} />
                         <span className="absolute inset-0 flex items-center justify-center text-[10px] sm:text-[12px] text-white font-bold font-pixel uppercase drop-shadow-md tracking-wider">Prev Img</span>
@@ -133,7 +132,7 @@ const GuidePopup = ({ guides, onClose }) => {
                       <button
                         onClick={handleNextImage}
                         disabled={currentImageIndex === guideImages.length - 1}
-                        className={`relative w-32 h-full transition-all active:scale-95 ${currentImageIndex === guideImages.length - 1 ? 'opacity-30 grayscale cursor-not-allowed' : 'hover:brightness-110 drop-shadow-md'}`}
+                        className={`relative w - 32 h - full transition - all active: scale - 95 ${currentImageIndex === guideImages.length - 1 ? 'opacity-30 grayscale cursor-not-allowed' : 'hover:brightness-110 drop-shadow-md'} `}
                       >
                         <img src="/button.png" alt="next" className="w-full h-full object-fill" style={{ imageRendering: 'pixelated' }} />
                         <span className="absolute inset-0 flex items-center justify-center text-[10px] sm:text-[12px] text-white font-bold font-pixel uppercase drop-shadow-md tracking-wider">Next Img</span>
@@ -152,19 +151,19 @@ const GuidePopup = ({ guides, onClose }) => {
                     scrollbarColor: '#8b5a2b rgba(0,0,0,0.3)'
                   }}>
                     <style>{`
-                      .overflow-y-auto::-webkit-scrollbar {
-                        width: 10px;
-                      }
-                      .overflow-y-auto::-webkit-scrollbar-track {
-                        background: rgba(0,0,0,0.3);
-                        border-radius: 5px;
-                      }
-                      .overflow-y-auto::-webkit-scrollbar-thumb {
-                        background-color: #8b5a2b;
-                        border-radius: 5px;
-                        border: 2px solid rgba(0,0,0,0.3);
-                      }
-                    `}</style>
+  .overflow - y - auto:: -webkit - scrollbar {
+  width: 10px;
+}
+                      .overflow - y - auto:: -webkit - scrollbar - track {
+  background: rgba(0, 0, 0, 0.3);
+  border - radius: 5px;
+}
+                      .overflow - y - auto:: -webkit - scrollbar - thumb {
+  background - color: #8b5a2b;
+  border - radius: 5px;
+  border: 2px solid rgba(0, 0, 0, 0.3);
+}
+`}</style>
                     <p className="text-lg text-white/90 leading-relaxed font-medium text-left whitespace-pre-wrap pb-4">
                       {currentGuide.description}
                     </p>
@@ -177,7 +176,7 @@ const GuidePopup = ({ guides, onClose }) => {
             <button
               onClick={handleNextGuide}
               disabled={isLastGuide}
-              className={`absolute right-2 top-1/2 -translate-y-1/2 z-10 p-1 transition-transform hover:scale-110 ${isLastGuide ? 'opacity-0' : 'opacity-100'}`}
+              className={`absolute right - 2 top - 1 / 2 - translate - y - 1 / 2 z - 10 p - 1 transition - transform hover: scale - 110 ${isLastGuide ? 'opacity-0' : 'opacity-100'} `}
             >
               <img src="/arrow.png" alt="next" className="w-8 h-10" style={{ imageRendering: 'pixelated' }} />
             </button>

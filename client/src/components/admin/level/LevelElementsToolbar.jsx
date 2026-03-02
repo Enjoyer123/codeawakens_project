@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Coins, Users, Gem, Link, Code } from 'lucide-react';
+import { Plus, Trash2, Coins, Users, Link, Code } from 'lucide-react';
 import { ITEM_TYPES } from '@/constants/itemTypes';
 
 import { useLevelElements } from './hooks/useLevelElements';
@@ -66,9 +66,7 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
     onSetMode('people');
   };
 
-  const handleAddTreasure = () => {
-    onSetMode('treasure');
-  };
+
 
   // --- Render Special Mode ---
   if (activeAlgo) {
@@ -298,7 +296,7 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
 
       {/* Group 4: Items (Conditional) */}
       {
-        (isItemTypeEnabled(ITEM_TYPES.COIN_POSITIONS) || isItemTypeEnabled(ITEM_TYPES.PEOPLE) || isItemTypeEnabled(ITEM_TYPES.TREASURES)) && (
+        (isItemTypeEnabled(ITEM_TYPES.COIN_POSITIONS) || isItemTypeEnabled(ITEM_TYPES.PEOPLE)) && (
           <div className="space-y-2">
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Items</h3>
             <div className="space-y-3">
@@ -323,16 +321,7 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
                     People
                   </Button>
                 )}
-                {isItemTypeEnabled(ITEM_TYPES.TREASURES) && (
-                  <Button
-                    variant={currentMode === 'treasure' ? 'default' : 'outline'}
-                    onClick={handleAddTreasure}
-                    className="w-full justify-start"
-                  >
-                    <Gem className="h-4 w-4 mr-2" />
-                    Treasure
-                  </Button>
-                )}
+
               </div>
 
               {/* Coin Value Input Sub-section */}

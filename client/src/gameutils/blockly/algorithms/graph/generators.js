@@ -43,11 +43,13 @@ export function defineGraphGenerators() {
 
     javascriptGenerator.forBlock["mark_visited_visual"] = function (block) {
         const node = javascriptGenerator.valueToCode(block, 'NODE', javascriptGenerator.ORDER_NONE) || '0';
+        if (javascriptGenerator.isCleanMode) return `markVisitedWithVisual(${node});\n`;
         return `await markVisitedWithVisual(${node});\n`;
     };
 
     javascriptGenerator.forBlock["show_path_visual"] = function (block) {
         const path = javascriptGenerator.valueToCode(block, 'PATH', javascriptGenerator.ORDER_NONE) || '[]';
+        if (javascriptGenerator.isCleanMode) return `showPathUpdateWithVisual(${path});\n`;
         return `await showPathUpdateWithVisual(${path});\n`;
     };
 

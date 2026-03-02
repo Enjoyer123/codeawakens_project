@@ -138,7 +138,6 @@ const PhaserMapEditor = ({
     formData.obstacles,
     formData.coin_positions,
     formData.people,
-    formData.treasures,
     formData.monsters, // Don't forget monsters if they were in original
     selectedNode,
     phaserLoaded,

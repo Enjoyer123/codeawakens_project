@@ -5,7 +5,7 @@ import Phaser from 'phaser';
 
 /**
  * Initializes the Goal UI on the top right of the screen if the level requires it.
- * Tracking coins, rescued people, and collected treasures.
+ * Tracking coins and rescued people.
  */
 export function setupGoalUI(scene) {
     if (!scene || !scene.levelData) return;
@@ -15,9 +15,8 @@ export function setupGoalUI(scene) {
     // Check if we need to show the UI
     const hasCoins = scene.coins && scene.coins.length > 0;
     const hasPeople = levelData.people && levelData.people.length > 0;
-    const hasTreasures = levelData.treasures && levelData.treasures.length > 0;
 
-    if (!hasCoins && !hasPeople && !hasTreasures) return;
+    if (!hasCoins && !hasPeople) return;
 
     // Create a container fixed to the camera
     const uiContainer = scene.add.container(scene.cameras.main.width - 200, 20);
@@ -75,17 +74,7 @@ export function setupGoalUI(scene) {
         startY += spacing;
     }
 
-    if (hasTreasures) {
-        const treasureIcon = scene.add.circle(20, startY + 8, 6, 0xffaa00);
-        const treasureText = scene.add.text(35, startY, `สมบัติ: 0 / ${levelData.treasures.length}`, {
-            fontSize: '12px',
-            color: '#ffffff',
-            fontFamily: 'Tahoma, Arial',
-        });
-        uiContainer.add([treasureIcon, treasureText]);
-        scene.goalUI.items.treasures = { text: treasureText, total: levelData.treasures.length, current: 0 };
-        startY += spacing;
-    }
+
 
     // Shrink background to fit content
     bg.clear();
@@ -99,7 +88,7 @@ export function setupGoalUI(scene) {
 
 /**
  * Updates the specific counter on the Goal UI.
- * type: 'coins' | 'people' | 'treasures'
+ * type: 'coins' | 'people'
  * count: number (current collected count)
  * collectedItems: array (optional) list of collected objects (e.g. coins to show values)
  */
@@ -152,7 +141,6 @@ export function updateGoalUI(scene, type, count, collectedItems = []) {
         }
     }
     else if (type === 'people') label = "ช่วยเหลือ";
-    else if (type === 'treasures') label = "สมบัติ";
 
     item.text.setText(`${label}: ${item.current} / ${item.total}`);
 

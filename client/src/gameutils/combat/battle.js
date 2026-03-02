@@ -9,7 +9,7 @@ import {
 import { getCurrentGameState, setCurrentGameState, getPlayerHp, setPlayerHp as setGlobalPlayerHp, } from '../shared/game';
 import { isDefeat } from './enemyUtils';
 import { showGameOver } from '../effects/gameEffects';
-import { updateAllCombatUIs, cleanupMonsterUI } from './battleUI';
+import { cleanupMonsterUI } from './battleUI';
 import { getDirectionFromAngle, showFloatingText } from './combatHelpers';
 
 export function startBattle(scene, monster, setPlayerHp, setIsGameOver, setCurrentHint, isPlayerAttack = false) {

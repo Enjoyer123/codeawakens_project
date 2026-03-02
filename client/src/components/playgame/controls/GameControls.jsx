@@ -1,5 +1,4 @@
-import React from 'react';
-import { History, Loader2, Play, FolderOpen, Bug } from 'lucide-react';
+import { History, Play, Bug, FolderOpen, Loader2 } from 'lucide-react';
 
 const GameControls = ({
     runCode,

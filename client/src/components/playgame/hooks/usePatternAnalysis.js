@@ -3,7 +3,7 @@ import * as Blockly from "blockly/core";
 import { getWeaponData } from '../../../gameutils/entities/weaponUtils';
 import { displayPlayerWeapon } from '../../../gameutils/combat/weaponEffects';
 import { getCurrentGameState, setCurrentGameState } from '../../../gameutils/shared/game';
-import { findBestMatch } from '../../../gameutils/shared/hint';
+import { findBestMatch } from '../../../gameutils/shared/hint/hintMatcher';
 
 /**
  * Hook for pattern analysis — เรียก findBestMatch ครั้งเดียวได้ทุกอย่าง
@@ -24,9 +24,14 @@ export function usePatternAnalysis({
   }, [goodPatterns, setHintData, setCurrentWeaponData]);
 
   useEffect(() => {
-    if (!blocklyLoaded || !workspaceRef.current) return;
+    if (!blocklyLoaded || !workspaceRef.current) {
+      console.log('🔴 [PatternAnalysis] Effect skipped: blocklyLoaded=', blocklyLoaded, 'workspace=', !!workspaceRef.current);
+      return;
+    }
     const workspace = workspaceRef.current;
     if (!workspace) return;
+
+    console.log('🟢 [PatternAnalysis] Effect FIRED! blocklyLoaded=', blocklyLoaded, 'workspace ID=', workspace.id);
 
     const analyzePattern = () => {
       const { goodPatterns, setHintData, setCurrentWeaponData } = valuesRef.current;
@@ -58,9 +63,12 @@ export function usePatternAnalysis({
 
       // ─── No patterns → show default ────────────────────────
       if (!goodPatterns || goodPatterns.length === 0) {
+        console.log('🔴 [PatternAnalysis] analyzePattern: No goodPatterns available, length=', goodPatterns?.length);
         setHintData({ patternPercentage: 0, bestPatternBigO: null });
         return;
       }
+
+      console.log('🟢 [PatternAnalysis] analyzePattern: goodPatterns=', goodPatterns.length, ', blocks=', currentBlockCount);
 
       // ─── ✅ เรียกฟังก์ชันเดียว ได้ทุกอย่าง ──────────────────
       const result = findBestMatch(workspace, goodPatterns);
@@ -79,6 +87,7 @@ export function usePatternAnalysis({
 
       // ─── อัปเดต effects สำหรับ Phaser ─────────────────────
       try {
+        console.log('🎨 [PatternAnalysis] Setting effects:', result.effects, 'percentage:', result.percentage);
         setCurrentGameState({ activeEffects: result.effects });
       } catch (e) {
         console.error("Error in effect state logic:", e);
@@ -138,6 +147,7 @@ export function usePatternAnalysis({
     };
 
     workspace.addChangeListener(onWorkspaceChange);
+    console.log('🟢 [PatternAnalysis] Listener registered on workspace', workspace.id, ', goodPatterns=', goodPatterns?.length);
     analyzePattern();
 
     return () => {

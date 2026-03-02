@@ -17,12 +17,19 @@ export const validateWorkspace = (workspace, levelData = {}) => {
         };
     }
 
-    // 2. Check for unconnected blocks (orphaned blocks)
-    // A block is orphaned if it's not the 'start_block' (if exists) and not connected to anything relevant.
-    // However, usually we can just check if there are multiple top blocks that are not Function definitions.
-    // Note: Some levels might allow multiple stacks, but usually we want one main flow.
-    // For now, let's skip strict orphaned check as it might be annoying, 
-    // but we SHOULD check if the main `start_game` block exists if required.
+    // 2. Check for orphaned (disconnected) blocks
+    // Top blocks that are NOT function definitions should be connected in a single stack.
+    // If there are multiple, the user has floating blocks that would generate unintended code.
+    const orphanBlocks = topBlocks.filter(b =>
+        !b.type.startsWith('procedures_def') &&
+        !b.type.startsWith('function_def')
+    );
+    if (orphanBlocks.length > 1) {
+        return {
+            isValid: false,
+            error: "มีบล็อกที่ไม่ได้เชื่อมต่อกัน! กรุณาต่อบล็อกทั้งหมดเข้าด้วยกัน หรือลบบล็อกที่ไม่ใช้ออก"
+        };
+    }
 
     // 3. Check for Block Constraints (Max Blocks)
     const allBlocks = workspace.getAllBlocks(false);

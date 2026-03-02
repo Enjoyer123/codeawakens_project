@@ -5,6 +5,7 @@ import { javascriptGenerator } from "blockly/javascript";
 export function defineEntityGenerators() {
     // Coin generators
     javascriptGenerator.forBlock["collect_coin"] = function (block) {
+        if (javascriptGenerator.isCleanMode) return 'collectCoin();\n';
         return 'await collectCoin();\n';
     };
 
@@ -17,6 +18,7 @@ export function defineEntityGenerators() {
     javascriptGenerator.forBlock["swap_coins"] = function (block) {
         const index1 = javascriptGenerator.valueToCode(block, 'INDEX1', javascriptGenerator.ORDER_ATOMIC) || '0';
         const index2 = javascriptGenerator.valueToCode(block, 'INDEX2', javascriptGenerator.ORDER_ATOMIC) || '0';
+        if (javascriptGenerator.isCleanMode) return `swapCoins(${index1}, ${index2});\n`;
         return `await swapCoins(${index1}, ${index2});\n`;
     };
 
@@ -56,6 +58,7 @@ export function defineEntityGenerators() {
     // Person rescue generators
     javascriptGenerator.forBlock["rescue_person_at_node"] = function (block) {
         const nodeId = javascriptGenerator.valueToCode(block, 'NODE_ID', javascriptGenerator.ORDER_ATOMIC) || '0';
+        if (javascriptGenerator.isCleanMode) return `rescuePersonAtNode(${nodeId});\n`;
         return `await rescuePersonAtNode(${nodeId});\n`;
     };
 

@@ -10,11 +10,10 @@ import {
 } from '../../../gameutils/shared/game';
 
 import { clearPlayerCoins } from '../../../gameutils/entities/coinUtils';
-import { clearRescuedPeople, resetAllPeople } from '../../../gameutils/entities/personUtils';
+import { resetAllPeople } from '../../../gameutils/entities/personUtils';
 import { updatePlayer } from '../../../gameutils/phaser/player/phaserGamePlayer';
-import { showGameOver, showVictory, clearGameOverScreen } from '../../../gameutils/effects/gameEffects';
+import { clearGameOverScreen } from '../../../gameutils/effects/gameEffects';
 import { resetEnemy } from '../../../gameutils/combat/enemyUtils';
-import { calculateFinalScore } from './scoreUtils';
 
 /**
  * Handle game restart
@@ -105,104 +104,3 @@ export function handleRestartGame({
     });
   }
 }
-
-/**
- * Handle victory condition
- * @param {Object} params - Parameters object
- * @param {boolean} params.isCompleted - Whether level is already completed
- * @param {Function} params.setIsCompleted - Function to set completion state
- * @param {Function} params.setIsRunning - Function to set running state
- * @param {Function} params.setGameState - Function to set game state
- * @param {Function} params.showVictory - Function to show victory screen
- * @param {Function} params.calculateFinalScore - Function to calculate final score
- * @param {Function} params.setFinalScore - Function to set final score
- * @param {Function} params.gameStartTime - Ref to game start time
- * @param {Function} params.setTimeSpent - Function to set time spent
- * @param {Function} params.setGameResult - Function to set game result
- * @param {boolean} params.isPreview - Whether in preview mode
- * @param {Function} params.onUnlockPattern - Callback for unlocking pattern
- * @param {Function} params.onUnlockLevel - Callback for unlocking level
- * @param {number} params.patternId - Pattern ID for preview mode
- * @param {Object} params.currentLevel - Current level data
- * @param {Function} params.setShowProgressModal - Function to show progress modal
- * @param {number} params.hintOpenCount - Number of times hints were opened
- * @param {Object} params.matchedPattern - Matched pattern object
- */
-// export async function handleVictory({
-//   isCompleted,
-//   setIsCompleted,
-//   setIsRunning,
-//   setGameState,
-//   showVictory,
-//   calculateFinalScore,
-//   setFinalScore,
-//   gameStartTime,
-//   setTimeSpent,
-//   setGameResult,
-//   isPreview,
-//   onUnlockPattern,
-//   onUnlockLevel,
-//   patternId,
-//   currentLevel,
-//   setShowProgressModal,
-//   hintOpenCount,
-//   matchedPattern = null,
-//   userBigO = null // Receive userBigO
-// }) {
-//   if (isCompleted) return;
-
-//   setIsCompleted(true);
-//   setIsRunning(false);
-//   setGameState("victory");
-
-//   const currentState = getCurrentGameState();
-//   if (currentState.currentScene) {
-//     showVictory(currentState.currentScene);
-//   }
-
-//   // Calculate score
-//   const patternTypeId = matchedPattern?.pattern_type_id || null;
-
-//   // Get target Big O from hintData explicitly first, then pattern or level
-//   const targetBigO = hintData?.bestPatternBigO || matchedPattern?.big_o || matchedPattern?.bigO || currentLevel?.big_o || currentLevel?.bigO || null;
-
-//   console.log('🏆 [handleVictory] Score Calc Debug:', {
-//     userBigO,
-//     targetBigO,
-//     explicitHintBigO: hintData?.bestPatternBigO,
-//     patternTypeId,
-//     matchedPatternBigO: matchedPattern?.big_o,
-//     currentLevelBigO: currentLevel?.big_o
-//   });
-
-//   const score = calculateFinalScore(false, patternTypeId, hintOpenCount, userBigO, targetBigO);
-//   setFinalScore(score);
-
-//   // Calculate time spent
-//   if (gameStartTime.current) {
-//     const endTime = Date.now();
-//     setTimeSpent(Math.floor((endTime - gameStartTime.current) / 1000));
-//   }
-
-//   setGameResult('victory');
-
-//   // In preview mode, unlock pattern and level
-//   if (isPreview && matchedPattern) {
-//     try {
-//       if (onUnlockPattern) {
-//         await onUnlockPattern(patternId || matchedPattern.pattern_id);
-//       }
-//       if (onUnlockLevel && currentLevel) {
-//         await onUnlockLevel(currentLevel.level_id);
-//       }
-//     } catch (error) {
-//       console.error('Error unlocking pattern/level:', error);
-//     }
-//   }
-
-//   // In normal mode, show progress modal (which will save progress)
-//   if (!isPreview) {
-//     setShowProgressModal(true);
-//   }
-// }
-

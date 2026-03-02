@@ -48,24 +48,10 @@ export {
     resetAllPeople
 } from './blocks/entities/rescue_helpers';
 
-// Re-export List Operations & Helpers
+// Re-export Data Operation Helpers
 export {
-    listPush, listSet,
-    // createListPushWithVisual, createListSetWithVisual
+    listPush, listSet, dictSet,
 } from './blocks/data/lists/helpers';
-
-// Re-export Shared Visual Wrappers (Emei, Dict)
-export {
-    createHighlightEmeiPath,
-    dictSet, createDictSetWithVisual
-} from './algorithms/shared/visual_wrappers';
-
-// Removed obsolete knapsack visual exports
-
-// Removed obsolete subset sum and coin change visual exports
-
-// Removed old coin change visuals export
 
 export { defineAllGenerators } from './core/generators';
 export { setXmlLoading, isXmlLoading } from './core/state';
-

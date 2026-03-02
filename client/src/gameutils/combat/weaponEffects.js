@@ -538,6 +538,14 @@ export function getPlayerWeaponSprite() {
     return playerWeaponContainer;
 }
 
+export function getPlayerAuraSprite() {
+    return auraEffectSprite;
+}
+
+export function getPlayerCircleSprite() {
+    return circleEffectSprite;
+}
+
 export function updatePlayerWeaponDisplay() {
     console.log("updatePlayerWeaponDisplay called");
     const currentState = getCurrentGameState();

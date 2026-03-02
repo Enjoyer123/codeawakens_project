@@ -107,7 +107,7 @@ async function playClassicDisplay(scene, trace, options = {}) {
 
     // 2. Play Trace 
     for (let i = 0; i < trace.length; i++) {
-        if (!scene || !scene.scene.isActive(scene.scene.key)) break;
+        if (!scene || !scene.scene || !scene.scene.isActive(scene.scene.key)) break;
         const step = trace[i];
 
         if (step.action === 'dp_update') {

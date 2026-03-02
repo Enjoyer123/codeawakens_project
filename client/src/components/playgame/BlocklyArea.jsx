@@ -6,8 +6,8 @@ import { Code, Box, FlaskConical, X, Copy, Check } from 'lucide-react';
 import BlocklyWorkspaceTab from './editor/BlocklyWorkspaceTab';
 import CodeEditorTab from './editor/CodeEditorTab';
 import TestResultsTab from './editor/TestResultsTab';
-import GameControls from './editor/GameControls';
-import HistoryModal from './HistoryModal';
+import GameControls from './controls/GameControls';
+import HistoryModal from './modals/HistoryModal';
 
 const BlocklyArea = ({
   blocklyRef,

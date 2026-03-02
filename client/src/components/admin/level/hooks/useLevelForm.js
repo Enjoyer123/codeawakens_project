@@ -35,7 +35,6 @@ export const useLevelForm = ({
         obstacles: [],
         coin_positions: [],
         people: [],
-        treasures: [],
         selectedBlocks: [],
         selectedVictoryConditions: [],
         knapsack_data: null,
@@ -85,7 +84,6 @@ export const useLevelForm = ({
                 obstacles: [],
                 coin_positions: [],
                 people: [],
-                treasures: [],
             }));
         }
     };
@@ -198,7 +196,6 @@ export const useLevelForm = ({
                 obstacles: formData.obstacles.length > 0 ? JSON.stringify(formData.obstacles) : null,
                 coin_positions: formData.coin_positions.length > 0 ? JSON.stringify(formData.coin_positions) : null,
                 people: formData.people.length > 0 ? JSON.stringify(formData.people) : null,
-                treasures: formData.treasures.length > 0 ? JSON.stringify(formData.treasures) : null,
                 knapsack_data: formData.knapsack_data ? JSON.stringify(formData.knapsack_data) : null,
                 subset_sum_data: formData.subset_sum_data ? JSON.stringify(formData.subset_sum_data) : null,
                 coin_change_data: formData.coin_change_data ? JSON.stringify(formData.coin_change_data) : null,

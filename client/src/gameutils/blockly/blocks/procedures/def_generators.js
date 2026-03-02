@@ -6,12 +6,16 @@ export function defineProcedureDefGenerators() {
     javascriptGenerator.forBlock["function_definition"] = function (block) {
         const functionName = block.getFieldValue('FUNCTION_NAME');
         const functionBody = javascriptGenerator.statementToCode(block, 'FUNCTION_BODY');
+        if (javascriptGenerator.isCleanMode) {
+            return `function ${functionName}(arg) {\n${functionBody}}\n`;
+        }
         return `async function ${functionName}(arg) {\n${functionBody}}\n`;
     };
 
     javascriptGenerator.forBlock["function_call"] = function (block) {
         const functionName = block.getFieldValue('FUNCTION_NAME');
         const argument = javascriptGenerator.valueToCode(block, 'ARGUMENT', javascriptGenerator.ORDER_ATOMIC) || '0';
+        if (javascriptGenerator.isCleanMode) return `${functionName}(${argument});\n`;
         return `await ${functionName}(${argument});\n`;
     };
 

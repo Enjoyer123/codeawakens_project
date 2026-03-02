@@ -174,7 +174,6 @@ const CodeEditorTab = ({
                               declare function nearPit(): boolean;
                               declare function atGoal(): boolean;
                               declare function hasPerson(): boolean;
-                              declare function hasTreasure(): boolean;
                               declare function hasCoin(): boolean;
                               declare function forEachCoin(callback: () => Promise<void>): Promise<void>;
                               declare var coins: number;

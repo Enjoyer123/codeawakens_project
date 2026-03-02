@@ -215,31 +215,6 @@ export const usePhaserMapInteractions = ({
         ...currentFormData,
         people: [...(currentFormData.people || []), newPeople],
       });
-    } else if (mode === 'treasure') {
-      // เพิ่ม treasure ที่ตำแหน่งที่คลิก (ต้อง enable ก่อน)
-      if (!isItemEnabled(ITEM_TYPES.TREASURES)) {
-        alert('Treasure ไม่ได้ถูก enable ใน category นี้');
-        return;
-      }
-      if (!clickedNode) {
-        alert('กรุณาคลิกที่ Node เพื่อเพิ่ม Treasure');
-        return;
-      }
-      const newTreasureId = (currentFormData.treasures?.length || 0) > 0
-        ? Math.max(...currentFormData.treasures.map(t => t.id || 0)) + 1
-        : 1;
-      const newTreasure = {
-        id: newTreasureId,
-        x: Math.round(clickedNode.x),
-        y: Math.round(clickedNode.y),
-        nodeId: clickedNode.id,
-        collected: false,
-        name: `💎 สมบัติล้ำค่า`,
-      };
-      onFormDataChange({
-        ...currentFormData,
-        treasures: [...(currentFormData.treasures || []), newTreasure],
-      });
     } else if (mode === 'start' && clickedNode) {
       // Set start node
       onFormDataChange({
@@ -356,19 +331,6 @@ export const usePhaserMapInteractions = ({
         return;
       }
 
-      // ลบ treasure (คลิกที่ตำแหน่ง)
-      const treasureAt = (currentFormData.treasures || []).findIndex(t =>
-        Math.abs(t.x - x) < 20 && Math.abs(t.y - y) < 20
-      );
-      if (treasureAt !== -1) {
-        if (confirm(`ลบ Treasure ${treasureAt + 1}?`)) {
-          onFormDataChange({
-            ...currentFormData,
-            treasures: currentFormData.treasures.filter((_, i) => i !== treasureAt),
-          });
-        }
-        return;
-      }
 
       // ตรวจสอบการลบ Monster
       // ลบ monster (คลิกที่ตำแหน่ง)
@@ -399,10 +361,9 @@ export const usePhaserMapInteractions = ({
             ),
             start_node_id: currentFormData.start_node_id === clickedNode.id ? null : currentFormData.start_node_id,
             goal_node_id: currentFormData.goal_node_id === clickedNode.id ? null : currentFormData.goal_node_id,
-            // ลบ coin, people, treasure ที่เกี่ยวข้องกับ node นี้
+            // ลบ coin, people ที่เกี่ยวข้องกับ node นี้
             coin_positions: (currentFormData.coin_positions || []).filter(c => c.nodeId !== clickedNode.id),
             people: (currentFormData.people || []).filter(p => p.nodeId !== clickedNode.id),
-            treasures: (currentFormData.treasures || []).filter(t => t.nodeId !== clickedNode.id),
           });
         }
       }

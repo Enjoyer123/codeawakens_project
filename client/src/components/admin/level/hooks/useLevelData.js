@@ -86,7 +86,7 @@ export const useLevelData = (levelId) => {
             }));
 
             const people = level.people ? (typeof level.people === 'string' ? JSON.parse(level.people) : level.people) : [];
-            const treasures = level.treasures ? (typeof level.treasures === 'string' ? JSON.parse(level.treasures) : level.treasures) : [];
+
 
             // Prepare Form Data structure
             const parsedData = {
@@ -111,7 +111,6 @@ export const useLevelData = (levelId) => {
                 obstacles,
                 coin_positions,
                 people,
-                treasures,
                 // Extra JSON fields
                 knapsack_data: typeof level.knapsack_data === 'string' ? JSON.parse(level.knapsack_data) : level.knapsack_data,
                 subset_sum_data: typeof level.subset_sum_data === 'string' ? JSON.parse(level.subset_sum_data) : level.subset_sum_data,

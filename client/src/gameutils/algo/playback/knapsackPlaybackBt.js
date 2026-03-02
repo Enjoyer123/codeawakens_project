@@ -52,7 +52,7 @@ async function playClassicDisplay(scene, trace, options = {}) {
     await sleep(baseWait);
 
     for (let step of trace) {
-        if (!scene.scene.isActive(scene.scene.key)) break;
+        if (!scene || !scene.scene || !scene.scene.isActive(scene.scene.key)) break;
 
         if (step.action === 'consider') {
             const idx = step.index;
