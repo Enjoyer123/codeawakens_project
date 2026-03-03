@@ -77,11 +77,10 @@ const GuidePopup = ({ guides, onClose }) => {
           </div>
 
           <div className="flex-1 min-h-0 flex items-stretch px-10 pb-8 pt-4 relative">
-            {/* Guide Arrows: Previous */}
             <button
               onClick={handlePreviousGuide}
               disabled={isFirstGuide}
-              className={`absolute left - 2 top - 1 / 2 - translate - y - 1 / 2 z - 10 p - 1 transition - transform hover: scale - 110 ${isFirstGuide ? 'opacity-0' : 'opacity-100'} `}
+              className={`absolute left-2 top-1/2 -translate-y-1/2 z-10 p-1 transition-transform hover:scale-110 ${isFirstGuide ? 'opacity-0' : 'opacity-100'}`}
             >
               <img src="/arrow.png" alt="prev" className="w-8 h-10 rotate-180" style={{ imageRendering: 'pixelated' }} />
             </button>
@@ -123,7 +122,7 @@ const GuidePopup = ({ guides, onClose }) => {
                       <button
                         onClick={handlePreviousImage}
                         disabled={currentImageIndex === 0}
-                        className={`relative w - 32 h - full transition - all active: scale - 95 ${currentImageIndex === 0 ? 'opacity-30 grayscale cursor-not-allowed' : 'hover:brightness-110 drop-shadow-md'} `}
+                        className={`relative w-32 h-full transition-all active:scale-95 ${currentImageIndex === 0 ? 'opacity-30 grayscale cursor-not-allowed' : 'hover:brightness-110 drop-shadow-md'}`}
                       >
                         <img src="/button.png" alt="prev" className="w-full h-full object-fill" style={{ imageRendering: 'pixelated' }} />
                         <span className="absolute inset-0 flex items-center justify-center text-[10px] sm:text-[12px] text-white font-bold font-pixel uppercase drop-shadow-md tracking-wider">Prev Img</span>
@@ -132,7 +131,7 @@ const GuidePopup = ({ guides, onClose }) => {
                       <button
                         onClick={handleNextImage}
                         disabled={currentImageIndex === guideImages.length - 1}
-                        className={`relative w - 32 h - full transition - all active: scale - 95 ${currentImageIndex === guideImages.length - 1 ? 'opacity-30 grayscale cursor-not-allowed' : 'hover:brightness-110 drop-shadow-md'} `}
+                        className={`relative w-32 h-full transition-all active:scale-95 ${currentImageIndex === guideImages.length - 1 ? 'opacity-30 grayscale cursor-not-allowed' : 'hover:brightness-110 drop-shadow-md'}`}
                       >
                         <img src="/button.png" alt="next" className="w-full h-full object-fill" style={{ imageRendering: 'pixelated' }} />
                         <span className="absolute inset-0 flex items-center justify-center text-[10px] sm:text-[12px] text-white font-bold font-pixel uppercase drop-shadow-md tracking-wider">Next Img</span>
@@ -176,7 +175,7 @@ const GuidePopup = ({ guides, onClose }) => {
             <button
               onClick={handleNextGuide}
               disabled={isLastGuide}
-              className={`absolute right - 2 top - 1 / 2 - translate - y - 1 / 2 z - 10 p - 1 transition - transform hover: scale - 110 ${isLastGuide ? 'opacity-0' : 'opacity-100'} `}
+              className={`absolute right-2 top-1/2 -translate-y-1/2 z-10 p-1 transition-transform hover:scale-110 ${isLastGuide ? 'opacity-0' : 'opacity-100'}`}
             >
               <img src="/arrow.png" alt="next" className="w-8 h-10" style={{ imageRendering: 'pixelated' }} />
             </button>

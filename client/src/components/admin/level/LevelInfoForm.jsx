@@ -77,7 +77,18 @@ const ALGORITHM_TEMPLATES = {
     ],
   },
   coin_change_data: {
-    monster_power: null
+    monster_power: null,
+    warriors: [null, null, null, null]
+  },
+  applied_data: {
+    type: "",
+    payload: {
+      n: null,
+      start: null,
+      end: null,
+      tourists: null,
+      edges: []
+    }
   }
 };
 
@@ -218,7 +229,7 @@ const LevelInfoForm = ({ formData, categories, prerequisiteLevels, isEditing, le
               { label: 'Knapsack', field: 'knapsack_data' },
               { label: 'Coin Change', field: 'coin_change_data' },
               { label: 'Subset Sum', field: 'subset_sum_data' },
-              { label: 'Applied Data', field: 'applied_data' }
+              { label: 'Emei Mountain (ง้อไบ๊)', field: 'applied_data' }
             ].map((type) => (
               <label key={type.field} className="flex items-center gap-2 p-2 border rounded-md hover:bg-gray-50 cursor-pointer">
                 <input

@@ -107,9 +107,17 @@ const PatternListDialog = ({ open, onOpenChange, levelId, levelName }) => {
                 <Card key={pattern.pattern_id} className="p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-lg mb-2">
-                        {pattern.pattern_name}
-                      </h3>
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="font-semibold text-lg">
+                          {pattern.pattern_name}
+                        </h3>
+                        <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full ${pattern.is_available
+                            ? 'bg-green-100 text-green-700 border border-green-200'
+                            : 'bg-red-100 text-red-700 border border-red-200'
+                          }`}>
+                          {pattern.is_available ? '🟢 ปลดล็อคแล้ว' : '🔴 ยังไม่ปลดล็อค'}
+                        </span>
+                      </div>
                       {pattern.description && (
                         <p className="text-sm text-gray-600 mb-2">
                           {pattern.description}

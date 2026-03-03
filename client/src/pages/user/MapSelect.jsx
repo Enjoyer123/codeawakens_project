@@ -113,25 +113,35 @@ const MapSelect = () => {
             // Use coordinates from DB
             const position = category.coordinates;
             const count = getCategoryCount(category);
-
+            // Category is locked if it has levels AND every level is locked for this user
+            const hasLevels = Array.isArray(category.levels) && category.levels.length > 0;
+            const isLocked = !hasLevels || category.levels.every(level => level.is_locked === true || !level.is_unlocked);
             if (!position) return null;
 
             return (
               <div
                 key={category.category_id}
-                onClick={() => handleCategorySelect(category.category_id)}
-                className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group"
+                onClick={() => !isLocked && handleCategorySelect(category.category_id)}
+                className={`absolute transform -translate-x-1/2 -translate-y-1/2 ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer group'}`}
                 style={{ left: `${position.left}%`, top: `${position.top}%` }}
+                title={isLocked ? 'ต้องผ่านด่านก่อนหน้าก่อน' : ''}
               >
                 {/* Node Container (Interactive Dot with Label) */}
                 <div className="relative flex flex-col items-center justify-center transition-all duration-300">
                   {/* Expanding Info Pill (Visible BY DEFAULT) */}
                   <div className="mb-1.5 opacity-100 scale-100 transition-all duration-200 ease-out z-20">
-                    <div className="px-2 py-0.5 bg-[#0f111a]/90 border border-[#7048e8]/60 shadow-[0_2px_8px_rgba(0,0,0,0.5)] rounded flex items-center gap-1.5 whitespace-nowrap group-hover:border-[#7048e8] group-hover:shadow-[0_0_12px_rgba(112,72,232,0.4)] group-hover:bg-[#0f111a]">
-                      <span className="text-[#e0e7ff] font-bold text-[9px] md:text-xs tracking-wide">
+                    <div className={`px-2 py-0.5 border shadow-[0_2px_8px_rgba(0,0,0,0.5)] rounded flex items-center gap-1.5 whitespace-nowrap ${isLocked
+                      ? 'bg-gray-800/90 border-gray-600/60 shadow-none'
+                      : 'bg-[#0f111a]/90 border-[#7048e8]/60 group-hover:border-[#7048e8] group-hover:shadow-[0_0_12px_rgba(112,72,232,0.4)] group-hover:bg-[#0f111a]'
+                      }`}>
+                      <span className={`font-bold text-[9px] md:text-xs tracking-wide ${isLocked ? 'text-gray-400' : 'text-[#e0e7ff]'}`}>
                         {category.category_name}
                       </span>
-                      {count > 0 && (
+                      {isLocked ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                        </svg>
+                      ) : count > 0 && (
                         <span className="bg-[#7048e8]/80 text-white text-[8px] md:text-[10px] font-bold px-1.5 py-0.2 rounded-sm group-hover:bg-[#7048e8]">
                           {count}
                         </span>
@@ -140,10 +150,15 @@ const MapSelect = () => {
                   </div>
 
                   {/* The actual Dot on the map */}
-                  <div className="w-3 h-3 md:w-4 md:h-4 bg-[#7048e8] rounded-full border border-white/40 shadow-[0_0_8px_rgba(112,72,232,0.6)] z-10 animate-pulse group-hover:animate-none group-hover:scale-110 transition-transform" />
+                  <div className={`w-3 h-3 md:w-4 md:h-4 rounded-full border border-white/40 z-10 transition-transform ${isLocked
+                    ? 'bg-gray-600 shadow-none'
+                    : 'bg-[#7048e8] shadow-[0_0_8px_rgba(112,72,232,0.6)] animate-pulse group-hover:animate-none group-hover:scale-110'
+                    }`} />
 
-                  {/* Subtle Glow under the dot */}
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 bg-[#7048e8]/10 rounded-full blur-md -z-1" />
+                  {/* Subtle Glow under the dot (Only if unlocked) */}
+                  {!isLocked && (
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 bg-[#7048e8]/10 rounded-full blur-md -z-1" />
+                  )}
                 </div>
               </div>
             );

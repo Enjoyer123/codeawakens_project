@@ -5,8 +5,8 @@
 export function setupCoinChange(scene) {
     if (!scene.levelData || !scene.levelData.coinChangeData) return;
     const data = scene.levelData.coinChangeData;
-    const monsterPower = data.monster_power || 32;
-    const warriors = data.warriors || [1, 5, 10, 25];
+    const monsterPower = data.monster_power;
+    const warriors = data.warriors || [];
 
     scene.coinChange = { monster: null, warriors: [], selectedBox: null };
 
@@ -46,5 +46,5 @@ export function setupCoinChange(scene) {
 
     // Setup box (invisible logic box used for coordinates if needed)
     scene.coinChange.selectedBox = { graphics: null, x: 400, y: 500, width: 400, height: 200 };
-    console.log(`Setup Coin Change: ${warriors.length} warriors, monster power: ${monsterPower}`);
+
 }

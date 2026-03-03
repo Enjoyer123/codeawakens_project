@@ -73,7 +73,8 @@ const CATEGORY_CONFIG = {
       "knapsack_pick_item", "knapsack_remove_item", "knapsack_consider_item", "knapsack_dp_update",
       "subset_sum_consider", "subset_sum_include", "subset_sum_exclude", "subset_sum_reset", "subset_sum_dp_update",
       "dijkstra_visit", "dijkstra_relax", "prim_visit", "prim_relax",
-      "kruskal_visit", "kruskal_add_edge"
+      "kruskal_visit", "kruskal_add_edge",
+      "local_variable_set"
     ]
   },
   Rescue: {

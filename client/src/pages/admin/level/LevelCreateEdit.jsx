@@ -10,6 +10,7 @@ import { ArrowLeft, Trash2, Eye, Save, Settings, Image as ImageIcon, Database } 
 
 // Components
 import PhaserMapEditor from '../../../components/admin/level/PhaserMapEditor';
+import AlgoPreview from '../../../components/admin/level/AlgoPreview';
 import LevelInfoForm from '../../../components/admin/level/LevelInfoForm';
 import BlockSelector from '../../../components/admin/level/BlockSelector';
 import VictoryConditionSelector from '../../../components/admin/level/VictoryConditionSelector';
@@ -73,6 +74,15 @@ const LevelCreateEdit = () => {
   const [patternListDialogOpen, setPatternListDialogOpen] = useState(false);
   const [monsterDialogOpen, setMonsterDialogOpen] = useState(false);
   const [selectedMonsterType, setSelectedMonsterType] = useState('vampire_1');
+
+  // Detect level type for canvas switching
+  const isPureAlgo = !!(formData.knapsack_data || formData.coin_change_data || formData.subset_sum_data);
+  const isGraphAlgo = !!formData.applied_data;
+  const activeAlgoKey = formData.knapsack_data ? 'knapsack_data'
+    : formData.coin_change_data ? 'coin_change_data'
+      : formData.subset_sum_data ? 'subset_sum_data'
+        : formData.applied_data ? 'applied_data'
+          : null;
 
   // Selected Category (Needs to be synced with formData.category_id)
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -249,8 +259,10 @@ const LevelCreateEdit = () => {
             {/* Toolbar Header for Canvas */}
             <div className="h-14 bg-gray-50 border-b border-gray-200 flex items-center justify-between px-4">
               <div className="flex items-center gap-2 overflow-x-auto">
-                <span className="text-xs font-bold text-black uppercase tracking-wider mr-2">Workspace</span>
-                {currentMode && (
+                <span className="text-xs font-bold text-black uppercase tracking-wider mr-2">
+                  {isPureAlgo ? 'Preview' : 'Workspace'}
+                </span>
+                {!isPureAlgo && currentMode && (
                   <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200 animate-pulse">
                     {currentMode === 'node' && 'MODE: ADD NODE'}
                     {currentMode === 'edge' && 'MODE: CONNECT EDGE'}
@@ -263,33 +275,43 @@ const LevelCreateEdit = () => {
                 )}
               </div>
 
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleDeleteMap}
-                className="h-8 text-xs bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
-              >
-                <Trash2 className="h-3 w-3 mr-2" />
-                CLEAR MAP
-              </Button>
+              {!isPureAlgo && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleDeleteMap}
+                  className="h-8 text-xs bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
+                >
+                  <Trash2 className="h-3 w-3 mr-2" />
+                  CLEAR MAP
+                </Button>
+              )}
             </div>
 
             {/* Canvas Container */}
             <div className="flex-1 bg-white relative flex items-center justify-center p-0 lg:p-8 overflow-hidden">
               <div className="shadow-lg border-white rounded-lg relative w-full h-full flex items-center justify-center">
-                <PhaserMapEditor
-                  canvasSize={canvasSize}
-                  backgroundImageUrl={backgroundImageUrl}
-                  formData={formData}
-                  currentMode={currentMode}
-                  selectedNode={selectedNode}
-                  onFormDataChange={setFormData}
-                  onSelectedNodeChange={setSelectedNode}
-                  onAddMonsterRequest={handleMonsterPlacementRequest}
-                  selectedCategory={selectedCategory}
-                  coinValue={coinValue}
-                  edgeWeight={edgeWeight}
-                />
+                {isPureAlgo ? (
+                  <AlgoPreview
+                    algoKey={activeAlgoKey}
+                    data={formData[activeAlgoKey]}
+                    backgroundImageUrl={backgroundImageUrl}
+                  />
+                ) : (
+                  <PhaserMapEditor
+                    canvasSize={canvasSize}
+                    backgroundImageUrl={backgroundImageUrl}
+                    formData={formData}
+                    currentMode={currentMode}
+                    selectedNode={selectedNode}
+                    onFormDataChange={setFormData}
+                    onSelectedNodeChange={setSelectedNode}
+                    onAddMonsterRequest={handleMonsterPlacementRequest}
+                    selectedCategory={selectedCategory}
+                    coinValue={coinValue}
+                    edgeWeight={edgeWeight}
+                  />
+                )}
 
                 {/* Canvas Overlay Info */}
                 <div className="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur rounded text-[10px] text-gray-200 font-mono pointer-events-none">

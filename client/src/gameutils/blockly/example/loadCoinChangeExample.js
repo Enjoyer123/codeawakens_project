@@ -59,8 +59,8 @@ const coinChangeExampleXml = `<xml xmlns="https://developers.google.com/blockly/
               </block>
             </statement>
             <next>
-              <!-- coin = coins[index] -->
-              <block type="variables_set" id="cc_set_coin">
+              <!-- let coin = coins[index] -->
+              <block type="local_variable_set" id="cc_set_coin">
                 <field name="VAR">coin</field>
                 <value name="VALUE">
                   <block type="lists_get_at_index" id="cc_coin_at_index">
@@ -69,13 +69,13 @@ const coinChangeExampleXml = `<xml xmlns="https://developers.google.com/blockly/
                   </block>
                 </value>
                 <next>
-                  <!-- include = -1 -->
-                  <block type="variables_set" id="cc_set_include_init">
+                  <!-- let include = -1 -->
+                  <block type="local_variable_set" id="cc_set_include_init">
                     <field name="VAR">include</field>
                     <value name="VALUE"><block type="math_number" id="cc_neg1_inc_init"><field name="NUM">-1</field></block></value>
                     <next>
-                      <!-- exclude = -1 -->
-                      <block type="variables_set" id="cc_set_exclude_init">
+                      <!-- let exclude = -1 -->
+                      <block type="local_variable_set" id="cc_set_exclude_init">
                         <field name="VAR">exclude</field>
                         <value name="VALUE"><block type="math_number" id="cc_neg1_exc_init"><field name="NUM">-1</field></block></value>
                         <next>

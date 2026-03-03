@@ -32,7 +32,7 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
     console.log(`🎬 [coinChangePlayback] Playing DP Spreadsheet Display at ${speed}x speed`);
 
     const warriors = scene.coinChange.warriors || [];
-    const targetAmount = scene.levelData?.coinChangeData?.monster_power || 32;
+    const targetAmount = scene.levelData?.coinChangeData?.monster_power || 0;
     const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
     let statusText, detailText;
