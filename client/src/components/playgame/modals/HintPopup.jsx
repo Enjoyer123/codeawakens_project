@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '../../ui/dialog';
 import { API_BASE_URL } from '../../../config/apiConfig';
 
-const HintPopup = ({ hints, isOpen, onClose, initialHintIndex = 0 }) => {
-    const [currentHintIndex, setCurrentHintIndex] = useState(initialHintIndex);
+const HintPopup = ({ hints, isOpen, onClose }) => {
+    const [currentHintIndex, setCurrentHintIndex] = useState(0);
 
-    // Reset to initial index when opening or when initialHintIndex changes
+    // Reset to 0 when opening
     useEffect(() => {
-        setCurrentHintIndex(initialHintIndex);
-    }, [initialHintIndex, isOpen]);
+        if (isOpen) {
+            setCurrentHintIndex(0);
+        }
+    }, [isOpen]);
 
     if (!hints || hints.length === 0) return null;
 

@@ -124,13 +124,8 @@ const GameCore = ({
   // Score system
   const [finalScore, setFinalScore] = useState(null);
 
-  // Hint open / count
+  // Hint panel state
   const [hintOpen, setHintOpen] = useState(false);
-  const [hintOpenCount, setHintOpenCount] = useState(0);
-
-  // Level-based hints
-  const [levelHintIndex, setLevelHintIndex] = useState(0);
-  const [activeLevelHint, setActiveLevelHint] = useState(null);
 
   // Ensure finalScore is set when game is over
   useEffect(() => {
@@ -139,8 +134,6 @@ const GameCore = ({
     }
   }, [isGameOver, finalScore]);
 
-  // Combat mode
-  const [inCombatMode, setInCombatMode] = useState(false);
 
   // Admin pattern management
   const [goodPatterns, setGoodPatterns] = useState([]);
@@ -433,19 +426,8 @@ const GameCore = ({
   // Guide system
   const { showGuide, guides, closeGuide, openGuide, hasGuides } = useGuideSystem(currentLevel);
 
-  // Handle need hint click
+  // Handle need hint click (UI validation only, actual checks happen on render via needHintDisabled)
   const handleNeedHintClick = () => {
-    const baseHints = Array.isArray(currentLevel?.hints)
-      ? [...currentLevel.hints]
-        .filter(h => h.is_active !== false)
-        .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
-      : [];
-
-    if (baseHints.length === 0) return;
-
-    let targetIndex = levelHintIndex >= baseHints.length ? 0 : levelHintIndex;
-    setActiveLevelHint(baseHints[targetIndex]);
-    setLevelHintIndex(targetIndex + 1);
     setHintOpen(true);
   };
 
@@ -478,35 +460,21 @@ const GameCore = ({
           </div>
           <GameArea
             gameRef={gameRef}
-            gameState={gameState}
-            isRunning={isRunning}
-            isGameOver={isGameOver}
-            onRestart={handleRestartGame}
             currentLevel={currentLevel}
-            playerNodeId={playerNodeId}
-            playerDirection={playerDirection}
             playerHpState={playerHpState}
-            isCompleted={isCompleted}
             currentWeaponData={currentWeaponData}
             hintData={hintData}
             hintOpen={hintOpen}
             onToggleHint={() => setHintOpen(false)}
-            hintOpenCount={hintOpenCount}
             levelHints={Array.isArray(currentLevel?.hints) ? currentLevel.hints : []}
-            activeLevelHint={activeLevelHint}
             onNeedHintClick={handleNeedHintClick}
             needHintDisabled={
               !Array.isArray(currentLevel?.hints) ||
               currentLevel.hints.filter(h => h.is_active !== false).length === 0
             }
-            finalScore={finalScore}
-            inCombatMode={inCombatMode}
-            workspaceRef={workspaceRef}
-            userBigO={userBigO}
             onUserBigOChange={handleBigOSelect}
             showBigOQuiz={showBigOQuiz}
             onCloseBigOQuiz={() => setShowBigOQuiz(false)}
-            userProgress={userProgress}
             hasGuides={hasGuides}
             onOpenGuide={openGuide}
           />

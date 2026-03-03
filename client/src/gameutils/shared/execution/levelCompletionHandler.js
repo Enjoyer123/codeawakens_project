@@ -10,8 +10,8 @@ import {
 } from '../../effects/gameEffects';
 import { updatePlayer } from '../../phaser/player/phaserGamePlayer';
 import { resetEnemy } from '../../combat/enemyUtils';
+import { playCombatSequence } from '../../combat/battleAnimation';
 import {
-    finalizeTablesBeforeVictory,
     calculateLevelScore
 } from './executionScoring';
 import { playVictorySequence } from '../../effects/executionAnimations';
@@ -192,8 +192,6 @@ const handleSuccess = async ({
         setIsRunning,
         setGameResult
     } = setters;
-
-    await finalizeTablesBeforeVictory(currentLevel);
 
     // Victory Animation (timing is handled inside playVictorySequence)
     let currentScene = getCurrentGameState().currentScene;

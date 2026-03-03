@@ -12,6 +12,19 @@
 const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
 
 /**
+ * ตรวจว่า level นี้เป็น Emei Mountain / Max Capacity หรือไม่
+ */
+function isEmeiLevel(levelData, code = '') {
+    return levelData.appliedData?.type?.includes('EMEI') ||
+        levelData.appliedData?.type?.includes('MAX_CAPACITY') ||
+        levelData.gameType === 'emei_mountain' ||
+        levelData.level_name?.includes('ง้อไบ๊') ||
+        code.includes('Emei(') ||
+        code.includes('showEmeiFinalResult') ||
+        code.includes('highlightPeak');
+}
+
+/**
  * สร้าง context สำหรับรัน algo code (ไม่มี visual)
  * แต่ละ algo type จะมี trace recorder ที่เก็บ step log
  */
@@ -443,8 +456,8 @@ function buildAlgoContext(levelData, trace, code = "") {
 
     // CoinChange
     if (levelData.coinChangeData) {
-        context.monster_power = Math.round(Number(levelData.coinChangeData.monster_power || 32));
-        context.warriors = (levelData.coinChangeData.warriors || [1, 5, 10, 25]).map(w => Math.round(Number(w)));
+        context.monster_power = Math.round(Number(levelData.coinChangeData.monster_power || 0));
+        context.warriors = (levelData.coinChangeData.warriors || []).map(w => Math.round(Number(w)));
     }
 
     // Rope Partition
@@ -463,20 +476,7 @@ function buildAlgoContext(levelData, trace, code = "") {
     }
 
     // Emei Mountain
-    const isEmeiMountain = levelData.appliedData?.type?.includes('EMEI') ||
-        levelData.appliedData?.type?.includes('MAX_CAPACITY') ||
-        levelData.gameType === 'emei_mountain' ||
-        levelData.level_name?.includes('ง้อไบ๊') ||
-        code.includes('Emei(') ||
-        code.includes('showEmeiFinalResult') ||
-        code.includes('highlightPeak');
-
-    console.log(`🏔️ [isEmeiMountain=${isEmeiMountain}]`, {
-        appliedType: levelData.appliedData?.type,
-        gameType: levelData.gameType,
-        hasHighlightPeak: code.includes('highlightPeak'),
-        hasShowFinalResult: code.includes('showEmeiFinalResult'),
-    });
+    const isEmeiMountain = isEmeiLevel(levelData, code);
 
     if (isEmeiMountain) {
         const payload = levelData.appliedData?.payload || {};
@@ -502,19 +502,6 @@ function buildAlgoContext(levelData, trace, code = "") {
         context.start = levelData.emeiStart ?? payload.start ?? levelData.startNodeId ?? levelData.startNode ?? 0;
         context.end = levelData.emeiEnd ?? payload.end ?? levelData.goalNodeId ?? levelData.goalNode ?? 5;
         context.tourists = levelData.emeiTourists ?? payload.tourists ?? payload.tourist ?? 20;
-
-        buildAlgoContext._emeiRunCount = (buildAlgoContext._emeiRunCount || 0) + 1;
-        console.log(`🗺️ [EMEI CONTEXT #${buildAlgoContext._emeiRunCount}]`, {
-            n: context.n,
-            tourists: context.tourists,
-            start: context.start,
-            end: context.end,
-            edgesCount: context.edges?.length,
-            payloadTourists: payload.tourists,
-            payloadTourist: payload.tourist,
-            payloadEnd: payload.end,
-            payloadN: payload.n,
-        });
     }
 
     return context;
@@ -557,57 +544,14 @@ export async function executeAlgoCode(code, levelData, timeoutMs = 5000) {
         const context = buildAlgoContext(levelData, trace, code);
 
         // Inject step counter + return capture
-        // Blockly gen code sets `var result = DFS(...)` at the end
-        // We need to explicitly return it, same as prepareExecutableCode does
-        let patchedCode = code;
-        if (levelData.coinChangeData && code.includes('function coinChange')) {
-            patchedCode = patchedCode.replace(/async function coinChange\((.*?)\)\s*\{/, 'async function coinChange($1) { let coin, include, exclude, minCoins, cand, ans;');
-        }
-        const isEmeiMountain = levelData.appliedData?.type?.includes('EMEI') ||
-            levelData.appliedData?.type?.includes('MAX_CAPACITY') ||
-            levelData.gameType === 'emei_mountain' ||
-            levelData.level_name?.includes('ง้อไบ๊') ||
-            code.includes('showEmeiFinalResult') ||
-            code.includes('highlightPeak');
-
-        if (isEmeiMountain) {
-            if (!code.includes('var result =') && !code.includes('let result =')) {
-                // With await (targets: await maxCapacity(n, edges, start, end, 20);)
-                const matchAwait = /await\s+([a-zA-Z0-9_]+)\(\s*n\s*,\s*edges\s*,\s*start\s*,\s*end\s*,\s*(.*?)\s*\)/.exec(patchedCode);
-                if (matchAwait) {
-                    const funcName = matchAwait[1];
-                    patchedCode = patchedCode.substring(0, matchAwait.index) + 'var result = await ' + funcName + '(n, edges, start, end, tourists)' + patchedCode.substring(matchAwait.index + matchAwait[0].length);
-                } else {
-                    // Without await (fallback)
-                    const matchNoAwait = /(?:^|\n)([a-zA-Z0-9_]+)\(\s*n\s*,\s*edges\s*,\s*start\s*,\s*end\s*,\s*(.*?)\s*\)/.exec(patchedCode);
-                    if (matchNoAwait) {
-                        const funcName = matchNoAwait[1];
-                        patchedCode = patchedCode.substring(0, matchNoAwait.index) + '\nvar result = ' + funcName + '(n, edges, start, end, tourists)' + patchedCode.substring(matchNoAwait.index + matchNoAwait[0].length);
-                    }
-                }
-            } else {
-                // If it already assigns to a variable, just override the parameter.
-                const matchAssign = /(=\s*(?:await\s+)?)([a-zA-Z0-9_]+)\(\s*n\s*,\s*edges\s*,\s*start\s*,\s*end\s*,\s*(.*?)\s*\)/.exec(patchedCode);
-                if (matchAssign) {
-                    const prefix = matchAssign[1];
-                    const funcName = matchAssign[2];
-                    patchedCode = patchedCode.substring(0, matchAssign.index) + prefix + funcName + '(n, edges, start, end, tourists)' + patchedCode.substring(matchAssign.index + matchAssign[0].length);
-                }
-            }
-        }
-
-        // Inject step counter + return capture
-        // We need to explicitly return it, same as prepareExecutableCode does
         const guardedCode = `
             let __stepCount = 0;
             const __maxSteps = 50000;
             function __guard() { if (++__stepCount > __maxSteps) throw new Error('Too many executions (infinite loop?)'); }
-        ` + patchedCode + `\n try { return result; } catch(e) { return undefined; }`;
+        ` + code + `\n try { return result; } catch(e) { return undefined; }`;
 
         const argNames = Object.keys(context);
         const argValues = argNames.map(k => context[k]);
-
-        console.log("---- [ALGO EXECUTOR RUNNING PATCHED CODE] ----\n", patchedCode, "\n----------------------------------------");
 
         const fn = new AsyncFunction(...argNames, '"use strict";\n' + guardedCode);
 

@@ -3,7 +3,6 @@
  * จัดการการเตรียม Workspace ของ Blockly และเชื่อมต่อกับ Phaser
  */
 
-import React, { useEffect } from 'react';
 import * as Blockly from "blockly";
 import "blockly/blocks";
 import "blockly/javascript";
@@ -63,164 +62,120 @@ export function useBlocklySetup({
       return;
     }
 
-    setTimeout(() => {
-      try {
-        // หมายเหตุ: ไม่ reset blocklyLoaded เป็น 0 ที่นี่ เพราะ React 18 จะ batch กับ
-        // setBlocklyLoaded(v => v + 1) ด้านล่าง ทำให้ผลลัพธ์เป็น 1 ซ้ำทุกรอบ
-        // ปล่อยให้ increment อย่างเดียว เพื่อให้ค่าเปลี่ยนจริงทุกครั้ง (1, 2, 3, ...)
-        if (workspaceRef.current) {
-          try {
-            workspaceRef.current.dispose();
-          } catch (disposeError) {
-            console.warn("Error disposing workspace:", disposeError);
-          }
-          workspaceRef.current = null;
+    try {
+      // Dispose old workspace if exists
+      if (workspaceRef.current) {
+        try {
+          workspaceRef.current.dispose();
+        } catch (disposeError) {
+          console.warn("Error disposing workspace:", disposeError);
         }
-        // รีเซ็ตตัวจำ XML เพื่อให้โหลด starter_xml ใหม่ได้หลังสร้าง workspace ใหม่
-        lastLoadedXmlRef.current = null;
-
-        // 1.2 เคลียร์ HTML Container
-        if (blocklyRef.current) {
-          blocklyRef.current.innerHTML = '';
-          if (!blocklyRef.current.parentNode) {
-            console.error("Blockly container is not attached to DOM!");
-            return;
-          }
-        }
-
-        // 1.3 เตรียมระบบภายใน (Definitions & Generators)
-        initializeImprovedVariableHandling(); // ระบบจัดการตัวแปร
-        ensureStandardBlocks();               // โหลดบล็อกมาตรฐาน
-        defineAllGenerators();                // โหลดตัวสร้างโค้ด JS
-
-        // Patch: แก้ไข Generator ของฟังก์ชัน (เฉพาะกิจ)
-        const customProcGen = javascriptGenerator.forBlock["procedures_defreturn"];
-        if (customProcGen) {
-          javascriptGenerator.forBlock["procedures_defreturn"] = customProcGen;
-        }
-
-        // 1.4 สร้าง Toolbox Config (เมนูด้านซ้าย)
-        const toolbox = createToolboxConfig(enabledBlocks);
-
-        // 1.5 กำหนดค่า Workspace (Theme, Grid, Zoom)
-        const workspaceConfig = {
-          theme: ModernTheme,
-          renderer: 'geras',
-          toolbox,
-          collapse: true,
-          comments: true,
-          disable: true,
-          maxBlocks: Infinity,
-          trashcan: true,
-          horizontalLayout: false,
-          toolboxPosition: "start",
-          css: true,
-          media: "https://blockly-demo.appspot.com/static/media/",
-          rtl: false,
-          move: {
-            scrollbars: { horizontal: true, vertical: true },
-            drag: true,
-            wheel: true,
-          },
-          plugins: {
-            blockDragger: ScrollBlockDragger,
-            metricsManager: ScrollMetricsManager,
-          },
-          sounds: false,
-          oneBasedIndex: true,
-          // เปิดใช้งาน Variables ถ้ามีบล็อกที่เกี่ยวข้อง
-          variables: enabledBlocks["variables_get"] ||
-            enabledBlocks["variables_set"] ||
-            enabledBlocks["var_math"] ||
-            enabledBlocks["get_var_value"] || false,
-          grid: {
-            spacing: 20,
-            length: 3,
-            colour: "#ccc",
-            snap: true,
-          },
-          zoom: {
-            controls: true,
-            wheel: true,
-            startScale: 0.8,
-            maxScale: 3,
-            minScale: 0.3,
-            scaleSpeed: 1.2,
-          },
-        };
-
-        // 1.6 Set scrollbar thickness (thinner, hugs the edge)
-        Blockly.Scrollbar.scrollbarThickness = 8;
-
-        // 1.7 Inject Workspace ลงใน DOM
-        const workspace = Blockly.inject(blocklyRef.current, workspaceConfig);
-        workspaceRef.current = workspace;
-
-        // Initialize scroll-options plugin (edge scrolling + wheel scroll while dragging)
-        const scrollOptions = new ScrollOptions(workspace);
-        scrollOptions.init();
-
-        // อัปเดตสถานะว่าพร้อมแล้ว
-        setBlocklyLoaded(v => v + 1);
-        setBlocklyJavaScriptReady(true);
-
-        // 1.7 เตรียมตัวแปรเริ่มต้น (Common Variables)
-        ensureCommonVariables(workspace);
-
-        // 1.8 ลงทะเบียน Event Handlers (ดักจับการเปลี่ยนแปลง)
-        registerProcedureEventHandlers(workspace);
-        registerVariableEventHandlers(workspace);
-
-        // 1.9 โหลด Starter XML ทันที (ไม่ต้องรอ useEffect ที่อาจโดน React batch)
-        if (starter_xml && typeof starter_xml === 'string' && starter_xml.trim()) {
-          loadStarterXml(workspace, starter_xml, isTextCodeEnabled, onCodeGenerated);
-          lastLoadedXmlRef.current = starter_xml;
-        }
-
-        // 1.10 เริ่มเกม Phaser
-        initPhaserGame();
-
-      } catch (error) {
-        console.error("Error initializing workspace:", error);
+        workspaceRef.current = null;
       }
-    }, 100);
-  };
 
-  // ============================================================================
-  // [Flow A] Initialization: 3. โหลด Starter XML (Load Code)
-  // ส่วนจัดการ Starter XML (โหลดโค้ดเริ่มต้น)
-  // ============================================================================
-
-  // ใช้ Ref ป้องกันการโหลดซ้ำ XML เดิม
-  const lastLoadedXmlRef = React.useRef(null);
-
-  useEffect(() => {
-    // ถ้า Workspace ยังไม่พร้อม -> รอไปก่อน
-    if (!workspaceRef.current) return;
-
-    // ถ้า XML ตัวนี้โหลดไปแล้ว -> ไม่ต้องโหลดซ้ำ
-    if (lastLoadedXmlRef.current === starter_xml) return;
-
-    if (starter_xml && typeof starter_xml === 'string' && starter_xml.trim()) {
-      // รอแป๊บนึงเพื่อให้ Workspace นิ่ง แล้วค่อยโหลด
-      setTimeout(() => {
-        loadStarterXml(
-          workspaceRef.current,
-          starter_xml,
-          isTextCodeEnabled,
-          onCodeGenerated,
-          // setCurrentHint
-        );
-        lastLoadedXmlRef.current = starter_xml; // จำไว้ว่าโหลดแล้ว
-      }, 200);
-    } else {
-      // ถ้าไม่มี XML ให้รีเซ็ตตัวจำ
-      if (lastLoadedXmlRef.current !== null) {
-        lastLoadedXmlRef.current = null;
+      // เคลียร์ HTML Container
+      if (blocklyRef.current) {
+        blocklyRef.current.innerHTML = '';
+        if (!blocklyRef.current.parentNode) {
+          console.error("Blockly container is not attached to DOM!");
+          return;
+        }
       }
+
+      // เตรียมระบบภายใน (Definitions & Generators)
+      initializeImprovedVariableHandling();
+      ensureStandardBlocks();
+      defineAllGenerators();
+
+      // Patch: แก้ไข Generator ของฟังก์ชัน (เฉพาะกิจ)
+      const customProcGen = javascriptGenerator.forBlock["procedures_defreturn"];
+      if (customProcGen) {
+        javascriptGenerator.forBlock["procedures_defreturn"] = customProcGen;
+      }
+
+      // สร้าง Toolbox Config (เมนูด้านซ้าย)
+      const toolbox = createToolboxConfig(enabledBlocks);
+
+      // กำหนดค่า Workspace (Theme, Grid, Zoom)
+      const workspaceConfig = {
+        theme: ModernTheme,
+        renderer: 'geras',
+        toolbox,
+        collapse: true,
+        comments: true,
+        disable: true,
+        maxBlocks: Infinity,
+        trashcan: true,
+        horizontalLayout: false,
+        toolboxPosition: "start",
+        css: true,
+        media: "https://blockly-demo.appspot.com/static/media/",
+        rtl: false,
+        move: {
+          scrollbars: { horizontal: true, vertical: true },
+          drag: true,
+          wheel: true,
+        },
+        plugins: {
+          blockDragger: ScrollBlockDragger,
+          metricsManager: ScrollMetricsManager,
+        },
+        sounds: false,
+        oneBasedIndex: true,
+        variables: enabledBlocks["variables_get"] ||
+          enabledBlocks["variables_set"] ||
+          enabledBlocks["var_math"] ||
+          enabledBlocks["get_var_value"] || false,
+        grid: {
+          spacing: 20,
+          length: 3,
+          colour: "#ccc",
+          snap: true,
+        },
+        zoom: {
+          controls: true,
+          wheel: true,
+          startScale: 0.8,
+          maxScale: 3,
+          minScale: 0.3,
+          scaleSpeed: 1.2,
+        },
+      };
+
+      // Set scrollbar thickness
+      Blockly.Scrollbar.scrollbarThickness = 8;
+
+      // Inject Workspace ลงใน DOM
+      const workspace = Blockly.inject(blocklyRef.current, workspaceConfig);
+      workspaceRef.current = workspace;
+
+      // Initialize scroll-options plugin
+      const scrollOptions = new ScrollOptions(workspace);
+      scrollOptions.init();
+
+      // อัปเดตสถานะว่าพร้อมแล้ว
+      setBlocklyLoaded(v => v + 1);
+      setBlocklyJavaScriptReady(true);
+
+      // เตรียมตัวแปรเริ่มต้น (Common Variables)
+      ensureCommonVariables(workspace);
+
+      // ลงทะเบียน Event Handlers (ดักจับการเปลี่ยนแปลง)
+      registerProcedureEventHandlers(workspace);
+      registerVariableEventHandlers(workspace);
+
+      // โหลด Starter XML (จุดเดียว — ไม่มี useEffect ซ้ำอีก)
+      if (starter_xml && typeof starter_xml === 'string' && starter_xml.trim()) {
+        loadStarterXml(workspace, starter_xml, isTextCodeEnabled, onCodeGenerated);
+      }
+
+      // เริ่มเกม Phaser
+      initPhaserGame();
+
+    } catch (error) {
+      console.error("Error initializing workspace:", error);
     }
-  }, [starter_xml, blocklyLoaded]);
-  //  }, [starter_xml, blocklyLoaded, setCurrentHint]);
+  };
 
   return { initBlocklyAndPhaser };
 }

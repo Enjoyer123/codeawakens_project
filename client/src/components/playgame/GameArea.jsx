@@ -21,7 +21,6 @@ const GameArea = ({
   onNeedHintClick,
   needHintDisabled,
   onToggleHint,
-  hintOpenCount,
   onUserBigOChange,
   showBigOQuiz,
   onCloseBigOQuiz,
@@ -81,7 +80,6 @@ const GameArea = ({
         hints={levelHints}
         isOpen={hintOpen && levelHints && levelHints.length > 0}
         onClose={onToggleHint}
-        initialHintIndex={hintOpenCount}
       />
 
       <BigOQuizModal

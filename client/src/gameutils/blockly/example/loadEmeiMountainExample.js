@@ -268,19 +268,24 @@ const emeiDijkstraXml = `<xml xmlns="https://developers.google.com/blockly/xml">
       </block>
     </value>
   </block>
-  <block type="procedures_callreturn" id="call_maxCapacity" x="20" y="850">
-    <mutation name="maxCapacity">
-      <arg name="n"></arg>
-      <arg name="edges"></arg>
-      <arg name="start"></arg>
-      <arg name="end"></arg>
-      <arg name="tourists"></arg>
-    </mutation>
-    <value name="ARG0"><block type="variables_get"><field name="VAR">n</field></block></value>
-    <value name="ARG1"><block type="variables_get"><field name="VAR">edges</field></block></value>
-    <value name="ARG2"><block type="variables_get"><field name="VAR">start</field></block></value>
-    <value name="ARG3"><block type="variables_get"><field name="VAR">end</field></block></value>
-    <value name="ARG4"><block type="math_number"><field name="NUM">20</field></block></value>
+  <block type="variables_set" id="call_maxCapacity_set" x="20" y="850">
+    <field name="VAR">result</field>
+    <value name="VALUE">
+      <block type="procedures_callreturn" id="call_maxCapacity">
+        <mutation name="maxCapacity">
+          <arg name="n"></arg>
+          <arg name="edges"></arg>
+          <arg name="start"></arg>
+          <arg name="end"></arg>
+          <arg name="tourists"></arg>
+        </mutation>
+        <value name="ARG0"><block type="variables_get"><field name="VAR">n</field></block></value>
+        <value name="ARG1"><block type="variables_get"><field name="VAR">edges</field></block></value>
+        <value name="ARG2"><block type="variables_get"><field name="VAR">start</field></block></value>
+        <value name="ARG3"><block type="variables_get"><field name="VAR">end</field></block></value>
+        <value name="ARG4"><block type="variables_get"><field name="VAR">tourists</field></block></value>
+      </block>
+    </value>
   </block>
 </xml>`;
 
@@ -556,19 +561,24 @@ const emeiPrimXml = `<xml xmlns="https://developers.google.com/blockly/xml">
       <block type="variables_get"><field name="VAR">result</field></block>
     </value>
   </block>
-  <block type="procedures_callreturn" id="p_call_max_prim" x="20" y="1100">
-    <mutation name="maxCapacity">
-      <arg name="n"></arg>
-      <arg name="edges"></arg>
-      <arg name="start"></arg>
-      <arg name="end"></arg>
-      <arg name="tourists"></arg>
-    </mutation>
-    <value name="ARG0"><block type="variables_get"><field name="VAR">n</field></block></value>
-    <value name="ARG1"><block type="variables_get"><field name="VAR">edges</field></block></value>
-    <value name="ARG2"><block type="variables_get"><field name="VAR">start</field></block></value>
-    <value name="ARG3"><block type="variables_get"><field name="VAR">end</field></block></value>
-    <value name="ARG4"><block type="math_number"><field name="NUM">20</field></block></value>
+  <block type="variables_set" id="p_call_max_prim_set" x="20" y="1100">
+    <field name="VAR">result</field>
+    <value name="VALUE">
+      <block type="procedures_callreturn" id="p_call_max_prim">
+        <mutation name="maxCapacity">
+          <arg name="n"></arg>
+          <arg name="edges"></arg>
+          <arg name="start"></arg>
+          <arg name="end"></arg>
+          <arg name="tourists"></arg>
+        </mutation>
+        <value name="ARG0"><block type="variables_get"><field name="VAR">n</field></block></value>
+        <value name="ARG1"><block type="variables_get"><field name="VAR">edges</field></block></value>
+        <value name="ARG2"><block type="variables_get"><field name="VAR">start</field></block></value>
+        <value name="ARG3"><block type="variables_get"><field name="VAR">end</field></block></value>
+        <value name="ARG4"><block type="variables_get"><field name="VAR">tourists</field></block></value>
+      </block>
+    </value>
   </block>
 </xml>`;
 
