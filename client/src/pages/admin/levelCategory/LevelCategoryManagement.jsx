@@ -25,7 +25,6 @@ import { getImageUrl } from '@/utils/imageUtils';
 import PageError from '@/components/shared/Error/PageError';
 
 const LevelCategoryManagement = () => {
-  const { getToken } = useAuth(); // Keeping if needed for other things, but hooks handle tokens.
   const { page, rowsPerPage, handlePageChange } = usePagination(1, 10);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -38,7 +37,7 @@ const LevelCategoryManagement = () => {
   } = useLevelCategories(searchQuery);
 
   if (isError) {
-    return <PageError message={categoriesError?.message} title="Failed to load level categories" />;
+    return <PageError message={categoriesError?.message} title="Failed to load topics" />;
   }
 
   // Mutations
@@ -88,7 +87,6 @@ const LevelCategoryManagement = () => {
     item_enable: false,
     item: null,
     difficulty_order: 1,
-    color_code: '#4CAF50',
     block_key: null,
   });
   const [saveError, setSaveError] = useState(null);
@@ -132,7 +130,6 @@ const LevelCategoryManagement = () => {
         item_enable: levelCategory.item_enable || false,
         item: items,
         difficulty_order: levelCategory.difficulty_order,
-        color_code: levelCategory.color_code || '#4CAF50',
         block_key: blockKeyDisplay,
       });
     } else {
@@ -147,7 +144,6 @@ const LevelCategoryManagement = () => {
         item_enable: false,
         item: null,
         difficulty_order: maxOrder + 1,
-        color_code: '#4CAF50',
         block_key: '',
       });
     }
@@ -165,7 +161,6 @@ const LevelCategoryManagement = () => {
       item_enable: false,
       item: null,
       difficulty_order: 1,
-      color_code: '#4CAF50',
       block_key: null,
       background_image: null,
     });
@@ -212,7 +207,7 @@ const LevelCategoryManagement = () => {
       ...levelCategoryForm,
       category_name: levelCategoryForm.category_name.trim(),
       description: levelCategoryForm.description.trim(),
-      color_code: levelCategoryForm.color_code.trim(),
+
       item: itemValue,
       difficulty_order: parseInt(levelCategoryForm.difficulty_order),
       block_key: blockKeyValue,
@@ -230,7 +225,7 @@ const LevelCategoryManagement = () => {
       handleCloseLevelCategoryDialog();
       return { success: true };
     } catch (err) {
-      const errorMessage = 'ไม่สามารถบันทึก level category ได้: ' +
+      const errorMessage = 'ไม่สามารถบันทึก topic ได้: ' +
         (err.message || 'Unknown error');
       setSaveError(errorMessage);
       return { success: false, error: errorMessage };
@@ -321,10 +316,10 @@ const LevelCategoryManagement = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <AdminPageHeader
-          title="Level Category Management"
-          subtitle="จัดการหมวดหมู่ระดับ"
+          title="Topic Management"
+          subtitle="จัดการหัวข้อการเรียนรู้"
           onAddClick={() => handleOpenLevelCategoryDialog()}
-          addButtonText="เพิ่มหมวดหมู่"
+          addButtonText="เพิ่มหัวข้อ"
         />
 
         {/* Save error moved to inside dialog usually, but here it's global? */}
@@ -337,15 +332,15 @@ const LevelCategoryManagement = () => {
         <SearchInput
           defaultValue={searchQuery}
           onSearch={handleSearchChange}
-          placeholder="ค้นหาหมวดหมู่ (name, description)..."
+          placeholder="ค้นหาหัวข้อ (name, description)..."
         />
 
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {loading ? (
-            <LoadingState message="Loading level categories..." />
+            <LoadingState message="Loading topics..." />
           ) : paginatedCategories.length === 0 ? (
             <EmptyState
-              message="ไม่พบข้อมูลหมวดหมู่"
+              message="ไม่พบข้อมูลหัวข้อ"
               searchQuery={searchQuery}
             />
           ) : (
@@ -392,7 +387,7 @@ const LevelCategoryManagement = () => {
           onOpenChange={handleDeleteDialogChange}
           onConfirm={handleDeleteConfirm}
           itemName={levelCategoryToDelete?.category_name}
-          title="ยืนยันการลบหมวดหมู่"
+          title="ยืนยันการลบหัวข้อ"
           deleting={deleting}
         />
       </div>

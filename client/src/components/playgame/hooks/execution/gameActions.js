@@ -3,7 +3,7 @@
  * These bridge the Blockly-generated code with Phaser animations.
  */
 
-import { getCurrentGameState, setCurrentGameState } from '@/gameutils/shared/game';
+import { getCurrentGameState, setCurrentGameState } from '@/gameutils/shared/game/gameState';
 import { calculateMoveForward, calculateTurnLeft, calculateTurnRight } from '@/gameutils/movement/movementCore';
 import { playMoveAnimation, playTurnAnimation } from '@/gameutils/movement/movementPlayback';
 import { nearPit as checkNearPit } from '@/gameutils/movement/collisionUtils';

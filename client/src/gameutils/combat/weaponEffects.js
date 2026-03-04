@@ -1,5 +1,5 @@
 // Combat Weapon Attack Effects
-import { getCurrentGameState } from '../shared/game';
+import { getCurrentGameState } from '../shared/game/gameState';
 
 import { createCanvasBasedEffect, showFallbackEffect } from './animationUtils';
 

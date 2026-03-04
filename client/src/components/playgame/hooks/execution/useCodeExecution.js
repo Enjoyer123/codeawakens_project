@@ -4,9 +4,9 @@
  */
 
 import { useState } from 'react';
-import { getCurrentGameState } from '@/gameutils/shared/game';
+import { getCurrentGameState } from '@/gameutils/shared/game/gameState';
 import { generateAndInstrumentCode } from '@/gameutils/blockly/core/executionCodeGeneration';
-import { isAlgoLevel } from '@/gameutils/algo';
+import { isAlgoLevel } from '@/gameutils/algo/algoPlayback';
 import { validateWorkspace } from './codeValidator';
 import { createGameActions } from './gameActions';
 import { runAlgoPath } from './algoRunner';

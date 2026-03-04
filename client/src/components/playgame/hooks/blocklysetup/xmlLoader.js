@@ -3,7 +3,7 @@
  * แยก Logic การโหลด Starter XML ออกมาเพื่อให้ useBlocklySetup สะอาดขึ้น
  */
 import * as Blockly from "blockly/core";
-import { setXmlLoading } from '@/gameutils/blockly';
+import { setXmlLoading } from '@/gameutils/blockly/core/state';
 import { javascriptGenerator } from "blockly/javascript";
 import {
     ensureVariableIds,

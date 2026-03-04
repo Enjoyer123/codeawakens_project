@@ -262,33 +262,24 @@ exports.submitTest = async (req, res) => {
 
       await Promise.all(userTestCreates);
 
-      // Determine Skill Level (Zone) based on Part Scores
+      // Determine Skill Level (Zone) based on overall percentage
       let skillLevel = null;
       if (testType === 'PreTest') {
-        // Logic:
-        // Part 1 (Basic) < 3 -> Zone_A (Novice)
-        // Part 2 (Logic) < 3 -> Zone_B (Coder)
-        // Part 3 (Advanced) < 3 -> Zone_C (Developer)
-        // Passed All -> Zone_C (Master) - treating Master as Zone_C for unlocking purposes
+        // Logic (percentage-based):
+        // >= 80% -> Zone_C (highest skill, unlocks all zones)
+        // >= 50% -> Zone_B (mid skill)
+        // <  50% -> Zone_A (needs practice, basic zone only)
+        const percentage = (score / totalQuestions) * 100;
 
-        if (scoreP1 < 3) {
-          skillLevel = 'Zone_A';
+        if (percentage >= 80) {
+          skillLevel = 'Zone_C';
+        } else if (percentage >= 50) {
+          skillLevel = 'Zone_B';
         } else {
-          // Passed Part 1
-          if (scoreP2 < 3) {
-            skillLevel = 'Zone_B';
-          } else {
-            // Passed Part 2
-            if (scoreP3 < 3) {
-              skillLevel = 'Zone_C';
-            } else {
-              // Passed Part 3
-              skillLevel = 'Zone_C'; // Master
-            }
-          }
+          skillLevel = 'Zone_A';
         }
 
-        console.log(`Scoring: P1=${scoreP1}, P2=${scoreP2}, P3=${scoreP3} => Skill: ${skillLevel}`);
+        console.log(`Scoring: ${score}/${totalQuestions} (${percentage.toFixed(1)}%) => Skill: ${skillLevel}`);
       }
 
       // Update User Score

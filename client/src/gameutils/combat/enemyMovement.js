@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { setPlayerHp as setGlobalPlayerHp } from '../shared/game';
+import { setPlayerHp as setGlobalPlayerHp } from '../shared/game/gameState';
 import { isDefeat } from './enemyUtils';
 import { showGameOver } from '../effects/gameEffects';
 import { getDirectionFromAngle } from './combatHelpers';

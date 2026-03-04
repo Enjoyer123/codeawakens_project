@@ -10,16 +10,18 @@ import {
   getWeaponsData
 } from '../../../gameutils/entities/weaponUtils';
 
-import { ensureDefaultBlocks } from '../../../gameutils/blockly';
+import { ensureDefaultBlocks } from '../../../gameutils/blockly/core/defaults';
+import {
+  setLevelData,
+  setCurrentGameState,
+  resetPlayerHp,
+} from '../../../gameutils/shared/game/gameState';
 import {
   safeParse,
   normalizeNodes,
   normalizeEdges,
   normalizePatternHints,
-  setLevelData,
-  setCurrentGameState,
-  resetPlayerHp,
-} from '../../../gameutils/shared/game';
+} from '../../../gameutils/shared/game/levelParser';
 
 import { API_BASE_URL } from '../../../config/apiConfig';
 

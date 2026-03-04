@@ -3,7 +3,7 @@
  * Extracted from useBlocklySetup.js to improve readability and maintainability.
  */
 import * as Blockly from "blockly/core";
-import { isXmlLoading } from '@/gameutils/blockly';
+import { isXmlLoading } from '@/gameutils/blockly/core/state';
 
 /**
  * Register procedure-related event handlers

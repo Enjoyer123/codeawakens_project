@@ -7,7 +7,7 @@
  * - Execution-counting wrappers for move functions
  */
 
-import { moveToNode, moveAlongPath } from '../../blockly';
+import { moveToNode, moveAlongPath } from '../../blockly/blocks/movement/helpers';
 
 /**
  * Creates a bidirectional graph adjacency map from nodes and edges.

@@ -1,5 +1,5 @@
 // Phaser Game Arrow Functions
-import { getCurrentGameState } from '../shared/game';
+import { getCurrentGameState } from '../shared/game/gameState';
 
 export function updatePlayerArrow(scene, x = null, y = null, direction = null) {
   if (!scene.playerArrow || !scene.player) {

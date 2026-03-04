@@ -1,6 +1,6 @@
 import * as Blockly from "blockly/core";
 import { javascriptGenerator } from "blockly/javascript";
-import { defineAllGenerators } from '@/gameutils/blockly';
+import { defineAllGenerators } from '@/gameutils/blockly/core/generators';
 
 export const setupCustomGenerator = (currentLevel) => {
     const customProcGen = function (block) {

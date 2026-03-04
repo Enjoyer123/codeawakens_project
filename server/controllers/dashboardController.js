@@ -11,20 +11,9 @@ exports.getDashboardStats = async (req, res) => {
 
         const totalLevels = await prisma.level.count();
 
-        // Total completions (correct attempts)
-        const totalCompletions = await prisma.userProgress.count({
-            where: { is_correct: true }
-        });
-
-        const totalStars = await prisma.userProgress.aggregate({
-            _sum: { stars_earned: true }
-        });
-
         res.json({
             totalUsers,
             totalLevels,
-            totalCompletions,
-            totalStars: totalStars._sum.stars_earned || 0
         });
     } catch (error) {
         console.error("Error fetching dashboard stats:", error);

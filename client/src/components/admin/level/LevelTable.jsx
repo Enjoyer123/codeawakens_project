@@ -2,7 +2,6 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Edit, Trash2, Eye, Play, Lightbulb, Blocks, Terminal, BookOpen } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 const LevelTable = ({
   levels,
@@ -10,10 +9,7 @@ const LevelTable = ({
   onViewPatterns,
   onNavigate
 }) => {
-  const navigate = useNavigate();
-
-  // If onNavigate is provided, use it, otherwise use local navigate
-  const handleNavigate = onNavigate || navigate;
+  const handleNavigate = onNavigate;
 
   const tableHeaderClassName =
     'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
@@ -26,7 +22,7 @@ const LevelTable = ({
         <thead className="bg-gray-50">
           <tr>
             <th className={tableHeaderClassName}>Level</th>
-            <th className={tableHeaderClassName}>Category</th>
+            <th className={tableHeaderClassName}>Topic</th>
             <th className={tableHeaderClassName}>Difficulty</th>
             <th className={tableHeaderClassName}>Status</th>
             <th className={tableHeaderClassName}>Creator</th>
@@ -50,24 +46,13 @@ const LevelTable = ({
               </td>
               <td className={tableCellClassName}>
                 {level.category && (
-                  <Badge
-                    variant="outline"
-                    style={{
-                      borderColor: level.category.color_code || '#gray',
-                      color: level.category.color_code || '#gray'
-                    }}
-                  >
+                  <Badge variant="outline">
                     {level.category.category_name}
                   </Badge>
                 )}
               </td>
               <td className={tableCellClassName}>
-                <div className="text-sm text-gray-900">
-                  <Badge variant="secondary">{level.difficulty}</Badge>
-                  <span className="ml-2 text-gray-500">
-                    ({level.difficulty_level})
-                  </span>
-                </div>
+                <Badge variant="secondary">{level.difficulty}</Badge>
               </td>
               <td className={tableCellClassName}>
                 <div className="flex flex-col gap-1">

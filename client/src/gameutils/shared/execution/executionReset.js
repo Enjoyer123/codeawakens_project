@@ -3,7 +3,7 @@ import {
     setCurrentGameState,
     resetPlayerHp,
     getPlayerHp,
-} from '../game';
+} from '../game/gameState';
 
 import { clearPlayerCoins } from '../../entities/coinUtils';
 import { clearRescuedPeople, resetAllPeople } from '../../entities/personUtils';

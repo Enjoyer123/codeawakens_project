@@ -1,9 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@clerk/clerk-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Users, Map, Award, Sword, Bell, BarChart3, PieChart, Book, Blocks, Star, CheckCircle } from 'lucide-react';
+import { Users, Map, BarChart3, PieChart } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart as RePieChart, Pie, Cell
@@ -18,9 +14,6 @@ import {
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 const AdminDashBoard = () => {
-  const navigate = useNavigate();
-  const { getToken } = useAuth();
-
   // TanStack Query Hooks
   const { data: statsData, isLoading: loadingOverview } = useDashboardStats();
   const { data: levelsData, isLoading: loadingLevels } = useLevelStats();
@@ -33,23 +26,11 @@ const AdminDashBoard = () => {
   const stats = statsData || {
     totalUsers: 0,
     totalLevels: 0,
-    totalCompletions: 0,
-    totalStars: 0
   };
 
   const levelStats = levelsData || [];
   const userStats = usersData || { skillDistribution: [] };
   const testStats = testsData || [];
-
-  const adminNavItems = [
-    { label: 'USER MANAGEMENT', path: '/admin/users', icon: Users },
-    { label: 'LEVEL MANAGEMENT', path: '/admin/levels', icon: Map },
-    { label: 'WEAPONS MANAGEMENT', path: '/admin/weapons', icon: Sword },
-    { label: 'REWARD MANAGEMENT', path: '/admin/rewards', icon: Award },
-    { label: 'GUIDE MANAGEMENT', path: '/admin/guides', icon: Book },
-    { label: 'BLOCK MANAGEMENT', path: '/admin/blocks', icon: Blocks },
-    { label: 'NOTIFICATION MANAGEMENT', path: '/admin/notifications', icon: Bell },
-  ];
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
@@ -60,7 +41,7 @@ const AdminDashBoard = () => {
       <div className="max-w-7xl mx-auto space-y-6">
 
         {/* Top Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card>
             <CardContent className="flex flex-col items-center justify-center p-6">
               <Users className="w-8 h-8 text-blue-500 mb-2" />
@@ -75,20 +56,6 @@ const AdminDashBoard = () => {
               <p className="text-xs text-muted-foreground">Total Levels</p>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center p-6">
-              <CheckCircle className="w-8 h-8 text-purple-500 mb-2" />
-              <div className="text-2xl font-bold">{stats.totalCompletions}</div>
-              <p className="text-xs text-muted-foreground">Levels Completed</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center p-6">
-              <Star className="w-8 h-8 text-yellow-500 mb-2" />
-              <div className="text-2xl font-bold">{stats.totalStars}</div>
-              <p className="text-xs text-muted-foreground">Stars Earned</p>
-            </CardContent>
-          </Card>
         </div>
 
         <div className="grid grid-cols-1 gap-6">
@@ -101,7 +68,7 @@ const AdminDashBoard = () => {
               <Card className="col-span-1">
                 <CardHeader>
                   <CardTitle className="text-lg font-bold flex items-center gap-2">
-                    <PieChart className="w-5 h-5" /> Level Categories
+                    <PieChart className="w-5 h-5" /> Topics
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -158,7 +125,7 @@ const AdminDashBoard = () => {
               </Card>
             </div>
 
-            {/* User Skill Distribution (Optional / Extra) */}
+            {/* User Skill Distribution */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg font-bold">User Skill Distribution</CardTitle>
@@ -172,7 +139,7 @@ const AdminDashBoard = () => {
                       margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                      <XAxis type="number" />
+                      <XAxis type="number" allowDecimals={false} />
                       <YAxis dataKey="name" type="category" width={100} />
                       <Tooltip />
                       <Bar dataKey="value" fill="#ffc658" name="Users" />

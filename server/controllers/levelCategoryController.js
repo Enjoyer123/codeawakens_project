@@ -273,20 +273,18 @@ exports.createLevelCategory = async (req, res) => {
       item_enable,
       item,
       difficulty_order,
-      color_code,
       block_key,
       background_image,
       coordinates
     } = req.body;
 
-    if (!category_name || !description || !difficulty_order || !color_code) {
+    if (!category_name || !description || !difficulty_order) {
       return res.status(400).json({
-        message: "Missing required fields: category_name, description, difficulty_order, color_code"
+        message: "Missing required fields: category_name, description, difficulty_order"
       });
     }
 
     const trimmedCategoryName = category_name.trim();
-    const trimmedColorCode = color_code.trim();
 
     // Sequence reset logic removed for production deployment
 
@@ -315,7 +313,7 @@ exports.createLevelCategory = async (req, res) => {
         description: description.trim(),
         item_enable: item_enable === true || item_enable === 'true' || item_enable === false,
         difficulty_order: parseInt(difficulty_order),
-        color_code: trimmedColorCode,
+        color_code: '#000000',
         block_key: (block_key && block_key !== 'null' && block_key !== '') ? block_key : null,
         background_image: background_image || null,
         coordinates: coordinates ? JSON.parse(JSON.stringify(coordinates)) : null, // Ensure valid JSON
@@ -358,15 +356,14 @@ exports.updateLevelCategory = async (req, res) => {
       item_enable,
       item,
       difficulty_order,
-      color_code,
       block_key,
       background_image,
       coordinates,
     } = req.body;
 
-    if (!category_name || !description || !difficulty_order || !color_code) {
+    if (!category_name || !description || !difficulty_order) {
       return res.status(400).json({
-        message: "Missing required fields: category_name, description, difficulty_order, color_code"
+        message: "Missing required fields: category_name, description, difficulty_order"
       });
     }
 
@@ -409,7 +406,7 @@ exports.updateLevelCategory = async (req, res) => {
         description: description.trim(),
         item_enable: item_enable === true || item_enable === 'true',
         difficulty_order: parseInt(difficulty_order),
-        color_code: color_code.trim(),
+
         block_key: (block_key && block_key !== 'null' && block_key !== '') ? block_key : null,
         background_image: background_image !== undefined ? background_image : undefined,
         coordinates: coordinates !== undefined ? JSON.parse(JSON.stringify(coordinates)) : undefined, // Update if provided

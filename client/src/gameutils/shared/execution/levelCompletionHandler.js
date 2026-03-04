@@ -1,9 +1,11 @@
 import {
     checkVictoryConditions,
     generateVictoryHint,
+} from '../game/victoryUtils';
+import {
     getCurrentGameState,
     getPlayerHp
-} from '../game';
+} from '../game/gameState';
 import {
     showGameOver,
     showVictory
