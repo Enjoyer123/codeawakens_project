@@ -42,7 +42,7 @@ const LevelCategoryImageDialog = ({
                                     <div className="border rounded-lg p-2 relative group">
                                         <img
                                             src={getImageUrl(selectedCategory.background_image)}
-                                            alt="Category Background"
+                                            alt="Topic Background"
                                             className="w-full h-48 object-contain rounded"
                                         />
                                         <Button

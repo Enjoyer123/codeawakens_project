@@ -3,10 +3,12 @@
  * Execute → Test → Score → Save → Animate → Complete
  */
 
-import { getCurrentGameState } from '@/gameutils/shared/game';
+import { getCurrentGameState } from '@/gameutils/shared/game/gameState';
 import { generateAndInstrumentCode } from '@/gameutils/blockly/core/executionCodeGeneration';
-import { extractFunctionName } from '@/gameutils/algo';
-import { executeAlgoCode, checkAlgoTestCases, playAlgoAnimation, detectAlgoType } from '@/gameutils/algo';
+import { extractFunctionName } from '@/gameutils/algo/codeParser';
+import { executeAlgoCode } from '@/gameutils/algo/algoExecutor';
+import { checkAlgoTestCases } from '@/gameutils/algo/algoTestRunner';
+import { playAlgoAnimation, detectAlgoType } from '@/gameutils/algo/algoPlayback';
 import { calculateLevelScore } from '@/gameutils/shared/execution/executionScoring';
 import { resetGameExecutionState } from '@/gameutils/shared/execution/executionReset';
 import { handleLevelCompletion } from '@/gameutils/shared/execution/levelCompletionHandler';

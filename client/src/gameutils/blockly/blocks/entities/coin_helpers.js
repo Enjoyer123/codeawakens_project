@@ -11,7 +11,7 @@ import {
     arePlayerCoinsSorted
 } from '../../../entities/coinUtils';
 
-import { getCurrentGameState, getCurrentScene } from '../../../shared/game';
+import { getCurrentGameState, getCurrentScene } from '../../../shared/game/gameState';
 import { collectCoinByPlayer, haveCoinAtPosition } from '../../../entities/collection';
 
 // Coin collection functions

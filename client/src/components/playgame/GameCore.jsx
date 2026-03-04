@@ -15,7 +15,7 @@ window.Blockly = Blockly;
 import { getWeaponData } from '../../gameutils/entities/weaponUtils';
 import { getRescuedPeople, clearRescuedPeople } from '../../gameutils/entities/personUtils';
 import { clearPlayerCoins } from '../../gameutils/entities/coinUtils';
-import { getCurrentGameState } from '../../gameutils/shared/game';
+import { getCurrentGameState } from '../../gameutils/shared/game/gameState';
 import { displayPlayerWeapon } from '../../gameutils/combat/weaponEffects';
 import { clearGameOverScreen } from '../../gameutils/effects/gameEffects';
 

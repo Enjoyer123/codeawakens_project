@@ -6,7 +6,7 @@ import {
   calculateDamage
 } from '../entities/weaponUtils';
 
-import { getCurrentGameState, setCurrentGameState, getPlayerHp, setPlayerHp as setGlobalPlayerHp, } from '../shared/game';
+import { getCurrentGameState, setCurrentGameState, getPlayerHp, setPlayerHp as setGlobalPlayerHp, } from '../shared/game/gameState';
 import { isDefeat } from './enemyUtils';
 import { showGameOver } from '../effects/gameEffects';
 import { cleanupMonsterUI } from './battleUI';

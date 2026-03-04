@@ -1,12 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import * as Blockly from 'blockly/core';
-import {
-    createToolboxConfig,
-    defineAllBlocks,
-    ensureStandardBlocks,
-    ensureCommonVariables,
-    initializeImprovedVariableHandling
-} from '../../../../gameutils/blockly';
+import { createToolboxConfig } from '../../../../gameutils/blockly/core/toolbox';
+import { defineAllBlocks } from '../../../../gameutils/blockly/core/definitions';
+import { ensureStandardBlocks } from '../../../../gameutils/blockly/core/standard';
+import { ensureCommonVariables, initializeImprovedVariableHandling } from '../../../../gameutils/blockly/blocks/data/variables/definitions';
 
 export const useBlocklyWorkspace = ({
     blocklyRef,

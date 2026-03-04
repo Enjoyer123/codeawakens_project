@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import { getWeaponData } from '../../entities/weaponUtils';
 import { displayPlayerWeapon, displayPlayerEffect } from '../../combat/weaponEffects';
-import { getCurrentGameState, setCurrentGameState, setCurrentScene } from '../../shared/game';
+import { getCurrentGameState, setCurrentGameState, setCurrentScene } from '../../shared/game/gameState';
 import { drawLevel, setupObstacles } from '../../setup/levelRenderer';
 import { setupMonsters } from '../../setup/monsterSetup';
 import { setupCoins, setupPeople } from '../../setup/entitySetup';

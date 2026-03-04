@@ -1,7 +1,11 @@
 import {
-    collectCoin, haveCoin, getCoinCount, getCoinValue, swapCoins, compareCoins, isSorted,
-    rescuePersonAtNode, hasPerson, personRescued, getPersonCount, moveToNode, moveAlongPath, listPush
-} from '../../blockly';
+    collectCoin, haveCoin, getCoinCount, getCoinValue, swapCoins, compareCoins, isSorted
+} from '../../blockly/blocks/entities/coin_helpers';
+import {
+    rescuePersonAtNode, hasPerson, personRescued, getPersonCount
+} from '../../blockly/blocks/entities/rescue_helpers';
+import { moveToNode, moveAlongPath } from '../../blockly/blocks/movement/helpers';
+import { listPush } from '../../blockly/blocks/data/lists/helpers';
 
 import {
     getPlayerCoins, addCoinToPlayer, clearPlayerCoins as clearPlayerCoinsUtil,
@@ -18,7 +22,7 @@ import { playRescueAnimation, playCollectAnimation } from '../../entities/action
 import {
     getCurrentGameState,
     setCurrentGameState
-} from '../game';
+} from '../game/gameState';
 
 
 /**

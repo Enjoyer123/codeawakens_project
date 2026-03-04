@@ -1,5 +1,5 @@
 // Collision detection functions
-import { getCurrentScene, getLevelData, directions, getCurrentGameState } from '../shared/game';
+import { getCurrentScene, getLevelData, directions, getCurrentGameState } from '../shared/game/gameState';
 
 
 export function checkObstacleCollisionWithRadius(scene, x, y, radius) {

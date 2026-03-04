@@ -10,20 +10,21 @@ const LevelCategoryTable = ({ levelCategories, onEdit, onDelete, onManageImages 
     'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
   const tableCellClassName = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900';
   const actionsCellClassName = 'px-6 py-4 whitespace-nowrap text-sm font-medium';
-  const colorSwatchClassName = 'w-6 h-6 rounded border border-gray-300';
+
 
   return (
     <div className="overflow-x-auto">
       <table className="w-full">
         <thead className="bg-gray-50">
           <tr>
-            <th className={tableHeaderClassName}>Category ID</th>
-            <th className={tableHeaderClassName}>Category Name</th>
+            <th className={tableHeaderClassName}>Topic ID</th>
+            <th className={tableHeaderClassName}>Topic Name</th>
             <th className={tableHeaderClassName}>Description</th>
             <th className={tableHeaderClassName}>Item Enable</th>
             <th className={tableHeaderClassName}>Items</th>
-            <th className={tableHeaderClassName}>Difficulty Order</th>
-            <th className={tableHeaderClassName}>Color Code</th>
+
+            <th className={tableHeaderClassName}>Image</th>
+
             <th className={tableHeaderClassName}>Block Key</th>
             <th className={tableHeaderClassName}>Actions</th>
           </tr>
@@ -60,20 +61,8 @@ const LevelCategoryTable = ({ levelCategories, onEdit, onDelete, onManageImages 
                   <span className="text-sm text-gray-400">-</span>
                 )}
               </td>
-              <td className={tableCellClassName}>
-                {category.difficulty_order}
-              </td>
-              <td className={tableCellClassName}>
-                <div className="flex items-center gap-2">
-                  <div
-                    className={colorSwatchClassName}
-                    style={{ backgroundColor: category.color_code }}
-                  />
-                  <span className="text-sm text-gray-600">
-                    {category.color_code}
-                  </span>
-                </div>
-              </td>
+
+
               {/* New Background column */}
               <td className={tableCellClassName}>
                 {category.background_image ? (

@@ -4,7 +4,7 @@ import Phaser from "phaser";
 import { playIdle } from '../movement/playerAnimation';
 import { updatePlayerArrow } from '../effects/arrow';
 import { showGameOver } from '../effects/gameEffects';
-import { getCurrentGameState, setCurrentGameState, getPlayerHp } from '../shared/game';
+import { getCurrentGameState, setCurrentGameState, getPlayerHp } from '../shared/game/gameState';
 import { getWeaponData } from '../entities/weaponUtils';
 
 /**

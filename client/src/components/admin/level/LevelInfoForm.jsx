@@ -112,13 +112,13 @@ const LevelInfoForm = ({ formData, categories, prerequisiteLevels, isEditing, le
         </div>
 
         <div>
-          <label className="text-sm font-medium">CATEGORY *</label>
+          <label className="text-sm font-medium">TOPIC *</label>
           <select
             value={formData.category_id}
             onChange={(e) => handleChange('category_id', e.target.value)}
             className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
           >
-            <option value="">Select category</option>
+            <option value="">Select topic</option>
             {categories.map((cat) => (
               <option key={cat.category_id} value={cat.category_id}>
                 {cat.category_name}
@@ -136,34 +136,23 @@ const LevelInfoForm = ({ formData, categories, prerequisiteLevels, isEditing, le
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="text-sm font-medium">Difficulty Level</label>
-            <Input
-              type="number"
-              min="1"
-              value={formData.difficulty_level}
-              onChange={(e) => handleChange('difficulty_level', parseInt(e.target.value) || 1)}
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium">Difficulty</label>
-            <select
-              value={formData.difficulty}
-              onChange={(e) => handleChange('difficulty', e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-            >
-              <option value="easy">Easy</option>
-              <option value="medium">Medium</option>
-              <option value="hard">Hard</option>
-              <option value="expert">Expert</option>
-            </select>
-          </div>
+        <div>
+          <label className="text-sm font-medium">Difficulty</label>
+          <select
+            value={formData.difficulty}
+            onChange={(e) => handleChange('difficulty', e.target.value)}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+          >
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+            <option value="expert">Expert</option>
+          </select>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="text-sm font-medium">Required Level (Map Require)</label>
+            <label className="text-sm font-medium">Map Require</label>
             <select
               value={formData.required_level_id}
               onChange={(e) => handleChange('required_level_id', e.target.value)}

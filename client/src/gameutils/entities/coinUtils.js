@@ -1,5 +1,5 @@
 // Coin management functions
-import { getCurrentGameState, setCurrentGameState, getCurrentScene } from '../shared/game';
+import { getCurrentGameState, setCurrentGameState, getCurrentScene } from '../shared/game/gameState';
 import { updateGoalUI } from '../setup/uiManager';
 
 export function getPlayerCoins() {

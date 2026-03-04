@@ -4,7 +4,7 @@ import { useBlocklyWorkspace } from '../../level/hooks/useBlocklyWorkspace';
 import { useBlocklyCleanup } from '../../level/hooks/useBlocklyCleanup';
 import { removeVariableIdsFromXml, addMutationToProcedureDefinitions, fixWorkspaceProcedures } from '../utils/patternBlocklyUtils';
 import { delay } from '../../level/utils/asyncUtils';
-import { setXmlLoading as setGlobalXmlLoading } from '@/gameutils/blockly';
+import { setXmlLoading as setGlobalXmlLoading } from '@/gameutils/blockly/core/state';
 
 export const usePatternBlocklyManager = ({
     levelData,

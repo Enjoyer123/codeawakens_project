@@ -18,7 +18,7 @@ export const useLevelForm = ({
         category_id: '',
         level_name: '',
         description: '',
-        difficulty_level: 1,
+
         difficulty: 'easy',
         is_unlocked: false,
         required_level_id: '',
@@ -133,7 +133,7 @@ export const useLevelForm = ({
     const handleSave = async () => {
         try {
             // Validate required fields
-            if (!formData.category_id || !formData.level_name || !formData.difficulty_level || !formData.difficulty) {
+            if (!formData.category_id || !formData.level_name || !formData.difficulty) {
                 toast.error('Please fill in all required fields: Category, Level Name, Difficulty Level, and Difficulty');
                 return;
             }
@@ -178,7 +178,7 @@ export const useLevelForm = ({
                 category_id: parseInt(formData.category_id),
                 level_name: formData.level_name.trim(),
                 description: formData.description || null,
-                difficulty_level: parseInt(formData.difficulty_level),
+
                 difficulty: formData.difficulty,
                 is_unlocked: formData.is_unlocked,
                 required_level_id: formData.required_level_id ? parseInt(formData.required_level_id) : null,

@@ -1,6 +1,6 @@
 import { playWalk, playIdle } from './playerAnimation';
 import { updateWeaponPosition } from '../combat/weaponEffects';
-import { setCurrentGameState } from '../shared/game';
+import { setCurrentGameState } from '../shared/game/gameState';
 import { updatePlayerArrow } from '../effects/arrow';
 
 // Node-based movement function
@@ -50,7 +50,7 @@ export async function moveToNode(player, nodeId) {
     player.currentNodeIndex = nodeId;
 
     if (levelData.goalNodeId === nodeId) {
-        const { getCurrentGameState, setCurrentGameState } = await import('../shared/game');
+        const { getCurrentGameState, setCurrentGameState } = await import('../shared/game/gameState');
         setCurrentGameState({ goalReached: true });
         player.scene.events.emit('goalReached');
     }

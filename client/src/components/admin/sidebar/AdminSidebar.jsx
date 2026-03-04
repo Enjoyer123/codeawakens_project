@@ -26,7 +26,7 @@ const AdminSidebar = () => {
       icon: Map,
     },
     {
-      label: 'Level Category Management',
+      label: 'Topic Management',
       path: '/admin/level-categories',
       icon: FolderTree,
     },

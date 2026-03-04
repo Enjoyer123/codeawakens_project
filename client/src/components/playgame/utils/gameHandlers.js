@@ -7,7 +7,7 @@ import {
   setCurrentGameState,
   resetPlayerHp,
 
-} from '../../../gameutils/shared/game';
+} from '../../../gameutils/shared/game/gameState';
 
 import { clearPlayerCoins } from '../../../gameutils/entities/coinUtils';
 import { resetAllPeople } from '../../../gameutils/entities/personUtils';

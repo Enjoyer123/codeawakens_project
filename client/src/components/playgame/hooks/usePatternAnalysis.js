@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import * as Blockly from "blockly/core";
 import { getWeaponData } from '../../../gameutils/entities/weaponUtils';
 import { displayPlayerWeapon } from '../../../gameutils/combat/weaponEffects';
-import { getCurrentGameState, setCurrentGameState } from '../../../gameutils/shared/game';
+import { getCurrentGameState, setCurrentGameState } from '../../../gameutils/shared/game/gameState';
 import { findBestMatch } from '../../../gameutils/shared/hint/hintMatcher';
 
 /**

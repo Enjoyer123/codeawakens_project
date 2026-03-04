@@ -1,7 +1,7 @@
 // Phaser Game Player Functions
 import { updateWeaponPosition } from '../../combat/weaponEffects';
 
-import { getCurrentGameState, setCurrentGameState, getPlayerHp } from '../../shared/game';
+import { getCurrentGameState, setCurrentGameState, getPlayerHp } from '../../shared/game/gameState';
 
 import { checkObstacleCollisionWithRadius } from '../../movement/collisionUtils';
 import { playIdle, playWalk } from '../../movement/playerAnimation';

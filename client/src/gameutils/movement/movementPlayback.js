@@ -1,7 +1,7 @@
 import { movePlayerWithCollisionDetection } from '../phaser/player/phaserGamePlayer';
 import { createPitFallEffect } from '../effects/gameEffects';
 import { rotatePlayer } from './playerMovement';
-import { getCurrentGameState } from '../shared/game';
+import { getCurrentGameState } from '../shared/game/gameState';
 
 /**
  * Handles playing the visual animation for turning (left/right).

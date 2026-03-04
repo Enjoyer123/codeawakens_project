@@ -16,12 +16,9 @@ import {
 } from '@blockly/plugin-scroll-options';
 
 // Import Blockly Core Modules
-import {
-  createToolboxConfig,
-  ensureStandardBlocks,
-  ensureCommonVariables,
-  initializeImprovedVariableHandling
-} from '../../../../gameutils/blockly';
+import { createToolboxConfig } from '../../../../gameutils/blockly/core/toolbox';
+import { ensureStandardBlocks } from '../../../../gameutils/blockly/core/standard';
+import { ensureCommonVariables, initializeImprovedVariableHandling } from '../../../../gameutils/blockly/blocks/data/variables/definitions';
 import { defineAllBlocks } from '@/gameutils/blockly/core/definitions';
 import { defineAllGenerators } from '@/gameutils/blockly/core/generators';
 
