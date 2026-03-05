@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Hook for Phaser game initialization
  */
 
@@ -22,19 +22,13 @@ export function usePhaserGame({
   handleRestartGame
 }) {
   const initPhaserGame = () => {
-    console.log("initPhaserGame called");
-    console.log("gameRef.current:", !!gameRef.current);
-    console.log("currentLevel:", !!currentLevel);
-    console.log("phaserGameRef.current:", !!phaserGameRef.current);
 
     if (!gameRef.current || !currentLevel) {
-      console.log("Early return - missing gameRef or currentLevel");
       return;
     }
 
     // Prevent creating multiple games
     if (phaserGameRef.current) {
-      console.log("Phaser game already exists, destroying first...");
       try {
         phaserGameRef.current.destroy(true);
         phaserGameRef.current = null;
@@ -60,10 +54,8 @@ export function usePhaserGame({
       }
     };
 
-    console.log("Creating Phaser game with config:", config);
     const game = new Phaser.Game(config);
     phaserGameRef.current = game;
-    console.log("Phaser game created:", phaserGameRef.current);
 
     // Prepare data to pass to the scene
     const sceneData = {

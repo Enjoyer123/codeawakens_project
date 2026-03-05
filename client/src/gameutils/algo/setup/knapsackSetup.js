@@ -3,17 +3,12 @@ import Phaser from "phaser";
 
 // Function to setup Knapsack problem display
 export function setupKnapsack(scene) {
-  console.log('ðŸ” setupKnapsack called');
-  console.log('ðŸ” scene.levelData:', scene.levelData);
-  console.log('ðŸ” scene.levelData.knapsackData:', scene.levelData?.knapsackData);
 
   if (!scene.levelData || !scene.levelData.knapsackData) {
-    console.log('âš ï¸ No knapsackData found, skipping setup');
     return;
   }
 
   const knapsackData = scene.levelData.knapsackData;
-  console.log('âœ… Knapsack data found:', knapsackData);
   scene.knapsack = {
     bag: null,
     items: []
@@ -59,7 +54,6 @@ export function setupKnapsack(scene) {
     bag.labelText = bagLabelText;
     scene.knapsack.bag = bag;
 
-    console.log(`Setup knapsack bag at (${bagX}, ${bagY})`);
   }
 
   // Setup items (à¸ªà¸¡à¸šà¸±à¸•à¸´) - à¸£à¸¹à¸›à¹€à¸žà¸Šà¸£
@@ -137,6 +131,5 @@ export function setupKnapsack(scene) {
       });
     });
 
-    console.log(`Setup ${scene.knapsack.items.length} knapsack items`);
   }
 }

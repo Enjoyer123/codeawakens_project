@@ -3,17 +3,12 @@ import Phaser from "phaser";
 
 // Function to setup Subset Sum problem display
 export function setupSubsetSum(scene) {
-  console.log('ðŸ” setupSubsetSum called');
-  console.log('ðŸ” scene.levelData:', scene.levelData);
-  console.log('ðŸ” scene.levelData.subsetSumData:', scene.levelData?.subsetSumData);
 
   if (!scene.levelData || !scene.levelData.subsetSumData) {
-    console.log('âš ï¸ No subsetSumData found, skipping setup');
     return;
   }
 
   const subsetSumData = scene.levelData.subsetSumData;
-  console.log('âœ… Subset Sum data found:', subsetSumData);
   scene.subsetSum = {
     side1: null,
     side2: null,
@@ -54,7 +49,6 @@ export function setupSubsetSum(scene) {
     side1.labelText = side1LabelText;
     scene.subsetSum.side1 = side1;
 
-    console.log(`Setup subset sum scale (side1) at (${side1X}, ${side1Y})`);
   }
 
   // NOTE: side2 is obsolete in the new single-platform design
@@ -118,7 +112,6 @@ export function setupSubsetSum(scene) {
       });
     });
 
-    console.log(`Setup ${scene.subsetSum.warriors.length} subset sum warriors`);
   } else if (subsetSumData.warriors && Array.isArray(subsetSumData.warriors)) {
     // à¸–à¹‰à¸²à¹„à¸¡à¹ˆà¸¡à¸µ warriors_display à¹ƒà¸«à¹‰à¹ƒà¸Šà¹‰ warriors array à¸¡à¸²à¸ªà¸£à¹‰à¸²à¸‡à¹€à¸­à¸‡
     const spacing = 150;
@@ -180,7 +173,6 @@ export function setupSubsetSum(scene) {
       });
     });
 
-    console.log(`Setup ${scene.subsetSum.warriors.length} subset sum warriors from warriors array`);
   }
 }
 

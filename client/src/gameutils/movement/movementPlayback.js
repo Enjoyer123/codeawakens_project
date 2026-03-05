@@ -1,4 +1,4 @@
-import { movePlayerWithCollisionDetection } from '../phaser/player/phaserGamePlayer';
+﻿import { movePlayerWithCollisionDetection } from '../phaser/player/phaserGamePlayer';
 import { createPitFallEffect } from '../effects/gameEffects';
 import { rotatePlayer } from './playerMovement';
 import { getCurrentGameState } from '../shared/game/gameState';
@@ -26,7 +26,6 @@ export async function playMoveAnimation(scene, actionData, options = {}) {
 
     if (actionData.hitObstacle) {
         // Player moves into pit
-        console.log("Player fell into pit! Movement stopped.");
 
         // This simulates moving halfway then falling
         await movePlayerWithCollisionDetection(

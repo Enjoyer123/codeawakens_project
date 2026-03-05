@@ -76,7 +76,9 @@ export async function runAlgoPath(code, {
         setGameResult('victory');
         setIsCompleted(true);
 
-        // 3b. Save via service (fire-and-forget) — normal users only
+        // 3b. Save progress early (before animation) — if user leaves during
+        //     animation, progress is already saved. Uses profileService directly
+        //     because this fires before control returns to useCodeExecution.
         if (!isPreview && getToken) {
             let blocklyXml = null;
             try {

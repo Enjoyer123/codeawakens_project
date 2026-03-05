@@ -1,4 +1,4 @@
-import Phaser from "phaser";
+﻿import Phaser from "phaser";
 import { setPlayerHp as setGlobalPlayerHp } from '../shared/game/gameState';
 import { isDefeat } from './enemyUtils';
 import { showGameOver } from '../effects/gameEffects';
@@ -79,7 +79,6 @@ function handleMonsterChase(scene, monster, delta, setPlayerHp, setIsGameOver, s
     if (monster.data.hasEngaged) {
         const distForFlee = Phaser.Math.Distance.Between(scene.player.x, scene.player.y, monster.sprite.x, monster.sprite.y);
         if (distForFlee > (monster.data.detectionRange || 60) + 20) {
-            console.log("💀 Player fled from battle! Instant Death.");
             if (scene.player.takeDamage) {
                 scene.player.takeDamage(100, true);
             } else {
@@ -97,7 +96,6 @@ function handleMonsterChase(scene, monster, delta, setPlayerHp, setIsGameOver, s
         const distForCollision = Phaser.Math.Distance.Between(scene.player.x, scene.player.y, monster.sprite.x, monster.sprite.y);
 
         if (isPlayerMoving && distForCollision < 25) {
-            console.log("💀 Player walked into monster! Instant Death.");
             if (scene.player.takeDamage) {
                 scene.player.takeDamage(100, true);
             } else {

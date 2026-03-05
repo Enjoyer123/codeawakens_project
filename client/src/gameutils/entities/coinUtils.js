@@ -1,4 +1,4 @@
-// Coin management functions
+﻿// Coin management functions
 import { getCurrentGameState, setCurrentGameState, getCurrentScene } from '../shared/game/gameState';
 import { updateGoalUI } from '../setup/uiManager';
 
@@ -34,7 +34,6 @@ export function swapPlayerCoins(index1, index2) {
   const i1 = parseInt(index1) - 1; // Convert to 0-based index
   const i2 = parseInt(index2) - 1;
 
-  console.log(`[coinUtils] Attempt swap: i1=${i1} (val=${coins[i1]?.value}) with i2=${i2} (val=${coins[i2]?.value}). length: ${coins.length}`);
 
   if (i1 >= 0 && i1 < coins.length && i2 >= 0 && i2 < coins.length) {
     // Swap the coins
@@ -42,7 +41,6 @@ export function swapPlayerCoins(index1, index2) {
     coins[i1] = coins[i2];
     coins[i2] = temp;
 
-    console.log(`[coinUtils] Swap SUCCESS. New order:`, coins.map(c => c.value).join(', '));
 
     setCurrentGameState({ playerCoins: coins });
 
@@ -53,7 +51,6 @@ export function swapPlayerCoins(index1, index2) {
 
     return true;
   }
-  console.log(`[coinUtils] Swap FAILED limit check.`);
   return false;
 }
 
@@ -80,7 +77,6 @@ export function comparePlayerCoins(index1, index2, operator) {
     case 'NEQ': result = value1 !== value2; break;
   }
 
-  console.log(`[coinUtils] Comparing index ${i1} (${value1}) ${operator} index ${i2} (${value2}) => ${result}`);
   return result;
 }
 

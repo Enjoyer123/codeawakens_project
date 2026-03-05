@@ -1,4 +1,4 @@
-/**
+﻿/**
  * primPlayback.js — Prim's Algorithm Animation Playback
  *
  * Trace Events handled:
@@ -25,7 +25,6 @@ async function playClassicDisplay(scene, trace, options = {}) {
         return;
     }
 
-    console.log(`🎬 [primPlayback] Playing ${trace.length} steps at ${speed}x speed`);
 
     // Graphics layers
     const edgeGraphics = scene.add.graphics().setDepth(2.5);

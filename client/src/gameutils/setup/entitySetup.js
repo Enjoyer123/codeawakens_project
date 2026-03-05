@@ -1,4 +1,4 @@
-// Entity setup functions
+﻿// Entity setup functions
 // Handles coins and people (NPCs)
 import Phaser from "phaser";
 
@@ -67,7 +67,6 @@ export function setupCoins(scene) {
         });
     });
 
-    console.log(`Setup ${scene.coins.length} coins`);
 }
 
 /**
@@ -121,7 +120,6 @@ export function setupPeople(scene) {
         scene.people.push(person);
     });
 
-    console.log(`Setup ${scene.people.length} people`);
 }
 
 

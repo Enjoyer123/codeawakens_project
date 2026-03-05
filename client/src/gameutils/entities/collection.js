@@ -1,4 +1,4 @@
-// Phaser collection and interaction functions
+﻿// Phaser collection and interaction functions
 import Phaser from "phaser";
 import { updateGoalUI } from '../setup/uiManager';
 
@@ -40,7 +40,6 @@ export function collectTreasureVisual(scene, nodeId) {
 
   const treasure = scene.treasures.find(t => t.getData('nodeId') === nodeId);
   if (treasure) {
-    console.log(`💎 Visual update: Hiding treasure at node ${nodeId}`);
     treasure.setVisible(false);
     if (treasure.nameLabel) treasure.nameLabel.setVisible(false);
     if (treasure.glowEffect) treasure.glowEffect.setVisible(false);
@@ -64,7 +63,6 @@ export function rescuePersonVisual(scene, nodeId) {
 
   const person = scene.people.find(p => p.getData('nodeId') === nodeId);
   if (person) {
-    console.log(`🆘 Visual update: Rescuing person at node ${nodeId}`);
 
     // Show rescue effect
     const rescueEffect = person.getData('rescueEffect');
@@ -124,17 +122,12 @@ export function rescuePersonVisual(scene, nodeId) {
 
 export function collectCoinByPlayer(scene, playerX, playerY) {
   if (!scene.coins) {
-    console.log("No coins array found in scene");
     return false;
   }
 
-  console.log(`=== PLAYER COIN COLLECTION DEBUG ===`);
-  console.log(`Player position: (${playerX}, ${playerY})`);
-  console.log(`Total coins: ${scene.coins.length}`);
 
   // Show available coins
   const availableCoins = scene.coins.filter(c => !c.collected);
-  console.log('Available coins:', availableCoins.map(c => ({ id: c.id, x: c.x, y: c.y, value: c.value })));
 
   // Find all coins within range and sort by distance
   const coinsInRange = [];
@@ -146,7 +139,6 @@ export function collectCoinByPlayer(scene, playerX, playerY) {
         Math.pow(playerX - coin.x, 2) + Math.pow(playerY - coin.y, 2)
       );
 
-      console.log(`Coin ${coin.id} (${coin.value} points) at (${coin.x}, ${coin.y}), distance: ${distance.toFixed(2)}, can collect: ${distance <= 100}`);
 
       if (distance <= 100) {
         coinsInRange.push({ coin, distance });
@@ -171,19 +163,16 @@ export function collectCoinByPlayer(scene, playerX, playerY) {
 
     // Add to player coins
     // Note: This will be handled by the calling function
-    console.log(`Coin ${coin.value} collected, should be added to player coins`);
 
     // Show collection effect
     showCoinCollectionEffect(scene, coin.sprite.x, coin.sprite.y, coin.value);
 
     // Update Phaser UI is now handled inside addCoinToPlayer (coinUtils.js)
-    console.log(`🎯 Collecting coin ${coin.id} (${coin.value} points) at distance ${distance.toFixed(2)}!`);
   }
 
   // Return true if any coins were collected
   return coinsInRange.length > 0;
 
-  console.log("No coin to collect at current position");
   return false;
 }
 
@@ -234,11 +223,9 @@ export function showCoinCollectionEffect(scene, x, y, value) {
 
 export function haveCoinAtPosition(scene, playerX, playerY) {
   if (!scene.coins) {
-    console.log("haveCoinAtPosition: No coins array found in scene");
     return false;
   }
 
-  console.log(`haveCoinAtPosition: Checking coins for player at (${playerX}, ${playerY})`);
 
   const result = scene.coins.some(coin => {
     if (coin.collected) return false;
@@ -248,12 +235,10 @@ export function haveCoinAtPosition(scene, playerX, playerY) {
       Math.pow(playerX - coin.x, 2) + Math.pow(playerY - coin.y, 2)
     );
 
-    console.log(`haveCoinAtPosition: Coin ${coin.value} at (${coin.x}, ${coin.y}), distance: ${distance.toFixed(2)}`);
 
     return distance <= 1000;
   });
 
-  console.log(`haveCoinAtPosition result: ${result}`);
   return result;
 }
 

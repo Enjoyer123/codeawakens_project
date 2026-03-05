@@ -1,4 +1,4 @@
-import { playAttack } from '../movement/playerAnimation.js';
+﻿import { playAttack } from '../movement/playerAnimation.js';
 import { getDirectionFromAngle } from './combatHelpers';
 import { cleanupMonsterUI } from './battleUI';
 export function haveEnemy(player) {
@@ -28,7 +28,6 @@ export function findNearbyEnemy(player) {
         );
 
         if (distance < 80) { // Increased range for bigger sprites
-            console.log("Found nearby enemy at distance:", distance);
             return monster;
         }
     }
@@ -105,7 +104,6 @@ async function killEnemy(player, enemySprite) {
         const deathAnimKey = `${prefix}-death-${dir}`;
 
         if (player.scene.anims.exists(deathAnimKey)) {
-            console.log(`💀 Playing death anim: ${deathAnimKey}`);
             enemySprite.anims.play(deathAnimKey, true);
             playedDeathAnim = true;
 

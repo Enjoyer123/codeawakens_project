@@ -1,4 +1,4 @@
-import { getCurrentGameState, setCurrentGameState, getPlayerHp } from '../shared/game/gameState';
+﻿import { getCurrentGameState, setCurrentGameState, getPlayerHp } from '../shared/game/gameState';
 import { checkMovementCollision } from './collisionUtils';
 
 const directionsArr = [
@@ -13,7 +13,6 @@ const directionsArr = [
  * Returns the planned action details without triggering visual animations
  */
 export function calculateMoveForward(sceneForCollision) {
-    console.log("🧠 [movementCore] calculateMoveForward เรียลรัน! - กำลังคำนวณสมองส่วนการเดิน");
     const currentState = getCurrentGameState();
     const playerHP = getPlayerHp();
 
@@ -80,12 +79,6 @@ export function calculateMoveForward(sceneForCollision) {
     // Validate if goal is reached logically
     const goalReached = targetNode.id === currentLevel.goalNodeId;
 
-    console.log(`🧠 [movementCore] คำนวณเสร็จสิ้น!
-        - เดินจาก Node: ${currentNode.id}
-        - ไปยัง Node: ${targetNode.id}
-        - ทิศทาง: ${currentState.direction}
-        - ตกหลุมไหม?: ${hitObstacle}
-        - ถึงเส้นชัยไหม?: ${goalReached}`);
 
     return {
         success: true,

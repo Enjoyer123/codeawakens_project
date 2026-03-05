@@ -1,4 +1,4 @@
-/**
+﻿/**
  * graphPlayback.js — DFS/BFS Animation Playback
  *
  * เล่น Animation สำรวจ Graph แบบเห็น backtrack ชัดเจน โดยใช้ Router Pattern:
@@ -44,7 +44,6 @@ async function playDfsBfsDisplay(scene, trace, options = {}) {
 
     let currentPath = [];  // เส้นทางที่กำลังสำรวจอยู่
 
-    console.log(`🎬 [graphPlayback] Playing ${trace.length} steps at ${speed}x speed`);
 
     for (let i = 0; i < trace.length; i++) {
         const step = trace[i];
@@ -132,7 +131,6 @@ async function playDfsBfsDisplay(scene, trace, options = {}) {
     explorationGraphics.destroy();
     deadEndGraphics.destroy();
 
-    console.log('✅ [graphPlayback] Animation complete');
 }
 
 // ============================================================================

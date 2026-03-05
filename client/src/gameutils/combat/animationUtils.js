@@ -1,8 +1,7 @@
-// Combat Animation Utilities
+﻿// Combat Animation Utilities
 import { preloadWeaponEffectSafe, checkImageExistsSafe } from './combatPreload';
 
 export function createCanvasBasedEffect(scene, posOrSprite, validFrames, weaponKey) {
-    // console.log(`🔍 DEEP DEBUG: Creating texture effect for ${weaponKey}`);
 
     let x, y, depth, angle = 0;
 
@@ -100,7 +99,6 @@ export function animateTextureFrames(scene, effect, validFrames) {
 
                 if (source?.image?.complete && source.image.naturalWidth > 0) {
                     effect.setTexture(frameKey);
-                    console.log(`Frame ${frameIndex + 1}/${validFrames.length}: ${frameKey}`);
 
                     // Force render update after texture change
                     scene.sys.displayList.queueDepthSort();
@@ -123,7 +121,6 @@ export function animateTextureFrames(scene, effect, validFrames) {
             if (frameIndex < validFrames.length) {
                 scene.time.delayedCall(150, nextFrame); // เพิ่มเวลา frame duration
             } else {
-                console.log(`Texture animation completed`);
                 // Fade out
                 scene.tweens.add({
                     targets: effect,
@@ -131,7 +128,6 @@ export function animateTextureFrames(scene, effect, validFrames) {
                     duration: 200,
                     onComplete: () => {
                         if (effect?.active) effect.destroy();
-                        console.log(`Texture effect destroyed with fade out`);
                     }
                 });
             }
@@ -142,7 +138,6 @@ export function animateTextureFrames(scene, effect, validFrames) {
 }
 
 export function showFallbackEffect(scene, weaponSprite) {
-    console.log("Creating fallback effect");
 
     const offsetX = weaponSprite.width * weaponSprite.scaleX * 0.5 + 10;
     // shift down a few pixels to align with scaled player
@@ -173,7 +168,6 @@ export function showFallbackEffect(scene, weaponSprite) {
         ease: 'Power2',
         onComplete: () => {
             effect.destroy();
-            console.log("Fallback effect completed");
         }
     });
 }

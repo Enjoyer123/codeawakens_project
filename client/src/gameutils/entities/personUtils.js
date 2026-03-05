@@ -1,4 +1,4 @@
-// Person rescue management functions
+﻿// Person rescue management functions
 import { getCurrentGameState, setCurrentGameState } from '../shared/game/gameState';
 
 // เก็บข้อมูลคนที่ต้องช่วย
@@ -8,7 +8,6 @@ let rescuedPeople = [];
 export async function rescuePerson() {
   const currentState = getCurrentGameState();
   if (!currentState.currentScene) {
-    console.log("No current scene available for rescue");
     return false;
   }
 
@@ -16,18 +15,15 @@ export async function rescuePerson() {
   const levelData = currentState.levelData;
 
   if (!levelData || !levelData.people) {
-    console.log("No level data or people available");
     return false;
   }
 
   const person = levelData.people.find(p => p.nodeId === currentNodeId);
   if (!person) {
-    console.log(`No person at node ${currentNodeId}`);
     return false;
   }
 
   if (person.rescued) {
-    console.log(`Person at node ${currentNodeId} already rescued`);
     return false;
   }
 
@@ -39,7 +35,6 @@ export async function rescuePerson() {
     rescuedAt: Date.now()
   });
 
-  console.log(`✅ ช่วย ${person.personName} ที่ node ${currentNodeId} สำเร็จ!`);
   return { success: true, nodeId: currentNodeId };
 }
 
@@ -47,7 +42,6 @@ export async function rescuePerson() {
 export async function rescuePersonAtNode(nodeId) {
   const currentState = getCurrentGameState();
   if (!currentState.currentScene) {
-    console.log("No current scene available for rescue");
     return false;
   }
 
@@ -57,18 +51,15 @@ export async function rescuePersonAtNode(nodeId) {
   const levelData = currentState.levelData;
 
   if (!levelData || !levelData.people) {
-    console.log("No level data or people available");
     return false;
   }
 
   const person = levelData.people.find(p => p.nodeId === targetNodeId);
   if (!person) {
-    console.log(`No person at node ${targetNodeId} (input: ${nodeId})`);
     return false;
   }
 
   if (person.rescued) {
-    console.log(`Person at node ${targetNodeId} already rescued`);
     return false;
   }
 
@@ -80,7 +71,6 @@ export async function rescuePersonAtNode(nodeId) {
     rescuedAt: Date.now()
   });
 
-  console.log(`✅ ช่วย ${person.personName} ที่ node ${targetNodeId} สำเร็จ!`);
 
   return { success: true, nodeId: targetNodeId };
 }
@@ -130,7 +120,6 @@ export function allPeopleRescued() {
   const totalPeople = currentState.levelData.people.length;
   const rescuedCount = rescuedPeople.length;
 
-  console.log(`People rescued: ${rescuedCount}/${totalPeople}`);
   return rescuedCount >= totalPeople;
 }
 
@@ -142,7 +131,6 @@ export function getRescuedPeople() {
 // ล้างข้อมูลคนที่ช่วยแล้ว (สำหรับ reset)
 export function clearRescuedPeople() {
   rescuedPeople = [];
-  console.log("Rescued people cleared");
 }
 
 // รีเซ็ตสถานะคนทั้งหมด
@@ -160,6 +148,5 @@ export async function resetAllPeople() {
   // ล้างข้อมูลคนที่ช่วยแล้ว
   clearRescuedPeople();
 
-  console.log("All people reset to not rescued");
 }
 

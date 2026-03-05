@@ -1,4 +1,4 @@
-/**
+﻿/**
  * coinChangePlaybackBacktrack.js
  * เลน Animation แบบ Backtracking (Stacking Bar / Tree)
  */
@@ -23,7 +23,6 @@ async function playCharacterDisplay(scene, trace, options) {
         return;
     }
 
-    console.log(`🎬 [coinChangePlayback] Playing Character Display Mode: ${trace.length} steps at ${speed}x speed`);
 
     const warriors = scene.coinChange.warriors;
     const targetAmount = scene.levelData?.coinChangeData?.monster_power || 0;
@@ -239,7 +238,6 @@ async function playCharacterDisplay(scene, trace, options) {
 
     statusText.setText('กระบวนการค้นหาเสร็จสิ้น (Backtracking)');
     statusText.setColor('#00FFFF');
-    console.log('✅ [coinChangePlaybackBacktrack] Animation complete');
 }
 
 /**
@@ -255,7 +253,6 @@ async function playBarDisplay(scene, trace, options) {
         return;
     }
 
-    console.log(`🎬 [coinChangePlayback] Playing ${trace.length} steps at ${speed}x speed`);
 
     const warriors = scene.coinChange.warriors;
     const targetAmount = scene.levelData?.coinChangeData?.monster_power || 0;
@@ -592,7 +589,6 @@ async function playBarDisplay(scene, trace, options) {
         await sleep(baseDelay * 1.5);
     }
 
-    console.log('✅ [coinChangePlaybackBacktrack] Animation complete');
 }
 
 /**

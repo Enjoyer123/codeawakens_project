@@ -1,4 +1,4 @@
-// Helper to get animation key based on prefix
+﻿// Helper to get animation key based on prefix
 import { getWeaponData } from '../entities/weaponUtils';
 import { animateWeaponAttack } from '../combat/weaponEffects';
 import { getCurrentGameState } from '../shared/game/gameState';
@@ -27,7 +27,6 @@ export function playIdle(player) {
     const hasDirectionalAnims = player.hasDirectionalAnims || false;
 
     // Debug: Log direction to verify it's correct
-    // console.log('playIdle - directionIndex:', player.directionIndex, 'direction:', dir, 'prefix:', prefix);
 
     try {
         if (prefix === 'player') {
@@ -139,7 +138,6 @@ export function playWalk(player) {
     const prefix = player.animPrefix || 'player';
 
     // Debug: Log direction to verify it's correct
-    // console.log('playWalk - directionIndex:', player.directionIndex, 'direction:', dir);
 
     try {
         if (prefix === 'player') {

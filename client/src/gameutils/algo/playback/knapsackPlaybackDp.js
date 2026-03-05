@@ -1,4 +1,4 @@
-// Knapsack Dynamic Programming Animation Playback
+﻿// Knapsack Dynamic Programming Animation Playback
 // 2D Spreadsheet Display Mode
 
 export async function playKnapsackDpAnimation(scene, trace, options = {}) {
@@ -18,7 +18,6 @@ async function playClassicDisplay(scene, trace, options = {}) {
         return;
     }
 
-    console.log(`🎬 [knapsackPlayback] Playing DP Spreadsheet Display at ${speed}x speed`);
 
     const items = scene.knapsack.items || [];
     const capacity = scene.levelData?.knapsackData?.capacity || 10;

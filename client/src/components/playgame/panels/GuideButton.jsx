@@ -1,4 +1,4 @@
-/**
+﻿/**
  * GuideButton Component
  * 
  * Button to reopen the initial level guide.
@@ -11,7 +11,6 @@ const GuideButton = ({ onOpenGuide, disabled }) => {
         <div className="flex-1 bg-black/30 rounded-lg p-2 border border-gray-700/50 flex items-center justify-center">
             <button
                 onClick={() => {
-                    console.log('📘 [GuideButton] clicked');
                     if (typeof onOpenGuide === 'function') {
                         onOpenGuide();
                     }

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * algoExecutor.js — Record & Playback System
  *
  * รันโค้ด Blockly ที่ gen มาแบบ "Pure Logic" (ไม่มี Phaser/Visual)
@@ -40,7 +40,6 @@ function buildAlgoContext(levelData, trace, code = "") {
     const nSize = levelData.nqueenData ? levelData.nqueenData.n : 4;
     const nqueenBoard = Array(nSize).fill(null).map(() => Array(nSize).fill(0));
 
-    console.log('🧪 [algoExecutor] Building context:', { startNode, goalNode, nodeCount: all_nodes.length, edgeCount: (levelData.edges || []).length, map });
 
     // --- Base context: pure graph functions ---
     const context = {
@@ -147,11 +146,9 @@ function buildAlgoContext(levelData, trace, code = "") {
             // Check row and column
             for (let i = 0; i < nSize; i++) {
                 if (nqueenBoard[row][i] === 1) {
-                    console.log(`🔴 safe(${row},${col}) → false (row conflict at col ${i})`);
                     return false;
                 }
                 if (nqueenBoard[i][col] === 1) {
-                    console.log(`🔴 safe(${row},${col}) → false (col conflict at row ${i})`);
                     return false;
                 }
             }
@@ -161,13 +158,11 @@ function buildAlgoContext(levelData, trace, code = "") {
                 for (let j = 0; j < nSize; j++) {
                     if (nqueenBoard[i][j] === 1) {
                         if (Math.abs(row - i) === Math.abs(col - j)) {
-                            console.log(`🔴 safe(${row},${col}) → false (diagonal conflict at ${i},${j})`);
                             return false;
                         }
                     }
                 }
             }
-            console.log(`🟢 safe(${row},${col}) → true, board:`, JSON.stringify(nqueenBoard));
             return true;
         },
         place: (r, c) => {
@@ -371,7 +366,6 @@ function buildAlgoContext(levelData, trace, code = "") {
             if (goalEnd !== undefined && goalEnd !== null) {
                 // Use weak equality to handle string/number mismatch
                 if (end != goalEnd) {
-                    console.log(`🗺️ [algoExecutor] highlightEmeiPath: SKIP end=${end} (goal=${goalEnd})`);
                     return;
                 }
             }
@@ -396,7 +390,6 @@ function buildAlgoContext(levelData, trace, code = "") {
                 curr = p;
             }
 
-            console.log(`🗺️ [algoExecutor] highlightEmeiPath: end=${end}, valid=${valid}, path=${JSON.stringify(path)}`);
 
             if (!valid) {
                 return;

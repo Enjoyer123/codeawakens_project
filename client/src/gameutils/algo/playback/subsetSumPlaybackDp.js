@@ -1,4 +1,4 @@
-// Subset Sum Dynamic Programming Animation Playback
+﻿// Subset Sum Dynamic Programming Animation Playback
 // 2D Spreadsheet Display Mode
 
 export async function playSubsetSumDpAnimation(scene, trace, options = {}) {
@@ -18,7 +18,6 @@ async function playClassicDisplay(scene, trace, options = {}) {
         return;
     }
 
-    console.log(`🎬 [subsetSumPlayback] Playing DP Spreadsheet Display at ${speed}x speed`);
 
     const warriors = scene.subsetSum.warriors || [];
     const targetSum = scene.levelData?.subsetSumData?.target_sum || 0;
