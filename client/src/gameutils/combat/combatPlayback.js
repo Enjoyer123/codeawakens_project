@@ -1,4 +1,4 @@
-import { hitEnemyWithDamage } from './playerCombat';
+﻿import { hitEnemyWithDamage } from './playerCombat';
 import { showEffectWeaponFixed } from './combatEffects';
 
 /**
@@ -7,14 +7,12 @@ import { showEffectWeaponFixed } from './combatEffects';
  */
 export async function playHitAnimation(scene, hitResult) {
     if (!hitResult.success) {
-        console.log("❌ [combatPlayback] Failed to hit enemy logically, no animation.");
         return { status: 'missed' };
     }
 
     const { targetEnemy, damage, weaponKey } = hitResult;
     const playerSprite = scene.player;
 
-    console.log(`⚔️ [combatPlayback] Playing hit animation for ${damage} damage with ${weaponKey}`);
 
     // โจมตีศัตรูโดยตรงพร้อมส่ง targetEnemy ให้ไม่ต้องคำนวณระยะซ้ำ
     const success = hitEnemyWithDamage(playerSprite, targetEnemy, damage);
@@ -28,7 +26,6 @@ export async function playHitAnimation(scene, hitResult) {
 
         // ตรวจสอบว่า monster ตายแล้วหรือไม่
         if (targetEnemy.data?.defeated || targetEnemy.sprite?.getData('defeated')) {
-            console.log("💀 [combatPlayback] Monster defeated animation completed");
             return { status: 'enemy_defeated' };
         }
 

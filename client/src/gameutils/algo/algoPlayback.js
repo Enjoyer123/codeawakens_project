@@ -1,4 +1,4 @@
-/**
+﻿/**
  * algoPlayback.js — Record & Playback System
  *
  * Dispatcher: รับ trace array + level type → เรียก playback function ที่ถูกด่าน
@@ -31,9 +31,6 @@ export function isAlgoLevel(level) {
     const gameType = level.gameType || '';
     const appliedType = level.appliedData?.type || '';
 
-    console.log('🔍 [isAlgoLevel] level.gameType =', gameType,
-        '| appliedData.type =', appliedType,
-        '| test_cases[0].function_name =', level.test_cases?.[0]?.function_name);
 
     const algoTypes = [
         'dfs', 'bfs', 'dijkstra', 'kruskal', 'prim',
@@ -109,7 +106,6 @@ export function detectAlgoType(level) {
 export async function playAlgoAnimation(scene, algoType, trace, options = {}) {
     const { speed = 1.0 } = options;
 
-    console.log(`🎬 [algoPlayback] Playing ${algoType} animation, ${trace.length} steps, speed: ${speed}x`);
 
     switch (algoType) {
         case 'DFS':

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * loadDfsPlaybackExample.js — DFS Example Blocks for Record & Playback System
  *
  * โหลด DFS example เหมือน loadDfsExample.js แต่ใช้ระบบ Record & Playback
@@ -294,7 +294,6 @@ export function loadDfsPlaybackExample(workspace) {
                     }
                 });
 
-                console.log('✅ DFS Playback example loaded');
             } catch (error) {
                 console.error('❌ Error loading DFS playback example:', error);
             }

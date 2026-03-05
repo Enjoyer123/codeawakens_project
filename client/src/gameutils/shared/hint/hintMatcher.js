@@ -1,4 +1,4 @@
-// Pattern Matching Functions for Hint System
+﻿// Pattern Matching Functions for Hint System
 // รวม logic ทั้งหมดเป็นที่เดียว: XML analysis + subsequence matching + best pattern selection
 
 // ─── XML Utilities ───────────────────────────────────────────────
@@ -247,7 +247,6 @@ export function findBestMatch(workspace, patterns) {
   const parser = new DOMParser();
 
   // console.group('🔍 [HintMatcher] findBestMatch');
-  // console.log('User blocks:', currentAnalysis.map(b => {
   //   let s = b.type;
   //   if (b.varName) s += `(${b.varName})`;
   //   if (b.fields) s += ` {${Object.entries(b.fields).map(([k, v]) => `${k}=${v}`).join(',')}}`;

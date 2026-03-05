@@ -1,4 +1,4 @@
-// Combat Weapon Attack Effects
+﻿// Combat Weapon Attack Effects
 import { getCurrentGameState } from '../shared/game/gameState';
 
 import { createCanvasBasedEffect, showFallbackEffect } from './animationUtils';
@@ -100,7 +100,6 @@ export function showEffectWeaponFixed(enemy, damage, weaponKey = 'stick', weapon
             }
         }
         if (validFrames.length > 0) {
-            console.log("✨ Found custom Circle frames:", validFrames);
             customScale = 8.0; // Increase size as requested (default is 4.0)
         }
     }
@@ -222,7 +221,6 @@ export function createWeaponRing(scene, x, y, weaponKey, options = {}) {
 }
 
 export function displayPlayerWeapon(weaponKey, scene) {
-    console.log("displayPlayerWeapon called", weaponKey);
 
     // Initial scene validation
     if (!scene || !scene.player) {
@@ -260,7 +258,6 @@ export function displayPlayerWeapon(weaponKey, scene) {
             if (playerWeaponContainer) {
                 playerWeaponContainer.setDepth(scene.player.depth - 1);
                 updateWeaponPosition(scene); // Sync position immediately
-                console.log(`✅ Weapon Ring created: ${weaponKey}`);
             }
 
             // โหลด effect ของอาวุธนี้ด้วย
@@ -277,7 +274,6 @@ export function displayPlayerWeapon(weaponKey, scene) {
 
     // Main texture loading logic
     if (!scene.textures.exists(textureKey)) {
-        console.log(`🔍 Loading weapon texture: ${textureKey}`);
         // Need API config
         import('../../config/apiConfig').then(m => {
             const weaponImageUrl = `${m.API_BASE_URL}/uploads/weapons/${weaponKey}_idle_1.png`;
@@ -393,7 +389,6 @@ export function displayPlayerEffect(effectKey, scene, keepExisting = false) {
 
     if (!effectKey) return;
 
-    console.log(`✨ Displaying effect: ${effectKey} (keep: ${keepExisting})`);
 
     if (effectKey.startsWith('circle_')) {
         // วาดวงเวทย์ (Magic Circle)
@@ -427,7 +422,6 @@ function drawMagicCircle(scene, index) {
     const animKey = `circle_${index}`;
     const firstFrameKey = `circle_${index}_1`;
 
-    console.log(`🔥 [weaponEffects] drawMagicCircle trying anim: ${animKey}`);
 
     if (circleEffectSprite) {
         circleEffectSprite.destroy();
@@ -484,7 +478,6 @@ function showPlayerAura(scene, index) {
     const player = scene.player;
     const animKey = `aura_${index}`;
 
-    console.log(`🔥 [weaponEffects] showPlayerAura using sprite: ${animKey}`);
 
     if (auraEffectSprite) {
         auraEffectSprite.destroy();
@@ -547,7 +540,6 @@ export function getPlayerCircleSprite() {
 }
 
 export function updatePlayerWeaponDisplay() {
-    console.log("updatePlayerWeaponDisplay called");
     const currentState = getCurrentGameState();
     const scene = currentState.currentScene;
 

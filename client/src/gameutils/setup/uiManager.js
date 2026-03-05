@@ -1,4 +1,4 @@
-// uiManager.js
+﻿// uiManager.js
 // Handles drawing persistent UI overlays (like Coin/Personnel counters) on the Phaser Canvas.
 
 import Phaser from 'phaser';
@@ -83,7 +83,6 @@ export function setupGoalUI(scene) {
     bg.lineStyle(2, 0x8b4513, 1);
     bg.strokeRoundedRect(0, 0, 180, startY + 10, 8);
 
-    console.log("✅ [uiManager] Goal UI created");
 }
 
 /**

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * emeiPlayback.js — Emei Mountain Cable Car Animation Playback
  * 
  * Trace Events handled:
@@ -27,7 +27,6 @@ async function playClassicDisplay(scene, trace, options = {}) {
         return;
     }
 
-    console.log(`🎬 [emeiPlayback] Playing ${trace.length} steps at ${speed}x speed`);
 
     // Pre-scan: find the correct emei_path event
     // Prefer the event where path ends at goalEnd (the actual goal node)
@@ -74,7 +73,6 @@ async function playClassicDisplay(scene, trace, options = {}) {
                 if (i !== targetPathIdx) break;
 
                 const { path, bottleneck, goalEnd } = step;
-                console.log(`🗺️ [emeiPlayback] emei_path (GOAL=${goalEnd}): path=${JSON.stringify(path)}, bottleneck=${bottleneck}`);
 
                 if (!path || path.length < 2) break;
 

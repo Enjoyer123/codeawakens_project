@@ -88,7 +88,6 @@ export function startBattle(scene, monster, setPlayerHp, setIsGameOver, setCurre
                       setGlobalPlayerHp(newHp);
                       setCurrentGameState({ playerHP: newHp });
                       if (typeof setPlayerHp === 'function') setPlayerHp(newHp);
-                      try { if (window.setPlayerHp) window.setPlayerHp(newHp); } catch (err) { }
                       if (newHp <= 0) {
                         setIsGameOver(true);
                         setCurrentGameState({ isGameOver: true });

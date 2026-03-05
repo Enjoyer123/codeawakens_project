@@ -1,4 +1,4 @@
-/**
+﻿/**
  * nqueenPlayback.js — N-Queen Animation Playback
  *
  * แต่ละ Display Mode เป็น self-contained 100%:
@@ -35,7 +35,6 @@ async function playClassicDisplay(scene, trace, options = {}) {
     const boardWidth = n * cellSize;
     const boardHeight = n * cellSize;
 
-    console.log(`🎬 [nqueenPlayback] Drawing ${n}x${n} grid and playing ${trace.length} steps`);
 
     // ====== วาด Board ======
     const bgRect = scene.add.rectangle(boardStartX, boardStartY, boardWidth, boardHeight, 0xFDF5E6);
@@ -178,7 +177,6 @@ async function playClassicDisplay(scene, trace, options = {}) {
         }
     }
 
-    console.log('✅ [nqueenPlayback] Animation complete');
 
     // ====== แสดง Solution Boards ======
     if (options.result && Array.isArray(options.result) && options.result.length > 0) {
@@ -186,7 +184,6 @@ async function playClassicDisplay(scene, trace, options = {}) {
         const isMulti = Array.isArray(solutions[0]) && Array.isArray(solutions[0][0]);
 
         if (isMulti && solutions.length > 0) {
-            console.log(`🏆 Found ${solutions.length} solutions! Drawing mini boards...`);
             const miniStartX = 650;
             let miniY = 120;
             const maxShow = Math.min(solutions.length, 4);

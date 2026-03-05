@@ -1,4 +1,4 @@
-// Phaser Game Player Functions
+﻿// Phaser Game Player Functions
 import { updateWeaponPosition } from '../../combat/weaponEffects';
 
 import { getCurrentGameState, setCurrentGameState, getPlayerHp } from '../../shared/game/gameState';
@@ -42,7 +42,6 @@ export function updatePlayer(scene, nodeId, direction) {
 
     // Use new movement function with animation
     moveToPosition(scene.player, targetNode.x, targetNode.y, calculatedDirection).then(() => {
-      console.log("moveToPosition completed");
       // Update player node index
       scene.player.currentNodeIndex = nodeId;
 
@@ -86,7 +85,6 @@ export function updatePlayer(scene, nodeId, direction) {
     // Update weapon position
     updateWeaponPosition(scene);
 
-    console.log('⚠️ No nodes in level, player animation updated at current position');
   }
 }
 

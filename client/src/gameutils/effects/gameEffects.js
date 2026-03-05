@@ -1,10 +1,9 @@
-// Phaser Game Effects Functions
+﻿// Phaser Game Effects Functions
 import Phaser from "phaser";
 import { createRescueEffect, createFirework } from './victory';
 
 // Function to create pit fall effect
 export function createPitFallEffect(scene) {
-  console.log("Creating pit fall effect");
 
   if (!scene.player) return;
 

@@ -5,7 +5,6 @@
 
 import { useEffect, useRef } from 'react';
 import {
-  loadWeaponsData,
   getWeaponData,
   getWeaponsData
 } from '../../../gameutils/entities/weaponUtils';
@@ -225,10 +224,7 @@ export function useLevelInitializer({
 
     const initializeLevel = async () => {
       try {
-        // 1. Load weapons data (needed for pattern → weapon mapping)
-        await loadWeaponsData(getToken);
-
-        // 2. Build enabled blocks + patterns
+        // 1. Build enabled blocks + patterns
         const enabledBlocks = buildEnabledBlocks(levelData);
         const goodPatterns = buildPatterns(levelData, isPreview);
 

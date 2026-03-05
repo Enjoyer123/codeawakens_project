@@ -1,4 +1,4 @@
-/**
+﻿/**
  * HintButton Component
  * 
  * Button to request hints from the level hint system.
@@ -19,7 +19,6 @@ const HintButton = ({ onNeedHintClick, needHintDisabled }) => {
     <div className="flex-1 bg-black/30 rounded-lg p-2 border border-gray-700/50 flex items-center justify-center">
       <button
         onClick={() => {
-          console.log('🟡 [HintButton] Need Hint button clicked');
           if (typeof onNeedHintClick === 'function') {
             onNeedHintClick();
           } else {

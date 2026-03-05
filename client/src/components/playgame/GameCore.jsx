@@ -1,6 +1,4 @@
-// src/components/playgame/GameCore.jsx
-// Core game component that can be reused for both normal play and preview mode
-import React, { useEffect, useRef, useState } from "react";
+﻿import React, { useEffect, useRef, useState } from "react";
 
 import { useParams } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
@@ -12,12 +10,14 @@ import "blockly/javascript";
 window.Blockly = Blockly;
 
 // Import utilities and data
-import { getWeaponData } from '../../gameutils/entities/weaponUtils';
-import { getRescuedPeople, clearRescuedPeople } from '../../gameutils/entities/personUtils';
+import { getWeaponData, loadWeaponsData } from '../../gameutils/entities/weaponUtils';
+import { clearRescuedPeople, resetAllPeople } from '../../gameutils/entities/personUtils';
 import { clearPlayerCoins } from '../../gameutils/entities/coinUtils';
-import { getCurrentGameState } from '../../gameutils/shared/game/gameState';
+import { getCurrentGameState, setCurrentGameState, resetPlayerHp } from '../../gameutils/shared/game/gameState';
 import { displayPlayerWeapon } from '../../gameutils/combat/weaponEffects';
 import { clearGameOverScreen } from '../../gameutils/effects/gameEffects';
+import { updatePlayer } from '../../gameutils/phaser/player/phaserGamePlayer';
+import { resetEnemy } from '../../gameutils/combat/enemyUtils';
 
 // Import components
 import GameArea from './GameArea';
@@ -37,17 +37,12 @@ import { usePatternAnalysis } from './hooks/usePatternAnalysis';
 import { useTextCodeValidation } from './hooks/useTextCodeValidation';
 import { useGuideSystem } from '../../hooks/useGuideSystem';
 
-// Import utils
-import { handleRestartGame as handleRestartGameUtil } from './utils/gameHandlers';
 import { EXAMPLE_LOADERS } from './constants/exampleLoaders';
 import ExecutionErrorModal from './modals/ExecutionErrorModal';
 import PageLoader from '../../components/shared/Loading/PageLoader';
 import { useSuppressBlocklyWarnings } from '../../components/admin/level/hooks/useSuppressBlocklyWarnings';
 
-const resetAllGameStates = () => {
-  clearPlayerCoins();
-  clearRescuedPeople();
-};
+
 
 /**
  * GameCore Component
@@ -182,10 +177,21 @@ const GameCore = ({
     handleTextCodeChangeWithState(newCode);
   };
 
+  // ═══════════════════════════════════════════
+  // 1. DATA LOADING — level + weapons
+  // ═══════════════════════════════════════════
+
   const { data: levelData, isLoading: isLevelLoading, isError: isLevelError, error: levelError } = useLevel(levelId);
 
+  // Load weapons data once on mount (needed for pattern → weapon mapping)
+  const [weaponsReady, setWeaponsReady] = useState(false);
+  useEffect(() => {
+    loadWeaponsData(getToken).then(() => setWeaponsReady(true));
+  }, [getToken]);
+
+  // Initialize level after both levelData and weapons are ready
   useLevelInitializer({
-    levelData,
+    levelData: weaponsReady ? levelData : null,
     getToken,
     isPreview,
     setEnabledBlocks,
@@ -214,7 +220,8 @@ const GameCore = ({
       setTextCode("");
       setCodeValidation({ isValid: false, message: "" });
       setBlocklyJavaScriptReady(false);
-      resetAllGameStates();
+      clearPlayerCoins();
+      clearRescuedPeople();
     }
   }, [levelId]);
 
@@ -234,7 +241,6 @@ const GameCore = ({
       }
 
       setGoodPatterns(filteredPatterns);
-      console.log('🟡 [GameCore] setGoodPatterns:', filteredPatterns.length, 'patterns, patternId:', patternId, 'blocklyLoaded:', blocklyLoaded);
     }
   }, [patternsData, isPreview, patternId]);
 
@@ -291,7 +297,8 @@ const GameCore = ({
     initBlocklyAndPhaser();
 
     return () => {
-      resetAllGameStates();
+      clearPlayerCoins();
+      clearRescuedPeople();
 
       if (phaserGameRef.current) {
         try {
@@ -313,38 +320,68 @@ const GameCore = ({
     };
   }, [currentLevel, blocklyRef.current]);
 
-  // Update player weapon display
-  const updatePlayerWeaponDisplay = () => {
-    const currentState = getCurrentGameState();
-    const weaponKey = currentState.weaponKey || 'stick';
-    const weaponData = getWeaponData(weaponKey);
-    setCurrentWeaponData(weaponData);
-
+  // Handle restart game — all logic inline, no external file
+  const handleRestartGame = () => {
     const currentScene = getCurrentGameState().currentScene;
-    if (currentScene && currentScene.add && currentScene.player) {
-      try {
-        displayPlayerWeapon(weaponKey, currentScene);
-      } catch (error) {
-        console.error("Error updating weapon display:", error);
+
+    // Clear Game Over screen
+    if (currentScene) {
+      clearGameOverScreen(currentScene);
+    }
+
+    // Reset global game state
+    setCurrentGameState({
+      currentNodeId: currentLevel.startNodeId,
+      direction: 0,
+      goalReached: false,
+      moveCount: 0,
+      isGameOver: false
+    });
+
+    // Reset React states
+    setPlayerNodeId(currentLevel.startNodeId);
+    setPlayerDirection(0);
+    resetPlayerHp(setPlayerHp);
+    setIsCompleted(false);
+    setIsGameOver(false);
+    setGameState("ready");
+    setCurrentHint("🔄 เกมเริ่มใหม่แล้ว! ลองใหม่อีกครั้ง");
+    setTestCaseResult(null);
+
+    // Clear entities
+    clearPlayerCoins();
+
+    // Update Phaser visuals
+    if (currentScene) {
+      updatePlayer(currentScene, currentLevel.startNodeId, 0);
+
+      // Update weapon display
+      const weaponKey = getCurrentGameState().weaponKey || 'stick';
+      setCurrentWeaponData(getWeaponData(weaponKey));
+      if (currentScene.player) {
+        try { displayPlayerWeapon(weaponKey, currentScene); } catch (e) { /* ignore */ }
+      }
+
+      // Reset monsters
+      if (currentScene.monsters) {
+        currentScene.monsters.forEach(monster => {
+          monster.data.defeated = false;
+          monster.data.inBattle = false;
+          monster.data.isChasing = false;
+          monster.data.lastAttackTime = null;
+          monster.data.hp = monster.data.maxHp || 3;
+          resetEnemy(monster.sprite, monster.sprite.x, monster.sprite.y);
+          if (monster.glow) {
+            monster.glow.setVisible(true);
+            monster.glow.setFillStyle(0xff0000, 0.2);
+          }
+          if (monster.sprite.anims) {
+            const idleAnim = monster.sprite.getData('idleAnim') || 'vampire-idle';
+            monster.sprite.anims.play(idleAnim, true);
+          }
+        });
       }
     }
-  };
-
-  // Handle restart game
-  const handleRestartGame = () => {
-    handleRestartGameUtil({
-      currentLevel,
-      setPlayerNodeId,
-      setPlayerDirection,
-      setPlayerHp,
-      setIsCompleted,
-      setIsGameOver,
-      setGameState,
-      setCurrentHint,
-      clearGameOverScreen,
-      updatePlayerWeaponDisplay
-    });
-    setTestCaseResult(null);
   };
 
   // Initialize Phaser game

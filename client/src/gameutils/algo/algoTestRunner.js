@@ -1,4 +1,4 @@
-/**
+﻿/**
  * algoTestRunner.js — Record & Playback System
  *
  * ตรวจผลลัพธ์ที่ได้จาก algoExecutor กับ Test Cases
@@ -145,7 +145,6 @@ function buildTestLevelData(baseLevelData, inputParams, functionName) {
             payload: testLevel.appliedData.payload ? { ...testLevel.appliedData.payload } : {}
         };
     }
-    console.log('🔍 [buildTestLevelData] inputParams:', inputParams, '| functionName:', functionName, '| gameType:', testLevel.gameType, '| appliedType:', testLevel.appliedData?.type, '| level_name:', testLevel.level_name);
 
     // Override start/goal from test params
     if (inputParams.start !== undefined) testLevel.startNodeId = inputParams.start;
@@ -231,7 +230,6 @@ function buildTestLevelData(baseLevelData, inputParams, functionName) {
         functionName?.toUpperCase() === 'MAXCAPACITY';
 
     if (isEmeiMountain) {
-        console.log('🏔️ [buildTestLevelData] isEmeiMountain=true, functionName:', functionName, 'inputParams:', JSON.stringify(inputParams));
         // Inject test inputs as FLAT properties on testLevel
         // because the real level's appliedData.payload does not have these fields.
         if (inputParams.n !== undefined) testLevel.emeiN = inputParams.n;

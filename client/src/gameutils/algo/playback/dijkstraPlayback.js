@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+﻿import Phaser from 'phaser';
 import { updateWeaponPosition } from '../../combat/weaponEffects';
 
 /**
@@ -29,7 +29,6 @@ async function playClassicDisplay(scene, trace, options = {}) {
         return;
     }
 
-    console.log(`🎬 [dijkstraPlayback] Playing ${trace.length} steps at ${speed}x speed`);
 
     // Graphics layers
     const edgeGraphics = scene.add.graphics().setDepth(2.5);
@@ -175,7 +174,6 @@ async function playClassicDisplay(scene, trace, options = {}) {
 
     edgeGraphics.destroy();
     statusText.setText('Dijkstra เสร็จสิ้น!');
-    console.log('✅ [dijkstraPlayback] Complete');
 }
 
 // =============================================================================

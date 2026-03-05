@@ -1,4 +1,4 @@
-// Player and cinematic monster setup
+﻿// Player and cinematic monster setup
 // Handles main player character and cinematic monster display
 import Phaser from "phaser";
 import { playIdle } from '../movement/playerAnimation';
@@ -33,7 +33,6 @@ export function drawPlayer(scene) {
             // ตำแหน่งมุมล่างซ้าย (ห่างจากขอบ 100px, 100px)
             playerX = 100;
             playerY = (scene.scale && scene.scale.height) ? scene.scale.height - 75 : 600;
-            console.log('⚠️ No nodes found, displaying player at bottom-left corner:', playerX, playerY);
         } else {
             playerX = startNode.x;
             playerY = startNode.y;
@@ -136,7 +135,6 @@ export function drawPlayer(scene) {
                 newHP = Math.max(0, newHP);
             }
 
-            console.log(`💥 Player takes ${damage} damage. HP: ${currentHP} -> ${newHP} (MinHP: ${minHP}, ForceKill: ${forceKill})`);
 
             // Update global state
             setCurrentGameState({ playerHP: newHP });
@@ -144,9 +142,6 @@ export function drawPlayer(scene) {
             // Update UI (if React setters/callbacks are available)
             if (typeof scene.externalHandlers.setPlayerHp === 'function') {
                 scene.externalHandlers.setPlayerHp(newHP);
-            }
-            if (window.setPlayerHp) {
-                window.setPlayerHp(newHP);
             }
 
             // Visual feedback
@@ -163,13 +158,9 @@ export function drawPlayer(scene) {
 
             // Check Game Over
             if (newHP <= 0) {
-                console.log("💀 Player HP reached 0. Triggering Game Over.");
                 setCurrentGameState({ isGameOver: true });
                 if (typeof scene.externalHandlers.setIsGameOver === 'function') {
                     scene.externalHandlers.setIsGameOver(true);
-                }
-                if (window.setIsGameOver) {
-                    window.setIsGameOver(true);
                 }
 
                 showGameOver(scene);
@@ -194,7 +185,6 @@ export function drawCinematicMonster(scene) {
     const startNode = hasNodes ? scene.levelData.nodes.find(n => n.id === scene.levelData.startNodeId) : null;
 
     const isCinematic = !hasNodes || !startNode;
-    console.log('DEBUG: drawCinematicMonster checking:', { hasNodes, hasStartNode: !!startNode, isCinematic });
 
     if (!isCinematic) return; // Skip for normal node-based levels
 
@@ -206,7 +196,6 @@ export function drawCinematicMonster(scene) {
     const monsterY = height - 100;
     const monsterX = width - 100;
 
-    console.log('🎬 Drawing Cinematic Monster at', monsterX, monsterY);
 
     try {
         // Determine texture and animation based on the first monster in levelData if available

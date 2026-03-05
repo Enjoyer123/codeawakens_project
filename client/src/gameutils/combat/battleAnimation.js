@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+﻿import Phaser from 'phaser';
 import { showEffectWeaponFixed } from './combatEffects';
 import { getCurrentGameState } from '../shared/game/gameState';
 import { getWeaponData } from '../entities/weaponUtils';
@@ -24,24 +24,13 @@ export function playCombatSequence(scene, isWin, onComplete) {
         appliedType.includes('ROPE') ||
         appliedType.includes('TRAIN');
 
-    console.log('⚔️ playCombatSequence Check:', {
-        hasNodes,
-        hasStartNode: !!startNode,
-        gameType: scene.levelData?.gameType,
-        appliedType: scene.levelData?.appliedData?.type,
-        isSpecial: isSpecialVisualLevel
-    });
-
     // If we have nodes AND a valid start node AND it's not a special visual level -> Skip combat (Standard Graph Level)
     if (hasNodes && startNode && !isSpecialVisualLevel) {
-        console.log('⚠️ Skipping combat sequence: Standard Graph Walk Level');
         if (onComplete) onComplete();
         return;
     }
 
-    console.log('✅ Playing cinematic combat for result:', isWin ? 'Win' : 'Loss');
 
-    console.log('Starting combat sequence. Result:', isWin ? 'Win' : 'Loss');
 
     const width = scene.cameras.main.width;
     const height = scene.cameras.main.height;
@@ -57,7 +46,6 @@ export function playCombatSequence(scene, isWin, onComplete) {
     // Hide Global Weapon Sprite if it exists
     const globalWeapon = getPlayerWeaponSprite();
     if (globalWeapon) {
-        console.log('⚔️ Hiding global weapon sprite for cinematic');
         globalWeapon.setVisible(false);
     }
 
@@ -198,7 +186,6 @@ export function playCombatSequence(scene, isWin, onComplete) {
     const checkWalksDone = () => {
         walksCompleted++;
         if (walksCompleted >= 2) {
-            console.log('⚔️ Both actors reached center. Starting combat action...');
             // Stop walking, play idle briefly before attack?
             // Actually performCombatAction usually starts immediately.
             // But let's ensure we are facing correct way or idle if there's a delay.
@@ -219,7 +206,6 @@ export function playCombatSequence(scene, isWin, onComplete) {
         ease: 'Power1',
         onUpdate: updateWeaponPos, // Force weapon to follow player frame-by-frame
         onComplete: () => {
-            console.log('⚔️ Player walk complete');
             if (player.anims && player.customAnims && scene.anims.exists(player.customAnims.stand)) {
                 player.play(player.customAnims.stand);
             } else {
@@ -241,7 +227,6 @@ export function playCombatSequence(scene, isWin, onComplete) {
         duration: 1500,
         ease: 'Power1',
         onComplete: () => {
-            console.log('⚔️ Monster walk complete');
             checkWalksDone();
         }
     });
@@ -268,7 +253,6 @@ function performCombatAction(scene, player, monster, isWin, monsterAttackAnim, m
 
     // Small pause before attack
     scene.time.delayedCall(800, () => {
-        console.log('⚔️ Combat Action Triggered for result:', isWin);
 
         try {
             if (isWin) {

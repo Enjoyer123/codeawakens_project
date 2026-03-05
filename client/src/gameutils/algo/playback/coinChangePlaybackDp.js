@@ -1,4 +1,4 @@
-/**
+﻿/**
  * coinChangePlaybackDp.js
  * เลน Animation แบบ DP (Spreadsheet Array 1D / Top-Down)
  */
@@ -29,7 +29,6 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
         return;
     }
 
-    console.log(`🎬 [coinChangePlayback] Playing DP Spreadsheet Display at ${speed}x speed`);
 
     const warriors = scene.coinChange.warriors || [];
     const targetAmount = scene.levelData?.coinChangeData?.monster_power || 0;
@@ -289,7 +288,6 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
         detailText.setText('');
     }
 
-    console.log('✅ [coinChangePlayback] Bottom-Up DP Spreadsheet Display complete');
 }
 
 /**
@@ -305,7 +303,6 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
 //         return;
 //     }
 
-//     console.log(`🎬 [coinChangePlayback] Playing DP Table Display at ${speed}x speed`);
 
 //     const warriors = scene.coinChange.warriors;
 //     const targetAmount = scene.levelData?.coinChangeData?.monster_power || 32;
@@ -462,5 +459,4 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
 //     pointer.setVisible(false);
 //     statusText.setText('✅ เติมตาราง Memoization สำเร็จทุกช่อง!');
 //     statusText.setColor('#00FFFF');
-//     console.log('✅ [coinChangePlayback] DP Table Animation complete');
 // }

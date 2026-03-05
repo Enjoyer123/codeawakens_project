@@ -1,4 +1,4 @@
-import {
+﻿import {
     checkVictoryConditions,
     generateVictoryHint,
 } from '../game/victoryUtils';
@@ -224,12 +224,6 @@ const handleSuccess = async ({
 
     // In preview mode, unlock pattern and level
     if (isPreview) {
-        console.log('🔍 [Preview] Pattern unlock check:', {
-            patternId,
-            matchedPatternId: hintData?.bestPattern?.pattern_id,
-            percentage: hintData?.patternPercentage,
-        });
-
         const matchedPattern = hintData?.bestPattern;
         const isPerfectMatch = hintData?.patternPercentage === 100;
 
@@ -256,11 +250,9 @@ const handleSuccess = async ({
                 if (!currentLevel.is_unlocked) {
                     await onUnlockLevel(currentLevel.level_id);
                 } else {
-                    console.log('🔍 [Preview] Level is already published. Skipping level unlock.');
                 }
             }
         } else {
-            console.log('🔍 [Preview] Pattern not 100% matched. Skipping unlock (Test Play Only).');
         }
 
     } else {
