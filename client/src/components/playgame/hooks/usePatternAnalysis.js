@@ -25,16 +25,16 @@ export function usePatternAnalysis({
   blocklyLoaded,
   workspaceRef,
   goodPatterns,
-  setHintData,
+  setPatternData,
   setCurrentWeaponData,
 }) {
   const processingRef = useRef(false);
 
-  const valuesRef = useRef({ goodPatterns, setHintData, setCurrentWeaponData });
+  const valuesRef = useRef({ goodPatterns, setPatternData, setCurrentWeaponData });
 
   useEffect(() => {
-    valuesRef.current = { goodPatterns, setHintData, setCurrentWeaponData };
-  }, [goodPatterns, setHintData, setCurrentWeaponData]);
+    valuesRef.current = { goodPatterns, setPatternData, setCurrentWeaponData };
+  }, [goodPatterns, setPatternData, setCurrentWeaponData]);
 
   useEffect(() => {
     if (!blocklyLoaded || !workspaceRef.current) {
@@ -45,7 +45,7 @@ export function usePatternAnalysis({
 
 
     const analyzePattern = () => {
-      const { goodPatterns, setHintData, setCurrentWeaponData } = valuesRef.current;
+      const { goodPatterns, setPatternData, setCurrentWeaponData } = valuesRef.current;
 
       if (!workspace?.getAllBlocks) return;
 
@@ -56,7 +56,7 @@ export function usePatternAnalysis({
       if (currentBlockCount === 0) {
         const defaultWeaponKey = getCurrentGameState().levelData?.defaultWeaponKey || "stick";
         updateWeapon(defaultWeaponKey, setCurrentWeaponData, { patternTypeId: 0, activeEffects: [] });
-        setHintData({
+        setPatternData({
           patternPercentage: 0, bestPatternBigO: null,
           showPatternProgress: true,
           threePartsMatch: { matchedParts: 0, part1Match: false, part2Match: false, part3Match: false }
@@ -66,7 +66,7 @@ export function usePatternAnalysis({
 
       // ─── No patterns → show default ────────────────────────
       if (!goodPatterns || goodPatterns.length === 0) {
-        setHintData({ patternPercentage: 0, bestPatternBigO: null });
+        setPatternData({ patternPercentage: 0, bestPatternBigO: null });
         return;
       }
 
@@ -74,8 +74,8 @@ export function usePatternAnalysis({
       // ─── เรียกฟังก์ชันเดียว ได้ทุกอย่าง ──────────────────
       const result = findBestMatch(workspace, goodPatterns);
 
-      // ─── อัปเดต hintData ─────
-      setHintData({
+      // ─── อัปเดต patternData ─────
+      setPatternData({
         matchedBlocks: result.matchedBlocks,
         totalBlocks: result.totalBlocks,
         showPatternProgress: true,

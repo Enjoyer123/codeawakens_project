@@ -8,7 +8,7 @@ import { calculateFinalScore } from '@/components/playgame/utils/scoreUtils';
 export const calculateLevelScore = (
     finalState,
     currentLevel,
-    hintData,
+    patternData,
     goodPatterns,
     userBigO
 ) => {
@@ -19,7 +19,7 @@ export const calculateLevelScore = (
     // Determine Target Big O (Only if pattern is matched)
     let targetBigO = null;
     if (patternTypeId > 0) {
-        targetBigO = hintData?.bestPatternBigO || hintData?.bestPattern?.big_o || hintData?.bestPattern?.bigO;
+        targetBigO = patternData?.bestPatternBigO || patternData?.bestPattern?.big_o || patternData?.bestPattern?.bigO;
 
         // Fallback 1: Try to find in goodPatterns using patternTypeId
         if (!targetBigO && patternTypeId && goodPatterns) {

@@ -15,11 +15,12 @@ const GameArea = ({
   currentLevel,
   playerHpState,
   currentWeaponData,
-  hintData,
+  patternData,
   hintOpen,
   levelHints,
-  onNeedHintClick,
-  needHintDisabled,
+  hasHints,
+  onOpenHint,
+
   onToggleHint,
   onUserBigOChange,
   showBigOQuiz,
@@ -53,22 +54,22 @@ const GameArea = ({
 
           {/* Pattern Match */}
           <PatternMatchPanel
-            hintData={hintData}
+            patternData={patternData}
             currentLevel={currentLevel}
             currentWeaponData={currentWeaponData}
           />
 
           {/* Block Count + Guide/Hint grouped */}
           <div className="flex flex-col gap-1 flex-shrink-0">
-            <BlockCountPanel hintData={hintData} />
+            <BlockCountPanel patternData={patternData} />
             <div className="flex gap-1">
               <GuideButton
                 onOpenGuide={onOpenGuide}
                 disabled={!hasGuides}
               />
               <HintButton
-                onNeedHintClick={onNeedHintClick}
-                needHintDisabled={needHintDisabled}
+                onOpenHint={onOpenHint}
+                disabled={!hasHints}
               />
             </div>
           </div>
@@ -86,7 +87,7 @@ const GameArea = ({
         isOpen={showBigOQuiz}
         onClose={onCloseBigOQuiz}
         onSelect={onUserBigOChange}
-        currentPatternName={hintData?.bestPattern?.name}
+        currentPatternName={patternData?.bestPattern?.name}
       />
     </div>
 

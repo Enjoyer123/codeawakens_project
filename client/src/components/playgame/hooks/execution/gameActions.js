@@ -19,9 +19,8 @@ import { haveEnemy } from '@/gameutils/combat/playerCombat';
  */
 export function createGameActions(setters, currentLevel, isPreview) {
     const {
-        setPlayerNodeId, setPlayerDirection,
         setIsGameOver, setGameState,
-        setShowProgressModal, setGameResult, setCurrentHint
+        setShowProgressModal, setGameResult
     } = setters;
 
     // ─── Sensors ───
@@ -60,16 +59,12 @@ export function createGameActions(setters, currentLevel, isPreview) {
             goalReached: result.goalReached
         });
 
-        if (result.targetNode) {
-            setPlayerNodeId(result.targetNode.id);
-        }
         return false;
     };
 
     const turnLeft = async () => {
         const result = calculateTurnLeft();
         if (result.success) {
-            setPlayerDirection(result.newDirection);
             setCurrentGameState({ direction: result.newDirection });
             const scene = getCurrentGameState().currentScene;
             if (scene) await playTurnAnimation(scene, result);
@@ -79,7 +74,6 @@ export function createGameActions(setters, currentLevel, isPreview) {
     const turnRight = async () => {
         const result = calculateTurnRight();
         if (result.success) {
-            setPlayerDirection(result.newDirection);
             setCurrentGameState({ direction: result.newDirection });
             const scene = getCurrentGameState().currentScene;
             if (scene) await playTurnAnimation(scene, result);
@@ -92,16 +86,13 @@ export function createGameActions(setters, currentLevel, isPreview) {
         const result = calculateHit(scene);
 
         if (!result.success) {
-            setCurrentHint('❌ ไม่มีศัตรูในระยะโจมตี');
             return false;
         }
 
         if (scene) {
             const playbackResult = await playHitAnimation(scene, result);
             if (playbackResult.status === 'enemy_defeated') {
-                setCurrentHint('⚔️ ศัตรูตายแล้ว! เดินต่อได้');
             } else if (playbackResult.status === 'missed') {
-                setCurrentHint('❌ โจมตีไม่สำเร็จ');
             }
         }
         return true;

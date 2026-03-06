@@ -8,7 +8,7 @@ import { RefreshCw, RotateCcw } from 'lucide-react';
 const CodeEditorTab = ({
     textCode,
     handleTextCodeChange,
-    blocklyJavaScriptReady,
+    blocklyLoaded,
     codeValidation,
     isPreview = false,
     isAdmin = false,
@@ -71,7 +71,7 @@ const CodeEditorTab = ({
         <TabsContent value="text" className="h-full m-0 p-0 absolute inset-0 z-10 data-[state=inactive]:hidden bg-[#0f111a]">
             <div className="flex flex-col h-full">
                 {/* Validation Message Banner */}
-                <div className={`px-4 py-2 text-[10px] font-pixel border-b flex items-center justify-between tracking-wide ${!blocklyJavaScriptReady
+                <div className={`px-4 py-2 text-[10px] font-pixel border-b flex items-center justify-between tracking-wide ${!blocklyLoaded
                     ? 'bg-[#1e1b4b]/80 text-yellow-500 border-purple-900/30'
                     : codeValidation?.isValid
                         ? 'bg-green-900/10 text-green-400 border-green-900/20'
@@ -79,10 +79,10 @@ const CodeEditorTab = ({
                     }`}>
                     <div className="flex items-center gap-2">
                         <span>{
-                            !blocklyJavaScriptReady ? '⏳ SYNCING...' :
+                            !blocklyLoaded ? '⏳ SYNCING...' :
                                 codeValidation?.isValid ? '✅ VALID' : '❌ INVALID'
                         }</span>
-                        {codeValidation?.message && !codeValidation.isValid && blocklyJavaScriptReady && (
+                        {codeValidation?.message && !codeValidation.isValid && blocklyLoaded && (
                             <span className="opacity-80 border-l border-purple-500/20 pl-2 ml-2">
                                 {codeValidation.message}
                             </span>

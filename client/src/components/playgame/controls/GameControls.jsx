@@ -6,7 +6,6 @@ const GameControls = ({
     blocklyLoaded,
     isRunning,
     isGameOver,
-    blocklyJavaScriptReady,
     codeValidation,
     currentLevel,
     onHistoryClick,
@@ -20,7 +19,7 @@ const GameControls = ({
         !blocklyLoaded ||
         isRunning ||
         isGameOver ||
-        (currentLevel?.textcode && !blocklyJavaScriptReady) ||
+        (currentLevel?.textcode && !blocklyLoaded) ||
         (currentLevel?.textcode && (!codeValidation || !codeValidation.isValid));
 
     return (

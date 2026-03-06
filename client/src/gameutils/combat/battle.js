@@ -12,7 +12,7 @@ import { showGameOver } from '../effects/gameEffects';
 import { cleanupMonsterUI } from './battleUI';
 import { getDirectionFromAngle, showFloatingText } from './combatHelpers';
 
-export function startBattle(scene, monster, setPlayerHp, setIsGameOver, setCurrentHint, isPlayerAttack = false) {
+export function startBattle(scene, monster, setPlayerHp, setIsGameOver, isPlayerAttack = false) {
   return new Promise((resolve) => {
     // Check if monster is already defeated or currently in battle
     if (monster.data.defeated || monster.data.inBattle) {
@@ -138,20 +138,7 @@ export function startBattle(scene, monster, setPlayerHp, setIsGameOver, setCurre
           });
         };
 
-        // --- Finalize Battle Results ---
         const finishBattle = (attackerFirst) => {
-          // Final Check for Hints
-          if (getPlayerHp() <= 0) {
-            setCurrentHint(`💀 แพ้แล้ว! ถูก ${monster.data.name} โจมตีหนักเกินไป`);
-          } else if (monster.data.defeated) {
-            setCurrentHint(`💀 ชนะ ${monster.data.name}! (เหลือ ${getPlayerHp()} HP)`);
-          } else {
-            if (finalDamage === 0) {
-              setCurrentHint(`🛡️ สู้ ${monster.data.name}! อาวุธป้องกันได้! (เหลือ ${getPlayerHp()} HP)`);
-            } else {
-              setCurrentHint(`⚔️ สู้ ${monster.data.name}! โดน ${finalDamage} damage (เหลือ ${getPlayerHp()} HP)`);
-            }
-          }
 
           monster.data.inBattle = false;
           resolve();

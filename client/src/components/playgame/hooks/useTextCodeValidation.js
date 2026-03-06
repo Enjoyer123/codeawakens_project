@@ -11,7 +11,6 @@ export function useTextCodeValidation({
   textCode,
   workspaceRef,
   blocklyLoaded,
-  blocklyJavaScriptReady,
   setCodeValidation
 }) {
   // ฟังก์ชัน validation กลาง — ใช้ร่วมกันทุกจุด
@@ -22,7 +21,7 @@ export function useTextCodeValidation({
     if (!code) {
       return setCodeValidation({ isValid: false, message: "กรุณาเขียนโค้ด" });
     }
-    if (!workspaceRef.current || !blocklyLoaded || !blocklyJavaScriptReady) {
+    if (!workspaceRef.current || !blocklyLoaded) {
       return setCodeValidation({ isValid: false, message: "กำลังรอให้ระบบพร้อมใช้งาน..." });
     }
     try {
@@ -31,7 +30,7 @@ export function useTextCodeValidation({
       console.error("Error validating text code:", error);
       setCodeValidation({ isValid: false, message: "เกิดข้อผิดพลาดในการตรวจสอบโค้ด" });
     }
-  }, [currentLevel?.textcode, workspaceRef, blocklyLoaded, blocklyJavaScriptReady, setCodeValidation]);
+  }, [currentLevel?.textcode, workspaceRef, blocklyLoaded, setCodeValidation]);
 
   // Handle text code changes (เรียกจาก onChange ของ editor)
   const handleTextCodeChange = (newCode) => runValidation(newCode);
@@ -39,11 +38,11 @@ export function useTextCodeValidation({
   // Auto-validate เมื่อ dependencies เปลี่ยน
   useEffect(() => {
     runValidation(textCode);
-  }, [currentLevel?.textcode, textCode, blocklyLoaded, blocklyJavaScriptReady, runValidation]);
+  }, [currentLevel?.textcode, textCode, blocklyLoaded, runValidation]);
 
   // Listen to workspace block changes (debounced)
   useEffect(() => {
-    if (!currentLevel?.textcode || !workspaceRef.current || !blocklyLoaded || !blocklyJavaScriptReady) {
+    if (!currentLevel?.textcode || !workspaceRef.current || !blocklyLoaded) {
       return;
     }
 
@@ -63,7 +62,7 @@ export function useTextCodeValidation({
         workspace.removeChangeListener(onBlockChange);
       }
     };
-  }, [currentLevel?.textcode, textCode, blocklyLoaded, blocklyJavaScriptReady, workspaceRef, runValidation]);
+  }, [currentLevel?.textcode, textCode, blocklyLoaded, workspaceRef, runValidation]);
 
   return { handleTextCodeChange };
 }

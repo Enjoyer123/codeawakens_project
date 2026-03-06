@@ -28,11 +28,9 @@ export class GameScene extends Phaser.Scene {
         super({ key: 'GameScene' });
         this.currentLevel = null; // Will be set via init data or directly
         this.externalHandlers = {
-            handleRestartGame: null,
             isRunning: false,
             setPlayerHp: null,
             setIsGameOver: null,
-            setCurrentHint: null,
             setCurrentWeaponData: null
         };
         // Use custom property to track currently rendered state
@@ -237,14 +235,6 @@ export class GameScene extends Phaser.Scene {
             }
         });
 
-        // Keyboard input for restart
-        if (this.input && this.input.keyboard) {
-            this.input.keyboard.on('keydown-R', () => {
-                if (getCurrentGameState().isGameOver && this.externalHandlers.handleRestartGame) {
-                    this.externalHandlers.handleRestartGame();
-                }
-            });
-        }
     }
 
     setupGame() {
@@ -324,8 +314,7 @@ export class GameScene extends Phaser.Scene {
             delta,
             this.externalHandlers.isRunning,
             this.externalHandlers.setPlayerHp,
-            this.externalHandlers.setIsGameOver,
-            this.externalHandlers.setCurrentHint
+            this.externalHandlers.setIsGameOver
         );
 
         // State-driven Visual Effects sync

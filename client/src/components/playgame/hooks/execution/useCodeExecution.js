@@ -19,13 +19,12 @@ import { runLegacyPath } from './legacyRunner';
 export function useCodeExecution({
     workspaceRef,
     currentLevel,
-    blocklyJavaScriptReady,
     codeValidation,
     isPreview,
     patternId,
+    blocklyLoaded,
     onUnlockPattern,
     onUnlockLevel,
-    gameStartTime,
     getToken,
     textCode,
     setters,
@@ -46,17 +45,14 @@ export function useCodeExecution({
         }
 
         if (!workspaceRef.current || !getCurrentGameState().currentScene) {
-            setters.setCurrentHint('⚠️ ระบบไม่พร้อมใช้งาน');
             return;
         }
 
-        if (currentLevel?.textcode && !blocklyJavaScriptReady) {
-            setters.setCurrentHint('⚠️ กรุณารอระบบโหลดสักครู่...');
+        if (currentLevel?.textcode && !blocklyLoaded) {
             return;
         }
 
         if (currentLevel?.textcode && !codeValidation.isValid) {
-            setters.setCurrentHint(`⚠️ ${codeValidation.message}`);
             return;
         }
 
@@ -65,7 +61,6 @@ export function useCodeExecution({
         setters.setGameState('running');
         setters.setIsCompleted(false);
         setters.setIsGameOver(false);
-        setters.setCurrentHint('🚀 กำลังเริ่มทำงาน...');
         if (setters.setTestCaseResult) setters.setTestCaseResult(null);
 
         try {
@@ -73,7 +68,6 @@ export function useCodeExecution({
             const code = await generateAndInstrumentCode(workspaceRef, currentLevel);
 
             if (!code.trim()) {
-                setters.setCurrentHint('❌ ไม่พบ Blocks! กรุณาลาก Blocks จาก Toolbox');
                 setters.setGameState('ready');
                 setters.setIsRunning(false);
                 return;
@@ -82,13 +76,13 @@ export function useCodeExecution({
             // ─── 4. Delegate to the right runner ───
             if (isAlgoLevel(currentLevel)) {
                 await runAlgoPath(code, {
-                    workspaceRef, currentLevel, isPreview, gameStartTime,
+                    workspaceRef, currentLevel, isPreview,
                     getToken, textCode, scoring, setters,
                     patternId, onUnlockPattern, onUnlockLevel, setExecutionError
                 });
             } else {
                 await runLegacyPath(code, {
-                    currentLevel, gameActions, isPreview, gameStartTime,
+                    currentLevel, gameActions, isPreview,
                     scoring, setters,
                     patternId, onUnlockPattern, onUnlockLevel, setExecutionError
                 });

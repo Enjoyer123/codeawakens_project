@@ -17,9 +17,7 @@ export function usePhaserGame({
   setCurrentWeaponData,
   setPlayerHp,
   setIsGameOver,
-  setCurrentHint,
-  isRunning,
-  handleRestartGame
+  isRunning
 }) {
   const initPhaserGame = () => {
 
@@ -61,11 +59,9 @@ export function usePhaserGame({
     const sceneData = {
       currentLevel: currentLevel,
       handlers: {
-        handleRestartGame,
         isRunning,
         setPlayerHp,
         setIsGameOver,
-        setCurrentHint,
         setCurrentWeaponData
       }
     };

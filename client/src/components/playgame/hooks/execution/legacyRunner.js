@@ -21,7 +21,6 @@ export async function runLegacyPath(code, {
     currentLevel,
     gameActions,
     isPreview,
-    gameStartTime,
     scoring,
     setters,
     patternId,
@@ -29,9 +28,9 @@ export async function runLegacyPath(code, {
     onUnlockLevel,
     setExecutionError
 }) {
-    const { hintData, goodPatterns, userBigO } = scoring;
+    const { patternData, goodPatterns, userBigO } = scoring;
     const {
-        setCurrentHint, setIsRunning, setGameState,
+        setIsRunning, setGameState,
         setPlayerHp, setPlayerNodeId, setPlayerDirection,
         setIsGameOver, setGameResult, setFinalScore,
         setShowProgressModal, setIsCompleted
@@ -39,14 +38,12 @@ export async function runLegacyPath(code, {
 
     // 1. Reset game state
     await resetGameExecutionState({
-        gameStartTime,
         setPlayerHp,
         setPlayerNodeId,
         setPlayerDirection,
         currentLevel
     });
 
-    setCurrentHint('⚙️ กำลังประมวลผล...');
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     // 2. Sanitize code (fix duplicate declarations)
@@ -89,15 +86,14 @@ export async function runLegacyPath(code, {
         currentLevel,
         testCaseResult: null,
         isPreview,
-        gameStartTime,
-        hintData,
+        patternData,
         goodPatterns,
         userBigO,
         patternId,
         onUnlockPattern,
         onUnlockLevel,
         setters: {
-            setCurrentHint, setIsGameOver, setGameState, setIsRunning,
+            setIsGameOver, setGameState, setIsRunning,
             setGameResult, setFinalScore, setShowProgressModal, setIsCompleted
         }
     });
@@ -108,9 +104,7 @@ export async function runLegacyPath(code, {
         const friendlyMessage = mapRuntimeErrorToMessage(executionErrorLocal);
 
         if (executionErrorLocal.message?.includes('infinite loop') || executionErrorLocal.message?.includes('timeout')) {
-            setCurrentHint('❌ พบ Infinite Loop - โปรแกรมทำงานนานเกินไป');
-        } else {
-            setCurrentHint(`❌ ${friendlyMessage}`);
+
         }
 
         setExecutionError({ title: 'เกิดข้อผิดพลาดขณะทำงาน', message: friendlyMessage });

@@ -17,15 +17,12 @@ import { resetEnemy } from '../../combat/enemyUtils';
 
 
 export const resetGameExecutionState = async ({
-    gameStartTime,
     setAttempts,
     setPlayerHp,
     setPlayerNodeId,
     setPlayerDirection,
     currentLevel
 }) => {
-    // Start timing the attempt
-    if (gameStartTime) gameStartTime.current = Date.now();
     if (setAttempts) setAttempts(prev => prev + 1);
 
     // Reset to start position และ sync HP
