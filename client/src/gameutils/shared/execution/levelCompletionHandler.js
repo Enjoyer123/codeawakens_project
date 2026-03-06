@@ -28,15 +28,14 @@ export const handleLevelCompletion = async ({
     currentLevel,
     testCaseResult,
     isPreview,
-    gameStartTime,
-    hintData,
+    patternData,
     goodPatterns,
     userBigO,
     patternId,
     onUnlockPattern,
     onUnlockLevel,
     setters: {
-        setCurrentHint,
+
         setIsGameOver,
         setGameState,
         setIsRunning,
@@ -70,9 +69,7 @@ export const handleLevelCompletion = async ({
         handleFailure({
             victoryResult,
             currentLevel,
-            gameStartTime,
             setters: {
-                setCurrentHint,
                 setIsGameOver,
                 setGameState,
                 setIsRunning,
@@ -86,7 +83,7 @@ export const handleLevelCompletion = async ({
         await handleSuccess({
             currentLevel,
             completionMessage,
-            hintData,
+            patternData,
             goodPatterns,
             userBigO,
             patternId,
@@ -96,12 +93,10 @@ export const handleLevelCompletion = async ({
                 setIsCompleted,
                 setGameState,
                 setFinalScore,
-                setCurrentHint,
                 setShowProgressModal,
                 setIsRunning,
                 setGameResult
             },
-            gameStartTime,
             isPreview
         });
     }
@@ -115,12 +110,10 @@ export const handleLevelCompletion = async ({
 const handleFailure = async ({
     victoryResult,
     currentLevel,
-    gameStartTime,
     setters,
     isPreview
 }) => {
     const {
-        setCurrentHint,
         setIsGameOver,
         setGameState,
         setIsRunning,
@@ -131,9 +124,7 @@ const handleFailure = async ({
 
     // Show hint for failed conditions
     const hintMessage = generateVictoryHint(victoryResult.failedConditions, currentLevel);
-    if (hintMessage) {
-        setCurrentHint(hintMessage);
-    }
+
 
     // Check if Game Over (HP <= 0 or puzzle failure)
     const currentState = getCurrentGameState();
@@ -164,7 +155,7 @@ const handleFailure = async ({
         }
 
         setIsRunning(false);
-        setCurrentHint("❌ ไม่ผ่านเงื่อนไขการผ่านด่าน");
+
         return;
     }
 };
@@ -175,21 +166,19 @@ const handleFailure = async ({
 const handleSuccess = async ({
     currentLevel,
     completionMessage,
-    hintData,
+    patternData,
     goodPatterns,
     userBigO,
     patternId,
     onUnlockPattern,
     onUnlockLevel,
     setters,
-    gameStartTime,
     isPreview
 }) => {
     const {
         setIsCompleted,
         setGameState,
         setFinalScore,
-        setCurrentHint,
         setShowProgressModal,
         setIsRunning,
         setGameResult
@@ -208,7 +197,7 @@ const handleSuccess = async ({
     const scoreData = calculateLevelScore(
         execFinalState,
         currentLevel,
-        hintData,
+        patternData,
         goodPatterns,
         userBigO
     );
@@ -216,7 +205,7 @@ const handleSuccess = async ({
 
     const weaponInfo = execFinalState.weaponData;
     if (completionMessage) {
-        setCurrentHint(`${completionMessage} (${weaponInfo?.name || ''}) - คะแนน: ${scoreData.totalScore} ⭐${scoreData.stars}`);
+
     }
 
 
@@ -224,8 +213,8 @@ const handleSuccess = async ({
 
     // In preview mode, unlock pattern and level
     if (isPreview) {
-        const matchedPattern = hintData?.bestPattern;
-        const isPerfectMatch = hintData?.patternPercentage === 100;
+        const matchedPattern = patternData?.bestPattern;
+        const isPerfectMatch = patternData?.patternPercentage === 100;
 
         if (isPerfectMatch) {
             let patternUnlocked = false;

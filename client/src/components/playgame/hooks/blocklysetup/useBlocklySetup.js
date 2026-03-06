@@ -40,8 +40,6 @@ export function useBlocklySetup({
   enabledBlocks,               // รายชื่อบล็อกที่อนุญาตให้ใช้ในด่านนี้
   // enabledBlockKeySignature,    // Signature สำหรับเช็คว่า block config เปลี่ยนหรือไม่
   setBlocklyLoaded,            // State บอกว่าโหลดเสร็จหรือยัง
-  setBlocklyJavaScriptReady,   // State บอกว่า JS Generator พร้อมไหม
-  // setCurrentHint,              // ฟังก์ชันแสดง Hint/Error
   initPhaserGame,              // ฟังก์ชันเริ่มเกม Phaser
   starter_xml = null,          // โค้ดเริ่มต้น (XML String)
   blocklyLoaded = false,       // สถานะปัจจุบัน
@@ -151,8 +149,7 @@ export function useBlocklySetup({
       scrollOptions.init();
 
       // อัปเดตสถานะว่าพร้อมแล้ว
-      setBlocklyLoaded(v => v + 1);
-      setBlocklyJavaScriptReady(true);
+      setBlocklyLoaded(true);
 
       // เตรียมตัวแปรเริ่มต้น (Common Variables)
       ensureCommonVariables(workspace);

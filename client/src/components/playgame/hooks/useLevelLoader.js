@@ -202,15 +202,14 @@ export function useLevelInitializer({
   isPreview,
   setEnabledBlocks,
   setGoodPatterns,
-  setCurrentHint,
-  setPlayerNodeId,
-  setPlayerDirection,
   setPlayerHp,
   setIsCompleted,
   setIsGameOver,
   setCurrentWeaponData,
   setGameState,
-  setCurrentLevelState
+  setCurrentLevelState,
+  setTextCode,
+  setCodeValidation
 }) {
   const initRef = useRef(null);
 
@@ -236,7 +235,7 @@ export function useLevelInitializer({
         setCurrentLevelState(formatted);
         setEnabledBlocks(enabledBlocks);
         setGoodPatterns(goodPatterns);
-        setCurrentHint(`📍 โหลดด่าน "${formatted.name}" เสร็จแล้ว`);
+
 
         setCurrentGameState({
           currentNodeId: formatted.startNodeId,
@@ -250,13 +249,15 @@ export function useLevelInitializer({
         });
 
         resetPlayerHp(setPlayerHp);
-        setPlayerNodeId(formatted.startNodeId);
-        setPlayerDirection(0);
         setPlayerHp(100);
         setIsCompleted(false);
         setIsGameOver(false);
         setCurrentWeaponData(getWeaponData(formatted.defaultWeaponKey));
         setGameState('ready');
+
+        // Reset Text Code state
+        if (setTextCode) setTextCode("");
+        if (setCodeValidation) setCodeValidation({ isValid: false, message: "" });
 
         // Marking this level as fully initialized
         initRef.current = levelData.level_id;

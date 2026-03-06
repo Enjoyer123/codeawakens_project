@@ -18,7 +18,6 @@ const BlocklyArea = ({
   isGameOver,
   currentLevel,
   codeValidation,
-  blocklyJavaScriptReady,
   textCode,
   handleTextCodeChange,
   testCaseResult,
@@ -80,7 +79,7 @@ const BlocklyArea = ({
               <TabsTrigger value="text" className="data-[state=active]:bg-[#4c1d95] text-purple-200 data-[state=active]:text-white flex items-center gap-2">
                 <Code size={16} />
                 <span>Text Code</span>
-                <div className={`ml-2 w-2 h-2 rounded-full ${!blocklyJavaScriptReady
+                <div className={`ml-2 w-2 h-2 rounded-full ${!blocklyLoaded
                   ? 'bg-yellow-500 animate-pulse'
                   : codeValidation?.isValid
                     ? 'bg-green-500'
@@ -110,7 +109,7 @@ const BlocklyArea = ({
             <CodeEditorTab
               textCode={textCode}
               handleTextCodeChange={handleTextCodeChange}
-              blocklyJavaScriptReady={blocklyJavaScriptReady}
+              blocklyLoaded={blocklyLoaded}
               codeValidation={codeValidation}
               isPreview={isPreview}
               isAdmin={isAdmin}
@@ -129,7 +128,6 @@ const BlocklyArea = ({
         blocklyLoaded={blocklyLoaded}
         isRunning={isRunning}
         isGameOver={isGameOver}
-        blocklyJavaScriptReady={blocklyJavaScriptReady}
         codeValidation={codeValidation}
         currentLevel={currentLevel}
         onHistoryClick={() => setHistoryOpen(true)}

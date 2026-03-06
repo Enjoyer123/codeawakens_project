@@ -7,7 +7,7 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 
-const PatternMatchPanel = ({ hintData, currentLevel, currentWeaponData }) => {
+const PatternMatchPanel = ({ patternData, currentLevel, currentWeaponData }) => {
   // หา idealPattern (Gold > Silver)
   const allPatterns = [...(currentLevel?.goodPatterns || []), ...(currentLevel?.patterns || [])];
   const idealPattern = allPatterns.find(p => p.pattern_type_id === 1) ||
@@ -15,14 +15,14 @@ const PatternMatchPanel = ({ hintData, currentLevel, currentWeaponData }) => {
 
   // คำนวณ weapon progress ตาม tier
   let weaponProgress = 0;
-  const currentBestPattern = hintData?.bestPattern;
+  const currentBestPattern = patternData?.bestPattern;
   if (idealPattern && currentBestPattern) {
     if (currentBestPattern.pattern_type_id === idealPattern.pattern_type_id) {
-      weaponProgress = hintData.patternPercentage || 0;
+      weaponProgress = patternData.patternPercentage || 0;
     } else if (currentBestPattern.pattern_type_id === 2 && idealPattern.pattern_type_id === 1) {
       weaponProgress = 66; // Silver ในด่าน Gold → ค้างที่ 66%
     } else if (currentBestPattern.pattern_type_id < idealPattern.pattern_type_id) {
-      weaponProgress = hintData.patternPercentage || 0;
+      weaponProgress = patternData.patternPercentage || 0;
     }
   }
 
@@ -99,7 +99,7 @@ const PatternMatchPanel = ({ hintData, currentLevel, currentWeaponData }) => {
           <div className="flex flex-col items-center">
             <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">MATCH</span>
             <span className="text-[10px] text-gray-500 font-mono">
-              {hintData?.matchedBlocks || 0}/{hintData?.totalBlocks || 0}
+              {patternData?.matchedBlocks || 0}/{patternData?.totalBlocks || 0}
             </span>
           </div>
 
@@ -126,18 +126,18 @@ const PatternMatchPanel = ({ hintData, currentLevel, currentWeaponData }) => {
               {/* Pattern Match Progress Bar (ตรง Pattern จริงกี่ %) */}
               <div className="w-full bg-gray-700/50 rounded-full h-2 overflow-hidden border border-gray-600/50 mt-1">
                 <div
-                  className={`h-full rounded-full transition-all duration-500 ${getProgressColor(hintData?.patternPercentage || 0)}`}
-                  style={{ width: `${Math.min(hintData?.patternPercentage || 0, 100)}%` }}
+                  className={`h-full rounded-full transition-all duration-500 ${getProgressColor(patternData?.patternPercentage || 0)}`}
+                  style={{ width: `${Math.min(patternData?.patternPercentage || 0, 100)}%` }}
                 />
               </div>
 
               {/* Pattern Name & Percentage */}
               <div className="flex items-center justify-between gap-1 w-full text-[10px] font-bold leading-none">
                 <span className="text-blue-300 truncate flex-1 text-left text-[8px]">
-                  {hintData?.bestPattern?.pattern_name || 'Pattern'}
+                  {patternData?.bestPattern?.pattern_name || 'Pattern'}
                 </span>
                 <span className="text-white bg-blue-500/20 px-1 rounded-sm text-[9px] shrink-0">
-                  {hintData?.patternPercentage || 0}%
+                  {patternData?.patternPercentage || 0}%
                 </span>
               </div>
             </div>
@@ -146,7 +146,7 @@ const PatternMatchPanel = ({ hintData, currentLevel, currentWeaponData }) => {
 
         {/* Right: Pattern Info (50%) */}
         <div className="w-1/2 flex flex-col pl-2">
-          {hintData && hintData.showPatternProgress ? (
+          {patternData && patternData.showPatternProgress ? (
             <div className="flex flex-col items-center gap-2 w-full">
               <div className="flex flex-col items-center">
                 <div className="flex items-center gap-1 mb-0.5">
@@ -162,7 +162,7 @@ const PatternMatchPanel = ({ hintData, currentLevel, currentWeaponData }) => {
                   </button>
                 </div>
                 <span className="text-[10px] text-blue-300 truncate font-bold leading-tight max-w-full text-center mb-1">
-                  {hintData?.bestPattern?.pattern_name || hintData?.bestPattern?.pattern_type?.type_name || 'กำลังวิเคราะห์...'}
+                  {patternData?.bestPattern?.pattern_name || patternData?.bestPattern?.pattern_type?.type_name || 'กำลังวิเคราะห์...'}
                 </span>
                 <span className="text-[10px] text-gray-300 truncate font-medium leading-tight max-w-full text-center">
                   จำนวน Pattern Part
@@ -170,14 +170,14 @@ const PatternMatchPanel = ({ hintData, currentLevel, currentWeaponData }) => {
               </div>
 
               {/* Three Parts Match Indicator - Bar-based */}
-              {hintData.threePartsMatch && (
+              {patternData.threePartsMatch && (
                 <div className="flex flex-col items-center gap-1.5 bg-black/20 rounded p-1.5 w-full">
                   <span className="text-[9px] text-gray-400 w-full text-center font-bold tracking-tight">
-                    PARTS: {hintData.threePartsMatch.matchedParts || 0}/3
+                    PARTS: {patternData.threePartsMatch.matchedParts || 0}/3
                   </span>
                   <div className="flex gap-1 w-full h-1.5 px-1">
                     {[1, 2, 3].map((part) => {
-                      const matchedParts = hintData.threePartsMatch.matchedParts || 0;
+                      const matchedParts = patternData.threePartsMatch.matchedParts || 0;
                       return (
                         <div
                           key={part}

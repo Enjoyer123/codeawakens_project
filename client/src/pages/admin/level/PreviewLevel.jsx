@@ -9,12 +9,9 @@ import { useUnlockPattern, useUnlockLevel, usePatterns } from '../../../services
 import PageLoader from '../../../components/shared/Loading/PageLoader';
 import { toast } from 'sonner';
 
-import { API_BASE_URL } from '../../../config/apiConfig';
-
 const PreviewLevel = () => {
   const { levelId } = useParams();
   const navigate = useNavigate();
-  const { getToken } = useAuth();
   const { data: levelData, isLoading: isLevelLoading, error: levelError } = useLevel(levelId);
   const { data: patternsDataRaw, isLoading: isPatternsLoading, error: patternsError } = usePatterns(levelId);
 

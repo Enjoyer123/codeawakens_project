@@ -19,9 +19,9 @@ import {
  * @param {string} starter_xml - XML string ที่จะโหลด
  * @param {boolean} isTextCodeEnabled - ถ้าเป็นด่านพิมพ์โค้ด ให้แปลงเป็น Text ด้วย
  * @param {Function|null} onCodeGenerated - Callback เมื่อแปลงเป็น Text แล้ว
- * @param {Function} setCurrentHint - ฟังก์ชันแสดง Error (ถ้ามี)
+ * @param {Function} onCodeGenerated - Callback แจ้งเตือนเมื่อข้อความเปลี่ยน
  */
-export const loadStarterXml = (workspace, starter_xml, isTextCodeEnabled, onCodeGenerated, setCurrentHint) => {
+export const loadStarterXml = (workspace, starter_xml, isTextCodeEnabled, onCodeGenerated) => {
     // 0. ตรวจสอบความพร้อม
     if (!workspace) {
         console.warn('Workspace disappeared before loading XML');
@@ -76,9 +76,7 @@ export const loadStarterXml = (workspace, starter_xml, isTextCodeEnabled, onCode
             } catch (rawErr) {
                 setXmlLoading(false);
                 console.error('Failed to load starter XML (both raw and processed):', rawErr);
-                if (setCurrentHint) {
-                    setCurrentHint('ไม่สามารถโหลด starter blocks ได้: ' + (rawErr.message || 'invalid XML'));
-                }
+
                 return;
             }
         }
@@ -125,8 +123,6 @@ export const loadStarterXml = (workspace, starter_xml, isTextCodeEnabled, onCode
 
     } catch (xmlError) {
         console.error('Error loading starter XML:', xmlError);
-        if (setCurrentHint) {
-            setCurrentHint('ไม่สามารถโหลด starter blocks ได้: ' + xmlError.message);
-        }
+
     }
 };

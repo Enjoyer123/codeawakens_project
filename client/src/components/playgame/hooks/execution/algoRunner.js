@@ -24,7 +24,6 @@ export async function runAlgoPath(code, {
     workspaceRef,
     currentLevel,
     isPreview,
-    gameStartTime,
     getToken,
     textCode,
     scoring,
@@ -34,15 +33,14 @@ export async function runAlgoPath(code, {
     onUnlockLevel,
     setExecutionError
 }) {
-    const { hintData, goodPatterns, userBigO } = scoring;
+    const { patternData, goodPatterns, userBigO } = scoring;
     const {
-        setCurrentHint, setIsRunning, setGameState, setFinalScore,
+        setIsRunning, setGameState, setFinalScore,
         setGameResult, setIsCompleted, setTestCaseResult,
         setPlayerHp, setPlayerNodeId, setPlayerDirection,
         setIsGameOver, setShowProgressModal
     } = setters;
 
-    setCurrentHint('⚙️ กำลังคำนวณผลลัพธ์...');
     await new Promise(r => setTimeout(r, 300));
 
     // Phase 1: Execute pure logic (no visuals)
@@ -50,7 +48,6 @@ export async function runAlgoPath(code, {
 
     if (error) {
         const friendlyMsg = mapRuntimeErrorToMessage(error);
-        setCurrentHint(`❌ ${friendlyMsg}`);
         setExecutionError({ title: 'เกิดข้อผิดพลาดขณะทำงาน', message: friendlyMsg });
         setGameState('ready');
         setIsRunning(false);
@@ -64,14 +61,14 @@ export async function runAlgoPath(code, {
     );
 
     if (setTestCaseResult) setTestCaseResult(testCaseResult);
-    setCurrentHint(testCaseResult.message);
+
 
     // Phase 3: If all tests pass → Score + Save immediately (before animation)
     if (testCaseResult.passed && testCaseResult.failedTests.length === 0) {
 
         // 3a. Calculate score
         const execState = getCurrentGameState();
-        const scoreData = calculateLevelScore(execState, currentLevel, hintData, goodPatterns, userBigO);
+        const scoreData = calculateLevelScore(execState, currentLevel, patternData, goodPatterns, userBigO);
         setFinalScore(scoreData);
         setGameResult('victory');
         setIsCompleted(true);
@@ -110,10 +107,9 @@ export async function runAlgoPath(code, {
         }
 
         if (scene && trace.length > 0) {
-            setCurrentHint('🎬 กำลังแสดง Animation...');
+
 
             await resetGameExecutionState({
-                gameStartTime,
                 setPlayerHp,
                 setPlayerNodeId,
                 setPlayerDirection,
@@ -133,15 +129,14 @@ export async function runAlgoPath(code, {
         currentLevel,
         testCaseResult,
         isPreview,
-        gameStartTime,
-        hintData,
+        patternData,
         goodPatterns,
         userBigO,
         patternId,
         onUnlockPattern,
         onUnlockLevel,
         setters: {
-            setCurrentHint, setIsGameOver, setGameState, setIsRunning,
+            setIsGameOver, setGameState, setIsRunning,
             setGameResult, setFinalScore, setShowProgressModal, setIsCompleted
         }
     });

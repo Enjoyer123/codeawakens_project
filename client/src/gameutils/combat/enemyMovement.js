@@ -5,7 +5,7 @@ import { showGameOver } from '../effects/gameEffects';
 import { getDirectionFromAngle } from './combatHelpers';
 import { startBattle } from './battle';
 
-export function updateMonsters(scene, delta, isRunning, setPlayerHp, setIsGameOver, setCurrentHint) {
+export function updateMonsters(scene, delta, isRunning, setPlayerHp, setIsGameOver) {
     if (!scene.monsters) return;
 
 
@@ -51,14 +51,14 @@ export function updateMonsters(scene, delta, isRunning, setPlayerHp, setIsGameOv
         }
 
         if (monster.data.isChasing) {
-            handleMonsterChase(scene, monster, delta, setPlayerHp, setIsGameOver, setCurrentHint);
+            handleMonsterChase(scene, monster, delta, setPlayerHp, setIsGameOver);
         } else {
             handleMonsterPatrol(scene, monster, delta);
         }
     });
 }
 
-function handleMonsterChase(scene, monster, delta, setPlayerHp, setIsGameOver, setCurrentHint) {
+function handleMonsterChase(scene, monster, delta, setPlayerHp, setIsGameOver) {
     const angle = Phaser.Math.Angle.Between(
         monster.sprite.x,
         monster.sprite.y,
@@ -133,7 +133,7 @@ function handleMonsterChase(scene, monster, delta, setPlayerHp, setIsGameOver, s
 
     const attackRange = monster.data.attackRange || 45;
     if (distAfterMove <= attackRange && !monster.data.inBattle) {
-        startBattle(scene, monster, setPlayerHp, setIsGameOver, setCurrentHint, false).catch(err => {
+        startBattle(scene, monster, setPlayerHp, setIsGameOver, false).catch(err => {
             console.error('Error starting battle:', err);
         });
     }
