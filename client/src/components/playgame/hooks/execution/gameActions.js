@@ -32,7 +32,7 @@ export function createGameActions(setters, currentLevel, isPreview) {
     const nearPit = () => checkNearPit();
 
     const atGoal = () =>
-        getCurrentGameState().currentNodeId === currentLevel?.goalNodeId;
+        getCurrentGameState().currentNodeId === currentLevel?.goal_node_id;
 
     // ─── Movement ───
     const moveForward = async () => {

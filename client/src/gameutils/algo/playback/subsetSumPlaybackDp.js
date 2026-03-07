@@ -20,7 +20,7 @@ async function playClassicDisplay(scene, trace, options = {}) {
 
 
     const warriors = scene.subsetSum.warriors || [];
-    const targetSum = scene.levelData?.subsetSumData?.target_sum || 0;
+    const targetSum = scene.levelData?.subset_sum_data?.target_sum || 0;
     const numItems = warriors.length;
 
     // Total rows = numItems + 1 (for 0 items)

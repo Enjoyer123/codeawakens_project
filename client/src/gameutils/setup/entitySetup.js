@@ -7,16 +7,16 @@ import Phaser from "phaser";
  * @param {Phaser.Scene} scene - Phaser scene instance
  */
 export function setupCoins(scene) {
-    if (!scene.levelData.coinPositions) return;
+    if (!scene.levelData.coin_positions) return;
 
     scene.coins = [];
 
     // Reset all coins to not collected
-    scene.levelData.coinPositions.forEach(coinData => {
+    scene.levelData.coin_positions.forEach(coinData => {
         coinData.collected = false;
     });
 
-    scene.levelData.coinPositions.forEach((coinData, index) => {
+    scene.levelData.coin_positions.forEach((coinData, index) => {
         // Use pixel coordinates directly
         const worldX = coinData.x;
         const worldY = coinData.y;

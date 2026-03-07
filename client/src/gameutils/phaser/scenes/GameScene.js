@@ -270,18 +270,21 @@ export class GameScene extends Phaser.Scene {
 
             const currentState = getCurrentGameState();
 
-            // Display default weapon
+            // Display weapon — respect pattern-matched weapon if already set
             if (this.levelData) {
                 const defaultWeaponKey = this.levelData.defaultWeaponKey || "stick";
-                const defaultWeaponData = getWeaponData(defaultWeaponKey);
+                const activeWeaponKey = currentState.weaponKey && currentState.patternTypeId
+                    ? currentState.weaponKey
+                    : defaultWeaponKey;
+                const activeWeaponData = getWeaponData(activeWeaponKey);
 
                 if (this.externalHandlers.setCurrentWeaponData) {
-                    this.externalHandlers.setCurrentWeaponData(defaultWeaponData);
+                    this.externalHandlers.setCurrentWeaponData(activeWeaponData);
                 }
 
                 setCurrentGameState({
-                    weaponKey: currentState.weaponKey || defaultWeaponKey,
-                    weaponData: currentState.weaponData || defaultWeaponData,
+                    weaponKey: activeWeaponKey,
+                    weaponData: activeWeaponData,
                     activeEffects: currentState.activeEffects || [],
                     patternTypeId: currentState.patternTypeId || 0
                 });
@@ -292,8 +295,8 @@ export class GameScene extends Phaser.Scene {
                 this.time.delayedCall(300, () => {
                     if (this && this.add && this.player) {
                         try {
-                            displayPlayerWeapon(defaultWeaponKey, this);
-                        } catch (error) { console.error("❌ Error displaying default weapon:", error); }
+                            displayPlayerWeapon(activeWeaponKey, this);
+                        } catch (error) { console.error("❌ Error displaying weapon:", error); }
                     }
                 });
             }

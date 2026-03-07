@@ -24,6 +24,7 @@ function updateWeapon(weaponKey, setCurrentWeaponData, extraState = {}) {
 export function usePatternAnalysis({
   blocklyLoaded,
   workspaceRef,
+  workspaceVersion,
   goodPatterns,
   setPatternData,
   setCurrentWeaponData,
@@ -52,8 +53,16 @@ export function usePatternAnalysis({
       const allBlocks = workspace.getAllBlocks(false);
       const currentBlockCount = allBlocks.length;
 
+      console.log('[PatternAnalysis] analyzePattern called', {
+        blockCount: currentBlockCount,
+        patternCount: goodPatterns?.length,
+        patternNames: goodPatterns?.map(p => p.pattern_name),
+        hasWeaponKeys: goodPatterns?.map(p => p.weaponKey),
+      });
+
       // ─── No blocks → reset ─────────────────────────────────
       if (currentBlockCount === 0) {
+        console.log('[PatternAnalysis] No blocks → resetting to 0');
         const defaultWeaponKey = getCurrentGameState().levelData?.defaultWeaponKey || "stick";
         updateWeapon(defaultWeaponKey, setCurrentWeaponData, { patternTypeId: 0, activeEffects: [] });
         setPatternData({
@@ -120,10 +129,12 @@ export function usePatternAnalysis({
     };
 
     workspace.addChangeListener(onWorkspaceChange);
+    console.log('[PatternAnalysis] Effect mounted. blocklyLoaded:', true, 'patterns:', valuesRef.current.goodPatterns?.length, 'blocks:', workspace.getAllBlocks?.(false)?.length);
     analyzePattern();
 
     return () => {
+      if (processingRef.current) clearTimeout(processingRef.current);
       if (workspace?.removeChangeListener) workspace.removeChangeListener(onWorkspaceChange);
     };
-  }, [blocklyLoaded, workspaceRef, goodPatterns]);
+  }, [blocklyLoaded, workspaceRef, workspaceVersion, goodPatterns]);
 }

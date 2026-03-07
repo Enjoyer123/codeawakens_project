@@ -28,7 +28,7 @@ async function playClassicDisplay(scene, trace, options = {}) {
     }
 
     // อ่าน n จาก levelData โดยตรง
-    const n = scene.levelData?.nqueenData?.n || options.n || 4;
+    const n = scene.levelData?.nqueen_data?.n || options.n || 4;
     const cellSize = 60;
     const boardStartX = 400;
     const boardStartY = 300;

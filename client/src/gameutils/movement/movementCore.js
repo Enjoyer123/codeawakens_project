@@ -77,7 +77,7 @@ export function calculateMoveForward(sceneForCollision) {
     }
 
     // Validate if goal is reached logically
-    const goalReached = targetNode.id === currentLevel.goalNodeId;
+    const goalReached = targetNode.id === currentLevel.goal_node_id;
 
 
     return {

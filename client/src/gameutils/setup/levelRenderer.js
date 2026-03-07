@@ -103,8 +103,8 @@ export function drawLevel(scene) {
 
     // Draw nodes AFTER edges (on top)
     scene.levelData.nodes.forEach((node) => {
-        const isStart = node.id === scene.levelData.startNodeId;
-        const isGoal = node.id === scene.levelData.goalNodeId;
+        const isStart = node.id === scene.levelData.start_node_id;
+        const isGoal = node.id === scene.levelData.goal_node_id;
 
         // Node color based on type
         let nodeColor = 0x667eea; // Blue default

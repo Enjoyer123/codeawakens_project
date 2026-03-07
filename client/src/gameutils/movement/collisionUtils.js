@@ -151,6 +151,6 @@ export function nearPit() {
 export function atGoal() {
   const levelData = getLevelData();
   const currentState = getCurrentGameState();
-  return currentState.currentNodeId === levelData?.goalNodeId;
+  return currentState.currentNodeId === levelData?.goal_node_id;
 }
 

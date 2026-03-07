@@ -20,7 +20,7 @@ async function playClassicDisplay(scene, trace, options = {}) {
 
 
     const items = scene.knapsack.items || [];
-    const capacity = scene.levelData?.knapsackData?.capacity || 10;
+    const capacity = scene.levelData?.knapsack_data?.capacity || 10;
     const numItems = items.length;
 
     // Total rows = numItems + 1 (for 0 items)

@@ -31,7 +31,7 @@ export const playVictorySequence = async (currentLevel, initialScene) => {
 
     if (currentScene) {
         // 2. Determine configuration
-        const victoryType = currentLevel.goalType === "ช่วยคน" ? 'rescue' : 'normal';
+        const victoryType = currentLevel.goal_type === "ช่วยคน" ? 'rescue' : 'normal';
         const isCinematicLevel = !currentLevel.nodes || currentLevel.nodes.length === 0;
         const isGraphLevel = currentLevel.nodes && currentLevel.nodes.length > 0 && currentLevel.edges && currentLevel.edges.length > 0;
 

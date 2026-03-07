@@ -4,11 +4,11 @@ import Phaser from "phaser";
 // Function to setup Subset Sum problem display
 export function setupSubsetSum(scene) {
 
-  if (!scene.levelData || !scene.levelData.subsetSumData) {
+  if (!scene.levelData || !scene.levelData.subset_sum_data) {
     return;
   }
 
-  const subsetSumData = scene.levelData.subsetSumData;
+  const subsetSumData = scene.levelData.subset_sum_data;
   scene.subsetSum = {
     side1: null,
     side2: null,

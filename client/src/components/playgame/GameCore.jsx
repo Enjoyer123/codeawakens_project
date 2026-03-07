@@ -10,7 +10,6 @@ import "blockly/javascript";
 window.Blockly = Blockly;
 
 // Import utilities and data
-import { loadWeaponsData } from '../../gameutils/entities/weaponUtils';
 import { clearRescuedPeople } from '../../gameutils/entities/personUtils';
 import { clearPlayerCoins } from '../../gameutils/entities/coinUtils';
 
@@ -37,8 +36,6 @@ import { EXAMPLE_LOADERS } from './constants/exampleLoaders';
 import ExecutionErrorModal from './modals/ExecutionErrorModal';
 import PageLoader from '../../components/shared/Loading/PageLoader';
 import { useSuppressBlocklyWarnings } from '../../components/admin/level/hooks/useSuppressBlocklyWarnings';
-
-
 
 /**
  * GameCore Component
@@ -80,6 +77,7 @@ const GameCore = ({
   // Level data
   const [currentLevel, setCurrentLevel] = useState(null);
   const [enabledBlocks, setEnabledBlocks] = useState({});
+  const [workspaceVersion, setWorkspaceVersion] = useState(0);
 
 
   // Load XML Modal
@@ -98,21 +96,11 @@ const GameCore = ({
   const [userBigO, setUserBigO] = useState(null);
   const [showBigOQuiz, setShowBigOQuiz] = useState(false);
 
-  // Hint system
+  // Pattern system
   const [patternData, setPatternData] = useState({});
 
   // Score system
   const [finalScore, setFinalScore] = useState(null);
-
-  // (Moving to useHintSystem)
-
-  // Ensure finalScore is set when game is over
-  useEffect(() => {
-    if (isGameOver && !finalScore) {
-      setFinalScore({ totalScore: 0, stars: 0 });
-    }
-  }, [isGameOver, finalScore]);
-
 
   // Admin pattern management
   const [goodPatterns, setGoodPatterns] = useState([]);
@@ -134,7 +122,10 @@ const GameCore = ({
   // Suppress Blockly deprecation warnings
   useSuppressBlocklyWarnings();
 
+
+  // ═══════════════════════════════════════════
   // Text code validation
+  // ═══════════════════════════════════════════
   const { handleTextCodeChange } = useTextCodeValidation({
     currentLevel,
     textCode,
@@ -159,17 +150,12 @@ const GameCore = ({
 
   const { data: levelData, isLoading: isLevelLoading, isError: isLevelError, error: levelError } = useLevel(levelId);
 
-  // Load weapons data once on mount (needed for pattern → weapon mapping)
-  const [weaponsReady, setWeaponsReady] = useState(false);
-  useEffect(() => {
-    loadWeaponsData(getToken).then(() => setWeaponsReady(true));
-  }, [getToken]);
-
-  // Initialize level after both levelData and weapons are ready
+  // Initialize level after levelData is ready
   useLevelInitializer({
-    levelData: weaponsReady ? levelData : null,
+    levelData,
     getToken,
     isPreview,
+    patternId,
     setEnabledBlocks,
     setGoodPatterns,
     setPlayerHp,
@@ -186,27 +172,11 @@ const GameCore = ({
   const error = isLevelError ? (levelError?.message || "Failed to load level") : null;
 
 
-
-  // โหลด Patterns สำหรับด่าน (ดึงจาก levelData ได้เลย ไม่ต้องไป fetch API ใหม่)
-  useEffect(() => {
-    if (levelData?.patterns) {
-      let filteredPatterns = isPreview
-        ? levelData.patterns
-        : levelData.patterns.filter(p => p.is_available === true);
-
-      // If a specific pattern is selected in preview mode, ONLY test against that pattern
-      if (isPreview && patternId !== null) {
-        filteredPatterns = filteredPatterns.filter(p => String(p.pattern_id) === String(patternId));
-      }
-
-      setGoodPatterns(filteredPatterns);
-    }
-  }, [levelData?.patterns, isPreview, patternId]);
-
   // Pattern analysis and weapon display
   usePatternAnalysis({
     blocklyLoaded,
     workspaceRef,
+    workspaceVersion,
     goodPatterns,
     setPatternData,
     setCurrentWeaponData,
@@ -254,6 +224,7 @@ const GameCore = ({
     }
 
     initBlocklyAndPhaser();
+    setWorkspaceVersion(v => v + 1);
 
     return () => {
       setBlocklyLoaded(false);
@@ -371,7 +342,7 @@ const GameCore = ({
         <GuidePopup
           guides={guides}
           onClose={closeGuide}
-          levelName={currentLevel?.name || 'ด่าน'}
+          levelName={currentLevel?.level_name || 'ด่าน'}
         />
       )}
       <div className={`flex ${isPreview ? 'h-full' : 'h-screen'} bg-[#0f111a]`}>

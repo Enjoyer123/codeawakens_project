@@ -25,7 +25,7 @@ export function drawPlayer(scene) {
     try {
         // ตรวจสอบว่ามี nodes หรือไม่
         const hasNodes = scene.levelData.nodes && scene.levelData.nodes.length > 0;
-        const startNode = hasNodes ? scene.levelData.nodes.find(n => n.id === scene.levelData.startNodeId) : null;
+        const startNode = hasNodes ? scene.levelData.nodes.find(n => n.id === scene.levelData.start_node_id) : null;
 
         // ถ้าไม่มี nodes หรือไม่มี startNode ให้แสดงตัวละครที่มุมล่างซ้าย
         let playerX, playerY;
@@ -75,7 +75,7 @@ export function drawPlayer(scene) {
         // Set player properties for new utility functions
         scene.player.directions = ['right', 'down', 'left', 'up'];
         scene.player.directionIndex = 0;
-        scene.player.currentNodeIndex = hasNodes && startNode ? scene.levelData.startNodeId : null;
+        scene.player.currentNodeIndex = hasNodes && startNode ? scene.levelData.start_node_id : null;
         scene.player.mapConfig = { tileSize: 32 }; // Default tile size
         scene.player.mapImage = null; // Will be set if needed
         scene.player.hasNodes = hasNodes; // เพิ่ม flag เพื่อระบุว่ามี nodes หรือไม่
@@ -182,7 +182,7 @@ export function drawCinematicMonster(scene) {
     // Check condition: Only draw if level has no nodes (same logic as drawPlayer for cinematic placement)
     // FIX: Also check startNode. If nodes exist but no startNode, drawPlayer falls back to cinematic, so we should too.
     const hasNodes = scene.levelData.nodes && scene.levelData.nodes.length > 0;
-    const startNode = hasNodes ? scene.levelData.nodes.find(n => n.id === scene.levelData.startNodeId) : null;
+    const startNode = hasNodes ? scene.levelData.nodes.find(n => n.id === scene.levelData.start_node_id) : null;
 
     const isCinematic = !hasNodes || !startNode;
 

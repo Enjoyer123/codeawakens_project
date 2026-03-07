@@ -37,7 +37,7 @@ export async function moveToNode(targetNodeId) {
 
     if (result) {
         const levelData = currentState.levelData;
-        const goalReached = targetNodeId === levelData.goalNodeId;
+        const goalReached = targetNodeId === levelData.goal_node_id;
 
         setCurrentGameState({
             currentNodeId: targetNodeId,
@@ -67,7 +67,7 @@ export async function moveAlongPath(path) {
             // Check if reached goal - if yes, clear all highlights except path
             const state = getCurrentGameState();
             if (state.currentScene && state.currentScene.levelData) {
-                const goalNodeId = state.currentScene.levelData.goalNodeId;
+                const goalNodeId = state.currentScene.levelData.goal_node_id;
                 if (Number(nodeId) === goalNodeId) {
                     // Reached goal (Highlights could be cleared via standard victory flow)
                 }
