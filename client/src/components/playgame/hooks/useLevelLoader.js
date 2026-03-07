@@ -6,7 +6,8 @@
 import { useEffect, useRef } from 'react';
 import {
   getWeaponData,
-  getWeaponsData
+  getWeaponsData,
+  loadWeaponsData
 } from '../../../gameutils/entities/weaponUtils';
 
 import { ensureDefaultBlocks } from '../../../gameutils/blockly/core/defaults';
@@ -35,26 +36,6 @@ const extractVictoryConditions = (levelResponse) =>
     }))
     .filter((vc) => vc.type);
 
-// ─── Helper: Extract guides ───
-const extractGuides = (levelResponse) =>
-  (levelResponse.guides || []).map((guide) => ({
-    ...guide,
-    guide_images: guide.guide_images || []
-  }));
-
-// ─── Helper: Extract hints ───
-const extractHints = (levelResponse) =>
-  (levelResponse.hints || []).map((hint) => ({
-    hint_id: hint.hint_id,
-    level_id: hint.level_id,
-    title: hint.title,
-    description: hint.description,
-    display_order: hint.display_order || 0,
-    is_active: hint.is_active,
-    created_at: hint.created_at,
-    updated_at: hint.updated_at,
-    hint_images: hint.hint_images || []
-  }));
 
 // ─── Helper: Build enabled blocks map ───
 const buildEnabledBlocks = (levelResponse) => {
@@ -106,7 +87,7 @@ const resolveWeaponKey = (pattern) => {
 };
 
 // ─── Helper: Build patterns list ───
-const buildPatterns = (levelResponse, isPreview) => {
+const buildPatterns = (levelResponse, isPreview, patternId = null) => {
   const allPatterns = (levelResponse.patterns || [])
     .map((pattern) => ({
       ...pattern,
@@ -119,7 +100,14 @@ const buildPatterns = (levelResponse, isPreview) => {
     // Deduplicate by pattern_id
     .filter((p, i, self) => i === self.findIndex((x) => x.pattern_id === p.pattern_id));
 
-  return isPreview ? allPatterns : allPatterns.filter((p) => p.is_available === true);
+  let validPatterns = isPreview ? allPatterns : allPatterns.filter((p) => p.is_available === true);
+
+  // In preview mode with a specific pattern selected, only test that one
+  if (isPreview && patternId !== null) {
+    validPatterns = validPatterns.filter(p => String(p.pattern_id) === String(patternId));
+  }
+
+  return validPatterns;
 };
 
 // ─── Helper: Resolve background image URL ───
@@ -128,13 +116,6 @@ const resolveBackgroundUrl = (levelResponse) => {
   if (!bg) return '/default-background.png';
   if (bg.startsWith('http')) return bg;
   return `${API_BASE_URL}${bg.startsWith('/') ? '' : '/'}${bg}`;
-};
-
-// ─── Helper: Check if this is a max-capacity (Emei) level ───
-const checkMaxCapacityLevel = (levelResponse) => {
-  const name = (levelResponse.level_name || '').toLowerCase();
-  const appliedType = safeParse(levelResponse.applied_data)?.type?.toUpperCase();
-  return name.includes('ง้อไบ๊') || name.includes('emei') || appliedType === 'GRAPH_MAX_CAPACITY';
 };
 
 // ─── Helper: Extract test cases ───
@@ -151,46 +132,16 @@ const extractTestCases = (levelResponse) =>
       display_order: tc.display_order || 0
     }));
 
-// ─── Helper: Build formatted level data ───
-const buildFormattedLevel = (levelResponse, enabledBlocks, goodPatterns) => ({
-  id: levelResponse.level_id,
-  level_id: levelResponse.level_id,
-  name: levelResponse.level_name,
-  level_name: levelResponse.level_name,
-  description: levelResponse.description,
-  difficulty: levelResponse.difficulty,
-  character: levelResponse.character || 'player',
-  background_image: resolveBackgroundUrl(levelResponse),
-  startNodeId: levelResponse.start_node_id,
-  goalNodeId: levelResponse.goal_node_id,
-  nodes: normalizeNodes(levelResponse.nodes),
-  edges: normalizeEdges(levelResponse.edges),
-  monsters: safeParse(levelResponse.monsters, []),
-  obstacles: safeParse(levelResponse.obstacles, []),
-  coinPositions: safeParse(levelResponse.coin_positions, []),
-  coins: safeParse(levelResponse.coins, []),
-  people: safeParse(levelResponse.people, []),
-  knapsackData: safeParse(levelResponse.knapsack_data, null),
-  subsetSumData: safeParse(levelResponse.subset_sum_data, null),
-  coinChangeData: safeParse(levelResponse.coin_change_data, null),
-  nqueenData: safeParse(levelResponse.nqueen_data, null),
-  appliedData: safeParse(levelResponse.applied_data, null),
-  enabledBlocks,
-  victoryConditions: extractVictoryConditions(levelResponse),
-  guides: extractGuides(levelResponse),
-  hints: extractHints(levelResponse),
-  defaultWeaponKey: 'stick',
-  goodPatterns,
-  goalType: levelResponse.goal_type || 'ถึงเป้าหมาย',
-  textcode: levelResponse.textcode || false,
-  category: levelResponse.category || null,
-  category_id: levelResponse.category_id || null,
-  customData: levelResponse.custom_data || null,
-  gameType: levelResponse.game_type,
-  isMaxCapacityLevel: checkMaxCapacityLevel(levelResponse),
-  starter_xml: levelResponse.starter_xml || null,
-  test_cases: extractTestCases(levelResponse),
-});
+// ─── Helper: Parse JSON-string fields from API ───
+const JSON_FIELDS_ARRAY = ['monsters', 'obstacles', 'coin_positions', 'coins', 'people'];
+const JSON_FIELDS_OBJECT = ['knapsack_data', 'subset_sum_data', 'coin_change_data', 'nqueen_data', 'applied_data', 'custom_data'];
+
+const parseJsonFields = (data) => {
+  const parsed = {};
+  JSON_FIELDS_ARRAY.forEach(key => { parsed[key] = safeParse(data[key], []); });
+  JSON_FIELDS_OBJECT.forEach(key => { parsed[key] = safeParse(data[key], null); });
+  return parsed;
+};
 
 // ═══════════════════════════════════════════
 // Main Hook
@@ -200,6 +151,7 @@ export function useLevelInitializer({
   levelData,
   getToken,
   isPreview,
+  patternId,
   setEnabledBlocks,
   setGoodPatterns,
   setPlayerHp,
@@ -223,12 +175,26 @@ export function useLevelInitializer({
 
     const initializeLevel = async () => {
       try {
+        // 0. Ensure weapons data is loaded from API before processing
+        await loadWeaponsData(getToken);
+
         // 1. Build enabled blocks + patterns
         const enabledBlocks = buildEnabledBlocks(levelData);
-        const goodPatterns = buildPatterns(levelData, isPreview);
+        const goodPatterns = buildPatterns(levelData, isPreview, patternId);
 
-        // 3. Build formatted level data
-        const formatted = buildFormattedLevel(levelData, enabledBlocks, goodPatterns);
+        // 3. Build formatted level data (spread API data + computed fields)
+        const formatted = {
+          ...levelData,
+          ...parseJsonFields(levelData),
+          background_image: resolveBackgroundUrl(levelData),
+          nodes: normalizeNodes(levelData.nodes),
+          edges: normalizeEdges(levelData.edges),
+          enabledBlocks,
+          victoryConditions: extractVictoryConditions(levelData),
+          defaultWeaponKey: 'stick',
+          goodPatterns,
+          test_cases: extractTestCases(levelData),
+        };
 
         // 4. Set global + React state
         setLevelData(formatted);
@@ -238,7 +204,7 @@ export function useLevelInitializer({
 
 
         setCurrentGameState({
-          currentNodeId: formatted.startNodeId,
+          currentNodeId: formatted.start_node_id,
           direction: 0,
           goalReached: false,
           moveCount: 0,

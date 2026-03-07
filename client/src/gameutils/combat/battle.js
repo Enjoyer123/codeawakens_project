@@ -1,16 +1,24 @@
 // Phaser Game Battle Functions
 import Phaser from "phaser";
-import {
-
-  getWeaponData,
-  calculateDamage
-} from '../entities/weaponUtils';
+import { getWeaponData } from '../entities/weaponUtils';
 
 import { getCurrentGameState, setCurrentGameState, getPlayerHp, setPlayerHp as setGlobalPlayerHp, } from '../shared/game/gameState';
 import { isDefeat } from './enemyUtils';
 import { showGameOver } from '../effects/gameEffects';
 import { cleanupMonsterUI } from './battleUI';
 import { getDirectionFromAngle, showFloatingText } from './combatHelpers';
+
+// คำนวณดาเมจตอนโดนมอนสเตอร์ตี (พลังป้องกันจากอาวุธ)
+function calculateDamage(monsterDamage, weaponData) {
+  // ถ้าไม่มีอาวุธ ให้ใช้ไม้พลองเป็นตัวฐาน (ป้องกัน=10)
+  const defense = weaponData?.combat_power ?? 10;
+
+  if (defense >= monsterDamage) {
+    return 0; // อาวุธกันดาเมจได้หมด
+  } else {
+    return monsterDamage - defense; // ทะลวงเกราะเข้ามาได้นิดหน่อย
+  }
+}
 
 export function startBattle(scene, monster, setPlayerHp, setIsGameOver, isPlayerAttack = false) {
   return new Promise((resolve) => {
@@ -37,6 +45,7 @@ export function startBattle(scene, monster, setPlayerHp, setIsGameOver, isPlayer
 
         const currentState = getCurrentGameState();
         const weaponData = currentState.weaponData || getWeaponData(currentState.weaponKey || 'stick');
+        console.log("weaponDataิฟะ", weaponData);
         const monsterDamage = monster.data.damage || 25;
         const finalDamage = calculateDamage(monsterDamage, weaponData);
 

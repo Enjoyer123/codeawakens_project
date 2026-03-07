@@ -28,8 +28,8 @@ export function isAlgoLevel(level) {
     if (!level) return false;
 
     // ตรวจจาก gameType หรือ appliedData.type
-    const gameType = level.gameType || '';
-    const appliedType = level.appliedData?.type || '';
+    const gameType = level.game_type || '';
+    const appliedType = level.applied_data?.type || '';
 
 
     const algoTypes = [
@@ -46,7 +46,7 @@ export function isAlgoLevel(level) {
     if (algoTypes.some(t => appliedLower.includes(t))) return true;
 
     // เช็คจากว่ามี algo-specific data
-    if (level.nqueenData || level.knapsackData || level.subsetSumData || level.coinChangeData) return true;
+    if (level.nqueen_data || level.knapsack_data || level.subset_sum_data || level.coin_change_data) return true;
 
     // เช็คจาก function_name ใน test_cases (รองรับชื่อฟังก์ชันย่อ เช่น DIJ, KRUS)
     const algoFunctions = [
@@ -66,8 +66,8 @@ export function isAlgoLevel(level) {
  * ตรวจประเภท algo จาก level data
  */
 export function detectAlgoType(level) {
-    const gameType = (level.gameType || '').toLowerCase();
-    const appliedType = (level.appliedData?.type || '').toLowerCase();
+    const gameType = (level.game_type || '').toLowerCase();
+    const appliedType = (level.applied_data?.type || '').toLowerCase();
     const combined = gameType + ' ' + appliedType;
 
     if (combined.includes('dfs')) return 'DFS';
@@ -83,10 +83,10 @@ export function detectAlgoType(level) {
     if (funcName === 'DIJ' || funcName === 'DIJKSTRA') return 'DIJKSTRA';
     if (funcName === 'KRUS' || funcName === 'KRUSKAL') return 'KRUSKAL';
     if (funcName === 'PRIM') return 'PRIM';
-    if (level.nqueenData || combined.includes('nqueen')) return 'NQUEEN';
-    if (level.coinChangeData || combined.includes('coin_change') || combined.includes('coinchange')) return 'COINCHANGE';
-    if (level.knapsackData || combined.includes('knapsack')) return 'KNAPSACK';
-    if (level.subsetSumData || combined.includes('subset_sum') || combined.includes('subsetsum')) return 'SUBSETSUM';
+    if (level.nqueen_data || combined.includes('nqueen')) return 'NQUEEN';
+    if (level.coin_change_data || combined.includes('coin_change') || combined.includes('coinchange')) return 'COINCHANGE';
+    if (level.knapsack_data || combined.includes('knapsack')) return 'KNAPSACK';
+    if (level.subset_sum_data || combined.includes('subset_sum') || combined.includes('subsetsum')) return 'SUBSETSUM';
     if (combined.includes('emei') || combined.includes('max_capacity') || combined.includes('graph_max_capacity')) return 'EMEI';
 
     // Detect Emei Mountain via function name
@@ -125,8 +125,8 @@ export async function playAlgoAnimation(scene, algoType, trace, options = {}) {
             const levelData = scene.levelData || {};
             const catName = (levelData.category?.category_name || '').toLowerCase();
             const catId = levelData.category_id;
-            const appliedType = (levelData.appliedData?.type || '').toLowerCase();
-            const gameType = (levelData.gameType || '').toLowerCase();
+            const appliedType = (levelData.applied_data?.type || '').toLowerCase();
+            const gameType = (levelData.game_type || '').toLowerCase();
 
             const isDP = catName.includes('dynamic') || catId === 6 || appliedType.includes('dp') || gameType.includes('dp');
             const isGreedy = catName.includes('greedy') || catId === 4 || appliedType.includes('greedy') || gameType.includes('greedy');
@@ -144,8 +144,8 @@ export async function playAlgoAnimation(scene, algoType, trace, options = {}) {
             const levelData = scene.levelData || {};
             const catName = (levelData.category?.category_name || '').toLowerCase();
             const catId = levelData.category_id;
-            const appliedType = (levelData.appliedData?.type || '').toLowerCase();
-            const gameType = (levelData.gameType || '').toLowerCase();
+            const appliedType = (levelData.applied_data?.type || '').toLowerCase();
+            const gameType = (levelData.game_type || '').toLowerCase();
 
             const isDP = catName.includes('dynamic') || catId === 6 || appliedType.includes('dp') || gameType.includes('dp');
 
@@ -160,8 +160,8 @@ export async function playAlgoAnimation(scene, algoType, trace, options = {}) {
             const levelData = scene.levelData || {};
             const catName = (levelData.category?.category_name || '').toLowerCase();
             const catId = levelData.category_id;
-            const appliedType = (levelData.appliedData?.type || '').toLowerCase();
-            const gameType = (levelData.gameType || '').toLowerCase();
+            const appliedType = (levelData.applied_data?.type || '').toLowerCase();
+            const gameType = (levelData.game_type || '').toLowerCase();
 
             const isDP = catName.includes('dynamic') || catId === 6 || appliedType.includes('dp') || gameType.includes('dp');
 

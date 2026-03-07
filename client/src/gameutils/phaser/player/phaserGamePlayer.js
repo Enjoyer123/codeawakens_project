@@ -55,7 +55,7 @@ export function updatePlayer(scene, nodeId, direction) {
       updatePlayerArrow(scene, targetNode.x, targetNode.y, calculatedDirection);
 
       // Check win condition
-      if (nodeId === scene.levelData.goalNodeId) {
+      if (nodeId === scene.levelData.goal_node_id) {
         setTimeout(() => {
           setCurrentGameState({ goalReached: true });
         }, 300);

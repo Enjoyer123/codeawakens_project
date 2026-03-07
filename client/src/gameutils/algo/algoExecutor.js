@@ -15,9 +15,9 @@ const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
  * ตรวจว่า level นี้เป็น Emei Mountain / Max Capacity หรือไม่
  */
 function isEmeiLevel(levelData, code = '') {
-    return levelData.appliedData?.type?.includes('EMEI') ||
-        levelData.appliedData?.type?.includes('MAX_CAPACITY') ||
-        levelData.gameType === 'emei_mountain' ||
+    return levelData.applied_data?.type?.includes('EMEI') ||
+        levelData.applied_data?.type?.includes('MAX_CAPACITY') ||
+        levelData.game_type === 'emei_mountain' ||
         levelData.level_name?.includes('ง้อไบ๊') ||
         code.includes('Emei(') ||
         code.includes('showEmeiFinalResult') ||
@@ -33,11 +33,11 @@ function buildAlgoContext(levelData, trace, code = "") {
     const all_nodes = (levelData.nodes || []).map(n => n.id);
 
     // Graph level start/goal from level data
-    const startNode = levelData.startNodeId !== undefined ? levelData.startNodeId : 0;
-    const goalNode = levelData.goalNodeId !== undefined ? levelData.goalNodeId : (all_nodes.length > 0 ? all_nodes[all_nodes.length - 1] : 0);
+    const startNode = levelData.start_node_id !== undefined ? levelData.start_node_id : 0;
+    const goalNode = levelData.goal_node_id !== undefined ? levelData.goal_node_id : (all_nodes.length > 0 ? all_nodes[all_nodes.length - 1] : 0);
 
     // --- N-Queen State ---
-    const nSize = levelData.nqueenData ? levelData.nqueenData.n : 4;
+    const nSize = levelData.nqueen_data ? levelData.nqueen_data.n : 4;
     const nqueenBoard = Array(nSize).fill(null).map(() => Array(nSize).fill(0));
 
 
@@ -407,8 +407,8 @@ function buildAlgoContext(levelData, trace, code = "") {
     // --- Inject algorithm-specific data ---
 
     // N-Queen
-    if (levelData.nqueenData) {
-        const n = levelData.nqueenData.n || 4;
+    if (levelData.nqueen_data) {
+        const n = levelData.nqueen_data.n || 4;
         const board = [];
         for (let i = 0; i < n; i++) { board[i] = []; for (let j = 0; j < n; j++) board[i][j] = 0; }
         context.n = n;
@@ -433,8 +433,8 @@ function buildAlgoContext(levelData, trace, code = "") {
     }
 
     // Knapsack
-    if (levelData.knapsackData) {
-        const { items = [], capacity = 0 } = levelData.knapsackData;
+    if (levelData.knapsack_data) {
+        const { items = [], capacity = 0 } = levelData.knapsack_data;
         context.weights = items.map(i => i.weight);
         context.values = items.map(i => i.price);
         context.n = items.length;
@@ -442,24 +442,24 @@ function buildAlgoContext(levelData, trace, code = "") {
     }
 
     // SubsetSum
-    if (levelData.subsetSumData) {
-        context.warriors = levelData.subsetSumData.warriors || [];
-        context.target_sum = levelData.subsetSumData.target_sum || 0;
+    if (levelData.subset_sum_data) {
+        context.warriors = levelData.subset_sum_data.warriors || [];
+        context.target_sum = levelData.subset_sum_data.target_sum || 0;
     }
 
     // CoinChange
-    if (levelData.coinChangeData) {
-        context.monster_power = Math.round(Number(levelData.coinChangeData.monster_power || 0));
-        context.warriors = (levelData.coinChangeData.warriors || []).map(w => Math.round(Number(w)));
+    if (levelData.coin_change_data) {
+        context.monster_power = Math.round(Number(levelData.coin_change_data.monster_power || 0));
+        context.warriors = (levelData.coin_change_data.warriors || []).map(w => Math.round(Number(w)));
     }
 
     // Rope Partition
-    if (levelData.gameType === 'rope_partition') {
+    if (levelData.game_type === 'rope_partition') {
         context.cuts = [];
         context.addCut = async (len) => { context.cuts.push(len); trace.push({ action: 'cut', length: len }); };
         context.removeCut = async () => { const r = context.cuts.pop(); trace.push({ action: 'uncut', length: r }); };
-        context.getRopeCuts = () => levelData.appliedData?.payload?.cuts || [2, 3, 5];
-        context.getRopeTarget = () => levelData.appliedData?.payload?.ropeLength || 10;
+        context.getRopeCuts = () => levelData.applied_data?.payload?.cuts || [2, 3, 5];
+        context.getRopeTarget = () => levelData.applied_data?.payload?.ropeLength || 10;
         context.initRopeTree = async () => { };
         context.pushRopeNode = async () => 0;
         context.popRopeNode = async () => { };
@@ -472,7 +472,7 @@ function buildAlgoContext(levelData, trace, code = "") {
     const isEmeiMountain = isEmeiLevel(levelData, code);
 
     if (isEmeiMountain) {
-        const payload = levelData.appliedData?.payload || {};
+        const payload = levelData.applied_data?.payload || {};
         context.n = levelData.emeiN ?? payload.n ?? (levelData.nodes ? levelData.nodes.length : 6);
 
         let extractedEdges = levelData.emeiEdges ?? payload.edges;
@@ -492,8 +492,8 @@ function buildAlgoContext(levelData, trace, code = "") {
         }
 
         context.edges = extractedEdges;
-        context.start = levelData.emeiStart ?? payload.start ?? levelData.startNodeId ?? levelData.startNode ?? 0;
-        context.end = levelData.emeiEnd ?? payload.end ?? levelData.goalNodeId ?? levelData.goalNode ?? 5;
+        context.start = levelData.emeiStart ?? payload.start ?? levelData.start_node_id ?? levelData.startNode ?? 0;
+        context.end = levelData.emeiEnd ?? payload.end ?? levelData.goal_node_id ?? levelData.goalNode ?? 5;
         context.tourists = levelData.emeiTourists ?? payload.tourists ?? payload.tourist ?? 20;
     }
 

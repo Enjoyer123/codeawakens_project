@@ -25,7 +25,7 @@ async function playCharacterDisplay(scene, trace, options) {
 
 
     const warriors = scene.coinChange.warriors;
-    const targetAmount = scene.levelData?.coinChangeData?.monster_power || 0;
+    const targetAmount = scene.levelData?.coin_change_data?.monster_power || 0;
 
     const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
@@ -255,7 +255,7 @@ async function playBarDisplay(scene, trace, options) {
 
 
     const warriors = scene.coinChange.warriors;
-    const targetAmount = scene.levelData?.coinChangeData?.monster_power || 0;
+    const targetAmount = scene.levelData?.coin_change_data?.monster_power || 0;
 
     // Helper
     const sleep = (ms) => new Promise(res => setTimeout(res, ms));
@@ -602,7 +602,7 @@ async function playTreeDisplay(scene, trace, options) {
     if (!scene || !scene.coinChange || !trace || trace.length === 0) return;
 
     const warriors = scene.coinChange.warriors;
-    const targetAmount = scene.levelData?.coinChangeData?.monster_power || 0;
+    const targetAmount = scene.levelData?.coin_change_data?.monster_power || 0;
     const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
     const statusText = scene.add.text(

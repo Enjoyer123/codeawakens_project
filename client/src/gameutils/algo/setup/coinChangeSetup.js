@@ -3,8 +3,8 @@
  * ถูกเรียกใช้จาก GameScene.js ตอนโหลดด่าน
  */
 export function setupCoinChange(scene) {
-    if (!scene.levelData || !scene.levelData.coinChangeData) return;
-    const data = scene.levelData.coinChangeData;
+    if (!scene.levelData || !scene.levelData.coin_change_data) return;
+    const data = scene.levelData.coin_change_data;
     const monsterPower = data.monster_power;
     const warriors = data.warriors || [];
 

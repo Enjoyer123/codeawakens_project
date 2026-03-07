@@ -31,7 +31,7 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
 
 
     const warriors = scene.coinChange.warriors || [];
-    const targetAmount = scene.levelData?.coinChangeData?.monster_power || 0;
+    const targetAmount = scene.levelData?.coin_change_data?.monster_power || 0;
     const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
     let statusText, detailText;
@@ -305,7 +305,7 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
 
 
 //     const warriors = scene.coinChange.warriors;
-//     const targetAmount = scene.levelData?.coinChangeData?.monster_power || 32;
+//     const targetAmount = scene.levelData?.coin_change_data?.monster_power || 32;
 //     const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
 //     const statusText = scene.add.text(

@@ -82,8 +82,8 @@ function checkSingleVictoryCondition(condition, currentState, levelData) {
 
     case "back_to_start":
       return {
-        completed: currentState.currentNodeId === levelData.startNodeId,
-        reason: currentState.currentNodeId === levelData.startNodeId ? "" : "ยังไม่กลับมาจุดเริ่มต้น"
+        completed: currentState.currentNodeId === levelData.start_node_id,
+        reason: currentState.currentNodeId === levelData.start_node_id ? "" : "ยังไม่กลับมาจุดเริ่มต้น"
       };
 
     case "all_monsters_defeated": {
@@ -95,7 +95,7 @@ function checkSingleVictoryCondition(condition, currentState, levelData) {
     }
 
     case "all_coins_collected": {
-      const totalCoins = levelData.coinPositions?.length || 0;
+      const totalCoins = levelData.coin_positions?.length || 0;
       if (totalCoins === 0) return { completed: true, reason: "" };
       const collected = getPlayerCoins().length >= totalCoins;
       return {
@@ -142,7 +142,7 @@ export function generateVictoryHint(failedConditions, levelData) {
   for (const fc of failedConditions) {
     switch (fc.type) {
       case "reach_goal":
-        hints.push(`❌ ยังไม่ถึง Node ${levelData.goalNodeId}`);
+        hints.push(`❌ ยังไม่ถึง Node ${levelData.goal_node_id}`);
         break;
       case "coins_sorted": {
         const coins = getPlayerCoins();
@@ -159,7 +159,7 @@ export function generateVictoryHint(failedConditions, levelData) {
         break;
       }
       case "back_to_start":
-        hints.push(`❌ ยังไม่กลับมาจุดเริ่มต้น (Node ${levelData.startNodeId})`);
+        hints.push(`❌ ยังไม่กลับมาจุดเริ่มต้น (Node ${levelData.start_node_id})`);
         break;
       case "all_monsters_defeated": {
         const defeated = levelData.monsters?.filter(m => m.defeated).length || 0;
@@ -169,7 +169,7 @@ export function generateVictoryHint(failedConditions, levelData) {
       }
       case "all_coins_collected": {
         const collected = getPlayerCoins().length;
-        const total = levelData.coinPositions?.length || 0;
+        const total = levelData.coin_positions?.length || 0;
         hints.push(`❌ ยังเก็บเหรียญไม่หมด (${collected}/${total})`);
         break;
       }
@@ -191,7 +191,7 @@ function checkMSTConnected(levelData) {
   if (!levelData.nodes?.length) return true;
   if (!levelData.edges?.length) return false;
 
-  const startNodeId = levelData.startNodeId || levelData.nodes[0].id;
+  const startNodeId = levelData.start_node_id || levelData.nodes[0].id;
   const visited = new Set();
   const queue = [startNodeId];
 

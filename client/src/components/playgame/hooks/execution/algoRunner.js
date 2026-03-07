@@ -86,7 +86,7 @@ export async function runAlgoPath(code, {
             } catch (e) { /* ignore */ }
 
             saveUserProgress(getToken, {
-                level_id: currentLevel.level_id || currentLevel.id,
+                level_id: currentLevel.level_id,
                 status: 'completed',
                 blockly_code: blocklyXml,
                 text_code: currentLevel?.textcode ? (textCode || '') : null,

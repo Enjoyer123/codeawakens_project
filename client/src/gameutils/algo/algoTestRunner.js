@@ -27,9 +27,9 @@ export async function checkAlgoTestCases(primaryResult, testCases, functionName,
         tc.function_name?.toUpperCase() === functionName?.toUpperCase()
     );
 
-    const isEmeiMountain = levelData.appliedData?.type?.includes('EMEI') ||
-        levelData.appliedData?.type?.includes('MAX_CAPACITY') ||
-        levelData.gameType === 'emei_mountain' ||
+    const isEmeiMountain = levelData.applied_data?.type?.includes('EMEI') ||
+        levelData.applied_data?.type?.includes('MAX_CAPACITY') ||
+        levelData.game_type === 'emei_mountain' ||
         levelData.level_name?.includes('ง้อไบ๊') ||
         functionName?.toUpperCase() === 'EMEI' ||
         functionName?.toUpperCase() === 'MAXCAPACITY' ||
@@ -139,16 +139,16 @@ export async function checkAlgoTestCases(primaryResult, testCases, functionName,
 function buildTestLevelData(baseLevelData, inputParams, functionName) {
     const testLevel = { ...baseLevelData };
     // IMPORTANT: Deep-copy appliedData to prevent mutation of the original level data
-    if (testLevel.appliedData) {
-        testLevel.appliedData = {
-            ...testLevel.appliedData,
-            payload: testLevel.appliedData.payload ? { ...testLevel.appliedData.payload } : {}
+    if (testLevel.applied_data) {
+        testLevel.applied_data = {
+            ...testLevel.applied_data,
+            payload: testLevel.applied_data.payload ? { ...testLevel.applied_data.payload } : {}
         };
     }
 
     // Override start/goal from test params
-    if (inputParams.start !== undefined) testLevel.startNodeId = inputParams.start;
-    if (inputParams.goal !== undefined) testLevel.goalNodeId = inputParams.goal;
+    if (inputParams.start !== undefined) testLevel.start_node_id = inputParams.start;
+    if (inputParams.goal !== undefined) testLevel.goal_node_id = inputParams.goal;
 
     // Graph-based: override map/edges
     const customGraph = inputParams.map || inputParams.graph || inputParams.edges;
@@ -173,25 +173,25 @@ function buildTestLevelData(baseLevelData, inputParams, functionName) {
     // (Already handled: we spread baseLevelData and only overrode start/goal above)
 
     // N-Queen: override n
-    if (inputParams.n !== undefined && testLevel.nqueenData) {
-        testLevel.nqueenData = { ...testLevel.nqueenData, n: inputParams.n };
+    if (inputParams.n !== undefined && testLevel.nqueen_data) {
+        testLevel.nqueen_data = { ...testLevel.nqueen_data, n: inputParams.n };
     }
 
     // CoinChange: override warriors/monster_power (also accept amount/coins aliases)
-    if (testLevel.coinChangeData) {
+    if (testLevel.coin_change_data) {
         const mp = inputParams.monster_power ?? inputParams.amount;
         const wa = inputParams.warriors ?? inputParams.coins;
         if (mp !== undefined) {
-            testLevel.coinChangeData = { ...testLevel.coinChangeData, monster_power: mp };
+            testLevel.coin_change_data = { ...testLevel.coin_change_data, monster_power: mp };
         }
         if (wa !== undefined) {
-            testLevel.coinChangeData = { ...testLevel.coinChangeData, warriors: wa };
+            testLevel.coin_change_data = { ...testLevel.coin_change_data, warriors: wa };
         }
     }
 
     // Knapsack: override items/capacity/weights/values
-    if (testLevel.knapsackData) {
-        const testKnapsackData = { ...testLevel.knapsackData };
+    if (testLevel.knapsack_data) {
+        const testKnapsackData = { ...testLevel.knapsack_data };
         if (inputParams.capacity !== undefined) testKnapsackData.capacity = inputParams.capacity;
         else if (inputParams.j !== undefined) testKnapsackData.capacity = inputParams.j; // fallback for DP test cases
 
@@ -206,25 +206,25 @@ function buildTestLevelData(baseLevelData, inputParams, functionName) {
             testKnapsackData.n = testKnapsackData.items.length;
         }
 
-        testLevel.knapsackData = testKnapsackData;
+        testLevel.knapsack_data = testKnapsackData;
     }
 
     // SubsetSum: override warriors/target_sum
-    if (testLevel.subsetSumData) {
-        const testSubsetSumData = { ...testLevel.subsetSumData };
+    if (testLevel.subset_sum_data) {
+        const testSubsetSumData = { ...testLevel.subset_sum_data };
         if (inputParams.target_sum !== undefined) testSubsetSumData.target_sum = inputParams.target_sum;
         else if (inputParams.target !== undefined) testSubsetSumData.target_sum = inputParams.target;
 
         if (inputParams.warriors !== undefined) testSubsetSumData.warriors = inputParams.warriors;
         else if (inputParams.arr !== undefined) testSubsetSumData.warriors = inputParams.arr;
 
-        testLevel.subsetSumData = testSubsetSumData;
+        testLevel.subset_sum_data = testSubsetSumData;
     }
 
     // Emei Mountain: override n, edges, start, end, tourists
-    const isEmeiMountain = testLevel.appliedData?.type?.includes('EMEI') ||
-        testLevel.appliedData?.type?.includes('MAX_CAPACITY') ||
-        testLevel.gameType === 'emei_mountain' ||
+    const isEmeiMountain = testLevel.applied_data?.type?.includes('EMEI') ||
+        testLevel.applied_data?.type?.includes('MAX_CAPACITY') ||
+        testLevel.game_type === 'emei_mountain' ||
         testLevel.level_name?.includes('ง้อไบ๊') ||
         functionName?.toUpperCase() === 'EMEI' ||
         functionName?.toUpperCase() === 'MAXCAPACITY';
@@ -239,9 +239,9 @@ function buildTestLevelData(baseLevelData, inputParams, functionName) {
         if (inputParams.tourists !== undefined) testLevel.emeiTourists = inputParams.tourists;
         else if (inputParams.tourist !== undefined) testLevel.emeiTourists = inputParams.tourist;
         // Also set on appliedData.payload as before (for levels that do store this there)
-        if (!testLevel.appliedData) testLevel.appliedData = { type: 'EMEI_MOUNTAIN', payload: {} };
-        if (!testLevel.appliedData.payload) testLevel.appliedData.payload = {};
-        const p = testLevel.appliedData.payload;
+        if (!testLevel.applied_data) testLevel.applied_data = { type: 'EMEI_MOUNTAIN', payload: {} };
+        if (!testLevel.applied_data.payload) testLevel.applied_data.payload = {};
+        const p = testLevel.applied_data.payload;
         if (inputParams.n !== undefined) p.n = inputParams.n;
         if (inputParams.edges !== undefined) p.edges = inputParams.edges;
         if (inputParams.start !== undefined) p.start = inputParams.start;

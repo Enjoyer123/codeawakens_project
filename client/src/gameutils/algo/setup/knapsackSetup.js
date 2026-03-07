@@ -4,11 +4,11 @@ import Phaser from "phaser";
 // Function to setup Knapsack problem display
 export function setupKnapsack(scene) {
 
-  if (!scene.levelData || !scene.levelData.knapsackData) {
+  if (!scene.levelData || !scene.levelData.knapsack_data) {
     return;
   }
 
-  const knapsackData = scene.levelData.knapsackData;
+  const knapsackData = scene.levelData.knapsack_data;
   scene.knapsack = {
     bag: null,
     items: []

@@ -12,11 +12,11 @@ import {
 export function playCombatSequence(scene, isWin, onComplete) {
     // Check condition: Only play if level has no nodes (OR if it falls back to cinematic mode like drawPlayer)
     const hasNodes = scene.levelData?.nodes && scene.levelData.nodes.length > 0;
-    const startNode = hasNodes ? scene.levelData.nodes.find(n => n.id === scene.levelData.startNodeId) : null;
+    const startNode = hasNodes ? scene.levelData.nodes.find(n => n.id === scene.levelData.start_node_id) : null;
 
     // Check for special game types that have nodes but are NOT graph traversal (so they SHOULD play combat)
-    const gameType = (scene.levelData?.gameType || '').toLowerCase();
-    const appliedType = (scene.levelData?.appliedData?.type || '').toUpperCase();
+    const gameType = (scene.levelData?.game_type || '').toLowerCase();
+    const appliedType = (scene.levelData?.applied_data?.type || '').toUpperCase();
 
     const isSpecialVisualLevel =
         gameType.includes('rope') ||

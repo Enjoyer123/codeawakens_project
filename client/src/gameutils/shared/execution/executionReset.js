@@ -27,7 +27,7 @@ export const resetGameExecutionState = async ({
 
     // Reset to start position และ sync HP
     setCurrentGameState({
-        currentNodeId: currentLevel.startNodeId,
+        currentNodeId: currentLevel.start_node_id,
         direction: 0,
         goalReached: false,
         moveCount: 0,
@@ -48,16 +48,16 @@ export const resetGameExecutionState = async ({
 
 
     // Reset knapsack items to original positions
-    if (currentLevel?.knapsackData) {
+    if (currentLevel?.knapsack_data) {
         // Obsolete table visual logic removed
     }
 
     // Reset subset sum warriors to original positions
-    if (currentLevel?.subsetSumData) {
+    if (currentLevel?.subset_sum_data) {
         // Obsolete subset sum tracking visual removed
     }
 
-    if (currentLevel?.coinChangeData) {
+    if (currentLevel?.coin_change_data) {
         // Obsolete coin change visual logic removed
     }
     // รีเซ็ตเหรียญในเกมให้กลับมาแสดง
@@ -111,7 +111,7 @@ export const resetGameExecutionState = async ({
         });
     }
 
-    if (setPlayerNodeId) setPlayerNodeId(currentLevel.startNodeId);
+    if (setPlayerNodeId) setPlayerNodeId(currentLevel.start_node_id);
     if (setPlayerDirection) setPlayerDirection(0);
 
     // Set direction in game state first
@@ -123,8 +123,8 @@ export const resetGameExecutionState = async ({
         const scene = getCurrentGameState().currentScene;
         if (scene.player) {
             scene.player.directionIndex = 0;
-            scene.player.currentNodeIndex = currentLevel.startNodeId;
+            scene.player.currentNodeIndex = currentLevel.start_node_id;
         }
-        updatePlayer(scene, currentLevel.startNodeId, 0);
+        updatePlayer(scene, currentLevel.start_node_id, 0);
     }
 };
