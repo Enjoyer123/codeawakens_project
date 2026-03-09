@@ -1,6 +1,5 @@
 // Blockly Coin Block Definitions
 import * as Blockly from "blockly/core";
-import { ensureVariableExists, createVariableChangeHandler } from '../data/variables/definitions';
 
 export function defineCoinBlocks() {
   Blockly.Blocks["collect_coin"] = {
@@ -110,7 +109,6 @@ export function defineCoinBlocks() {
       this.setColour(120);
       this.setTooltip("วนลูปผ่านเหรียญที่เก็บมาทั้งหมด");
 
-      this.setOnChange(createVariableChangeHandler('coin').bind(this));
     }
   };
 }

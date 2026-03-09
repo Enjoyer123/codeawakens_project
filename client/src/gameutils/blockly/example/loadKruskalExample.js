@@ -137,51 +137,51 @@ const kruskalExampleXml = `<?xml version="1.0" encoding="UTF-8"?>
                                 <field name="VAR">u</field>
                                 <value name="VALUE">
                                   <block type="lists_get_at_index" id="get_u">
-                                    <value name="LIST">
+<value name="LIST">
                                       <block type="variables_get" id="edge_data_var">
                                         <field name="VAR">edge_data</field>
                                       </block>
                                     </value>
-                                    <value name="INDEX">
+<value name="INDEX">
                                       <block type="math_number" id="u_index">
                                         <field name="NUM">0</field>
                                       </block>
                                     </value>
-                                  </block>
+</block>
                                 </value>
                                 <next>
                                   <block type="variables_set" id="set_v">
                                     <field name="VAR">v</field>
                                     <value name="VALUE">
                                       <block type="lists_get_at_index" id="get_v">
-                                        <value name="LIST">
+<value name="LIST">
                                           <block type="variables_get" id="edge_data_var_v">
                                             <field name="VAR">edge_data</field>
                                           </block>
                                         </value>
-                                        <value name="INDEX">
+<value name="INDEX">
                                           <block type="math_number" id="v_index">
                                             <field name="NUM">1</field>
                                           </block>
                                         </value>
-                                      </block>
+</block>
                                     </value>
                                     <next>
                                       <block type="variables_set" id="set_weight">
                                         <field name="VAR">weight</field>
                                         <value name="VALUE">
                                           <block type="lists_get_at_index" id="get_weight">
-                                            <value name="LIST">
+<value name="LIST">
                                               <block type="variables_get" id="edge_data_var_weight">
                                                 <field name="VAR">edge_data</field>
                                               </block>
                                             </value>
-                                            <value name="INDEX">
+<value name="INDEX">
                                               <block type="math_number" id="weight_index">
                                                 <field name="NUM">2</field>
                                               </block>
                                             </value>
-                                          </block>
+</block>
                                         </value>
                                         <next>
                                           <!-- TRACE: kruskal_visit(u, v, weight) -->

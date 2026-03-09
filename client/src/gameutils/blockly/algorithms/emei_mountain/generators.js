@@ -10,18 +10,8 @@ export function defineEmeiGenerators() {
         return `await highlightPeak(${node});\n`;
     };
 
-    javascriptGenerator.forBlock["emei_highlight_cable_car"] = function (block) {
-        const u = javascriptGenerator.valueToCode(block, "U", javascriptGenerator.ORDER_NONE) || "0";
-        const v = javascriptGenerator.valueToCode(block, "V", javascriptGenerator.ORDER_NONE) || "0";
-        const capacity = javascriptGenerator.valueToCode(block, "CAPACITY", javascriptGenerator.ORDER_NONE) || "0";
-        if (javascriptGenerator.isCleanMode) {
-            const safeU = (u === 'undefined' || u === '(undefined)') ? '0' : u;
-            const safeV = (v === 'undefined' || v === '(undefined)') ? '0' : v;
-            const safeCap = (capacity === 'undefined' || capacity === '(undefined)') ? '0' : capacity;
-            return `highlightCableCar(${safeU}, ${safeV}, ${safeCap});\n`;
-        }
-        return `await highlightCableCar(${u}, ${v}, ${capacity});\n`;
-    };
+
+
 
     javascriptGenerator.forBlock["emei_show_final_result"] = function (block) {
         const bottleneck = javascriptGenerator.valueToCode(block, "BOTTLENECK", javascriptGenerator.ORDER_NONE) || "0";

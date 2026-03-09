@@ -47,8 +47,8 @@ const dijkstraExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
             <next>
 
               <!-- while PQ not empty -->
-              <block type="while_loop" id="main_loop">
-                <value name="CONDITION">
+              <block type="controls_whileUntil" id="main_loop"><field name="MODE">WHILE</field>
+                <value name="BOOL">
                   <block type="logic_negate" id="negate_empty">
                     <value name="BOOL">
                       <block type="lists_isEmpty" id="check_empty">
@@ -85,9 +85,9 @@ const dijkstraExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
                             <field name="VAR">pq_item</field>
                             <value name="VALUE">
                               <block type="lists_get_at_index" id="get_pq_item">
-                                <value name="LIST"><block type="variables_get"><field name="VAR">PQ</field></block></value>
-                                <value name="INDEX"><block type="variables_get"><field name="VAR">min_index</field></block></value>
-                              </block>
+<value name="LIST"><block type="variables_get"><field name="VAR">PQ</field></block></value>
+<value name="INDEX"><block type="variables_get"><field name="VAR">min_index</field></block></value>
+</block>
                             </value>
                             <next>
 
@@ -96,9 +96,9 @@ const dijkstraExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
                                 <field name="VAR">dist</field>
                                 <value name="VALUE">
                                   <block type="lists_get_at_index" id="get_dist">
-                                    <value name="LIST"><block type="variables_get"><field name="VAR">pq_item</field></block></value>
-                                    <value name="INDEX"><block type="math_number"><field name="NUM">0</field></block></value>
-                                  </block>
+<value name="LIST"><block type="variables_get"><field name="VAR">pq_item</field></block></value>
+<value name="INDEX"><block type="math_number"><field name="NUM">0</field></block></value>
+</block>
                                 </value>
                                 <next>
 
@@ -107,9 +107,9 @@ const dijkstraExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
                                     <field name="VAR">current_path</field>
                                     <value name="VALUE">
                                       <block type="lists_get_at_index" id="get_cur_path">
-                                        <value name="LIST"><block type="variables_get"><field name="VAR">pq_item</field></block></value>
-                                        <value name="INDEX"><block type="math_number"><field name="NUM">1</field></block></value>
-                                      </block>
+<value name="LIST"><block type="variables_get"><field name="VAR">pq_item</field></block></value>
+<value name="INDEX"><block type="math_number"><field name="NUM">1</field></block></value>
+</block>
                                     </value>
                                     <next>
 
@@ -118,8 +118,8 @@ const dijkstraExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
                                         <field name="VAR">node</field>
                                         <value name="VALUE">
                                           <block type="lists_get_last" id="get_node">
-                                            <value name="LIST"><block type="variables_get"><field name="VAR">current_path</field></block></value>
-                                          </block>
+<value name="LIST"><block type="variables_get"><field name="VAR">current_path</field></block></value>
+</block>
                                         </value>
                                         <next>
 
@@ -131,8 +131,8 @@ const dijkstraExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
 
                                               <!-- Remove PQ[min_index] -->
                                               <block type="lists_remove_at_index" id="remove_pq">
-                                                <value name="LIST"><block type="variables_get"><field name="VAR">PQ</field></block></value>
-                                                <value name="INDEX"><block type="variables_get"><field name="VAR">min_index</field></block></value>
+<value name="LIST"><block type="variables_get"><field name="VAR">PQ</field></block></value>
+<value name="INDEX"><block type="variables_get"><field name="VAR">min_index</field></block></value>
                                                 <next>
 
                                                   <!-- if node == goal -> return path -->
@@ -142,7 +142,7 @@ const dijkstraExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
                                                         <value name="A"><block type="variables_get"><field name="VAR">node</field></block></value>
                                                         <field name="OP">EQ</field>
                                                         <value name="B"><block type="variables_get"><field name="VAR">goal</field></block></value>
-                                                      </block>
+</block>
                                                     </value>
                                                     <statement name="DO0">
                                                       <block type="procedures_return" id="return_path">
@@ -187,9 +187,9 @@ const dijkstraExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
                                                                     <field name="VAR">neighbor</field>
                                                                     <value name="VALUE">
                                                                       <block type="lists_get_at_index" id="get_nbr">
-                                                                        <value name="LIST"><block type="variables_get"><field name="VAR">neighbor_data</field></block></value>
-                                                                        <value name="INDEX"><block type="math_number"><field name="NUM">0</field></block></value>
-                                                                      </block>
+<value name="LIST"><block type="variables_get"><field name="VAR">neighbor_data</field></block></value>
+<value name="INDEX"><block type="math_number"><field name="NUM">0</field></block></value>
+</block>
                                                                     </value>
                                                                     <next>
 
@@ -198,9 +198,9 @@ const dijkstraExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
                                                                         <field name="VAR">weight</field>
                                                                         <value name="VALUE">
                                                                           <block type="lists_get_at_index" id="get_w">
-                                                                            <value name="LIST"><block type="variables_get"><field name="VAR">neighbor_data</field></block></value>
-                                                                            <value name="INDEX"><block type="math_number"><field name="NUM">1</field></block></value>
-                                                                          </block>
+<value name="LIST"><block type="variables_get"><field name="VAR">neighbor_data</field></block></value>
+<value name="INDEX"><block type="math_number"><field name="NUM">1</field></block></value>
+</block>
                                                                         </value>
                                                                         <next>
 

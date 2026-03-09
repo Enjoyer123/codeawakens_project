@@ -14,23 +14,23 @@ const coinChangeExampleXml = `<xml xmlns="https://developers.google.com/blockly/
     <comment pinned="false" h="80" w="320">Backtracking (short): compute include/exclude, track once, return min. Returns -1 if impossible.</comment>
     <statement name="STACK">
       <!-- if amount == 0 return 0 -->
-      <block type="if_only" id="cc_if_amount_zero">
-        <value name="CONDITION">
+      <block type="controls_if" id="cc_if_amount_zero">
+        <value name="IF0">
           <block type="logic_compare" id="cc_amount_eq_0">
             <value name="A"><block type="variables_get" id="cc_amount_get0"><field name="VAR">amount</field></block></value>
             <field name="OP">EQ</field>
             <value name="B"><block type="math_number" id="cc_zero0"><field name="NUM">0</field></block></value>
           </block>
         </value>
-        <statement name="DO">
+        <statement name="DO0">
           <block type="procedures_return" id="cc_return0">
             <value name="VALUE"><block type="math_number" id="cc_zero_ret"><field name="NUM">0</field></block></value>
           </block>
         </statement>
         <next>
           <!-- if amount < 0 OR index >= coins.length return -1 -->
-          <block type="if_only" id="cc_if_invalid">
-            <value name="CONDITION">
+          <block type="controls_if" id="cc_if_invalid">
+            <value name="IF0">
               <block type="logic_operation" id="cc_invalid_or">
                 <field name="OP">OR</field>
                 <value name="A">
@@ -53,7 +53,7 @@ const coinChangeExampleXml = `<xml xmlns="https://developers.google.com/blockly/
                 </value>
               </block>
             </value>
-            <statement name="DO">
+            <statement name="DO0">
               <block type="procedures_return" id="cc_return_neg1_invalid">
                 <value name="VALUE"><block type="math_number" id="cc_neg1_invalid"><field name="NUM">-1</field></block></value>
               </block>
@@ -64,9 +64,9 @@ const coinChangeExampleXml = `<xml xmlns="https://developers.google.com/blockly/
                 <field name="VAR">coin</field>
                 <value name="VALUE">
                   <block type="lists_get_at_index" id="cc_coin_at_index">
-                    <value name="LIST"><block type="variables_get" id="cc_coins_get_item"><field name="VAR">coins</field></block></value>
-                    <value name="INDEX"><block type="variables_get" id="cc_index_get_item"><field name="VAR">index</field></block></value>
-                  </block>
+<value name="LIST"><block type="variables_get" id="cc_coins_get_item"><field name="VAR">coins</field></block></value>
+<value name="INDEX"><block type="variables_get" id="cc_index_get_item"><field name="VAR">index</field></block></value>
+</block>
                 </value>
                 <next>
                   <!-- let include = -1 -->
@@ -80,15 +80,15 @@ const coinChangeExampleXml = `<xml xmlns="https://developers.google.com/blockly/
                         <value name="VALUE"><block type="math_number" id="cc_neg1_exc_init"><field name="NUM">-1</field></block></value>
                         <next>
                           <!-- if amount >= coin then include = coinChange(amount-coin, coins, index); if include != -1 include = include+1 -->
-                          <block type="if_only" id="cc_if_can_include">
-                            <value name="CONDITION">
+                          <block type="controls_if" id="cc_if_can_include">
+                            <value name="IF0">
                               <block type="logic_compare" id="cc_amount_gte_coin">
                                 <value name="A"><block type="variables_get" id="cc_amount_get_gte"><field name="VAR">amount</field></block></value>
                                 <field name="OP">GTE</field>
                                 <value name="B"><block type="variables_get" id="cc_coin_get_gte"><field name="VAR">coin</field></block></value>
                               </block>
                             </value>
-                            <statement name="DO">
+                            <statement name="DO0">
                               <block type="coin_change_add_warrior_to_selection" id="cc_pick_coin">
                                 <value name="WARRIOR_INDEX"><block type="variables_get" id="cc_index_get_pick"><field name="VAR">index</field></block></value>
                                 <next>
@@ -112,15 +112,15 @@ const coinChangeExampleXml = `<xml xmlns="https://developers.google.com/blockly/
                                   </block>
                                 </value>
                                 <next>
-                                  <block type="if_only" id="cc_if_include_valid">
-                                    <value name="CONDITION">
+                                  <block type="controls_if" id="cc_if_include_valid">
+                                    <value name="IF0">
                                       <block type="logic_compare" id="cc_include_neq_neg1">
                                         <value name="A"><block type="variables_get" id="cc_include_get_chk"><field name="VAR">include</field></block></value>
                                         <field name="OP">NEQ</field>
                                         <value name="B"><block type="math_number" id="cc_neg1_chk"><field name="NUM">-1</field></block></value>
                                       </block>
                                     </value>
-                                    <statement name="DO">
+                                    <statement name="DO0">
                                       <block type="variables_set" id="cc_set_include_plus1">
                                         <field name="VAR">include</field>
                                         <value name="VALUE">
@@ -171,30 +171,30 @@ const coinChangeExampleXml = `<xml xmlns="https://developers.google.com/blockly/
                                     <value name="EXCLUDE"><block type="variables_get" id="cc_exclude_get_track"><field name="VAR">exclude</field></block></value>
                                     <next>
                                       <!-- if include == -1 return exclude -->
-                                      <block type="if_only" id="cc_if_include_neg1">
-                                        <value name="CONDITION">
+                                      <block type="controls_if" id="cc_if_include_neg1">
+                                        <value name="IF0">
                                           <block type="logic_compare" id="cc_include_eq_neg1">
                                             <value name="A"><block type="variables_get" id="cc_include_get_eq"><field name="VAR">include</field></block></value>
                                             <field name="OP">EQ</field>
                                             <value name="B"><block type="math_number" id="cc_neg1_eq1"><field name="NUM">-1</field></block></value>
                                           </block>
                                         </value>
-                                        <statement name="DO">
+                                        <statement name="DO0">
                                           <block type="procedures_return" id="cc_return_exclude_when_inc_bad">
                                             <value name="VALUE"><block type="variables_get" id="cc_exclude_get_ret1"><field name="VAR">exclude</field></block></value>
                                           </block>
                                         </statement>
                                         <next>
                                           <!-- if exclude == -1 return include -->
-                                          <block type="if_only" id="cc_if_exclude_neg1">
-                                            <value name="CONDITION">
+                                          <block type="controls_if" id="cc_if_exclude_neg1">
+                                            <value name="IF0">
                                               <block type="logic_compare" id="cc_exclude_eq_neg1">
                                                 <value name="A"><block type="variables_get" id="cc_exclude_get_eq"><field name="VAR">exclude</field></block></value>
                                                 <field name="OP">EQ</field>
                                                 <value name="B"><block type="math_number" id="cc_neg1_eq2"><field name="NUM">-1</field></block></value>
                                               </block>
                                             </value>
-                                            <statement name="DO">
+                                            <statement name="DO0">
                                               <block type="procedures_return" id="cc_return_include_when_exc_bad">
                                                 <value name="VALUE"><block type="variables_get" id="cc_include_get_ret2"><field name="VAR">include</field></block></value>
                                               </block>

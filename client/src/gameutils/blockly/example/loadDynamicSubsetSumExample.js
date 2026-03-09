@@ -60,8 +60,6 @@ export const dynamicSubsetSumExampleXml = `<xml xmlns="https://developers.google
                                 <field name="WHERE">FROM_START</field>
                                 <value name="LIST">
                                   <block type="lists_get_at_index">
-                                    <field name="MODE">GET</field>
-                                    <field name="WHERE">FROM_START</field>
                                     <value name="LIST"><block type="variables_get"><field name="VAR">dp</field></block></value>
                                     <value name="INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
                                   </block>
@@ -88,8 +86,6 @@ export const dynamicSubsetSumExampleXml = `<xml xmlns="https://developers.google
                         <field name="VAR">val</field>
                         <value name="VALUE">
                           <block type="lists_get_at_index">
-                            <field name="MODE">GET</field>
-                            <field name="WHERE">FROM_START</field>
                             <value name="LIST"><block type="variables_get"><field name="VAR">arr</field></block></value>
                             <value name="INDEX">
                               <block type="math_arithmetic">
@@ -108,23 +104,21 @@ export const dynamicSubsetSumExampleXml = `<xml xmlns="https://developers.google
                             <value name="TO"><block type="variables_get"><field name="VAR">target_sum</field></block></value>
                             <statement name="DO">
                               <!-- if val > j -->
-                              <block type="if_else">
-                                <value name="CONDITION">
+                              <block type="controls_if"><mutation else="1"></mutation>
+                                <value name="IF0">
                                   <block type="logic_compare">
                                     <field name="OP">GT</field>
                                     <value name="A"><block type="variables_get"><field name="VAR">val</field></block></value>
                                     <value name="B"><block type="variables_get"><field name="VAR">j</field></block></value>
                                   </block>
                                 </value>
-                                <statement name="IF_DO">
+                                <statement name="DO0">
                                   <!-- dp[i][j] = dp[i-1][j] -->
                                   <block type="lists_setIndex">
                                     <field name="MODE">SET</field>
                                     <field name="WHERE">FROM_START</field>
                                     <value name="LIST">
                                       <block type="lists_get_at_index">
-                                        <field name="MODE">GET</field>
-                                        <field name="WHERE">FROM_START</field>
                                         <value name="LIST"><block type="variables_get"><field name="VAR">dp</field></block></value>
                                         <value name="INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
                                       </block>
@@ -132,12 +126,8 @@ export const dynamicSubsetSumExampleXml = `<xml xmlns="https://developers.google
                                     <value name="AT"><block type="variables_get"><field name="VAR">j</field></block></value>
                                     <value name="TO">
                                       <block type="lists_get_at_index">
-                                        <field name="MODE">GET</field>
-                                        <field name="WHERE">FROM_START</field>
                                         <value name="LIST">
                                           <block type="lists_get_at_index">
-                                            <field name="MODE">GET</field>
-                                            <field name="WHERE">FROM_START</field>
                                             <value name="LIST"><block type="variables_get"><field name="VAR">dp</field></block></value>
                                             <value name="INDEX">
                                               <block type="math_arithmetic">
@@ -153,15 +143,13 @@ export const dynamicSubsetSumExampleXml = `<xml xmlns="https://developers.google
                                     </value>
                                   </block>
                                 </statement>
-                                <statement name="ELSE_DO">
+                                <statement name="ELSE">
                                   <!-- dp[i][j] = dp[i-1][j] OR dp[i-1][j-val] -->
                                   <block type="lists_setIndex">
                                     <field name="MODE">SET</field>
                                     <field name="WHERE">FROM_START</field>
                                     <value name="LIST">
                                       <block type="lists_get_at_index">
-                                        <field name="MODE">GET</field>
-                                        <field name="WHERE">FROM_START</field>
                                         <value name="LIST"><block type="variables_get"><field name="VAR">dp</field></block></value>
                                         <value name="INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
                                       </block>
@@ -172,12 +160,8 @@ export const dynamicSubsetSumExampleXml = `<xml xmlns="https://developers.google
                                         <field name="OP">OR</field>
                                         <value name="A">
                                           <block type="lists_get_at_index">
-                                            <field name="MODE">GET</field>
-                                            <field name="WHERE">FROM_START</field>
                                             <value name="LIST">
                                               <block type="lists_get_at_index">
-                                                <field name="MODE">GET</field>
-                                                <field name="WHERE">FROM_START</field>
                                                 <value name="LIST"><block type="variables_get"><field name="VAR">dp</field></block></value>
                                                 <value name="INDEX">
                                                   <block type="math_arithmetic">
@@ -193,12 +177,8 @@ export const dynamicSubsetSumExampleXml = `<xml xmlns="https://developers.google
                                         </value>
                                         <value name="B">
                                           <block type="lists_get_at_index">
-                                            <field name="MODE">GET</field>
-                                            <field name="WHERE">FROM_START</field>
                                             <value name="LIST">
                                               <block type="lists_get_at_index">
-                                                <field name="MODE">GET</field>
-                                                <field name="WHERE">FROM_START</field>
                                                 <value name="LIST"><block type="variables_get"><field name="VAR">dp</field></block></value>
                                                 <value name="INDEX">
                                                   <block type="math_arithmetic">
@@ -229,12 +209,8 @@ export const dynamicSubsetSumExampleXml = `<xml xmlns="https://developers.google
                                     <value name="SUM"><block type="variables_get"><field name="VAR">j</field></block></value>
                                     <value name="VALUE">
                                       <block type="lists_get_at_index">
-                                        <field name="MODE">GET</field>
-                                        <field name="WHERE">FROM_START</field>
                                         <value name="LIST">
                                           <block type="lists_get_at_index">
-                                            <field name="MODE">GET</field>
-                                            <field name="WHERE">FROM_START</field>
                                             <value name="LIST"><block type="variables_get"><field name="VAR">dp</field></block></value>
                                             <value name="INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
                                           </block>
@@ -255,12 +231,8 @@ export const dynamicSubsetSumExampleXml = `<xml xmlns="https://developers.google
                       <block type="procedures_return">
                         <value name="VALUE">
                           <block type="lists_get_at_index">
-                            <field name="MODE">GET</field>
-                            <field name="WHERE">FROM_START</field>
                             <value name="LIST">
                               <block type="lists_get_at_index">
-                                <field name="MODE">GET</field>
-                                <field name="WHERE">FROM_START</field>
                                 <value name="LIST"><block type="variables_get"><field name="VAR">dp</field></block></value>
                                 <value name="INDEX"><block type="variables_get"><field name="VAR">n</field></block></value>
                               </block>

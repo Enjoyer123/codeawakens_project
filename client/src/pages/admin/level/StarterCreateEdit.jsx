@@ -10,8 +10,7 @@ import {
   removeVariableIdsFromXml,
 } from '../../../components/admin/level/utils/blocklyProcedureUtils';
 
-// ✅ เพิ่ม import fixWorkspaceProcedures
-import { addMutationToProcedureDefinitions, fixWorkspaceProcedures } from '../../../components/admin/pattern/utils/patternBlocklyUtils';
+
 import { setXmlLoading } from "@/gameutils/blockly/core/state";
 
 import { useBlocklyCleanup } from '../../../components/admin/level/hooks/useBlocklyCleanup';
@@ -158,8 +157,7 @@ const StarterCreateEdit = () => {
             }
 
             const cleanedStarterXml = removeVariableIdsFromXml(starter_xml);
-            const robustXml = addMutationToProcedureDefinitions(cleanedStarterXml);
-            const xml = Blockly.utils.xml.textToDom(robustXml);
+            const xml = Blockly.utils.xml.textToDom(cleanedStarterXml);
 
             workspaceRef.current.clear();
 
@@ -218,12 +216,7 @@ const StarterCreateEdit = () => {
               continue; // Retry loop
             }
 
-            // ✅ CHANGED: ใช้ fixWorkspaceProcedures แทน Logic เดิม
-            // เพื่อใช้สูตร Winner/Loser (Keep block with logic)
-            await delay(50);
-            if (workspaceRef.current) {
-              fixWorkspaceProcedures(workspaceRef.current);
-            }
+
 
             // Success! Finish up.
             await delay(50);
@@ -270,13 +263,8 @@ const StarterCreateEdit = () => {
     }
 
     try {
-      // ✅ เรียก fix อีกทีเพื่อความชัวร์ก่อน Save
-      fixWorkspaceProcedures(workspaceRef.current);
-
       const xml = Blockly.Xml.workspaceToDom(workspaceRef.current);
-      let xmlText = Blockly.Xml.domToText(xml);
-
-      xmlText = addMutationToProcedureDefinitions(xmlText);
+      const xmlText = Blockly.Xml.domToText(xml);
 
       const updateData = {
         starter_xml: xmlText || null,

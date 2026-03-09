@@ -1,6 +1,5 @@
 // Helper function to load N-Queen example blocks into Blockly workspace
 import * as Blockly from "blockly/core";
-import { addMutationToProcedureDefinitions } from "../../../components/playgame/hooks/blocklysetup/xmlFixers";
 import { setXmlLoading } from "../core/state";
 
 // N-Queen Example XML - Backtracking recursive solution (FIXED - return solution in base case)
@@ -10,15 +9,15 @@ const nQueenExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml"
     <field name="NAME">solve</field>
     <comment pinned="false" h="80" w="200">Backtracking recursive solution for N-Queen. Collects all solutions into solutions_list.</comment>
     <statement name="STACK">
-      <block type="if_else" id="base_case_row_equals_n">
-        <value name="CONDITION">
+      <block type="controls_if" id="base_case_row_equals_n"><mutation else="1"></mutation>
+        <value name="IF0">
           <block type="logic_compare" id="row_equals_n">
             <value name="A"><block type="variables_get" id="row_var_base"><field name="VAR">row</field></block></value>
             <field name="OP">EQ</field>
             <value name="B"><block type="variables_get" id="n_value"><field name="VAR">n</field></block></value>
           </block>
         </value>
-        <statement name="IF_DO">
+        <statement name="DO0">
           <block type="variables_set" id="init_solution">
             <field name="VAR">solution</field>
             <value name="VALUE">
@@ -47,8 +46,8 @@ const nQueenExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml"
                       </block>
                     </value>
                     <statement name="DO">
-                      <block type="if_only" id="check_queen">
-                        <value name="CONDITION">
+                      <block type="controls_if" id="check_queen">
+                        <value name="IF0">
                           <block type="logic_compare">
                             <value name="A">
                               <block type="lists_get_at_index">
@@ -65,7 +64,7 @@ const nQueenExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml"
                             <value name="B"><block type="math_number"><field name="NUM">1</field></block></value>
                           </block>
                         </value>
-                        <statement name="DO">
+                        <statement name="DO0">
                           <block type="lists_add_item">
                             <value name="LIST"><block type="variables_get"><field name="VAR">solution</field></block></value>
                             <value name="ITEM">
@@ -92,7 +91,7 @@ const nQueenExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml"
             </next>
           </block>
         </statement>
-        <statement name="ELSE_DO">
+        <statement name="ELSE">
           <block type="for_loop_dynamic" id="for_col_loop">
             <field name="VAR">col</field>
             <value name="FROM"><block type="math_number"><field name="NUM">0</field></block></value>
@@ -104,14 +103,14 @@ const nQueenExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml"
               </block>
             </value>
             <statement name="DO">
-              <block type="if_only" id="if_safe">
-                <value name="CONDITION">
+              <block type="controls_if" id="if_safe">
+                <value name="IF0">
                   <block type="nqueen_is_safe">
                     <value name="ROW"><block type="variables_get"><field name="VAR">row</field></block></value>
                     <value name="COL"><block type="variables_get"><field name="VAR">col</field></block></value>
                   </block>
                 </value>
-                <statement name="DO">
+                <statement name="DO0">
                   <block type="nqueen_place">
                     <value name="ROW"><block type="variables_get"><field name="VAR">row</field></block></value>
                     <value name="COL"><block type="variables_get"><field name="VAR">col</field></block></value>
@@ -169,6 +168,7 @@ const nQueenExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml"
   </block>
 </xml>`;
 
+
 /**
  * Load N-Queen example blocks into Blockly workspace
  * @param {Blockly.Workspace} workspace - Blockly workspace
@@ -183,7 +183,7 @@ export function loadNQueenExampleBlocks(workspace) {
     // console.log removed('🔍 Loading N-Queen example blocks (FIXED)...');
 
     // Process XML to fix definitions and deduplicate
-    const processedXml = addMutationToProcedureDefinitions(nQueenExampleXml);
+    const processedXml = nQueenExampleXml;
     const xmlDom = Blockly.utils.xml.textToDom(processedXml);
 
     // ⚡ Performance: Set flag to skip event processing during load to prevent auto-creation of definitions

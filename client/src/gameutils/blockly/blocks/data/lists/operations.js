@@ -1,6 +1,5 @@
 // Blockly List Operations Block Definitions (for DFS/BFS)
 import * as Blockly from "blockly/core";
-import { ensureVariableExists, createVariableChangeHandler } from "../variables/definitions";
 
 export function defineListOperationsBlocks() {
   // Add item to list
@@ -129,7 +128,6 @@ export function defineListOperationsBlocks() {
       this.setColour(120);
       this.setTooltip("วนลูปผ่านแต่ละ element ใน list (คลิกที่ตัวแปรเพื่อเปลี่ยนชื่อ)");
 
-      this.setOnChange(createVariableChangeHandler('element').bind(this));
     },
   };
 

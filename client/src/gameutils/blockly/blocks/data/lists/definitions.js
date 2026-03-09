@@ -8,6 +8,8 @@ export function defineListBlocks() {
       this.itemCount_ = 1; // เปลี่ยนจาก 3 เป็น 1 เพื่อให้ตรงกับ pattern ที่รับค่าเดียว
       this.updateShape_();
       this.setOutput(true, 'Array');
+      const mutatorIcon = new Blockly.icons.MutatorIcon(['lists_create_with_item'], this);
+      this.addIcon(mutatorIcon);
       // Note: Mutator is not available in Blockly v12+ in the same way
       // We'll use a simpler approach without mutator
       this.setTooltip('สร้างลิสต์ด้วยไอเท็มจำนวนหนึ่ง');

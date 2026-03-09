@@ -5,7 +5,6 @@ import {
     rescuePersonAtNode, hasPerson, personRescued, getPersonCount
 } from '../../blockly/blocks/entities/rescue_helpers';
 import { moveToNode, moveAlongPath } from '../../blockly/blocks/movement/helpers';
-import { listPush } from '../../blockly/blocks/data/lists/helpers';
 
 import {
     getPlayerCoins, addCoinToPlayer, clearPlayerCoins as clearPlayerCoinsUtil,
@@ -16,8 +15,6 @@ import {
 import { allPeopleRescued } from '../../entities/personUtils';
 
 
-
-import { playRescueAnimation, playCollectAnimation } from '../../entities/actionPlayback';
 
 import {
     getCurrentGameState,
@@ -61,28 +58,14 @@ export const buildExecutionContext = ({
         collectCoin, haveCoin, getCoinCount, getCoinValue, swapCoins, compareCoins, isSorted,
         getPlayerCoins, addCoinToPlayer, clearPlayerCoins: clearPlayerCoinsUtil, swapPlayerCoins, comparePlayerCoins,
         getPlayerCoinValue, getPlayerCoinCount, arePlayerCoinsSorted,
-        rescuePersonAtNode: async (nodeId) => {
-            const result = await rescuePersonAtNode(nodeId);
-            if (result && result.success && getCurrentGameState().currentScene) {
-                await playRescueAnimation(getCurrentGameState().currentScene, result);
-            }
-            return result;
-        },
+        rescuePersonAtNode,
         hasPerson, personRescued, getPersonCount, allPeopleRescued,
 
 
         moveToNode: wrappedMoveToNode, moveAlongPath: wrappedMoveAlongPath,
 
-        // Use basic list ops for simple levels (no visual tracing needed here)
-        listPush,
-        // listSet, dictSet can be mapped to simple array/object mutations if actually used in Simple Levels,
-        // but typically Simple Levels do not use complex array replacements.
 
-        getCurrentGameState, setCurrentGameState,
-        // Demo: explore effect (จำลองเอฟเฟกต์สำรวจ)
-        playExploreEffect: async () => {
-            await new Promise(resolve => setTimeout(resolve, 300));
-        }
+        getCurrentGameState, setCurrentGameState
     };
 
     // --- Phase 1: Pure Level Actions executed by generic execution context ---

@@ -266,7 +266,7 @@ export function findBestMatch(workspace, patterns) {
     let stepsMatched = 0;
     for (let si = 0; si < hints.length; si++) {
       const hint = hints[si];
-      const xmlCheck = hint.xmlCheck || hint.xmlcheck;
+      let xmlCheck = hint.xmlCheck || hint.xmlcheck;
       if (!xmlCheck) continue;
 
       try {
@@ -289,7 +289,7 @@ export function findBestMatch(workspace, patterns) {
     let currentMatchedBlocks = 0;
     let currentTotalBlocks = 0;
     const lastHint = hints[hints.length - 1];
-    const lastXml = lastHint?.xmlCheck || lastHint?.xmlcheck;
+    let lastXml = lastHint?.xmlCheck || lastHint?.xmlcheck;
     if (lastXml) {
       try {
         const lastDoc = parser.parseFromString(lastXml, 'text/xml');

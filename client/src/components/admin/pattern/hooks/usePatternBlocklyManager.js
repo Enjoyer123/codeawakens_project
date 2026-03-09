@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import * as Blockly from 'blockly/core';
 import { useBlocklyWorkspace } from '../../level/hooks/useBlocklyWorkspace';
 import { useBlocklyCleanup } from '../../level/hooks/useBlocklyCleanup';
-import { removeVariableIdsFromXml, addMutationToProcedureDefinitions, fixWorkspaceProcedures } from '../utils/patternBlocklyUtils';
+import { removeVariableIdsFromXml } from '../../level/utils/blocklyProcedureUtils';
 import { delay } from '../../level/utils/asyncUtils';
 import { setXmlLoading as setGlobalXmlLoading } from '@/gameutils/blockly/core/state';
 
@@ -148,7 +148,6 @@ export const usePatternBlocklyManager = ({
 
             try {
                 finalXml = removeVariableIdsFromXml(finalXml);
-                finalXml = addMutationToProcedureDefinitions(finalXml);
             } catch (e) {
                 console.warn("XML Cleanup failed, using original", e);
             }
@@ -160,14 +159,7 @@ export const usePatternBlocklyManager = ({
 
             Blockly.Xml.domToWorkspace(xmlDom, workspaceRef.current);
 
-            // -----------------------------------------------------------
-            // ✅ FIX: เรียกใช้ Runtime Fixer ทันทีหลังจากโหลด XML ลง Workspace
-            // เพื่อจัดการกับบล็อก solve1, solve2 ที่อาจเกิดขึ้น
-            // -----------------------------------------------------------
-            if (workspaceRef.current) {
-                fixWorkspaceProcedures(workspaceRef.current);
-            }
-            // -----------------------------------------------------------
+
 
             setGlobalXmlLoading(false);
 
@@ -196,12 +188,8 @@ export const usePatternBlocklyManager = ({
     const saveCurrentWorkspaceToRef = useCallback(() => {
         if (!workspaceRef.current) return false;
         try {
-            // ก่อน Save ทำการ fix อีกรอบเพื่อความชัวร์ว่า XML ที่ออกไปสะอาด
-            fixWorkspaceProcedures(workspaceRef.current);
-
             const xmlDom = Blockly.Xml.workspaceToDom(workspaceRef.current);
-            let xmlText = Blockly.Xml.domToText(xmlDom);
-            xmlText = addMutationToProcedureDefinitions(xmlText);
+            const xmlText = Blockly.Xml.domToText(xmlDom);
 
             const currentRef = [...stepsRef.current];
             const stepData = currentRef[currentStepIndex] || { step: currentStepIndex, xml: '', effect: '' };
@@ -266,8 +254,7 @@ export const usePatternBlocklyManager = ({
     // Get current XML for saving
     const getCurrentXml = () => {
         if (!workspaceRef.current) return '';
-        // Fix ก่อน export เสมอ
-        fixWorkspaceProcedures(workspaceRef.current);
+
 
         const xmlDom = Blockly.Xml.workspaceToDom(workspaceRef.current);
         return Blockly.Xml.domToText(xmlDom);

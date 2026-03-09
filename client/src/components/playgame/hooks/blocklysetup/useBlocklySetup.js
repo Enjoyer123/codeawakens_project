@@ -7,7 +7,6 @@ import * as Blockly from "blockly";
 import "blockly/blocks";
 import "blockly/javascript";
 import "blockly/msg/en";
-import { javascriptGenerator } from "blockly/javascript";
 import ModernTheme from '@blockly/theme-modern';
 import {
   ScrollOptions,
@@ -18,15 +17,9 @@ import {
 // Import Blockly Core Modules
 import { createToolboxConfig } from '../../../../gameutils/blockly/core/toolbox';
 import { ensureStandardBlocks } from '../../../../gameutils/blockly/core/standard';
-import { ensureCommonVariables, initializeImprovedVariableHandling } from '../../../../gameutils/blockly/blocks/data/variables/definitions';
-import { defineAllBlocks } from '@/gameutils/blockly/core/definitions';
 import { defineAllGenerators } from '@/gameutils/blockly/core/generators';
 
 // Import Modules ที่แยกออกมา (Decoupled Modules)
-import {
-  registerProcedureEventHandlers,
-  registerVariableEventHandlers
-} from './blocklyEvents';
 import { loadStarterXml } from './xmlLoader';
 
 /**
@@ -78,15 +71,9 @@ export function useBlocklySetup({
       }
 
       // เตรียมระบบภายใน (Definitions & Generators)
-      initializeImprovedVariableHandling();
       ensureStandardBlocks();
       defineAllGenerators();
 
-      // Patch: แก้ไข Generator ของฟังก์ชัน (เฉพาะกิจ)
-      const customProcGen = javascriptGenerator.forBlock["procedures_defreturn"];
-      if (customProcGen) {
-        javascriptGenerator.forBlock["procedures_defreturn"] = customProcGen;
-      }
 
       // สร้าง Toolbox Config (เมนูด้านซ้าย)
       const toolbox = createToolboxConfig(enabledBlocks);
@@ -116,7 +103,7 @@ export function useBlocklySetup({
           metricsManager: ScrollMetricsManager,
         },
         sounds: false,
-        oneBasedIndex: true,
+        oneBasedIndex: false,
         variables: enabledBlocks["variables_get"] ||
           enabledBlocks["variables_set"] ||
           enabledBlocks["var_math"] ||
@@ -150,13 +137,6 @@ export function useBlocklySetup({
 
       // อัปเดตสถานะว่าพร้อมแล้ว
       setBlocklyLoaded(true);
-
-      // เตรียมตัวแปรเริ่มต้น (Common Variables)
-      ensureCommonVariables(workspace);
-
-      // ลงทะเบียน Event Handlers (ดักจับการเปลี่ยนแปลง)
-      registerProcedureEventHandlers(workspace);
-      registerVariableEventHandlers(workspace);
 
       // โหลด Starter XML (จุดเดียว — ไม่มี useEffect ซ้ำอีก)
       if (starter_xml && typeof starter_xml === 'string' && starter_xml.trim()) {

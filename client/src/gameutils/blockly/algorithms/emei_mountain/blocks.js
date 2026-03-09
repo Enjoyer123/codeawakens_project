@@ -15,25 +15,6 @@ export function defineEmeiVisualBlocks() {
         },
     };
 
-    // Highlight a cable car route
-    Blockly.Blocks["emei_highlight_cable_car"] = {
-        init: function () {
-            this.appendValueInput("U")
-                .setCheck("Number")
-                .appendField("Highlight Cable Car from");
-            this.appendValueInput("V")
-                .setCheck("Number")
-                .appendField("to");
-            this.appendValueInput("CAPACITY")
-                .setCheck("Number")
-                .appendField("Capacity");
-            this.setInputsInline(true);
-            this.setPreviousStatement(true, null);
-            this.setNextStatement(true, null);
-            this.setColour(200);
-            this.setTooltip("แสดงแอนิเมชันกระเช้าวิ่งระหว่างยอดเขา");
-        },
-    };
 
     // Show final calculation result
     Blockly.Blocks["emei_show_final_result"] = {

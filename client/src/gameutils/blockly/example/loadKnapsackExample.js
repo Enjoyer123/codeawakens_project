@@ -46,9 +46,6 @@ const knapsackExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
                     <field name="OP">GT</field>
                     <value name="A">
                       <block type="lists_get_at_index">
-                        <mutation statement="false" at="true"></mutation>
-                        <field name="MODE">GET</field>
-                        <field name="WHERE">FROM_START</field>
                         <value name="LIST"><block type="variables_get"><field name="VAR">w</field></block></value>
                         <value name="INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
                       </block>
@@ -108,9 +105,6 @@ const knapsackExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
                                 <field name="OP">ADD</field>
                                 <value name="A">
                                   <block type="lists_get_at_index">
-                                    <mutation statement="false" at="true"></mutation>
-                                    <field name="MODE">GET</field>
-                                    <field name="WHERE">FROM_START</field>
                                     <value name="LIST"><block type="variables_get"><field name="VAR">v</field></block></value>
                                     <value name="INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
                                   </block>
@@ -135,9 +129,6 @@ const knapsackExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
                                         <value name="A"><block type="variables_get"><field name="VAR">j</field></block></value>
                                         <value name="B">
                                           <block type="lists_get_at_index">
-                                            <mutation statement="false" at="true"></mutation>
-                                            <field name="MODE">GET</field>
-                                            <field name="WHERE">FROM_START</field>
                                             <value name="LIST"><block type="variables_get"><field name="VAR">w</field></block></value>
                                             <value name="INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
                                           </block>
@@ -153,9 +144,16 @@ const knapsackExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
                                 <next>
                                   <block type="procedures_return">
                                     <value name="VALUE">
-                                      <block type="math_max">
-                                        <value name="A"><block type="variables_get"><field name="VAR">without_item</field></block></value>
-                                        <value name="B"><block type="variables_get"><field name="VAR">with_item</field></block></value>
+                                      <block type="math_on_list">
+                                        <mutation op="MAX"></mutation>
+                                        <field name="OP">MAX</field>
+                                        <value name="LIST">
+                                          <block type="lists_create_with">
+                                            <mutation items="2"></mutation>
+                                            <value name="ADD0"><block type="variables_get"><field name="VAR">without_item</field></block></value>
+                                            <value name="ADD1"><block type="variables_get"><field name="VAR">with_item</field></block></value>
+                                          </block>
+                                        </value>
                                       </block>
                                     </value>
                                   </block>
@@ -269,9 +267,6 @@ const knapsackDpExampleXml = `<xml xmlns="https://developers.google.com/blockly/
                         <field name="VAR">wi</field>
                         <value name="VALUE">
                           <block type="lists_get_at_index">
-                            <mutation statement="false" at="true"></mutation>
-                            <field name="MODE">GET</field>
-                            <field name="WHERE">FROM_START</field>
                             <value name="LIST"><block type="variables_get"><field name="VAR">weights</field></block></value>
                             <value name="INDEX">
                               <block type="math_arithmetic">
@@ -287,9 +282,6 @@ const knapsackDpExampleXml = `<xml xmlns="https://developers.google.com/blockly/
                             <field name="VAR">vi</field>
                             <value name="VALUE">
                               <block type="lists_get_at_index">
-                                <mutation statement="false" at="true"></mutation>
-                                <field name="MODE">GET</field>
-                                <field name="WHERE">FROM_START</field>
                                 <value name="LIST"><block type="variables_get"><field name="VAR">values</field></block></value>
                                 <value name="INDEX">
                                   <block type="math_arithmetic">
@@ -312,9 +304,6 @@ const knapsackDpExampleXml = `<xml xmlns="https://developers.google.com/blockly/
                                     <field name="VAR">prevRow</field>
                                     <value name="VALUE">
                                       <block type="lists_get_at_index">
-                                        <mutation statement="false" at="true"></mutation>
-                                        <field name="MODE">GET</field>
-                                        <field name="WHERE">FROM_START</field>
                                         <value name="LIST"><block type="variables_get"><field name="VAR">dp</field></block></value>
                                         <value name="INDEX">
                                           <block type="math_arithmetic">
@@ -330,9 +319,6 @@ const knapsackDpExampleXml = `<xml xmlns="https://developers.google.com/blockly/
                                         <field name="VAR">dp_i1_w</field>
                                         <value name="VALUE">
                                           <block type="lists_get_at_index">
-                                            <mutation statement="false" at="true"></mutation>
-                                            <field name="MODE">GET</field>
-                                            <field name="WHERE">FROM_START</field>
                                             <value name="LIST"><block type="variables_get"><field name="VAR">prevRow</field></block></value>
                                             <value name="INDEX"><block type="variables_get"><field name="VAR">w</field></block></value>
                                           </block>
@@ -353,9 +339,6 @@ const knapsackDpExampleXml = `<xml xmlns="https://developers.google.com/blockly/
                                                 <field name="VAR">dp_i1_w_wi</field>
                                                 <value name="VALUE">
                                                   <block type="lists_get_at_index">
-                                                    <mutation statement="false" at="true"></mutation>
-                                                    <field name="MODE">GET</field>
-                                                    <field name="WHERE">FROM_START</field>
                                                     <value name="LIST"><block type="variables_get"><field name="VAR">prevRow</field></block></value>
                                                     <value name="INDEX">
                                                       <block type="math_arithmetic">
@@ -371,9 +354,6 @@ const knapsackDpExampleXml = `<xml xmlns="https://developers.google.com/blockly/
                                                     <field name="VAR">currRow</field>
                                                     <value name="VALUE">
                                                       <block type="lists_get_at_index">
-                                                        <mutation statement="false" at="true"></mutation>
-                                                        <field name="MODE">GET</field>
-                                                        <field name="WHERE">FROM_START</field>
                                                         <value name="LIST"><block type="variables_get"><field name="VAR">dp</field></block></value>
                                                         <value name="INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
                                                       </block>
@@ -386,13 +366,20 @@ const knapsackDpExampleXml = `<xml xmlns="https://developers.google.com/blockly/
                                                         <value name="LIST"><block type="variables_get"><field name="VAR">currRow</field></block></value>
                                                         <value name="AT"><block type="variables_get"><field name="VAR">w</field></block></value>
                                                         <value name="TO">
-                                                          <block type="math_max">
-                                                            <value name="A"><block type="variables_get"><field name="VAR">dp_i1_w</field></block></value>
-                                                            <value name="B">
-                                                              <block type="math_arithmetic">
-                                                                <field name="OP">ADD</field>
-                                                                <value name="A"><block type="variables_get"><field name="VAR">vi</field></block></value>
-                                                                <value name="B"><block type="variables_get"><field name="VAR">dp_i1_w_wi</field></block></value>
+                                                          <block type="math_on_list">
+                                                            <mutation op="MAX"></mutation>
+                                                            <field name="OP">MAX</field>
+                                                            <value name="LIST">
+                                                              <block type="lists_create_with">
+                                                                <mutation items="2"></mutation>
+                                                                <value name="ADD0"><block type="variables_get"><field name="VAR">dp_i1_w</field></block></value>
+                                                                <value name="ADD1">
+                                                                  <block type="math_arithmetic">
+                                                                    <field name="OP">ADD</field>
+                                                                    <value name="A"><block type="variables_get"><field name="VAR">vi</field></block></value>
+                                                                    <value name="B"><block type="variables_get"><field name="VAR">dp_i1_w_wi</field></block></value>
+                                                                  </block>
+                                                                </value>
                                                               </block>
                                                             </value>
                                                           </block>
@@ -409,9 +396,6 @@ const knapsackDpExampleXml = `<xml xmlns="https://developers.google.com/blockly/
                                                 <field name="VAR">currRow</field>
                                                 <value name="VALUE">
                                                   <block type="lists_get_at_index">
-                                                    <mutation statement="false" at="true"></mutation>
-                                                    <field name="MODE">GET</field>
-                                                    <field name="WHERE">FROM_START</field>
                                                     <value name="LIST"><block type="variables_get"><field name="VAR">dp</field></block></value>
                                                     <value name="INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
                                                   </block>
@@ -440,14 +424,8 @@ const knapsackDpExampleXml = `<xml xmlns="https://developers.google.com/blockly/
                                                 <value name="CAPACITY"><block type="variables_get"><field name="VAR">w</field></block></value>
                                                 <value name="VALUE">
                                                   <block type="lists_get_at_index">
-                                                    <mutation statement="false" at="true"></mutation>
-                                                    <field name="MODE">GET</field>
-                                                    <field name="WHERE">FROM_START</field>
                                                     <value name="LIST">
                                                       <block type="lists_get_at_index">
-                                                        <mutation statement="false" at="true"></mutation>
-                                                        <field name="MODE">GET</field>
-                                                        <field name="WHERE">FROM_START</field>
                                                         <value name="LIST"><block type="variables_get"><field name="VAR">dp</field></block></value>
                                                         <value name="INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
                                                       </block>
@@ -475,14 +453,8 @@ const knapsackDpExampleXml = `<xml xmlns="https://developers.google.com/blockly/
                   <block type="procedures_return">
                     <value name="VALUE">
                       <block type="lists_get_at_index">
-                        <mutation statement="false" at="true"></mutation>
-                        <field name="MODE">GET</field>
-                        <field name="WHERE">FROM_START</field>
                         <value name="LIST">
                           <block type="lists_get_at_index">
-                            <mutation statement="false" at="true"></mutation>
-                            <field name="MODE">GET</field>
-                            <field name="WHERE">FROM_START</field>
                             <value name="LIST"><block type="variables_get"><field name="VAR">dp</field></block></value>
                             <value name="INDEX"><block type="variables_get"><field name="VAR">n</field></block></value>
                           </block>

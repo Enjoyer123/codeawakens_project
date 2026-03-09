@@ -59,27 +59,14 @@ export const validateWorkspace = (workspace, levelData = {}) => {
         // Skip disabled blocks
         if (!block.isEnabled()) continue;
 
-        // Check loops (while_loop)
-        if (block.type === 'while_loop') {
-            const condition = block.getInputTargetBlock('CONDITION');
+        // Check loops (controls_whileUntil)
+        if (block.type === 'controls_whileUntil') {
+            const condition = block.getInputTargetBlock('BOOL');
             if (!condition) {
                 console.warn("Validation failed: Loop missing condition");
                 return {
                     isValid: false,
                     error: "พบ Loop ที่ไม่มีเงื่อนไข! กรุณาใส่เงื่อนไขในบล็อก Loop"
-                };
-            }
-        }
-
-        // Check If-Only, If-Else,
-        if (block.type === 'if_only' || block.type === 'if_else') {
-            // Check 'CONDITION' input
-            const condition = block.getInputTargetBlock('CONDITION');
-            if (!condition) {
-                console.warn("Validation failed: IF missing condition");
-                return {
-                    isValid: false,
-                    error: "พบเงื่อนไข IF ที่ว่างเปล่า! กรุณาใส่เงื่อนไขให้ครบถ้วน"
                 };
             }
         }
@@ -110,8 +97,8 @@ export const validateWorkspace = (workspace, levelData = {}) => {
 
         // Note: 'repeat' block uses FieldNumber, so it always has a value. No check needed.
 
-        // Check missing values in logic_compare, math_arithmetic, math_compare, logic_operation
-        if (block.type === 'logic_compare' || block.type === 'math_arithmetic' || block.type === 'math_compare' || block.type === 'logic_operation') {
+        // Check missing values in logic_compare, math_arithmetic, logic_operation
+        if (block.type === 'logic_compare' || block.type === 'math_arithmetic' || block.type === 'logic_operation') {
             const inputA = block.getInputTargetBlock('A');
             const inputB = block.getInputTargetBlock('B');
             if (!inputA || !inputB) {
@@ -166,16 +153,16 @@ export const validateWorkspace = (workspace, levelData = {}) => {
             }
         }
 
-        if (block.type === 'lists_getIndex' || block.type === 'lists_setIndex') {
-            // Usually has 'AT' input for index
-            const at = block.getInputTargetBlock('AT');
-            if (!at) {
-                return {
-                    isValid: false,
-                    error: "พบการเข้าถึง List โดยไม่ระบุตำแหน่ง (Index)! กรุณาใส่ตำแหน่งที่ต้องการ"
-                };
-            }
-        }
+        // if (block.type === 'lists_getIndex' || block.type === 'lists_setIndex') {
+        //     // Usually has 'AT' input for index
+        //     const at = block.getInputTargetBlock('AT');
+        //     if (!at) {
+        //         return {
+        //             isValid: false,
+        //             error: "พบการเข้าถึง List โดยไม่ระบุตำแหน่ง (Index)! กรุณาใส่ตำแหน่งที่ต้องการ"
+        //         };
+        //     }
+        // }
 
         // --- NEW: Dictionary Operations ---
         if (block.type === 'dict_set') {

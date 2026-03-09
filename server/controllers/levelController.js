@@ -316,7 +316,6 @@ exports.createLevel = async (req, res) => {
       category_id,
       level_name,
       description,
-      difficulty_level,
       difficulty,
       is_unlocked,
       required_level_id,
@@ -363,7 +362,6 @@ exports.createLevel = async (req, res) => {
     const missingFields = [];
     if (!category_id || category_id === '') missingFields.push('category_id');
     if (!level_name || level_name.trim() === '') missingFields.push('level_name');
-    if (!difficulty_level || difficulty_level === '') missingFields.push('difficulty_level');
     if (!difficulty || difficulty.trim() === '') missingFields.push('difficulty');
     if (!background_image || background_image.trim() === '') missingFields.push('background_image');
 
@@ -419,11 +417,10 @@ exports.createLevel = async (req, res) => {
         category_id: parseInt(category_id),
         level_name,
         description: description || null,
-        difficulty_level: parseInt(difficulty_level),
         difficulty,
         is_unlocked: is_unlocked === true || is_unlocked === 'true',
         required_level_id: required_level_id ? parseInt(required_level_id) : null,
-        required_skill_level: required_skill_level || null,
+        required_skill_level: required_skill_level || 'Zone_A',
         required_for_post_test: required_for_post_test === true || required_for_post_test === 'true',
         textcode: textcode === true || textcode === 'true',
         background_image,
@@ -513,7 +510,6 @@ exports.updateLevel = async (req, res) => {
       category_id,
       level_name,
       description,
-      difficulty_level,
       difficulty,
       is_unlocked,
       required_level_id,
@@ -577,7 +573,6 @@ exports.updateLevel = async (req, res) => {
     }
     if (level_name !== undefined) updateData.level_name = level_name;
     if (description !== undefined) updateData.description = description;
-    if (difficulty_level !== undefined) updateData.difficulty_level = parseInt(difficulty_level);
     if (difficulty !== undefined) updateData.difficulty = difficulty;
     if (is_unlocked !== undefined) updateData.is_unlocked = is_unlocked === true || is_unlocked === 'true';
     if (required_level_id !== undefined) {

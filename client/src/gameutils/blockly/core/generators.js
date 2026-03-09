@@ -2,16 +2,15 @@
  * Generator definitions
  * Aggregates all generator definitions
  */
-import { defineDictionaryGenerators, defineDataGenerators } from '../blocks/data/generators';
-import { defineMovementGenerators } from '../blocks/movement/generators';
+import { defineDataGenerators } from '../blocks/data/variables/generators';
 import { defineLogicGenerators } from '../blocks/logic/generators';
-import { defineMathGenerators } from '../blocks/math/generators';
+import { defineDictionaryGenerators } from '../blocks/data/dicts/generators';
+import { defineMovementGenerators } from '../blocks/movement/generators';
 import { defineLoopGenerators } from '../blocks/loops/generators';
 import { defineEntityGenerators } from '../blocks/entities/generators';
 import { defineGraphGenerators } from '../algorithms/graph/generators';
 import { defineListGenerators } from '../blocks/data/lists/generators';
 import { defineListSetIndexGenerator } from '../blocks/data/lists/set_generator';
-import { defineSpecialMathGenerators } from '../algorithms/shared/special_math';
 import { defineProcedureDefGenerators } from '../blocks/procedures/def_generators';
 import { defineProcedureCallGenerators } from '../blocks/procedures/call_generators';
 
@@ -21,13 +20,13 @@ import { defineSubsetSumGenerators } from '../algorithms/subset_sum/generators';
 import { defineCoinChangeGenerators } from '../algorithms/coin_change/generators';
 import { defineEmeiGenerators } from '../algorithms/emei_mountain/generators';
 import { defineNQueenGenerators } from '../algorithms/nqueen/generators';
+import { defineMathGenerators } from '../blocks/math/generators';
 
 export const defineAllGenerators = () => {
 
   defineMovementGenerators();
-  defineLogicGenerators();
-  defineMathGenerators();
   defineLoopGenerators();
+  defineLogicGenerators();
   defineDataGenerators();
   defineDictionaryGenerators();
   defineListGenerators();
@@ -35,15 +34,13 @@ export const defineAllGenerators = () => {
   defineEntityGenerators();
   defineProcedureDefGenerators();
   defineProcedureCallGenerators();
-
-  // Complex Algorithms
+  defineMathGenerators();
+  // Algorithm Generators
   defineGraphGenerators();
-  defineSpecialMathGenerators();
-
-  // Feature-specific Algorithm Generators
   defineKnapsackGenerators();
   defineSubsetSumGenerators();
   defineCoinChangeGenerators();
   defineEmeiGenerators();
   defineNQueenGenerators();
 };
+
