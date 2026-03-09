@@ -128,21 +128,18 @@ const subsetSumExampleXml = `<xml xmlns="https://developers.google.com/blockly/x
                                 </value>
                                 <field name="OP">ADD</field>
                                 <value name="B">
-                                  <block type="lists_getIndex" id="get_arr_index_include">
-                                    <mutation statement="false" at="true"></mutation>
-                                    <field name="MODE">GET</field>
-                                    <field name="WHERE">FROM_START</field>
-                                    <value name="VALUE">
+                                  <block type="lists_get_at_index" id="get_arr_index_include">
+<value name="LIST">
                                       <block type="variables_get" id="arr_var_get_include">
                                         <field name="VAR">arr</field>
                                       </block>
                                     </value>
-                                    <value name="AT">
+<value name="INDEX">
                                       <block type="variables_get" id="index_var_get_include">
                                         <field name="VAR">index</field>
                                       </block>
                                     </value>
-                                  </block>
+</block>
                                 </value>
                               </block>
                             </value>

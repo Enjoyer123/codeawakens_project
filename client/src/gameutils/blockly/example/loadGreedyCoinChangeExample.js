@@ -16,15 +16,15 @@ const greedyCoinChangeExampleXml = `<xml xmlns="https://developers.google.com/bl
     <comment pinned="false" h="90" w="420">Greedy: choose the largest coin &lt;= amount (scan coins[index..]) repeatedly. Return count, or -1 if stuck.</comment>
     <statement name="STACK">
       <!-- if amount == 0 return 0 -->
-      <block type="if_only" id="ccg_if_amount_zero">
-        <value name="CONDITION">
+      <block type="controls_if" id="ccg_if_amount_zero">
+        <value name="IF0">
           <block type="logic_compare" id="ccg_amount_eq_0">
             <value name="A"><block type="variables_get" id="ccg_amount_get0"><field name="VAR">amount</field></block></value>
             <field name="OP">EQ</field>
             <value name="B"><block type="math_number" id="ccg_zero0"><field name="NUM">0</field></block></value>
           </block>
         </value>
-        <statement name="DO">
+        <statement name="DO0">
           <block type="procedures_return" id="ccg_return0">
             <value name="VALUE"><block type="math_number" id="ccg_zero_ret"><field name="NUM">0</field></block></value>
           </block>
@@ -40,15 +40,15 @@ const greedyCoinChangeExampleXml = `<xml xmlns="https://developers.google.com/bl
             </value>
             <next>
               <!-- if index >= n return -1 -->
-              <block type="if_only" id="ccg_if_index_oob">
-                <value name="CONDITION">
+              <block type="controls_if" id="ccg_if_index_oob">
+                <value name="IF0">
                   <block type="logic_compare" id="ccg_index_gte_n">
                     <value name="A"><block type="variables_get" id="ccg_index_get_oob"><field name="VAR">index</field></block></value>
                     <field name="OP">GTE</field>
                     <value name="B"><block type="variables_get" id="ccg_n_get_oob"><field name="VAR">n</field></block></value>
                   </block>
                 </value>
-                <statement name="DO">
+                <statement name="DO0">
                   <block type="procedures_return" id="ccg_return_neg1_oob">
                     <value name="VALUE"><block type="math_number" id="ccg_neg1_oob"><field name="NUM">-1</field></block></value>
                   </block>
@@ -60,8 +60,8 @@ const greedyCoinChangeExampleXml = `<xml xmlns="https://developers.google.com/bl
                     <value name="VALUE"><block type="math_number" id="ccg_count0"><field name="NUM">0</field></block></value>
                     <next>
                       <!-- while amount > 0 -->
-                      <block type="while_loop" id="ccg_while_amount_gt0">
-                        <value name="CONDITION">
+                      <block type="controls_whileUntil" id="ccg_while_amount_gt0"><field name="MODE">WHILE</field>
+                        <value name="BOOL">
                           <block type="logic_compare" id="ccg_amount_gt0">
                             <value name="A"><block type="variables_get" id="ccg_amount_get_gt0"><field name="VAR">amount</field></block></value>
                             <field name="OP">GT</field>
@@ -102,8 +102,8 @@ const greedyCoinChangeExampleXml = `<xml xmlns="https://developers.google.com/bl
                                         </value>
                                         <next>
                                           <!-- if (coin <= amount) AND (coin > bestValue) then bestValue=coin; bestIndex=i -->
-                                          <block type="if_only" id="ccg_if_better">
-                                            <value name="CONDITION">
+                                          <block type="controls_if" id="ccg_if_better">
+                                            <value name="IF0">
                                               <block type="logic_operation" id="ccg_and_cond">
                                                 <field name="OP">AND</field>
                                                 <value name="A">
@@ -122,7 +122,7 @@ const greedyCoinChangeExampleXml = `<xml xmlns="https://developers.google.com/bl
                                                 </value>
                                               </block>
                                             </value>
-                                            <statement name="DO">
+                                            <statement name="DO0">
                                               <block type="variables_set" id="ccg_set_bestValue_coin">
                                                 <field name="VAR">bestValue</field>
                                                 <value name="VALUE"><block type="variables_get" id="ccg_coin_get_assign_best"><field name="VAR">coin</field></block></value>
@@ -140,20 +140,20 @@ const greedyCoinChangeExampleXml = `<xml xmlns="https://developers.google.com/bl
                                     </statement>
                                     <next>
                                       <!-- if bestIndex == -1 return -1 else select + update -->
-                                      <block type="if_else" id="ccg_if_stuck">
-                                        <value name="CONDITION">
+                                      <block type="controls_if" id="ccg_if_stuck"><mutation else="1"></mutation>
+                                        <value name="IF0">
                                           <block type="logic_compare" id="ccg_bestIndex_eq_neg1">
                                             <value name="A"><block type="variables_get" id="ccg_bestIndex_get_eq"><field name="VAR">bestIndex</field></block></value>
                                             <field name="OP">EQ</field>
                                             <value name="B"><block type="math_number" id="ccg_neg1_cmp"><field name="NUM">-1</field></block></value>
                                           </block>
                                         </value>
-                                        <statement name="IF_DO">
+                                        <statement name="DO0">
                                           <block type="procedures_return" id="ccg_return_neg1_stuck">
                                             <value name="VALUE"><block type="math_number" id="ccg_neg1_stuck"><field name="NUM">-1</field></block></value>
                                           </block>
                                         </statement>
-                                        <statement name="ELSE_DO">
+                                        <statement name="ELSE">
                                           <block type="coin_change_add_warrior_to_selection" id="ccg_select_best_coin">
                                             <value name="WARRIOR_INDEX"><block type="variables_get" id="ccg_bestIndex_get_sel"><field name="VAR">bestIndex</field></block></value>
                                             <next>

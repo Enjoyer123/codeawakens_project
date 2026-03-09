@@ -3,7 +3,7 @@ import * as Blockly from 'blockly/core';
 import { createToolboxConfig } from '../../../../gameutils/blockly/core/toolbox';
 import { defineAllBlocks } from '../../../../gameutils/blockly/core/definitions';
 import { ensureStandardBlocks } from '../../../../gameutils/blockly/core/standard';
-import { ensureCommonVariables, initializeImprovedVariableHandling } from '../../../../gameutils/blockly/blocks/data/variables/definitions';
+
 
 export const useBlocklyWorkspace = ({
     blocklyRef,
@@ -27,8 +27,8 @@ export const useBlocklyWorkspace = ({
 
         try {
             ensureStandardBlocks();
-            ensureCommonVariables();
-            initializeImprovedVariableHandling();
+
+
             defineAllBlocks();
 
             const toolboxConfig = createToolboxConfig(enabledBlocks);

@@ -47,8 +47,8 @@ const dfsPlaybackXml = `<xml xmlns="https://developers.google.com/blockly/xml">
             </value>
             <next>
               <!-- Main loop: ทำซ้ำจนกว่า container ว่าง -->
-              <block type="while_loop" id="main_loop">
-                <value name="CONDITION">
+              <block type="controls_whileUntil" id="main_loop"><field name="MODE">WHILE</field>
+                <value name="BOOL">
                   <block type="logic_negate" id="not_empty">
                     <value name="BOOL">
                       <block type="lists_isEmpty" id="is_empty">
@@ -67,12 +67,12 @@ const dfsPlaybackXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                     <field name="VAR">result</field>
                     <value name="VALUE">
                       <block type="lists_remove_last_return" id="pop_container">
-                        <value name="LIST">
+<value name="LIST">
                           <block type="variables_get" id="container_var2">
                             <field name="VAR">container</field>
                           </block>
                         </value>
-                      </block>
+</block>
                     </value>
                     <next>
                       <!-- node = ดึงตัวสุดท้ายจาก path -->
@@ -80,17 +80,17 @@ const dfsPlaybackXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                         <field name="VAR">node</field>
                         <value name="VALUE">
                           <block type="lists_get_last" id="get_last_node">
-                            <value name="LIST">
+<value name="LIST">
                               <block type="variables_get" id="path_var">
                                 <field name="VAR">result</field>
                               </block>
                             </value>
-                          </block>
+</block>
                         </value>
                         <next>
                           <!-- ถ้า node = goal แล้ว return path -->
-                          <block type="if_only" id="check_goal">
-                            <value name="CONDITION">
+                          <block type="controls_if" id="check_goal">
+                            <value name="IF0">
                               <block type="logic_compare" id="node_equals_goal">
                                 <value name="A">
                                   <block type="variables_get" id="node_var">
@@ -105,7 +105,7 @@ const dfsPlaybackXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                                 </value>
                               </block>
                             </value>
-                            <statement name="DO">
+                            <statement name="DO0">
                               <block type="procedures_return" id="return_path">
                                 <value name="VALUE">
                                   <block type="variables_get" id="path_var2">
@@ -140,8 +140,8 @@ const dfsPlaybackXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                                       </value>
                                       <statement name="DO">
                                         <!-- ถ้า neighbor ไม่มีอยู่ใน visited -->
-                                        <block type="if_only" id="check_not_visited">
-                                          <value name="CONDITION">
+                                        <block type="controls_if" id="check_not_visited">
+                                          <value name="IF0">
                                             <block type="logic_not_in" id="not_in_visited">
                                               <value name="ITEM">
                                                 <block type="variables_get" id="neighbor_var">
@@ -155,7 +155,7 @@ const dfsPlaybackXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                                               </value>
                                             </block>
                                           </value>
-                                          <statement name="DO">
+                                          <statement name="DO0">
                                             <!-- เพิ่ม neighbor เข้า visited -->
                                             <block type="lists_add_item" id="add_to_visited">
                                               <value name="LIST">

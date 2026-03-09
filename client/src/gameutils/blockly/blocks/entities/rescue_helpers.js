@@ -11,13 +11,19 @@ import {
     resetAllPeople as gameResetAllPeople
 } from '../../../entities/personUtils';
 
+import { getCurrentGameState } from '../../../shared/game/gameState';
+import { playRescueAnimation } from '../../../entities/actionPlayback';
 
 export function rescuePerson() {
     return gameRescuePerson();
 }
 
-export function rescuePersonAtNode(nodeId) {
-    return gameRescuePersonAtNode(nodeId);
+export async function rescuePersonAtNode(nodeId) {
+    const result = await gameRescuePersonAtNode(nodeId);
+    if (result && result.success && getCurrentGameState().currentScene) {
+        await playRescueAnimation(getCurrentGameState().currentScene, result);
+    }
+    return result;
 }
 
 export function hasPerson() {

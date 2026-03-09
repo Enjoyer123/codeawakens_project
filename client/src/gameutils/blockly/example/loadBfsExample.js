@@ -42,8 +42,8 @@ const bfsExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
             </value>
             <next>
               <!-- Main loop: ทำซ้ำจนกว่า container ว่าง -->
-              <block type="while_loop" id="main_loop">
-                <value name="CONDITION">
+              <block type="controls_whileUntil" id="main_loop"><field name="MODE">WHILE</field>
+                <value name="BOOL">
                   <block type="logic_negate" id="not_empty">
                     <value name="BOOL">
                       <block type="lists_isEmpty" id="is_empty">

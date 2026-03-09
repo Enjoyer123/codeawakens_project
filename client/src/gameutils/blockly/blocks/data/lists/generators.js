@@ -123,29 +123,6 @@ export function defineListGenerators() {
     return [`"${text}"`, javascriptGenerator.ORDER_ATOMIC];
   };
 
-  // Variable math operations
-  javascriptGenerator.forBlock["var_math"] = function (block) {
-    const variable = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), 'VARIABLE');
-    const operator = block.getFieldValue('OP');
-    const value = javascriptGenerator.valueToCode(block, 'VALUE', javascriptGenerator.ORDER_ATOMIC) || '0';
-
-    let code;
-    switch (operator) {
-      case 'ADD': code = `${variable} + ${value}`; break;
-      case 'MINUS': code = `${variable} - ${value}`; break;
-      case 'MULTIPLY': code = `${variable} * ${value}`; break;
-      case 'DIVIDE': code = `${variable} / ${value}`; break;
-      default: code = `${variable}`;
-    }
-
-    return [code, javascriptGenerator.ORDER_ADDITIVE];
-  };
-
-  javascriptGenerator.forBlock["get_var_value"] = function (block) {
-    const variable = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), 'VARIABLE');
-    return [variable, javascriptGenerator.ORDER_ATOMIC];
-  };
-
   // Override variables_set to detect MST_weight updates
   // variables_set generator removed (handled in blocklyDataGenerators.js)
 }

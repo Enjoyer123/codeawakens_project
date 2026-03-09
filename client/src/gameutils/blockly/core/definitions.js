@@ -1,10 +1,8 @@
-// Blockly Block Definitions - Main aggregator
 import { defineMovementBlocks } from '../blocks/movement/definitions';
 import { defineLogicBlocks } from '../blocks/logic/definitions';
-import { defineMathBlocks } from '../blocks/math/definitions';
 import { defineCoinBlocks } from '../blocks/entities/coin';
 import { definePersonBlocks } from '../blocks/entities/person';
-
+import { defineMathBlocks } from '../blocks/math/definitions';
 
 import { defineFunctionBlocks } from '../blocks/procedures/definitions';
 import { defineLoopBlocks } from '../blocks/loops/definitions';
@@ -13,7 +11,7 @@ import { defineListBlocks } from '../blocks/data/lists/definitions';
 import { defineListOperationsBlocks } from '../blocks/data/lists/operations';
 import { defineGraphOperationsBlocks } from '../algorithms/graph/definitions';
 import { defineLogicOperatorsBlocks } from '../blocks/logic/operators';
-import { defineDfsVisualBlocks } from '../algorithms/graph/visual_blocks';
+
 import { defineDictionaryBlocks } from '../blocks/data/dicts/definitions';
 import { defineKnapsackVisualBlocks } from '../algorithms/knapsack/blocks';
 import { defineSubsetSumVisualBlocks } from '../algorithms/subset_sum/blocks';
@@ -38,7 +36,7 @@ export function defineAllBlocks() {
   defineListOperationsBlocks();
   defineGraphOperationsBlocks();
   defineLogicOperatorsBlocks();
-  defineDfsVisualBlocks();
+
   defineDictionaryBlocks();
   defineKnapsackVisualBlocks();
   defineSubsetSumVisualBlocks();

@@ -138,6 +138,16 @@ const AlgoDataForm = ({ algoKey, data, onChange }) => {
                     />
                 </div>
                 <div>
+                    <label className="text-xs font-medium text-gray-600">Bag Name (ชื่อกระเป๋า)</label>
+                    <Input
+                        type="text"
+                        value={data?.bag?.label ?? ''}
+                        onChange={(e) => update('bag.label', e.target.value)}
+                        placeholder="เช่น กระเป๋าเป้"
+                        className="mt-1 mb-2"
+                    />
+                </div>
+                <div>
                     <label className="text-xs font-medium text-gray-600 block mb-2">Items (สมบัติ)</label>
                     {items.map((item, i) => (
                         <div key={i} className="flex items-center gap-2 mb-2 bg-gray-50 p-2 rounded">

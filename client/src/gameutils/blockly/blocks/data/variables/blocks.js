@@ -1,6 +1,5 @@
 // Blockly Variable Block Definitions
 import * as Blockly from "blockly/core";
-import { createVariableChangeHandler } from './definitions';
 
 export function defineVariableBlocks() {
   Blockly.Blocks["var_math"] = {
@@ -20,7 +19,7 @@ export function defineVariableBlocks() {
       this.setOutput(true, "Number");
       this.setColour(230);
       this.setTooltip("การคำนวณทางคณิตศาสตร์");
-      this.setOnChange(createVariableChangeHandler('i').bind(this));
+
     }
   };
 
@@ -32,7 +31,7 @@ export function defineVariableBlocks() {
       this.setOutput(true, "Number");
       this.setColour(330);
       this.setTooltip("ได้ค่าของตัวแปร");
-      this.setOnChange(createVariableChangeHandler('i').bind(this));
+
     }
   };
 }

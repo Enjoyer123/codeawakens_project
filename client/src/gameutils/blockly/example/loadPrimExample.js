@@ -191,8 +191,8 @@ const primExampleXml = `<?xml version="1.0" encoding="UTF-8"?>
                             </statement>
                             <next>
                               <!-- Main loop: While PQ != [] -->
-                              <block type="while_loop" id="main_loop">
-                                <value name="CONDITION">
+                              <block type="controls_whileUntil" id="main_loop"><field name="MODE">WHILE</field>
+                                <value name="BOOL">
                                   <block type="logic_negate" id="not_empty">
                                     <value name="BOOL">
                                       <block type="lists_isEmpty" id="is_empty">
@@ -242,17 +242,17 @@ const primExampleXml = `<?xml version="1.0" encoding="UTF-8"?>
                                             <field name="VAR">pq_item</field>
                                             <value name="VALUE">
                                               <block type="lists_get_at_index" id="get_pq_item">
-                                                <value name="LIST">
+<value name="LIST">
                                                   <block type="variables_get" id="pq_var_get">
                                                     <field name="VAR">PQ</field>
                                                   </block>
                                                 </value>
-                                                <value name="INDEX">
+<value name="INDEX">
                                                   <block type="variables_get" id="min_index_var">
                                                     <field name="VAR">min_index</field>
                                                   </block>
                                                 </value>
-                                              </block>
+</block>
                                             </value>
                                             <next>
                                               <!-- dist = pq_item[0] -->
@@ -260,17 +260,17 @@ const primExampleXml = `<?xml version="1.0" encoding="UTF-8"?>
                                                 <field name="VAR">dist</field>
                                                 <value name="VALUE">
                                                   <block type="lists_get_at_index" id="get_dist">
-                                                    <value name="LIST">
+<value name="LIST">
                                                       <block type="variables_get" id="pq_item_var">
                                                         <field name="VAR">pq_item</field>
                                                       </block>
                                                     </value>
-                                                    <value name="INDEX">
+<value name="INDEX">
                                                       <block type="math_number" id="dist_index">
                                                         <field name="NUM">0</field>
                                                       </block>
                                                     </value>
-                                                  </block>
+</block>
                                                 </value>
                                                 <next>
                                                   <!-- node = pq_item[1] -->
@@ -278,35 +278,35 @@ const primExampleXml = `<?xml version="1.0" encoding="UTF-8"?>
                                                     <field name="VAR">node</field>
                                                     <value name="VALUE">
                                                       <block type="lists_get_at_index" id="get_node">
-                                                        <value name="LIST">
+<value name="LIST">
                                                           <block type="variables_get" id="pq_item_node">
                                                             <field name="VAR">pq_item</field>
                                                           </block>
                                                         </value>
-                                                        <value name="INDEX">
+<value name="INDEX">
                                                           <block type="math_number" id="node_index">
                                                             <field name="NUM">1</field>
                                                           </block>
                                                         </value>
-                                                      </block>
+</block>
                                                     </value>
                                                     <next>
                                                       <!-- Remove item at min_index from PQ -->
                                                       <block type="lists_remove_at_index" id="remove_from_pq">
-                                                        <value name="LIST">
+<value name="LIST">
                                                           <block type="variables_get" id="pq_var_remove">
                                                             <field name="VAR">PQ</field>
                                                           </block>
                                                         </value>
-                                                        <value name="INDEX">
+<value name="INDEX">
                                                           <block type="variables_get" id="min_index_var4">
                                                             <field name="VAR">min_index</field>
                                                           </block>
                                                         </value>
                                                         <next>
                                                           <!-- if node in visited: skip, else: process -->
-                                                          <block type="if_else" id="check_visited">
-                                                            <value name="CONDITION">
+                                                          <block type="controls_if" id="check_visited"><mutation else="1"></mutation>
+                                                            <value name="IF0">
                                                               <block type="lists_contains" id="node_in_visited">
                                                                 <value name="ITEM">
                                                                   <block type="variables_get" id="node_var_visited">
@@ -318,12 +318,12 @@ const primExampleXml = `<?xml version="1.0" encoding="UTF-8"?>
                                                                     <field name="VAR">visited</field>
                                                                   </block>
                                                                 </value>
-                                                              </block>
+</block>
                                                             </value>
-                                                            <statement name="IF_DO">
+                                                            <statement name="DO0">
                                                               <!-- ถ้า node อยู่ใน visited แล้ว: ไม่ทำอะไร (skip) -->
                                                             </statement>
-                                                            <statement name="ELSE_DO">
+                                                            <statement name="ELSE">
                                                               <!-- TRACE: prim_visit(node, parent[node], dist) -->
                                                               <block type="prim_visit" id="trace_prim_visit">
                                                                 <value name="NODE">
@@ -394,34 +394,34 @@ const primExampleXml = `<?xml version="1.0" encoding="UTF-8"?>
                                                                             <field name="VAR">neighbor</field>
                                                                             <value name="VALUE">
                                                                               <block type="lists_get_at_index" id="get_neighbor">
-                                                                                <value name="LIST">
+<value name="LIST">
                                                                                   <block type="variables_get" id="neighbor_data_var">
                                                                                     <field name="VAR">neighbor_data</field>
                                                                                   </block>
                                                                                 </value>
-                                                                                <value name="INDEX">
+<value name="INDEX">
                                                                                   <block type="math_number" id="neighbor_index">
                                                                                     <field name="NUM">0</field>
                                                                                   </block>
                                                                                 </value>
-                                                                              </block>
+</block>
                                                                             </value>
                                                                             <next>
                                                                               <block type="variables_set" id="set_weight">
                                                                                 <field name="VAR">weight</field>
                                                                                 <value name="VALUE">
                                                                                   <block type="lists_get_at_index" id="get_weight">
-                                                                                    <value name="LIST">
+<value name="LIST">
                                                                                       <block type="variables_get" id="neighbor_data_var2">
                                                                                         <field name="VAR">neighbor_data</field>
                                                                                       </block>
                                                                                     </value>
-                                                                                    <value name="INDEX">
+<value name="INDEX">
                                                                                       <block type="math_number" id="weight_index">
                                                                                         <field name="NUM">1</field>
                                                                                       </block>
                                                                                     </value>
-                                                                                  </block>
+</block>
                                                                                 </value>
                                                                                 <next>
                                                                                   <!-- if neighbor not in visited && weight < distance[neighbor] -->
@@ -559,16 +559,14 @@ const primExampleXml = `<?xml version="1.0" encoding="UTF-8"?>
                                                                             </next>
                                                                           </block>
                                                                         </statement>
-                                                                        </block>
-                                                                      </next>
-                                                                    </block>
-                                                                  </next>
-                                                                </block>
-                                                              </next>
-                                                            </block>
-                                                          </statement>
-                                                        </block>
-                                                      </next>
+                                                                      </block>
+                                                                    </next>
+                                                                  </block>
+                                                                </next>
+                                                              </block>
+                                                            </next>
+                                                          </block>
+                                                        </next>
                                                       </block>
                                                     </next>
                                                   </block>

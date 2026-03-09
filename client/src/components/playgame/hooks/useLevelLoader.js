@@ -211,6 +211,8 @@ export function useLevelInitializer({
           isGameOver: false,
           weaponKey: formatted.defaultWeaponKey,
           weaponData: getWeaponData(formatted.defaultWeaponKey),
+          activeEffects: [],   // รีเซ็ต effect จากด่านเก่า ไม่งั้น syncEffectsWithState จะดึงค่าเก่ามาสร้าง Aura ใหม่
+          patternTypeId: 0,    // รีเซ็ต pattern match
           levelData: formatted
         });
 

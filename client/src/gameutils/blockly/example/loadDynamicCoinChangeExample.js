@@ -73,8 +73,8 @@ const dynamicCoinChangeExampleXml = `<xml xmlns="https://developers.google.com/b
                                      <value name="COIN_INDEX"><block type="lists_indexOf"><field name="END">FIRST</field><value name="VALUE"><block type="variables_get"><field name="VAR">coins</field></block></value><value name="FIND"><block type="variables_get"><field name="VAR">coin</field></block></value></block></value>
                                      <next>
                                        <!-- if curr_amount - coin >= 0 -->
-                                       <block type="if_only" id="check_coin_fit">
-                                         <value name="CONDITION">
+                                       <block type="controls_if" id="check_coin_fit">
+                                         <value name="IF0">
                                            <block type="logic_compare">
                                              <value name="A">
                                                <block type="math_arithmetic">
@@ -87,22 +87,19 @@ const dynamicCoinChangeExampleXml = `<xml xmlns="https://developers.google.com/b
                                              <value name="B"><block type="math_number"><field name="NUM">0</field></block></value>
                                            </block>
                                          </value>
-                                         <statement name="DO">
+                                         <statement name="DO0">
                                            <!-- prev_coins = dp[curr_amount - coin] -->
                                            <block type="variables_set">
                                               <field name="VAR">prev_coins</field>
                                               <value name="VALUE">
-                                                <block type="lists_getIndex">
-                                                  <mutation statement="false" at="true"></mutation>
-                                                  <field name="MODE">GET</field>
-                                                  <field name="WHERE">FROM_START</field>
-                                                  <value name="VALUE"><block type="variables_get"><field name="VAR">dp</field></block></value>
-                                                  <value name="AT">
+                                                <block type="lists_get_at_index">
+<value name="LIST"><block type="variables_get"><field name="VAR">dp</field></block></value>
+<value name="INDEX">
                                                     <block type="math_arithmetic">
                                                       <value name="A"><block type="variables_get"><field name="VAR">curr_amount</field></block></value>
                                                       <field name="OP">MINUS</field>
                                                       <value name="B"><block type="variables_get"><field name="VAR">coin</field></block></value>
-                                                    </block>
+</block>
                                                   </value>
                                                 </block>
                                               </value>
@@ -111,18 +108,15 @@ const dynamicCoinChangeExampleXml = `<xml xmlns="https://developers.google.com/b
                                                 <block type="variables_set">
                                                    <field name="VAR">current_coins</field>
                                                    <value name="VALUE">
-                                                     <block type="lists_getIndex">
-                                                       <mutation statement="false" at="true"></mutation>
-                                                       <field name="MODE">GET</field>
-                                                       <field name="WHERE">FROM_START</field>
-                                                       <value name="VALUE"><block type="variables_get"><field name="VAR">dp</field></block></value>
-                                                       <value name="AT"><block type="variables_get"><field name="VAR">curr_amount</field></block></value>
-                                                     </block>
+                                                     <block type="lists_get_at_index">
+<value name="LIST"><block type="variables_get"><field name="VAR">dp</field></block></value>
+<value name="INDEX"><block type="variables_get"><field name="VAR">curr_amount</field></block></value>
+</block>
                                                    </value>
                                                    <next>
                                                      <!-- if prev_coins != 999999 and prev_coins + 1 < current_coins -->
-                                                     <block type="if_only" id="check_better_path">
-                                                       <value name="CONDITION">
+                                                     <block type="controls_if" id="check_better_path">
+                                                       <value name="IF0">
                                                          <block type="logic_operation">
                                                             <field name="OP">AND</field>
                                                             <value name="A">
@@ -139,7 +133,7 @@ const dynamicCoinChangeExampleXml = `<xml xmlns="https://developers.google.com/b
                                                             </value>
                                                          </block>
                                                        </value>
-                                                       <statement name="DO">
+                                                       <statement name="DO0">
                                                          <!-- dp[curr_amount] = prev_coins + 1 -->
                                                          <block type="lists_setIndex" id="update_dp">
                                                            <field name="MODE">SET</field>
@@ -159,13 +153,11 @@ const dynamicCoinChangeExampleXml = `<xml xmlns="https://developers.google.com/b
                                                                    <field name="WHERE1">FIRST</field>
                                                                    <field name="WHERE2">LAST</field>
                                                                    <value name="LIST">
-                                                                     <block type="lists_getIndex">
-                                                                       <mutation statement="false" at="true"></mutation>
-                                                                       <field name="MODE">GET</field>
-                                                                       <field name="WHERE">FROM_START</field>
-                                                                       <value name="VALUE"><block type="variables_get"><field name="VAR">combo</field></block></value>
-                                                                       <value name="AT">
-                                                                         <block type="math_arithmetic"><value name="A"><block type="variables_get"><field name="VAR">curr_amount</field></block></value><field name="OP">MINUS</field><value name="B"><block type="variables_get"><field name="VAR">coin</field></block></value></block>
+                                                                     <block type="lists_get_at_index">
+<value name="LIST"><block type="variables_get"><field name="VAR">combo</field></block></value>
+<value name="INDEX">
+                                                                         <block type="math_arithmetic"><value name="A"><block type="variables_get"><field name="VAR">curr_amount</field></block></value><field name="OP">MINUS</field><value name="B"><block type="variables_get"><field name="VAR">coin</field></block></value>
+</block>
                                                                        </value>
                                                                      </block>
                                                                    </value>
@@ -220,24 +212,21 @@ const dynamicCoinChangeExampleXml = `<xml xmlns="https://developers.google.com/b
                           <block type="variables_set">
                             <field name="VAR">ans</field>
                             <value name="VALUE">
-                              <block type="lists_getIndex">
-                                <mutation statement="false" at="true"></mutation>
-                                <field name="MODE">GET</field>
-                                <field name="WHERE">FROM_START</field>
-                                <value name="VALUE"><block type="variables_get"><field name="VAR">dp</field></block></value>
-                                <value name="AT"><block type="variables_get"><field name="VAR">amount</field></block></value>
-                              </block>
+                              <block type="lists_get_at_index">
+<value name="LIST"><block type="variables_get"><field name="VAR">dp</field></block></value>
+<value name="INDEX"><block type="variables_get"><field name="VAR">amount</field></block></value>
+</block>
                             </value>
                             <next>
-                              <block type="if_only">
-                                <value name="CONDITION">
+                              <block type="controls_if">
+                                <value name="IF0">
                                   <block type="logic_compare">
                                     <value name="A"><block type="variables_get"><field name="VAR">ans</field></block></value>
                                     <field name="OP">EQ</field>
                                     <value name="B"><block type="math_number"><field name="NUM">999999</field></block></value>
                                   </block>
                                 </value>
-                                <statement name="DO">
+                                <statement name="DO0">
                                   <block type="variables_set"><field name="VAR">ans</field><value name="VALUE"><block type="math_number"><field name="NUM">-1</field></block></value></block>
                                 </statement>
                               </block>

@@ -41,7 +41,7 @@ exports.createTestCase = async (req, res) => {
     } = req.body;
 
     // Validate required fields
-    if (!level_id || !test_case_name || !function_name || !expected_output) {
+    if (!level_id || !test_case_name || !function_name || expected_output === undefined) {
       return res.status(400).json({
         message: 'Missing required fields: level_id, test_case_name, function_name, expected_output',
       });

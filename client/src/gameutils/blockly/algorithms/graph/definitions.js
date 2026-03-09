@@ -149,6 +149,51 @@ export function defineGraphOperationsBlocks() {
       this.setTooltip("บันทึกว่าเลือกเส้นเชื่อมนี้เข้าสู่ MST (Record Trace)");
     },
   };
+
+  // --- Visual Feedback Blocks for DFS/BFS ---
+
+  // Get neighbors with visual feedback
+  Blockly.Blocks["graph_get_neighbors_visual"] = {
+    init: function () {
+      this.appendValueInput("GRAPH")
+        .setCheck(null)
+        .appendField("Get Neighbors of Node (Visual)");
+      this.appendValueInput("NODE")
+        .setCheck("Number")
+        .appendField("from Graph");
+      this.setOutput(true, "Array");
+      this.setColour(200);
+      this.setTooltip("ดึง neighbors พร้อมอัปเดต Visual (DFS/BFS)");
+    },
+  };
+
+  // Mark node as visited with visual feedback
+  Blockly.Blocks["mark_visited_visual"] = {
+    init: function () {
+      this.appendValueInput("NODE")
+        .setCheck("Number")
+        .appendField("Mark Node");
+      this.appendDummyInput()
+        .appendField("as Visited (Visual)");
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setColour(200);
+      this.setTooltip("Mark node ว่าเยี่ยมชมแล้ว พร้อมแสดงผล Visual");
+    },
+  };
+
+  // Show path update with visual feedback
+  Blockly.Blocks["show_path_visual"] = {
+    init: function () {
+      this.appendValueInput("PATH")
+        .setCheck("Array")
+        .appendField("Show Path (Visual)");
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setColour(200);
+      this.setTooltip("แสดงอัปเดตเส้นทาง (Path) ปัจจุบันด้วย Visual");
+    },
+  };
 }
 
 

@@ -97,8 +97,8 @@ const emeiDijkstraXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                               </block>
                             </value>
                             <next>
-                              <block type="while_loop" id="dij_loop">
-                                <value name="CONDITION">
+                              <block type="controls_whileUntil" id="dij_loop"><field name="MODE">WHILE</field>
+                                <value name="BOOL">
                                   <block type="logic_negate">
                                     <value name="BOOL">
                                       <block type="lists_isEmpty"><value name="VALUE"><block type="variables_get"><field name="VAR">PQ</field></block></value></block>
@@ -112,15 +112,21 @@ const emeiDijkstraXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                                     <next>
                                       <block type="variables_set" id="get_top">
                                         <field name="VAR">top</field>
-                                        <value name="VALUE"><block type="lists_get_at_index"><value name="LIST"><block type="variables_get"><field name="VAR">PQ</field></block></value><value name="INDEX"><block type="variables_get"><field name="VAR">idx</field></block></value></block></value>
+                                        <value name="VALUE"><block type="lists_get_at_index">
+<value name="LIST"><block type="variables_get"><field name="VAR">PQ</field></block></value>
+<value name="INDEX"><block type="variables_get"><field name="VAR">idx</field></block></value>
+</block></value>
                                         <next>
                                           <block type="lists_remove_at_index" id="pop_top">
-                                            <value name="LIST"><block type="variables_get"><field name="VAR">PQ</field></block></value>
-                                            <value name="INDEX"><block type="variables_get"><field name="VAR">idx</field></block></value>
+<value name="LIST"><block type="variables_get"><field name="VAR">PQ</field></block></value>
+<value name="INDEX"><block type="variables_get"><field name="VAR">idx</field></block></value>
                                             <next>
                                               <block type="variables_set" id="set_u">
                                                 <field name="VAR">u</field>
-                                                <value name="VALUE"><block type="lists_get_at_index"><value name="LIST"><block type="variables_get"><field name="VAR">top</field></block></value><value name="INDEX"><block type="math_number"><field name="NUM">1</field></block></value></block></value>
+                                                <value name="VALUE"><block type="lists_get_at_index">
+<value name="LIST"><block type="variables_get"><field name="VAR">top</field></block></value>
+<value name="INDEX"><block type="math_number"><field name="NUM">1</field></block></value>
+</block></value>
                                                 <next>
                                                   <block type="emei_highlight_peak" id="peak_u">
                                                     <value name="NODE"><block type="variables_get"><field name="VAR">u</field></block></value>
@@ -136,15 +142,30 @@ const emeiDijkstraXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                                                         <statement name="DO">
                                                           <block type="variables_set" id="set_v">
                                                             <field name="VAR">v</field>
-                                                            <value name="VALUE"><block type="lists_get_at_index"><value name="LIST"><block type="variables_get"><field name="VAR">neighbor_data</field></block></value><value name="INDEX"><block type="math_number"><field name="NUM">0</field></block></value></block></value>
+                                                            <value name="VALUE"><block type="lists_get_at_index">
+<value name="LIST"><block type="variables_get"><field name="VAR">neighbor_data</field></block></value>
+<value name="INDEX"><block type="math_number"><field name="NUM">0</field></block></value>
+</block></value>
                                                             <next>
                                                               <block type="variables_set" id="calc_min_cap">
                                                                 <field name="VAR">min_cap</field>
                                                                 <value name="VALUE">
-                                                                  <block type="math_min_max">
+                                                                  <block type="math_on_list">
+                                                                    <mutation op="MIN"></mutation>
                                                                     <field name="OP">MIN</field>
-                                                                    <value name="A"><block type="lists_get_at_index"><value name="LIST"><block type="variables_get"><field name="VAR">capacities</field></block></value><value name="INDEX"><block type="variables_get"><field name="VAR">u</field></block></value></block></value>
-                                                                    <value name="B"><block type="lists_get_at_index"><value name="LIST"><block type="variables_get"><field name="VAR">neighbor_data</field></block></value><value name="INDEX"><block type="math_number"><field name="NUM">1</field></block></value></block></value>
+                                                                    <value name="LIST">
+                                                                      <block type="lists_create_with">
+                                                                        <mutation items="2"></mutation>
+                                                                        <value name="ADD0"><block type="lists_get_at_index">
+<value name="LIST"><block type="variables_get"><field name="VAR">capacities</field></block></value>
+<value name="INDEX"><block type="variables_get"><field name="VAR">u</field></block></value>
+</block></value>
+                                                                        <value name="ADD1"><block type="lists_get_at_index">
+<value name="LIST"><block type="variables_get"><field name="VAR">neighbor_data</field></block></value>
+<value name="INDEX"><block type="math_number"><field name="NUM">1</field></block></value>
+</block></value>
+                                                                      </block>
+                                                                    </value>
                                                                   </block>
                                                                 </value>
                                                                 <next>
@@ -153,7 +174,10 @@ const emeiDijkstraXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                                                                       <block type="logic_compare">
                                                                         <field name="OP">GT</field>
                                                                         <value name="A"><block type="variables_get"><field name="VAR">min_cap</field></block></value>
-                                                                        <value name="B"><block type="lists_get_at_index"><value name="LIST"><block type="variables_get"><field name="VAR">capacities</field></block></value><value name="INDEX"><block type="variables_get"><field name="VAR">v</field></block></value></block></value>
+                                                                        <value name="B"><block type="lists_get_at_index">
+<value name="LIST"><block type="variables_get"><field name="VAR">capacities</field></block></value>
+<value name="INDEX"><block type="variables_get"><field name="VAR">v</field></block></value>
+</block></value>
                                                                       </block>
                                                                     </value>
                                                                     <statement name="DO0">
@@ -209,7 +233,10 @@ const emeiDijkstraXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                                 <next>
                                   <block type="variables_set" id="set_bottleneck">
                                     <field name="VAR">C</field>
-                                    <value name="VALUE"><block type="lists_get_at_index"><value name="LIST"><block type="variables_get"><field name="VAR">capacities</field></block></value><value name="INDEX"><block type="variables_get"><field name="VAR">end</field></block></value></block></value>
+                                    <value name="VALUE"><block type="lists_get_at_index">
+<value name="LIST"><block type="variables_get"><field name="VAR">capacities</field></block></value>
+<value name="INDEX"><block type="variables_get"><field name="VAR">end</field></block></value>
+</block></value>
                                     <next>
                                     <block type="variables_set" id="calc_rounds">
                                         <field name="VAR">result</field>
@@ -416,11 +443,17 @@ const emeiPrimXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                                                 <statement name="DO">
                                                   <block type="variables_set">
                                                     <field name="VAR">v</field>
-                                                    <value name="VALUE"><block type="lists_get_at_index"><value name="LIST"><block type="variables_get"><field name="VAR">edge</field></block></value><value name="INDEX"><block type="math_number"><field name="NUM">0</field></block></value></block></value>
+                                                    <value name="VALUE"><block type="lists_get_at_index">
+<value name="LIST"><block type="variables_get"><field name="VAR">edge</field></block></value>
+<value name="INDEX"><block type="math_number"><field name="NUM">0</field></block></value>
+</block></value>
                                                     <next>
                                                       <block type="variables_set">
                                                         <field name="VAR">w</field>
-                                                        <value name="VALUE"><block type="lists_get_at_index"><value name="LIST"><block type="variables_get"><field name="VAR">edge</field></block></value><value name="INDEX"><block type="math_number"><field name="NUM">1</field></block></value></block></value>
+                                                        <value name="VALUE"><block type="lists_get_at_index">
+<value name="LIST"><block type="variables_get"><field name="VAR">edge</field></block></value>
+<value name="INDEX"><block type="math_number"><field name="NUM">1</field></block></value>
+</block></value>
                                                         <next>
                                                           <block type="controls_if">
                                                             <value name="IF0">
@@ -430,9 +463,9 @@ const emeiPrimXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                                                                   <block type="logic_negate">
                                                                     <value name="BOOL">
                                                                       <block type="lists_get_at_index">
-                                                                        <value name="LIST"><block type="variables_get"><field name="VAR">visited</field></block></value>
-                                                                        <value name="INDEX"><block type="variables_get"><field name="VAR">v</field></block></value>
-                                                                      </block>
+<value name="LIST"><block type="variables_get"><field name="VAR">visited</field></block></value>
+<value name="INDEX"><block type="variables_get"><field name="VAR">v</field></block></value>
+</block>
                                                                     </value>
                                                                   </block>
                                                                 </value>
@@ -440,17 +473,26 @@ const emeiPrimXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                                                                   <block type="logic_compare">
                                                                     <field name="OP">GT</field>
                                                                     <value name="A">
-                                                                      <block type="math_min_max">
+                                                                      <block type="math_on_list">
+                                                                        <mutation op="MIN"></mutation>
                                                                         <field name="OP">MIN</field>
-                                                                        <value name="A"><block type="lists_get_at_index"><value name="LIST"><block type="variables_get"><field name="VAR">capacities</field></block></value><value name="INDEX"><block type="variables_get"><field name="VAR">u</field></block></value></block></value>
-                                                                        <value name="B"><block type="variables_get"><field name="VAR">w</field></block></value>
+                                                                        <value name="LIST">
+                                                                          <block type="lists_create_with">
+                                                                            <mutation items="2"></mutation>
+                                                                            <value name="ADD0"><block type="lists_get_at_index">
+<value name="LIST"><block type="variables_get"><field name="VAR">capacities</field></block></value>
+<value name="INDEX"><block type="variables_get"><field name="VAR">u</field></block></value>
+</block></value>
+                                                                            <value name="ADD1"><block type="variables_get"><field name="VAR">w</field></block></value>
+                                                                          </block>
+                                                                        </value>
                                                                       </block>
                                                                     </value>
                                                                     <value name="B">
                                                                       <block type="lists_get_at_index">
-                                                                        <value name="LIST"><block type="variables_get"><field name="VAR">capacities</field></block></value>
-                                                                        <value name="INDEX"><block type="variables_get"><field name="VAR">v</field></block></value>
-                                                                      </block>
+<value name="LIST"><block type="variables_get"><field name="VAR">capacities</field></block></value>
+<value name="INDEX"><block type="variables_get"><field name="VAR">v</field></block></value>
+</block>
                                                                     </value>
                                                                   </block>
                                                                 </value>
@@ -464,10 +506,19 @@ const emeiPrimXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                                                                 <value name="LIST"><block type="variables_get"><field name="VAR">capacities</field></block></value>
                                                                 <value name="AT"><block type="variables_get"><field name="VAR">v</field></block></value>
                                                                 <value name="TO">
-                                                                  <block type="math_min_max">
+                                                                  <block type="math_on_list">
+                                                                    <mutation op="MIN"></mutation>
                                                                     <field name="OP">MIN</field>
-                                                                    <value name="A"><block type="lists_get_at_index"><value name="LIST"><block type="variables_get"><field name="VAR">capacities</field></block></value><value name="INDEX"><block type="variables_get"><field name="VAR">u</field></block></value></block></value>
-                                                                    <value name="B"><block type="variables_get"><field name="VAR">w</field></block></value>
+                                                                    <value name="LIST">
+                                                                      <block type="lists_create_with">
+                                                                        <mutation items="2"></mutation>
+                                                                        <value name="ADD0"><block type="lists_get_at_index">
+<value name="LIST"><block type="variables_get"><field name="VAR">capacities</field></block></value>
+<value name="INDEX"><block type="variables_get"><field name="VAR">u</field></block></value>
+</block></value>
+                                                                        <value name="ADD1"><block type="variables_get"><field name="VAR">w</field></block></value>
+                                                                      </block>
+                                                                    </value>
                                                                   </block>
                                                                 </value>
                                                                 <next>
@@ -503,9 +554,9 @@ const emeiPrimXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                                 <field name="VAR">C</field>
                                 <value name="VALUE">
                                   <block type="lists_get_at_index">
-                                    <value name="LIST"><block type="variables_get"><field name="VAR">capacities</field></block></value>
-                                    <value name="INDEX"><block type="variables_get"><field name="VAR">end</field></block></value>
-                                  </block>
+<value name="LIST"><block type="variables_get"><field name="VAR">capacities</field></block></value>
+<value name="INDEX"><block type="variables_get"><field name="VAR">end</field></block></value>
+</block>
                                 </value>
                                 <next>
                                   <block type="variables_set">
