@@ -16,7 +16,8 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
     formData.knapsack_data ? { key: 'knapsack_data', label: 'Knapsack Data' } :
       formData.coin_change_data ? { key: 'coin_change_data', label: 'Coin Change Data' } :
         formData.subset_sum_data ? { key: 'subset_sum_data', label: 'Subset Sum Data' } :
-          formData.applied_data ? { key: 'applied_data', label: 'Graph Algorithm' } : null;
+          formData.nqueen_data ? { key: 'nqueen_data', label: 'N-Queen Data' } :
+            formData.applied_data ? { key: 'applied_data', label: 'Graph Algorithm' } : null;
 
   // Pure algo = no canvas needed, graph algo = canvas + form
   const isPureAlgo = activeAlgo && activeAlgo.key !== 'applied_data';
@@ -29,22 +30,73 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
     onSetMode('people');
   };
 
+  // --- Helper: get the current algo monster type (first monster in array, or default) ---
+  const algoMonsterType = (formData.monsters && formData.monsters.length > 0)
+    ? formData.monsters[0].type || 'vampire_1'
+    : 'vampire_1';
+
+  // --- Helper: set the algo monster type (upsert a single entry in formData.monsters) ---
+  const setAlgoMonsterType = (type) => {
+    const monsterTemplates = {
+      'vampire_1': { name: '🧛 Vampire', hp: 3, damage: 100, detectionRange: 80 },
+      'vampire_2': { name: '🧛 Vampire 2', hp: 3, damage: 100, detectionRange: 80 },
+      'vampire_3': { name: '🧛 Vampire 3', hp: 3, damage: 100, detectionRange: 80 },
+    };
+    const template = monsterTemplates[type] || monsterTemplates['vampire_1'];
+    onFormDataChange({
+      ...formData,
+      monsters: [{ id: 1, ...template, type, x: 0, y: 0, patrol: [], defeated: false }]
+    });
+  };
+
   // --- Render Pure Algo Mode (CoinChange, Knapsack, SubsetSum) ---
   if (isPureAlgo) {
     return (
       <div className="bg-white rounded-lg shadow-md p-4 space-y-6">
-        {/* Character Selection */}
+        {/* Character Selection — Visual Buttons */}
         <div className="space-y-2">
           <label className="text-[10px] font-bold text-gray-500 uppercase">Player Character</label>
-          <select
-            value={formData.character || 'main_1'}
-            onChange={(e) => onFormDataChange({ ...formData, character: e.target.value })}
-            className="w-full text-xs h-8 border border-gray-200 rounded-md px-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            <option value="main_1">Main 1</option>
-            <option value="main_2">Main 2</option>
-            <option value="main_3">Main 3</option>
-          </select>
+          <div className="flex flex-col gap-1">
+            {[
+              { id: 'main_1', name: 'Main 1', img: '/characters/main_1_00.png' },
+              { id: 'main_2', name: 'Main 2', img: '/characters/main_2_00.png' },
+              { id: 'main_3', name: 'Main 3', img: '/characters/main_3_00.png' },
+            ].map((char) => (
+              <Button
+                key={char.id}
+                variant={(formData.character || 'main_1') === char.id ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => onFormDataChange({ ...formData, character: char.id })}
+                className={`justify-start h-9 text-[10px] py-1 px-2 ${(formData.character || 'main_1') === char.id ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'text-gray-600'}`}
+              >
+                <img src={char.img} alt={char.name} className="w-6 h-6 mr-2 object-contain" />
+                {char.name}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* Monster Type Selection — Visual Buttons */}
+        <div className="space-y-2">
+          <label className="text-[10px] font-bold text-gray-500 uppercase">Monster Type</label>
+          <div className="flex flex-col gap-1">
+            {[
+              { id: 'vampire_1', name: 'Vampire', img: '/enemies/vampire_1_00.png' },
+              { id: 'vampire_2', name: 'Vampire 2', img: '/enemies/vampire_2_00.png' },
+              { id: 'vampire_3', name: 'Vampire 3', img: '/enemies/vampire_3_00.png' },
+            ].map((monster) => (
+              <Button
+                key={monster.id}
+                variant={algoMonsterType === monster.id ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setAlgoMonsterType(monster.id)}
+                className={`justify-start h-9 text-[10px] py-1 px-2 ${algoMonsterType === monster.id ? 'bg-purple-100 text-purple-700 hover:bg-purple-200' : 'text-gray-600'}`}
+              >
+                <img src={monster.img} alt={monster.name} className="w-6 h-6 mr-2 object-contain" />
+                {monster.name}
+              </Button>
+            ))}
+          </div>
         </div>
 
         {/* Algorithm Data Form */}

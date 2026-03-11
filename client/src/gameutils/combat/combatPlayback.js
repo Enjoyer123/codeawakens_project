@@ -1,5 +1,5 @@
 ﻿import { hitEnemyWithDamage } from './playerCombat';
-import { showEffectWeaponFixed } from './combatEffects';
+import { showEffectWeaponFixed } from './weaponEffects';
 
 /**
  * Visual playback for the hit action.

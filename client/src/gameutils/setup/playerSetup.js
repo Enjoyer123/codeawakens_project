@@ -39,30 +39,13 @@ export function drawPlayer(scene) {
         }
 
         // Determine character texture and animation properties
-        // DEFAULT TO MAIN_1 if undefined or 'player' (legacy)
-        const characterType = scene.levelData.character || 'main_1';
-        let textureKey = 'main_1';
-        let animPrefix = 'main_1';
-        let hasDirectionalAnims = true;
-
-        if (characterType === 'player') {
-            // Legacy mapping
-            textureKey = 'main_1';
-            animPrefix = 'main_1';
-            hasDirectionalAnims = true;
-        } else if (characterType === 'main_1') {
-            textureKey = 'main_1';
-            animPrefix = 'main_1';
-            hasDirectionalAnims = true;
-        } else if (characterType === 'main_2') {
-            textureKey = 'main_2';
-            animPrefix = 'main_2';
-            hasDirectionalAnims = true;
-        } else if (characterType === 'main_3') {
-            textureKey = 'main_3';
-            animPrefix = 'main_3';
-            hasDirectionalAnims = true;
-        }
+        // Legacy 'player' maps to 'main_1', otherwise use characterType directly
+        const charKey = (scene.levelData.character === 'player' || !scene.levelData.character)
+            ? 'main_1'
+            : scene.levelData.character;
+        const textureKey = charKey;
+        const animPrefix = charKey;
+        const hasDirectionalAnims = true;
 
         // Create player sprite
         scene.player = scene.add.sprite(playerX, playerY, textureKey);
@@ -104,10 +87,7 @@ export function drawPlayer(scene) {
         }
 
         // Update arrow position to match initial direction (direction 0 = right)
-        // Use setTimeout to ensure game state is ready
-        setTimeout(() => {
-            updatePlayerArrow(scene, playerX, playerY, 0);
-        }, 100);
+        updatePlayerArrow(scene, playerX, playerY, 0);
 
         // ✅ Add takeDamage method to player sprite for combat handling
         scene.player.takeDamage = (damage, forceKill = false) => {
@@ -198,26 +178,23 @@ export function drawCinematicMonster(scene) {
 
 
     try {
-        // Determine texture and animation based on the first monster in levelData if available
+        // Lookup map: monsterType -> { textureKey, idleAnim }
+        const MONSTER_CONFIG = {
+            vampire_1: { textureKey: 'Vampire_1', idleAnim: 'vampire_1-idle_left' },
+            vampire_2: { textureKey: 'Vampire_2', idleAnim: 'vampire_2-idle_left' },
+            vampire_3: { textureKey: 'Vampire_3', idleAnim: 'vampire_3-idle_left' },
+            slime_1: { textureKey: 'slime_1', idleAnim: 'slime_1-idle_left' },
+        };
+
         let textureKey = 'Vampire_1';
         let idleAnim = 'vampire_1-idle_left';
 
         if (scene.levelData.monsters && scene.levelData.monsters.length > 0) {
-            const monsterData = scene.levelData.monsters[0];
-            const monsterType = monsterData.type || 'vampire_1';
-
-            if (monsterType === 'vampire_1') {
-                textureKey = 'Vampire_1';
-                idleAnim = 'vampire_1-idle_left';
-            } else if (monsterType === 'vampire_2') {
-                textureKey = 'Vampire_2';
-                idleAnim = 'vampire_2-idle_left';
-            } else if (monsterType === 'vampire_3') {
-                textureKey = 'Vampire_3';
-                idleAnim = 'vampire_3-idle_left';
-            } else if (monsterType === 'slime_1') {
-                textureKey = 'slime_1';
-                idleAnim = 'slime_1-idle_left';
+            const monsterType = scene.levelData.monsters[0].type || 'vampire_1';
+            const config = MONSTER_CONFIG[monsterType];
+            if (config) {
+                textureKey = config.textureKey;
+                idleAnim = config.idleAnim;
             }
         }
 

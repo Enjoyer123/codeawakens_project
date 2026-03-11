@@ -5,7 +5,7 @@ import { showGameOver } from '../effects/gameEffects';
 import { getDirectionFromAngle } from './combatHelpers';
 import { startBattle } from './battle';
 
-export function updateMonsters(scene, delta, isRunning, setPlayerHp, setIsGameOver) {
+export function updateMonsters(scene, delta, isRunning) {
     if (!scene.monsters) return;
 
 
@@ -51,14 +51,14 @@ export function updateMonsters(scene, delta, isRunning, setPlayerHp, setIsGameOv
         }
 
         if (monster.data.isChasing) {
-            handleMonsterChase(scene, monster, delta, setPlayerHp, setIsGameOver);
+            handleMonsterChase(scene, monster, delta);
         } else {
             handleMonsterPatrol(scene, monster, delta);
         }
     });
 }
 
-function handleMonsterChase(scene, monster, delta, setPlayerHp, setIsGameOver) {
+function handleMonsterChase(scene, monster, delta) {
     const angle = Phaser.Math.Angle.Between(
         monster.sprite.x,
         monster.sprite.y,
@@ -83,7 +83,9 @@ function handleMonsterChase(scene, monster, delta, setPlayerHp, setIsGameOver) {
                 scene.player.takeDamage(100, true);
             } else {
                 setGlobalPlayerHp(0);
-                if (typeof setIsGameOver === 'function') setIsGameOver(true);
+                if (scene.externalHandlers && typeof scene.externalHandlers.setIsGameOver === 'function') {
+                    scene.externalHandlers.setIsGameOver(true);
+                }
                 showGameOver(scene);
             }
             return;
@@ -100,7 +102,9 @@ function handleMonsterChase(scene, monster, delta, setPlayerHp, setIsGameOver) {
                 scene.player.takeDamage(100, true);
             } else {
                 setGlobalPlayerHp(0);
-                if (typeof setIsGameOver === 'function') setIsGameOver(true);
+                if (scene.externalHandlers && typeof scene.externalHandlers.setIsGameOver === 'function') {
+                    scene.externalHandlers.setIsGameOver(true);
+                }
                 showGameOver(scene);
             }
             return;
@@ -133,7 +137,7 @@ function handleMonsterChase(scene, monster, delta, setPlayerHp, setIsGameOver) {
 
     const attackRange = monster.data.attackRange || 45;
     if (distAfterMove <= attackRange && !monster.data.inBattle) {
-        startBattle(scene, monster, setPlayerHp, setIsGameOver, false).catch(err => {
+        startBattle(scene, monster, null, scene.externalHandlers?.setIsGameOver, false).catch(err => {
             console.error('Error starting battle:', err);
         });
     }

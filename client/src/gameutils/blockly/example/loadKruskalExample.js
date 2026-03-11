@@ -12,7 +12,13 @@ export function loadKruskalExampleBlocks(workspace) {
     // console.log removed('📦 Loading Kruskal example blocks into workspace...');
 
     // Clear workspace first
+    if (workspace._starterListener) {
+      workspace.removeChangeListener(workspace._starterListener);
+      workspace._starterListener = null;
+    }
+    Blockly.Events.disable();
     workspace.clear();
+    Blockly.Events.enable();
 
     // Wait a bit for workspace to be ready
     setTimeout(() => {

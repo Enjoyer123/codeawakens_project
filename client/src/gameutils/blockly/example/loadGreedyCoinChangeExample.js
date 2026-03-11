@@ -233,7 +233,13 @@ export function loadGreedyCoinChangeExampleBlocks(workspace) {
 
   try {
     // console.log removed('➕ Loading Greedy Coin Change example blocks into workspace...');
+    if (workspace._starterListener) {
+      workspace.removeChangeListener(workspace._starterListener);
+      workspace._starterListener = null;
+    }
+    Blockly.Events.disable();
     workspace.clear();
+    Blockly.Events.enable();
 
     setTimeout(() => {
       try {

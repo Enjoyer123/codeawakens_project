@@ -264,7 +264,14 @@ export function loadBfsExampleBlocks(workspace) {
     // console.log removed('📦 Loading BFS example blocks into workspace...');
 
     // Clear workspace first
+    // ลบ starter listener ก่อน clear เพื่อให้ example blocks ลบได้ตามปกติ
+    if (workspace._starterListener) {
+      workspace.removeChangeListener(workspace._starterListener);
+      workspace._starterListener = null;
+    }
+    Blockly.Events.disable();
     workspace.clear();
+    Blockly.Events.enable();
 
     // Wait a bit for workspace to be ready
     setTimeout(() => {

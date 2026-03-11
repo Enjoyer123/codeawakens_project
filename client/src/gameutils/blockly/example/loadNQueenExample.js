@@ -1,6 +1,5 @@
 // Helper function to load N-Queen example blocks into Blockly workspace
 import * as Blockly from "blockly/core";
-import { setXmlLoading } from "../core/state";
 
 // N-Queen Example XML - Backtracking recursive solution (FIXED - return solution in base case)
 const nQueenExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
@@ -180,50 +179,19 @@ export function loadNQueenExampleBlocks(workspace) {
   }
 
   try {
-    // console.log removed('🔍 Loading N-Queen example blocks (FIXED)...');
+    const xmlDom = Blockly.utils.xml.textToDom(nQueenExampleXml);
 
-    // Process XML to fix definitions and deduplicate
-    const processedXml = nQueenExampleXml;
-    const xmlDom = Blockly.utils.xml.textToDom(processedXml);
+    // ลบ starter listener + clear workspace ก่อนโหลด
+    if (workspace._starterListener) {
+      workspace.removeChangeListener(workspace._starterListener);
+      workspace._starterListener = null;
+    }
+    Blockly.Events.disable();
+    workspace.clear();
+    Blockly.Events.enable();
 
-    // ⚡ Performance: Set flag to skip event processing during load to prevent auto-creation of definitions
-    setXmlLoading(true);
-
-    // Load into workspace
+    // โหลด blocks
     Blockly.Xml.domToWorkspace(xmlDom, workspace);
-
-    setXmlLoading(false);
-
-    // Ensure necessary variables exist (use getVariableMap() APIs for Blockly v12+)
-    const variableNames = ['row', 'col', 'n', 'result', 'solution', 'i', 'j', 'solveResult', 'board'];
-    variableNames.forEach(varName => {
-      try {
-        // Prefer new API if available
-        if (workspace.getVariableMap && typeof workspace.getVariableMap === 'function') {
-          const vm = workspace.getVariableMap();
-          if (!vm.getVariable(varName)) {
-            // createVariable signature: (name, type?, id?) - keep minimal
-            if (typeof vm.createVariable === 'function') {
-              vm.createVariable(varName);
-            } else if (typeof workspace.createVariable === 'function') {
-              // fallback to old API
-              workspace.createVariable(varName);
-            }
-          }
-        } else {
-          // older Blockly versions
-          if (!workspace.getVariable(varName)) {
-            workspace.createVariable(varName);
-          }
-        }
-      } catch (e) {
-        // Variable might already exist, ignore
-        console.debug('Variable', varName, 'already exists or error:', e);
-      }
-    });
-
-    // console.log removed('✅ N-Queen example blocks loaded successfully');
-    // console.log removed('⚠️ Note: Functions safe(row, col), place(row, col), and remove(row, col) will be initialized by nqueenInitCode');
   } catch (error) {
     console.error('❌ Error loading N-Queen example blocks:', error);
   }

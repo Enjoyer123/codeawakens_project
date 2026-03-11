@@ -273,7 +273,13 @@ export const dynamicSubsetSumExampleXml = `<xml xmlns="https://developers.google
 export function loadDynamicSubsetSumExampleBlocks(workspace) {
   if (!workspace) return;
   try {
+    if (workspace._starterListener) {
+      workspace.removeChangeListener(workspace._starterListener);
+      workspace._starterListener = null;
+    }
+    Blockly.Events.disable();
     workspace.clear();
+    Blockly.Events.enable();
     setTimeout(() => {
       try {
         const xmlDom = Blockly.utils.xml.textToDom(dynamicSubsetSumExampleXml);

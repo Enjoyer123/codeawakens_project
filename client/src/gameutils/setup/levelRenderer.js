@@ -12,10 +12,9 @@ export function drawLevel(scene) {
         return;
     }
 
-    // ตรวจสอบว่า scene.add มีอยู่จริง
-    if (!scene.add) {
-        console.error('❌ Scene.add is null, scene may not be ready yet');
-        return;
+    // ตรวจสอบว่าระบบภายในการวาดภาพของ Scene ยกเลิกไปแล้วหรือยัง (ผู้เล่นกดออกด่าน)
+    if (!scene.sys || !scene.sys.displayList || !scene.add) {
+        return; // ไม่ต้องแจ้ง Error ออกมา เพราะเป็นการปิดหน้าจอตามปกติ
     }
 
     if (scene.textures && scene.textures.exists('bg')) {
@@ -24,7 +23,7 @@ export function drawLevel(scene) {
             bg.setDisplaySize(scene.scale.width, scene.scale.height);
             bg.setPosition(scene.scale.width / 2, scene.scale.height / 2);
         } catch (error) {
-            console.error('❌ Error creating background image:', error);
+            // ปล่อยผ่าน
         }
     }
 
@@ -32,8 +31,7 @@ export function drawLevel(scene) {
     try {
         graphics = scene.add.graphics();
     } catch (error) {
-        console.error('❌ Error creating graphics:', error);
-        return;
+        return; // ออกเงียบๆ กรณี scene ถูกทำลายระหว่างเริ่มวาด
     }
     graphics.setDepth(1);
 
