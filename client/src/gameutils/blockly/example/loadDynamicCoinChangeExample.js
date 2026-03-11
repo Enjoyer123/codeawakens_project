@@ -274,6 +274,10 @@ export const loadDynamicCoinChangeExampleBlocks = (workspace) => {
   if (!workspace) return;
   Blockly.Events.disable();
   try {
+    if (workspace._starterListener) {
+      workspace.removeChangeListener(workspace._starterListener);
+      workspace._starterListener = null;
+    }
     workspace.clear();
     // Wait for clear to process properly before inject
     setTimeout(() => {

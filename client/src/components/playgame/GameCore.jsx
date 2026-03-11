@@ -1,5 +1,5 @@
 ﻿import React, { useEffect, useRef, useState } from "react";
-
+import { removeStarterListener, loadStarterXml } from './hooks/blocklysetup/xmlLoader';
 import { useParams } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import useUserStore from '../../store/useUserStore';
@@ -250,6 +250,43 @@ const GameCore = ({
       }
     };
   }, [currentLevel, blocklyRef.current]);
+
+  useEffect(() => {
+    if (!isPreview || !workspaceRef.current || !blocklyLoaded) return;
+
+    const prev = prevPatternXmlRef.current;
+    prevPatternXmlRef.current = patternXml;
+
+    // ถ้าเลือก Pattern → โหลด XML ของ Pattern นั้น
+    if (patternXml) {
+      try {
+        removeStarterListener(workspaceRef.current);
+        Blockly.Events.disable();
+        workspaceRef.current.clear();
+        Blockly.Events.enable();
+        const xmlDom = Blockly.utils.xml.textToDom(patternXml);
+        Blockly.Xml.domToWorkspace(xmlDom, workspaceRef.current);
+      } catch (e) {
+        Blockly.Events.enable();
+        console.error("Error loading pattern XML into workspace:", e);
+      }
+    }
+    // ถ้ายกเลิกเลือก (จาก Pattern กลับมา "เล่นเฉยๆ") → โหลด starter XML ของด่านใหม่
+    else if (prev) {
+      try {
+        if (currentLevel?.starter_xml) {
+          loadStarterXml(workspaceRef.current, currentLevel.starter_xml, currentLevel?.textcode || false, handleInitialCodeGenerated);
+        } else {
+          Blockly.Events.disable();
+          workspaceRef.current.clear();
+          Blockly.Events.enable();
+        }
+      } catch (e) {
+        Blockly.Events.enable();
+        console.error("Error restoring starter XML into workspace:", e);
+      }
+    }
+  }, [patternXml, blocklyLoaded, isPreview]);
 
   // Initialize Phaser game
   const { initPhaserGame } = usePhaserGame({

@@ -26,15 +26,14 @@ import { API_BASE_URL } from '../../../config/apiConfig';
 export class GameScene extends Phaser.Scene {
     constructor() {
         super({ key: 'GameScene' });
-        this.currentLevel = null; // Will be set via init data or directly
+        this.currentLevel = null;
         this.externalHandlers = {
             isRunning: false,
             setPlayerHp: null,
             setIsGameOver: null,
             setCurrentWeaponData: null
         };
-        // Use custom property to track currently rendered state
-        this.renderedEffectsJson = "[]";
+        this.renderedEffects = [];
     }
 
     init(data) {
@@ -52,31 +51,25 @@ export class GameScene extends Phaser.Scene {
 
         // Error handler
         this.load.on('loaderror', (file) => {
-            console.error('❌ Failed to load file:', file.key, 'from:', file.src);
+            console.error('Failed to load file:', file.key, 'from:', file.src);
             this.load.nextFile(file, true);
         });
-
-
 
         if (backgroundPath) {
             this.load.image('bg', backgroundPath);
         } else {
-            this.load.image('bg', '/default-background.png');
+            this.load.image('bg', '/Mapdefault.png');
         }
 
         // Load sprites
-        // Legacy 'player' and 'vampire' atlases removed
-        // Only load V1/2/3 and Main1/2/3 + Slime
         this.load.atlas('Vampire_1', '/enemies/Vampire1.png', '/enemies/Vampire1.json');
         this.load.atlas('Vampire_2', '/enemies/Vampire2.png', '/enemies/Vampire2.json');
         this.load.atlas('Vampire_3', '/enemies/Vampire3.png', '/enemies/Vampire3.json');
-        // Load Slime sprites (using slime_1 key to match animation configs)
+
         this.load.atlas('slime_1', '/characters/Slime1.png', '/characters/Slime1.json');
-        // Load newly added Main_1 character
+
         this.load.atlas('main_1', '/characters/Main1.png', '/characters/Main1.json');
-        // Load newly added Main_2 character
         this.load.atlas('main_2', '/characters/Main2.png', '/characters/Main2.json');
-        // Load newly added Main_3 character
         this.load.atlas('main_3', '/characters/Main3.png', '/characters/Main3.json');
 
         // Load Org bots for Coin Change
@@ -85,8 +78,6 @@ export class GameScene extends Phaser.Scene {
         this.load.image('org1', '/bot/org1.png');
         this.load.image('org2', '/bot/org2.png');
         this.load.image('org3', '/bot/org3.png');
-
-        // this.load.image('weapon_stick', `${API_BASE_URL}/uploads/weapons/stick_idle_1.png`);
 
         // Load bag object
         this.load.image('bag', '/object/bag.png');
@@ -107,7 +98,6 @@ export class GameScene extends Phaser.Scene {
         for (let i = 1; i <= 13; i++) {
             this.load.image(`aura_2_${i}`, `/aura/aura_2_${i}.png`);
         }
-
         // Load circle_1 (7 frames)
         for (let i = 1; i <= 7; i++) {
             this.load.image(`circle_1_${i}`, `/aura/circle_1_${i}.png`);
@@ -119,8 +109,6 @@ export class GameScene extends Phaser.Scene {
     }
 
     create() {
-
-
         // Create aura animation
         if (this.textures.exists('aura_1_1')) {
             this.anims.create({
@@ -138,7 +126,6 @@ export class GameScene extends Phaser.Scene {
                 frameRate: 8,
                 repeat: -1
             });
-
         }
 
         // Create aura_2 animation
@@ -189,9 +176,6 @@ export class GameScene extends Phaser.Scene {
 
 
         // Create animations
-        // Legacy Animation Creators Removed
-        // createCharacterAnims(this.anims);
-        // createVampireAnims(this.anims);
         createVampire_1Anims(this.anims);
         createSlime1Anims(this.anims);
         createMain_1Anims(this.anims);
@@ -201,57 +185,40 @@ export class GameScene extends Phaser.Scene {
         createVampire_3Anims(this.anims);
 
 
-
-        // Helper for safe setup
-        const safeSetupGame = (retryCount = 0, maxRetries = 20) => {
-            if (!this || !this.scene || !this.sys) return;
-
-            if (!this.add || !this.add.graphics || !this.add.sprite || !this.add.image) {
-                if (retryCount < maxRetries) {
-                    setTimeout(() => {
-                        if (this && this.setupGame) safeSetupGame(retryCount + 1, maxRetries);
-                    }, 100);
-                    return;
-                } else {
-                    console.error('❌ Scene.add still not ready after max retries');
-                    return;
-                }
+        // Helper for safe setup (Cleaner Version)
+        const safeSetupGame = () => {
+            // เช็คว่าถ้า Scene ถูกปิดหรือทำลายทิ้งไประหว่างรอโหลด (เช่น ผู้เล่นกดออกด่านเร็ว)
+            // ให้ล้มเลิกการตั้งค่าทันที ไม่ต้องวนลูปให้เปลือง Memory
+            if (!this || !this.scene || !this.sys || !this.add) {
+                console.warn('Scene was destroyed or inactive. Aborting setup.');
+                return;
             }
             this.setupGame();
         };
 
-        // Delay to ensure scene is ready
-        this.time.delayedCall(200, () => {
+        // Initializing async loading for dynamic assets (Weapon Effects)
+        const initDynamicAssets = async () => {
             if (this.load && this.load.list) {
-                preloadAllWeaponEffects(this).then(() => {
-
-                    safeSetupGame();
-                }).catch((error) => {
+                try {
+                    await preloadAllWeaponEffects(this);
+                } catch (error) {
                     console.error("Error preloading weapon effects:", error);
-                    safeSetupGame();
-                });
-            } else {
-                safeSetupGame();
+                }
             }
-        });
+            // หลัง await กลับมา เช็คอีกทีว่า Scene ยังอยู่ไหม
+            // (ผู้เล่นอาจกดออกด่านระหว่างรอโหลด)
+            if (!this || !this.scene || !this.sys || !this.add) {
+                console.warn('Scene was destroyed during preload. Aborting setup.');
+                return;
+            }
+            safeSetupGame();
+        };
+
+        initDynamicAssets();
 
     }
 
     setupGame() {
-        if (!this || !this.scene || !this.sys) return;
-        if (!this.add || !this.levelData) {
-            console.error('❌ Scene not ready or missing level data');
-            return;
-        }
-
-        // Additional checks for add methods
-        if (!this.add.graphics || !this.add.sprite || !this.add.image) {
-            console.error('❌ Scene.add methods missing in setupGame');
-            return;
-        }
-
-
-
         try {
             drawLevel(this);
             drawPlayer(this);
@@ -260,7 +227,6 @@ export class GameScene extends Phaser.Scene {
             setupObstacles(this);
             setupCoins(this);
             setupPeople(this);
-
             setupKnapsack(this);
             setupSubsetSum(this);
             setupCoinChange(this);
@@ -289,20 +255,20 @@ export class GameScene extends Phaser.Scene {
                     patternTypeId: currentState.patternTypeId || 0
                 });
 
-                // Clear renderedEffectsJson to force a re-sync on the first update()
-                this.renderedEffectsJson = "[]";
+                // Clear renderedEffects to force a re-sync on the first update()
+                this.renderedEffects = [];
 
-                this.time.delayedCall(300, () => {
-                    if (this && this.add && this.player) {
-                        try {
-                            displayPlayerWeapon(activeWeaponKey, this);
-                        } catch (error) { console.error("❌ Error displaying weapon:", error); }
+                if (this && this.add && this.player) {
+                    try {
+                        displayPlayerWeapon(activeWeaponKey, this);
+                    } catch (error) {
+                        console.error("Error displaying weapon:", error);
                     }
-                });
+                }
             }
 
         } catch (error) {
-            console.error('❌ Error in setupGame:', error);
+            console.error('Error in setupGame:', error);
         }
     }
 
@@ -315,9 +281,7 @@ export class GameScene extends Phaser.Scene {
         updateMonsters(
             this,
             delta,
-            this.externalHandlers.isRunning,
-            this.externalHandlers.setPlayerHp,
-            this.externalHandlers.setIsGameOver
+            this.externalHandlers.isRunning
         );
 
         // State-driven Visual Effects sync
@@ -325,12 +289,16 @@ export class GameScene extends Phaser.Scene {
     }
 
     syncEffectsWithState(state) {
-        if (!state.activeEffects) return;
+        if (!state.activeEffects || !Array.isArray(state.activeEffects)) return;
 
-        const effectsJson = JSON.stringify(state.activeEffects);
-        if (this.renderedEffectsJson !== effectsJson) {
+        // Efficient array comparison instead of JSON.stringify every frame (60fps)
+        const isChanged =
+            this.renderedEffects.length !== state.activeEffects.length ||
+            this.renderedEffects.some((val, i) => val !== state.activeEffects[i]);
+
+        if (isChanged) {
             // State has changed, update visuals!
-            this.renderedEffectsJson = effectsJson;
+            this.renderedEffects = [...state.activeEffects];
 
             try {
                 // Clear existing effects first

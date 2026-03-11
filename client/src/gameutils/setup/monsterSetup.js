@@ -8,27 +8,6 @@ import Phaser from "phaser";
  */
 export function setupMonsters(scene) {
     if (!scene || !scene.levelData || !scene.levelData.monsters) {
-        console.warn('⚠️ Scene, levelData, or monsters is null, cannot setup monsters');
-        return;
-    }
-
-    // ตรวจสอบว่า scene ยังมีชีวิตอยู่
-    if (scene.sys && scene.sys.isDestroyed) {
-        console.error('❌ Scene has been destroyed or is invalid');
-        return;
-    }
-
-    if (!scene.add) {
-        console.error('❌ Scene.add is null, scene may not be ready yet');
-        return;
-    }
-
-    if (!scene.add.sprite || !scene.add.circle || !scene.add.rectangle) {
-        console.error('❌ Scene.add methods not available:', {
-            hasSprite: !!scene.add.sprite,
-            hasCircle: !!scene.add.circle,
-            hasRectangle: !!scene.add.rectangle
-        });
         return;
     }
 
@@ -36,25 +15,6 @@ export function setupMonsters(scene) {
 
     scene.levelData.monsters.forEach((monsterData, index) => {
         try {
-            if (!scene.add) {
-                console.error(`❌ Scene.add is null when creating monster ${index}`);
-                return;
-            }
-
-            if (!scene.add.sprite) {
-                console.error(`❌ Scene.add.sprite is null when creating monster ${index}`);
-                return;
-            }
-
-            if (!scene.add.circle) {
-                console.error(`❌ Scene.add.circle is null when creating monster ${index}`);
-                return;
-            }
-
-            if (!scene.add.rectangle) {
-                console.error(`❌ Scene.add.rectangle is null when creating monster ${index}`);
-                return;
-            }
 
             const startPos = monsterData.patrol && monsterData.patrol.length > 0
                 ? monsterData.patrol[0]
@@ -62,44 +22,24 @@ export function setupMonsters(scene) {
 
             if (!startPos) return;
 
-            // Determine texture and initial animation based on monster type
-            const monsterType = monsterData.type || 'vampire_1'; // Modified default
-            let textureKey = 'Vampire_1'; // Default updated to Vampire 1
-            let idleAnim = 'vampire_1-idle_down';
-            let moveAnim = 'vampire_1-walk_down';
-            let attackAnim = 'vampire_1-attack-down';
-            let animPrefix = 'vampire_1';
-            let hasDirectionalAnims = true; // Vampire 1 uses directional anims
+            // Lookup map for monster configurations
+            const MONSTER_CONFIG = {
+                vampire_1: { textureKey: 'Vampire_1', animPrefix: 'vampire_1' },
+                vampire_2: { textureKey: 'Vampire_2', animPrefix: 'vampire_2' },
+                vampire_3: { textureKey: 'Vampire_3', animPrefix: 'vampire_3' },
+                slime_1: { textureKey: 'slime_1', animPrefix: 'slime' }
+            };
 
-            if (monsterType === 'vampire_1') {
-                textureKey = 'Vampire_1';
-                idleAnim = 'vampire_1-idle_down';
-                moveAnim = 'vampire_1-walk_down';
-                attackAnim = 'vampire_1-attack-down';
-                animPrefix = 'vampire_1';
-                hasDirectionalAnims = true;
-            } else if (monsterType === 'vampire_2') {
-                textureKey = 'Vampire_2';
-                idleAnim = 'vampire_2-idle_down';
-                moveAnim = 'vampire_2-walk_down';
-                attackAnim = 'vampire_2-attack-down';
-                animPrefix = 'vampire_2';
-                hasDirectionalAnims = true;
-            } else if (monsterType === 'vampire_3') {
-                textureKey = 'Vampire_3';
-                idleAnim = 'vampire_3-idle_down';
-                moveAnim = 'vampire_3-walk_down';
-                attackAnim = 'vampire_3-attack-down';
-                animPrefix = 'vampire_3';
-                hasDirectionalAnims = true;
-            } else if (monsterType === 'slime_1') {
-                textureKey = 'slime_1';
-                idleAnim = 'slime-idle_down';
-                moveAnim = 'slime-walk_down';
-                attackAnim = 'slime-attack-down'; // Assuming standard naming
-                animPrefix = 'slime';
-                hasDirectionalAnims = true;
-            }
+            const monsterType = monsterData.type || 'vampire_1';
+            const config = MONSTER_CONFIG[monsterType] || MONSTER_CONFIG['vampire_1'];
+
+            // Setup variables using config
+            const textureKey = config.textureKey;
+            const animPrefix = config.animPrefix;
+            const idleAnim = `${animPrefix}-idle_down`;
+            const moveAnim = `${animPrefix}-walk_down`;
+            const attackAnim = `${animPrefix}-attack-down`;
+            const hasDirectionalAnims = true;
 
             // Create monster sprite with correct texture
             const monsterSprite = scene.add.sprite(startPos.x, startPos.y, textureKey);
@@ -160,13 +100,13 @@ export function setupMonsters(scene) {
                 if (scene.anims.exists(idleAnim)) {
                     monsterSprite.anims.play(idleAnim, true);
                 } else {
-                    console.warn(`⚠️ Animation ${idleAnim} not found, skipping playback`);
+                    console.warn(`Animation ${idleAnim} not found, skipping playback`);
                 }
             }
 
             scene.monsters.push(monster);
         } catch (error) {
-            console.error(`❌ Error creating monster ${index}:`, error);
+            console.error(`Error creating monster ${index}:`, error);
         }
     });
 }

@@ -265,44 +265,50 @@ const dfsPlaybackXml = `<xml xmlns="https://developers.google.com/blockly/xml">
  * @param {Blockly.Workspace} workspace
  */
 export function loadDfsPlaybackExample(workspace) {
-    if (!workspace) {
-        console.error('Cannot load DFS playback example: workspace is null');
-        return;
+  if (!workspace) {
+    console.error('Cannot load DFS playback example: workspace is null');
+    return;
+  }
+
+  try {
+    if (workspace._starterListener) {
+      workspace.removeChangeListener(workspace._starterListener);
+      workspace._starterListener = null;
     }
+    Blockly.Events.disable();
+    workspace.clear();
+    Blockly.Events.enable();
 
-    try {
-        workspace.clear();
+    setTimeout(() => {
+      try {
+        const xmlDom = Blockly.utils.xml.textToDom(dfsPlaybackXml);
+        Blockly.Xml.domToWorkspace(xmlDom, workspace);
 
-        setTimeout(() => {
-            try {
-                const xmlDom = Blockly.utils.xml.textToDom(dfsPlaybackXml);
-                Blockly.Xml.domToWorkspace(xmlDom, workspace);
-
-                // Ensure variables exist
-                const variableNames = ['container', 'visited', 'result', 'node', 'neighbor', 'garph', 'start', 'goal', 'map'];
-                variableNames.forEach(varName => {
-                    try {
-                        const variableMap = workspace.getVariableMap();
-                        if (variableMap) {
-                            const existingVar = variableMap.getVariable(varName);
-                            if (!existingVar) workspace.createVariable(varName);
-                        } else {
-                            workspace.createVariable(varName);
-                        }
-                    } catch (e) {
-                        console.debug(`Variable ${varName} already exists:`, e);
-                    }
-                });
-
-            } catch (error) {
-                console.error('❌ Error loading DFS playback example:', error);
+        // Ensure variables exist
+        const variableNames = ['container', 'visited', 'result', 'node', 'neighbor', 'garph', 'start', 'goal', 'map'];
+        variableNames.forEach(varName => {
+          try {
+            const variableMap = workspace.getVariableMap();
+            if (variableMap) {
+              const existingVar = variableMap.getVariable(varName);
+              if (!existingVar) workspace.createVariable(varName);
+            } else {
+              workspace.createVariable(varName);
             }
-        }, 100);
-    } catch (error) {
-        console.error('❌ Error in loadDfsPlaybackExample:', error);
-    }
+          } catch (e) {
+            console.debug(`Variable ${varName} already exists:`, e);
+          }
+        });
+
+      } catch (error) {
+        console.error('❌ Error loading DFS playback example:', error);
+      }
+    }, 100);
+  } catch (error) {
+    console.error('❌ Error in loadDfsPlaybackExample:', error);
+  }
 }
 
 export function getDfsPlaybackExampleXml() {
-    return dfsPlaybackXml;
+  return dfsPlaybackXml;
 }

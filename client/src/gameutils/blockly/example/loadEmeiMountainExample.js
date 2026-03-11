@@ -642,7 +642,13 @@ export function loadEmeiMountainExample(workspace, type = 'dijkstra') {
   if (!workspace) return;
 
   try {
+    if (workspace._starterListener) {
+      workspace.removeChangeListener(workspace._starterListener);
+      workspace._starterListener = null;
+    }
+    Blockly.Events.disable();
     workspace.clear();
+    Blockly.Events.enable();
     const xmlText = type === 'dijkstra' ? emeiDijkstraXml : emeiPrimXml;
     const xmlDom = Blockly.utils.xml.textToDom(xmlText);
     Blockly.Xml.domToWorkspace(xmlDom, workspace);

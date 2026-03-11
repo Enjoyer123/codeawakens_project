@@ -162,7 +162,7 @@ export function createToolboxConfig(enabledBlocks) {
     if (enabledBlocks["procedures_defreturn"]) {
       categories.push({
         kind: "category",
-        name: "คืนค่า (Return)",
+        name: "Return",
         categorystyle: "procedure_category",
         contents: [{ kind: "block", type: "procedures_return" }]
       });

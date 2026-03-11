@@ -1,8 +1,8 @@
 ﻿import Phaser from 'phaser';
-import { showEffectWeaponFixed } from './combatEffects';
 import { getCurrentGameState } from '../shared/game/gameState';
 import { getWeaponData } from '../entities/weaponUtils';
 import {
+    showEffectWeaponFixed,
     createWeaponRing,
     animateWeaponAttack,
     getPlayerWeaponSprite,

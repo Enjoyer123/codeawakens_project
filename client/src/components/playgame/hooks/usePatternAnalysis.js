@@ -5,6 +5,8 @@ import { displayPlayerWeapon } from '../../../gameutils/combat/weaponEffects';
 import { getCurrentGameState, setCurrentGameState } from '../../../gameutils/shared/game/gameState';
 import { findBestMatch } from '../../../gameutils/shared/hint/hintMatcher';
 
+import { toast } from 'sonner';
+
 /**
  * Sync weapon across React state + global state + Phaser visual
  */
@@ -29,7 +31,8 @@ export function usePatternAnalysis({
   setPatternData,
   setCurrentWeaponData,
 }) {
-  const processingRef = useRef(false);
+  const debounceTimerRef = useRef(null);
+  const notifiedPatternsRef = useRef(new Set());
 
   const valuesRef = useRef({ goodPatterns, setPatternData, setCurrentWeaponData });
 
@@ -53,16 +56,10 @@ export function usePatternAnalysis({
       const allBlocks = workspace.getAllBlocks(false);
       const currentBlockCount = allBlocks.length;
 
-      console.log('[PatternAnalysis] analyzePattern called', {
-        blockCount: currentBlockCount,
-        patternCount: goodPatterns?.length,
-        patternNames: goodPatterns?.map(p => p.pattern_name),
-        hasWeaponKeys: goodPatterns?.map(p => p.weaponKey),
-      });
 
       // ─── No blocks → reset ─────────────────────────────────
       if (currentBlockCount === 0) {
-        console.log('[PatternAnalysis] No blocks → resetting to 0');
+
         const defaultWeaponKey = getCurrentGameState().levelData?.defaultWeaponKey || "stick";
         updateWeapon(defaultWeaponKey, setCurrentWeaponData, { patternTypeId: 0, activeEffects: [] });
         setPatternData({
@@ -82,6 +79,18 @@ export function usePatternAnalysis({
 
       // ─── เรียกฟังก์ชันเดียว ได้ทุกอย่าง ──────────────────
       const result = findBestMatch(workspace, goodPatterns);
+
+      // ─── Real-time Notification ──────────────────────────
+      if (result.isComplete && result.percentage === 100 && result.bestPattern) {
+        const patternName = result.bestPattern.pattern_name || result.bestPattern.pattern_type?.type_name || "Pattern";
+        if (!notifiedPatternsRef.current.has(result.bestPattern.pattern_id)) {
+          toast.success(`ต่อบล็อกถูกต้องตาม ${patternName}! \nได้รับอาวุธ: ${(result.bestPattern.weapon?.name || "อาวุธใหม่")}`, {
+            duration: 4000,
+            position: 'top-center'
+          });
+          notifiedPatternsRef.current.add(result.bestPattern.pattern_id);
+        }
+      }
 
       // ─── อัปเดต patternData ─────
       setPatternData({
@@ -110,6 +119,7 @@ export function usePatternAnalysis({
         }
       } else {
         const defaultWeaponKey = getCurrentGameState().levelData?.defaultWeaponKey || "stick";
+        // ถ้า Pattern ไม่ถูก 100% คืนค่าเป็น Stick
         updateWeapon(defaultWeaponKey, setCurrentWeaponData, { patternTypeId: 0 });
       }
     };
@@ -124,16 +134,16 @@ export function usePatternAnalysis({
         event.type === 'drag'
       ) return;
 
-      if (processingRef.current) clearTimeout(processingRef.current);
-      processingRef.current = setTimeout(() => { analyzePattern(); }, 500);
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = setTimeout(() => { analyzePattern(); }, 500);
     };
 
     workspace.addChangeListener(onWorkspaceChange);
-    console.log('[PatternAnalysis] Effect mounted. blocklyLoaded:', true, 'patterns:', valuesRef.current.goodPatterns?.length, 'blocks:', workspace.getAllBlocks?.(false)?.length);
+
     analyzePattern();
 
     return () => {
-      if (processingRef.current) clearTimeout(processingRef.current);
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
       if (workspace?.removeChangeListener) workspace.removeChangeListener(onWorkspaceChange);
     };
   }, [blocklyLoaded, workspaceRef, workspaceVersion, goodPatterns]);

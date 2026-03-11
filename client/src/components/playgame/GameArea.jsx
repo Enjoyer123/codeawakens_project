@@ -45,12 +45,14 @@ const GameArea = ({
       <div className="flex-shrink-0 bg-[#1e1b4b]/95 backdrop-blur-md border-t border-purple-500/30 shadow-2xl z-30">
         <div className="flex flex-wrap items-center gap-2 p-2 lg:p-3 text-purple-100">
 
-          {/* STATUS: HP & Weapon */}
-          <StatusPanel
-            playerHpState={playerHpState}
-            currentWeaponData={currentWeaponData}
-            characterName={currentLevel?.character || 'main_1'}
-          />
+          {/* STATUS: HP & Weapon — ซ่อนไว้จนกว่าข้อมูลด่านจะโหลดเสร็จ เพื่อป้องกันรูปตัวละคร default กระพริบ */}
+          {currentLevel && (
+            <StatusPanel
+              playerHpState={playerHpState}
+              currentWeaponData={currentWeaponData}
+              characterName={currentLevel.character || 'main_1'}
+            />
+          )}
 
           {/* Pattern Match */}
           <PatternMatchPanel

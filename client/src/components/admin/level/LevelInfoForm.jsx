@@ -89,6 +89,9 @@ const ALGORITHM_TEMPLATES = {
       tourists: null,
       edges: []
     }
+  },
+  nqueen_data: {
+    n: 4
   }
 };
 
@@ -218,6 +221,7 @@ const LevelInfoForm = ({ formData, categories, prerequisiteLevels, isEditing, le
               { label: 'Knapsack', field: 'knapsack_data' },
               { label: 'Coin Change', field: 'coin_change_data' },
               { label: 'Subset Sum', field: 'subset_sum_data' },
+              { label: 'N-Queen', field: 'nqueen_data' },
               { label: 'Emei Mountain (ง้อไบ๊)', field: 'applied_data' }
             ].map((type) => (
               <label key={type.field} className="flex items-center gap-2 p-2 border rounded-md hover:bg-gray-50 cursor-pointer">
@@ -233,6 +237,7 @@ const LevelInfoForm = ({ formData, categories, prerequisiteLevels, isEditing, le
                       newData.knapsack_data = null;
                       newData.coin_change_data = null;
                       newData.subset_sum_data = null;
+                      newData.nqueen_data = null;
                       newData.applied_data = null;
 
                       // Enable selected (Initialize with empty object if null)

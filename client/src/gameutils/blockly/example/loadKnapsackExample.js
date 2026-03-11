@@ -485,7 +485,13 @@ const knapsackDpExampleXml = `<xml xmlns="https://developers.google.com/blockly/
 export function loadKnapsackExampleBlocks(workspace, type = 'BACKTRACK') {
   if (!workspace) return;
   try {
+    if (workspace._starterListener) {
+      workspace.removeChangeListener(workspace._starterListener);
+      workspace._starterListener = null;
+    }
+    Blockly.Events.disable();
     workspace.clear();
+    Blockly.Events.enable();
     setTimeout(() => {
       try {
         const xmlToLoad = type === 'DP' ? knapsackDpExampleXml : knapsackExampleXml;
