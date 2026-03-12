@@ -33,30 +33,3 @@ export const generateAndInstrumentCode = async (workspaceRef, currentLevel) => {
     const code = javascriptGenerator.workspaceToCode(workspaceRef.current);
     return code;
 };
-
-/**
- * Prepares the final executable code string by wrapping user code with
- * safety globals and a return-capture statement.
- * 
- * @param {string} code - The user's generated code.
- * @param {Object} analysisResult - Algorithm flags (varName, isNQueen, isTrainSchedule).
- * @param {Object} currentLevel - The current level object.
- * @returns {string} The final executable code string.
- */
-export const prepareExecutableCode = (code, analysisResult, currentLevel) => {
-    const { varName } = analysisResult;
-
-    const returnStatement = `try { return ${varName}; } catch(e) { return undefined; }`;
-
-    let finalCode = `
-        // Safety: visual runs MUST yield
-        if (typeof globalThis !== 'undefined') { globalThis.__isVisualRun = true; }
-        // Safety: Reset step counter
-        if (typeof globalThis !== 'undefined') { globalThis.__stepCount = 0; }
-        
-        ${code}
-        ${returnStatement}
-    `;
-
-    return finalCode;
-};

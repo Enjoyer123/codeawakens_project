@@ -3,7 +3,7 @@
  * Build context → Execute user code → Handle completion
  */
 
-import { prepareExecutableCode } from '@/gameutils/blockly/core/executionCodeGeneration';
+
 import { buildExecutionContext } from '@/gameutils/shared/execution/executionContextBuilder';
 import { handleLevelCompletion } from '@/gameutils/shared/execution/levelCompletionHandler';
 import { createGraphMap, createExecutionWrappers } from '@/gameutils/shared/execution/executionHelpers';
@@ -65,8 +65,21 @@ export async function runLegacyPath(code, {
         currentLevel
     });
 
+function prepareExecutableCodeLocal(code, analysisResult) {
+    const { varName } = analysisResult;
+    return `
+        // Safety: visual runs MUST yield
+        if (typeof globalThis !== 'undefined') { globalThis.__isVisualRun = true; }
+        // Safety: Reset step counter
+        if (typeof globalThis !== 'undefined') { globalThis.__stepCount = 0; }
+        
+        ${code}
+        try { return ${varName}; } catch(e) { return undefined; }
+    `;
+}
+
     const varName = 'result';
-    const finalExecutableCode = prepareExecutableCode(sanitizedCode, { varName }, currentLevel);
+    const finalExecutableCode = prepareExecutableCodeLocal(sanitizedCode, { varName });
 
     // 4. Execute code
     let executionErrorLocal = null;
