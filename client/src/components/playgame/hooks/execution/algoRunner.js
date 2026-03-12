@@ -4,7 +4,6 @@
  */
 
 import { getCurrentGameState } from '@/gameutils/shared/game/gameState';
-import { generateAndInstrumentCode } from '@/gameutils/blockly/core/executionCodeGeneration';
 import { extractFunctionName } from '@/gameutils/algo/codeParser';
 import { executeAlgoCode } from '@/gameutils/algo/algoExecutor';
 import { checkAlgoTestCases } from '@/gameutils/algo/algoTestRunner';
