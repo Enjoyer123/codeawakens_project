@@ -2,8 +2,9 @@
  * AlgoPreview — lightweight visual preview for algo levels
  * Shows a representation of the algorithm data (warriors, items, etc.)
  * without needing the full Phaser canvas.
+ * ใช้ algo_data.type + algo_data.payload
  */
-const AlgoPreview = ({ algoKey, data, backgroundImageUrl }) => {
+const AlgoPreview = ({ algoType, data, backgroundImageUrl }) => {
     const bgStyle = backgroundImageUrl ? {
         backgroundImage: `url(${backgroundImageUrl})`,
         backgroundSize: 'cover',
@@ -13,7 +14,7 @@ const AlgoPreview = ({ algoKey, data, backgroundImageUrl }) => {
     };
 
     // --- CoinChange Preview ---
-    if (algoKey === 'coin_change_data') {
+    if (algoType === 'COINCHANGE') {
         const warriors = (data?.warriors || []).filter(w => w != null);
         const mp = data?.monster_power;
         return (
@@ -53,7 +54,7 @@ const AlgoPreview = ({ algoKey, data, backgroundImageUrl }) => {
     }
 
     // --- Knapsack Preview ---
-    if (algoKey === 'knapsack_data') {
+    if (algoType === 'KNAPSACK') {
         const items = (data?.items || []).filter(item => item?.weight != null || item?.price != null);
         const capacity = data?.capacity;
         return (
@@ -93,7 +94,7 @@ const AlgoPreview = ({ algoKey, data, backgroundImageUrl }) => {
     }
 
     // --- SubsetSum Preview ---
-    if (algoKey === 'subset_sum_data') {
+    if (algoType === 'SUBSETSUM') {
         const warriors = (data?.warriors_display || []).filter(w => w?.power != null);
         const target = data?.target_sum;
         return (
@@ -124,22 +125,21 @@ const AlgoPreview = ({ algoKey, data, backgroundImageUrl }) => {
         );
     }
 
-    // --- Applied/Emei Preview (keep PhaserMapEditor, but show summary) ---
-    if (algoKey === 'applied_data') {
-        const payload = data?.payload || {};
+    // --- Applied/Emei Preview ---
+    if (algoType === 'EMEI') {
         return (
             <div className="w-full h-full relative rounded-lg overflow-hidden" style={bgStyle}>
                 <div className="absolute inset-0 bg-black/40" />
                 <div className="relative z-10 flex flex-col items-center justify-center h-full gap-6">
                     <h3 className="text-white/60 text-sm font-bold uppercase tracking-widest">
-                        {data?.type || 'Graph Algorithm'} Preview
+                        Emei Mountain Preview
                     </h3>
                     <div className="grid grid-cols-2 gap-4">
                         {[
-                            { label: 'Nodes', value: payload.n },
-                            { label: 'Tourists', value: payload.tourists },
-                            { label: 'Start', value: payload.start },
-                            { label: 'End', value: payload.end },
+                            { label: 'Nodes', value: data?.n },
+                            { label: 'Tourists', value: data?.tourists },
+                            { label: 'Start', value: data?.start },
+                            { label: 'End', value: data?.end },
                         ].map(({ label, value }) => (
                             <div key={label} className="bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-center backdrop-blur-sm">
                                 <div className="text-lg font-bold text-white">{value ?? '—'}</div>

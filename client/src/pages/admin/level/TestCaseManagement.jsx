@@ -1,11 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
-import { useAuth } from '@clerk/clerk-react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
-import ErrorAlert from '@/components/shared/alert/ErrorAlert';
 import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import { Plus } from 'lucide-react';
@@ -19,16 +16,185 @@ import {
     DialogTitle,
     DialogFooter,
 } from "@/components/ui/dialog";
-
 import PageError from '@/components/shared/Error/PageError';
 
+// =========================================================================
+// Config: ฟิลด์ที่ต้องกรอกสำหรับแต่ละ Algorithm type
+// key ใน fields ต้องตรงกับที่ buildTestLevelData ใน algoTestRunner.js ใช้
+// =========================================================================
+const ALGO_INPUT_CONFIG = {
+    // Graph Algorithms
+    DFS: {
+        label: 'Graph Traversal', fields: [
+            { key: 'edges', label: 'Edges', type: 'json_array', placeholder: '[[0,1],[0,2],[1,3]]', hint: 'Array of [from, to] or [from, to, weight]' },
+            { key: 'start', label: 'Start Node', type: 'number', placeholder: '0' },
+            { key: 'goal', label: 'Goal Node', type: 'number', placeholder: '3' },
+        ]
+    },
+    BFS: {
+        label: 'Graph Traversal', fields: [
+            { key: 'edges', label: 'Edges', type: 'json_array', placeholder: '[[0,1],[0,2],[1,3]]', hint: 'Array of [from, to] or [from, to, weight]' },
+            { key: 'start', label: 'Start Node', type: 'number', placeholder: '0' },
+            { key: 'goal', label: 'Goal Node', type: 'number', placeholder: '3' },
+        ]
+    },
+    DIJ: {
+        label: 'Dijkstra', fields: [
+            { key: 'edges', label: 'Edges', type: 'json_array', placeholder: '[[0,1,4],[0,2,1],[2,1,2]]', hint: 'Array of [from, to, weight]' },
+            { key: 'start', label: 'Start Node', type: 'number', placeholder: '0' },
+            { key: 'goal', label: 'Goal Node', type: 'number', placeholder: '3' },
+        ]
+    },
+    PRIM: {
+        label: 'Prim MST', fields: [
+            { key: 'edges', label: 'Edges', type: 'json_array', placeholder: '[[0,1,4],[0,2,1],[2,1,2]]', hint: 'Array of [from, to, weight]' },
+            { key: 'start', label: 'Start Node', type: 'number', placeholder: '0' },
+        ]
+    },
+    KRUSKAL: {
+        label: 'Kruskal MST', fields: [
+            { key: 'edges', label: 'Edges', type: 'json_array', placeholder: '[[0,1,4],[0,2,1],[2,1,2]]', hint: 'Array of [from, to, weight]' },
+        ]
+    },
+    // Dynamic Programming
+    KNAPSACK: {
+        label: 'Knapsack', fields: [
+            { key: 'items', label: 'Items', type: 'json_array', placeholder: '[{"weight":2,"price":3},{"weight":3,"price":4}]', hint: 'Array of {weight, price}' },
+            { key: 'capacity', label: 'Capacity', type: 'number', placeholder: '5' },
+        ]
+    },
+    COINCHANGE: {
+        label: 'Coin Change', fields: [
+            { key: 'warriors', label: 'Coins', type: 'json_array', placeholder: '[1, 3, 5]', hint: 'Array of coin denominations' },
+            { key: 'monster_power', label: 'Target Amount', type: 'number', placeholder: '7' },
+        ]
+    },
+    SUBSETSUM: {
+        label: 'Subset Sum', fields: [
+            { key: 'warriors', label: 'Warriors (weights)', type: 'json_array', placeholder: '[3, 1, 4, 2]', hint: 'Array of item weights' },
+            { key: 'target_sum', label: 'Target Sum', type: 'number', placeholder: '5' },
+        ]
+    },
+    // Other Algorithms
+    SOLVE: {
+        label: 'N-Queen', fields: [
+            { key: 'n', label: 'Board Size (N)', type: 'number', placeholder: '4' },
+        ]
+    },
+    MAXCAPACITY: {
+        label: 'Max Flow (Emei)', fields: [
+            { key: 'n', label: 'number of nodes', type: 'number', placeholder: '4' },
+            { key: 'edges', label: 'Edges', type: 'json_array', placeholder: '[[0,1,10],[0,2,5],[1,3,8]]', hint: 'Array of [from, to, capacity]' },
+            { key: 'start', label: 'Source Node', type: 'number', placeholder: '0' },
+            { key: 'end', label: 'Sink Node', type: 'number', placeholder: '3' },
+            { key: 'tourists', label: 'Tourists Count', type: 'number', placeholder: '20' },
+        ]
+    },
+    SOLVEROPE: {
+        label: 'Rope Partition', fields: [
+            { key: 'lengths', label: 'Lengths', type: 'json_array', placeholder: '[5, 3, 8, 2]', hint: 'Array of rope segment lengths' },
+        ]
+    },
+};
+
+// =========================================================================
+// Helper: สร้าง input_fields object ว่างๆ ตาม function_name
+// =========================================================================
+function buildEmptyFields(functionName) {
+    const config = ALGO_INPUT_CONFIG[functionName];
+    if (!config) return {};
+    return Object.fromEntries(config.fields.map(f => [f.key, f.type === 'number' ? '0' : '']));
+}
+
+// =========================================================================
+// Helper: แปลง input_params object (จาก DB) → input_fields สำหรับ Form
+// =========================================================================
+function paramsToFields(inputParams, functionName) {
+    const config = ALGO_INPUT_CONFIG[functionName];
+    if (!config || !inputParams) return buildEmptyFields(functionName);
+    return Object.fromEntries(
+        config.fields.map(f => {
+            const val = inputParams[f.key];
+            if (val === undefined || val === null) return [f.key, f.type === 'number' ? '0' : ''];
+            if (f.type === 'json_array') return [f.key, JSON.stringify(val)];
+            return [f.key, String(val)];
+        })
+    );
+}
+
+// =========================================================================
+// Helper: แปลง input_fields (จาก Form) → input_params JSON สำหรับ save
+// =========================================================================
+function fieldsToParams(inputFields, functionName) {
+    const config = ALGO_INPUT_CONFIG[functionName];
+    if (!config) return {};
+    const result = {};
+    for (const f of config.fields) {
+        const raw = inputFields[f.key];
+        if (raw === undefined || raw === '' || raw === null) continue;
+        if (f.type === 'number') {
+            result[f.key] = parseFloat(raw);
+        } else if (f.type === 'json_array') {
+            result[f.key] = JSON.parse(raw); // will throw if invalid JSON — caught in handleSave
+        }
+    }
+    return result;
+}
+
+// =========================================================================
+// Sub-Component: ฟิลด์ Input ตาม Algorithm type
+// =========================================================================
+function AlgoInputFields({ functionName, inputFields, onChange }) {
+    const config = ALGO_INPUT_CONFIG[functionName];
+    if (!config) {
+        return (
+            <p className="text-sm text-gray-400 italic">
+                เลือก Function Name ก่อนเพื่อดูฟิลด์ที่ต้องกรอก
+            </p>
+        );
+    }
+
+    return (
+        <div className="grid gap-3">
+            <p className="text-xs text-blue-700 font-medium bg-blue-50 rounded px-2 py-1">
+                📋 {config.label} — กรอกข้อมูลสำหรับ Test Case นี้
+            </p>
+            {config.fields.map(field => (
+                <div key={field.key}>
+                    <label className="block text-sm font-medium mb-1">
+                        {field.label}
+                        {field.hint && <span className="text-xs text-gray-400 ml-2">({field.hint})</span>}
+                    </label>
+                    {field.type === 'json_array' ? (
+                        <textarea
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm font-mono h-[80px]"
+                            value={inputFields[field.key] ?? ''}
+                            onChange={e => onChange(field.key, e.target.value)}
+                            placeholder={field.placeholder}
+                        />
+                    ) : (
+                        <input
+                            type="number"
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                            value={inputFields[field.key] ?? '0'}
+                            onChange={e => onChange(field.key, e.target.value)}
+                            placeholder={field.placeholder}
+                        />
+                    )}
+                </div>
+            ))}
+        </div>
+    );
+}
+
+// =========================================================================
+// Main Component
+// =========================================================================
 const TestCaseManagement = () => {
-    const { getToken } = useAuth();
-    const navigate = useNavigate();
+
     const { levelId } = useParams();
     const numericLevelId = parseInt(levelId, 10);
 
-    // TanStack Query Hooks
     const { data: level } = useLevel(numericLevelId);
     const {
         data: testCasesData,
@@ -45,20 +211,16 @@ const TestCaseManagement = () => {
     const updateTestCaseMutation = useUpdateTestCase();
     const deleteTestCaseMutation = useDeleteTestCase();
 
-    // Derived State
     const testCases = testCasesData || [];
 
-    // Dialog & Form States
-
-    // Dialog & Form States
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingTestCase, setEditingTestCase] = useState(null);
     const [formData, setFormData] = useState({
         test_case_name: '',
         function_name: '',
-        input_params: '',
-        expected_output: '',
+        input_fields: {},         // structured fields (replaces raw input_params string)
+        expected_output: '[]',
         comparison_type: 'exact',
         is_primary: false,
         display_order: 0,
@@ -66,15 +228,13 @@ const TestCaseManagement = () => {
     const [testCaseToDelete, setTestCaseToDelete] = useState(null);
     const [deleting, setDeleting] = useState(false);
 
-    // No manual load effects needed
-
     const handleOpenDialog = useCallback((testCase = null) => {
         if (testCase) {
             setEditingTestCase(testCase);
             setFormData({
                 test_case_name: testCase.test_case_name || '',
                 function_name: testCase.function_name || '',
-                input_params: JSON.stringify(testCase.input_params, null, 2),
+                input_fields: paramsToFields(testCase.input_params, testCase.function_name),
                 expected_output: JSON.stringify(testCase.expected_output, null, 2),
                 comparison_type: testCase.comparison_type || 'exact',
                 is_primary: testCase.is_primary || false,
@@ -85,7 +245,7 @@ const TestCaseManagement = () => {
             setFormData({
                 test_case_name: '',
                 function_name: '',
-                input_params: '{}',
+                input_fields: {},
                 expected_output: '[]',
                 comparison_type: 'exact',
                 is_primary: false,
@@ -101,7 +261,7 @@ const TestCaseManagement = () => {
         setFormData({
             test_case_name: '',
             function_name: '',
-            input_params: '{}',
+            input_fields: {},
             expected_output: '[]',
             comparison_type: 'exact',
             is_primary: false,
@@ -109,9 +269,23 @@ const TestCaseManagement = () => {
         });
     }, []);
 
-    const handleSave = useCallback(async () => {
+    // เมื่อ function_name เปลี่ยน → reset input fields ให้ตรงกับ type ใหม่
+    const handleFunctionNameChange = useCallback((newFn) => {
+        setFormData(prev => ({
+            ...prev,
+            function_name: newFn,
+            input_fields: buildEmptyFields(newFn),
+        }));
+    }, []);
 
-        // Validation
+    const handleFieldChange = useCallback((key, value) => {
+        setFormData(prev => ({
+            ...prev,
+            input_fields: { ...prev.input_fields, [key]: value },
+        }));
+    }, []);
+
+    const handleSave = useCallback(async () => {
         if (!formData.test_case_name.trim()) {
             toast.error('กรุณากรอกชื่อ Test Case');
             return;
@@ -121,13 +295,18 @@ const TestCaseManagement = () => {
             return;
         }
 
-        let parsedInput, parsedOutput;
-        try {
-            parsedInput = JSON.parse(formData.input_params);
-        } catch (e) {
-            toast.error('Input Params ต้องเป็น JSON ที่ถูกต้อง');
-            return;
+        // Assemble input_params from structured fields (skip if primary)
+        let parsedInput = {};
+        if (!formData.is_primary) {
+            try {
+                parsedInput = fieldsToParams(formData.input_fields, formData.function_name);
+            } catch (e) {
+                toast.error('ข้อมูล Input มี JSON ที่ไม่ถูกต้อง กรุณาตรวจสอบ Array fields');
+                return;
+            }
         }
+
+        let parsedOutput;
         try {
             parsedOutput = JSON.parse(formData.expected_output);
         } catch (e) {
@@ -218,6 +397,31 @@ const TestCaseManagement = () => {
                         </DialogHeader>
 
                         <div className="grid grid-cols-1 gap-4">
+                            {/* Primary Toggle */}
+                            <div className="flex items-center justify-between bg-blue-50 p-3 rounded-lg border border-blue-100 mb-2">
+                                <div className="flex items-center gap-3">
+                                    <div className={`p-2 rounded-full ${formData.is_primary ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-400'}`}>
+                                        <Plus className="h-4 w-4" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold text-blue-900">Primary Test Case</p>
+                                        <p className="text-xs text-blue-700">เทสเคสหลักที่ใช้ข้อมูลจากสิ่งที่วางบนด่านโดยตรง</p>
+                                    </div>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        className="sr-only peer"
+                                        checked={formData.is_primary}
+                                        onChange={e => {
+                                            setFormData({ ...formData, is_primary: e.target.checked });
+                                        }}
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+
+                            {/* Name & Function */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Test Case Name</label>
@@ -226,7 +430,7 @@ const TestCaseManagement = () => {
                                         className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
                                         value={formData.test_case_name}
                                         onChange={e => setFormData({ ...formData, test_case_name: e.target.value })}
-                                        placeholder="e.g. Simple Sort"
+                                        placeholder="e.g. Simple Run"
                                     />
                                 </div>
                                 <div>
@@ -234,7 +438,7 @@ const TestCaseManagement = () => {
                                     <select
                                         className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm font-mono"
                                         value={formData.function_name}
-                                        onChange={e => setFormData({ ...formData, function_name: e.target.value })}
+                                        onChange={e => handleFunctionNameChange(e.target.value)}
                                     >
                                         <option value="">Select Function...</option>
                                         <optgroup label="Graph Theory">
@@ -248,7 +452,6 @@ const TestCaseManagement = () => {
                                             <option value="KNAPSACK">KNAPSACK</option>
                                             <option value="COINCHANGE">COINCHANGE</option>
                                             <option value="SUBSETSUM">SUBSETSUM</option>
-
                                         </optgroup>
                                         <optgroup label="Other Algorithms">
                                             <option value="SOLVE">SOLVE (N-Queen)</option>
@@ -256,61 +459,63 @@ const TestCaseManagement = () => {
                                             <option value="MAXCAPACITY">MAXCAPACITY (Max Flow)</option>
                                         </optgroup>
                                     </select>
-                                    <p className="text-xs text-muted-foreground text-gray-500 mt-1">
-                                        Select the function name that corresponds to the Algorithm Block used in this level.
-                                    </p>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">
-                                        Input Params (JSON)
-                                    </label>
-                                    <textarea
-                                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm font-mono h-[120px]"
-                                        value={formData.input_params}
-                                        onChange={e => setFormData({ ...formData, input_params: e.target.value })}
-                                        placeholder='{"arr": [3, 1, 2]}'
+                            {/* Structured Input Fields (hidden when Primary) */}
+                            {!formData.is_primary ? (
+                                <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                                    <p className="text-xs font-semibold text-gray-500 uppercase mb-3">Input Parameters</p>
+                                    <AlgoInputFields
+                                        functionName={formData.function_name}
+                                        inputFields={formData.input_fields}
+                                        onChange={handleFieldChange}
                                     />
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">
-                                        Expected Output
-                                    </label>
-                                    {formData.comparison_type === 'boolean_equals' ? (
-                                        <select
-                                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                                            value={formData.expected_output === 'true' || formData.expected_output === true ? 'true' : 'false'}
-                                            onChange={(e) => setFormData({ ...formData, expected_output: e.target.value })}
-                                        >
-                                            <option value="true">True</option>
-                                            <option value="false">False</option>
-                                        </select>
-                                    ) : formData.comparison_type === 'number_equals' ? (
-                                        <input
-                                            type="number"
-                                            step="any"
-                                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                                            value={formData.expected_output}
-                                            onChange={(e) => setFormData({ ...formData, expected_output: e.target.value })}
-                                            placeholder="e.g. 10.5"
-                                        />
-                                    ) : (
-                                        <textarea
-                                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm font-mono h-[120px]"
-                                            value={typeof formData.expected_output === 'string' ? formData.expected_output : JSON.stringify(formData.expected_output, null, 2)}
-                                            onChange={(e) => setFormData({ ...formData, expected_output: e.target.value })}
-                                            placeholder='[1, 2, 3]'
-                                        />
-                                    )}
-                                    {formData.comparison_type !== 'boolean_equals' && formData.comparison_type !== 'number_equals' && (
-                                        <p className="text-xs text-gray-500 mt-1">Accepts valid JSON format (e.g. [1, 2] or 40.5)</p>
-                                    )}
+                            ) : (
+                                <div className="border border-dashed border-blue-200 rounded-lg p-3 bg-blue-50 text-center">
+                                    <p className="text-sm text-blue-600">
+                                        🎯 Primary test case — ข้อมูลจะถูกดึงจากสิ่งที่วางบนด่านโดยอัตโนมัติ
+                                    </p>
                                 </div>
+                            )}
+
+                            {/* Expected Output */}
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Expected Output</label>
+                                {formData.comparison_type === 'boolean_equals' ? (
+                                    <select
+                                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                                        value={formData.expected_output === 'true' || formData.expected_output === true ? 'true' : 'false'}
+                                        onChange={(e) => setFormData({ ...formData, expected_output: e.target.value })}
+                                    >
+                                        <option value="true">True</option>
+                                        <option value="false">False</option>
+                                    </select>
+                                ) : formData.comparison_type === 'number_equals' ? (
+                                    <input
+                                        type="number"
+                                        step="any"
+                                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                                        value={formData.expected_output}
+                                        onChange={(e) => setFormData({ ...formData, expected_output: e.target.value })}
+                                        placeholder="e.g. 10.5"
+                                    />
+                                ) : (
+                                    <textarea
+                                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm font-mono h-[100px]"
+                                        value={typeof formData.expected_output === 'string' ? formData.expected_output : JSON.stringify(formData.expected_output, null, 2)}
+                                        onChange={(e) => setFormData({ ...formData, expected_output: e.target.value })}
+                                        placeholder='[1, 2, 3]'
+                                    />
+                                )}
+                                {formData.comparison_type !== 'boolean_equals' && formData.comparison_type !== 'number_equals' && (
+                                    <p className="text-xs text-gray-500 mt-1">Accepts valid JSON format (e.g. [1, 2] or 40.5)</p>
+                                )}
                             </div>
 
-                            <div className="grid grid-cols-3 gap-4 items-end">
+                            {/* Comparison Type & Display Order */}
+                            <div className="grid grid-cols-2 gap-4 items-end">
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Comparison Type</label>
                                     <select
@@ -319,27 +524,16 @@ const TestCaseManagement = () => {
                                         onChange={(e) => {
                                             const newType = e.target.value;
                                             let newOutput = formData.expected_output;
-
-                                            // Auto-reset expected output based on target type
-                                            if (newType === 'boolean_equals') {
-                                                newOutput = 'true';
-                                            } else if (newType === 'number_equals') {
-                                                // Try to parse existing as number, else reset to 0
+                                            if (newType === 'boolean_equals') newOutput = 'true';
+                                            else if (newType === 'number_equals') {
                                                 const num = parseFloat(newOutput);
                                                 newOutput = isNaN(num) ? '0' : String(num);
                                             } else if (newType === 'array_equals') {
-                                                // Switching to Array Equals -> Ensure it looks like an array
-                                                if (!newOutput || newOutput === 'true' || newOutput === 'false') {
-                                                    newOutput = '[]';
-                                                } else if (!newOutput.trim().startsWith('[')) {
-                                                    // Wrap scalar (like '0' or '10.5') in array
-                                                    newOutput = `[${newOutput}]`;
-                                                }
+                                                if (!newOutput || newOutput === 'true' || newOutput === 'false') newOutput = '[]';
+                                                else if (!newOutput.trim().startsWith('[')) newOutput = `[${newOutput}]`;
                                             } else {
-                                                // Switching to Exact Match (JSON) -> 0 or scalars are fine
                                                 if (!newOutput || newOutput === 'true' || newOutput === 'false') newOutput = '{}';
                                             }
-
                                             setFormData({ ...formData, comparison_type: newType, expected_output: newOutput });
                                         }}
                                     >
@@ -357,16 +551,6 @@ const TestCaseManagement = () => {
                                         value={formData.display_order}
                                         onChange={e => setFormData({ ...formData, display_order: e.target.value })}
                                     />
-                                </div>
-                                <div className="pb-2">
-                                    <label className="flex items-center gap-2 cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.is_primary}
-                                            onChange={e => setFormData({ ...formData, is_primary: e.target.checked })}
-                                        />
-                                        <span className="text-sm font-medium">Primary Test Case</span>
-                                    </label>
                                 </div>
                             </div>
                         </div>
@@ -392,7 +576,7 @@ const TestCaseManagement = () => {
                     deleting={deleting}
                 />
             </div>
-        </div >
+        </div>
     );
 };
 

@@ -1,14 +1,15 @@
-﻿// Subset Sum algorithm visualization setup
+// Subset Sum algorithm visualization setup
 import Phaser from "phaser";
+import { getAlgoPayload } from '../../shared/levelType';
 
 // Function to setup Subset Sum problem display
 export function setupSubsetSum(scene) {
 
-  if (!scene.levelData || !scene.levelData.subset_sum_data) {
+  const subsetSumData = getAlgoPayload(scene.levelData, 'SUBSETSUM');
+  if (!subsetSumData) {
     return;
   }
 
-  const subsetSumData = scene.levelData.subset_sum_data;
   scene.subsetSum = {
     side1: null,
     side2: null,

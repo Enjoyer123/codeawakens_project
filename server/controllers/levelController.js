@@ -330,11 +330,7 @@ exports.createLevel = async (req, res) => {
       obstacles,
       coin_positions,
       people,
-      knapsack_data,
-      subset_sum_data,
-      coin_change_data,
-      nqueen_data,
-      applied_data,
+      algo_data,
       starter_xml,
       block_ids,
       victory_condition_ids,
@@ -435,11 +431,7 @@ exports.createLevel = async (req, res) => {
         obstacles: parseJsonField(obstacles),
         coin_positions: parseJsonField(coin_positions),
         people: parseJsonField(people),
-        knapsack_data: parseJsonField(knapsack_data),
-        subset_sum_data: parseJsonField(subset_sum_data),
-        coin_change_data: parseJsonField(coin_change_data),
-        nqueen_data: parseJsonField(nqueen_data),
-        applied_data: parseJsonField(applied_data),
+        algo_data: parseJsonField(algo_data),
         starter_xml: starter_xml || null,
         created_by: user.user_id,
         level_blocks: block_ids && block_ids.length > 0 ? {
@@ -524,11 +516,7 @@ exports.updateLevel = async (req, res) => {
       obstacles,
       coin_positions,
       people,
-      knapsack_data,
-      subset_sum_data,
-      coin_change_data,
-      nqueen_data,
-      applied_data,
+      algo_data,
       starter_xml,
       block_ids,
       victory_condition_ids,
@@ -608,11 +596,7 @@ exports.updateLevel = async (req, res) => {
     if (obstacles !== undefined) updateData.obstacles = parseJsonField(obstacles);
     if (coin_positions !== undefined) updateData.coin_positions = parseJsonField(coin_positions);
     if (people !== undefined) updateData.people = parseJsonField(people);
-    if (knapsack_data !== undefined) updateData.knapsack_data = parseJsonField(knapsack_data);
-    if (subset_sum_data !== undefined) updateData.subset_sum_data = parseJsonField(subset_sum_data);
-    if (coin_change_data !== undefined) updateData.coin_change_data = parseJsonField(coin_change_data);
-    if (nqueen_data !== undefined) updateData.nqueen_data = parseJsonField(nqueen_data);
-    if (applied_data !== undefined) updateData.applied_data = parseJsonField(applied_data);
+    if (algo_data !== undefined) updateData.algo_data = parseJsonField(algo_data);
     if (starter_xml !== undefined) updateData.starter_xml = starter_xml || null;
 
     // Use transaction to update level and relationships

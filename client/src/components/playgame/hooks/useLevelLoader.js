@@ -134,7 +134,7 @@ const extractTestCases = (levelResponse) =>
 
 // ─── Helper: Parse JSON-string fields from API ───
 const JSON_FIELDS_ARRAY = ['monsters', 'obstacles', 'coin_positions', 'coins', 'people'];
-const JSON_FIELDS_OBJECT = ['knapsack_data', 'subset_sum_data', 'coin_change_data', 'nqueen_data', 'applied_data', 'custom_data'];
+const JSON_FIELDS_OBJECT = ['algo_data', 'applied_data', 'custom_data'];
 
 const parseJsonFields = (data) => {
   const parsed = {};

@@ -1,4 +1,4 @@
-﻿import Phaser from 'phaser';
+import Phaser from 'phaser';
 import { getCurrentGameState } from '../shared/game/gameState';
 import { getWeaponData } from '../entities/weaponUtils';
 import {
@@ -16,7 +16,7 @@ export function playCombatSequence(scene, isWin, onComplete) {
 
     // Check for special game types that have nodes but are NOT graph traversal (so they SHOULD play combat)
     const gameType = (scene.levelData?.game_type || '').toLowerCase();
-    const appliedType = (scene.levelData?.applied_data?.type || '').toUpperCase();
+    const appliedType = (scene.levelData?.algo_data?.type || '').toUpperCase();
 
     const isSpecialVisualLevel =
         gameType.includes('rope') ||

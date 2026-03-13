@@ -1,4 +1,4 @@
-﻿/**
+/**
  * coinChangePlaybackDp.js
  * เลน Animation แบบ DP (Spreadsheet Array 1D / Top-Down)
  */
@@ -31,7 +31,7 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
 
 
     const warriors = scene.coinChange.warriors || [];
-    const targetAmount = scene.levelData?.coin_change_data?.monster_power || 0;
+    const targetAmount = scene.levelData?.algo_data?.payload?.monster_power || 0;
     const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
     let statusText, detailText;

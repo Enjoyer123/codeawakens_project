@@ -2,9 +2,11 @@
  * Setup Coin Change Visuals (ฉากพื้นฐานของนักรบและบอส)
  * ถูกเรียกใช้จาก GameScene.js ตอนโหลดด่าน
  */
+import { getAlgoPayload } from '../../shared/levelType';
+
 export function setupCoinChange(scene) {
-    if (!scene.levelData || !scene.levelData.coin_change_data) return;
-    const data = scene.levelData.coin_change_data;
+    const data = getAlgoPayload(scene.levelData, 'COINCHANGE');
+    if (!data) return;
     const monsterPower = data.monster_power;
     const warriors = data.warriors || [];
 

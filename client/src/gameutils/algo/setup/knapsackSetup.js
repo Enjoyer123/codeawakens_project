@@ -1,14 +1,15 @@
-﻿// Knapsack algorithm visualization setup
+// Knapsack algorithm visualization setup
 import Phaser from "phaser";
+import { getAlgoPayload } from '../../shared/levelType';
 
 // Function to setup Knapsack problem display
 export function setupKnapsack(scene) {
 
-  if (!scene.levelData || !scene.levelData.knapsack_data) {
+  const knapsackData = getAlgoPayload(scene.levelData, 'KNAPSACK');
+  if (!knapsackData) {
     return;
   }
 
-  const knapsackData = scene.levelData.knapsack_data;
   scene.knapsack = {
     bag: null,
     items: []

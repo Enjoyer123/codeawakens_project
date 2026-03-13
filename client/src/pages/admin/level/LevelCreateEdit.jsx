@@ -75,14 +75,11 @@ const LevelCreateEdit = () => {
   const [monsterDialogOpen, setMonsterDialogOpen] = useState(false);
   const [selectedMonsterType, setSelectedMonsterType] = useState('vampire_1');
 
-  // Detect level type for canvas switching
-  const isPureAlgo = !!(formData.knapsack_data || formData.coin_change_data || formData.subset_sum_data);
-  const isGraphAlgo = !!formData.applied_data;
-  const activeAlgoKey = formData.knapsack_data ? 'knapsack_data'
-    : formData.coin_change_data ? 'coin_change_data'
-      : formData.subset_sum_data ? 'subset_sum_data'
-        : formData.applied_data ? 'applied_data'
-          : null;
+  // Detect level type for canvas switching (ใช้ algo_data แทน legacy columns)
+  const algoType = formData.algo_data?.type || null;
+  const PURE_ALGO_TYPES = ['KNAPSACK', 'COINCHANGE', 'SUBSETSUM', 'NQUEEN'];
+  const isPureAlgo = algoType && PURE_ALGO_TYPES.includes(algoType);
+  const isGraphAlgo = algoType === 'EMEI';
 
   // Selected Category (Needs to be synced with formData.category_id)
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -293,8 +290,8 @@ const LevelCreateEdit = () => {
               <div className="shadow-lg border-white rounded-lg relative w-full h-full flex items-center justify-center">
                 {isPureAlgo ? (
                   <AlgoPreview
-                    algoKey={activeAlgoKey}
-                    data={formData[activeAlgoKey]}
+                    algoType={algoType}
+                    data={formData.algo_data?.payload}
                     backgroundImageUrl={backgroundImageUrl}
                   />
                 ) : (
