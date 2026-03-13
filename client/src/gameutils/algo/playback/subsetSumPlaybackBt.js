@@ -29,7 +29,7 @@ async function playClassicDisplay(scene, trace, options = {}) {
         strokeThickness: 5
     }).setOrigin(0.5).setDepth(20);
 
-    const targetSum = scene.levelData?.subset_sum_data?.target_sum || 0;
+    const targetSum = scene.levelData?.algo_data?.payload?.target_sum || 0;
 
     const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 

@@ -1,96 +1,44 @@
 import { Input } from '@/components/ui/input';
 
-const ALGORITHM_TEMPLATES = {
-  knapsack_data: {
-    bag: {
-      x: 400,
-      y: 450,
-      label: ""
-    },
+// Algo type definitions (used for checkbox + algo_data.type mapping)
+const ALGO_TYPES = [
+  { type: 'KNAPSACK', label: 'Knapsack' },
+  { type: 'COINCHANGE', label: 'Coin Change' },
+  { type: 'SUBSETSUM', label: 'Subset Sum' },
+  { type: 'NQUEEN', label: 'N-Queen' },
+  { type: 'EMEI', label: 'Emei Mountain (ง้อไบ๊)' }
+];
+
+// Default payload templates per algo type
+const ALGO_PAYLOAD_TEMPLATES = {
+  KNAPSACK: {
+    bag: { x: 400, y: 450, label: "" },
     items: [
-      {
-        x: 150,
-        y: 150,
-        id: 1,
-        label: "",
-        price: null,
-        weight: null
-      },
-      {
-        x: 400,
-        y: 150,
-        id: 2,
-        label: "",
-        price: null,
-        weight: null
-      },
-      {
-        x: 650,
-        y: 150,
-        id: 3,
-        label: "",
-        price: null,
-        weight: null
-      }
+      { x: 150, y: 150, id: 1, label: "", price: null, weight: null },
+      { x: 400, y: 150, id: 2, label: "", price: null, weight: null },
+      { x: 650, y: 150, id: 3, label: "", price: null, weight: null }
     ],
     capacity: null
   },
-  subset_sum_data: {
-    side1: {
-      x: 200,
-      y: 450,
-      label: "ฝั่ง 1"
-    },
-    side2: {
-      x: 600,
-      y: 450,
-      label: "ฝั่ง 2"
-    },
-    warriors: [
-      null,
-      null,
-      null
-    ],
+  SUBSETSUM: {
+    side1: { x: 200, y: 450, label: "ฝั่ง 1" },
+    side2: { x: 600, y: 450, label: "ฝั่ง 2" },
+    warriors: [null, null, null],
     target_sum: null,
     warriors_display: [
-      {
-        x: 150,
-        y: 150,
-        id: 1,
-        label: "",
-        power: null
-      },
-      {
-        x: 400,
-        y: 150,
-        id: 2,
-        label: "",
-        power: null
-      },
-      {
-        x: 650,
-        y: 150,
-        id: 3,
-        label: "",
-        power: null
-      }
+      { x: 150, y: 150, id: 1, label: "", power: null },
+      { x: 400, y: 150, id: 2, label: "", power: null },
+      { x: 650, y: 150, id: 3, label: "", power: null }
     ],
   },
-  coin_change_data: {
+  COINCHANGE: {
     monster_power: null,
     warriors: [null, null, null, null]
   },
-  applied_data: {
-    type: "",
-    payload: {
-      n: null,
-      start: null,
-      end: null,
-      tourists: null,
-      edges: []
-    }
+  EMEI: {
+    tourists: null
   },
-  nqueen_data: {
+  NQUEEN: {
     n: 4
   }
 };
@@ -99,6 +47,9 @@ const LevelInfoForm = ({ formData, categories, prerequisiteLevels, isEditing, le
   const handleChange = (field, value) => {
     onFormDataChange({ ...formData, [field]: value });
   };
+
+  // ดึง algo type ปัจจุบัน
+  const currentAlgoType = formData.algo_data?.type || null;
 
   return (
     <div className="bg-white rounded-lg shadow-md p-4">
@@ -213,44 +164,33 @@ const LevelInfoForm = ({ formData, categories, prerequisiteLevels, isEditing, le
           </label>
         </div>
 
-        {/* Level Type Selection (Mutually Exclusive) */}
+        {/* Level Type Selection (Mutually Exclusive) — ใช้ algo_data.type */}
         <div className="space-y-2 pt-4 border-t border-gray-100">
           <label className="text-sm font-bold text-gray-700">Level Type (Algorithm)</label>
           <div className="grid grid-cols-2 gap-2">
-            {[
-              { label: 'Knapsack', field: 'knapsack_data' },
-              { label: 'Coin Change', field: 'coin_change_data' },
-              { label: 'Subset Sum', field: 'subset_sum_data' },
-              { label: 'N-Queen', field: 'nqueen_data' },
-              { label: 'Emei Mountain (ง้อไบ๊)', field: 'applied_data' }
-            ].map((type) => (
-              <label key={type.field} className="flex items-center gap-2 p-2 border rounded-md hover:bg-gray-50 cursor-pointer">
+            {ALGO_TYPES.map((algoType) => (
+              <label key={algoType.type} className="flex items-center gap-2 p-2 border rounded-md hover:bg-gray-50 cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={!!formData[type.field]}
+                  checked={currentAlgoType === algoType.type}
                   onChange={(e) => {
                     const isChecked = e.target.checked;
                     const newData = { ...formData };
 
                     if (isChecked) {
-                      // Mutual exclusivity: Clear others
-                      newData.knapsack_data = null;
-                      newData.coin_change_data = null;
-                      newData.subset_sum_data = null;
-                      newData.nqueen_data = null;
-                      newData.applied_data = null;
-
-                      // Enable selected (Initialize with empty object if null)
-                      newData[type.field] = formData[type.field] || ALGORITHM_TEMPLATES[type.field] || {};
+                      // สร้าง algo_data ใหม่ (ใช้ payload เดิมถ้ามี, ไม่งั้นใช้ template)
+                      const existingPayload = (currentAlgoType === algoType.type && formData.algo_data?.payload)
+                        ? formData.algo_data.payload
+                        : ALGO_PAYLOAD_TEMPLATES[algoType.type] || {};
+                      newData.algo_data = { type: algoType.type, payload: existingPayload };
                     } else {
-                      // Disable
-                      newData[type.field] = null;
+                      newData.algo_data = null;
                     }
                     onFormDataChange(newData);
                   }}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <span className="text-sm text-gray-700">{type.label}</span>
+                <span className="text-sm text-gray-700">{algoType.label}</span>
               </label>
             ))}
           </div>

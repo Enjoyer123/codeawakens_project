@@ -37,11 +37,7 @@ export const useLevelForm = ({
         people: [],
         selectedBlocks: [],
         selectedVictoryConditions: [],
-        knapsack_data: null,
-        subset_sum_data: null,
-        coin_change_data: null,
-        applied_data: null,
-        nqueen_data: null,
+        algo_data: null,
     });
 
     const [backgroundImage, setBackgroundImage] = useState(null);
@@ -196,11 +192,7 @@ export const useLevelForm = ({
                 obstacles: formData.obstacles.length > 0 ? JSON.stringify(formData.obstacles) : null,
                 coin_positions: formData.coin_positions.length > 0 ? JSON.stringify(formData.coin_positions) : null,
                 people: formData.people.length > 0 ? JSON.stringify(formData.people) : null,
-                knapsack_data: formData.knapsack_data ? JSON.stringify(formData.knapsack_data) : null,
-                subset_sum_data: formData.subset_sum_data ? JSON.stringify(formData.subset_sum_data) : null,
-                coin_change_data: formData.coin_change_data ? JSON.stringify(formData.coin_change_data) : null,
-                applied_data: formData.applied_data ? JSON.stringify(formData.applied_data) : null,
-                nqueen_data: formData.nqueen_data ? JSON.stringify(formData.nqueen_data) : null,
+                algo_data: formData.algo_data ? JSON.stringify(formData.algo_data) : null,
                 block_ids: formData.selectedBlocks,
                 victory_condition_ids: formData.selectedVictoryConditions,
             };

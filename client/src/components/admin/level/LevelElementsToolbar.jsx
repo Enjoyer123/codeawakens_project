@@ -11,16 +11,11 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
   const { isItemTypeEnabled, isWeightedGraphCategory } = useLevelElements(selectedCategory);
   const [showPlayerSelect, setShowPlayerSelect] = useState(false);
 
-  // --- Special Algorithm Mode Detection ---
-  const activeAlgo =
-    formData.knapsack_data ? { key: 'knapsack_data', label: 'Knapsack Data' } :
-      formData.coin_change_data ? { key: 'coin_change_data', label: 'Coin Change Data' } :
-        formData.subset_sum_data ? { key: 'subset_sum_data', label: 'Subset Sum Data' } :
-          formData.nqueen_data ? { key: 'nqueen_data', label: 'N-Queen Data' } :
-            formData.applied_data ? { key: 'applied_data', label: 'Graph Algorithm' } : null;
-
-  // Pure algo = no canvas needed, graph algo = canvas + form
-  const isPureAlgo = activeAlgo && activeAlgo.key !== 'applied_data';
+  // --- Special Algorithm Mode Detection (ใช้ algo_data แทน legacy columns) ---
+  const algoType = formData.algo_data?.type || null;
+  const PURE_ALGO_TYPES = ['KNAPSACK', 'COINCHANGE', 'SUBSETSUM', 'NQUEEN'];
+  const isPureAlgo = algoType && PURE_ALGO_TYPES.includes(algoType);
+  const isGraphAlgo = algoType === 'EMEI';
 
   const handleAddCoin = () => {
     onSetMode('coin');
@@ -101,9 +96,9 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
 
         {/* Algorithm Data Form */}
         <AlgoDataForm
-          algoKey={activeAlgo.key}
-          data={formData[activeAlgo.key]}
-          onChange={(newData) => onFormDataChange({ ...formData, [activeAlgo.key]: newData })}
+          algoType={algoType}
+          data={formData.algo_data?.payload}
+          onChange={(newPayload) => onFormDataChange({ ...formData, algo_data: { ...formData.algo_data, payload: newPayload } })}
         />
       </div>
     );
@@ -351,13 +346,13 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
         )
       }
 
-      {/* Graph Algorithm Data Form (shown alongside map tools for applied_data) */}
-      {activeAlgo && activeAlgo.key === 'applied_data' && (
+      {/* Graph Algorithm Data Form (shown alongside map tools for EMEI) */}
+      {isGraphAlgo && (
         <div className="pt-4 border-t border-gray-200">
           <AlgoDataForm
-            algoKey={activeAlgo.key}
-            data={formData[activeAlgo.key]}
-            onChange={(newData) => onFormDataChange({ ...formData, [activeAlgo.key]: newData })}
+            algoType={algoType}
+            data={formData.algo_data?.payload}
+            onChange={(newPayload) => onFormDataChange({ ...formData, algo_data: { ...formData.algo_data, payload: newPayload } })}
           />
         </div>
       )}

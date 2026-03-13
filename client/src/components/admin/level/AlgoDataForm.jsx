@@ -5,9 +5,10 @@ import { useState } from 'react';
 
 /**
  * AlgoDataForm — form-based editor for algorithm-specific level data
- * Replaces the raw JSON textarea with proper input fields per algo type
+ * ใช้ algo_data.type เพื่อเลือก form ที่เหมาะสม
+ * data = algo_data.payload
  */
-const AlgoDataForm = ({ algoKey, data, onChange }) => {
+const AlgoDataForm = ({ algoType, data, onChange }) => {
     const [showJson, setShowJson] = useState(false);
     const [jsonString, setJsonString] = useState('');
     const [jsonError, setJsonError] = useState(null);
@@ -47,7 +48,7 @@ const AlgoDataForm = ({ algoKey, data, onChange }) => {
     // Shared header
     const header = (
         <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-gray-700 uppercase">{algoKey.replace(/_/g, ' ')}</h3>
+            <h3 className="text-sm font-bold text-gray-700 uppercase">{algoType}</h3>
             <Button variant="ghost" size="sm" onClick={handleJsonToggle} className="text-[10px] text-gray-400">
                 {showJson ? 'Form View' : 'JSON View'}
             </Button>
@@ -71,7 +72,7 @@ const AlgoDataForm = ({ algoKey, data, onChange }) => {
     }
 
     // --- CoinChange ---
-    if (algoKey === 'coin_change_data') {
+    if (algoType === 'COINCHANGE') {
         const warriors = data?.warriors || [];
         return (
             <div className="space-y-4">
@@ -121,7 +122,7 @@ const AlgoDataForm = ({ algoKey, data, onChange }) => {
     }
 
     // --- Knapsack ---
-    if (algoKey === 'knapsack_data') {
+    if (algoType === 'KNAPSACK') {
         const items = data?.items || [];
         return (
             <div className="space-y-4">
@@ -214,7 +215,7 @@ const AlgoDataForm = ({ algoKey, data, onChange }) => {
     }
 
     // --- SubsetSum ---
-    if (algoKey === 'subset_sum_data') {
+    if (algoType === 'SUBSETSUM') {
         const warriors = data?.warriors || [];
         const warriorsDisplay = data?.warriors_display || [];
         return (
@@ -285,7 +286,7 @@ const AlgoDataForm = ({ algoKey, data, onChange }) => {
     }
 
     // --- N-Queen ---
-    if (algoKey === 'nqueen_data') {
+    if (algoType === 'NQUEEN') {
         return (
             <div className="space-y-4">
                 {header}
@@ -309,8 +310,7 @@ const AlgoDataForm = ({ algoKey, data, onChange }) => {
     }
 
     // --- Emei Mountain (Graph-based) ---
-    if (algoKey === 'applied_data') {
-        const payload = data?.payload || {};
+    if (algoType === 'EMEI') {
         return (
             <div className="space-y-4">
                 <div className="flex items-center justify-between mb-4">
@@ -324,8 +324,8 @@ const AlgoDataForm = ({ algoKey, data, onChange }) => {
                     <Input
                         type="number"
                         min="1"
-                        value={payload?.tourists ?? ''}
-                        onChange={(e) => update('payload.tourists', parseInt(e.target.value) || null)}
+                        value={data?.tourists ?? ''}
+                        onChange={(e) => update('tourists', parseInt(e.target.value) || null)}
                         placeholder="เช่น 20"
                         className="mt-1"
                     />

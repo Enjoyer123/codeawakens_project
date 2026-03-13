@@ -1,98 +1,163 @@
 /**
- * Result Comparator Utilities
- * Compare actual output with expected output
+ * ระบบตรวจคำตอบ (Result Comparator)
+ * ทำหน้าที่เปรียบเทียบคำตอบที่ Blockly คำนวณได้ (Actual) กับคำตอบที่คาดหวังจาก DB (Expected)
  */
 
 /**
- * Compare actual output with expected output based on comparison type
- * @param {*} actual - Actual return value
- * @param {*} expected - Expected return value
- * @param {string} comparisonType - "exact", "array_equals", "number_equals", "boolean_equals", "contains"
- * @returns {boolean}
+ * เปรียบเทียบผลลัพธ์ตามประเภทของการทดสอบที่กำหนดไว้
+ * @param {*} actual - คำตอบที่โปรแกรมรันออกมาได้
+ * @param {*} expected - คำตอบเฉลย
+ * @param {string} comparisonType - โหมดการตรวจคำตอบ (เช่น 'exact', 'array_equals', 'number_equals')
+ * @returns {boolean} - true ถ้าตรงกัน, false ถ้าผิด
  */
 export function compareOutput(actual, expected, comparisonType = 'exact') {
     switch (comparisonType) {
+
+        // ---------------------------------------------------------
+        // 1. โหมดตรวจเทียบค่าความจริง (Boolean)
+        // ---------------------------------------------------------
         case 'boolean_equals': {
-            const toBool = v => (v === 'true' || v === true) ? true : (v === 'false' || v === false) ? false : v;
-            return toBool(actual) === toBool(expected);
+            // แปลง string 'true' / 'false' ให้กลายเป็น boolean จริงๆ เผื่อ DB ส่งมาเป็น string
+            const normalizeBoolean = (val) => {
+                if (val === 'true' || val === true) return true;
+                if (val === 'false' || val === false) return false;
+                return val;
+            };
+
+            return normalizeBoolean(actual) === normalizeBoolean(expected);
         }
 
-        case 'exact':
+        // ---------------------------------------------------------
+        // 2. โหมดตรวจเทียบความเป๊ะ (Exact)
+        // ---------------------------------------------------------
+        case 'exact': {
+            // ใช้ JSON.stringify ทำให้เทียบ Object และ Array เชิงลึกได้ง่ายที่สุด
             return JSON.stringify(actual) === JSON.stringify(expected);
+        }
 
+        // ---------------------------------------------------------
+        // 3. โหมดตรวจเทียบอาร์เรย์ (Array Equals)
+        // ---------------------------------------------------------
         case 'array_equals': {
+            // ถ้าไม่ใช่ Array ทั้งคู่ ให้ถือว่าผิด
             if (!Array.isArray(actual) || !Array.isArray(expected)) return false;
+
+            // ขนาดไม่เท่ากัน แปลว่าเก็บมาไม่ครบ ถือว่าผิด
             if (actual.length !== expected.length) return false;
 
-            // Coordinate pair arrays → unordered set comparison
-            const isCoordPairs = arr => arr.every(it => Array.isArray(it) && it.length === 2 && typeof it[0] === 'number');
-            if (isCoordPairs(actual) && isCoordPairs(expected)) {
-                const toKey = p => `${p[0]},${p[1]}`;
-                const actualSet = new Set(actual.map(toKey));
-                return expected.every(p => actualSet.has(toKey(p)));
+            // ตรวจว่ามันคือ "อาร์เรย์ของคู่พิกัด" หรือไม่ (เช่น [[0,1], [1,2]])
+            // ถ้าใช่ เราจะอนุญาตให้สลับที่กันได้ (ขอบอกแค่ว่าในถุงมีคู่พิกัดครบก็พอ)
+            let isActualPairs = true;
+            for (let i = 0; i < actual.length; i++) {
+                const item = actual[i];
+                if (!Array.isArray(item) || item.length !== 2 || typeof item[0] !== 'number') {
+                    isActualPairs = false;
+                    break;
+                }
             }
 
-            return actual.every((val, idx) => deepEqual(val, expected[idx]));
+            let isExpectedPairs = true;
+            for (let i = 0; i < expected.length; i++) {
+                const item = expected[i];
+                if (!Array.isArray(item) || item.length !== 2 || typeof item[0] !== 'number') {
+                    isExpectedPairs = false;
+                    break;
+                }
+            }
+
+            // ถ้าเป็นอาร์เรย์พิกัดทั้งคู่ ให้ใช้วิธีเช็คแบบ "ไม่สนลำดับ" (Unordered Set)
+            if (isActualPairs && isExpectedPairs) {
+                // แปลงคำตอบให้เป็น String ก้อนๆ จะได้เทียบง่ายๆ เช่น "0,1"
+                const createHashKey = (pair) => pair[0] + "," + pair[1];
+
+                // โยนลง Set เพื่อค้นหาไวๆ
+                const actualSet = new Set();
+                for (const pair of actual) {
+                    actualSet.add(createHashKey(pair));
+                }
+
+                // เช็คว่าเฉลยทุกคู่ มีอยู่ในคำตอบที่ส่งมาหรือไม่
+                for (const pair of expected) {
+                    if (!actualSet.has(createHashKey(pair))) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            // ถ้าไม่ใช่อาร์เรย์พิกัด ให้ไล่เช็คทีละตัวตามลำดับ (Sequential Check)
+            for (let i = 0; i < actual.length; i++) {
+                if (!deepEqual(actual[i], expected[i])) {
+                    return false;
+                }
+            }
+            return true;
         }
 
+        // ---------------------------------------------------------
+        // 4. โหมดตรวจเทียบตัวเลข (Number Equals)
+        // ---------------------------------------------------------
         case 'number_equals': {
-            const a = Number(actual), b = Number(expected);
-            return !isNaN(a) && !isNaN(b) && a === b;
+            const numActual = Number(actual);
+            const numExpected = Number(expected);
+
+            // ตรวจสอบว่าแปลงเป็นตัวเลขได้จริงทั้งคู่ และค่าต้องเท่ากัน
+            if (!isNaN(numActual) && !isNaN(numExpected)) {
+                return numActual === numExpected;
+            }
+            return false;
         }
 
-        default:
+        // ---------------------------------------------------------
+        // Default (ถ้าไม่ระบุ หรือหลุดเคส ให้ใช้สูตร Exact)
+        // ---------------------------------------------------------
+        default: {
             return JSON.stringify(actual) === JSON.stringify(expected);
+        }
     }
 }
 
-/** Deep equality (arrays + plain objects) */
-function deepEqual(a, b) {
-    if (a === b) return true;
-    if (Array.isArray(a) && Array.isArray(b)) {
-        return a.length === b.length && a.every((v, i) => deepEqual(v, b[i]));
+// =========================================================================
+// ตัวช่วยเทียบความเหมือนเจาะลึกแบบทะลุ Array/Object (Deep Equality)
+// =========================================================================
+function deepEqual(valA, valB) {
+    // ถ้าตัวเดียวกันเป๊ะ (เช่น 1 === 1 หรือ "A" === "A")
+    if (valA === valB) return true;
+
+    // ถ้าเป็นเบอร์ตอง Array ทั้งคู่ ต้องเทียบไส้ในทีละตัว
+    if (Array.isArray(valA) && Array.isArray(valB)) {
+        if (valA.length !== valB.length) return false;
+
+        for (let i = 0; i < valA.length; i++) {
+            if (!deepEqual(valA[i], valB[i])) {
+                return false;
+            }
+        }
+        return true;
     }
-    if (a && typeof a === 'object' && b && typeof b === 'object') {
-        const ak = Object.keys(a).sort(), bk = Object.keys(b).sort();
-        return ak.length === bk.length && ak.every((k, i) => k === bk[i] && deepEqual(a[k], b[k]));
+
+    // ถ้าเป็น Object ทั้งคู่ (และต้องไม่ใช่ null)
+    if (valA && typeof valA === 'object' && valB && typeof valB === 'object') {
+        const keysA = Object.keys(valA).sort();
+        const keysB = Object.keys(valB).sort();
+
+        // เช็คว่าจำนวน Key เท่ากันมั้ย
+        if (keysA.length !== keysB.length) return false;
+
+        // ไล่เช็ค Value ของทุกๆ Key ว่าเหมือนกันหรือไม่
+        for (let i = 0; i < keysA.length; i++) {
+            const keyName = keysA[i];
+
+            // เช็คว่าชื่อ Key ตรงกัน และไส้ในตรงกันหรือไม่
+            if (keyName !== keysB[i] || !deepEqual(valA[keyName], valB[keyName])) {
+                return false;
+            }
+        }
+        return true;
     }
+
+    // ถ้าหลุดมาถึงนี่ แปลว่าหน้าตาไม่เหมือนกันแล้วล่ะ
     return false;
 }
 
-/**
- * Validate N-Queen Solution
- * @param {Array} actual - Solution array (single or multi)
- * @param {number} n - Board size
- * @returns {boolean}
- */
-export function isValidNQueenSolution(actual, n) {
-    if (!Array.isArray(actual) || actual.length === 0) return false;
 
-    // Multi-solution: actual = [solution1, solution2, ...]
-    const isMulti = Array.isArray(actual[0]) && (
-        (Array.isArray(actual[0][0]) && typeof actual[0][0][0] === 'number') ||
-        (!Array.isArray(actual[0][0]) && typeof actual[0][0] === 'number')
-    );
-
-    if (isMulti) return actual.every(s => validateSingle(s, n));
-    return validateSingle(actual, n);
-}
-
-function validateSingle(actual, n) {
-    if (!Array.isArray(actual)) return false;
-
-    // Normalize to [[row, col], ...] format
-    const queens = Array.isArray(actual[0])
-        ? actual
-        : actual.map((col, row) => [row, col]);
-
-    if (queens.length !== n) return false;
-
-    for (let i = 0; i < n; i++) {
-        for (let j = i + 1; j < n; j++) {
-            const [r1, c1] = queens[i];
-            const [r2, c2] = queens[j];
-            if (r1 === r2 || c1 === c2 || Math.abs(r1 - r2) === Math.abs(c1 - c2)) return false;
-        }
-    }
-    return true;
-}

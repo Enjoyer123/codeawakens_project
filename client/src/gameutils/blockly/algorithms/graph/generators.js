@@ -57,20 +57,14 @@ export function defineGraphGenerators() {
     javascriptGenerator.forBlock["dijkstra_visit"] = function (block) {
         const node = javascriptGenerator.valueToCode(block, 'NODE', javascriptGenerator.ORDER_NONE) || '0';
         const dist = javascriptGenerator.valueToCode(block, 'DIST', javascriptGenerator.ORDER_NONE) || '0';
-        if (javascriptGenerator.isCleanMode) {
-            return `trace.push({ action: 'dijkstra_visit', node: ${node}, dist: ${dist} });\n`;
-        }
-        return `if (typeof trace !== 'undefined') trace.push({ action: 'dijkstra_visit', node: ${node}, dist: ${dist} });\n`;
+        return `recordDijkstraVisit(${node}, ${dist});\n`;
     };
 
     javascriptGenerator.forBlock["dijkstra_relax"] = function (block) {
         const from = javascriptGenerator.valueToCode(block, 'FROM', javascriptGenerator.ORDER_NONE) || '0';
         const to = javascriptGenerator.valueToCode(block, 'TO', javascriptGenerator.ORDER_NONE) || '0';
         const newDist = javascriptGenerator.valueToCode(block, 'NEW_DIST', javascriptGenerator.ORDER_NONE) || '0';
-        if (javascriptGenerator.isCleanMode) {
-            return `trace.push({ action: 'dijkstra_relax', from: ${from}, to: ${to}, newDist: ${newDist} });\n`;
-        }
-        return `if (typeof trace !== 'undefined') trace.push({ action: 'dijkstra_relax', from: ${from}, to: ${to}, newDist: ${newDist} });\n`;
+        return `recordDijkstraRelax(${from}, ${to}, ${newDist});\n`;
     };
 
     // Prim Trace generators
@@ -78,20 +72,14 @@ export function defineGraphGenerators() {
         const node = javascriptGenerator.valueToCode(block, 'NODE', javascriptGenerator.ORDER_NONE) || '0';
         const parent = javascriptGenerator.valueToCode(block, 'PARENT', javascriptGenerator.ORDER_NONE) || 'null';
         const dist = javascriptGenerator.valueToCode(block, 'DIST', javascriptGenerator.ORDER_NONE) || '0';
-        if (javascriptGenerator.isCleanMode) {
-            return `trace.push({ action: 'prim_visit', node: ${node}, parent: ${parent}, dist: ${dist} });\n`;
-        }
-        return `if (typeof trace !== 'undefined') trace.push({ action: 'prim_visit', node: ${node}, parent: ${parent}, dist: ${dist} });\n`;
+        return `recordPrimVisit(${node}, ${parent}, ${dist});\n`;
     };
 
     javascriptGenerator.forBlock["prim_relax"] = function (block) {
         const from = javascriptGenerator.valueToCode(block, 'FROM', javascriptGenerator.ORDER_NONE) || '0';
         const to = javascriptGenerator.valueToCode(block, 'TO', javascriptGenerator.ORDER_NONE) || '0';
         const newDist = javascriptGenerator.valueToCode(block, 'NEW_DIST', javascriptGenerator.ORDER_NONE) || '0';
-        if (javascriptGenerator.isCleanMode) {
-            return `trace.push({ action: 'prim_relax', from: ${from}, to: ${to}, newDist: ${newDist} });\n`;
-        }
-        return `if (typeof trace !== 'undefined') trace.push({ action: 'prim_relax', from: ${from}, to: ${to}, newDist: ${newDist} });\n`;
+        return `recordPrimRelax(${from}, ${to}, ${newDist});\n`;
     };
 
     // Kruskal Trace generators
@@ -99,19 +87,13 @@ export function defineGraphGenerators() {
         const from = javascriptGenerator.valueToCode(block, 'FROM', javascriptGenerator.ORDER_NONE) || '0';
         const to = javascriptGenerator.valueToCode(block, 'TO', javascriptGenerator.ORDER_NONE) || '0';
         const weight = javascriptGenerator.valueToCode(block, 'WEIGHT', javascriptGenerator.ORDER_NONE) || '0';
-        if (javascriptGenerator.isCleanMode) {
-            return `trace.push({ action: 'kruskal_visit', from: ${from}, to: ${to}, weight: ${weight} });\n`;
-        }
-        return `if (typeof trace !== 'undefined') trace.push({ action: 'kruskal_visit', from: ${from}, to: ${to}, weight: ${weight} });\n`;
+        return `recordKruskalVisit(${from}, ${to}, ${weight});\n`;
     };
 
     javascriptGenerator.forBlock["kruskal_add_edge"] = function (block) {
         const from = javascriptGenerator.valueToCode(block, 'FROM', javascriptGenerator.ORDER_NONE) || '0';
         const to = javascriptGenerator.valueToCode(block, 'TO', javascriptGenerator.ORDER_NONE) || '0';
         const weight = javascriptGenerator.valueToCode(block, 'WEIGHT', javascriptGenerator.ORDER_NONE) || '0';
-        if (javascriptGenerator.isCleanMode) {
-            return `trace.push({ action: 'kruskal_add_edge', from: ${from}, to: ${to}, weight: ${weight} });\n`;
-        }
-        return `if (typeof trace !== 'undefined') trace.push({ action: 'kruskal_add_edge', from: ${from}, to: ${to}, weight: ${weight} });\n`;
+        return `recordKruskalAddEdge(${from}, ${to}, ${weight});\n`;
     };
 }

@@ -47,19 +47,11 @@ export const resetGameExecutionState = async ({
 
 
 
-    // Reset knapsack items to original positions
-    if (currentLevel?.knapsack_data) {
-        // Obsolete table visual logic removed
-    }
 
-    // Reset subset sum warriors to original positions
-    if (currentLevel?.subset_sum_data) {
-        // Obsolete subset sum tracking visual removed
-    }
+    // Reset algo-specific visuals (Knapsack / SubsetSum / CoinChange)
+    // ตอนนี้ logic reset ถูกลบไปแล้วเพราะเป็น obsolete
+    // แต่ยังเก็บโครงสร้างไว้เผื่อย้อนกลับ
 
-    if (currentLevel?.coin_change_data) {
-        // Obsolete coin change visual logic removed
-    }
     // รีเซ็ตเหรียญในเกมให้กลับมาแสดง
     if (getCurrentGameState().currentScene) {
         // รีเซ็ตเหรียญที่เก็บไว้แล้วให้กลับมาแสดง
