@@ -75,13 +75,7 @@ export function playAttack(player) {
                 player.setFlipX(false);
             }
         } else {
-            // Use standardized helper
-            // Main/Slime: full prefix + '-attack_' + dir
-            // Example: 'main_3-attack_down'
-            // Example: 'slime_1-attack_down' (if prefix is slime_1)
-            // But if prefix is 'slime', we need to check how it's set in playerSetup. 
-            // Previous code assumed 'slime' -> 'slime_1'. 
-            // But main_3 -> 'main_3_1' was the bug.
+
 
             // Logic:
             let animKey = '';
@@ -99,11 +93,8 @@ export function playAttack(player) {
 
             // Let's rely on getAnimKey logic which I will fix/verify below
             // Actually, simply applying the logic directly here is cleaner for now to match user request style
-            if (prefix === 'slime') {
-                animKey = `slime_1-attack_${dir}`;
-            } else {
-                animKey = `${prefix}-attack_${dir}`;
-            }
+
+            animKey = `${prefix}-attack_${dir}`;
 
             if (player.scene && player.scene.anims && player.scene.anims.exists(animKey)) {
                 player.anims.play(animKey, true);
@@ -151,11 +142,7 @@ export function playWalk(player) {
         } else {
             // Main/Slime logic
             let animKey = '';
-            if (prefix === 'slime') {
-                animKey = `slime_1-walk_${dir}`;
-            } else {
-                animKey = `${prefix}-walk_${dir}`;
-            }
+            animKey = `${prefix}-walk_${dir}`;
 
             if (player.scene && player.scene.anims && player.scene.anims.exists(animKey)) {
                 player.anims.play(animKey, true);

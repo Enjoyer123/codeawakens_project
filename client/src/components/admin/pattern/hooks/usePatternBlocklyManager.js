@@ -8,7 +8,8 @@ import { setXmlLoading as setGlobalXmlLoading } from '@/gameutils/blockly/core/s
 export const usePatternBlocklyManager = ({
     levelData,
     patternData,
-    isViewMode
+    isViewMode,
+    showAlert
 }) => {
     // Steps State
     const [steps, setSteps] = useState([]);
@@ -171,7 +172,7 @@ export const usePatternBlocklyManager = ({
     }, [currentStepIndex]);
 
     const handleNextStep = async () => {
-        if (currentStepIndex >= 2) return alert('สูงสุด 3 ขั้นตอน');
+        if (currentStepIndex >= 2) { showAlert?.('คำเตือน', 'ถึงขั้นตอนสุดท้ายแล้ว (สูงสุด 3 ขั้นตอน)'); return; }
 
         const proceed = async () => {
             if (!isViewMode) saveCurrentWorkspaceToRef();

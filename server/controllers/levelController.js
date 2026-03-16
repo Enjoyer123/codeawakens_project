@@ -31,7 +31,6 @@ exports.getAllLevels = async (req, res) => {
           select: {
             category_id: true,
             category_name: true,
-            color_code: true,
           },
         },
         creator: {
@@ -86,7 +85,6 @@ exports.getAllCategories = async (req, res) => {
         category_id: true,
         category_name: true,
         description: true,
-        color_code: true,
         difficulty_order: true,
         item_enable: true,
         category_items: {
@@ -323,7 +321,6 @@ exports.createLevel = async (req, res) => {
       background_image,
       start_node_id,
       goal_node_id,
-      goal_type,
       nodes,
       edges,
       map_entities,
@@ -419,7 +416,6 @@ exports.createLevel = async (req, res) => {
         background_image,
         start_node_id: start_node_id !== null && start_node_id !== undefined ? parseInt(start_node_id) : null,
         goal_node_id: goal_node_id !== null && goal_node_id !== undefined ? parseInt(goal_node_id) : null,
-        goal_type: goal_type || null,
         character: character || null,
         coordinates: parseJsonField(coordinates), // Parse and save coordinates
         nodes: parseJsonField(nodes),
@@ -445,7 +441,6 @@ exports.createLevel = async (req, res) => {
           select: {
             category_id: true,
             category_name: true,
-            color_code: true,
           },
         },
         creator: {
@@ -503,7 +498,6 @@ exports.updateLevel = async (req, res) => {
       background_image,
       start_node_id,
       goal_node_id,
-      goal_type,
       nodes,
       edges,
       map_entities,
@@ -578,7 +572,6 @@ exports.updateLevel = async (req, res) => {
     if (background_image !== undefined) updateData.background_image = background_image;
     if (start_node_id !== undefined) updateData.start_node_id = start_node_id !== null ? parseInt(start_node_id) : null;
     if (goal_node_id !== undefined) updateData.goal_node_id = goal_node_id !== null ? parseInt(goal_node_id) : null;
-    if (goal_type !== undefined) updateData.goal_type = goal_type || null;
     if (character !== undefined) updateData.character = character;
     if (coordinates !== undefined) updateData.coordinates = parseJsonField(coordinates); // Update coordinates
     if (nodes !== undefined) updateData.nodes = parseJsonField(nodes);
@@ -640,7 +633,6 @@ exports.updateLevel = async (req, res) => {
             select: {
               category_id: true,
               category_name: true,
-              color_code: true,
             },
           },
           creator: {

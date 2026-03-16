@@ -10,208 +10,178 @@ async function main() {
         { type: 'coins_sorted', description: 'เรียงเหรียญจากน้อยไปมาก', check: 'coinsSorted' },
         { type: 'all_people_rescued', description: 'ช่วยคนทั้งหมด', check: 'allPeopleRescued' },
         { type: 'treasure_collected', description: 'เก็บสมบัติสำเร็จ', check: 'treasureCollected' },
-        { type: 'all_coins_collected', description: 'เก็บเหรียญทั้งหมด', check: 'allCoinsCollected' },
         { type: 'back_to_start', description: 'กลับมาที่จุดเริ่มต้น', check: 'backToStart' },
-        { type: 'mst_connected', description: 'เชื่อมต่อทุก node ได้', check: 'mstConnected' },
         { type: 'function_return_test', description: 'ตรวจสอบ return value ของ function กับ test cases', check: 'functionReturnTest' }
     ];
 
     for (const vc of victoryConditions) {
-        await prisma.victoryCondition.upsert({
-            where: { type: vc.type },
-            update: vc,
-            create: vc,
+        // Attempt to find existing by type first
+        const existing = await prisma.victoryCondition.findUnique({
+            where: { type: vc.type }
         });
+
+        if (existing) {
+            await prisma.victoryCondition.update({
+                where: { type: vc.type },
+                data: vc
+            });
+        } else {
+            await prisma.victoryCondition.create({
+                data: vc
+            });
+        }
     }
     console.log('✅ Victory Conditions seeded.');
 
-    // 2. Blocks — ยึดจาก block definitions ปัจจุบัน (ไม่มี legacy names)
+    // 2. Blocks
     const blocks = [
-        // ═══════════════════════════════════════════
         // Movement
-        // ═══════════════════════════════════════════
-        { block_key: 'move_forward', block_name: 'Move Forward', description: 'เดินไปข้างหน้า', category: 'movement', blockly_type: 'move_forward', syntax_example: 'await moveForward();' },
-        { block_key: 'turn_left', block_name: 'Turn Left', description: 'เลี้ยวซ้าย', category: 'movement', blockly_type: 'turn_left', syntax_example: 'await turnLeft();' },
-        { block_key: 'turn_right', block_name: 'Turn Right', description: 'เลี้ยวขวา', category: 'movement', blockly_type: 'turn_right', syntax_example: 'await turnRight();' },
-        { block_key: 'hit', block_name: 'Hit', description: 'โจมตีศัตรู', category: 'movement', blockly_type: 'hit', syntax_example: 'await hit();' },
-        { block_key: 'move_to_node', block_name: 'Move to Node', description: 'เดินไปยัง node ที่กำหนด', category: 'movement', blockly_type: 'move_to_node', syntax_example: 'await moveToNode(nodeId);' },
-        { block_key: 'move_along_path', block_name: 'Move Along Path', description: 'เดินตาม path', category: 'movement', blockly_type: 'move_along_path', syntax_example: 'await moveAlongPath(path);' },
-        { block_key: 'moveforward_with_explor', block_name: 'Move Forward (Explore)', description: 'เดินไปข้างหน้า (แบบสำรวจ)', category: 'movement', blockly_type: 'moveforward_with_explor', syntax_example: 'await moveForwardExplore();' },
-        { block_key: 'nqueen_place', block_name: 'Place Queen', description: 'วางควีนลงบนกระดาน', category: 'movement', blockly_type: 'nqueen_place', syntax_example: 'place(row, col)' },
-        { block_key: 'nqueen_remove', block_name: 'Remove Queen', description: 'ยกควีนออกจากกระดาน (Backtracking)', category: 'movement', blockly_type: 'nqueen_remove', syntax_example: 'remove(row, col)' },
+        { block_key: 'move_forward', block_name: 'move_forward', description: 'เดินไปข้างหน้า', category: 'movement'},
+        { block_key: 'turn_left', block_name: 'turn_left', description: 'เลี้ยวซ้าย', category: 'movement' },
+        { block_key: 'turn_right', block_name: 'turn_right', description: 'เลี้ยวขวา', category: 'movement' },
+        { block_key: 'hit', block_name: 'hit', description: 'โจมตีศัตรู', category: 'movement' },
+        { block_key: 'move_to_node', block_name: 'move_to_node', description: 'เดินไปยัง node ที่กำหนด', category: 'movement' },
+        { block_key: 'move_along_path', block_name: 'move_along_path', description: 'เดินตาม path', category: 'movement' },
+        { block_key: 'nqueen_place', block_name: 'nqueen_place', description: 'วางควีน (N-Queen)', category: 'movement' },
+        { block_key: 'nqueen_remove', block_name: 'nqueen_remove', description: 'ยกควีนออก (N-Queen)', category: 'movement' },
 
-        // ═══════════════════════════════════════════
-        // Logic (Blockly Built-in)
-        // ═══════════════════════════════════════════
-        { block_key: 'controls_if', block_name: 'If / If-Else', description: 'เงื่อนไข if / if-else', category: 'logic', blockly_type: 'controls_if', syntax_example: 'if (condition) { } else { }' },
-        { block_key: 'logic_compare', block_name: 'Compare', description: 'เปรียบเทียบค่า (=, ≠, <, >, ≤, ≥)', category: 'logic', blockly_type: 'logic_compare', syntax_example: '(a === b), (a < b), etc.' },
-        { block_key: 'logic_operation', block_name: 'And/Or', description: 'ตรรกะ AND / OR', category: 'logic', blockly_type: 'logic_operation', syntax_example: '(a && b), (a || b)' },
-        { block_key: 'logic_negate', block_name: 'Not', description: 'ปฏิเสธ (NOT)', category: 'logic', blockly_type: 'logic_negate', syntax_example: '!condition' },
-        { block_key: 'logic_boolean', block_name: 'True/False', description: 'ค่าความจริง', category: 'logic', blockly_type: 'logic_boolean', syntax_example: 'true, false' },
-        { block_key: 'logic_null', block_name: 'Null', description: 'ค่า null', category: 'logic', blockly_type: 'logic_null', syntax_example: 'null' },
-        { block_key: 'logic_not_in', block_name: 'Not In List', description: 'เช็คว่า item ไม่อยู่ใน list', category: 'logic', blockly_type: 'logic_not_in', syntax_example: '!list.includes(item)' },
-        { block_key: 'nqueen_is_safe', block_name: 'Is Safe (N-Queen)', description: 'ตรวจสอบว่าตำแหน่งปลอดภัย', category: 'logic', blockly_type: 'nqueen_is_safe', syntax_example: 'safe(row, col)' },
+        // Logic
+        { block_key: 'controls_if', block_name: 'controls_if', description: 'เงื่อนไข if / if-else', category: 'logic' },
+        { block_key: 'procedures_ifreturn', block_name: 'procedures_ifreturn', description: 'เงื่อนไข if return', category: 'logic' },
+        { block_key: 'logic_compare', block_name: 'logic_compare', description: 'เปรียบเทียบค่า (==, !=, <, >)', category: 'logic' },
+        { block_key: 'logic_boolean', block_name: 'logic_boolean', description: 'ค่าความจริง (true/false)', category: 'logic' },
+        { block_key: 'logic_negate', block_name: 'logic_negate', description: 'ปฏิเสธ (NOT)', category: 'logic' },
+        { block_key: 'logic_operation', block_name: 'logic_operation', description: 'การดำเนินการตรรกะ (AND/OR)', category: 'logic' },
+        { block_key: 'logic_not_in', block_name: 'logic_not_in', description: 'ตรวจสอบว่าไม่อยู่ใน', category: 'logic' },
+        { block_key: 'logic_null', block_name: 'logic_null', description: 'ค่า null', category: 'logic' },
+        { block_key: 'nqueen_is_safe', block_name: 'nqueen_is_safe', description: 'ตรวจสอบความปลอดภัย (N-Queen)', category: 'logic' },
 
-        // ═══════════════════════════════════════════
-        // Conditions (Custom)
-        // ═══════════════════════════════════════════
-        { block_key: 'found_monster', block_name: 'Found Monster', description: 'ตรวจสอบว่ามีศัตรู', category: 'conditions', blockly_type: 'found_monster', syntax_example: 'foundMonster()' },
-        { block_key: 'can_move_forward', block_name: 'Can Move Forward', description: 'ตรวจสอบว่าเดินได้', category: 'conditions', blockly_type: 'can_move_forward', syntax_example: 'canMoveForward()' },
-        { block_key: 'near_pit', block_name: 'Near Pit', description: 'ตรวจสอบว่าอยู่ใกล้หลุม', category: 'conditions', blockly_type: 'near_pit', syntax_example: 'nearPit()' },
-        { block_key: 'at_goal', block_name: 'At Goal', description: 'ตรวจสอบว่าถึงเป้าหมาย', category: 'conditions', blockly_type: 'at_goal', syntax_example: 'atGoal()' },
+        // Conditions
+        { block_key: 'found_monster', block_name: 'found_monster', description: 'ตรวจสอบว่ามีศัตรู', category: 'conditions' },
+        { block_key: 'can_move_forward', block_name: 'can_move_forward', description: 'ตรวจสอบว่าสามารถไปต่อได้', category: 'conditions' },
+        { block_key: 'near_pit', block_name: 'near_pit', description: 'ตรวจสอบว่าอยู่ใกล้หลุม', category: 'conditions' },
+        { block_key: 'at_goal', block_name: 'at_goal', description: 'ตรวจสอบว่าถึงเป้าหมาย', category: 'conditions' },
+        { block_key: 'has_coin', block_name: 'has_coin', description: 'ตรวจสอบว่ามีเหรียญ', category: 'conditions' },
+        { block_key: 'has_person', block_name: 'has_person', description: 'ตรวจสอบว่ามีคน', category: 'conditions' },
 
-        // ═══════════════════════════════════════════
         // Loops
-        // ═══════════════════════════════════════════
-        { block_key: 'controls_repeat_ext', block_name: 'Repeat', description: 'ลูป repeat N ครั้ง', category: 'loops', blockly_type: 'controls_repeat_ext', syntax_example: 'for (let i = 0; i < n; i++) { }' },
-        { block_key: 'controls_whileUntil', block_name: 'While Loop', description: 'ลูป while', category: 'loops', blockly_type: 'controls_whileUntil', syntax_example: 'while (condition) { }' },
-        { block_key: 'controls_for', block_name: 'For Loop', description: 'ลูป for (from, to, step)', category: 'loops', blockly_type: 'controls_for', syntax_example: 'for (let i = from; i <= to; i++) { }' },
-        { block_key: 'controls_forEach', block_name: 'For Each', description: 'ลูปสำหรับแต่ละ item', category: 'loops', blockly_type: 'controls_forEach', syntax_example: 'for (let item of list) { }' },
-        { block_key: 'controls_flow_statements', block_name: 'Break / Continue', description: 'หยุดหรือข้ามรอบลูป', category: 'loops', blockly_type: 'controls_flow_statements', syntax_example: 'break; continue;' },
-        { block_key: 'for_loop_dynamic', block_name: 'For Loop (Dynamic)', description: 'ลูป for แบบ dynamic start/end', category: 'loops', blockly_type: 'for_loop_dynamic', syntax_example: 'for (let i = from; i <= to; i++) { }' },
-        { block_key: 'for_each_in_list', block_name: 'For Each In List', description: 'ลูปสำหรับแต่ละ item ใน list', category: 'loops', blockly_type: 'for_each_in_list', syntax_example: 'for (let item of list) { }' },
-        { block_key: 'for_each_coin', block_name: 'For Each Coin', description: 'ลูปสำหรับแต่ละเหรียญ', category: 'loops', blockly_type: 'for_each_coin', syntax_example: 'for (let i = 0; i < coins.length; i++) { }' },
-        { block_key: 'for_each_person', block_name: 'For Each Person', description: 'ลูปสำหรับแต่ละคน', category: 'loops', blockly_type: 'for_each_person', syntax_example: 'for (let i = 0; i < people.length; i++) { }' },
+        { block_key: 'controls_repeat_ext', block_name: 'controls_repeat_ext', description: 'ลูป repeat (ทำซ้ำ N รอบ)', category: 'loops' },
+        { block_key: 'controls_whileUntil', block_name: 'controls_whileUntil', description: 'ลูป while (ทำซ้ำจนกว่า)', category: 'loops' },
+        { block_key: 'controls_for', block_name: 'controls_for', description: 'ลูป for (นับค่า)', category: 'loops' },
+        { block_key: 'controls_forEach', block_name: 'controls_forEach', description: 'ลูป for-each (วนใน list)', category: 'loops' },
+        { block_key: 'controls_flow_statements', block_name: 'controls_flow_statements', description: 'คำสั่งควบคุมลูป (break/continue)', category: 'loops' },
+        { block_key: 'for_loop_dynamic', block_name: 'for_loop_dynamic', description: 'ลูป for แบบ dynamic', category: 'loops' },
+        { block_key: 'for_each_in_list', block_name: 'for_each_in_list', description: 'ลูปสำหรับแต่ละไอเท็มใน list', category: 'loops' },
+        { block_key: 'for_each_coin', block_name: 'for_each_coin', description: 'ลูปสำหรับแต่ละเหรียญ', category: 'loops' },
+        { block_key: 'for_each_person', block_name: 'for_each_person', description: 'ลูปสำหรับแต่ละคน', category: 'loops' },
 
-        // ═══════════════════════════════════════════
+        // Operators
+        { block_key: 'math_number', block_name: 'math_number', description: 'ตัวเลข', category: 'operators' },
+        { block_key: 'math_arithmetic', block_name: 'math_arithmetic', description: 'การคำนวณ (+, -, *, /)', category: 'operators' },
+        { block_key: 'math_on_list', block_name: 'math_on_list', description: 'การคำนวณบน list', category: 'operators' },
+        { block_key: 'math_single', block_name: 'math_single', description: 'คณิตศาสตร์ (sqrt, abs)', category: 'operators' },
+        { block_key: 'var_math', block_name: 'var_math', description: 'คำนวณกับตัวแปร', category: 'operators' },
+        { block_key: 'get_var_value', block_name: 'get_var_value', description: 'ดึงค่าตัวแปร (legacy)', category: 'operators' },
+        { block_key: 'text', block_name: 'text', description: 'ข้อความ', category: 'operators' },
+        { block_key: 'lists_create_empty', block_name: 'lists_create_empty', description: 'สร้าง list ว่าง', category: 'operators' },
+        { block_key: 'lists_create_with', block_name: 'lists_create_with', description: 'สร้าง list พร้อมไอเท็ม', category: 'operators' },
+        { block_key: 'lists_length', block_name: 'lists_length', description: 'ความยาวของ list', category: 'operators' },
+        { block_key: 'lists_isEmpty', block_name: 'lists_isEmpty', description: 'เช็คว่า list ว่างไหม', category: 'operators' },
+        { block_key: 'lists_indexOf', block_name: 'lists_indexOf', description: 'หาตำแหน่ง (index) ใน list', category: 'operators' },
+        { block_key: 'lists_add_item', block_name: 'lists_add_item', description: 'เพิ่มไอเท็ม (list.push)', category: 'operators' },
+        { block_key: 'lists_remove_last', block_name: 'lists_remove_last', description: 'ลบตัวสุดท้าย', category: 'operators' },
+        { block_key: 'lists_remove_last_return', block_name: 'lists_remove_last_return', description: 'ดึงและลบตัวสุดท้าย (pop)', category: 'operators' },
+        { block_key: 'lists_get_last', block_name: 'lists_get_last', description: 'ดึงตัวสุดท้าย', category: 'operators' },
+        { block_key: 'lists_get_first', block_name: 'lists_get_first', description: 'ดึงตัวแรก', category: 'operators' },
+        { block_key: 'lists_remove_first_return', block_name: 'lists_remove_first_return', description: 'ดึงและลบตัวแรก (shift)', category: 'operators' },
+        { block_key: 'lists_get_at_index', block_name: 'lists_get_at_index', description: 'ดึงค่าด้วย index', category: 'operators' },
+        { block_key: 'lists_setIndex', block_name: 'lists_setIndex', description: 'ตั้งค่าด้วย index', category: 'operators' },
+        { block_key: 'lists_remove_at_index', block_name: 'lists_remove_at_index', description: 'ลบค่าด้วย index', category: 'operators' },
+        { block_key: 'lists_contains', block_name: 'lists_contains', description: 'เช็คว่าลิสต์มีไอเท็ม', category: 'operators' },
+        { block_key: 'lists_concat', block_name: 'lists_concat', description: 'รวม list เข้าด้วยกัน', category: 'operators' },
+        { block_key: 'lists_find_min_index', block_name: 'lists_find_min_index', description: 'หา index ของค่าน้อยสุด', category: 'operators' },
+        { block_key: 'lists_find_max_index', block_name: 'lists_find_max_index', description: 'หา index ของค่ามากสุด', category: 'operators' },
+        { block_key: 'lists_sort_by_weight', block_name: 'lists_sort_by_weight', description: 'เรียง (Edge List) ตามน้ำหนัก', category: 'operators' },
+        { block_key: 'lists_getSublist', block_name: 'lists_getSublist', description: 'ดึง Sub-list (Slice/Clone list)', category: 'operators' },
+        { block_key: 'collect_coin', block_name: 'collect_coin', description: 'เก็บเหรียญ', category: 'operators' },
+        { block_key: 'swap_coins', block_name: 'swap_coins', description: 'สลับเหรียญ', category: 'operators' },
+        { block_key: 'compare_coins', block_name: 'compare_coins', description: 'เปรียบเทียบเหรียญ', category: 'operators' },
+        { block_key: 'get_coin_value', block_name: 'get_coin_value', description: 'ดึงมูลค่าเหรียญ', category: 'operators' },
+        { block_key: 'coin_count', block_name: 'coin_count', description: 'จำนวนเหรียญทั้งหมด', category: 'operators' },
+        { block_key: 'is_sorted', block_name: 'is_sorted', description: 'ตรวจสอบว่าเหรียญเรียงลำดับ', category: 'operators' },
+        { block_key: 'rescue_person', block_name: 'rescue_person', description: 'ช่วยคน', category: 'operators' },
+        { block_key: 'rescue_person_at_node', block_name: 'rescue_person_at_node', description: 'ช่วยคนที่โหนดระบุ', category: 'operators' },
+        { block_key: 'person_rescued', block_name: 'person_rescued', description: 'คนถูกช่วยแล้ว?', category: 'operators' },
+        { block_key: 'person_count', block_name: 'person_count', description: 'จำนวนคนที่ช่วยแล้ว', category: 'operators' },
+        { block_key: 'all_people_rescued', block_name: 'all_people_rescued', description: 'ช่วยทุกคนสำเร็จ?', category: 'operators' },
+        { block_key: 'graph_get_neighbors', block_name: 'graph_get_neighbors', description: 'ดึง Node เพื่อนบ้าน (Neighbors)', category: 'operators' },
+        { block_key: 'graph_get_neighbors_with_weight', block_name: 'graph_get_neighbors_with_weight', description: 'ดึงเพื่อนบ้านพร้อม Weight', category: 'operators' },
+        { block_key: 'graph_get_all_edges', block_name: 'graph_get_all_edges', description: 'ดึง Edges ทั้งหมดในกราฟ', category: 'operators' },
+        { block_key: 'graph_get_node_value', block_name: 'graph_get_node_value', description: 'อ่านค่าประจำ Node', category: 'operators' },
+        { block_key: 'graph_get_current_node', block_name: 'graph_get_current_node', description: 'Node ปัจจุบันที่ตัวละครยืน', category: 'operators' },
+        { block_key: 'dict_create', block_name: 'dict_create', description: 'สร้าง Dictionary ({})', category: 'operators' },
+        { block_key: 'dict_set', block_name: 'dict_set', description: 'เซ็ตค่าให้ Dictionary', category: 'operators' },
+        { block_key: 'dict_get', block_name: 'dict_get', description: 'ดึงค่าจาก Dictionary', category: 'operators' },
+        { block_key: 'dict_has_key', block_name: 'dict_has_key', description: 'ตรวจว่า Dictionary มี Key นี้', category: 'operators' },
+        { block_key: 'dsu_find', block_name: 'dsu_find', description: 'DSU: หารากของชุด (Find)', category: 'operators' },
+        { block_key: 'dsu_union', block_name: 'dsu_union', description: 'DSU: รวมชุด (Union)', category: 'operators' },
+
+        // Visuals
+        { block_key: 'dijkstra_visit', block_name: 'dijkstra_visit', description: 'Dijkstra: เยือนโหนด', category: 'visuals' },
+        { block_key: 'dijkstra_relax', block_name: 'dijkstra_relax', description: 'Dijkstra: อัปเดตตาราง', category: 'visuals' },
+        { block_key: 'prim_visit', block_name: 'prim_visit', description: 'Prim: เยือนโหนด', category: 'visuals' },
+        { block_key: 'prim_relax', block_name: 'prim_relax', description: 'Prim: อัปเดตตาราง', category: 'visuals' },
+        { block_key: 'kruskal_visit', block_name: 'kruskal_visit', description: 'Kruskal: พิจารณาเส้นทาง', category: 'visuals' },
+        { block_key: 'kruskal_add_edge', block_name: 'kruskal_add_edge', description: 'Kruskal: เลือกเส้นเข้าต้นไม้', category: 'visuals' },
+        { block_key: 'knapsack_pick_item', block_name: 'knapsack_pick_item', description: 'Knapsack: ยกไอเท็ม', category: 'visuals' },
+        { block_key: 'knapsack_remove_item', block_name: 'knapsack_remove_item', description: 'Knapsack: วางไอเท็ม', category: 'visuals' },
+        { block_key: 'knapsack_consider_item', block_name: 'knapsack_consider_item', description: 'Knapsack: พิจารณาไอเท็ม', category: 'visuals' },
+        { block_key: 'knapsack_dp_update', block_name: 'knapsack_dp_update', description: 'Knapsack: อัปเดตตาราง', category: 'visuals' },
+        { block_key: 'subset_sum_consider', block_name: 'subset_sum_consider', description: 'Subset Sum: พิจารณา', category: 'visuals' },
+        { block_key: 'subset_sum_include', block_name: 'subset_sum_include', description: 'Subset Sum: รวมลงสัพเซ็ต', category: 'visuals' },
+        { block_key: 'subset_sum_exclude', block_name: 'subset_sum_exclude', description: 'Subset Sum: ไม่รวม', category: 'visuals' },
+        { block_key: 'subset_sum_reset', block_name: 'subset_sum_reset', description: 'Subset Sum: ยกเลิก/รีเซ็ต', category: 'visuals' },
+        { block_key: 'subset_sum_dp_update', block_name: 'subset_sum_dp_update', description: 'Subset Sum: อัปเดต DP', category: 'visuals' },
+        { block_key: 'coin_change_add_warrior_to_selection', block_name: 'coin_change_add_warrior_to_selection', description: 'Coin Change: เพิ่มตัว', category: 'visuals' },
+        { block_key: 'coin_change_track_decision', block_name: 'coin_change_track_decision', description: 'Coin Change: บันทึกข้อมูล DP', category: 'visuals' },
+        { block_key: 'coin_change_remove_warrior', block_name: 'coin_change_remove_warrior', description: 'Coin Change: เอาตัวออก', category: 'visuals' },
+        { block_key: 'coin_change_consider', block_name: 'coin_change_consider', description: 'Coin Change: พิจารณา', category: 'visuals' },
+        { block_key: 'coin_change_memo_hit', block_name: 'coin_change_memo_hit', description: 'Coin Change: เจอค่า Memo', category: 'visuals' },
+        { block_key: 'emei_highlight_peak', block_name: 'emei_highlight_peak', description: 'Emei: ส่องยอดเขา', category: 'visuals' },
+        { block_key: 'emei_highlight_path', block_name: 'emei_highlight_path', description: 'Emei: ส่องเส้นทางผ่าน', category: 'visuals' },
+        { block_key: 'emei_show_final_result', block_name: 'emei_show_final_result', description: 'Emei: แสดงผลทางที่ง่ายสุด', category: 'visuals' },
+        { block_key: 'graph_get_neighbors_visual', block_name: 'graph_get_neighbors_visual', description: 'ดึงเพื่อนบ้านพร้อม Visual (DFS)', category: 'visuals' },
+        { block_key: 'mark_visited_visual', block_name: 'mark_visited_visual', description: 'Mark โหนด Visited (Visual)', category: 'visuals' },
+        { block_key: 'show_path_visual', block_name: 'show_path_visual', description: 'แสดงเส้นทาง Show Path (Visual)', category: 'visuals' },
+
+        // Functions
+        { block_key: 'procedures_defreturn', block_name: 'procedures_defreturn', description: 'ประกาศฟังก์ชันมี Return', category: 'functions' },
+        { block_key: 'procedures_defnoreturn', block_name: 'procedures_defnoreturn', description: 'ประกาศฟังก์ชันไม่มี Return', category: 'functions' },
+        { block_key: 'procedures_callreturn', block_name: 'procedures_callreturn', description: 'เรียกฟังก์ชันมี Return', category: 'functions' },
+        { block_key: 'procedures_callnoreturn', block_name: 'procedures_callnoreturn', description: 'เรียกฟังก์ชันไม่มี Return', category: 'functions' },
+        { block_key: 'procedures_return', block_name: 'procedures_return', description: 'คืนค่า (Return) โดดๆ', category: 'functions' },
+
         // Variables
-        // ═══════════════════════════════════════════
-        { block_key: 'variables_get', block_name: 'Get Variable', description: 'อ่านค่าตัวแปร', category: 'variables', blockly_type: 'variables_get', syntax_example: 'variableName' },
-        { block_key: 'variables_set', block_name: 'Set Variable', description: 'ตั้งค่าตัวแปร', category: 'variables', blockly_type: 'variables_set', syntax_example: 'variableName = value;' },
-        { block_key: 'var_math', block_name: 'Variable Math', description: 'คำนวณกับตัวแปร (+=, -=, *=, /=)', category: 'variables', blockly_type: 'var_math', syntax_example: 'variable += value;' },
-        { block_key: 'get_var_value', block_name: 'Get Variable Value', description: 'ดึงค่าตัวแปร', category: 'variables', blockly_type: 'get_var_value', syntax_example: 'variable' },
-
-        // ═══════════════════════════════════════════
-        // Functions / Procedures
-        // ═══════════════════════════════════════════
-        { block_key: 'procedures_defreturn', block_name: 'Function (Return)', description: 'สร้างฟังก์ชันที่ return ค่า', category: 'functions', blockly_type: 'procedures_defreturn', syntax_example: 'function name(params) { return value; }' },
-        { block_key: 'procedures_defnoreturn', block_name: 'Function (No Return)', description: 'สร้างฟังก์ชันที่ไม่ return ค่า', category: 'functions', blockly_type: 'procedures_defnoreturn', syntax_example: 'function name(params) { }' },
-        { block_key: 'procedures_callreturn', block_name: 'Call Function (Return)', description: 'เรียกฟังก์ชันที่มี return', category: 'functions', blockly_type: 'procedures_callreturn', syntax_example: 'result = functionName(args)' },
-        { block_key: 'procedures_callnoreturn', block_name: 'Call Function (No Return)', description: 'เรียกฟังก์ชันที่ไม่มี return', category: 'functions', blockly_type: 'procedures_callnoreturn', syntax_example: 'functionName(args);' },
-        { block_key: 'procedures_ifreturn', block_name: 'If Return', description: 'เงื่อนไข if return ภายใน function', category: 'functions', blockly_type: 'procedures_ifreturn', syntax_example: 'if (condition) { return value; }' },
-        { block_key: 'procedures_return', block_name: 'Return', description: 'คืนค่าจากฟังก์ชัน', category: 'functions', blockly_type: 'procedures_return', syntax_example: 'return value;' },
-
-        // ═══════════════════════════════════════════
-        // Operators / Math
-        // ═══════════════════════════════════════════
-        { block_key: 'math_number', block_name: 'Number', description: 'ตัวเลข', category: 'math', blockly_type: 'math_number', syntax_example: '123' },
-        { block_key: 'math_arithmetic', block_name: 'Arithmetic', description: 'การคำนวณ (+, -, *, /, ^)', category: 'math', blockly_type: 'math_arithmetic', syntax_example: '(a + b), (a - b), etc.' },
-        { block_key: 'math_on_list', block_name: 'Min / Max', description: 'หาค่าต่ำสุด/สูงสุดจาก list', category: 'math', blockly_type: 'math_on_list', syntax_example: 'Math.min(...list), Math.max(...list)' },
-        { block_key: 'math_single', block_name: 'Math Function', description: 'ฟังก์ชันคณิตศาสตร์ (sqrt, abs, etc.)', category: 'math', blockly_type: 'math_single', syntax_example: 'Math.sqrt(x), Math.abs(x)' },
-        { block_key: 'text', block_name: 'Text', description: 'ข้อความ', category: 'math', blockly_type: 'text', syntax_example: '"hello"' },
-
-        // ═══════════════════════════════════════════
-        // Lists
-        // ═══════════════════════════════════════════
-        { block_key: 'lists_create_with', block_name: 'Create List', description: 'สร้าง list จาก items', category: 'lists', blockly_type: 'lists_create_with', syntax_example: '[item1, item2, ...]' },
-        { block_key: 'lists_create_empty', block_name: 'Create Empty List', description: 'สร้าง list ว่าง', category: 'lists', blockly_type: 'lists_create_empty', syntax_example: '[]' },
-        { block_key: 'lists_add_item', block_name: 'List Push', description: 'เพิ่ม item เข้า list', category: 'lists', blockly_type: 'lists_add_item', syntax_example: 'list.push(item)' },
-        { block_key: 'lists_remove_last', block_name: 'List Remove Last', description: 'ลบตัวสุดท้ายจาก list', category: 'lists', blockly_type: 'lists_remove_last', syntax_example: 'list.pop()' },
-        { block_key: 'lists_remove_last_return', block_name: 'List Pop Last', description: 'ดึงและลบตัวสุดท้าย', category: 'lists', blockly_type: 'lists_remove_last_return', syntax_example: 'list.pop()' },
-        { block_key: 'lists_remove_first_return', block_name: 'List Shift', description: 'ดึงและลบตัวแรก', category: 'lists', blockly_type: 'lists_remove_first_return', syntax_example: 'list.shift()' },
-        { block_key: 'lists_get_last', block_name: 'List Get Last', description: 'ดูตัวสุดท้าย', category: 'lists', blockly_type: 'lists_get_last', syntax_example: 'list[list.length - 1]' },
-        { block_key: 'lists_get_first', block_name: 'List Get First', description: 'ดูตัวแรก', category: 'lists', blockly_type: 'lists_get_first', syntax_example: 'list[0]' },
-        { block_key: 'lists_get_at_index', block_name: 'List Get At Index', description: 'ดึง item ตาม index', category: 'lists', blockly_type: 'lists_get_at_index', syntax_example: 'list[index]' },
-        { block_key: 'lists_setIndex', block_name: 'List Set At Index', description: 'ตั้งค่า item ตาม index', category: 'lists', blockly_type: 'lists_setIndex', syntax_example: 'list[index] = value;' },
-        { block_key: 'lists_remove_at_index', block_name: 'List Remove At Index', description: 'ลบ item ตาม index', category: 'lists', blockly_type: 'lists_remove_at_index', syntax_example: 'list.splice(index, 1)' },
-        { block_key: 'lists_contains', block_name: 'List Contains', description: 'เช็คว่า item อยู่ใน list', category: 'lists', blockly_type: 'lists_contains', syntax_example: 'list.includes(item)' },
-        { block_key: 'lists_concat', block_name: 'List Concat', description: 'รวม 2 lists', category: 'lists', blockly_type: 'lists_concat', syntax_example: 'list1.concat(list2)' },
-        { block_key: 'lists_length', block_name: 'List Length', description: 'นับจำนวน item', category: 'lists', blockly_type: 'lists_length', syntax_example: 'list.length' },
-        { block_key: 'lists_isEmpty', block_name: 'List Is Empty', description: 'เช็คว่า list ว่าง', category: 'lists', blockly_type: 'lists_isEmpty', syntax_example: 'list.length === 0' },
-        { block_key: 'lists_indexOf', block_name: 'List Index Of', description: 'หา index ของ item', category: 'lists', blockly_type: 'lists_indexOf', syntax_example: 'list.indexOf(item)' },
-        { block_key: 'lists_find_min_index', block_name: 'List Find Min Index', description: 'หา index ของค่าน้อยที่สุด', category: 'lists', blockly_type: 'lists_find_min_index', syntax_example: 'findMinIndex(list)' },
-        { block_key: 'lists_find_max_index', block_name: 'List Find Max Index', description: 'หา index ของค่ามากที่สุด', category: 'lists', blockly_type: 'lists_find_max_index', syntax_example: 'findMaxIndex(list)' },
-        { block_key: 'lists_sort_by_weight', block_name: 'Sort By Weight', description: 'เรียง edges ตาม weight', category: 'lists', blockly_type: 'lists_sort_by_weight', syntax_example: 'sortEdgesByWeight(edges)' },
-
-        // ═══════════════════════════════════════════
-        // Dictionaries / DSU
-        // ═══════════════════════════════════════════
-        { block_key: 'dict_create', block_name: 'Create Dictionary', description: 'สร้าง dictionary', category: 'dictionary', blockly_type: 'dict_create', syntax_example: '{}' },
-        { block_key: 'dict_set', block_name: 'Dict Set', description: 'ตั้งค่าใน dictionary', category: 'dictionary', blockly_type: 'dict_set', syntax_example: 'dict[key] = value;' },
-        { block_key: 'dict_get', block_name: 'Dict Get', description: 'ดึงค่าจาก dictionary', category: 'dictionary', blockly_type: 'dict_get', syntax_example: 'dict[key]' },
-        { block_key: 'dict_has_key', block_name: 'Dict Has Key', description: 'เช็คว่ามี key', category: 'dictionary', blockly_type: 'dict_has_key', syntax_example: 'dict.hasOwnProperty(key)' },
-        { block_key: 'dsu_find', block_name: 'DSU Find', description: 'หา root ใน Disjoint Set', category: 'dictionary', blockly_type: 'dsu_find', syntax_example: 'dsuFind(parent, node)' },
-        { block_key: 'dsu_union', block_name: 'DSU Union', description: 'รวม sets ใน Disjoint Set', category: 'dictionary', blockly_type: 'dsu_union', syntax_example: 'dsuUnion(parent, rank, u, v)' },
-
-        // ═══════════════════════════════════════════
-        // Entities — Coins
-        // ═══════════════════════════════════════════
-        { block_key: 'collect_coin', block_name: 'Collect Coin', description: 'เก็บเหรียญ', category: 'coins', blockly_type: 'collect_coin', syntax_example: 'await collectCoin();' },
-        { block_key: 'has_coin', block_name: 'Has Coin', description: 'ตรวจสอบว่ามีเหรียญ', category: 'conditions', blockly_type: 'has_coin', syntax_example: 'hasCoin()' },
-        { block_key: 'swap_coins', block_name: 'Swap Coins', description: 'สลับเหรียญ', category: 'coins', blockly_type: 'swap_coins', syntax_example: 'swapCoins(i, j)' },
-        { block_key: 'compare_coins', block_name: 'Compare Coins', description: 'เปรียบเทียบค่าเหรียญ', category: 'coins', blockly_type: 'compare_coins', syntax_example: 'compareCoins(i, j, op)' },
-        { block_key: 'get_coin_value', block_name: 'Get Coin Value', description: 'ดึงค่าเหรียญ', category: 'coins', blockly_type: 'get_coin_value', syntax_example: 'getCoinValue(index)' },
-        { block_key: 'coin_count', block_name: 'Coin Count', description: 'นับจำนวนเหรียญ', category: 'coins', blockly_type: 'coin_count', syntax_example: 'getCoinCount()' },
-        { block_key: 'is_sorted', block_name: 'Is Sorted', description: 'เช็คว่าเหรียญเรียงลำดับ', category: 'coins', blockly_type: 'is_sorted', syntax_example: 'isSorted()' },
-
-        // ═══════════════════════════════════════════
-        // Entities — Persons
-        // ═══════════════════════════════════════════
-        { block_key: 'rescue_person', block_name: 'Rescue Person', description: 'ช่วยคน', category: 'rescue', blockly_type: 'rescue_person', syntax_example: 'await rescuePersonAtNode(nodeId);' },
-        { block_key: 'rescue_person_at_node', block_name: 'Rescue At Node', description: 'ช่วยคนที่ node กำหนด', category: 'rescue', blockly_type: 'rescue_person_at_node', syntax_example: 'await rescuePersonAtNode(nodeId);' },
-        { block_key: 'has_person', block_name: 'Has Person', description: 'ตรวจสอบว่ามีคน', category: 'conditions', blockly_type: 'has_person', syntax_example: 'hasPerson()' },
-        { block_key: 'person_rescued', block_name: 'Person Rescued', description: 'ตรวจสอบว่าช่วยคนแล้ว', category: 'rescue', blockly_type: 'person_rescued', syntax_example: 'personRescued()' },
-        { block_key: 'person_count', block_name: 'Person Count', description: 'นับจำนวนคนที่ช่วยแล้ว', category: 'rescue', blockly_type: 'person_count', syntax_example: 'getPersonCount()' },
-        { block_key: 'all_people_rescued', block_name: 'All People Rescued', description: 'เช็คว่าช่วยคนครบ', category: 'rescue', blockly_type: 'all_people_rescued', syntax_example: 'allPeopleRescued()' },
-
-        // ═══════════════════════════════════════════
-        // Graph Algorithms
-        // ═══════════════════════════════════════════
-        { block_key: 'graph_get_neighbors', block_name: 'Get Neighbors', description: 'ดึง neighbors ของ node', category: 'graph', blockly_type: 'graph_get_neighbors', syntax_example: 'getNeighbors(graph, node)' },
-        { block_key: 'graph_get_node_value', block_name: 'Get Node Value', description: 'อ่านค่า node', category: 'graph', blockly_type: 'graph_get_node_value', syntax_example: 'getNodeValue(node)' },
-        { block_key: 'graph_get_current_node', block_name: 'Get Current Node', description: 'เลข node ปัจจุบัน', category: 'graph', blockly_type: 'graph_get_current_node', syntax_example: 'getCurrentNode()' },
-        { block_key: 'graph_get_neighbors_with_weight', block_name: 'Get Neighbors With Weight', description: 'ดึง neighbors พร้อม weight', category: 'graph', blockly_type: 'graph_get_neighbors_with_weight', syntax_example: 'getNeighborsWithWeight(graph, node)' },
-        { block_key: 'graph_get_all_edges', block_name: 'Get All Edges', description: 'ดึง edges ทั้งหมด', category: 'graph', blockly_type: 'graph_get_all_edges', syntax_example: 'getAllEdges(graph)' },
-
-        // ═══════════════════════════════════════════
-        // Visuals — Graph Algorithms
-        // ═══════════════════════════════════════════
-        { block_key: 'dijkstra_visit', block_name: 'Dijkstra Visit', description: 'บันทึกการเยี่ยม node (Dijkstra)', category: 'visuals', blockly_type: 'dijkstra_visit', syntax_example: 'dijkstraVisit(node)' },
-        { block_key: 'dijkstra_relax', block_name: 'Dijkstra Relax', description: 'บันทึก relax edge (Dijkstra)', category: 'visuals', blockly_type: 'dijkstra_relax', syntax_example: 'dijkstraRelax(from, to, dist)' },
-        { block_key: 'prim_visit', block_name: 'Prim Visit', description: 'บันทึกการเยี่ยม node (Prim)', category: 'visuals', blockly_type: 'prim_visit', syntax_example: 'primVisit(node)' },
-        { block_key: 'prim_relax', block_name: 'Prim Relax', description: 'บันทึก relax edge (Prim)', category: 'visuals', blockly_type: 'prim_relax', syntax_example: 'primRelax(from, to, weight)' },
-        { block_key: 'kruskal_visit', block_name: 'Kruskal Visit', description: 'บันทึกการพิจารณา edge (Kruskal)', category: 'visuals', blockly_type: 'kruskal_visit', syntax_example: 'kruskalVisit(from, to)' },
-        { block_key: 'kruskal_add_edge', block_name: 'Kruskal Add Edge', description: 'เพิ่ม edge เข้า MST (Kruskal)', category: 'visuals', blockly_type: 'kruskal_add_edge', syntax_example: 'kruskalAddEdge(from, to, weight)' },
-
-        // ═══════════════════════════════════════════
-        // Visuals — Knapsack
-        // ═══════════════════════════════════════════
-        { block_key: 'knapsack_pick_item', block_name: 'Knapsack Pick', description: 'เลือกหยิบ item', category: 'visuals', blockly_type: 'knapsack_pick_item', syntax_example: 'knapsackPick(index)' },
-        { block_key: 'knapsack_remove_item', block_name: 'Knapsack Remove', description: 'วาง item กลับ', category: 'visuals', blockly_type: 'knapsack_remove_item', syntax_example: 'knapsackRemove(index)' },
-        { block_key: 'knapsack_consider_item', block_name: 'Knapsack Consider', description: 'พิจารณา item', category: 'visuals', blockly_type: 'knapsack_consider_item', syntax_example: 'knapsackConsider(index)' },
-        { block_key: 'knapsack_dp_update', block_name: 'Knapsack DP Update', description: 'อัปเดตตาราง DP', category: 'visuals', blockly_type: 'knapsack_dp_update', syntax_example: 'knapsackDpUpdate(i, w, val)' },
-
-        // ═══════════════════════════════════════════
-        // Visuals — Subset Sum
-        // ═══════════════════════════════════════════
-        { block_key: 'subset_sum_consider', block_name: 'Subset Sum Consider', description: 'พิจารณา item', category: 'visuals', blockly_type: 'subset_sum_consider', syntax_example: 'subsetSumConsider(index)' },
-        { block_key: 'subset_sum_include', block_name: 'Subset Sum Include', description: 'รวม item เข้า subset', category: 'visuals', blockly_type: 'subset_sum_include', syntax_example: 'subsetSumInclude(index)' },
-        { block_key: 'subset_sum_exclude', block_name: 'Subset Sum Exclude', description: 'ไม่รวม item', category: 'visuals', blockly_type: 'subset_sum_exclude', syntax_example: 'subsetSumExclude(index)' },
-        { block_key: 'subset_sum_reset', block_name: 'Subset Sum Reset', description: 'รีเซ็ตสถานะ', category: 'visuals', blockly_type: 'subset_sum_reset', syntax_example: 'subsetSumReset()' },
-        { block_key: 'subset_sum_dp_update', block_name: 'Subset Sum DP Update', description: 'อัปเดตตาราง DP', category: 'visuals', blockly_type: 'subset_sum_dp_update', syntax_example: 'subsetSumDpUpdate(i, s, val)' },
-
-        // ═══════════════════════════════════════════
-        // Visuals — Coin Change
-        // ═══════════════════════════════════════════
-        { block_key: 'coin_change_add_warrior_to_selection', block_name: 'Add Warrior', description: 'เพิ่มนักรบลงในรายการที่เลือก', category: 'visuals', blockly_type: 'coin_change_add_warrior_to_selection', syntax_example: 'addWarrior(index)' },
-        { block_key: 'coin_change_track_decision', block_name: 'Track Decision', description: 'บันทึกการตัดสินใจ DP', category: 'visuals', blockly_type: 'coin_change_track_decision', syntax_example: 'trackDecision(target, coinIndex, result)' },
-        { block_key: 'coin_change_remove_warrior', block_name: 'Remove Warrior', description: 'ลบนักรบออก', category: 'visuals', blockly_type: 'coin_change_remove_warrior', syntax_example: 'removeWarrior(index)' },
-        { block_key: 'coin_change_consider', block_name: 'Consider Coin', description: 'พิจารณาเหรียญ', category: 'visuals', blockly_type: 'coin_change_consider', syntax_example: 'considerCoin(index)' },
-        { block_key: 'coin_change_memo_hit', block_name: 'Memo Hit', description: 'พบค่าใน memo แล้ว', category: 'visuals', blockly_type: 'coin_change_memo_hit', syntax_example: 'memoHit(amount)' },
-
-        // ═══════════════════════════════════════════
-        // Visuals — Emei Mountain
-        // ═══════════════════════════════════════════
-        { block_key: 'emei_highlight_peak', block_name: 'Highlight Peak', description: 'ไฮไลท์ยอดเขา', category: 'visuals', blockly_type: 'emei_highlight_peak', syntax_example: 'highlightPeak(node)' },
-        { block_key: 'emei_highlight_path', block_name: 'Highlight Path', description: 'แสดงเส้นทาง', category: 'visuals', blockly_type: 'emei_highlight_path', syntax_example: 'highlightPath(parent, end, bottleneck)' },
-        { block_key: 'emei_show_final_result', block_name: 'Show Result', description: 'แสดงผลลัพธ์สุดท้าย', category: 'visuals', blockly_type: 'emei_show_final_result', syntax_example: 'showFinalResult(bottleneck, rounds)' },
+        { block_key: 'variables_get', block_name: 'variables_get', description: 'ดึงค่าตัวแปร', category: 'variables' },
+        { block_key: 'variables_set', block_name: 'variables_set', description: 'ตั้งค่าตัวแปร', category: 'variables' },
+        { block_key: 'math_change', block_name: 'math_change', description: 'เพิ่ม/ลดค่าให้กับตัวแปร', category: 'variables' },
+        { block_key: 'local_variable_set', block_name: 'local_variable_set', description: 'ประกาศ/ตั้งค่าตัวแปร Local', category: 'variables' }
     ];
 
     for (const block of blocks) {
         await prisma.block.upsert({
             where: { block_key: block.block_key },
-            update: block,
-            create: block,
+            update: {
+                block_name: block.block_name,
+                description: block.description,
+                category: block.category,
+            },
+            create: {
+                block_key: block.block_key,
+                block_name: block.block_name,
+                description: block.description,
+                category: block.category,
+            },
         });
     }
     console.log('✅ Blocks seeded.');

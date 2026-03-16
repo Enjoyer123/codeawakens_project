@@ -13,7 +13,6 @@ const {
 // Victory Condition CRUD routes
 router.get("/victory-conditions", authCheck, requireAdmin, getAllVictoryConditions);
 router.get("/victory-conditions/:victoryConditionId", authCheck, requireAdmin, getVictoryConditionById);
-// router.post("/victory-conditions", authCheck, requireAdmin, createVictoryCondition); // Removed: Creation only allowed via seed/migration
 
 router.put("/victory-conditions/:victoryConditionId", authCheck, requireAdmin, updateVictoryCondition);
 router.delete("/victory-conditions/:victoryConditionId", authCheck, requireAdmin, deleteVictoryCondition);

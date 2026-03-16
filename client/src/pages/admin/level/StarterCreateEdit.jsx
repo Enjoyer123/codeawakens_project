@@ -18,6 +18,8 @@ import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import PatternBlocklyWorkspace from '@/components/admin/pattern/PatternBlocklyWorkspace';
 import { API_BASE_URL } from '../../../config/apiConfig';
 import PageError from '@/components/shared/Error/PageError';
+import AlertDialog from '@/components/shared/dialog/AlertDialog';
+import { useAlertDialog } from '@/components/shared/dialog/useAlertDialog';
 
 const StarterCreateEdit = () => {
   const { levelId } = useParams();
@@ -32,6 +34,8 @@ const StarterCreateEdit = () => {
     error,
     isError
   } = useLevel(levelId);
+
+  const { alertDialog, showAlert } = useAlertDialog();
 
   const updateLevelMutation = useUpdateLevel();
 
@@ -99,7 +103,7 @@ const StarterCreateEdit = () => {
 
   const handleSave = async () => {
     if (!workspaceRef.current) {
-      alert('Workspace ไม่พร้อม');
+      showAlert('ข้อผิดพลาด', 'Workspace ไม่พร้อม');
       return;
     }
 
@@ -116,10 +120,10 @@ const StarterCreateEdit = () => {
         levelData: updateData
       });
 
-      alert('บันทึก Starter XML สำเร็จ');
+      showAlert('สำเร็จ', 'บันทึก Starter XML สำเร็จ');
       navigate(`/admin/levels/${levelId}/edit`);
     } catch (error) {
-      alert(`เกิดข้อผิดพลาดในการบันทึก: ` + (error.message || 'ไม่ทราบสาเหตุ'));
+      showAlert('ข้อผิดพลาด', `เกิดข้อผิดพลาดในการบันทึก: ` + (error.message || 'ไม่ทราบสาเหตุ'));
     }
   };
 
@@ -168,6 +172,7 @@ const StarterCreateEdit = () => {
           </div>
         </div>
       </div>
+      <AlertDialog {...alertDialog} />
     </div>
   );
 };

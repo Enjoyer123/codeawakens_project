@@ -152,10 +152,8 @@ exports.getLevelCategoryById = async (req, res) => {
             description: true,
             difficulty: true,
             goal_node_id: true,
-            monsters: true,
             category_id: true,
             start_node_id: true,
-            goal_type: true,
             is_unlocked: true,
             required_level_id: true,
             required_skill_level: true,
@@ -313,7 +311,6 @@ exports.createLevelCategory = async (req, res) => {
         description: description.trim(),
         item_enable: item_enable === true || item_enable === 'true' || item_enable === false,
         difficulty_order: parseInt(difficulty_order),
-        color_code: '#000000',
         block_key: (block_key && block_key !== 'null' && block_key !== '') ? block_key : null,
         background_image: background_image || null,
         coordinates: coordinates ? JSON.parse(JSON.stringify(coordinates)) : null, // Ensure valid JSON

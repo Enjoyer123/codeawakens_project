@@ -5,7 +5,6 @@ import { useTests, useDeleteTest } from '../../../services/hooks/useTests';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import SearchInput from '@/components/admin/formFields/SearchInput';
-import ErrorAlert from '@/components/shared/alert/ErrorAlert';
 import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TestTable from '@/components/admin/test/TestTable';

@@ -101,7 +101,6 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, blocklyXml, tex
       attempts_count: 1,
       blockly_code: blocklyXml || null,
       text_code: levelData?.textcode ? textCodeContent : null,
-      execution_time: 0,
       best_score: totalScore,
       pattern_bonus_score: patternBonus,
       is_correct: isVictory,

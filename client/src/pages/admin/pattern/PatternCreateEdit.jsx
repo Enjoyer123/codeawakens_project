@@ -32,6 +32,8 @@ import { usePatternForm } from '../../../components/admin/pattern/hooks/usePatte
 import { usePatternBlocklyManager } from '../../../components/admin/pattern/hooks/usePatternBlocklyManager';
 import { useSuppressBlocklyWarnings } from '@/components/admin/level/hooks/useSuppressBlocklyWarnings';
 import { setXmlLoading } from "@/gameutils/blockly/core/state";
+import AlertDialog from '@/components/shared/dialog/AlertDialog';
+import { useAlertDialog } from '@/components/shared/dialog/useAlertDialog';
 
 const PatternCreateEdit = () => {
   const { levelId, patternId } = useParams();
@@ -48,11 +50,15 @@ const PatternCreateEdit = () => {
   // --- 2. View Mode ---
   const [isViewMode, setIsViewMode] = useState(false);
 
+  // --- 3. Alert Dialog ---
+  const { alertDialog, showAlert } = useAlertDialog();
+
   // --- 4. Blockly Manager Hook ---
   const blocklyManager = usePatternBlocklyManager({
     levelData,
     patternData,
-    isViewMode
+    isViewMode,
+    showAlert
   });
 
   // --- 5. Handlers ---
@@ -62,12 +68,12 @@ const PatternCreateEdit = () => {
     levelId,
     patternId,
     patternData,
-    patternTypes: [], // Not needed for logic save
+    patternTypes: [],
     onSaveSuccess: () => {
-      alert('บันทึก Logic เรียบร้อย');
       navigate(`/admin/levels/${levelId}/preview/${patternId}`);
     },
-    isEditMode
+    isEditMode,
+    showAlert
   });
 
   const handleSaveLogic = () => {
@@ -97,7 +103,7 @@ const PatternCreateEdit = () => {
       console.log(`[Export XML] Downloaded for Step ${blocklyManager.currentStepIndex}`);
     } catch (e) {
       console.error('[Export XML] Failed:', e);
-      alert('❌ เกิดข้อผิดพลาดในการ Export');
+      showAlert('❌ Export ไม่สำเร็จ', 'เกิดข้อผิดพลาดในการ Export');
     }
   };
 
@@ -110,23 +116,27 @@ const PatternCreateEdit = () => {
       if (!file) return;
       try {
         const xmlText = await file.text();
-        const confirmed = window.confirm(
-          '📥 Import XML?\n\nBlock จากไฟล์จะถูกเพิ่มเข้าไปใน Workspace\n(ไม่ทับ Block เดิม)\n\nต้องการดำเนินการต่อหรือไม่?'
+        showAlert(
+          '📥 Import XML?',
+          'Block จากไฟล์จะถูกเพิ่มเข้าไปใน Workspace\n(ไม่ทับ Block เดิม)\n\nต้องการดำเนินการต่อหรือไม่?',
+          () => {
+            if (blocklyManager.workspaceRef.current) {
+              try {
+                const xmlDom = Blockly.utils.xml.textToDom(xmlText);
+                setXmlLoading(true);
+                Blockly.Xml.domToWorkspace(xmlDom, blocklyManager.workspaceRef.current);
+                setXmlLoading(false);
+              } catch (innerErr) {
+                console.error('[Import XML] Inner Error:', innerErr);
+                showAlert('❌ Import ไม่สำเร็จ', 'เกิดข้อผิดพลาดในการ Import กรุณาตรวจสอบไฟล์ XML');
+              }
+            }
+          },
+          { showCancel: true }
         );
-        if (!confirmed) return;
-
-        if (blocklyManager.workspaceRef.current) {
-          const xmlDom = Blockly.utils.xml.textToDom(xmlText);
-
-          setXmlLoading(true);
-
-          Blockly.Xml.domToWorkspace(xmlDom, blocklyManager.workspaceRef.current);
-
-          setXmlLoading(false);
-        }
       } catch (e) {
-        console.error('[Import XML] Error:', e);
-        alert('❌ เกิดข้อผิดพลาดในการ Import\n\nกรุณาตรวจสอบไฟล์ XML');
+        console.error('[Import XML File Read] Error:', e);
+        showAlert('❌ อ่านไฟล์ไม่สำเร็จ', 'ไม่สามารถอ่านไฟล์ XML ได้');
       }
     };
     input.click();
@@ -307,6 +317,7 @@ const PatternCreateEdit = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <AlertDialog {...alertDialog} />
     </div>
   );
 };

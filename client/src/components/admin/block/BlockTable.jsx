@@ -43,7 +43,7 @@ const BlockTable = ({ blocks, onEdit, onDelete }) => {
             <th className={tableHeaderClassName}>Block Name</th>
             <th className={tableHeaderClassName}>Image</th>
             <th className={tableHeaderClassName}>Category</th>
-            <th className={tableHeaderClassName}>Blockly Type</th>
+
             <th className={tableHeaderClassName}>Available</th>
             <th className={tableHeaderClassName}>Actions</th>
           </tr>
@@ -76,9 +76,7 @@ const BlockTable = ({ blocks, onEdit, onDelete }) => {
                   {blockCategories.find((c) => c.value === block.category)?.label || block.category}
                 </Badge>
               </td>
-              <td className={`${tableCellClassName} text-gray-500`}>
-                {block.blockly_type || '-'}
-              </td>
+
               <td className={tableCellClassName}>
                 <Badge variant={block.is_available ? 'default' : 'secondary'}>
                   {block.is_available ? 'Available' : 'Unavailable'}

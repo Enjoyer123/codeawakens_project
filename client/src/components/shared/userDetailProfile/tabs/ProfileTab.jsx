@@ -5,6 +5,8 @@ import { API_BASE_URL } from '../../../../config/apiConfig';
 import { Pencil } from 'lucide-react';
 import ProfileEditDialog from './ProfileEditDialog'; // Import the new dialog
 import { Badge } from "@/components/ui/badge";
+import { useAlertDialog } from '@/components/shared/dialog/useAlertDialog';
+import AlertDialog from '@/components/shared/dialog/AlertDialog';
 
 const ProfileTab = ({
     userDetails,
@@ -13,8 +15,10 @@ const ProfileTab = ({
     getToken
 }) => {
     const navigate = useNavigate();
+    const { alertDialog, showAlert } = useAlertDialog();
+
     // We pass the whole returned object to the dialog
-    const profileData = useProfileTab({ userDetails, getToken, onUpdateSuccess });
+    const profileData = useProfileTab({ userDetails, getToken, onUpdateSuccess, showAlert });
 
     // Destructure what we need for the main view
     const {
@@ -147,6 +151,7 @@ const ProfileTab = ({
                 onOpenChange={toggleEditMode}
                 profileData={{ ...profileData, userDetails }}
             />
+            <AlertDialog {...alertDialog} />
         </div>
     );
 };

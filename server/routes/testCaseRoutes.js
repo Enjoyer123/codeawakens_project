@@ -5,16 +5,16 @@ const authCheck = require('../middleware/authCheck');
 const requireAdmin = require('../middleware/requireAdmin');
 
 // Get all test cases for a level (public - no auth needed)
-router.get('/level/:levelId', testCaseController.getTestCasesByLevel);
+router.get('/test-cases/level/:levelId', testCaseController.getTestCasesByLevel);
 
 // Create a new test case (requires authentication and admin)
-router.post('/', authCheck, requireAdmin, testCaseController.createTestCase);
+router.post('/test-cases/', authCheck, requireAdmin, testCaseController.createTestCase);
 
 // Update a test case (requires authentication and admin)
-router.put('/:testCaseId', authCheck, requireAdmin, testCaseController.updateTestCase);
+router.put('/test-cases/:testCaseId', authCheck, requireAdmin, testCaseController.updateTestCase);
 
 // Delete a test case (requires authentication and admin)
-router.delete('/:testCaseId', authCheck, requireAdmin, testCaseController.deleteTestCase);
+router.delete('/test-cases/:testCaseId', authCheck, requireAdmin, testCaseController.deleteTestCase);
 
 module.exports = router;
 

@@ -66,15 +66,5 @@ export function defineMovementBlocks() {
       this.setTooltip("เดินตาม path ที่กำหนด (list of nodes)");
     },
   };
-  // blocklyMovement.js — เพิ่ม input กลับ
-  Blockly.Blocks["moveforward_with_explor"] = {
-    init: function () {
-      this.appendValueInput("STEPS")        // ← เพิ่ม input ชื่อ "STEPS"
-        .setCheck("Number")
-        .appendField("Move Forward + Explore");
-      this.setPreviousStatement(true, null);
-      this.setNextStatement(true, null);
-      this.setStyle('loop_blocks');
-    },
-  };
+
 }

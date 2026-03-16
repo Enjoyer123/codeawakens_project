@@ -7,7 +7,13 @@ import { API_BASE_URL } from '../config/apiConfig';
  */
 export const getImageUrl = (pathFile) => {
   if (!pathFile) return null;
-  return `${API_BASE_URL}${pathFile}`;
+  
+  // Ensure we don't end up with double slashes if API_BASE_URL ends with one
+  // and ensure pathFile starts with a slash if it doesn't already
+  const cleanBase = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+  const cleanPath = pathFile.startsWith('/') ? pathFile : `/${pathFile}`;
+  
+  return `${cleanBase}${cleanPath}`;
 };
 
 /**

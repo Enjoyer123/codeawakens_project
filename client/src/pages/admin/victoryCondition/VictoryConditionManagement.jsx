@@ -11,7 +11,6 @@ import {
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import SearchInput from '@/components/admin/formFields/SearchInput';
-import ErrorAlert from '@/components/shared/alert/ErrorAlert';
 import PaginationControls from '@/components/shared/pagination/PaginationControls';
 import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import VictoryConditionFormDialog from '@/components/admin/addEditDialog/VictoryConditionFormDialog';

@@ -33,32 +33,6 @@ export const fetchAllVictoryConditions = async (getToken, page = 1, limit = 10, 
   }
 };
 
-// Create victory condition
-export const createVictoryCondition = async (getToken, victoryConditionData) => {
-  try {
-    const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}/victory-conditions`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(victoryConditionData),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'Failed to create victory condition' }));
-      throw new Error(errorData.message || 'Failed to create victory condition');
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error creating victory condition:', error);
-    throw error;
-  }
-};
-
 // Update victory condition
 export const updateVictoryCondition = async (getToken, victoryConditionId, victoryConditionData) => {
   try {

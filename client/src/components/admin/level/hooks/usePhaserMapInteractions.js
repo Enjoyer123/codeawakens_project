@@ -7,7 +7,7 @@ export const usePhaserMapInteractions = ({
   formDataRef, selectedNodeRef, currentModeRef, coinValueRef, edgeWeightRef,
   selectedCategoryRef, obstacleDragStartRef, obstacleDragEndRef, isDraggingObstacleRef,
   editingObstacleIndexRef, onFormDataChange, onSelectedNodeChange, onAddMonsterRequest,
-  onEditEntityRequest, redrawPhaser
+  onEditEntityRequest, redrawPhaser, showAlert
 }) => {
   const onAddMonsterReqRef = useRef(onAddMonsterRequest);
   onAddMonsterReqRef.current = onAddMonsterRequest;
@@ -126,7 +126,7 @@ export const usePhaserMapInteractions = ({
 
     coin: (x, y, nodeAt, entityAt) => {
       if (entityAt?.type === 'coin') return;
-      if (!isItemEnabled(ITEM_TYPES.COIN_POSITIONS)) return alert('Coin ไม่ได้ถูก enable ใน category นี้');
+      if (!isItemEnabled(ITEM_TYPES.COIN_POSITIONS)) { showAlert?.('คำเตือน', 'Coin ไม่ได้ถูก enable ใน category นี้'); return; }
 
       const val = Number(coinValueRef.current);
       const newCoin = { x: Math.round(x), y: Math.round(y), collected: false, id: generateId(getEntities('COIN')), value: (!isNaN(val) && val > 0) ? val : 10, entity_type: 'COIN' };
@@ -135,8 +135,8 @@ export const usePhaserMapInteractions = ({
 
     people: (x, y, nodeAt, entityAt) => {
       if (entityAt?.type === 'people') return;
-      if (!isItemEnabled(ITEM_TYPES.PEOPLE)) return alert('People ไม่ได้ถูก enable ใน category นี้');
-      if (!nodeAt) return alert('กรุณาคลิกที่ Node เพื่อเพิ่ม People');
+      if (!isItemEnabled(ITEM_TYPES.PEOPLE)) { showAlert?.('คำเตือน', 'People ไม่ได้ถูก enable ใน category นี้'); return; }
+      if (!nodeAt) { showAlert?.('คำเตือน', 'กรุณาคลิกที่ Node เพื่อเพิ่ม People'); return; }
 
       const id = generateId(getEntities('PEOPLE'));
       const newPerson = { x: Math.round(nodeAt.x), y: Math.round(nodeAt.y), id, nodeId: nodeAt.id, rescued: false, personName: `คนที่ ${id}`, entity_type: 'PEOPLE' };
@@ -178,22 +178,24 @@ export const usePhaserMapInteractions = ({
       // Delete free-standing Entities
       if (entityAt && entityAt.type !== 'node') {
         const name = entityAt.type === 'monster' ? entityAt.data.name : entityAt.type;
-        if (confirm(`ลบ ${name}?`)) {
+        showAlert('ยืนยันการลบ', `ลบ ${name}?`, () => {
           onFormDataChange({ ...data, map_entities: data.map_entities.filter((_, i) => i !== entityAt.index) });
-        }
+        }, { showCancel: true });
         return;
       }
 
       // Delete Graph Nodes and bound edges/entities
-      if (nodeAt && confirm(`ลบ Node ${nodeAt.id}?`)) {
-        onFormDataChange({
-          ...data,
-          nodes: data.nodes.filter(n => n.id !== nodeAt.id),
-          edges: data.edges.filter(e => e.from !== nodeAt.id && e.to !== nodeAt.id),
-          start_node_id: data.start_node_id === nodeAt.id ? null : data.start_node_id,
-          goal_node_id: data.goal_node_id === nodeAt.id ? null : data.goal_node_id,
-          map_entities: (data.map_entities || []).filter(e => e.entity_type === 'MONSTER' || e.entity_type === 'OBSTACLE' || e.nodeId !== nodeAt.id)
-        });
+      if (nodeAt) {
+        showAlert('ยืนยันการลบ', `ลบ Node ${nodeAt.id}?`, () => {
+          onFormDataChange({
+            ...data,
+            nodes: data.nodes.filter(n => n.id !== nodeAt.id),
+            edges: data.edges.filter(e => e.from !== nodeAt.id && e.to !== nodeAt.id),
+            start_node_id: data.start_node_id === nodeAt.id ? null : data.start_node_id,
+            goal_node_id: data.goal_node_id === nodeAt.id ? null : data.goal_node_id,
+            map_entities: (data.map_entities || []).filter(e => e.entity_type === 'MONSTER' || e.entity_type === 'OBSTACLE' || e.nodeId !== nodeAt.id)
+          });
+        }, { showCancel: true });
       }
     },
 

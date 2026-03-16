@@ -67,11 +67,9 @@ export function playCombatSequence(scene, isWin, onComplete) {
 
 
     // Spawn Cinematic Player
-    const characterType = scene.levelData.character || 'main_1';
+    const characterType = scene.levelData.character;
 
-    // Slime_1 relies on "slime" as character type in some older configurations, 
-    // but its sprites uses slime_1. Default to characterType if not a special mapped name.
-    const playerPrefix = characterType === 'slime' ? 'slime_1' : characterType;
+    const playerPrefix = characterType === 'main_1' ? 'main_1' : characterType;
     const playerTexture = playerPrefix;
     const moveAnim = `${playerPrefix}-walk_right`;
     const standAnim = `${playerPrefix}-idle_right`;

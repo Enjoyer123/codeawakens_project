@@ -85,7 +85,6 @@ export const usePhaserGameInit = ({
         this.load.image('vampire_1', '/enemies/vampire_1_00.png');
         this.load.image('vampire_2', '/enemies/vampire_2_00.png');
         this.load.image('vampire_3', '/enemies/vampire_3_00.png');
-        this.load.image('slime_1', '/characters/Slime1.png');
         this.load.image('bot_slime1', '/characters/Slime1.png');
       }
 

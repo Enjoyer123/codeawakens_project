@@ -73,7 +73,7 @@ const WeaponFormDialog = ({
             name="weapon_name"
             value={formData.weapon_name}
             onChange={(e) => handleChange('weapon_name', e.target.value)}
-            placeholder="🏭 ไม้เท้าเก่า"
+            placeholder="มือเปล่า"
             required
           />
           <FormInput
@@ -90,13 +90,6 @@ const WeaponFormDialog = ({
               type="number"
               value={formData.combat_power}
               onChange={(e) => handleChange('combat_power', parseInt(e.target.value) || 0)}
-            />
-            <FormInput
-              label="Emoji"
-              name="emoji"
-              value={formData.emoji || ''}
-              onChange={(e) => handleChange('emoji', e.target.value)}
-              placeholder="🏭"
             />
           </div>
           <FormSelect

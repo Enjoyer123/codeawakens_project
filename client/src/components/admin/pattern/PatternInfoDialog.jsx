@@ -13,10 +13,15 @@ import PatternInfoForm from './PatternInfoForm';
 import { usePattern, useUpdatePattern, useCreatePattern, usePatternTypes } from '../../../services/hooks/usePattern';
 import { useWeapons } from '../../../services/hooks/useWeapons';
 import ContentLoader from '@/components/shared/Loading/ContentLoader';
+import { useAlertDialog } from '@/components/shared/dialog/useAlertDialog';
+import AlertDialog from '@/components/shared/dialog/AlertDialog';
 
 const PatternInfoDialog = ({ open, onOpenChange, patternId, levelId }) => {
     const navigate = useNavigate();
     const isCreateMode = !patternId;
+
+    // Shared Dialogs
+    const { alertDialog, showAlert } = useAlertDialog();
 
     // Data Hooks
     const { data: patternData, isLoading: isPatternLoading } = usePattern(patternId);
@@ -57,7 +62,7 @@ const PatternInfoDialog = ({ open, onOpenChange, patternId, levelId }) => {
 
     const handleSave = async (shouldEditLogic = false) => {
         if (!patternName.trim()) {
-            alert('กรุณากรอกชื่อ');
+            showAlert('กรุณากรอกชื่อ');
             return;
         }
 
@@ -94,7 +99,7 @@ const PatternInfoDialog = ({ open, onOpenChange, patternId, levelId }) => {
             }
         } catch (err) {
             console.error('Failed to save pattern info:', err);
-            alert('บันทึกไม่สำเร็จ: ' + err.message);
+            showAlert('บันทึกไม่สำเร็จ: ' + err.message);
         }
     };
 
@@ -165,6 +170,7 @@ const PatternInfoDialog = ({ open, onOpenChange, patternId, levelId }) => {
                     </div>
                 )}
             </DialogContent>
+            <AlertDialog {...alertDialog} />
         </Dialog>
     );
 };

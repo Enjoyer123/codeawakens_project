@@ -3,6 +3,8 @@ import { useAuth } from '@clerk/clerk-react';
 import { fetchAllLevelCategories, updateLevelCategoryCoordinates } from '../../services/levelCategoryService';
 import { updateLevelCoordinates } from '../../services/levelService';
 import { toast } from 'sonner';
+import AlertDialog from '@/components/shared/dialog/AlertDialog';
+import { useAlertDialog } from '@/components/shared/dialog/useAlertDialog';
 
 const MapCoordinatePicker = ({
   data = null,
@@ -17,6 +19,7 @@ const MapCoordinatePicker = ({
   const [placements, setPlacements] = useState({});
   const [loading, setLoading] = useState(true);
   const mapRef = useRef(null);
+  const { alertDialog, showAlert } = useAlertDialog();
 
   // Use props data if provided, otherwise use fetched data
   const items = data || internalCategories;
@@ -99,46 +102,51 @@ const MapCoordinatePicker = ({
   };
 
   const handleClear = () => {
-    if (confirm('Clear all placements?')) {
+    showAlert('ยืนยันการลบ', 'Clear all placements?', () => {
       setPlacements({});
-    }
+    }, { showCancel: true });
   }
 
   const handleSave = async () => {
-    if (!confirm(`Are you sure you want to save ${Object.keys(placements).length} positions to the database?`)) return;
+    showAlert(
+      'ยืนยันการบันทึก',
+      `Are you sure you want to save ${Object.keys(placements).length} positions to the database?`,
+      async () => {
+        setLoading(true);
+        let successCount = 0;
+        let failCount = 0;
 
-    setLoading(true);
-    let successCount = 0;
-    let failCount = 0;
-
-    try {
-      const promises = Object.entries(placements).map(async ([itemId, coordinates]) => {
         try {
-          if (saveType === 'category') {
-            await updateLevelCategoryCoordinates(getToken, itemId, coordinates);
-          } else if (saveType === 'level') {
-            await updateLevelCoordinates(getToken, itemId, coordinates);
+          const promises = Object.entries(placements).map(async ([itemId, coordinates]) => {
+            try {
+              if (saveType === 'category') {
+                await updateLevelCategoryCoordinates(getToken, itemId, coordinates);
+              } else if (saveType === 'level') {
+                await updateLevelCoordinates(getToken, itemId, coordinates);
+              }
+              successCount++;
+            } catch (err) {
+              console.error(`Failed to save item ${itemId}:`, err);
+              failCount++;
+            }
+          });
+
+          await Promise.all(promises);
+
+          if (failCount === 0) {
+            toast.success(`Successfully saved ${successCount} positions!`);
+          } else {
+            toast.warning(`Saved ${successCount} positions, but failed ${failCount}.`);
           }
-          successCount++;
         } catch (err) {
-          console.error(`Failed to save item ${itemId}:`, err);
-          failCount++;
+          console.error('Error saving coordinates:', err);
+          toast.error('Failed to save coordinates.');
+        } finally {
+          setLoading(false);
         }
-      });
-
-      await Promise.all(promises);
-
-      if (failCount === 0) {
-        toast.success(`Successfully saved ${successCount} positions!`);
-      } else {
-        toast.warning(`Saved ${successCount} positions, but failed ${failCount}.`);
-      }
-    } catch (err) {
-      console.error('Error saving coordinates:', err);
-      toast.error('Failed to save coordinates.');
-    } finally {
-      setLoading(false);
-    }
+      },
+      { showCancel: true }
+    );
   };
 
   return (
@@ -250,6 +258,7 @@ const MapCoordinatePicker = ({
           </ol>
         </div>
       </div>
+      <AlertDialog {...alertDialog} />
     </div>
   );
 };

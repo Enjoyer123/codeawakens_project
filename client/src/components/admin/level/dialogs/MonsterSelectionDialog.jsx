@@ -25,7 +25,6 @@ const MonsterSelectionDialog = ({ open, onOpenChange, onSelectMonster }) => {
                         className="flex flex-col items-center gap-2 h-auto py-6 border-2 hover:border-blue-500 hover:bg-blue-50"
                         onClick={() => onSelectMonster('vampire_1')}
                     >
-                        <span className="text-4xl">🧛</span>
                         <span className="font-bold">Vampire 1</span>
                         <span className="text-xs text-gray-500">HP: 3 | ATK: 100</span>
                     </Button>
@@ -34,7 +33,6 @@ const MonsterSelectionDialog = ({ open, onOpenChange, onSelectMonster }) => {
                         className="flex flex-col items-center gap-2 h-auto py-6 border-2 hover:border-blue-500 hover:bg-blue-50"
                         onClick={() => onSelectMonster('vampire_2')}
                     >
-                        <span className="text-4xl">🧛</span>
                         <span className="font-bold">Vampire 2</span>
                         <span className="text-xs text-gray-500">HP: 3 | ATK: 100</span>
                     </Button>
@@ -43,18 +41,8 @@ const MonsterSelectionDialog = ({ open, onOpenChange, onSelectMonster }) => {
                         className="flex flex-col items-center gap-2 h-auto py-6 border-2 hover:border-blue-500 hover:bg-blue-50"
                         onClick={() => onSelectMonster('vampire_3')}
                     >
-                        <span className="text-4xl">🧛</span>
                         <span className="font-bold">Vampire 3</span>
                         <span className="text-xs text-gray-500">HP: 3 | ATK: 100</span>
-                    </Button>
-                    <Button
-                        variant="outline"
-                        className="flex flex-col items-center gap-2 h-auto py-6 border-2 hover:border-blue-500 hover:bg-blue-50"
-                        onClick={() => onSelectMonster('slime_1')}
-                    >
-                        <span className="text-4xl">💧</span>
-                        <span className="font-bold">Slime 1</span>
-                        <span className="text-xs text-gray-500">HP: 2 | ATK: 50</span>
                     </Button>
                 </div>
                 <DialogFooter className="sm:justify-start">

@@ -106,12 +106,6 @@ const RewardFormDialog = ({
             onChange={(e) => handleChange('required_score', parseInt(e.target.value) || 0)}
             required
           />
-          <FormCheckbox
-            label="Is Automatic"
-            name="is_automatic"
-            checked={formData.is_automatic}
-            onChange={(e) => handleChange('is_automatic', e.target.checked)}
-          />
           <div className="border-t pt-4">
             <p className="text-sm text-gray-500">{noteText}</p>
           </div>

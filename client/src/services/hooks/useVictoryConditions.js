@@ -3,7 +3,6 @@ import { useAuth } from '@clerk/clerk-react';
 import {
     fetchAllVictoryConditions,
     getVictoryConditionById,
-    createVictoryCondition,
     updateVictoryCondition,
     deleteVictoryCondition
 } from '../victoryConditionService';
@@ -31,19 +30,6 @@ export const useVictoryCondition = (victoryConditionId) => {
         enabled: !!getToken && !!victoryConditionId,
         staleTime: 0,
         gcTime: 0,
-    });
-};
-
-// Create victory condition
-export const useCreateVictoryCondition = () => {
-    const { getToken } = useAuth();
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationFn: (data) => createVictoryCondition(getToken, data),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['victoryConditions'] });
-        },
     });
 };
 

@@ -39,7 +39,6 @@ model LevelCategory {
   description      String
   item_enable      Boolean
   difficulty_order Int
-  color_code       String
   block_key        Json?
   background_image String?
   coordinates      Json?    // { "top": 20.44, "left": 73.3 }
@@ -117,7 +116,6 @@ model Level {
   coordinates              Json?    // { "top": 28.44, "left": 30.27 }
   start_node_id            Int?
   goal_node_id             Int?
-  goal_type                String?
   character                String?       // Character type for this level (e.g. 'warrior', 'mage')
   nodes                    Json?
   edges                    Json?
@@ -211,7 +209,6 @@ model UserProgress {
   attempts_count      Int       @default(0)
   blockly_code        String?
   text_code           String?
-  execution_time      Int?
   best_score          Int       @default(0)
   pattern_bonus_score Int       @default(0)
   is_correct          Boolean   @default(false)
@@ -235,7 +232,6 @@ model Reward {
   reward_name    String
   description    String?
   required_score Int
-  is_automatic   Boolean      @default(false)
   frame1         String?
   level          Level        @relation(fields: [level_id], references: [level_id], onDelete: Cascade)
   user_rewards   UserReward[]
@@ -341,7 +337,6 @@ model Weapon {
   weapon_name   String
   description   String?
   combat_power  Int            @default(0)
-  emoji         String?
   weapon_type   WeaponType
   created_at    DateTime       @default(now())
   updated_at    DateTime       @updatedAt
@@ -357,7 +352,6 @@ model Block {
   block_name     String
   description    String?
   category       BlockCategory
-  blockly_type   String?
   is_available   Boolean       @default(true)
   syntax_example String?
   block_image    String?       // Path to block image

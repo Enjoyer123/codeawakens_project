@@ -12,13 +12,13 @@ export const useLevelForm = ({
     isEditing,
     getToken,
     navigate,
-    initialBackgroundImageUrl = null
+    initialBackgroundImageUrl = null,
+    showAlert
 }) => {
     const [formData, setFormData] = useState({
         category_id: '',
         level_name: '',
         description: '',
-
         difficulty: 'easy',
         is_unlocked: false,
         required_level_id: '',
@@ -28,7 +28,6 @@ export const useLevelForm = ({
         background_image: '',
         start_node_id: null,
         goal_node_id: null,
-        goal_type: '',
         nodes: [],
         edges: [],
         map_entities: [],
@@ -68,14 +67,14 @@ export const useLevelForm = ({
     };
 
     const handleDeleteMap = () => {
-        if (confirm('Are you sure you want to delete the entire map?')) {
+        showAlert?.('ยืนยันการล้างข้อมูล', 'Are you sure you want to delete the entire map?', () => {
             setFormData(prev => ({
                 ...prev,
                 nodes: [],
                 edges: [],
                 map_entities: [],
             }));
-        }
+        }, { showCancel: true });
     };
 
     const addMonster = (type, x, y, startNodeId) => {
@@ -97,10 +96,9 @@ export const useLevelForm = ({
         ];
 
         const monsterTemplates = {
-            'vampire_1': { name: '🧛 Vampire', hp: 3, damage: 100, detectionRange: 80 },
-            'vampire_2': { name: '🧛 Vampire 2', hp: 3, damage: 100, detectionRange: 80 },
-            'vampire_3': { name: '🧛 Vampire 3', hp: 3, damage: 100, detectionRange: 80 },
-            'slime_1': { name: '💧 Slime 1', hp: 2, damage: 50, detectionRange: 60 }
+            'vampire_1': { name: 'Vampire', hp: 3, damage: 100, detectionRange: 80 },
+            'vampire_2': { name: 'Vampire 2', hp: 3, damage: 100, detectionRange: 80 },
+            'vampire_3': { name: 'Vampire 3', hp: 3, damage: 100, detectionRange: 80 },
         };
 
         const template = monsterTemplates[type] || monsterTemplates['vampire_1'];
@@ -154,7 +152,6 @@ export const useLevelForm = ({
                 category_id: parseInt(formData.category_id),
                 level_name: formData.level_name.trim(),
                 description: formData.description || null,
-
                 difficulty: formData.difficulty,
                 is_unlocked: formData.is_unlocked,
                 required_level_id: formData.required_level_id ? parseInt(formData.required_level_id) : null,
@@ -164,7 +161,6 @@ export const useLevelForm = ({
                 background_image: backgroundImagePath,
                 start_node_id: formData.start_node_id !== null && formData.start_node_id !== undefined ? formData.start_node_id : null,
                 goal_node_id: formData.goal_node_id !== null && formData.goal_node_id !== undefined ? formData.goal_node_id : null,
-                goal_type: formData.goal_type || null,
                 character: formData.character || 'main_1',
                 nodes: formData.nodes.length > 0 ? JSON.stringify(formData.nodes) : null,
                 edges: formData.edges.length > 0 ? JSON.stringify(formData.edges) : null,

@@ -1,4 +1,4 @@
-﻿// Combat Weapon Attack Effects
+// Combat Weapon Attack Effects
 import { getCurrentGameState } from '../shared/game/gameState';
 import { createCanvasBasedEffect } from './animationUtils';
 
@@ -85,8 +85,8 @@ export function displayPlayerWeapon(weaponKey, scene) {
     };
 
     if (!scene.textures.exists(textureKey)) {
-        import('../../config/apiConfig').then(m => {
-            const url = `${m.API_BASE_URL}/uploads/weapons/${weaponKey}_idle_1.png`;
+        import('../../utils/imageUtils').then(({ getImageUrl }) => {
+            const url = getImageUrl(`uploads/weapons/${weaponKey}_idle_1.png`);
             if (!scene.load?.list) return;
             scene.load.image(textureKey, url);
             scene.load.once(`filecomplete-image-${textureKey}`, () => {

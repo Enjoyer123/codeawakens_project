@@ -1,5 +1,7 @@
 // Combat Weapon Effects Preload
 import { API_BASE_URL } from '../../config/apiConfig';
+import { getImageUrl } from '../../utils/imageUtils';
+
 
 export async function preloadAllWeaponEffects(scene) {
   // ตรวจสอบว่า scene มีอยู่จริง
@@ -56,7 +58,7 @@ export async function preloadWeaponEffectSafe(scene, weaponKey, effectType = '')
       // But user might have put them in /aura/ or root.
 
       // Let's try the schema: /uploads/weapons_effect/Circle_1.png
-      const url1 = `${API_BASE_URL}/uploads/weapons_effect/Circle_${i}.png`;
+      const url1 = getImageUrl(`uploads/weapons_effect/Circle_${i}.png`);
       const url2 = `/aura/Circle_${i}.png`;
       const url3 = `/weapons_effect/Circle_${i}.png`;
 
@@ -92,7 +94,7 @@ export async function preloadWeaponEffectSafe(scene, weaponKey, effectType = '')
 
   // ตรวจสอบไฟล์ที่มีจริง
   // 1. Check for Single File first (e.g. sword.png)
-  const singleFileUrl = `${API_BASE_URL}/uploads/weapons_effect/${weaponKey}.png`;
+  const singleFileUrl = getImageUrl(`uploads/weapons_effect/${weaponKey}.png`);
   const singleFileKey = texturePrefix; // effect_sword
 
   if (scene.textures && !scene.textures.exists(singleFileKey)) {
@@ -108,7 +110,7 @@ export async function preloadWeaponEffectSafe(scene, weaponKey, effectType = '')
     let frameKey;
 
     // รูปแบบใหม่: {weaponkey}_{typefile}_frame.png
-    url = `${API_BASE_URL}/uploads/weapons_effect/${weaponKey}_${typeFile}_${i}.png`;
+    url = getImageUrl(`uploads/weapons_effect/${weaponKey}_${typeFile}_${i}.png`);
     frameKey = `${texturePrefix}-${i}`;
 
     if (scene.textures && !scene.textures.exists(frameKey)) {

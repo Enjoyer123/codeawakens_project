@@ -10,7 +10,7 @@ const EntityEditPopover = ({ entity, isOpen, onClose, onSave }) => {
 
   useEffect(() => {
     if (entity && isOpen) {
-        setFormData(entity.data || {});
+      setFormData(entity.data || {});
     }
   }, [entity, isOpen]);
 
@@ -20,7 +20,7 @@ const EntityEditPopover = ({ entity, isOpen, onClose, onSave }) => {
 
   const handleSave = () => {
     if (entity) {
-        onSave(entity, formData);
+      onSave(entity, formData);
     }
     onClose();
   };
@@ -60,15 +60,15 @@ const EntityEditPopover = ({ entity, isOpen, onClose, onSave }) => {
                 />
               </div>
             </div>
-             <div className="grid gap-2">
-                <Label htmlFor="detectionRange">ระยะมองเห็น</Label>
-                <Input
-                  id="detectionRange"
-                  type="number"
-                  value={formData.detectionRange || 60}
-                  onChange={(e) => handleChange('detectionRange', Number(e.target.value))}
-                />
-              </div>
+            <div className="grid gap-2">
+              <Label htmlFor="detectionRange">ระยะมองเห็น</Label>
+              <Input
+                id="detectionRange"
+                type="number"
+                value={formData.detectionRange || 60}
+                onChange={(e) => handleChange('detectionRange', Number(e.target.value))}
+              />
+            </div>
             <div className="grid gap-2">
               <Label>ชนิด Monster</Label>
               <Select
@@ -82,7 +82,6 @@ const EntityEditPopover = ({ entity, isOpen, onClose, onSave }) => {
                   <SelectItem value="vampire_1">Vampire 1</SelectItem>
                   <SelectItem value="vampire_2">Vampire 2</SelectItem>
                   <SelectItem value="vampire_3">Vampire 3</SelectItem>
-                  <SelectItem value="slime_1">Slime 1</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -113,15 +112,15 @@ const EntityEditPopover = ({ entity, isOpen, onClose, onSave }) => {
             />
           </div>
         );
-        
+
       case 'node':
         return (
-           <div className="grid gap-2">
-             <Label>ข้อมูลอัปเดตสำหรับ Node {entity.id}</Label>
-             <p className="text-sm text-gray-500">
-               ฟีเจอร์นี้สงวนไว้สำหรับการปรับแต่ง Node ในอนาคต
-             </p>
-           </div>
+          <div className="grid gap-2">
+            <Label>ข้อมูลอัปเดตสำหรับ Node {entity.id}</Label>
+            <p className="text-sm text-gray-500">
+              ฟีเจอร์นี้สงวนไว้สำหรับการปรับแต่ง Node ในอนาคต
+            </p>
+          </div>
         );
 
       default:
@@ -145,11 +144,11 @@ const EntityEditPopover = ({ entity, isOpen, onClose, onSave }) => {
         <DialogHeader>
           <DialogTitle>{getTitle()}</DialogTitle>
         </DialogHeader>
-        
+
         <div className="grid gap-4 py-4">
           {renderFields()}
         </div>
-        
+
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             ยกเลิก

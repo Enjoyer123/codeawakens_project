@@ -19,7 +19,6 @@ const RewardTable = ({ rewards, onEdit, onDelete, onManageImages }) => {
             <th className={tableHeaderClassName}>Level</th>
             <th className={tableHeaderClassName}>Type</th>
             <th className={tableHeaderClassName}>Required Score</th>
-            <th className={tableHeaderClassName}>Status</th>
             <th className={tableHeaderClassName}>Images</th>
             <th className={tableHeaderClassName}>Actions</th>
           </tr>
@@ -58,11 +57,6 @@ const RewardTable = ({ rewards, onEdit, onDelete, onManageImages }) => {
               </td>
               <td className={tableCellClassName}>
                 {reward.required_score}
-              </td>
-              <td className={tableCellClassName}>
-                <Badge variant={reward.is_automatic ? 'default' : 'secondary'}>
-                  {reward.is_automatic ? 'Automatic' : 'Manual'}
-                </Badge>
               </td>
               <td className="px-6 py-4">
                 <div className="flex items-center gap-2 flex-wrap">

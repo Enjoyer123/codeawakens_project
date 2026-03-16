@@ -13,12 +13,12 @@ const {
   checkAndAwardRewards
 } = require("../controllers/profileController");
 
-router.get("/check-profile", authCheck, checkProfile);
-router.get("/user", authCheck, getUserByClerkId);
+router.get("/profile/check-profile", authCheck, checkProfile);
+router.get("/profile/user", authCheck, getUserByClerkId);
 router.put("/profile/username", authCheck, updateUsername);
 router.post("/profile/image", authCheck, uploadMiddleware.single("profileImage"), uploadProfileImage);
 router.delete("/profile/image", authCheck, deleteProfileImage);
-router.post("/progress", authCheck, saveUserProgress);
-router.post("/rewards/check", authCheck, checkAndAwardRewards);
+router.post("/profile/progress", authCheck, saveUserProgress);
+router.post("/profile/rewards/check", authCheck, checkAndAwardRewards);
 
 module.exports = router;
