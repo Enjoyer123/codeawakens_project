@@ -1,486 +1,256 @@
-import { useRef, useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { ITEM_TYPES } from '@/constants/itemTypes';
 
+const HIT_THRESHOLD = 20;
+
 export const usePhaserMapInteractions = ({
-  formDataRef,
-  selectedNodeRef,
-  currentModeRef,
-  backgroundImageUrlRef,
-  coinValueRef,
-  edgeWeightRef,
-  selectedCategoryRef,
-  obstacleDragStartRef,
-  obstacleDragEndRef,
-  isDraggingObstacleRef,
-  editingObstacleIndexRef,
-  onFormDataChange,
-  onSelectedNodeChange,
-  onAddMonsterRequest,
-  redrawPhaser
+  formDataRef, selectedNodeRef, currentModeRef, coinValueRef, edgeWeightRef,
+  selectedCategoryRef, obstacleDragStartRef, obstacleDragEndRef, isDraggingObstacleRef,
+  editingObstacleIndexRef, onFormDataChange, onSelectedNodeChange, onAddMonsterRequest,
+  onEditEntityRequest, redrawPhaser
 }) => {
-  const onAddMonsterRequestRef = useRef(onAddMonsterRequest);
+  const onAddMonsterReqRef = useRef(onAddMonsterRequest);
+  onAddMonsterReqRef.current = onAddMonsterRequest;
 
-  // Update ref when prop changes
-  onAddMonsterRequestRef.current = onAddMonsterRequest;
+  const onEditEntityReqRef = useRef(onEditEntityRequest);
+  onEditEntityReqRef.current = onEditEntityRequest;
 
-  // Phaser helper functions
-  const findNodeAt = (x, y) => {
-    const threshold = 20;
-    const nodes = formDataRef.current.nodes;
-    return nodes.find(node =>
-      Math.abs(node.x - x) < threshold &&
-      Math.abs(node.y - y) < threshold
-    );
+  const lastClickTimeRef = useRef(0);
+
+  // --- Utility Helpers ---
+  const isItemEnabled = (itemName) => {
+    const category = selectedCategoryRef.current;
+    if (!category?.item_enable) return false;
+
+    // Handle Array of items relationship
+    if (Array.isArray(category.category_items)) {
+      return category.category_items.some(ci => ci.item_type === itemName);
+    }
+
+    // Legacy String parsing handling
+    try {
+      const parsedItems = typeof category.item === 'string' ? JSON.parse(category.item) : category.item;
+      return Array.isArray(parsedItems) && parsedItems.includes(itemName);
+    } catch {
+      return false;
+    }
   };
 
-  // Find obstacle at position (for editing)
-  const findObstacleAt = (x, y) => {
-    const obstacles = formDataRef.current.obstacles || [];
-    for (let i = 0; i < obstacles.length; i++) {
-      const obstacle = obstacles[i];
-      if (obstacle.points && obstacle.points.length >= 3) {
-        // Check if point is inside polygon
-        const minX = Math.min(...obstacle.points.map(p => p.x));
-        const maxX = Math.max(...obstacle.points.map(p => p.x));
-        const minY = Math.min(...obstacle.points.map(p => p.y));
-        const maxY = Math.max(...obstacle.points.map(p => p.y));
+  const isWeightedCategory = () => {
+    const category = selectedCategoryRef.current;
+    const catName = (category?.category_name || '').toLowerCase();
 
-        if (x >= minX && x <= maxX && y >= minY && y <= maxY) {
-          return { obstacle, index: i };
-        }
-      } else if (obstacle.x && obstacle.y) {
-        // Legacy format - check if within square
-        const threshold = 20;
-        if (Math.abs(obstacle.x - x) < threshold && Math.abs(obstacle.y - y) < threshold) {
-          return { obstacle, index: i };
-        }
+    // Abstracting the specific algorithm string matching behind a boolean rule Check
+    return catName.includes('shortest path') || catName.includes('minimum spanning tree') ||
+      catName.includes('dijkstra') || catName.includes('prim') || catName.includes('kruskal');
+  };
+
+  const getEntities = (type) => (formDataRef.current.map_entities || []).filter(e => e.entity_type === type);
+  const generateId = (items) => items.length > 0 ? Math.max(...items.map(i => i.id || 0)) + 1 : 0;
+
+
+  // --- Hit Detection ---
+  const findNodeAt = (x, y) => formDataRef.current.nodes.find(n =>
+    Math.abs(n.x - x) < HIT_THRESHOLD && Math.abs(n.y - y) < HIT_THRESHOLD
+  );
+
+  const findObstacleAt = (x, y) => {
+    const entities = formDataRef.current.map_entities || [];
+    for (let i = 0; i < entities.length; i++) {
+      const obs = entities[i];
+      if (obs.entity_type !== 'OBSTACLE') continue;
+
+      if (obs.points?.length >= 3) {
+        const minX = Math.min(...obs.points.map(p => p.x)), maxX = Math.max(...obs.points.map(p => p.x));
+        const minY = Math.min(...obs.points.map(p => p.y)), maxY = Math.max(...obs.points.map(p => p.y));
+        if (x >= minX && x <= maxX && y >= minY && y <= maxY) return { obstacle: obs, index: i };
+      } else if (obs.x && obs.y && Math.abs(obs.x - x) < HIT_THRESHOLD && Math.abs(obs.y - y) < HIT_THRESHOLD) {
+        return { obstacle: obs, index: i };
       }
     }
     return null;
   };
 
-  // ตรวจสอบว่า item enable หรือไม่
-  const isItemEnabled = (itemName) => {
-    const selectedCategory = selectedCategoryRef.current;
-    if (!selectedCategory?.item_enable) return false;
+  const findEntityAt = (x, y) => {
+    const node = findNodeAt(x, y);
+    if (node) return { type: 'node', data: node, id: node.id };
 
-    // ใช้ category_items ถ้ามี (ตารางใหม่)
-    if (selectedCategory?.category_items && Array.isArray(selectedCategory.category_items)) {
-      return selectedCategory.category_items.some(ci => ci.item_type === itemName);
-    }
-
-    // Fallback ไปใช้ item (backward compatibility)
-    let itemData = selectedCategory?.item;
-    if (!itemData) return false;
-
-    // ถ้าเป็น string ให้ parse JSON
-    if (typeof itemData === 'string') {
-      try {
-        itemData = JSON.parse(itemData);
-      } catch (e) {
-        return false;
+    const entities = formDataRef.current.map_entities || [];
+    for (let i = 0; i < entities.length; i++) {
+      const ent = entities[i];
+      if (ent.entity_type === 'COIN' || ent.entity_type === 'PEOPLE') {
+        if (Math.abs(ent.x - x) < HIT_THRESHOLD && Math.abs(ent.y - y) < HIT_THRESHOLD) {
+          return { type: ent.entity_type.toLowerCase(), data: ent, index: i };
+        }
+      } else if (ent.entity_type === 'MONSTER') {
+        const mX = ent.x || formDataRef.current.nodes.find(n => n.id === ent.startNode)?.x || 0;
+        const mY = ent.y || formDataRef.current.nodes.find(n => n.id === ent.startNode)?.y || 0;
+        if (Math.abs(mX - x) < HIT_THRESHOLD && Math.abs(mY - y) < HIT_THRESHOLD) {
+          return { type: 'monster', data: ent, index: i };
+        }
       }
     }
 
-    // แปลงเป็น array
-    const enabledItems = Array.isArray(itemData) ? itemData : [itemData];
-    return enabledItems.includes(itemName);
+    const obs = findObstacleAt(x, y);
+    if (obs) return { type: 'obstacle', data: obs.obstacle, index: obs.index };
+
+    return null;
   };
 
-  const handlePhaserClick = useCallback((x, y) => {
-    const clickedNode = findNodeAt(x, y);
-    const mode = currentModeRef.current;
-    const currentFormData = formDataRef.current;
-    const currentSelectedNode = selectedNodeRef.current;
+  // --- Dispatch Handlers ---
+  const handlers = {
+    node: (x, y, nodeAt) => {
+      if (nodeAt) return; // Prevent Overlap
+      const data = formDataRef.current;
+      const newNode = { id: generateId(data.nodes), x: Math.round(x), y: Math.round(y) };
+      onFormDataChange({ ...data, nodes: [...data.nodes, newNode] });
+    },
 
+    edge: (x, y, nodeAt, entityAt) => {
+      if (!nodeAt) return;
+      const data = formDataRef.current;
+      const selected = selectedNodeRef.current;
 
-    if (mode === 'node') {
-      // Add new node
-      const newNodeId = currentFormData.nodes.length > 0
-        ? Math.max(...currentFormData.nodes.map(n => n.id)) + 1
-        : 0;
-      const newNode = {
-        id: newNodeId,
-        x: Math.round(x),
-        y: Math.round(y),
-      };
-      onFormDataChange({
-        ...currentFormData,
-        nodes: [...currentFormData.nodes, newNode],
-      });
-    } else if (mode === 'edge') {
-      // Handle edge creation
-      if (!clickedNode) return;
+      // Select first node if none active
+      if (!selected) return onSelectedNodeChange(nodeAt);
 
-      if (!currentSelectedNode) {
-        // First node selection
-        onSelectedNodeChange(clickedNode);
-      } else {
-        // Second node selection - create edge
-        if (currentSelectedNode.id !== clickedNode.id) {
-          const edgeExists = currentFormData.edges.some(e =>
-            (e.from === currentSelectedNode.id && e.to === clickedNode.id) ||
-            (e.from === clickedNode.id && e.to === currentSelectedNode.id)
-          );
-
-          if (!edgeExists) {
-            // ตรวจสอบว่า category เป็น Shortest Path หรือ Minimum Spanning Tree
-            // ใช้ selectedCategoryRef.current แทน selectedCategory เพื่อให้ได้ค่าล่าสุด
-            const currentCategory = selectedCategoryRef.current;
-            const categoryName = (currentCategory?.category_name || '').toLowerCase();
-            const isWeightedGraph = categoryName.includes('shortest path') ||
-              categoryName.includes('minimum spanning tree') ||
-              categoryName.includes('dijkstra') ||
-              categoryName.includes('prim') ||
-              categoryName.includes('kruskal');
-
-            // ใช้ edgeWeightRef.current แทน edgeWeight เพื่อให้ได้ค่าล่าสุด
-            const currentEdgeWeightFromRef = edgeWeightRef.current;
-            const edgeWeightNum = typeof currentEdgeWeightFromRef === 'number'
-              ? currentEdgeWeightFromRef
-              : parseInt(currentEdgeWeightFromRef, 10);
-            const currentEdgeWeight = (!isNaN(edgeWeightNum) && edgeWeightNum > 0) ? edgeWeightNum : 1;
-
-            const newEdge = {
-              from: currentSelectedNode.id,
-              to: clickedNode.id,
-            };
-
-            // เพิ่ม value field ถ้าเป็น weighted graph
-            if (isWeightedGraph) {
-              newEdge.value = currentEdgeWeight;
-            }
-
-            if (process.env.NODE_ENV === 'development') {
-              console.log('Creating edge:', newEdge, 'isWeightedGraph:', isWeightedGraph, 'categoryName:', categoryName, 'currentCategory:', currentCategory);
-            }
-
-            onFormDataChange({
-              ...currentFormData,
-              edges: [...currentFormData.edges, newEdge],
-            });
-          }
-        }
-        onSelectedNodeChange(null);
+      // Select second node
+      if (selected.id !== nodeAt.id && !data.edges.some(e => (e.from === selected.id && e.to === nodeAt.id) || (e.from === nodeAt.id && e.to === selected.id))) {
+        const val = Number(edgeWeightRef.current);
+        const newEdge = { from: selected.id, to: nodeAt.id };
+        if (isWeightedCategory()) newEdge.value = (!isNaN(val) && val > 0) ? val : 1;
+        onFormDataChange({ ...data, edges: [...data.edges, newEdge] });
       }
-    } else if (mode === 'coin') {
-      // เพิ่ม coin ที่ตำแหน่งที่คลิก (ต้อง enable ก่อน)
-      if (!isItemEnabled(ITEM_TYPES.COIN_POSITIONS)) {
-        alert('Coin ไม่ได้ถูก enable ใน category นี้');
-        return;
-      }
-      const newCoinId = (currentFormData.coin_positions?.length || 0) > 0
-        ? Math.max(...currentFormData.coin_positions.map(c => c.id || 0)) + 1
-        : 1;
-      // ใช้ coinValueRef.current แทน coinValue เพื่อให้ได้ค่าล่าสุด (เพราะ handlePhaserClick ถูกเรียกจาก closure)
-      const currentCoinValueFromRef = coinValueRef.current;
-      // แปลง coinValue เป็น number และตรวจสอบว่าเป็น valid number
-      const coinValueNum = typeof currentCoinValueFromRef === 'number'
-        ? currentCoinValueFromRef
-        : parseInt(currentCoinValueFromRef, 10);
-      const currentCoinValue = (!isNaN(coinValueNum) && coinValueNum > 0) ? coinValueNum : 10;
-      const newCoin = {
-        x: Math.round(x),
-        y: Math.round(y),
-        collected: false,
-        id: newCoinId,
-        value: currentCoinValue, // ใช้ค่าจาก input
-      };
-      onFormDataChange({
-        ...currentFormData,
-        coin_positions: [...(currentFormData.coin_positions || []), newCoin],
-      });
-    } else if (mode === 'people') {
-      // เพิ่ม people ที่ตำแหน่งที่คลิก (ต้อง enable ก่อน)
-      if (!isItemEnabled(ITEM_TYPES.PEOPLE)) {
-        alert('People ไม่ได้ถูก enable ใน category นี้');
-        return;
-      }
-      if (!clickedNode) {
-        alert('กรุณาคลิกที่ Node เพื่อเพิ่ม People');
-        return;
-      }
-      const newPeopleId = (currentFormData.people?.length || 0) > 0
-        ? Math.max(...currentFormData.people.map(p => p.id || 0)) + 1
-        : 1;
-      const newPeople = {
-        x: Math.round(clickedNode.x),
-        y: Math.round(clickedNode.y),
-        id: newPeopleId,
-        nodeId: clickedNode.id,
-        rescued: false,
-        personName: `คนที่ ${newPeopleId}`,
-      };
-      onFormDataChange({
-        ...currentFormData,
-        people: [...(currentFormData.people || []), newPeople],
-      });
-    } else if (mode === 'start' && clickedNode) {
-      // Set start node
-      onFormDataChange({
-        ...currentFormData,
-        start_node_id: clickedNode.id,
-      });
-    } else if (mode === 'goal' && clickedNode) {
-      // Set goal node
-      onFormDataChange({
-        ...currentFormData,
-        goal_node_id: clickedNode.id,
-      });
-    } else if (mode === 'monster') {
-      // If we have a request callback (e.g. to show a choice dialog), use it
-      if (typeof onAddMonsterRequestRef.current === 'function') {
-        onAddMonsterRequestRef.current(x, y, clickedNode);
-        return;
-      }
+      onSelectedNodeChange(null);
+    },
 
-      // Add monster at clicked position (Fallback/Default behavior)
-      const newMonsterId = currentFormData.monsters.length > 0
-        ? Math.max(...currentFormData.monsters.map(m => m.id)) + 1
-        : 1;
+    coin: (x, y, nodeAt, entityAt) => {
+      if (entityAt?.type === 'coin') return;
+      if (!isItemEnabled(ITEM_TYPES.COIN_POSITIONS)) return alert('Coin ไม่ได้ถูก enable ใน category นี้');
 
-      const patrolWidth = 40;
-      const patrolHeight = 45;
-      const centerX = Math.round(x);
-      const centerY = Math.round(y);
+      const val = Number(coinValueRef.current);
+      const newCoin = { x: Math.round(x), y: Math.round(y), collected: false, id: generateId(getEntities('COIN')), value: (!isNaN(val) && val > 0) ? val : 10, entity_type: 'COIN' };
+      onFormDataChange({ ...formDataRef.current, map_entities: [...(formDataRef.current.map_entities || []), newCoin] });
+    },
 
+    people: (x, y, nodeAt, entityAt) => {
+      if (entityAt?.type === 'people') return;
+      if (!isItemEnabled(ITEM_TYPES.PEOPLE)) return alert('People ไม่ได้ถูก enable ใน category นี้');
+      if (!nodeAt) return alert('กรุณาคลิกที่ Node เพื่อเพิ่ม People');
+
+      const id = generateId(getEntities('PEOPLE'));
+      const newPerson = { x: Math.round(nodeAt.x), y: Math.round(nodeAt.y), id, nodeId: nodeAt.id, rescued: false, personName: `คนที่ ${id}`, entity_type: 'PEOPLE' };
+      onFormDataChange({ ...formDataRef.current, map_entities: [...(formDataRef.current.map_entities || []), newPerson] });
+    },
+
+    monster: (x, y, nodeAt, entityAt) => {
+      if (entityAt?.type === 'monster') return;
+      if (onAddMonsterReqRef.current) return onAddMonsterReqRef.current(x, y, nodeAt);
+
+      // Automatic Fallback setup 
+      const data = formDataRef.current;
+      const center = { x: Math.round(x), y: Math.round(y) };
       const patrol = [
-        { x: centerX - patrolWidth / 2, y: centerY - patrolHeight / 2 },
-        { x: centerX + patrolWidth / 2, y: centerY - patrolHeight / 2 },
-        { x: centerX + patrolWidth / 2, y: centerY + patrolHeight / 2 },
-        { x: centerX - patrolWidth / 2, y: centerY + patrolHeight / 2 }
+        { x: center.x - 20, y: center.y - 22 }, { x: center.x + 20, y: center.y - 22 },
+        { x: center.x + 20, y: center.y + 22 }, { x: center.x - 20, y: center.y + 22 }
       ];
+      const newMonster = { id: generateId(getEntities('MONSTER')), name: '🧛 Vampire', hp: 3, damage: 100, type: 'vampire_1', x: center.x, y: center.y, startNode: nodeAt?.id || null, patrol, defeated: false, detectionRange: 60, entity_type: 'MONSTER' };
+      onFormDataChange({ ...data, map_entities: [...(data.map_entities || []), newMonster] });
+    },
 
-      const newMonster = {
-        id: newMonsterId,
-        name: '🧛 Vampire',
-        hp: 3,
-        damage: 100,
-        type: 'vampire_1', // Default type
-        x: centerX,
-        y: centerY,
-        startNode: clickedNode ? clickedNode.id : null,
-        patrol: patrol,
-        defeated: false,
-        detectionRange: 60,
-      };
-      onFormDataChange({
-        ...currentFormData,
-        monsters: [...currentFormData.monsters, newMonster],
-      });
-    } else if (mode === 'obstacle') {
-      // Check if clicking on existing obstacle to edit
-      const obstacleAt = findObstacleAt(x, y);
-      if (obstacleAt && obstacleAt.obstacle.points && obstacleAt.obstacle.points.length >= 3) {
-        // Start editing existing obstacle
-        editingObstacleIndexRef.current = obstacleAt.index;
-        const points = obstacleAt.obstacle.points;
-        const minX = Math.min(...points.map(p => p.x));
-        const maxX = Math.max(...points.map(p => p.x));
-        const minY = Math.min(...points.map(p => p.y));
-        const maxY = Math.max(...points.map(p => p.y));
-        obstacleDragStartRef.current = { x: minX, y: minY };
-        obstacleDragEndRef.current = { x: maxX, y: maxY };
-        isDraggingObstacleRef.current = true;
+    obstacle: (x, y, nodeAt, entityAt) => {
+      isDraggingObstacleRef.current = true;
+      if (entityAt?.type === 'obstacle' && entityAt?.data?.points?.length >= 3) {
+        editingObstacleIndexRef.current = entityAt.index;
+        const pts = entityAt.data.points;
+        obstacleDragStartRef.current = { x: Math.min(...pts.map(p => p.x)), y: Math.min(...pts.map(p => p.y)) };
+        obstacleDragEndRef.current = { x: Math.max(...pts.map(p => p.x)), y: Math.max(...pts.map(p => p.y)) };
       } else {
-        // Start dragging to create new rectangle obstacle
+        editingObstacleIndexRef.current = null;
         obstacleDragStartRef.current = { x: Math.round(x), y: Math.round(y) };
         obstacleDragEndRef.current = { x: Math.round(x), y: Math.round(y) };
-        isDraggingObstacleRef.current = true;
-        editingObstacleIndexRef.current = null;
       }
-    } else if (mode === 'delete') {
-      // Check if clicking on obstacle
-      const obstacleAt = findObstacleAt(x, y);
-      if (obstacleAt) {
-        if (confirm(`ลบ Obstacle ${obstacleAt.index + 1}?`)) {
-          onFormDataChange({
-            ...currentFormData,
-            obstacles: currentFormData.obstacles.filter((_, i) => i !== obstacleAt.index),
-          });
+    },
+
+    delete: (x, y, nodeAt, entityAt) => {
+      const data = formDataRef.current;
+
+      // Delete free-standing Entities
+      if (entityAt && entityAt.type !== 'node') {
+        const name = entityAt.type === 'monster' ? entityAt.data.name : entityAt.type;
+        if (confirm(`ลบ ${name}?`)) {
+          onFormDataChange({ ...data, map_entities: data.map_entities.filter((_, i) => i !== entityAt.index) });
         }
         return;
       }
 
-      // Delete coin, people, treasure if clicked
-      // ลบ coin
-      const coinAt = (currentFormData.coin_positions || []).findIndex(c =>
-        Math.abs(c.x - x) < 20 && Math.abs(c.y - y) < 20
-      );
-      if (coinAt !== -1) {
-        if (confirm(`ลบ Coin ${coinAt + 1}?`)) {
-          onFormDataChange({
-            ...currentFormData,
-            coin_positions: currentFormData.coin_positions.filter((_, i) => i !== coinAt),
-          });
-        }
-        return;
+      // Delete Graph Nodes and bound edges/entities
+      if (nodeAt && confirm(`ลบ Node ${nodeAt.id}?`)) {
+        onFormDataChange({
+          ...data,
+          nodes: data.nodes.filter(n => n.id !== nodeAt.id),
+          edges: data.edges.filter(e => e.from !== nodeAt.id && e.to !== nodeAt.id),
+          start_node_id: data.start_node_id === nodeAt.id ? null : data.start_node_id,
+          goal_node_id: data.goal_node_id === nodeAt.id ? null : data.goal_node_id,
+          map_entities: (data.map_entities || []).filter(e => e.entity_type === 'MONSTER' || e.entity_type === 'OBSTACLE' || e.nodeId !== nodeAt.id)
+        });
       }
+    },
 
-      // ลบ people (คลิกที่ตำแหน่ง)
-      const peopleAt = (currentFormData.people || []).findIndex(p =>
-        Math.abs(p.x - x) < 20 && Math.abs(p.y - y) < 20
-      );
-      if (peopleAt !== -1) {
-        if (confirm(`ลบ People ${peopleAt + 1}?`)) {
-          onFormDataChange({
-            ...currentFormData,
-            people: currentFormData.people.filter((_, i) => i !== peopleAt),
-          });
-        }
-        return;
-      }
-
-
-      // ตรวจสอบการลบ Monster
-      // ลบ monster (คลิกที่ตำแหน่ง)
-      const monsterAt = (currentFormData.monsters || []).findIndex(m => {
-        const mX = m.x || (m.startNode ? currentFormData.nodes.find(n => n.id === m.startNode)?.x : 0);
-        const mY = m.y || (m.startNode ? currentFormData.nodes.find(n => n.id === m.startNode)?.y : 0);
-        return Math.abs(mX - x) < 20 && Math.abs(mY - y) < 20;
-      });
-
-      if (monsterAt !== -1) {
-        if (confirm(`ลบ Monster ${currentFormData.monsters[monsterAt].name}?`)) {
-          onFormDataChange({
-            ...currentFormData,
-            monsters: currentFormData.monsters.filter((_, i) => i !== monsterAt),
-          });
-        }
-        return;
-      }
-
-      // Delete node if clicked
-      if (clickedNode) {
-        if (confirm(`ลบ Node ${clickedNode.id}?`)) {
-          onFormDataChange({
-            ...currentFormData,
-            nodes: currentFormData.nodes.filter(n => n.id !== clickedNode.id),
-            edges: currentFormData.edges.filter(e =>
-              e.from !== clickedNode.id && e.to !== clickedNode.id
-            ),
-            start_node_id: currentFormData.start_node_id === clickedNode.id ? null : currentFormData.start_node_id,
-            goal_node_id: currentFormData.goal_node_id === clickedNode.id ? null : currentFormData.goal_node_id,
-            // ลบ coin, people ที่เกี่ยวข้องกับ node นี้
-            coin_positions: (currentFormData.coin_positions || []).filter(c => c.nodeId !== clickedNode.id),
-            people: (currentFormData.people || []).filter(p => p.nodeId !== clickedNode.id),
-          });
-        }
-      }
-    }
-  }, [
-    formDataRef,
-    selectedNodeRef,
-    currentModeRef,
-    onFormDataChange,
-    onSelectedNodeChange,
-    coinValueRef,
-    selectedCategoryRef,
-    edgeWeightRef,
-    isDraggingObstacleRef,
-    obstacleDragStartRef,
-    obstacleDragEndRef,
-    editingObstacleIndexRef
-  ]);
+    start: (x, y, nodeAt) => { if (nodeAt) onFormDataChange({ ...formDataRef.current, start_node_id: nodeAt.id }); },
+    goal: (x, y, nodeAt) => { if (nodeAt) onFormDataChange({ ...formDataRef.current, goal_node_id: nodeAt.id }); }
+  };
 
   const setupInteractionEvents = useCallback((scene, canvasSize) => {
-    // Make scene interactive - create a zone that covers the entire scene
-    const zone = scene.add.zone(canvasSize.width / 2, canvasSize.height / 2, canvasSize.width, canvasSize.height);
-    zone.setInteractive();
+    const zone = scene.add.zone(canvasSize.width / 2, canvasSize.height / 2, canvasSize.width, canvasSize.height).setInteractive();
 
-    // Pointer events
     zone.on('pointerdown', (pointer) => {
-      handlePhaserClick(pointer.x, pointer.y);
+      const now = scene.time.now;
+      if (now - lastClickTimeRef.current < 300) {
+        // Double Click Dispatch
+        const entity = findEntityAt(pointer.x, pointer.y);
+        if (entity && onEditEntityReqRef.current) onEditEntityReqRef.current(entity);
+      } else {
+        // Single Click Dispatch Route
+        const mode = currentModeRef.current;
+        if (handlers[mode]) {
+          handlers[mode](pointer.x, pointer.y, findNodeAt(pointer.x, pointer.y), findEntityAt(pointer.x, pointer.y));
+        }
+      }
+      lastClickTimeRef.current = now;
     });
 
     scene.input.on('pointermove', (pointer) => {
       const mode = currentModeRef.current;
-
-      // Handle obstacle dragging
-      if (mode === 'obstacle' && isDraggingObstacleRef.current && obstacleDragStartRef.current) {
+      if (mode === 'obstacle' && isDraggingObstacleRef.current) {
         obstacleDragEndRef.current = { x: Math.round(pointer.x), y: Math.round(pointer.y) };
-        redrawPhaser(); // Redraw to show preview
+        redrawPhaser();
       }
-
-      // Handle cursor changes
-      if (mode === 'delete') {
-        const node = findNodeAt(pointer.x, pointer.y);
-        const obstacleAt = findObstacleAt(pointer.x, pointer.y);
-        if (node || obstacleAt) {
-          scene.input.setDefaultCursor('pointer');
-        } else {
-          scene.input.setDefaultCursor('default');
-        }
-      } else if (mode === 'obstacle') {
-        scene.input.setDefaultCursor('crosshair');
-      } else {
-        scene.input.setDefaultCursor('default');
-      }
+      scene.input.setDefaultCursor(mode === 'delete' ? (findEntityAt(pointer.x, pointer.y) ? 'pointer' : 'default') : mode === 'obstacle' ? 'crosshair' : 'default');
     });
 
-    scene.input.on('pointerup', (pointer) => {
-      const mode = currentModeRef.current;
+    scene.input.on('pointerup', () => {
+      if (currentModeRef.current === 'obstacle' && isDraggingObstacleRef.current && obstacleDragStartRef.current && obstacleDragEndRef.current) {
+        const start = obstacleDragStartRef.current, end = obstacleDragEndRef.current;
+        const pts = [
+          { x: Math.min(start.x, end.x), y: Math.min(start.y, end.y) },
+          { x: Math.max(start.x, end.x), y: Math.min(start.y, end.y) },
+          { x: Math.max(start.x, end.x), y: Math.max(start.y, end.y) },
+          { x: Math.min(start.x, end.x), y: Math.max(start.y, end.y) }
+        ];
 
-      // Finish obstacle dragging
-      if (mode === 'obstacle' && isDraggingObstacleRef.current && obstacleDragStartRef.current && obstacleDragEndRef.current) {
-        const start = obstacleDragStartRef.current;
-        const end = obstacleDragEndRef.current;
-
-        // Calculate rectangle bounds
-        const minX = Math.min(start.x, end.x);
-        const maxX = Math.max(start.x, end.x);
-        const minY = Math.min(start.y, end.y);
-        const maxY = Math.max(start.y, end.y);
-
-        // Only create/update if rectangle is large enough
-        if (Math.abs(maxX - minX) > 10 && Math.abs(maxY - minY) > 10) {
-          const currentFormData = formDataRef.current;
-
+        if (Math.abs(pts[1].x - pts[0].x) > 10 && Math.abs(pts[2].y - pts[0].y) > 10) {
+          const data = formDataRef.current;
           if (editingObstacleIndexRef.current !== null) {
-            // Update existing obstacle
-            const updatedObstacles = [...currentFormData.obstacles];
-            const existingObstacle = updatedObstacles[editingObstacleIndexRef.current];
-            updatedObstacles[editingObstacleIndexRef.current] = {
-              ...existingObstacle,
-              type: 'pit',
-              points: [
-                { x: minX, y: minY }, // top-left
-                { x: maxX, y: minY }, // top-right
-                { x: maxX, y: maxY }, // bottom-right
-                { x: minX, y: maxY }  // bottom-left
-              ]
-            };
-
-            onFormDataChange({
-              ...currentFormData,
-              obstacles: updatedObstacles,
-            });
+            const ents = [...data.map_entities];
+            ents[editingObstacleIndexRef.current] = { ...ents[editingObstacleIndexRef.current], type: 'pit', points: pts };
+            onFormDataChange({ ...data, map_entities: ents });
           } else {
-            // Create new obstacle
-            const newObstacleId = currentFormData.obstacles.length > 0
-              ? Math.max(...currentFormData.obstacles.map(o => o.id || 0)) + 1
-              : 1;
-
-            // Create rectangle with 4 points (clockwise from top-left)
-            const newObstacle = {
-              id: newObstacleId,
-              type: 'pit',
-              points: [
-                { x: minX, y: minY }, // top-left
-                { x: maxX, y: minY }, // top-right
-                { x: maxX, y: maxY }, // bottom-right
-                { x: minX, y: maxY }  // bottom-left
-              ]
-            };
-
-            onFormDataChange({
-              ...currentFormData,
-              obstacles: [...currentFormData.obstacles, newObstacle],
-            });
+            const newObs = { id: generateId(getEntities('OBSTACLE')), type: 'pit', entity_type: 'OBSTACLE', points: pts };
+            onFormDataChange({ ...data, map_entities: [...(data.map_entities || []), newObs] });
           }
         }
 
-        // Reset drag state
         isDraggingObstacleRef.current = false;
         obstacleDragStartRef.current = null;
         obstacleDragEndRef.current = null;
@@ -488,7 +258,8 @@ export const usePhaserMapInteractions = ({
       }
     });
 
-  }, [currentModeRef, isDraggingObstacleRef, obstacleDragStartRef, obstacleDragEndRef, editingObstacleIndexRef, formDataRef, onFormDataChange, redrawPhaser, handlePhaserClick]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [redrawPhaser]); // Handlers read from refs continuously, no deep reactivity needed here for events
 
   return { setupInteractionEvents };
 };

@@ -1,7 +1,7 @@
 import { useRef, useEffect, useCallback } from 'react';
-import { usePhaserGameInit } from './hooks/usePhaserGameInit';
-import { usePhaserMapRenderer } from './hooks/usePhaserMapRenderer';
-import { usePhaserMapInteractions } from './hooks/usePhaserMapInteractions';
+import { usePhaserGameInit } from '../hooks/usePhaserGameInit';
+import { usePhaserMapRenderer } from '../hooks/usePhaserMapRenderer';
+import { usePhaserMapInteractions } from '../hooks/usePhaserMapInteractions';
 import ContentLoader from '@/components/shared/Loading/ContentLoader';
 
 const PhaserMapEditor = ({
@@ -13,6 +13,7 @@ const PhaserMapEditor = ({
   onFormDataChange,
   onSelectedNodeChange,
   onAddMonsterRequest,
+  onEditEntityRequest,
   selectedCategory,
   coinValue = 10,
   edgeWeight = 1,
@@ -96,6 +97,7 @@ const PhaserMapEditor = ({
     onFormDataChange,
     onSelectedNodeChange,
     onAddMonsterRequest,
+    onEditEntityRequest,
     redrawPhaser
   });
 
@@ -135,10 +137,7 @@ const PhaserMapEditor = ({
     formData.edges,
     formData.start_node_id,
     formData.goal_node_id,
-    formData.obstacles,
-    formData.coin_positions,
-    formData.people,
-    formData.monsters, // Don't forget monsters if they were in original
+    formData.map_entities,
     selectedNode,
     phaserLoaded,
     redrawPhaser

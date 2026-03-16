@@ -1,9 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
-import * as Blockly from 'blockly/core';
-import { createToolboxConfig } from '../../../../gameutils/blockly/core/toolbox';
-import { defineAllBlocks } from '../../../../gameutils/blockly/core/definitions';
-import { ensureStandardBlocks } from '../../../../gameutils/blockly/core/standard';
-
+import { useSharedBlockly } from '../../../../gameutils/blockly/hooks/useSharedBlockly';
 
 export const useBlocklyWorkspace = ({
     blocklyRef,
@@ -12,84 +7,12 @@ export const useBlocklyWorkspace = ({
     initialData, // Optional: for future use
     readOnly = false // ← เพิ่ม
 }) => {
-    const workspaceRef = useRef(null);
-    const [blocklyLoaded, setBlocklyLoaded] = useState(false);
-    const [error, setError] = useState(null);
-
-    useEffect(() => {
-        if (!blocklyRef.current || !enabledBlocks || Object.keys(enabledBlocks).length === 0) {
-            return;
-        }
-
-        if (workspaceRef.current) {
-            return;
-        }
-
-        try {
-            ensureStandardBlocks();
-
-
-            defineAllBlocks();
-
-            const toolboxConfig = createToolboxConfig(enabledBlocks);
-
-            const workspaceConfig = {
-                toolbox: toolboxConfig,
-                collapse: true,
-                comments: true,
-                disable: false, // Allow editing
-                maxBlocks: Infinity,
-                trashcan: true,
-                horizontalLayout: false,
-                toolboxPosition: 'start',
-                css: true,
-                media: 'https://blockly-demo.appspot.com/static/media/',
-                rtl: false,
-                scrollbars: true,
-                sounds: false,
-                oneBasedIndex: true,
-                readOnly: readOnly, // ← เพิ่ม
-                variables: enabledBlocks['variables_get'] ||
-                    enabledBlocks['variables_set'] ||
-                    enabledBlocks['var_math'] ||
-                    enabledBlocks['get_var_value'] || false,
-                grid: {
-                    spacing: 20,
-                    length: 3,
-                    colour: '#ccc',
-                    snap: true,
-                },
-                zoom: {
-                    controls: true,
-                    wheel: true,
-                    startScale: 0.8,
-                    maxScale: 3,
-                    minScale: 0.3,
-                    scaleSpeed: 1.2,
-                },
-            };
-
-            const workspace = Blockly.inject(blocklyRef.current, workspaceConfig);
-            workspaceRef.current = workspace;
-            setBlocklyLoaded(true);
-
-        } catch (err) {
-            console.error('Error initializing Blockly:', err);
-            setError('เกิดข้อผิดพลาดในการโหลด Blockly: ' + (err?.message || 'ไม่ทราบสาเหตุ'));
-        }
-
-        return () => {
-            if (workspaceRef.current) {
-                workspaceRef.current.dispose();
-                workspaceRef.current = null;
-                setBlocklyLoaded(false);
-            }
-        };
-    }, [enabledBlocks, blocklyRef, refReady]); // Added refReady to dependencies
-
-    return {
-        workspaceRef,
-        blocklyLoaded,
-        error
-    };
+    // Delegate to the universal hook
+    return useSharedBlockly({
+        blocklyRef,
+        enabledBlocks,
+        readOnly,
+        autoInject: true,
+        refReady
+    });
 };

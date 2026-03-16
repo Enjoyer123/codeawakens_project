@@ -1,4 +1,4 @@
-﻿// uiManager.js
+// uiManager.js
 // Handles drawing persistent UI overlays (like Coin/Personnel counters) on the Phaser Canvas.
 
 import Phaser from 'phaser';
@@ -14,7 +14,8 @@ export function setupGoalUI(scene) {
 
     // Check if we need to show the UI
     const hasCoins = scene.coins && scene.coins.length > 0;
-    const hasPeople = levelData.people && levelData.people.length > 0;
+    const peopleEntities = levelData.map_entities?.filter(e => e.entity_type === 'PEOPLE') || [];
+    const hasPeople = peopleEntities.length > 0;
 
     if (!hasCoins && !hasPeople) return;
 
@@ -63,15 +64,17 @@ export function setupGoalUI(scene) {
     }
 
     if (hasPeople) {
-        const personIcon = scene.add.circle(20, startY + 8, 6, 0x00ffaa);
-        const personText = scene.add.text(35, startY, `ช่วยเหลือ: 0 / ${levelData.people.length}`, {
-            fontSize: '12px',
-            color: '#ffffff',
-            fontFamily: 'Tahoma, Arial',
+        const peopleCount = levelData.map_entities?.filter(e => e.entity_type === 'PEOPLE')?.length || 0;
+        const icon = scene.add.image(20, startY + 8, 'bot_slime1').setScale(0.8);
+        const personText = scene.add.text(35, startY, `ช่วยเหลือ: 0 / ${peopleCount}`, {
+            fontSize: '14px', fill: '#fff', fontFamily: 'Arial'
         });
-        uiContainer.add([personIcon, personText]);
-        scene.goalUI.items.people = { text: personText, total: levelData.people.length, current: 0 };
-        startY += spacing;
+
+        personText.setDepth(10);
+        icon.setDepth(10);
+        uiContainer.add([icon, personText]); // Add icon and text to container
+        scene.goalUI.items.people = { text: personText, total: peopleCount, current: 0 };
+        startY += 30;
     }
 
 

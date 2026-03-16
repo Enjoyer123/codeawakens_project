@@ -13,23 +13,15 @@ import SearchInput from '@/components/admin/formFields/SearchInput';
 import { Plus } from 'lucide-react';
 import {
   useLevelHints,
-  useCreateLevelHint,
-  useUpdateLevelHint,
   useDeleteLevelHint,
   useUploadHintImage,
   useDeleteHintImage
 } from '../../../services/hooks/useLevelHints';
 import { useLevel } from '../../../services/hooks/useLevel';
-import LevelHintImageDialog from '../../../components/admin/level/LevelHintImageDialog';
+import LevelHintImageDialog from '@/components/admin/imageDialog/LevelHintImageDialog';
 import { getImageUrl } from '@/utils/imageUtils';
-import LevelHintTable from '@/components/admin/level/LevelHintTable';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import LevelHintTable from '@/components/admin/level/tables/LevelHintTable';
+import LevelHintFormDialog from '@/components/admin/addEditDialog/LevelHintFormDialog';
 
 import PageError from '@/components/shared/Error/PageError';
 
@@ -48,8 +40,6 @@ const LevelHintManagement = () => {
     error: queryError
   } = useLevelHints(numericLevelId);
 
-  const createHintMutation = useCreateLevelHint();
-  const updateHintMutation = useUpdateLevelHint();
   const deleteHintMutation = useDeleteLevelHint();
   const uploadImageMutation = useUploadHintImage();
   const deleteImageMutation = useDeleteHintImage();
@@ -60,13 +50,6 @@ const LevelHintManagement = () => {
 
   const [hintDialogOpen, setHintDialogOpen] = useState(false);
   const [editingHint, setEditingHint] = useState(null);
-  const [hintForm, setHintForm] = useState({
-    title: '',
-    description: '',
-    display_order: 0,
-    is_active: true,
-  });
-  const [saveError, setSaveError] = useState(null);
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [hintToDelete, setHintToDelete] = useState(null);
@@ -122,73 +105,14 @@ const LevelHintManagement = () => {
   );
 
   const handleOpenHintDialog = useCallback((hint = null) => {
-    if (hint) {
-      setEditingHint(hint);
-      setHintForm({
-        title: hint.title || '',
-        description: hint.description || '',
-        display_order: hint.display_order || 0,
-        is_active: hint.is_active,
-      });
-    } else {
-      setEditingHint(null);
-      setHintForm({
-        title: '',
-        description: '',
-        display_order: 0,
-        is_active: true,
-      });
-    }
-    setSaveError(null);
+    setEditingHint(hint || null);
     setHintDialogOpen(true);
   }, []);
 
   const handleCloseHintDialog = useCallback(() => {
     setHintDialogOpen(false);
     setEditingHint(null);
-    setSaveError(null);
-    setHintForm({
-      title: '',
-      description: '',
-      display_order: 0,
-      is_active: true,
-    });
   }, []);
-
-  const handleSaveHint = useCallback(async () => {
-    setSaveError(null);
-
-    if (!hintForm.title.trim()) {
-      const msg = 'กรุณากรอกชื่อ Hint';
-      setSaveError(msg);
-      return { success: false, error: msg };
-    }
-
-    const payload = {
-      level_id: numericLevelId,
-      title: hintForm.title.trim(),
-      description: hintForm.description?.trim() || null,
-      display_order: parseInt(hintForm.display_order) || 0,
-      is_active: hintForm.is_active === true || hintForm.is_active === 'true',
-    };
-
-    try {
-      if (editingHint) {
-        await updateHintMutation.mutateAsync({
-          hintId: editingHint.hint_id,
-          data: payload
-        });
-      } else {
-        await createHintMutation.mutateAsync(payload);
-      }
-      handleCloseHintDialog();
-      return { success: true };
-    } catch (err) {
-      const msg = 'ไม่สามารถบันทึก hint ได้: ' + (err.message || 'Unknown error');
-      setSaveError(msg);
-      return { success: false, error: msg };
-    }
-  }, [editingHint, hintForm, numericLevelId, handleCloseHintDialog, updateHintMutation, createHintMutation]);
 
   const handleDeleteClick = useCallback((hint) => {
     setHintToDelete(hint);
@@ -307,7 +231,6 @@ const LevelHintManagement = () => {
           addButtonText="เพิ่ม Hint"
         />
 
-        <ErrorAlert message={saveError} />
         <ErrorAlert message={deleteError} />
         <ErrorAlert message={imageError} />
 
@@ -345,74 +268,13 @@ const LevelHintManagement = () => {
           )}
         </div>
 
-        {/* Simple Hint Form Dialog */}
-        <Dialog open={hintDialogOpen} onOpenChange={setHintDialogOpen}>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>
-                {editingHint ? 'แก้ไข Hint' : 'เพิ่ม Hint ใหม่'}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium mb-1">Title</label>
-                <input
-                  type="text"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                  value={hintForm.title}
-                  onChange={e => setHintForm({ ...hintForm, title: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Description</label>
-                <textarea
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                  rows={3}
-                  value={hintForm.description}
-                  onChange={e => setHintForm({ ...hintForm, description: e.target.value })}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Display Order</label>
-                  <input
-                    type="number"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                    value={hintForm.display_order}
-                    onChange={e =>
-                      setHintForm({ ...hintForm, display_order: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="flex items-center gap-2 mt-6">
-                  <input
-                    id="hint-active"
-                    type="checkbox"
-                    checked={hintForm.is_active}
-                    onChange={e =>
-                      setHintForm({ ...hintForm, is_active: e.target.checked })
-                    }
-                  />
-                  <label htmlFor="hint-active" className="text-sm">
-                    Active
-                  </label>
-                </div>
-              </div>
-              <div className="text-xs text-gray-400 mt-2">
-                * อัปโหลดรูปสำหรับ Hint จะเพิ่มในขั้นถัดไป (ตอนนี้รองรับข้อความก่อน)
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={handleCloseHintDialog}>
-                ยกเลิก
-              </Button>
-              <Button onClick={handleSaveHint}>
-                <Plus className="h-4 w-4 mr-2" />
-                บันทึก
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <LevelHintFormDialog
+          open={hintDialogOpen}
+          onOpenChange={setHintDialogOpen}
+          editingHint={editingHint}
+          numericLevelId={numericLevelId}
+          onClose={handleCloseHintDialog}
+        />
 
         <DeleteConfirmDialog
           open={deleteDialogOpen}

@@ -1,4 +1,4 @@
-﻿// Person rescue management functions
+// Person rescue management functions
 import { getCurrentGameState, setCurrentGameState } from '../shared/game/gameState';
 
 // เก็บข้อมูลคนที่ต้องช่วย
@@ -14,11 +14,11 @@ export async function rescuePerson() {
   const currentNodeId = currentState.currentNodeId;
   const levelData = currentState.levelData;
 
-  if (!levelData || !levelData.people) {
-    return false;
+  if (!levelData || !levelData.map_entities) {
+    return null;
   }
 
-  const person = levelData.people.find(p => p.nodeId === currentNodeId);
+  const person = levelData.map_entities.filter(e => e.entity_type === 'PEOPLE').find(p => p.nodeId === currentNodeId);
   if (!person) {
     return false;
   }
@@ -50,11 +50,11 @@ export async function rescuePersonAtNode(nodeId) {
 
   const levelData = currentState.levelData;
 
-  if (!levelData || !levelData.people) {
-    return false;
+  if (!levelData || !levelData.map_entities) {
+    return null;
   }
 
-  const person = levelData.people.find(p => p.nodeId === targetNodeId);
+  const person = levelData.map_entities.filter(e => e.entity_type === 'PEOPLE').find(p => p.nodeId === targetNodeId);
   if (!person) {
     return false;
   }
@@ -83,7 +83,7 @@ export function hasPerson() {
   }
 
   const currentNodeId = currentState.currentNodeId;
-  const person = currentState.levelData.people?.find(p => p.nodeId === currentNodeId && !p.rescued);
+  const person = currentState.levelData.map_entities?.filter(e => e.entity_type === 'PEOPLE')?.find(p => p.nodeId === currentNodeId && !p.rescued);
 
   return !!person;
 }
@@ -96,7 +96,7 @@ export function personRescued() {
   }
 
   const currentNodeId = currentState.currentNodeId;
-  const person = currentState.levelData.people?.find(p => p.nodeId === currentNodeId);
+  const person = currentState.levelData.map_entities?.filter(e => e.entity_type === 'PEOPLE')?.find(p => p.nodeId === currentNodeId);
 
   if (!person) {
     return false;
@@ -113,11 +113,12 @@ export function getPersonCount() {
 // ตรวจสอบว่าช่วยคนทั้งหมดแล้วหรือไม่
 export function allPeopleRescued() {
   const currentState = getCurrentGameState();
-  if (!currentState.levelData || !currentState.levelData.people) {
+  if (!currentState.levelData || !currentState.levelData.map_entities) {
     return false;
   }
 
-  const totalPeople = currentState.levelData.people.length;
+  const peopleEntities = currentState.levelData.map_entities.filter(e => e.entity_type === 'PEOPLE');
+  const totalPeople = peopleEntities.length;
   const rescuedCount = rescuedPeople.length;
 
   return rescuedCount >= totalPeople;
@@ -136,12 +137,13 @@ export function clearRescuedPeople() {
 // รีเซ็ตสถานะคนทั้งหมด
 export async function resetAllPeople() {
   const currentState = getCurrentGameState();
-  if (!currentState.levelData || !currentState.levelData.people) {
-    return;
+  if (!currentState.levelData || !currentState.levelData.map_entities) {
+    return false;
   }
 
-  // รีเซ็ตสถานะ rescued ของทุกคน
-  currentState.levelData.people.forEach(person => {
+  const peopleEntities = currentState.levelData.map_entities.filter(e => e.entity_type === 'PEOPLE');
+
+  peopleEntities.forEach(person => {
     person.rescued = false;
   });
 

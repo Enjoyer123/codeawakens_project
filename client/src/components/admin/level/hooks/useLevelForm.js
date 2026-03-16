@@ -31,10 +31,7 @@ export const useLevelForm = ({
         goal_type: '',
         nodes: [],
         edges: [],
-        monsters: [],
-        obstacles: [],
-        coin_positions: [],
-        people: [],
+        map_entities: [],
         selectedBlocks: [],
         selectedVictoryConditions: [],
         algo_data: null,
@@ -76,17 +73,15 @@ export const useLevelForm = ({
                 ...prev,
                 nodes: [],
                 edges: [],
-                monsters: [],
-                obstacles: [],
-                coin_positions: [],
-                people: [],
+                map_entities: [],
             }));
         }
     };
 
     const addMonster = (type, x, y, startNodeId) => {
-        const newMonsterId = formData.monsters.length > 0
-            ? Math.max(...formData.monsters.map(m => m.id)) + 1
+        const monsters = formData.map_entities.filter(e => e.entity_type === 'MONSTER');
+        const newMonsterId = monsters.length > 0
+            ? Math.max(...monsters.map(m => m.id)) + 1
             : 1;
 
         const patrolWidth = 40;
@@ -113,6 +108,7 @@ export const useLevelForm = ({
         const baseMonsterData = {
             ...template,
             type: type,
+            entity_type: 'MONSTER',
             x: centerX,
             y: centerY,
             startNode: startNodeId,
@@ -122,7 +118,7 @@ export const useLevelForm = ({
 
         setFormData(prev => ({
             ...prev,
-            monsters: [...prev.monsters, { id: newMonsterId, ...baseMonsterData }],
+            map_entities: [...prev.map_entities, { id: newMonsterId, ...baseMonsterData }],
         }));
     };
 
@@ -138,6 +134,7 @@ export const useLevelForm = ({
             let backgroundImagePath = formData.background_image;
 
             if (backgroundImage) {
+                // We have a new File object to upload
                 try {
                     const uploadResult = await uploadBackgroundMutation.mutateAsync(backgroundImage);
                     backgroundImagePath = uploadResult.imageUrl;
@@ -145,28 +142,11 @@ export const useLevelForm = ({
                     toast.error('Failed to upload background image. Please try again.');
                     return;
                 }
-            } else if (!backgroundImagePath && backgroundImageUrl) {
-                try {
-                    const response = await fetch(backgroundImageUrl);
-                    const blob = await response.blob();
-                    const file = new File([blob], 'background-image.png', { type: blob.type });
-                    const uploadResult = await uploadBackgroundMutation.mutateAsync(file);
-                    backgroundImagePath = uploadResult.imageUrl;
-                } catch (err) {
-                    if (backgroundImageUrl.startsWith('/uploads/')) {
-                        backgroundImagePath = backgroundImageUrl;
-                    } else {
-                        toast.error('Please upload a background image before saving.');
-                        return;
-                    }
-                }
-            } else if (!backgroundImagePath || backgroundImagePath === '') {
+            } else if (backgroundImageUrl && backgroundImageUrl.startsWith('/uploads/')) {
+                // We already have a valid local URL from before
+                backgroundImagePath = backgroundImageUrl;
+            } else if (!backgroundImagePath || backgroundImagePath.trim() === '') {
                 toast.error('Please upload a background image before saving.');
-                return;
-            }
-
-            if (!backgroundImagePath || backgroundImagePath.trim() === '') {
-                toast.error('Background image is required. Please upload a background image.');
                 return;
             }
 
@@ -188,10 +168,7 @@ export const useLevelForm = ({
                 character: formData.character || 'main_1',
                 nodes: formData.nodes.length > 0 ? JSON.stringify(formData.nodes) : null,
                 edges: formData.edges.length > 0 ? JSON.stringify(formData.edges) : null,
-                monsters: formData.monsters.length > 0 ? JSON.stringify(formData.monsters) : null,
-                obstacles: formData.obstacles.length > 0 ? JSON.stringify(formData.obstacles) : null,
-                coin_positions: formData.coin_positions.length > 0 ? JSON.stringify(formData.coin_positions) : null,
-                people: formData.people.length > 0 ? JSON.stringify(formData.people) : null,
+                map_entities: formData.map_entities.length > 0 ? JSON.stringify(formData.map_entities) : null,
                 algo_data: formData.algo_data ? JSON.stringify(formData.algo_data) : null,
                 block_ids: formData.selectedBlocks,
                 victory_condition_ids: formData.selectedVictoryConditions,

@@ -3,32 +3,22 @@ import { useAuth } from '@clerk/clerk-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
+import ErrorAlert from '@/components/shared/alert/ErrorAlert';
+import SearchInput from '@/components/admin/formFields/SearchInput';
+import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import {
   useLevelGuides,
-  useCreateGuide,
-  useUpdateGuide,
   useDeleteGuide,
   useUploadGuideImage,
   useDeleteGuideImage
 } from '../../../services/hooks/useLevelGuides';
 import { useLevel } from '../../../services/hooks/useLevel';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
-import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
-import SearchInput from '@/components/admin/formFields/SearchInput';
-import ErrorAlert from '@/components/shared/alert/ErrorAlert';
-import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
-import GuideImageDialog from '../../../components/admin/guide/GuideImageDialog';
+import GuideImageDialog from '@/components/admin/imageDialog/GuideImageDialog';
 import { getImageUrl } from '@/utils/imageUtils';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { createDeleteErrorMessage } from '@/utils/errorHandler';
-import LevelGuideTable from '@/components/admin/level/LevelGuideTable';
-
+import LevelGuideTable from '@/components/admin/level/tables/LevelGuideTable';
+import LevelGuideFormDialog from '@/components/admin/addEditDialog/LevelGuideFormDialog';
+import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import PageError from '@/components/shared/Error/PageError';
 
 const LevelGuideManagement = () => {
@@ -50,8 +40,6 @@ const LevelGuideManagement = () => {
     return <PageError message={queryError?.message} title="Failed to load guides" />;
   }
 
-  const createGuideMutation = useCreateGuide();
-  const updateGuideMutation = useUpdateGuide();
   const deleteGuideMutation = useDeleteGuide();
   const uploadImageMutation = useUploadGuideImage();
   const deleteImageMutation = useDeleteGuideImage();
@@ -60,16 +48,8 @@ const LevelGuideManagement = () => {
   const guides = guidesData || [];
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Guide form states
   const [guideDialogOpen, setGuideDialogOpen] = useState(false);
   const [editingGuide, setEditingGuide] = useState(null);
-  const [guideForm, setGuideForm] = useState({
-    title: '',
-    description: '',
-    display_order: 0,
-    is_active: true,
-  });
-  const [saveError, setSaveError] = useState(null);
 
   // Delete states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -88,71 +68,14 @@ const LevelGuideManagement = () => {
   // No manual load effects
 
   const handleOpenGuideDialog = useCallback((guide = null) => {
-    if (guide) {
-      setEditingGuide(guide);
-      setGuideForm({
-        title: guide.title,
-        description: guide.description || '',
-        display_order: guide.display_order,
-        is_active: guide.is_active,
-      });
-    } else {
-      setEditingGuide(null);
-      setGuideForm({
-        title: '',
-        description: '',
-        display_order: 0,
-        is_active: true,
-      });
-    }
-    setSaveError(null);
+    setEditingGuide(guide || null);
     setGuideDialogOpen(true);
   }, []);
 
   const handleCloseGuideDialog = useCallback(() => {
     setGuideDialogOpen(false);
     setEditingGuide(null);
-    setSaveError(null);
-    setGuideForm({
-      title: '',
-      description: '',
-      display_order: 0,
-      is_active: true,
-    });
   }, []);
-
-  const handleSaveGuide = useCallback(async () => {
-    setSaveError(null);
-
-    if (!guideForm.title.trim()) {
-      const errorMessage = 'กรุณากรอกชื่อ Guide (Title)';
-      setSaveError(errorMessage);
-      return;
-    }
-
-    const formData = {
-      level_id: numericLevelId,
-      title: guideForm.title.trim(),
-      description: guideForm.description?.trim() || null,
-      display_order: parseInt(guideForm.display_order) || 0,
-      is_active: guideForm.is_active === true || guideForm.is_active === 'true',
-    };
-
-    try {
-      if (editingGuide) {
-        await updateGuideMutation.mutateAsync({
-          guideId: editingGuide.guide_id,
-          data: formData
-        });
-      } else {
-        await createGuideMutation.mutateAsync(formData);
-      }
-      handleCloseGuideDialog();
-    } catch (err) {
-      const errorMessage = 'ไม่สามารถบันทึก guide ได้: ' + (err.message || 'Unknown error');
-      setSaveError(errorMessage);
-    }
-  }, [guideForm, editingGuide, numericLevelId, handleCloseGuideDialog, updateGuideMutation, createGuideMutation]);
 
   const handleDeleteClick = useCallback((guide) => {
     setGuideToDelete(guide);
@@ -169,8 +92,7 @@ const LevelGuideManagement = () => {
       setDeleteDialogOpen(false);
       setGuideToDelete(null);
     } catch (err) {
-      const errorMessage = createDeleteErrorMessage('guide', err);
-      setDeleteError(errorMessage);
+      setDeleteError('ไม่สามารถลบ guide ได้: ' + (err.message || 'Unknown error'));
     } finally {
       setDeleting(false);
     }
@@ -264,7 +186,6 @@ const LevelGuideManagement = () => {
         />
 
         <ErrorAlert message={deleteError} />
-        <ErrorAlert message={saveError} />
         <ErrorAlert message={imageError} />
 
         <SearchInput
@@ -288,64 +209,13 @@ const LevelGuideManagement = () => {
           )}
         </div>
 
-        {/* Create/Edit Dialog */}
-        {/* Create/Edit Dialog */}
-        <Dialog open={guideDialogOpen} onOpenChange={setGuideDialogOpen}>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>
-                {editingGuide ? 'แก้ไข Guide' : 'เพิ่ม Guide ใหม่'}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium mb-1">Title</label>
-                <input
-                  type="text"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                  value={guideForm.title}
-                  onChange={e => setGuideForm({ ...guideForm, title: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Description</label>
-                <textarea
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                  rows={3}
-                  value={guideForm.description}
-                  onChange={e => setGuideForm({ ...guideForm, description: e.target.value })}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Display Order</label>
-                  <input
-                    type="number"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                    value={guideForm.display_order}
-                    onChange={e => setGuideForm({ ...guideForm, display_order: e.target.value })}
-                  />
-                </div>
-                <div className="flex items-center gap-2 mt-6">
-                  <input
-                    id="guide-active"
-                    type="checkbox"
-                    checked={guideForm.is_active}
-                    onChange={e => setGuideForm({ ...guideForm, is_active: e.target.checked })}
-                  />
-                  <label htmlFor="guide-active" className="text-sm">Active</label>
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={handleCloseGuideDialog}>ยกเลิก</Button>
-              <Button onClick={handleSaveGuide}>
-                <Plus className="h-4 w-4 mr-2" />
-                บันทึก
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <LevelGuideFormDialog
+          open={guideDialogOpen}
+          onOpenChange={setGuideDialogOpen}
+          editingGuide={editingGuide}
+          numericLevelId={numericLevelId}
+          onClose={handleCloseGuideDialog}
+        />
 
         <DeleteConfirmDialog
           open={deleteDialogOpen}

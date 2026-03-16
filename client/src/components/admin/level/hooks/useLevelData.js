@@ -76,16 +76,16 @@ export const useLevelData = (levelId) => {
                 value: edge.value !== undefined && edge.value !== null ? edge.value : undefined,
             }));
 
-            const monsters = level.monsters ? (typeof level.monsters === 'string' ? JSON.parse(level.monsters) : level.monsters) : [];
-            const obstacles = level.obstacles ? (typeof level.obstacles === 'string' ? JSON.parse(level.obstacles) : level.obstacles) : [];
-
-            let coin_positions = level.coin_positions ? (typeof level.coin_positions === 'string' ? JSON.parse(level.coin_positions) : level.coin_positions) : [];
-            coin_positions = coin_positions.map(coin => ({
-                ...coin,
-                value: coin.value !== undefined && coin.value !== null ? coin.value : 10,
-            }));
-
-            const people = level.people ? (typeof level.people === 'string' ? JSON.parse(level.people) : level.people) : [];
+            let map_entities = level.map_entities ? (typeof level.map_entities === 'string' ? JSON.parse(level.map_entities) : level.map_entities) : [];
+            map_entities = map_entities.map(entity => {
+                if (entity.entity_type === 'COIN') {
+                    return {
+                        ...entity,
+                        value: entity.value !== undefined && entity.value !== null ? entity.value : 10,
+                    };
+                }
+                return entity;
+            });
 
 
             // Prepare Form Data structure
@@ -107,10 +107,7 @@ export const useLevelData = (levelId) => {
                 character: level.character || 'player',
                 nodes,
                 edges,
-                monsters,
-                obstacles,
-                coin_positions,
-                people,
+                map_entities,
                 // Extra JSON fields — ใช้ algo_data เท่านั้น (ไม่ migrate ด่านเก่า)
                 algo_data: typeof level.algo_data === 'string' ? JSON.parse(level.algo_data) : (level.algo_data || null),
 

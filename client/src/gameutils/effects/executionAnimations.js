@@ -38,8 +38,9 @@ export const playVictorySequence = async (currentLevel, initialScene) => {
         // 3. Pre-Banner Animation (Combat or Delay)
         if (isCinematicLevel) {
             // Check if monsters were already defeated by user code (e.g. hit() blocks)
+            const monsters = currentScene.levelData?.map_entities?.filter(e => e.entity_type === 'MONSTER') || [];
             const allMonstersDefeated = !currentScene.monsters
-                || currentScene.monsters.length === 0
+                || monsters.length === 0
                 || currentScene.monsters.every(m =>
                     m.data?.defeated || m.sprite?.getData('defeated') || m.isDefeated
                 );

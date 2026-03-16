@@ -1,4 +1,4 @@
-/**
+﻿/**
  * algoTestRunner.js — Record & Playback System
  *
  * ตรวจผลลัพธ์ที่ได้จาก algoExecutor กับ Test Cases
@@ -130,7 +130,6 @@ const FUNCTION_TO_ALGO_TYPE = {
     COINCHANGE: 'COINCHANGE',
     SUBSETSUM: 'SUBSETSUM',
     SOLVE: 'NQUEEN',
-    SOLVEROPE: 'SOLVEROPE',
     MAXCAPACITY: 'EMEI',
 };
 

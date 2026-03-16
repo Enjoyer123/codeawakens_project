@@ -133,18 +133,18 @@ export function drawLevel(scene) {
 }
 
 /**
- * Setup obstacle sprites (pits)
- * @param {Phaser.Scene} scene - Phaser scene instance
+ * Add obstacles (pits) to the scene
+ * @param {Phaser.Scene} scene - The main scene
  */
 export function setupObstacles(scene) {
-    // เริ่มต้น obstacles array เสมอ
     scene.obstacles = [];
 
-    if (!scene.levelData.obstacles || scene.levelData.obstacles.length === 0) {
+    const obstacles = scene.levelData.map_entities?.filter(e => e.entity_type === 'OBSTACLE') || [];
+    if (obstacles.length === 0) {
         return;
     }
 
-    scene.levelData.obstacles.forEach((obstacle, index) => {
+    obstacles.forEach((obstacle, index) => {
         // ตรวจสอบว่า obstacle และ points มีอยู่จริง
         if (!obstacle || !obstacle.points || obstacle.points.length < 3) {
             console.warn(`Skipping obstacle ${index} - missing data or insufficient points:`, obstacle);

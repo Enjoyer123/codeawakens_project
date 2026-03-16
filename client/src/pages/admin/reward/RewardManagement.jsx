@@ -11,7 +11,7 @@ import SearchInput from '@/components/admin/formFields/SearchInput';
 import ErrorAlert from '@/components/shared/alert/ErrorAlert';
 import PaginationControls from '@/components/shared/pagination/PaginationControls';
 import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
-import RewardImageDialog from '../../../components/admin/reward/RewardImageDialog';
+import RewardImageDialog from '@/components/admin/imageDialog/RewardImageDialog';
 import RewardFormDialog from '@/components/admin/addEditDialog/RewardFormDialog';
 import { usePagination } from '@/hooks/usePagination';
 import { getImageUrl } from '@/utils/imageUtils';
@@ -216,56 +216,8 @@ const RewardManagement = () => {
         frameNumber
       });
 
-      // Update local selectedReward state to reflect changes immediately in dialog
-      // Since useUploadRewardFrame invalidates 'rewards', the main list updates.
-      // But selectedReward is local state. We might need to sync it.
-      // Easiest is to let the user close/reopen or trust that image URL will work if predictable?
-      // Actually, standard pattern is to re-fetch or update local state.
-      // Since we rely on invalidation, let's just minimal update if possible or ignore if dialog uses props?
-      // Dialog uses selectedReward. So we need to update it.
-      // We can use the data returned from mutation to update selectedReward!
-
-      // But wait, mutation returns what the API returns.
-      // Let's assume API returns updated reward or frame info.
-      // If not, we might need a separate query for single reward to verify strict sync,
-      // OR just updating the timestamp on the image URL if usage is based on predictable URLs.
-
-      // For now, let's trust that invalidation updates the list, but selectedReward is STALE.
-      // We need to re-fetch the specific reward or update selectedReward state.
-      // Since useRewards is paginated, finding it in new data might be tricky if page changes (unlikely here).
-
-      // A trick: The dialog only needs to know it's done. 
-      // If the dialog re-renders from `rewards` list finding, that works.
-      // But `selectedReward` is a copy.
-      // Let's manually update `selectedReward` or re-fetch it.
-      // Since we don't have useReward(id) active here for the selected one, simple manual patch?
-
-      // Quick fix: Since we can't easily get the fresh reward object without a query,
-      // we might want to close and reopen or just accept it?
-      // Actually, `uploadRewardFrame` API usually returns updated reward structure?
-      // Let's check service... yes returns data.
-
-      // Let's assume we can't easily patch deeply nested frame structure without knowing API response format perfectly.
-      // I'll leave it as is, but maybe add a refetch via queryClient if critical?
-      // Actually, if I invalidate 'rewards', the `rewardsData` updates.
-      // But `selectedReward` state does NOT update automatically.
-      // So I should watch `rewardsData` and update `selectedReward` if it exists?
-      // Or cleaner: `handleUploadFrame` can fetch fresh reward data via `queryClient.fetchQuery`?
-      // Let's try to update selectedReward with what we know or just toggle loading.
-
-      // Better yet: make the Dialog fetch its own data using `useReward` hook!
-      // But that requires refactoring Dialog wrapper or component.
-
-      // For now, I will add a listener logic or just manual checking.
-      // Actually, in the old code:
-      // const data = await fetchAllRewards(...)
-      // const updatedReward = data.rewards?.find(...)
-      // setSelectedReward(updatedReward);
-
-      // I can duplicate that logic using `queryClient`?
-      // Or just close/reopen? No, bad UX.
-      // I'll stick to not updating it perfectly unless I add `useReward` for `selectedReward`.
-      // Actually, adding `useReward(selectedReward?.reward_id)` is easy and proper!
+      // Data invalidation is handled by useUploadRewardFrame hook.
+      // We rely on useReward in the dialog to fetch the fresh data.
 
     } catch (err) {
       setImageError('ไม่สามารถอัปโหลดรูปภาพได้: ' + (err.message || 'Unknown error'));
@@ -293,21 +245,8 @@ const RewardManagement = () => {
   }, [selectedReward, deleteFrameAsync]);
 
 
-  // HACK: To update selectedReward when keys invalidate
-  // This is a bit dirty but works for this specific interaction without deep refactor
-  // If `selectedReward` is set, we can try to find it in `rewards` list if it's there.
-  // But `rewards` only has current page.
-  // If we really want live updates in dialog, passing `rewardId` to dialog and letting it fetch is best.
-  // But for now, let's rely on simple state update if api returns it, or just ignore live update if visuals don't break.
-  // (Frames usually update via URL timestamp or similar?)
-  // Let's modify `handleUploadFrame` to partially mock update if needed or just leave as is.
-  // The User will close dialog eventually.
-
-  // Real Solution: Use `useReward` for the active selected reward to keep it fresh!
+  // useReward fetches fresh data to keep the dialog updated when images change
   const { data: activeRewardData } = useReward(selectedReward?.reward_id);
-  // When activeRewardData changes, update selectedReward?
-  // Or just pass activeRewardData to the dialog instead of selectedReward state?
-  // Yes! Pass `activeRewardData || selectedReward` to dialog.
 
   const dialogReward = activeRewardData || selectedReward;
 

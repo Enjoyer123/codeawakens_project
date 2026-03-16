@@ -1,4 +1,4 @@
-﻿// Entity setup functions
+// Entity setup functions
 // Handles coins and people (NPCs)
 import Phaser from "phaser";
 
@@ -6,17 +6,13 @@ import Phaser from "phaser";
  * Setup collectible coins with animations
  * @param {Phaser.Scene} scene - Phaser scene instance
  */
-export function setupCoins(scene) {
-    if (!scene.levelData.coin_positions) return;
+export function setupCoins(scene, onCoinCollected) {
+    if (!scene.levelData.map_entities) return;
 
     scene.coins = [];
 
-    // Reset all coins to not collected
-    scene.levelData.coin_positions.forEach(coinData => {
-        coinData.collected = false;
-    });
-
-    scene.levelData.coin_positions.forEach((coinData, index) => {
+    const coinPositions = scene.levelData.map_entities.filter(e => e.entity_type === 'COIN');
+    coinPositions.forEach((coinData, index) => {
         // Use pixel coordinates directly
         const worldX = coinData.x;
         const worldY = coinData.y;
@@ -74,11 +70,12 @@ export function setupCoins(scene) {
  * @param {Phaser.Scene} scene - Phaser scene instance
  */
 export function setupPeople(scene) {
-    if (!scene.levelData.people) return;
+    if (!scene.levelData.map_entities) return;
 
     scene.people = [];
+    const peopleEntities = scene.levelData.map_entities.filter(e => e.entity_type === 'PEOPLE');
 
-    scene.levelData.people.forEach((personData) => {
+    peopleEntities.forEach((personData) => {
         // ใช้ตำแหน่งเดิมของคน (บน node) และขยับลงมา 10 พิกเซล
         const personX = personData.x;
         const personY = personData.y + 10;

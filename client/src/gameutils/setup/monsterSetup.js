@@ -7,13 +7,14 @@ import Phaser from "phaser";
  * @param {Phaser.Scene} scene - Phaser scene instance
  */
 export function setupMonsters(scene) {
-    if (!scene || !scene.levelData || !scene.levelData.monsters) {
+    if (!scene || !scene.levelData || !scene.levelData.map_entities) {
         return;
     }
 
     if (!scene.monsters) scene.monsters = [];
 
-    scene.levelData.monsters.forEach((monsterData, index) => {
+    const monsters = scene.levelData.map_entities.filter(e => e.entity_type === 'MONSTER');
+    monsters.forEach((monsterData, index) => {
         try {
 
             const startPos = monsterData.patrol && monsterData.patrol.length > 0

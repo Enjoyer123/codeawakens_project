@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import * as Blockly from 'blockly/core';
+import * as Blockly from 'blockly';
 import 'blockly/blocks';
 import 'blockly/javascript';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Loader } from '@/components/ui/loader';
 import { Info } from 'lucide-react';
 import PageLoader from '@/components/shared/Loading/PageLoader';
@@ -143,7 +151,7 @@ const PatternCreateEdit = () => {
                 variant={isViewMode ? "default" : "outline"}
                 onClick={() => setIsViewMode(!isViewMode)}
               >
-                {isViewMode ? '✏️ Edit Mode' : '👁️ View Mode'}
+                {isViewMode ? 'Edit Mode' : 'View Mode'}
               </Button>
               <Button
                 onClick={handleSaveLogic}
@@ -234,10 +242,10 @@ const PatternCreateEdit = () => {
             </div>
             <div className="space-x-2">
               <Button variant="outline" size="sm" onClick={handleCopyToBuffer}>
-                💾 Export XML
+                Export XML
               </Button>
               <Button variant="outline" size="sm" onClick={handleImportFromFile}>
-                📥 Import XML
+                Import XML
               </Button>
               <Button variant="outline" size="sm" onClick={blocklyManager.handlePreviousStep} disabled={blocklyManager.currentStepIndex === 0}>
                 ← Previous
@@ -250,10 +258,10 @@ const PatternCreateEdit = () => {
 
           {/* Blockly Container */}
           <div className="flex-1 relative">
-            {(blocklyManager.xmlLoading || !blocklyManager.blocklyLoaded) && (
+            {!blocklyManager.blocklyLoaded && (
               <div className="absolute inset-0 z-20 bg-white/90">
                 <ContentLoader
-                  message={blocklyManager.xmlLoading ? "Preparing Blocks..." : "Loading Workspace..."}
+                  message="Loading Workspace..."
                   height="h-full"
                 />
               </div>
@@ -262,6 +270,43 @@ const PatternCreateEdit = () => {
           </div>
         </div>
       </div>
+
+      {/* Confirmation Dialog mapped to blocklyManager state */}
+      <Dialog
+        open={blocklyManager.confirmDialog?.isOpen}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            blocklyManager.setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{blocklyManager.confirmDialog?.title}</DialogTitle>
+          </DialogHeader>
+          <DialogDescription className="whitespace-pre-wrap text-base text-gray-700 leading-relaxed mt-4">
+            {blocklyManager.confirmDialog?.message}
+          </DialogDescription>
+          <DialogFooter className="mt-6">
+            <Button
+              variant="outline"
+              onClick={() => blocklyManager.setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+            >
+              ยกเลิก
+            </Button>
+            <Button
+              className="bg-blue-600 hover:bg-blue-500 text-white font-bold tracking-wide"
+              onClick={() => {
+                if (blocklyManager.confirmDialog?.onConfirm) {
+                  blocklyManager.confirmDialog.onConfirm();
+                }
+              }}
+            >
+              ดำเนินการต่อ
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

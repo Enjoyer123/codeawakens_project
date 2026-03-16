@@ -16,7 +16,7 @@ import ErrorAlert from '@/components/shared/alert/ErrorAlert';
 import PaginationControls from '@/components/shared/pagination/PaginationControls';
 import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import LevelCategoryFormDialog from '@/components/admin/addEditDialog/LevelCategoryFormDialog';
-import LevelCategoryImageDialog from '@/components/admin/levelCategory/LevelCategoryImageDialog';
+import LevelCategoryImageDialog from '@/components/admin/imageDialog/LevelCategoryImageDialog';
 import { usePagination } from '@/hooks/usePagination';
 import { createDeleteErrorMessage } from '@/utils/errorHandler';
 import LevelCategoryTable from '@/components/admin/levelCategory/LevelCategoryTable';

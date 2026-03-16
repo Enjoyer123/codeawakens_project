@@ -1,6 +1,15 @@
-import { useRef, useCallback } from 'react';
+import { useCallback } from 'react';
 
-import { API_BASE_URL } from '../../../../config/apiConfig';
+// Depth constants to manage layering cleanly
+const DEPTH = {
+  BACKGROUND: 0,
+  GRID_AND_EDGES: 1,
+  OBSTACLES: 50,
+  TEXT_OVERLAYS: 100,
+  NODES: 150,
+  MONSTER_SHADOW: 199,
+  MONSTERS: 200,
+};
 
 export const usePhaserMapRenderer = ({
   canvasSize,
@@ -8,299 +17,194 @@ export const usePhaserMapRenderer = ({
   selectedNodeRef,
   phaserGraphicsRef,
   coinTextsRef,
-  backgroundSpriteRef,
   obstacleDragStartRef,
   obstacleDragEndRef,
-  isDraggingObstacleRef,
-  backgroundImageUrlRef // Add this ref
+  isDraggingObstacleRef
 }) => {
+  // Alias coinTextsRef to a better name internally since it holds all overlays (texts/icons/shadows)
+  const overlayObjectsRef = coinTextsRef;
 
-  const redrawPhaser = useCallback(() => {
-    const currentGraphics = phaserGraphicsRef.current;
-    if (!currentGraphics || !currentGraphics.scene) {
-      return;
-    }
+  const clearOverlays = () => {
+    overlayObjectsRef.current.forEach(obj => obj && typeof obj.destroy === 'function' && obj.destroy());
+    overlayObjectsRef.current = [];
+  };
 
-    const currentFormData = formDataRef.current;
-    const currentSelectedNode = selectedNodeRef.current;
+  const drawGrid = (graphics, width, height) => {
+    graphics.lineStyle(1, 0x4a5568, 0.3);
+    for (let i = 0; i < width; i += 50) graphics.lineBetween(i, 0, i, height);
+    for (let i = 0; i < height; i += 50) graphics.lineBetween(0, i, width, i);
+  };
 
-    // ลบ text objects เก่าก่อน
-    coinTextsRef.current.forEach(text => {
-      if (text && text.destroy) {
-        text.destroy();
+  const drawEdges = (graphics, scene, edges, nodes) => {
+    graphics.lineStyle(3, 0xffd700, 1);
+    edges.forEach(edge => {
+      const fromNode = nodes.find(n => n.id === edge.from);
+      const toNode = nodes.find(n => n.id === edge.to);
+      if (!fromNode || !toNode) return;
+
+      graphics.lineBetween(fromNode.x, fromNode.y, toNode.x, toNode.y);
+
+      // Support Edge Weights
+      if (edge.value != null && !isNaN(Number(edge.value))) {
+        const midX = (fromNode.x + toNode.x) / 2;
+        const midY = (fromNode.y + toNode.y) / 2;
+        const weightText = scene.add.text(midX, midY, edge.value.toString(), {
+          fontSize: '14px', color: '#000000', fontStyle: 'bold',
+          backgroundColor: '#FFD700', padding: { x: 6, y: 3 }
+        });
+        weightText.setOrigin(0.5).setDepth(DEPTH.TEXT_OVERLAYS);
+        overlayObjectsRef.current.push(weightText);
       }
     });
-    coinTextsRef.current = [];
+  };
 
-    currentGraphics.clear();
-
-    // Draw grid
-    currentGraphics.lineStyle(1, 0x4a5568, 0.3);
-    for (let i = 0; i < canvasSize.width; i += 50) {
-      currentGraphics.lineBetween(i, 0, i, canvasSize.height);
-    }
-    for (let i = 0; i < canvasSize.height; i += 50) {
-      currentGraphics.lineBetween(0, i, canvasSize.width, i);
-    }
-
-    // Draw edges
-    currentGraphics.lineStyle(3, 0xffd700, 1); // Yellow
-    currentFormData.edges.forEach(edge => {
-      const fromNode = currentFormData.nodes.find(n => n.id === edge.from);
-      const toNode = currentFormData.nodes.find(n => n.id === edge.to);
-      if (fromNode && toNode) {
-        currentGraphics.lineBetween(fromNode.x, fromNode.y, toNode.x, toNode.y);
-
-        // แสดง edge weight ถ้ามี
-        if (edge.value !== undefined && edge.value !== null && !isNaN(Number(edge.value))) {
-          const midX = (fromNode.x + toNode.x) / 2;
-          const midY = (fromNode.y + toNode.y) / 2;
-          if (currentGraphics.scene) {
-            const weightText = currentGraphics.scene.add.text(midX, midY, edge.value.toString(), {
-              fontSize: '14px',
-              color: '#000000',
-              fontStyle: 'bold',
-              backgroundColor: '#FFD700',
-              padding: { x: 6, y: 3 },
-            });
-            weightText.setOrigin(0.5);
-            weightText.setDepth(100);
-            coinTextsRef.current.push(weightText); // เก็บไว้เพื่อลบทีหลัง
-
-            if (process.env.NODE_ENV === 'development') {
-              console.log('Drawing edge weight:', edge.value, 'at', midX, midY);
-            }
-          }
-        }
-      }
-    });
-
-    // Draw nodes
-    currentFormData.nodes.forEach(node => {
-      const isStart = node.id === currentFormData.start_node_id;
-      const isGoal = node.id === currentFormData.goal_node_id;
-      const isSelected = currentSelectedNode && currentSelectedNode.id === node.id;
+  const drawNodes = (graphics, scene, nodes, selectedNode, startNodeId, goalNodeId) => {
+    nodes.forEach(node => {
+      const isStart = node.id === startNodeId;
+      const isGoal = node.id === goalNodeId;
+      const isSelected = selectedNode?.id === node.id;
 
       // Shadow
-      currentGraphics.fillStyle(0x000000, 0.3);
-      currentGraphics.fillCircle(node.x + 2, node.y + 2, 18);
+      graphics.fillStyle(0x000000, 0.3).fillCircle(node.x + 2, node.y + 2, 18);
 
-      // Node color
-      let nodeColor = 0x667eea; // Blue default
-      if (isStart) nodeColor = 0x10b981; // Green start
-      else if (isGoal) nodeColor = 0xf59e0b; // Yellow goal
-      else if (isSelected) nodeColor = 0xfbbf24; // Light yellow selected
-
-      currentGraphics.fillStyle(nodeColor, 1);
-      currentGraphics.fillCircle(node.x, node.y, 18);
-
+      // Node Fill
+      const nodeColor = isStart ? 0x10b981 : isGoal ? 0xf59e0b : isSelected ? 0xfbbf24 : 0x667eea;
+      graphics.fillStyle(nodeColor, 1).fillCircle(node.x, node.y, 18);
+      
       // Border
-      currentGraphics.lineStyle(3, 0xffffff, 1);
-      currentGraphics.strokeCircle(node.x, node.y, 18);
+      graphics.lineStyle(3, 0xffffff, 1).strokeCircle(node.x, node.y, 18);
 
-      // Node ID Text
-      if (currentGraphics.scene) {
-        const idText = currentGraphics.scene.add.text(node.x, node.y, node.id.toString(), {
-          fontSize: '12px',
-          color: '#ffffff',
-          fontStyle: 'bold',
-          stroke: '#000000',
-          strokeThickness: 3,
-          align: 'center'
+      // ID Text
+      const idText = scene.add.text(node.x, node.y, node.id.toString(), {
+        fontSize: '12px', color: '#ffffff', fontStyle: 'bold',
+        stroke: '#000000', strokeThickness: 3, align: 'center'
+      });
+      idText.setOrigin(0.5, 0.5).setDepth(DEPTH.NODES);
+      overlayObjectsRef.current.push(idText);
+    });
+  };
+
+  const drawMonsters = (graphics, scene, monsters, nodes) => {
+    monsters.forEach(monster => {
+      const x = monster.x || nodes.find(n => n.id === monster.startNode)?.x;
+      const y = monster.y || nodes.find(n => n.id === monster.startNode)?.y;
+      if (!x || !y) return;
+
+      const keysMap = { vampire_2: 'vampire_2', vampire_3: 'vampire_3', slime_1: 'slime_1' };
+      const textureKey = keysMap[monster.type] || 'vampire_1';
+
+      const shadow = scene.add.image(x + 2, y + 2, textureKey)
+        .setDisplaySize(50, 50).setTint(0x000000).setAlpha(0.3).setDepth(DEPTH.MONSTER_SHADOW);
+      const sprite = scene.add.image(x, y, textureKey)
+        .setDisplaySize(50, 50).setDepth(DEPTH.MONSTERS);
+      
+      overlayObjectsRef.current.push(shadow, sprite);
+    });
+  };
+
+  const drawCoins = (graphics, scene, coins) => {
+    coins.forEach(coin => {
+      if (coin.x == null || coin.y == null) return;
+      
+      graphics.fillStyle(0x000000, 0.3).fillCircle(coin.x + 2, coin.y + 2, 12);
+      graphics.fillStyle(0xffd700, 1).fillCircle(coin.x, coin.y, 12);
+      graphics.lineStyle(2, 0xffffff, 1).strokeCircle(coin.x, coin.y, 12);
+
+      const valText = scene.add.text(coin.x, coin.y + 20, (coin.value ?? 10).toString(), {
+        fontSize: '14px', color: '#000000', fontStyle: 'bold',
+        backgroundColor: '#FFD700', padding: { x: 6, y: 3 }
+      });
+      valText.setOrigin(0.5).setDepth(DEPTH.TEXT_OVERLAYS);
+      overlayObjectsRef.current.push(valText);
+    });
+  };
+
+  const drawPeople = (graphics, scene, people) => {
+    people.forEach(person => {
+      if (person.x == null || person.y == null) return;
+
+      const pGraph = scene.add.graphics().setDepth(DEPTH.TEXT_OVERLAYS);
+      pGraph.fillStyle(0x000000, 0.3).fillCircle(person.x + 2, person.y + 2, 12);
+      pGraph.fillStyle(0x3b82f6, 1).fillCircle(person.x, person.y, 12);
+      pGraph.lineStyle(2, 0xffffff, 1).strokeCircle(person.x, person.y, 12);
+      
+      const icon = scene.add.text(person.x, person.y, '👤', { fontSize: '14px' });
+      icon.setOrigin(0.5).setDepth(DEPTH.TEXT_OVERLAYS + 1);
+      
+      overlayObjectsRef.current.push(pGraph, icon);
+    });
+  };
+
+  const drawObstacles = (graphics, obstacles) => {
+    obstacles.forEach(obstacle => {
+      if (obstacle.points?.length >= 3) {
+        // Shadow Polygon
+        graphics.fillStyle(0x000000, 0.3).beginPath().moveTo(obstacle.points[0].x + 2, obstacle.points[0].y + 2);
+        for (let i = 1; i < obstacle.points.length; i++) graphics.lineTo(obstacle.points[i].x + 2, obstacle.points[i].y + 2);
+        graphics.closePath().fillPath();
+
+        // Object Fill
+        graphics.fillStyle(0x000000, 0.8).beginPath().moveTo(obstacle.points[0].x, obstacle.points[0].y);
+        for (let i = 1; i < obstacle.points.length; i++) graphics.lineTo(obstacle.points[i].x, obstacle.points[i].y);
+        graphics.closePath().fillPath();
+        
+        // Settings & Corners
+        graphics.lineStyle(3, 0x8b4513, 1).strokePath().fillStyle(0xffff00, 1);
+        obstacle.points.forEach(p => {
+          graphics.fillRect(p.x - 4, p.y - 4, 8, 8);
+          graphics.lineStyle(2, 0x000000, 1).strokeRect(p.x - 4, p.y - 4, 8, 8);
         });
-        idText.setOrigin(0.5, 0.5);
-        idText.setDepth(150);
-        coinTextsRef.current.push(idText);
+      } else if (obstacle.x && obstacle.y) {
+        // Legacy Square
+        graphics.fillStyle(0x000000, 0.3).fillRect(obstacle.x - 10, obstacle.y - 10, 24, 24);
+        graphics.fillStyle(0x8b4513, 1).fillRect(obstacle.x - 12, obstacle.y - 12, 24, 24);
+        graphics.lineStyle(2, 0xffffff, 1).strokeRect(obstacle.x - 12, obstacle.y - 12, 24, 24);
       }
     });
+  };
 
-    // Draw monsters
-    if (currentFormData.monsters && currentFormData.monsters.length > 0) {
-      currentFormData.monsters.forEach(monster => {
-        // Draw monster at x, y position
-        const monsterX = monster.x || (monster.startNode ? currentFormData.nodes.find(n => n.id === monster.startNode)?.x : 0);
-        const monsterY = monster.y || (monster.startNode ? currentFormData.nodes.find(n => n.id === monster.startNode)?.y : 0);
+  const drawPreviewSelection = (graphics) => {
+    if (!isDraggingObstacleRef.current || !obstacleDragStartRef.current || !obstacleDragEndRef.current) return;
+    const start = obstacleDragStartRef.current, end = obstacleDragEndRef.current;
+    
+    // Calculate Rect Frame
+    const minX = Math.min(start.x, end.x), maxX = Math.max(start.x, end.x);
+    const minY = Math.min(start.y, end.y), maxY = Math.max(start.y, end.y);
 
-        if (monsterX && monsterY) {
-          const mType = monster.type || 'vampire_1';
-          let textureKey = 'vampire_1';
+    graphics.lineStyle(2, 0x00ff00, 0.8).strokeRect(minX, minY, maxX - minX, maxY - minY);
+    graphics.fillStyle(0x00ff00, 0.2).fillRect(minX, minY, maxX - minX, maxY - minY);
+  };
 
-          if (mType === 'vampire_2') textureKey = 'vampire_2';
-          else if (mType === 'vampire_3') textureKey = 'vampire_3';
-          else if (mType === 'slime_1') textureKey = 'slime_1';
+  const redrawPhaser = useCallback(() => {
+    const graphics = phaserGraphicsRef.current;
+    if (!graphics || !graphics.scene) return;
 
+    const data = formDataRef.current;
+    const scene = graphics.scene;
+    
+    // Group Entities by type
+    const entities = data.map_entities || [];
+    const entityGroups = { MONSTER: [], COIN: [], PEOPLE: [], OBSTACLE: [] };
+    entities.forEach(e => { if (entityGroups[e.entity_type]) entityGroups[e.entity_type].push(e); });
 
-          // Shadow
-          const shadow = currentGraphics.scene.add.image(monsterX + 2, monsterY + 2, textureKey);
-          shadow.setDisplaySize(50, 50);
-          shadow.setTint(0x000000);
-          shadow.setAlpha(0.3);
-          shadow.setDepth(199); // Below monster sprite
-          coinTextsRef.current.push(shadow);
+    // Cleanup previous overlays and wipe board
+    clearOverlays();
+    graphics.clear();
+    
+    // Render pipeline
+    drawGrid(graphics, canvasSize.width, canvasSize.height);
+    drawEdges(graphics, scene, data.edges, data.nodes);
+    drawNodes(graphics, scene, data.nodes, selectedNodeRef.current, data.start_node_id, data.goal_node_id);
+    drawObstacles(graphics, entityGroups.OBSTACLE);
+    drawMonsters(graphics, scene, entityGroups.MONSTER, data.nodes);
+    drawCoins(graphics, scene, entityGroups.COIN);
+    drawPeople(graphics, scene, entityGroups.PEOPLE);
+    drawPreviewSelection(graphics);
 
-          const monsterSprite = currentGraphics.scene.add.image(monsterX, monsterY, textureKey);
-          monsterSprite.setDisplaySize(50, 50);
-          monsterSprite.setDepth(200); // Above nodes (nodes are at 150)
-          coinTextsRef.current.push(monsterSprite);
-        }
-      });
-    }
-
-    // Draw coins
-    if (currentFormData.coin_positions && currentFormData.coin_positions.length > 0) {
-      currentFormData.coin_positions.forEach(coin => {
-        const coinX = coin.x;
-        const coinY = coin.y;
-
-        if (coinX !== undefined && coinY !== undefined) {
-          // Shadow
-          currentGraphics.fillStyle(0x000000, 0.3);
-          currentGraphics.fillCircle(coinX + 2, coinY + 2, 12);
-
-          // Coin circle (gold)
-          currentGraphics.fillStyle(0xffd700, 1);
-          currentGraphics.fillCircle(coinX, coinY, 12);
-
-          // Border
-          currentGraphics.lineStyle(2, 0xffffff, 1);
-          currentGraphics.strokeCircle(coinX, coinY, 12);
-
-          // Value text - แสดงมูลค่าเหรียญ (แสดงด้านล่างเหรียญ)
-          const coinValueToDisplay = coin.value !== undefined && coin.value !== null ? coin.value : 10;
-          if (currentGraphics.scene) {
-            const text = currentGraphics.scene.add.text(coinX, coinY + 20, coinValueToDisplay.toString(), {
-              fontSize: '14px',
-              color: '#000000',
-              fontStyle: 'bold',
-              backgroundColor: '#FFD700',
-              padding: { x: 6, y: 3 },
-            });
-            text.setOrigin(0.5);
-            text.setDepth(100); // ให้อยู่บนสุด
-            coinTextsRef.current.push(text); // เก็บไว้เพื่อลบทีหลัง
-          }
-        }
-      });
-    }
-
-    // Draw people
-    if (currentFormData.people && currentFormData.people.length > 0) {
-      currentFormData.people.forEach(person => {
-        const personX = person.x;
-        const personY = person.y;
-
-        if (personX !== undefined && personY !== undefined) {
-          if (currentGraphics.scene) {
-            // Create a separate Graphics object for this person with proper depth
-            const personGraphics = currentGraphics.scene.add.graphics();
-            personGraphics.setDepth(100); // Above nodes
-
-            // Shadow
-            personGraphics.fillStyle(0x000000, 0.3);
-            personGraphics.fillCircle(personX + 2, personY + 2, 12);
-
-            // Person circle (blue)
-            personGraphics.fillStyle(0x3b82f6, 1); // Blue color
-            personGraphics.fillCircle(personX, personY, 12);
-
-            // Border
-            personGraphics.lineStyle(2, 0xffffff, 1);
-            personGraphics.strokeCircle(personX, personY, 12);
-
-            coinTextsRef.current.push(personGraphics);
-
-            // Person emoji/icon
-            const personIcon = currentGraphics.scene.add.text(personX, personY, '👤', {
-              fontSize: '14px',
-            });
-            personIcon.setOrigin(0.5);
-            personIcon.setDepth(101); // Above person circle
-            coinTextsRef.current.push(personIcon);
-          }
-        }
-      });
-    }
-
-    // Draw obstacles
-    if (currentFormData.obstacles && currentFormData.obstacles.length > 0) {
-      currentFormData.obstacles.forEach((obstacle, index) => {
-        if (obstacle.points && obstacle.points.length >= 3) {
-          // Draw polygon obstacle (pit)
-          // Shadow
-          currentGraphics.fillStyle(0x000000, 0.3);
-          currentGraphics.beginPath();
-          currentGraphics.moveTo(obstacle.points[0].x + 2, obstacle.points[0].y + 2);
-          for (let i = 1; i < obstacle.points.length; i++) {
-            currentGraphics.lineTo(obstacle.points[i].x + 2, obstacle.points[i].y + 2);
-          }
-          currentGraphics.closePath();
-          currentGraphics.fillPath();
-
-          // Obstacle fill
-          currentGraphics.fillStyle(0x000000, 0.8); // Black with transparency
-          currentGraphics.beginPath();
-          currentGraphics.moveTo(obstacle.points[0].x, obstacle.points[0].y);
-          for (let i = 1; i < obstacle.points.length; i++) {
-            currentGraphics.lineTo(obstacle.points[i].x, obstacle.points[i].y);
-          }
-          currentGraphics.closePath();
-          currentGraphics.fillPath();
-
-          // Border
-          currentGraphics.lineStyle(3, 0x8b4513, 1); // Brown border
-          currentGraphics.strokePath();
-
-          // Draw corner handles for editing (small squares)
-          currentGraphics.fillStyle(0xffff00, 1); // Yellow handles
-          obstacle.points.forEach(point => {
-            currentGraphics.fillRect(point.x - 4, point.y - 4, 8, 8);
-            currentGraphics.lineStyle(2, 0x000000, 1);
-            currentGraphics.strokeRect(point.x - 4, point.y - 4, 8, 8);
-          });
-        } else if (obstacle.x && obstacle.y) {
-          // Legacy format - draw as square
-          // Shadow
-          currentGraphics.fillStyle(0x000000, 0.3);
-          currentGraphics.fillRect(obstacle.x - 12 + 2, obstacle.y - 12 + 2, 24, 24);
-
-          // Obstacle square
-          currentGraphics.fillStyle(0x8b4513, 1); // Brown
-          currentGraphics.fillRect(obstacle.x - 12, obstacle.y - 12, 24, 24);
-
-          // Border
-          currentGraphics.lineStyle(2, 0xffffff, 1);
-          currentGraphics.strokeRect(obstacle.x - 12, obstacle.y - 12, 24, 24);
-        }
-      });
-    }
-
-    // Draw preview rectangle while dragging
-    if (isDraggingObstacleRef.current && obstacleDragStartRef.current && obstacleDragEndRef.current) {
-      const start = obstacleDragStartRef.current;
-      const end = obstacleDragEndRef.current;
-      const minX = Math.min(start.x, end.x);
-      const maxX = Math.max(start.x, end.x);
-      const minY = Math.min(start.y, end.y);
-      const maxY = Math.max(start.y, end.y);
-
-      // Draw preview rectangle with dashed line effect
-      currentGraphics.lineStyle(2, 0x00ff00, 0.8); // Green dashed preview
-      currentGraphics.strokeRect(minX, minY, maxX - minX, maxY - minY);
-
-      // Fill preview
-      currentGraphics.fillStyle(0x00ff00, 0.2); // Light green fill
-      currentGraphics.fillRect(minX, minY, maxX - minX, maxY - minY);
-    }
   }, [
-    canvasSize,
-    formDataRef,
-    selectedNodeRef,
-    phaserGraphicsRef,
-    coinTextsRef,
-    obstacleDragStartRef,
-    obstacleDragEndRef,
-    isDraggingObstacleRef
-  ]);
+    canvasSize, formDataRef, selectedNodeRef, phaserGraphicsRef, 
+    isDraggingObstacleRef, obstacleDragStartRef, obstacleDragEndRef
+  ]); 
 
   return { redrawPhaser };
 };

@@ -326,10 +326,7 @@ exports.createLevel = async (req, res) => {
       goal_type,
       nodes,
       edges,
-      monsters,
-      obstacles,
-      coin_positions,
-      people,
+      map_entities,
       algo_data,
       starter_xml,
       block_ids,
@@ -427,10 +424,7 @@ exports.createLevel = async (req, res) => {
         coordinates: parseJsonField(coordinates), // Parse and save coordinates
         nodes: parseJsonField(nodes),
         edges: parseJsonField(edges),
-        monsters: parseJsonField(monsters),
-        obstacles: parseJsonField(obstacles),
-        coin_positions: parseJsonField(coin_positions),
-        people: parseJsonField(people),
+        map_entities: parseJsonField(map_entities),
         algo_data: parseJsonField(algo_data),
         starter_xml: starter_xml || null,
         created_by: user.user_id,
@@ -512,10 +506,7 @@ exports.updateLevel = async (req, res) => {
       goal_type,
       nodes,
       edges,
-      monsters,
-      obstacles,
-      coin_positions,
-      people,
+      map_entities,
       algo_data,
       starter_xml,
       block_ids,
@@ -592,10 +583,7 @@ exports.updateLevel = async (req, res) => {
     if (coordinates !== undefined) updateData.coordinates = parseJsonField(coordinates); // Update coordinates
     if (nodes !== undefined) updateData.nodes = parseJsonField(nodes);
     if (edges !== undefined) updateData.edges = parseJsonField(edges);
-    if (monsters !== undefined) updateData.monsters = parseJsonField(monsters);
-    if (obstacles !== undefined) updateData.obstacles = parseJsonField(obstacles);
-    if (coin_positions !== undefined) updateData.coin_positions = parseJsonField(coin_positions);
-    if (people !== undefined) updateData.people = parseJsonField(people);
+    if (map_entities !== undefined) updateData.map_entities = parseJsonField(map_entities);
     if (algo_data !== undefined) updateData.algo_data = parseJsonField(algo_data);
     if (starter_xml !== undefined) updateData.starter_xml = starter_xml || null;
 
