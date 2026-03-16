@@ -4,8 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Plus, Trash2, Coins, Users, Link } from 'lucide-react';
 import { ITEM_TYPES } from '@/constants/itemTypes';
 
-import { useLevelElements } from './hooks/useLevelElements';
-import AlgoDataForm from './AlgoDataForm';
+import { useLevelElements } from '../hooks/useLevelElements';
+import AlgoDataForm from '../forms/AlgoDataForm';
 
 const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, onAddMonster, onAddObstacle, selectedCategory, selectedMonsterType, onMonsterTypeChange, coinValue, onCoinValueChange, edgeWeight, onEdgeWeightChange, onFormDataChange }) => {
   const { isItemTypeEnabled, isWeightedGraphCategory } = useLevelElements(selectedCategory);
@@ -26,8 +26,8 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
   };
 
   // --- Helper: get the current algo monster type (first monster in array, or default) ---
-  const algoMonsterType = (formData.monsters && formData.monsters.length > 0)
-    ? formData.monsters[0].type || 'vampire_1'
+  const algoMonsterType = (formData.map_entities && formData.map_entities.filter(e => e.entity_type === 'MONSTER').length > 0)
+    ? formData.map_entities.filter(e => e.entity_type === 'MONSTER')[0].type || 'vampire_1'
     : 'vampire_1';
 
   // --- Helper: set the algo monster type (upsert a single entry in formData.monsters) ---
@@ -38,9 +38,15 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
       'vampire_3': { name: '🧛 Vampire 3', hp: 3, damage: 100, detectionRange: 80 },
     };
     const template = monsterTemplates[type] || monsterTemplates['vampire_1'];
+
+    const otherEntities = (formData.map_entities || []).filter(e => e.entity_type !== 'MONSTER');
+
     onFormDataChange({
       ...formData,
-      monsters: [{ id: 1, ...template, type, x: 0, y: 0, patrol: [], defeated: false }]
+      map_entities: [
+        ...otherEntities,
+        { id: 1, ...template, type: type, entity_type: 'MONSTER', x: null, y: null, targetNode: null, patrol: [], defeated: false }
+      ]
     });
   };
 

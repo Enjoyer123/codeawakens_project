@@ -1,4 +1,4 @@
-﻿// Player and cinematic monster setup
+// Player and cinematic monster setup
 // Handles main player character and cinematic monster display
 import Phaser from "phaser";
 import { playIdle } from '../movement/playerAnimation';
@@ -188,9 +188,10 @@ export function drawCinematicMonster(scene) {
 
         let textureKey = 'Vampire_1';
         let idleAnim = 'vampire_1-idle_left';
-
-        if (scene.levelData.monsters && scene.levelData.monsters.length > 0) {
-            const monsterType = scene.levelData.monsters[0].type || 'vampire_1';
+        // Define properties from monsters via map_entities
+        const monsters = scene.levelData.map_entities?.filter(e => e.entity_type === 'MONSTER') || [];
+        if (monsters.length > 0) {
+            const monsterType = monsters[0].type || 'vampire_1';
             const config = MONSTER_CONFIG[monsterType];
             if (config) {
                 textureKey = config.textureKey;

@@ -14,18 +14,8 @@ export function playCombatSequence(scene, isWin, onComplete) {
     const hasNodes = scene.levelData?.nodes && scene.levelData.nodes.length > 0;
     const startNode = hasNodes ? scene.levelData.nodes.find(n => n.id === scene.levelData.start_node_id) : null;
 
-    // Check for special game types that have nodes but are NOT graph traversal (so they SHOULD play combat)
-    const gameType = (scene.levelData?.game_type || '').toLowerCase();
-    const appliedType = (scene.levelData?.algo_data?.type || '').toUpperCase();
-
-    const isSpecialVisualLevel =
-        gameType.includes('rope') ||
-        gameType.includes('train') ||
-        appliedType.includes('ROPE') ||
-        appliedType.includes('TRAIN');
-
-    // If we have nodes AND a valid start node AND it's not a special visual level -> Skip combat (Standard Graph Level)
-    if (hasNodes && startNode && !isSpecialVisualLevel) {
+    // If we have nodes AND a valid start node -> Skip combat (Standard Graph Level)
+    if (hasNodes && startNode) {
         if (onComplete) onComplete();
         return;
     }
@@ -148,8 +138,9 @@ export function playCombatSequence(scene, isWin, onComplete) {
     let textureKey = 'Vampire_1';
     let monsterPrefix = 'vampire_1';
 
-    if (scene.levelData.monsters && scene.levelData.monsters.length > 0) {
-        const monsterData = scene.levelData.monsters[0];
+    const monsters = scene.levelData.map_entities?.filter(e => e.entity_type === 'MONSTER') || [];
+    if (monsters.length > 0) {
+        const monsterData = monsters[0];
         const monsterType = monsterData.type || 'vampire_1';
         monsterPrefix = monsterType;
 

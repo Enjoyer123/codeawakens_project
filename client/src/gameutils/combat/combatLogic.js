@@ -1,4 +1,4 @@
-﻿import Phaser from 'phaser';
+import Phaser from 'phaser';
 import { getCurrentGameState } from '../shared/game/gameState';
 
 /**
@@ -15,8 +15,9 @@ export function calculateHit(scene) {
     let nearestMonster = null;
     let nearestDistance = Infinity;
 
+    const monsters = scene.levelData?.map_entities?.filter(e => e.entity_type === 'MONSTER') || [];
     // หาศัตรูที่อยู่ใกล้ที่สุด
-    if (scene.monsters && scene.monsters.length > 0) {
+    if (scene.monsters && monsters.length > 0) {
         scene.monsters.forEach((monster) => {
             if (monster.data?.defeated || monster.sprite?.getData('defeated') || monster.isDefeated) return;
 

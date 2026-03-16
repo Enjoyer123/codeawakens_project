@@ -10,7 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Loader } from '@/components/ui/loader';
 import { Trash2 } from 'lucide-react';
-import FrameUploadInput from './FrameUploadInput';
+import FrameUploadInput from '@/components/admin/reward/FrameUploadInput';
 
 const RewardImageDialog = ({
   open,

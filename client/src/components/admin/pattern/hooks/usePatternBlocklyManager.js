@@ -1,9 +1,8 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import * as Blockly from 'blockly/core';
 import { useBlocklyWorkspace } from '../../level/hooks/useBlocklyWorkspace';
-import { useBlocklyCleanup } from '../../level/hooks/useBlocklyCleanup';
-import { removeVariableIdsFromXml } from '../../level/utils/blocklyProcedureUtils';
-import { delay } from '../../level/utils/asyncUtils';
+// const { useBlocklyCleanup } removed
+import { useEnabledBlocks } from '@/gameutils/blockly/hooks/useEnabledBlocks';
 import { setXmlLoading as setGlobalXmlLoading } from '@/gameutils/blockly/core/state';
 
 export const usePatternBlocklyManager = ({
@@ -16,9 +15,16 @@ export const usePatternBlocklyManager = ({
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
     const stepsRef = useRef([]); // Keep track of latest step data without re-renders
     const lastLoadedXmlRef = useRef(null); // Prevent redundant XML loads
-    const [xmlLoading, setXmlLoading] = useState(false);
     const [blocklyRefReady, setBlocklyRefReady] = useState(false);
     const blocklyRef = useRef(null);
+
+    // Dialog State
+    const [confirmDialog, setConfirmDialog] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: null
+    });
 
     // Initialize Steps when patternData loads
     useEffect(() => {
@@ -52,36 +58,7 @@ export const usePatternBlocklyManager = ({
     }, [steps]);
 
     // Calculate Enabled Blocks
-    const enabledBlocks = useMemo(() => {
-        if (!levelData) return {};
-        const enabledBlocksObj = {};
-
-        if (Array.isArray(levelData.level_blocks)) {
-            levelData.level_blocks.forEach((blockInfo) => {
-                if (blockInfo?.block?.block_key) {
-                    enabledBlocksObj[blockInfo.block.block_key] = true;
-                }
-            });
-        }
-
-        if (Object.keys(enabledBlocksObj).length === 0) {
-            if (typeof levelData.enabled_blocks === 'object') {
-                Object.assign(enabledBlocksObj, levelData.enabled_blocks || {});
-            } else if (typeof levelData.enabled_blocks === 'string') {
-                try {
-                    Object.assign(enabledBlocksObj, JSON.parse(levelData.enabled_blocks) || {});
-                } catch (e) { }
-            }
-        }
-
-        if (Object.keys(enabledBlocksObj).length === 0) {
-            enabledBlocksObj.move_forward = true;
-            enabledBlocksObj.turn_left = true;
-            enabledBlocksObj.turn_right = true;
-        }
-
-        return enabledBlocksObj;
-    }, [levelData]);
+    const enabledBlocks = useEnabledBlocks(levelData);
 
     // Blockly Workspace Init
     const blocklyRefCallback = useCallback((node) => {
@@ -94,7 +71,7 @@ export const usePatternBlocklyManager = ({
     const {
         workspaceRef,
         blocklyLoaded,
-        blocklyInitError
+        error: blocklyInitError
     } = useBlocklyWorkspace({
         blocklyRef,
         levelData,
@@ -104,7 +81,7 @@ export const usePatternBlocklyManager = ({
         readOnly: isViewMode
     });
 
-    const { cleanupDuplicateProcedures } = useBlocklyCleanup({ workspaceRef });
+    // const { cleanupDuplicateProcedures } removed
 
     // XML Loading Logic
     const loadStepXml = useCallback(async (index, isForward = true) => {
@@ -118,7 +95,6 @@ export const usePatternBlocklyManager = ({
 
         if (!isViewMode && isForward && index > 0) {
             const prevStep = stepsRef.current[index - 1];
-            const currentWorkspaceXml = getCurrentXml(); // Check if we should carry over current work
 
             // Logic: ถ้าเป็นการกด Next เราอาจจะอยากโหลด XML ของ Step ก่อนหน้ามาทำต่อ
             // แต่ในที่นี้ใช้ logic ดึงจาก saved step
@@ -138,18 +114,12 @@ export const usePatternBlocklyManager = ({
         setGlobalXmlLoading(true);
 
         try {
-            await delay(50);
+            await new Promise(r => setTimeout(r, 50));
             workspaceRef.current.clear();
 
             let finalXml = xmlToLoad;
             if (!finalXml || !finalXml.trim()) {
                 finalXml = '<xml xmlns="https://developers.google.com/blockly/xml"></xml>';
-            }
-
-            try {
-                finalXml = removeVariableIdsFromXml(finalXml);
-            } catch (e) {
-                console.warn("XML Cleanup failed, using original", e);
             }
 
             const xmlDom = Blockly.utils.xml.textToDom(finalXml);
@@ -163,19 +133,15 @@ export const usePatternBlocklyManager = ({
 
             setGlobalXmlLoading(false);
 
-            if (!isViewMode && cleanupDuplicateProcedures) {
-                await delay(50);
-                cleanupDuplicateProcedures(true);
-            }
+            // Removed cleanupDuplicateProcedures
 
         } catch (err) {
             console.error("Error loading XML for step", index, err);
         } finally {
-            setXmlLoading(false); // Update local state
             setGlobalXmlLoading(false);
             lastLoadedXmlRef.current = index;
         }
-    }, [levelData, cleanupDuplicateProcedures, isViewMode]);
+    }, [levelData, isViewMode]);
 
     // Initial Load
     useEffect(() => {
@@ -207,38 +173,53 @@ export const usePatternBlocklyManager = ({
     const handleNextStep = async () => {
         if (currentStepIndex >= 2) return alert('สูงสุด 3 ขั้นตอน');
 
+        const proceed = async () => {
+            if (!isViewMode) saveCurrentWorkspaceToRef();
+            const nextIndex = currentStepIndex + 1;
+            setCurrentStepIndex(nextIndex);
+            await loadStepXml(nextIndex, true);
+        };
+
         if (!isViewMode) {
-            const confirmed = window.confirm(
-                '⚠️ คำเตือน: กรุณาตรวจสอบ Block ให้ดีก่อนกด Next\n\n' +
-                'เพราะถ้าต้องกลับมาแก้ไข Step นี้ในภายหลัง\n' +
-                'Block ของ Step ถัดไปจะต้องเรียงใหม่ทั้งหมด\n\n' +
-                'ต้องการดำเนินการต่อหรือไม่?'
-            );
-            if (!confirmed) return;
-            saveCurrentWorkspaceToRef();
+            setConfirmDialog({
+                isOpen: true,
+                title: 'ยืนยันเปลี่ยน Step',
+                message: '⚠️ คำเตือน: กรุณาตรวจสอบ Block ให้ดีก่อนกด Next\n\nเพราะถ้าต้องกลับมาแก้ไข Step นี้ในภายหลัง\nBlock ของ Step ถัดไปจะต้องเรียงใหม่ทั้งหมด\n\nต้องการดำเนินการต่อหรือไม่?',
+                onConfirm: async () => {
+                    setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+                    await proceed();
+                }
+            });
+            return;
         }
 
-        const nextIndex = currentStepIndex + 1;
-        setCurrentStepIndex(nextIndex);
-        await loadStepXml(nextIndex, true);
+        await proceed();
     };
 
     const handlePreviousStep = async () => {
         if (currentStepIndex <= 0) return;
 
+        const proceed = async () => {
+            if (!isViewMode) saveCurrentWorkspaceToRef();
+            const prevIndex = currentStepIndex - 1;
+            setCurrentStepIndex(prevIndex);
+            await loadStepXml(prevIndex, false);
+        };
+
         if (!isViewMode) {
-            const confirmed = window.confirm(
-                '⚠️ คำเตือน: การย้อนกลับจะทำให้ต้องเรียง Block ใหม่\n\n' +
-                'เมื่อคุณกลับมาจาก Step ' + currentStepIndex + '\n\n' +
-                'ต้องการย้อนกลับหรือไม่?'
-            );
-            if (!confirmed) return;
-            saveCurrentWorkspaceToRef();
+            setConfirmDialog({
+                isOpen: true,
+                title: 'ยืนยันย้อนกลับ',
+                message: '⚠️ คำเตือน: การย้อนกลับจะทำให้ต้องเรียง Block ใหม่\n\nเมื่อคุณกลับมาจาก Step ' + currentStepIndex + '\n\nต้องการย้อนกลับหรือไม่?',
+                onConfirm: async () => {
+                    setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+                    await proceed();
+                }
+            });
+            return;
         }
 
-        const prevIndex = currentStepIndex - 1;
-        setCurrentStepIndex(prevIndex);
-        await loadStepXml(prevIndex, false);
+        await proceed();
     };
 
     const updateStepEffect = (effect) => {
@@ -263,7 +244,6 @@ export const usePatternBlocklyManager = ({
     return {
         steps, stepsRef,
         currentStepIndex,
-        xmlLoading,
         blocklyLoaded,
         blocklyInitError,
         blocklyRefCallback,
@@ -274,6 +254,8 @@ export const usePatternBlocklyManager = ({
         saveCurrentWorkspaceToRef,
         updateStepEffect,
         getCurrentXml,
-        workspaceRef
+        workspaceRef,
+        confirmDialog,
+        setConfirmDialog
     };
 };

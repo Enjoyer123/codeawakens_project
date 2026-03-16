@@ -1,4 +1,4 @@
-﻿import Phaser from "phaser";
+import Phaser from "phaser";
 import { setPlayerHp as setGlobalPlayerHp } from '../shared/game/gameState';
 import { isDefeat } from './enemyUtils';
 import { showGameOver } from '../effects/gameEffects';
@@ -6,10 +6,10 @@ import { getDirectionFromAngle } from './combatHelpers';
 import { startBattle } from './battle';
 
 export function updateMonsters(scene, delta, isRunning) {
-    if (!scene.monsters) return;
+    const monsters = scene.levelData?.map_entities?.filter(e => e.entity_type === 'MONSTER') || [];
+    if (!scene.monsters || monsters.length === 0) return;
 
-
-
+    // อัปเดตมอนสเตอร์แต่ละตัว
     scene.monsters.forEach((monster) => {
         // ตรวจสอบว่าศัตรูตายแล้วหรือไม่ (Remove inBattle check to allow Flee Detection to run)
         if (isDefeat(monster.sprite) || monster.data?.defeated || monster.sprite.getData('defeated') || monster.isDefeated) return;

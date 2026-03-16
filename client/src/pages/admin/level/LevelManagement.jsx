@@ -14,7 +14,7 @@ import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import { usePagination } from '@/hooks/usePagination';
 import { createDeleteErrorMessage } from '@/utils/errorHandler';
 import PatternListDialog from '../../../components/admin/pattern/PatternListDialog';
-import LevelTable from '@/components/admin/level/LevelTable';
+import LevelTable from '@/components/admin/level/tables/LevelTable';
 
 import PageError from '@/components/shared/Error/PageError';
 

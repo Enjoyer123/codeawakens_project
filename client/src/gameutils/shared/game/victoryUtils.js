@@ -87,7 +87,8 @@ function checkSingleVictoryCondition(condition, currentState, levelData) {
       };
 
     case "all_monsters_defeated": {
-      const allDefeated = !levelData.monsters?.length || levelData.monsters.every(m => m.defeated);
+      const monsters = levelData.map_entities?.filter(e => e.entity_type === 'MONSTER') || [];
+      const allDefeated = !monsters.length || monsters.every(m => m.defeated);
       return {
         completed: allDefeated,
         reason: allDefeated ? "" : "ยังฆ่า Monster ไม่หมด"
@@ -95,7 +96,8 @@ function checkSingleVictoryCondition(condition, currentState, levelData) {
     }
 
     case "all_coins_collected": {
-      const totalCoins = levelData.coin_positions?.length || 0;
+      const coins = levelData.map_entities?.filter(e => e.entity_type === 'COIN') || [];
+      const totalCoins = coins.length;
       if (totalCoins === 0) return { completed: true, reason: "" };
       const collected = getPlayerCoins().length >= totalCoins;
       return {
@@ -154,7 +156,8 @@ export function generateVictoryHint(failedConditions, levelData) {
       }
       case "all_people_rescued": {
         const rescued = getRescuedPeople().length;
-        const total = levelData.people?.length || 0;
+        const peopleEntities = levelData.map_entities?.filter(e => e.entity_type === 'PEOPLE') || [];
+        const total = peopleEntities.length;
         hints.push(`❌ ยังช่วยคนไม่ครบ (${rescued}/${total})`);
         break;
       }
@@ -162,15 +165,17 @@ export function generateVictoryHint(failedConditions, levelData) {
         hints.push(`❌ ยังไม่กลับมาจุดเริ่มต้น (Node ${levelData.start_node_id})`);
         break;
       case "all_monsters_defeated": {
-        const defeated = levelData.monsters?.filter(m => m.defeated).length || 0;
-        const total = levelData.monsters?.length || 0;
-        hints.push(`❌ ยังฆ่า Monster ไม่หมด (${defeated}/${total})`);
+        const monsters = levelData.map_entities?.filter(e => e.entity_type === 'MONSTER') || [];
+        const defeated = monsters.filter(m => m.defeated).length;
+        const totalMonsters = monsters.length;
+        hints.push(`❌ ยังฆ่า Monster ไม่หมด (${defeated}/${totalMonsters})`);
         break;
       }
       case "all_coins_collected": {
         const collected = getPlayerCoins().length;
-        const total = levelData.coin_positions?.length || 0;
-        hints.push(`❌ ยังเก็บเหรียญไม่หมด (${collected}/${total})`);
+        const coins = levelData.map_entities?.filter(e => e.entity_type === 'COIN') || [];
+        const totalCoins = coins.length;
+        hints.push(`❌ ยังเก็บเหรียญไม่หมด (${collected}/${totalCoins})`);
         break;
       }
       case "mst_connected":

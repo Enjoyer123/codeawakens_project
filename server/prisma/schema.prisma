@@ -121,11 +121,7 @@ model Level {
   character                String?       // Character type for this level (e.g. 'warrior', 'mage')
   nodes                    Json?
   edges                    Json?
-  monsters                 Json?
-  obstacles                Json?
-  coin_positions           Json?
-  people                   Json?
-  treasures                Json?
+  map_entities             Json?
   algo_data                Json? // Unified algorithm data: { type: "NQUEEN"|"KNAPSACK"|"COINCHANGE"|"SUBSETSUM"|"EMEI", payload: {...} }
   starter_xml              String? // Blockly XML สำหรับ starter blocks (โหลดให้ผู้เล่นทุกคน)
   created_at               DateTime                @default(now())

@@ -133,7 +133,7 @@ const extractTestCases = (levelResponse) =>
     }));
 
 // ─── Helper: Parse JSON-string fields from API ───
-const JSON_FIELDS_ARRAY = ['monsters', 'obstacles', 'coin_positions', 'coins', 'people'];
+const JSON_FIELDS_ARRAY = ['map_entities', 'coins'];
 const JSON_FIELDS_OBJECT = ['algo_data', 'applied_data', 'custom_data'];
 
 const parseJsonFields = (data) => {
@@ -195,6 +195,8 @@ export function useLevelInitializer({
           goodPatterns,
           test_cases: extractTestCases(levelData),
         };
+
+
 
         // 4. Set global + React state
         setLevelData(formatted);

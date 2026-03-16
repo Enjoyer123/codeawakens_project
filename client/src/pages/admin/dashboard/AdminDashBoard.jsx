@@ -73,7 +73,7 @@ const AdminDashBoard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="h-[250px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minHeight={250} minWidth={200}>
                       <RePieChart>
                         <Pie
                           data={levelStats}
@@ -106,7 +106,7 @@ const AdminDashBoard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="h-[250px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minHeight={250} minWidth={200}>
                       <BarChart
                         data={testStats}
                         margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
@@ -132,7 +132,7 @@ const AdminDashBoard = () => {
               </CardHeader>
               <CardContent>
                 <div className="h-[200px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minHeight={200} minWidth={200}>
                     <BarChart
                       data={userStats.skillDistribution}
                       layout="vertical"

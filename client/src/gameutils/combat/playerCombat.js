@@ -1,4 +1,4 @@
-﻿import { playAttack } from '../movement/playerAnimation.js';
+import { playAttack } from '../movement/playerAnimation.js';
 import { getDirectionFromAngle } from './combatHelpers';
 import { cleanupMonsterUI } from './battleUI';
 export function haveEnemy(player) {
@@ -8,7 +8,8 @@ export function haveEnemy(player) {
 export function findNearbyEnemy(player) {
     // ใช้ scene.monsters แทน player.enemies
     const scene = player.scene;
-    if (!scene || !scene.monsters) return null;
+    const monsters = scene.levelData?.map_entities?.filter(e => e.entity_type === 'MONSTER') || [];
+    if (!scene || !scene.monsters || monsters.length === 0) return null;
 
     for (const monster of scene.monsters) {
         // ตรวจสอบว่า monster ตายแล้วหรือไม่
