@@ -80,7 +80,6 @@ const LevelManagement = () => {
     } catch (err) {
       // Global error handler will show toast
       console.error(err);
-      toast.error('ไม่สามารถลบด่านได้: ' + (err.message || 'Unknown error'));
     }
   }, [levelToDelete, deleteLevelAsync]);
 

@@ -97,7 +97,6 @@ const WeaponManagement = () => {
       toast.success('ลบอาวุธสำเร็จ');
     } catch (err) {
       console.error(err);
-      toast.error('ไม่สามารถลบอาวุธได้: ' + (err.message || 'Unknown error'));
     }
   }, [weaponToDelete, deleteWeaponMutation]);
 

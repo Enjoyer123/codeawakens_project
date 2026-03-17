@@ -84,7 +84,6 @@ const NotificationManagement = () => {
             toast.success('ลบแจ้งเตือนสำเร็จ');
         } catch (err) {
             console.error(err);
-            toast.error('ไม่สามารถลบแจ้งเตือนได้: ' + (err.message || 'Unknown error'));
         }
     }, [itemToDelete, deleteNotificationAsync]);
 
@@ -110,7 +109,6 @@ const NotificationManagement = () => {
             toast.success('ส่งแจ้งเตือนสำเร็จ');
         } catch (err) {
             console.error("Failed to send notification:", err);
-            toast.error('ส่งแจ้งเตือนไม่สำเร็จ: ' + (err.message || 'Unknown error'));
         }
     };
 

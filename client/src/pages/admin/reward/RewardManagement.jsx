@@ -94,7 +94,6 @@ const RewardManagement = () => {
       toast.success('ลบรางวัลสำเร็จ');
     } catch (err) {
       console.error(err);
-      toast.error('ไม่สามารถลบรางวัลได้: ' + (err.message || 'Unknown error'));
     }
   }, [rewardToDelete, deleteRewardAsync]);
 

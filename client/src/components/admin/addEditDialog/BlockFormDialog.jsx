@@ -14,7 +14,6 @@ import FormCheckbox from '@/components/admin/formFields/FormCheckbox';
 import { Label } from '@/components/ui/label';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { getImageUrl } from '@/utils/imageUtils';
-import { toast } from 'sonner';
 
 // TanStack hooks for mutations (since BlockFormDialog handles save now)
 import { useUpdateBlock, useUploadBlockImage } from '@/services/hooks/useBlocks';
@@ -46,6 +45,7 @@ const BlockFormDialog = ({
     category: 'movement',
     is_available: true,
     syntax_example: '',
+    block_image: '',
   });
 
   // Internal Image State
@@ -67,9 +67,10 @@ const BlockFormDialog = ({
           category: editingBlock.category,
           is_available: editingBlock.is_available,
           syntax_example: editingBlock.syntax_example || '',
+          block_image: editingBlock.block_image || '',
         });
         setSelectedImage(null);
-        setImagePreview(getImageUrl(editingBlock.block_image));
+        setImagePreview(editingBlock.block_image ? getImageUrl(editingBlock.block_image) : null);
       } else {
         // Reset if opening for "add" (though blocks disable add currently)
         setFormData({
@@ -79,6 +80,7 @@ const BlockFormDialog = ({
           category: 'movement',
           is_available: true,
           syntax_example: '',
+          block_image: '',
         });
         setSelectedImage(null);
         setImagePreview(null);
@@ -137,7 +139,7 @@ const BlockFormDialog = ({
 
       if (editingBlock) {
         // Handle image upload if a new one is selected
-        let imagePath = formData.block_image || editingBlock.block_image; 
+        let imagePath = formData.block_image; 
         if (selectedImage) {
           const uploadResult = await uploadImageAsync(selectedImage);
           imagePath = uploadResult.path;

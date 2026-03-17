@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
@@ -12,7 +13,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader } from '@/components/ui/loader';
 import { Plus, Trash2, X } from 'lucide-react';
-import { toast } from 'sonner';
 import { useAddWeaponImage, useDeleteWeaponImage } from '@/services/hooks/useWeapons';
 
 const WeaponImageDialog = ({
@@ -71,7 +71,6 @@ const WeaponImageDialog = ({
 
     } catch (err) {
       console.error(err);
-      toast.error(err.message || 'Error uploading image');
     }
   };
 
@@ -85,7 +84,6 @@ const WeaponImageDialog = ({
       });
     } catch (err) {
       console.error(err);
-      toast.error('Failed to delete image');
     } finally {
       setDeletingId(null);
     }

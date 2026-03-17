@@ -160,7 +160,7 @@ const TestCaseFormDialog = ({ open, onOpenChange, editingTestCase, numericLevelI
             }
             onClose();
         } catch (err) {
-            toast.error('ไม่สามารถบันทึก Test Case ได้: ' + (err.message || 'Unknown error'));
+            console.error(err);
         }
     }, [editingTestCase, formData, numericLevelId, updateTestCaseMutation, createTestCaseMutation, onClose]);
 
