@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Loader } from '@/components/ui/loader';
@@ -27,6 +27,16 @@ import { useAlertDialog } from '@/components/shared/dialog/useAlertDialog';
 // Hooks
 import { useLevelData } from '../../../components/admin/level/hooks/useLevelData';
 import { useLevelForm } from '../../../components/admin/level/hooks/useLevelForm';
+
+const MODE_LABELS = {
+  node: 'MODE: ADD NODE',
+  edge: 'MODE: CONNECT EDGE',
+  start: 'MODE: SET START',
+  goal: 'MODE: SET GOAL',
+  monster: 'MODE: PLACE MONSTER',
+  obstacle: 'MODE: PLACE OBSTACLE',
+  delete: 'MODE: DELETE',
+};
 
 const LevelCreateEdit = () => {
   const navigate = useNavigate();
@@ -73,7 +83,7 @@ const LevelCreateEdit = () => {
   });
 
   // --- 3. UI State ---
-  const [canvasSize] = useState({ width: 1200, height: 920 });
+  const CANVAS_SIZE = { width: 1200, height: 920 };
   const [currentMode, setCurrentMode] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
   const [coinValue, setCoinValue] = useState(10);
@@ -92,27 +102,13 @@ const LevelCreateEdit = () => {
   const isPureAlgo = algoType && PURE_ALGO_TYPES.includes(algoType);
   const isGraphAlgo = algoType === 'EMEI';
 
-  // Selected Category (Needs to be synced with formData.category_id)
-  const [selectedCategory, setSelectedCategory] = useState(null);
-
-  // Sync selectedCategory when initial data loads
-  useEffect(() => {
-    if (initialSelectedCategory) {
-      setSelectedCategory(initialSelectedCategory);
-    }
-  }, [initialSelectedCategory]);
-
-  // Update selectedCategory when formData.category_id changes
-  // (e.g. user changes dropdown in LevelInfoForm)
-  useEffect(() => {
+  // Selected Category (Derived with useMemo)
+  const selectedCategory = useMemo(() => {
     if (formData.category_id && categories.length > 0) {
-      const category = categories.find(cat => cat.category_id.toString() === formData.category_id.toString());
-      if (category) {
-        setSelectedCategory(category);
-      }
+      return categories.find(cat => cat.category_id.toString() === formData.category_id.toString()) || initialSelectedCategory;
     }
-  }, [formData.category_id, categories]);
-
+    return initialSelectedCategory;
+  }, [formData.category_id, categories, initialSelectedCategory]);
 
   // --- 4. Event Handlers (Interaction) ---
 
@@ -293,15 +289,9 @@ const LevelCreateEdit = () => {
                 <span className="text-xs font-bold text-black uppercase tracking-wider mr-2">
                   {isPureAlgo ? 'Preview' : 'Workspace'}
                 </span>
-                {!isPureAlgo && currentMode && (
+                {!isPureAlgo && currentMode && MODE_LABELS[currentMode] && (
                   <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200 animate-pulse">
-                    {currentMode === 'node' && 'MODE: ADD NODE'}
-                    {currentMode === 'edge' && 'MODE: CONNECT EDGE'}
-                    {currentMode === 'start' && 'MODE: SET START'}
-                    {currentMode === 'goal' && 'MODE: SET GOAL'}
-                    {currentMode === 'monster' && 'MODE: PLACE MONSTER'}
-                    {currentMode === 'obstacle' && 'MODE: PLACE OBSTACLE'}
-                    {currentMode === 'delete' && 'MODE: DELETE'}
+                    {MODE_LABELS[currentMode]}
                   </Badge>
                 )}
               </div>
@@ -330,7 +320,7 @@ const LevelCreateEdit = () => {
                   />
                 ) : (
                   <PhaserMapEditor
-                    canvasSize={canvasSize}
+                    canvasSize={CANVAS_SIZE}
                     backgroundImageUrl={backgroundImageUrl}
                     formData={formData}
                     currentMode={currentMode}
@@ -348,7 +338,7 @@ const LevelCreateEdit = () => {
 
                 {/* Canvas Overlay Info */}
                 <div className="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur rounded text-[10px] text-gray-200 font-mono pointer-events-none">
-                  {canvasSize.width} x {canvasSize.height}
+                  {CANVAS_SIZE.width} x {CANVAS_SIZE.height}
                 </div>
               </div>
             </div>

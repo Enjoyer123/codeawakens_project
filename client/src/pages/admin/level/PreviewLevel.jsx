@@ -8,6 +8,8 @@ import { useUnlockPattern, useUnlockLevel, usePatterns } from '../../../services
 import PageLoader from '../../../components/shared/Loading/PageLoader';
 import { toast } from 'sonner';
 
+
+
 const PreviewLevel = () => {
   const { levelId } = useParams();
   const navigate = useNavigate();
@@ -116,124 +118,63 @@ const PreviewLevel = () => {
 
       {/* Pattern Selector Panel */}
       {patterns.length > 0 && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '12px',
-            right: '12px',
-            zIndex: 1000,
-            minWidth: panelOpen ? '260px' : 'auto',
-          }}
-        >
+        <div className={`absolute top-3 right-3 z-[1000] ${panelOpen ? 'min-w-[260px]' : 'w-auto'}`}>
           <button
             onClick={() => setPanelOpen(!panelOpen)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '8px 14px',
-              background: 'rgba(30, 30, 50, 0.9)',
-              backdropFilter: 'blur(8px)',
-              border: '1px solid rgba(100, 100, 200, 0.3)',
-              borderRadius: panelOpen ? '10px 10px 0 0' : '10px',
-              color: '#e0e0ff',
-              fontSize: '13px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              width: '100%',
-              justifyContent: 'space-between',
-            }}
+            className={`flex items-center justify-between gap-2 px-4 py-2 w-full bg-white/95 backdrop-blur-sm border border-gray-200 text-gray-800 text-sm font-semibold shadow-md transition-colors hover:bg-gray-50 focus:outline-none ${panelOpen ? 'rounded-t-xl' : 'rounded-xl'}`}
           >
-            <span>📋 Patterns ({patterns.length})</span>
-            <span style={{ fontSize: '10px' }}>{panelOpen ? '▲' : '▼'}</span>
+            <span className="flex items-center gap-2">
+              Patterns ({patterns.length})
+            </span>
+            <span className="text-[10px] text-gray-500">{panelOpen ? '▲' : '▼'}</span>
           </button>
 
           {panelOpen && (
-            <div
-              style={{
-                background: 'rgba(20, 20, 40, 0.95)',
-                backdropFilter: 'blur(12px)',
-                border: '1px solid rgba(100, 100, 200, 0.3)',
-                borderTop: 'none',
-                borderRadius: '0 0 10px 10px',
-                padding: '8px',
-                maxHeight: '320px',
-                overflowY: 'auto',
-              }}
-            >
+            <div className="bg-white/95 backdrop-blur-sm border border-gray-200 border-t-0 p-2 max-h-[320px] overflow-y-auto rounded-b-xl shadow-lg">
               {/* No selection option */}
               <button
                 onClick={() => { setSelectedPatternId(null); setSelectedPatternXml(null); }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  width: '100%',
-                  padding: '8px 10px',
-                  background: !selectedPatternId ? 'rgba(80, 80, 160, 0.3)' : 'transparent',
-                  border: !selectedPatternId ? '1px solid rgba(120, 120, 255, 0.4)' : '1px solid transparent',
-                  borderRadius: '8px',
-                  color: '#c0c0e0',
-                  fontSize: '12px',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  marginBottom: '4px',
-                }}
+                className={`flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-left transition-colors ${!selectedPatternId
+                    ? 'bg-blue-50 border border-blue-200 text-blue-800'
+                    : 'bg-transparent border border-transparent text-gray-600 hover:bg-gray-50'
+                  } mb-1`}
               >
-                <span style={{ fontSize: '14px' }}>🎮</span>
-                <span>เล่นเฉยๆ (ไม่เลือก Pattern)</span>
+                <span className="font-medium">เล่นเฉยๆ (ไม่เลือก Pattern)</span>
               </button>
 
-              {patterns.map((p) => (
-                <button
-                  key={p.pattern_id}
-                  onClick={() => handleSelectPattern(p)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    width: '100%',
-                    padding: '8px 10px',
-                    background: selectedPatternId === p.pattern_id ? 'rgba(80, 80, 160, 0.3)' : 'transparent',
-                    border: selectedPatternId === p.pattern_id ? '1px solid rgba(120, 120, 255, 0.4)' : '1px solid transparent',
-                    borderRadius: '8px',
-                    color: '#e0e0ff',
-                    fontSize: '12px',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    marginBottom: '4px',
-                    transition: 'all 0.15s ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (selectedPatternId !== p.pattern_id) {
-                      e.currentTarget.style.background = 'rgba(60, 60, 130, 0.2)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (selectedPatternId !== p.pattern_id) {
-                      e.currentTarget.style.background = 'transparent';
-                    }
-                  }}
-                >
-                  <span style={{ fontSize: '10px', color: p.is_available ? '#4ade80' : '#f87171' }}>
-                    {p.is_available ? '🟢' : '🔴'}
-                  </span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {p.pattern_name}
-                    </div>
-                    {p.pattern_type && (
-                      <div style={{ fontSize: '10px', color: '#8888bb', marginTop: '2px' }}>
-                        {p.pattern_type.type_name}
-                        {p.bigO && ` · O(${p.bigO})`}
+              {patterns.map((p) => {
+                const isSelected = selectedPatternId === p.pattern_id;
+                return (
+                  <button
+                    key={p.pattern_id}
+                    onClick={() => handleSelectPattern(p)}
+                    className={`group flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-left transition-colors ${isSelected
+                        ? 'bg-blue-50 border border-blue-200'
+                        : 'bg-transparent border border-transparent hover:bg-gray-50'
+                      } mb-1`}
+                  >
+                    <span className={`text-[10px] ${p.is_available ? 'text-green-500' : 'text-red-400'}`}>
+                      {p.is_available ? '●' : '●'}
+                    </span>
+
+                    <div className="flex-1 min-w-0">
+                      <div className={`font-medium truncate ${isSelected ? 'text-blue-800' : 'text-gray-700 group-hover:text-gray-900'}`}>
+                        {p.pattern_name}
                       </div>
+                      {p.pattern_type && (
+                        <div className="text-[11px] text-gray-500 mt-0.5 truncate">
+                          {p.pattern_type.type_name}
+                          {p.bigO && <span className="text-gray-400 ml-1">· O({p.bigO})</span>}
+                        </div>
+                      )}
+                    </div>
+
+                    {isSelected && (
+                      <span className="text-blue-600 font-bold ml-2">✓</span>
                     )}
-                  </div>
-                  {selectedPatternId === p.pattern_id && (
-                    <span style={{ fontSize: '14px' }}>✓</span>
-                  )}
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>

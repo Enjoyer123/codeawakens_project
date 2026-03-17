@@ -138,6 +138,9 @@ const NotificationManagement = () => {
         if (!itemToDelete) return;
 
         try {
+            await deleteNotificationAsync(itemToDelete.notification_id);
+            setDeleteDialogOpen(false);
+            setItemToDelete(null);
         } catch (err) {
             console.error(err);
         }
