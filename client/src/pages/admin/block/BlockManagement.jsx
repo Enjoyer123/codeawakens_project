@@ -13,7 +13,6 @@ import {
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import SearchInput from '@/components/admin/formFields/SearchInput';
-import ErrorAlert from '@/components/shared/alert/ErrorAlert';
 import PaginationControls from '@/components/shared/pagination/PaginationControls';
 import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import BlockFormDialog from '@/components/admin/addEditDialog/BlockFormDialog';
@@ -63,7 +62,6 @@ const BlockManagement = () => {
     block_name: '',
     description: '',
     category: 'movement',
-    blockly_type: '',
     is_available: true,
     syntax_example: '',
   });
@@ -89,7 +87,6 @@ const BlockManagement = () => {
         block_name: block.block_name,
         description: block.description || '',
         category: block.category,
-        blockly_type: block.blockly_type || '',
         is_available: block.is_available,
         syntax_example: block.syntax_example || '',
       });
@@ -108,7 +105,6 @@ const BlockManagement = () => {
       block_name: '',
       description: '',
       category: 'movement',
-      blockly_type: '',
       is_available: true,
       syntax_example: '',
     });
@@ -142,7 +138,6 @@ const BlockManagement = () => {
       block_key: blockForm.block_key.trim(),
       block_name: blockForm.block_name.trim(),
       description: blockForm.description?.trim() || null,
-      blockly_type: blockForm.blockly_type?.trim() || null,
       syntax_example: blockForm.syntax_example?.trim() || null,
     };
 

@@ -183,7 +183,6 @@ export function drawCinematicMonster(scene) {
             vampire_1: { textureKey: 'Vampire_1', idleAnim: 'vampire_1-idle_left' },
             vampire_2: { textureKey: 'Vampire_2', idleAnim: 'vampire_2-idle_left' },
             vampire_3: { textureKey: 'Vampire_3', idleAnim: 'vampire_3-idle_left' },
-            slime_1: { textureKey: 'slime_1', idleAnim: 'slime_1-idle_left' },
         };
 
         let textureKey = 'Vampire_1';

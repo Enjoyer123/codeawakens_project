@@ -28,7 +28,6 @@ export function setupMonsters(scene) {
                 vampire_1: { textureKey: 'Vampire_1', animPrefix: 'vampire_1' },
                 vampire_2: { textureKey: 'Vampire_2', animPrefix: 'vampire_2' },
                 vampire_3: { textureKey: 'Vampire_3', animPrefix: 'vampire_3' },
-                slime_1: { textureKey: 'slime_1', animPrefix: 'slime' }
             };
 
             const monsterType = monsterData.type || 'vampire_1';

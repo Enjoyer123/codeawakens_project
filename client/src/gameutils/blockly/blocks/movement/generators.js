@@ -34,20 +34,4 @@ export function defineMovementGenerators() {
         return `await moveAlongPath(${path});\n`;
     };
 
-    // move_forward_with_explore
-    javascriptGenerator.forBlock["moveforward_with_explor"] = function (block) {
-        // ดึง STEPS จาก input
-        const steps = javascriptGenerator.valueToCode(block, 'STEPS', javascriptGenerator.ORDER_ATOMIC) || '1';
-
-        // ✅ Clean Mode: User เห็น/เขียนแค่นี้
-        if (javascriptGenerator.isCleanMode) {
-            return `moveForward.explore(${steps});\n`;
-        }
-
-        // 🔧 Runtime Mode: เครื่องรันจริง (Loop + Visual)
-        return `for (let i = 0; i < ${steps}; i++) {
-    await moveForward();
-    await playExploreEffect();
-}\n`;
-    };
 }

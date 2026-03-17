@@ -104,13 +104,7 @@ const BlockFormDialog = ({
             options={blockCategories}
             required
           />
-          <FormInput
-            label="Blockly Type"
-            name="blockly_type"
-            value={formData.blockly_type || ''}
-            onChange={(e) => handleChange('blockly_type', e.target.value)}
-            placeholder="เช่น move_forward"
-          />
+
           <FormInput
             label="Syntax Example"
             name="syntax_example"

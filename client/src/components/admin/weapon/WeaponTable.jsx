@@ -28,7 +28,6 @@ const WeaponTable = ({ weapons, onEdit, onDelete, onManageImages }) => {
             <tr key={weapon.weapon_id} className="hover:bg-gray-50">
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex items-center gap-2">
-                  <span className="text-lg">{weapon.emoji || '⚔️'}</span>
                   <div>
                     <div className="text-sm font-medium text-gray-900">
                       {weapon.weapon_name}

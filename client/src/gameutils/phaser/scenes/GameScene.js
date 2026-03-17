@@ -13,7 +13,6 @@ import { setupGoalUI } from '../../setup/uiManager';
 import { updateMonsters } from '../../combat/enemyMovement';
 // Removed Legacy Anims
 import { createVampire_1Anims } from '../../../anims/Vampire_1Anims';
-import { createSlime1Anims } from '../../../anims/Slime_1Anims';
 import { createMain_1Anims } from '../../../anims/Main_1Anims';
 import { createMain_2Anims } from '../../../anims/Main_2Anims';
 import { createMain_3Anims } from '../../../anims/Main_3Anims';
@@ -65,8 +64,6 @@ export class GameScene extends Phaser.Scene {
         this.load.atlas('Vampire_1', '/enemies/Vampire1.png', '/enemies/Vampire1.json');
         this.load.atlas('Vampire_2', '/enemies/Vampire2.png', '/enemies/Vampire2.json');
         this.load.atlas('Vampire_3', '/enemies/Vampire3.png', '/enemies/Vampire3.json');
-
-        this.load.atlas('slime_1', '/characters/Slime1.png', '/characters/Slime1.json');
 
         this.load.atlas('main_1', '/characters/Main1.png', '/characters/Main1.json');
         this.load.atlas('main_2', '/characters/Main2.png', '/characters/Main2.json');
@@ -177,7 +174,6 @@ export class GameScene extends Phaser.Scene {
 
         // Create animations
         createVampire_1Anims(this.anims);
-        createSlime1Anims(this.anims);
         createMain_1Anims(this.anims);
         createMain_2Anims(this.anims);
         createMain_3Anims(this.anims);
@@ -189,7 +185,7 @@ export class GameScene extends Phaser.Scene {
         const safeSetupGame = () => {
             // เช็คว่าถ้า Scene ถูกปิดหรือทำลายทิ้งไประหว่างรอโหลด (เช่น ผู้เล่นกดออกด่านเร็ว)
             // ให้ล้มเลิกการตั้งค่าทันที ไม่ต้องวนลูปให้เปลือง Memory
-            if (!this || !this.scene || !this.sys || !this.add) {
+            if (!this || !this.scene || !this.sys || !this.add || !this.sys.isActive() || !this.sys.displayList) {
                 console.warn('Scene was destroyed or inactive. Aborting setup.');
                 return;
             }
@@ -207,7 +203,7 @@ export class GameScene extends Phaser.Scene {
             }
             // หลัง await กลับมา เช็คอีกทีว่า Scene ยังอยู่ไหม
             // (ผู้เล่นอาจกดออกด่านระหว่างรอโหลด)
-            if (!this || !this.scene || !this.sys || !this.add) {
+            if (!this || !this.scene || !this.sys || !this.add || !this.sys.isActive() || !this.sys.displayList) {
                 console.warn('Scene was destroyed during preload. Aborting setup.');
                 return;
             }

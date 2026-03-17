@@ -39,7 +39,6 @@ const WeaponManagement = () => {
     weapon_name: '',
     description: '',
     combat_power: 0,
-    emoji: '',
     weapon_type: 'melee',
   });
 
@@ -116,7 +115,6 @@ const WeaponManagement = () => {
         weapon_name: weapon.weapon_name,
         description: weapon.description || '',
         combat_power: weapon.combat_power || 0,
-        emoji: weapon.emoji || '',
         weapon_type: weapon.weapon_type,
       });
     } else {
@@ -126,7 +124,6 @@ const WeaponManagement = () => {
         weapon_name: '',
         description: '',
         combat_power: 0,
-        emoji: '',
         weapon_type: 'melee',
       });
     }
@@ -143,7 +140,6 @@ const WeaponManagement = () => {
       weapon_name: '',
       description: '',
       combat_power: 0,
-      emoji: '',
       weapon_type: 'melee',
     });
   }, []);

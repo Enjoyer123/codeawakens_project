@@ -6,6 +6,8 @@ import { AlertCircle } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { LoadingState } from '@/components/shared/DataTableStates';
 import useUserStore from '../../store/useUserStore';
+import AlertDialog from '@/components/shared/dialog/AlertDialog';
+import { useAlertDialog } from '@/components/shared/dialog/useAlertDialog';
 import TestResultCard from '../../components/test/TestResultCard';
 import { getImageUrl } from '@/utils/imageUtils';
 import { useTestsByType, useSubmitTest } from '../../services/hooks/useTests';
@@ -39,11 +41,12 @@ const TestPage = () => {
     }
   }
 
-  // Local State
   const [answers, setAnswers] = useState({});
   const [result, setResult] = useState(null);
-  const [submitting, setSubmitting] = useState(false); // Can also use mutation.isPending
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  
+  const { alertDialog, showAlert } = useAlertDialog();
 
   // Derived State
   const isPreTest = type === 'pre';
@@ -89,46 +92,37 @@ const TestPage = () => {
   };
 
   const handleSubmit = async () => {
-    // Validate all questions answered?
     const questions = tests || [];
     const unansweredCount = questions.length - Object.keys(answers).length;
 
-    if (unansweredCount > 0) {
-      if (!window.confirm(`You have ${unansweredCount} unanswered questions. Are you sure you want to submit?`)) {
-        return;
+    const performSubmit = async () => {
+      try {
+        setSubmitting(true);
+        setError(null);
+
+        const answerArray = Object.entries(answers).map(([testId, choiceId]) => ({
+          test_id: parseInt(testId),
+          choice_id: choiceId
+        }));
+
+        const resultData = await submitTestMutation.mutateAsync({ type, answers: answerArray });
+        setResult(resultData);
+      } catch (err) {
+        setError('Failed to submit test. ' + (err.message || 'Unknown error'));
+      } finally {
+        setSubmitting(false);
       }
-    }
+    };
 
-    try {
-      setSubmitting(true);
-      setError(null);
-
-      const answerArray = Object.entries(answers).map(([testId, choiceId]) => ({
-        test_id: parseInt(testId),
-        choice_id: choiceId
-      }));
-
-      const resultData = await submitTestMutation.mutateAsync({ type, answers: answerArray });
-      setResult(resultData);
-
-      // We should ideally invalidate 'userProfile' to get new scores, 
-      // but submitTestMutation doesn't auto-invalidate 'userProfile' unless we update the hook.
-      // However, the component relies on the *returned* resultData for the immediate UI.
-      // And we updated the Store manually in the original code. 
-      // But now we rely on useProfile to sync store.
-      // So we should invalidate userProfile.
-      // Ideally useProfile hook invalidating logic should be in mutation success, 
-      // or we can just let the user navigate away.
-      // But for correctness immediately after submit if they stay:
-      // (The original code re-fetched profile manually).
-
-      // Let's rely on Profile sync effect if we invalidate queries? 
-      // Actually submitTest service probably updates backend.
-
-    } catch (err) {
-      setError('Failed to submit test. ' + (err.message || 'Unknown error'));
-    } finally {
-      setSubmitting(false);
+    if (unansweredCount > 0) {
+      showAlert(
+        'ยืนยันการส่งคำตอบ',
+        `You have ${unansweredCount} unanswered questions.\nAre you sure you want to submit?`,
+        performSubmit,
+        { showCancel: true }
+      );
+    } else {
+      performSubmit();
     }
   };
 
@@ -236,6 +230,7 @@ const TestPage = () => {
           </Button>
         </div>
       </div>
+      <AlertDialog {...alertDialog} />
     </div>
   );
 };

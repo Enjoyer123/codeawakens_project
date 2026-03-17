@@ -17,6 +17,7 @@ const PhaserMapEditor = ({
   selectedCategory,
   coinValue = 10,
   edgeWeight = 1,
+  showAlert
 }) => {
   const gameRef = useRef(null);
   const phaserGameRef = useRef(null);
@@ -98,7 +99,8 @@ const PhaserMapEditor = ({
     onSelectedNodeChange,
     onAddMonsterRequest,
     onEditEntityRequest,
-    redrawPhaser
+    redrawPhaser,
+    showAlert
   });
 
   // Define scene callbacks

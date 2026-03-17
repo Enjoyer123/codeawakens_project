@@ -8,7 +8,6 @@ import {
 } from '../game/gameState';
 import {
     showGameOver,
-    showVictory
 } from '../../effects/gameEffects';
 import { updatePlayer } from '../../phaser/player/phaserGamePlayer';
 import { resetEnemy } from '../../combat/enemyUtils';

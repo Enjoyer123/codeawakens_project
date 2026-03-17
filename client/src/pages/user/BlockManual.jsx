@@ -99,13 +99,13 @@ const VERIFIED_SYNTAX = {
 
 const CATEGORIES = [
     { id: 'all', label: 'All' },
-    { id: 'Movement', label: 'Movement' },
-    { id: 'Logic', label: 'Logic' },
-    { id: 'Loops', label: 'Loops' },
-    { id: 'Math', label: 'Math' },
-    { id: 'Lists', label: 'Lists' },
-    { id: 'Graph', label: 'Graph' },
-    { id: 'Visual', label: 'Visual' }
+    { id: 'movement', label: 'Movement' },
+    { id: 'logic', label: 'Logic' },
+    { id: 'conditions', label: 'Conditions' },
+    { id: 'loops', label: 'Loops' },
+    { id: 'functions', label: 'Functions' },
+    { id: 'variables', label: 'Variables' },
+    { id: 'operators', label: 'Operators' },
 ];
 
 const BlockManual = () => {

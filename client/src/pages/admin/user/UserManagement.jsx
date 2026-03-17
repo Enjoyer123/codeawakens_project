@@ -22,11 +22,14 @@ import { createDeleteErrorMessage } from '@/utils/errorHandler';
 import UserTable from '@/components/admin/user/UserTable';
 
 import PageError from '@/components/shared/Error/PageError';
+import AlertDialog from '@/components/shared/dialog/AlertDialog';
+import { useAlertDialog } from '@/components/shared/dialog/useAlertDialog';
 
 const UserManagement = () => {
   const { getToken } = useAuth();
   const { page, rowsPerPage, handlePageChange } = usePagination(1, 5);
   const [searchQuery, setSearchQuery] = useState('');
+  const { alertDialog, showAlert } = useAlertDialog();
 
   // TanStack Query Hooks
   const {
@@ -118,7 +121,7 @@ const UserManagement = () => {
       setResetDialogOpen(false);
       // Query invalidation handles refresh
     } catch (err) {
-      alert('Failed to reset: ' + err.message);
+      showAlert('Error', 'Failed to reset: ' + err.message);
     }
   };
 
@@ -222,6 +225,7 @@ const UserManagement = () => {
         user={selectedUserForHistory}
       // testHistory prop removed - modal handles fetching
       />
+      <AlertDialog {...alertDialog} />
     </div>
   );
 };

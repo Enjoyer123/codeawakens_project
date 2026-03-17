@@ -21,6 +21,8 @@ import MonsterSelectionDialog from '../../../components/admin/level/dialogs/Mons
 import EntityEditPopover from '../../../components/admin/level/editor/EntityEditPopover';
 import ErrorAlert from '@/components/shared/alert/ErrorAlert';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
+import AlertDialog from '@/components/shared/dialog/AlertDialog';
+import { useAlertDialog } from '@/components/shared/dialog/useAlertDialog';
 
 // Hooks
 import { useLevelData } from '../../../components/admin/level/hooks/useLevelData';
@@ -31,6 +33,9 @@ const LevelCreateEdit = () => {
   const { getToken } = useAuth();
   const { levelId } = useParams();
   const isEditing = !!levelId;
+
+  // --- 0. Shared Dialogs ---
+  const { alertDialog, showAlert } = useAlertDialog();
 
   // --- 1. Data Layer ---
   const {
@@ -63,7 +68,8 @@ const LevelCreateEdit = () => {
     levelId,
     isEditing,
     getToken,
-    navigate
+    navigate,
+    showAlert
   });
 
   // --- 3. UI State ---
@@ -75,7 +81,7 @@ const LevelCreateEdit = () => {
   const [patternListDialogOpen, setPatternListDialogOpen] = useState(false);
   const [monsterDialogOpen, setMonsterDialogOpen] = useState(false);
   const [selectedMonsterType, setSelectedMonsterType] = useState('vampire_1');
-  
+
   // Popover State
   const [editPopoverOpen, setEditPopoverOpen] = useState(false);
   const [editingEntity, setEditingEntity] = useState(null);
@@ -125,9 +131,8 @@ const LevelCreateEdit = () => {
   };
 
   const handleMonsterPlacementRequest = (x, y, clickedNode) => {
-    // 🛑 Enforce Node-only placement
     if (!clickedNode) {
-      alert('⚠️ Monster must be placed on a node (ตำแหน่งนี้ไม่ใช่ Node)');
+      showAlert('คำเตือน', '⚠️ Monster must be placed on a node (ตำแหน่งนี้ไม่ใช่ Node)');
       return;
     }
 
@@ -146,19 +151,19 @@ const LevelCreateEdit = () => {
   const handleEntitySave = (entity, updatedData) => {
     // 1. ตรวจสอบว่าเป็น node หรือไม่ (ตอนนี้เราอาจยังไม่รองรับแก้ node ผ่าน popover โดยตรง แต่กันไว้ก่อน)
     if (entity.type === 'node') {
-        const updatedNodes = formData.nodes.map(n => n.id === entity.id ? { ...n, ...updatedData } : n);
-        setFormData({ ...formData, nodes: updatedNodes });
-        return;
+      const updatedNodes = formData.nodes.map(n => n.id === entity.id ? { ...n, ...updatedData } : n);
+      setFormData({ ...formData, nodes: updatedNodes });
+      return;
     }
 
     // 2. ถ้าเป็น entities อื่นๆ ให้หาใน formData.map_entities ด้วย index แล้วแทนที่
     if (entity.index !== undefined && formData.map_entities) {
-        const updatedMapEntities = [...formData.map_entities];
-        updatedMapEntities[entity.index] = {
-            ...updatedMapEntities[entity.index],
-            ...updatedData
-        };
-        setFormData({ ...formData, map_entities: updatedMapEntities });
+      const updatedMapEntities = [...formData.map_entities];
+      updatedMapEntities[entity.index] = {
+        ...updatedMapEntities[entity.index],
+        ...updatedData
+      };
+      setFormData({ ...formData, map_entities: updatedMapEntities });
     }
   };
 
@@ -337,6 +342,7 @@ const LevelCreateEdit = () => {
                     selectedCategory={selectedCategory}
                     coinValue={coinValue}
                     edgeWeight={edgeWeight}
+                    showAlert={showAlert}
                   />
                 )}
 
@@ -377,6 +383,8 @@ const LevelCreateEdit = () => {
         entity={editingEntity}
         onSave={handleEntitySave}
       />
+
+      <AlertDialog {...alertDialog} />
     </div>
   );
 };

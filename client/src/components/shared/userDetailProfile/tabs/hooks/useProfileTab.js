@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { useUpdateUsername, useUploadProfileImage, useDeleteProfileImage } from '../../../../../services/hooks/useProfile';
 import { toast } from 'sonner';
 
-export const useProfileTab = ({ userDetails, getToken, onUpdateSuccess }) => {
+export const useProfileTab = ({ userDetails, getToken, onUpdateSuccess, showAlert }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [usernameInput, setUsernameInput] = useState(userDetails.user.username || '');
   const [usernameSuccess, setUsernameSuccess] = useState('');
@@ -92,21 +92,18 @@ export const useProfileTab = ({ userDetails, getToken, onUpdateSuccess }) => {
     }
   };
 
-  const handleDeleteImage = async () => {
-    if (!confirm('Are you sure you want to delete your profile image?')) {
-      return;
-    }
-
-    setImageSuccess('');
-
-    try {
-      await deleteImageAsync();
-      setImageSuccess('Profile image deleted successfully');
-      setTimeout(() => setImageSuccess(''), 3000);
-      if (onUpdateSuccess) onUpdateSuccess();
-    } catch (error) {
-      // Error handled by query hook state
-    }
+  const handleDeleteImage = () => {
+    showAlert?.('ยืนยันการลบรูป', 'Are you sure you want to delete your profile image?', async () => {
+      setImageSuccess('');
+      try {
+        await deleteImageAsync();
+        setImageSuccess('Profile image deleted successfully');
+        setTimeout(() => setImageSuccess(''), 3000);
+        if (onUpdateSuccess) onUpdateSuccess();
+      } catch (error) {
+        // Error handled by query hook state
+      }
+    }, { showCancel: true });
   };
 
   return {

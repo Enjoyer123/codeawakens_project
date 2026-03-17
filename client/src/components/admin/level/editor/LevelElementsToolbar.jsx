@@ -33,9 +33,9 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
   // --- Helper: set the algo monster type (upsert a single entry in formData.monsters) ---
   const setAlgoMonsterType = (type) => {
     const monsterTemplates = {
-      'vampire_1': { name: '🧛 Vampire', hp: 3, damage: 100, detectionRange: 80 },
-      'vampire_2': { name: '🧛 Vampire 2', hp: 3, damage: 100, detectionRange: 80 },
-      'vampire_3': { name: '🧛 Vampire 3', hp: 3, damage: 100, detectionRange: 80 },
+      'vampire_1': { name: 'Vampire', hp: 3, damage: 100, detectionRange: 80 },
+      'vampire_2': { name: 'Vampire 2', hp: 3, damage: 100, detectionRange: 80 },
+      'vampire_3': { name: 'Vampire 3', hp: 3, damage: 100, detectionRange: 80 },
     };
     const template = monsterTemplates[type] || monsterTemplates['vampire_1'];
 

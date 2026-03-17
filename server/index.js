@@ -18,6 +18,7 @@ const testCaseRouter = require("./routes/testCaseRoutes");
 const testRouter = require("./routes/testRoutes");
 const notificationRouter = require("./routes/NotificationRoute");
 const dashboardRouter = require("./routes/dashboardRoutes");
+const leaderboardRouter = require("./routes/leaderboardRoutes");
 const path = require("path");
 const { clerkMiddleware } = require("@clerk/express");
 const morgan = require("morgan");
@@ -30,14 +31,13 @@ app.use(
 
 // Morgan HTTP request logging for UAT evidence
 app.use(morgan("combined"));
-
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use('api/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(clerkMiddleware());
 
-app.use("/api/profile", profileRouter);
+// ─── API Routes ───
+app.use("/api", profileRouter);
 app.use("/api", adminUsersRouter);
 app.use("/api", weaponRouter);
 app.use("/api", levelRouter);
@@ -48,11 +48,11 @@ app.use("/api", blockRouter);
 app.use("/api", victoryConditionRouter);
 app.use("/api", levelCategoryRouter);
 app.use("/api", patternRouter);
-app.use("/api/test-cases", testCaseRouter);
-app.use("/api/tests", testRouter);
+app.use("/api", testCaseRouter);
+app.use("/api", testRouter);
 app.use("/api", notificationRouter);
-app.use("/api", require("./routes/leaderboardRoutes"));
 app.use("/api", dashboardRouter);
+app.use("/api", leaderboardRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello World - Server is running!");

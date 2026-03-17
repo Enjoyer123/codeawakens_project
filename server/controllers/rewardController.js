@@ -132,7 +132,6 @@ exports.createReward = async (req, res) => {
       reward_name,
       description,
       required_score,
-      is_automatic,
       frame1,
     } = req.body;
 
@@ -164,7 +163,6 @@ exports.createReward = async (req, res) => {
         reward_name,
         description: description || null,
         required_score: parseInt(required_score),
-        is_automatic: is_automatic === true || is_automatic === 'true',
         frame1: frame1 || null,
       },
       include: {
@@ -202,7 +200,6 @@ exports.updateReward = async (req, res) => {
       reward_name,
       description,
       required_score,
-      is_automatic,
       frame1,
     } = req.body;
 
@@ -235,7 +232,6 @@ exports.updateReward = async (req, res) => {
     if (reward_name !== undefined) updateData.reward_name = reward_name;
     if (description !== undefined) updateData.description = description;
     if (required_score !== undefined) updateData.required_score = parseInt(required_score);
-    if (is_automatic !== undefined) updateData.is_automatic = is_automatic === true || is_automatic === 'true';
     if (frame1 !== undefined) updateData.frame1 = frame1 || null;
 
     const reward = await prisma.reward.update({

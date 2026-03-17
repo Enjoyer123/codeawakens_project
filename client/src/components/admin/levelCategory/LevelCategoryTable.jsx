@@ -22,9 +22,7 @@ const LevelCategoryTable = ({ levelCategories, onEdit, onDelete, onManageImages 
             <th className={tableHeaderClassName}>Description</th>
             <th className={tableHeaderClassName}>Item Enable</th>
             <th className={tableHeaderClassName}>Items</th>
-
             <th className={tableHeaderClassName}>Image</th>
-
             <th className={tableHeaderClassName}>Block Key</th>
             <th className={tableHeaderClassName}>Actions</th>
           </tr>

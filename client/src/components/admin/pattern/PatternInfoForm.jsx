@@ -70,7 +70,7 @@ const PatternInfoForm = ({
             <option value="">-- ไม่ระบุ --</option>
             {weapons && weapons.map((weapon) => (
               <option key={weapon.weapon_id} value={weapon.weapon_id}>
-                {weapon.weapon_name} {weapon.emoji}
+                {weapon.weapon_name}
               </option>
             ))}
           </select>

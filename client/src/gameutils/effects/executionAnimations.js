@@ -31,7 +31,6 @@ export const playVictorySequence = async (currentLevel, initialScene) => {
 
     if (currentScene) {
         // 2. Determine configuration
-        const victoryType = currentLevel.goal_type === "ช่วยคน" ? 'rescue' : 'normal';
         const isCinematicLevel = !currentLevel.nodes || currentLevel.nodes.length === 0;
         const isGraphLevel = currentLevel.nodes && currentLevel.nodes.length > 0 && currentLevel.edges && currentLevel.edges.length > 0;
 
@@ -61,7 +60,7 @@ export const playVictorySequence = async (currentLevel, initialScene) => {
         }
 
         // 4. Show Victory Banner
-        showVictory(currentScene, victoryType);
+        showVictory(currentScene);
 
         // 5. Post-Banner Delay based on level type
         if (isCinematicLevel) {

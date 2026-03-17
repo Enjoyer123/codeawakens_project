@@ -17,17 +17,17 @@ const { choiceUploadMiddleware } = require("../middleware/testChoiceUpload");
 const requireAdmin = require("../middleware/requireAdmin");
 
 // Public/User routes
-router.get("/:type", authCheck, getTestsByType);
-router.post("/submit", authCheck, submitTest);
+router.get("/tests/:type", authCheck, getTestsByType);
+router.post("/tests/submit", authCheck, submitTest);
 
 // Admin routes
-router.get("/admin/all", authCheck, requireAdmin, getAllTests);
-router.post("/", authCheck, requireAdmin, createTest);
-router.put("/:id", authCheck, requireAdmin, updateTest);
-router.delete("/:id", authCheck, requireAdmin, deleteTest);
-router.delete("/choices/:id", authCheck, requireAdmin, deleteTestChoice);
+router.get("/tests/admin/all", authCheck, requireAdmin, getAllTests);
+router.post("/tests/", authCheck, requireAdmin, createTest);
+router.put("/tests/:id", authCheck, requireAdmin, updateTest);
+router.delete("/tests/:id", authCheck, requireAdmin, deleteTest);
+router.delete("/tests/choices/:id", authCheck, requireAdmin, deleteTestChoice);
 
-router.post("/upload-image", authCheck, requireAdmin, uploadMiddleware.single("image"), uploadTestImage);
-router.post("/upload-choice-image", authCheck, requireAdmin, choiceUploadMiddleware.single("image"), uploadChoiceImage);
+router.post("/tests/upload-image", authCheck, requireAdmin, uploadMiddleware.single("image"), uploadTestImage);
+router.post("/tests/upload-choice-image", authCheck, requireAdmin, choiceUploadMiddleware.single("image"), uploadChoiceImage);
 
 module.exports = router;

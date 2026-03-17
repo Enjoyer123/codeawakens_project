@@ -266,7 +266,6 @@ exports.saveUserProgress = async (req, res) => {
       attempts_count,
       blockly_code,
       text_code,
-      execution_time,
       best_score,
       pattern_bonus_score,
       is_correct,
@@ -363,7 +362,6 @@ exports.saveUserProgress = async (req, res) => {
         // ⭐ Update code and execution metadata ONLY when score is improved or equal
         updateData.blockly_code = blockly_code || existingProgress.blockly_code;
         updateData.text_code = text_code || existingProgress.text_code;
-        updateData.execution_time = execution_time !== undefined ? execution_time : existingProgress.execution_time;
         updateData.hp_remaining = hp_remaining !== undefined ? hp_remaining : existingProgress.hp_remaining;
         updateData.user_big_o = user_big_o !== undefined ? user_big_o : existingProgress.user_big_o;
       } else {
@@ -376,7 +374,6 @@ exports.saveUserProgress = async (req, res) => {
         // ⭐ Preserve existing best code and metadata
         updateData.blockly_code = existingProgress.blockly_code;
         updateData.text_code = existingProgress.text_code;
-        updateData.execution_time = existingProgress.execution_time;
         updateData.hp_remaining = existingProgress.hp_remaining;
         updateData.user_big_o = existingProgress.user_big_o;
       }
@@ -408,7 +405,6 @@ exports.saveUserProgress = async (req, res) => {
         attempts_count: attempts_count || 1,
         blockly_code: blockly_code || null,
         text_code: text_code || null,
-        execution_time: execution_time || null,
         best_score: newBestScore,
         pattern_bonus_score: pattern_bonus_score || 0,
         is_correct: is_correct || false,

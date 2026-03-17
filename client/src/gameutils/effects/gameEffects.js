@@ -1,4 +1,4 @@
-﻿// Phaser Game Effects Functions
+// Phaser Game Effects Functions
 import Phaser from "phaser";
 import { createRescueEffect, createFirework } from './victory';
 
@@ -107,7 +107,7 @@ export function clearGameOverScreen(scene) {
 }
 
 // Function to show Victory screen
-export function showVictory(scene, victoryType = 'normal') {
+export function showVictory(scene) {
   const victoryText = scene.add.text(scene.cameras.main.centerX, scene.cameras.main.centerY - 50,
     'VICTORY!', {
     fontSize: '48px',
@@ -121,21 +121,14 @@ export function showVictory(scene, victoryType = 'normal') {
   victoryText.setScrollFactor(0);
 
   let subtitleText;
-  if (victoryType === 'rescue') {
-    subtitleText = scene.add.text(scene.cameras.main.centerX, scene.cameras.main.centerY + 10,
-      'All people rescued and goal reached!', {
-      fontSize: '24px',
-      color: '#00ff00',
-      fontStyle: 'bold'
-    });
-  } else {
-    subtitleText = scene.add.text(scene.cameras.main.centerX, scene.cameras.main.centerY + 10,
-      'All enemies defeated and goal reached!', {
-      fontSize: '24px',
-      color: '#ffffff',
-      fontStyle: 'bold'
-    });
-  }
+
+  subtitleText = scene.add.text(scene.cameras.main.centerX, scene.cameras.main.centerY + 10,
+    'Well Done, Mission Complete!', {
+    fontSize: '24px',
+    color: '#ffffff',
+    fontStyle: 'bold'
+  });
+
   subtitleText.setOrigin(0.5);
   subtitleText.setDepth(200);
   subtitleText.setScrollFactor(0);
@@ -158,34 +151,11 @@ export function showVictory(scene, victoryType = 'normal') {
     repeat: -1
   });
 
-  // เพิ่มเอฟเฟกต์พิเศษสำหรับด่านช่วยคน
-  if (victoryType === 'rescue') {
-    // แสดงข้อความพิเศษสำหรับการช่วยคน
-    const rescueMessage = scene.add.text(scene.cameras.main.centerX, scene.cameras.main.centerY + 50,
-      '🎉 Mission Accomplished! 🎉', {
-      fontSize: '20px',
-      color: '#00ff00',
-      fontStyle: 'bold',
-      stroke: '#000000',
-      strokeThickness: 2
-    });
-    rescueMessage.setOrigin(0.5);
-    rescueMessage.setDepth(200);
-    rescueMessage.setScrollFactor(0);
-
-    // เอฟเฟกต์พิเศษสำหรับการช่วยคน
-    scene.time.addEvent({
-      delay: 300,
-      callback: () => createRescueEffect(scene),
-      repeat: 8
-    });
-  } else {
-    // เอฟเฟกต์ปกติ
-    scene.time.addEvent({
-      delay: 500,
-      callback: () => createFirework(scene),
-      repeat: 10
-    });
-  }
+  // เอฟเฟกต์ปกติ
+  scene.time.addEvent({
+    delay: 500,
+    callback: () => createFirework(scene),
+    repeat: 10
+  });
 }
 

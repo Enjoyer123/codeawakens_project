@@ -75,7 +75,6 @@ const RewardManagement = () => {
     reward_name: '',
     description: '',
     required_score: 0,
-    is_automatic: false,
   });
 
   // Delete states
@@ -106,7 +105,6 @@ const RewardManagement = () => {
         reward_name: reward.reward_name,
         description: reward.description || '',
         required_score: reward.required_score,
-        is_automatic: reward.is_automatic,
       });
     } else {
       setEditingReward(null);
@@ -116,7 +114,6 @@ const RewardManagement = () => {
         reward_name: '',
         description: '',
         required_score: 0,
-        is_automatic: false,
       });
     }
     // setSaveError(null);
@@ -133,7 +130,6 @@ const RewardManagement = () => {
       reward_name: '',
       description: '',
       required_score: 0,
-      is_automatic: false,
     });
   }, []);
 

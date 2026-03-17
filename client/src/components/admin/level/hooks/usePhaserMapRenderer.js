@@ -70,7 +70,7 @@ export const usePhaserMapRenderer = ({
       // Node Fill
       const nodeColor = isStart ? 0x10b981 : isGoal ? 0xf59e0b : isSelected ? 0xfbbf24 : 0x667eea;
       graphics.fillStyle(nodeColor, 1).fillCircle(node.x, node.y, 18);
-      
+
       // Border
       graphics.lineStyle(3, 0xffffff, 1).strokeCircle(node.x, node.y, 18);
 
@@ -90,14 +90,14 @@ export const usePhaserMapRenderer = ({
       const y = monster.y || nodes.find(n => n.id === monster.startNode)?.y;
       if (!x || !y) return;
 
-      const keysMap = { vampire_2: 'vampire_2', vampire_3: 'vampire_3', slime_1: 'slime_1' };
+      const keysMap = { vampire_2: 'vampire_2', vampire_3: 'vampire_3' };
       const textureKey = keysMap[monster.type] || 'vampire_1';
 
       const shadow = scene.add.image(x + 2, y + 2, textureKey)
         .setDisplaySize(50, 50).setTint(0x000000).setAlpha(0.3).setDepth(DEPTH.MONSTER_SHADOW);
       const sprite = scene.add.image(x, y, textureKey)
         .setDisplaySize(50, 50).setDepth(DEPTH.MONSTERS);
-      
+
       overlayObjectsRef.current.push(shadow, sprite);
     });
   };
@@ -105,7 +105,7 @@ export const usePhaserMapRenderer = ({
   const drawCoins = (graphics, scene, coins) => {
     coins.forEach(coin => {
       if (coin.x == null || coin.y == null) return;
-      
+
       graphics.fillStyle(0x000000, 0.3).fillCircle(coin.x + 2, coin.y + 2, 12);
       graphics.fillStyle(0xffd700, 1).fillCircle(coin.x, coin.y, 12);
       graphics.lineStyle(2, 0xffffff, 1).strokeCircle(coin.x, coin.y, 12);
@@ -127,10 +127,10 @@ export const usePhaserMapRenderer = ({
       pGraph.fillStyle(0x000000, 0.3).fillCircle(person.x + 2, person.y + 2, 12);
       pGraph.fillStyle(0x3b82f6, 1).fillCircle(person.x, person.y, 12);
       pGraph.lineStyle(2, 0xffffff, 1).strokeCircle(person.x, person.y, 12);
-      
+
       const icon = scene.add.text(person.x, person.y, '👤', { fontSize: '14px' });
       icon.setOrigin(0.5).setDepth(DEPTH.TEXT_OVERLAYS + 1);
-      
+
       overlayObjectsRef.current.push(pGraph, icon);
     });
   };
@@ -147,7 +147,7 @@ export const usePhaserMapRenderer = ({
         graphics.fillStyle(0x000000, 0.8).beginPath().moveTo(obstacle.points[0].x, obstacle.points[0].y);
         for (let i = 1; i < obstacle.points.length; i++) graphics.lineTo(obstacle.points[i].x, obstacle.points[i].y);
         graphics.closePath().fillPath();
-        
+
         // Settings & Corners
         graphics.lineStyle(3, 0x8b4513, 1).strokePath().fillStyle(0xffff00, 1);
         obstacle.points.forEach(p => {
@@ -166,7 +166,7 @@ export const usePhaserMapRenderer = ({
   const drawPreviewSelection = (graphics) => {
     if (!isDraggingObstacleRef.current || !obstacleDragStartRef.current || !obstacleDragEndRef.current) return;
     const start = obstacleDragStartRef.current, end = obstacleDragEndRef.current;
-    
+
     // Calculate Rect Frame
     const minX = Math.min(start.x, end.x), maxX = Math.max(start.x, end.x);
     const minY = Math.min(start.y, end.y), maxY = Math.max(start.y, end.y);
@@ -181,7 +181,7 @@ export const usePhaserMapRenderer = ({
 
     const data = formDataRef.current;
     const scene = graphics.scene;
-    
+
     // Group Entities by type
     const entities = data.map_entities || [];
     const entityGroups = { MONSTER: [], COIN: [], PEOPLE: [], OBSTACLE: [] };
@@ -190,7 +190,7 @@ export const usePhaserMapRenderer = ({
     // Cleanup previous overlays and wipe board
     clearOverlays();
     graphics.clear();
-    
+
     // Render pipeline
     drawGrid(graphics, canvasSize.width, canvasSize.height);
     drawEdges(graphics, scene, data.edges, data.nodes);
@@ -202,9 +202,9 @@ export const usePhaserMapRenderer = ({
     drawPreviewSelection(graphics);
 
   }, [
-    canvasSize, formDataRef, selectedNodeRef, phaserGraphicsRef, 
+    canvasSize, formDataRef, selectedNodeRef, phaserGraphicsRef,
     isDraggingObstacleRef, obstacleDragStartRef, obstacleDragEndRef
-  ]); 
+  ]);
 
   return { redrawPhaser };
 };

@@ -7,7 +7,8 @@ export const usePatternForm = ({
     patternData,
     patternTypes,
     onSaveSuccess,
-    isEditMode
+    isEditMode,
+    showAlert
 }) => {
     // Form State
     const [patternName, setPatternName] = useState('');
@@ -30,12 +31,12 @@ export const usePatternForm = ({
 
     const handleSave = async (finalSteps, workspaceXml) => {
         if (!patternName.trim()) {
-            alert('กรุณากรอกชื่อ');
+            showAlert?.('กรุณากรอกข้อมูล', 'กรุณากรอกชื่อ Pattern');
             return;
         }
 
         if (finalSteps.length === 0) {
-            alert('ต้องมีอย่างน้อย 1 Step');
+            showAlert?.('กรุณากรอกข้อมูล', 'ต้องมีอย่างน้อย 1 Step');
             return;
         }
 
@@ -87,7 +88,7 @@ export const usePatternForm = ({
 
         } catch (err) {
             console.error("Save failed", err);
-            alert('บันทึกไม่สำเร็จ: ' + err.message);
+            showAlert?.('บันทึกไม่สำเร็จ', err.message);
         }
     };
 
