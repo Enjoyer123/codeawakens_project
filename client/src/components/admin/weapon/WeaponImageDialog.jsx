@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
@@ -11,23 +12,82 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader } from '@/components/ui/loader';
 import { Plus, Trash2, X } from 'lucide-react';
+import { toast } from 'sonner';
+import { useAddWeaponImage, useDeleteWeaponImage } from '@/services/hooks/useWeapons';
 
 const WeaponImageDialog = ({
   open,
   onOpenChange,
   selectedWeapon,
-  imageForm,
-  onImageFormChange,
-  uploadingImage,
-  deletingImageId,
-  onAddImage,
-  onDeleteImage,
   getImageUrl,
 }) => {
+  const [imageForm, setImageForm] = useState({
+    type_animation: 'weapon',
+    type_file: 'idle',
+    frame: 1,
+    imageFile: null
+  });
+
+  const { mutateAsync: addImageAsync, isPending: isUploading } = useAddWeaponImage();
+  const { mutateAsync: deleteImageAsync, isPending: isDeleting } = useDeleteWeaponImage();
+  const [deletingId, setDeletingId] = useState(null);
+
   const handleImageFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      onImageFormChange({ ...imageForm, imageFile: file });
+    setImageForm({ ...imageForm, imageFile: file });
+
+  };
+
+  const handleAddImage = async () => {
+    if (!selectedWeapon) return;
+
+    if (!imageForm.imageFile) {
+      toast.error('กรุณาเลือกไฟล์รูปภาพ');
+      return;
+    }
+
+    try {
+      await addImageAsync({
+        weaponId: selectedWeapon.weapon_id,
+        imageFile: imageForm.imageFile,
+        imageData: {
+          type_file: imageForm.type_file,
+          type_animation: imageForm.type_animation,
+          frame: imageForm.type_animation === 'weapon' ? 1 : imageForm.frame
+        }
+      });
+
+      // Reset form on success
+      setImageForm({
+        type_animation: 'weapon',
+        type_file: 'idle',
+        frame: 1,
+        imageFile: null
+      });
+
+      // Clear file input
+      const fileInput = document.getElementById('weapon-image-upload');
+      if (fileInput) fileInput.value = '';
+
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message || 'Error uploading image');
+    }
+  };
+
+  const handleDeleteImage = async (fileId) => {
+    if (!selectedWeapon) return;
+    try {
+      setDeletingId(fileId);
+      await deleteImageAsync({
+        weaponId: selectedWeapon.weapon_id,
+        fileId: fileId
+      });
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to delete image');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -55,7 +115,7 @@ const WeaponImageDialog = ({
                     const newTypeAnim = e.target.value;
                     const newTypeFile = newTypeAnim === 'weapon' ? 'idle' : 'attack';
                     const newFrame = newTypeAnim === 'weapon' ? 1 : imageForm.frame;
-                    onImageFormChange({
+                    setImageForm({
                       ...imageForm,
                       type_animation: newTypeAnim,
                       type_file: newTypeFile,
@@ -75,13 +135,14 @@ const WeaponImageDialog = ({
                     type="number"
                     min="1"
                     value={imageForm.frame}
-                    onChange={(e) => onImageFormChange({ ...imageForm, frame: parseInt(e.target.value) || 1 })}
+                    onChange={(e) => setImageForm({ ...imageForm, frame: parseInt(e.target.value) || 1 })}
                   />
                 </div>
               )}
               <div>
                 <label className="text-sm font-medium">Image File</label>
                 <Input
+                  id="weapon-image-upload"
                   type="file"
                   accept="image/*"
                   onChange={handleImageFileChange}
@@ -92,15 +153,19 @@ const WeaponImageDialog = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => onImageFormChange({ ...imageForm, imageFile: null })}
+                      onClick={() => {
+                        setImageForm({ ...imageForm, imageFile: null });
+                        const fileInput = document.getElementById('weapon-image-upload');
+                        if (fileInput) fileInput.value = '';
+                      }}
                     >
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
                 )}
               </div>
-              <Button onClick={onAddImage} className="w-full" disabled={uploadingImage}>
-                {uploadingImage ? (
+              <Button onClick={handleAddImage} className="w-full" disabled={isUploading}>
+                {isUploading ? (
                   <>
                     <Loader className="h-4 w-4 mr-2" />
                     กำลังอัปโหลด...
@@ -162,10 +227,10 @@ const WeaponImageDialog = ({
                                 variant="destructive"
                                 size="sm"
                                 className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={() => onDeleteImage(img.file_id)}
-                                disabled={deletingImageId === img.file_id}
+                                onClick={() => handleDeleteImage(img.file_id)}
+                                disabled={deletingId === img.file_id || isDeleting}
                               >
-                                {deletingImageId === img.file_id ? (
+                                {deletingId === img.file_id ? (
                                   <Loader className="h-3 w-3" />
                                 ) : (
                                   <Trash2 className="h-3 w-3" />

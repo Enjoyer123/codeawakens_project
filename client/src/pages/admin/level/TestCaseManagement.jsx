@@ -32,10 +32,9 @@ const TestCaseManagement = () => {
     const testCases = testCasesData || [];
 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [dialogOpen, setDialogOpen] = useState(false);
     const [editingTestCase, setEditingTestCase] = useState(null);
     const [testCaseToDelete, setTestCaseToDelete] = useState(null);
-    const [deleting, setDeleting] = useState(false);
+    const [dialogOpen, setDialogOpen] = useState(false);
 
     const handleOpenDialog = useCallback((testCase = null) => {
         setEditingTestCase(testCase);
@@ -55,15 +54,12 @@ const TestCaseManagement = () => {
     const handleDeleteConfirm = useCallback(async () => {
         if (!testCaseToDelete) return;
         try {
-            setDeleting(true);
             await deleteTestCaseMutation.mutateAsync(testCaseToDelete.test_case_id);
             toast.success('ลบ Test Case สำเร็จ');
             setDeleteDialogOpen(false);
             setTestCaseToDelete(null);
         } catch (err) {
             toast.error('ไม่สามารถลบ Test Case ได้: ' + (err.message || 'Unknown error'));
-        } finally {
-            setDeleting(false);
         }
     }, [testCaseToDelete, deleteTestCaseMutation]);
 
@@ -103,11 +99,20 @@ const TestCaseManagement = () => {
 
                 <DeleteConfirmDialog
                     open={deleteDialogOpen}
-                    onOpenChange={setDeleteDialogOpen}
+                    onOpenChange={(open) => {
+                        if (!deleteTestCaseMutation.isPending) {
+                            setDeleteDialogOpen(open);
+                            setTestCaseToDelete(null);
+                        }
+                    }}
                     onConfirm={handleDeleteConfirm}
-                    itemName={testCaseToDelete?.test_case_name}
                     title="ยืนยันการลบ Test Case"
-                    deleting={deleting}
+                    itemName={testCaseToDelete?.test_case_name}
+                    description={`คุณต้องการลบ Test Case "${testCaseToDelete?.test_case_name}" ใช่หรือไม่? ฟาดฟันนี้ไม่สามารถย้อนกลับได้`}
+                    confirmText="ลบ Test Case"
+                    cancelText="ยกเลิก"
+                    variant="destructive"
+                    deleting={deleteTestCaseMutation.isPending}
                 />
             </div>
         </div>

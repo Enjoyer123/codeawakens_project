@@ -1,13 +1,8 @@
-import { useState, useCallback, useEffect } from 'react';
-import { useAuth } from '@clerk/clerk-react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useCallback } from 'react';
+import { toast } from 'sonner';
 import {
   useLevelCategories,
-  useCreateLevelCategory,
-  useUpdateLevelCategory,
   useDeleteLevelCategory,
-  useUploadCategoryBackground,
-  useDeleteCategoryBackground
 } from '../../../services/hooks/useLevelCategories';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
@@ -18,7 +13,7 @@ import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import LevelCategoryFormDialog from '@/components/admin/addEditDialog/LevelCategoryFormDialog';
 import LevelCategoryImageDialog from '@/components/admin/imageDialog/LevelCategoryImageDialog';
 import { usePagination } from '@/hooks/usePagination';
-import { createDeleteErrorMessage } from '@/utils/errorHandler';
+
 import LevelCategoryTable from '@/components/admin/levelCategory/LevelCategoryTable';
 import { getImageUrl } from '@/utils/imageUtils';
 
@@ -41,35 +36,14 @@ const LevelCategoryManagement = () => {
   }
 
   // Mutations
-  const { mutateAsync: createCategoryAsync } = useCreateLevelCategory();
-  const { mutateAsync: updateCategoryAsync } = useUpdateLevelCategory();
   const { mutateAsync: deleteCategoryAsync, isPending: deleting } = useDeleteLevelCategory();
-  const { mutateAsync: uploadImageAsync, isPending: uploadingImage } = useUploadCategoryBackground();
-  const { mutateAsync: deleteImageAsync, isPending: deletingImage } = useDeleteCategoryBackground();
 
-  // Derived state
-  // Filter locally if API doesn't support pagination, OR rely on API if it does.
-  // The service passes 'search' to API. 
-  // However, `useLevelCategories` hook in my implementation calls `fetchAllLevelCategories(getToken, search)`.
-  // `levelCategoryService.js` fetches ALL (no page/limit params sent, only search).
-  // So we must handle pagination CLIENT-SIDE for now, OR update service to support pagination.
-  // The original component code shows `setPagination(data.pagination || { ... })`.
-  // Wait, `levelCategoryService.js` (step 226) DOES NOT send page/limit.
-  // But `LevelCategoryManagement.jsx` (step 285, line 75-81) expects `data.pagination`.
-  // If `levelCategoryService.js` returns all data, `data.pagination` might be undefined.
-  // If the API returns all data, we should paginate locally.
-  // The original code implies it expected pagination but maybe the API didn't support it strictly?
-  // Let's assume we get all categories and paginate locally.
-
+  // Client-side pagination (API returns all categories)
   const allCategories = categoriesData?.levelCategories || [];
-  // Client-side pagination logic if API returns all
   const startIndex = (page - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
   const paginatedCategories = allCategories.slice(startIndex, endIndex);
 
-  // If the API DOES return pagination (e.g. if I missed it in service), use it.
-  // But strictly looking at `levelCategoryService.js`, it only sends `search`.
-  // So client-side pagination is safer.
 
   const pagination = {
     total: allCategories.length,
@@ -81,15 +55,6 @@ const LevelCategoryManagement = () => {
   // Level Category form states
   const [levelCategoryDialogOpen, setLevelCategoryDialogOpen] = useState(false);
   const [editingLevelCategory, setEditingLevelCategory] = useState(null);
-  const [levelCategoryForm, setLevelCategoryForm] = useState({
-    category_name: '',
-    description: '',
-    item_enable: false,
-    item: null,
-    difficulty_order: 1,
-    block_key: null,
-  });
-  const [saveError, setSaveError] = useState(null);
 
   // Delete states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -106,134 +71,16 @@ const LevelCategoryManagement = () => {
   }, [handlePageChange]);
 
   const handleOpenLevelCategoryDialog = useCallback((levelCategory = null) => {
-    if (levelCategory) {
-      setEditingLevelCategory(levelCategory);
-      // Convert block_key to comma-separated format for easier editing
-      let blockKeyDisplay = '';
-      if (levelCategory.block_key) {
-        if (Array.isArray(levelCategory.block_key)) {
-          blockKeyDisplay = levelCategory.block_key.join(', ');
-        } else if (typeof levelCategory.block_key === 'object') {
-          // If it's an object, convert to JSON string
-          blockKeyDisplay = JSON.stringify(levelCategory.block_key, null, 2);
-        } else {
-          blockKeyDisplay = String(levelCategory.block_key);
-        }
-      }
-
-      // Get items from category_items relation
-      const items = levelCategory.category_items?.map(ci => ci.item_type) || [];
-
-      setLevelCategoryForm({
-        category_name: levelCategory.category_name,
-        description: levelCategory.description || '',
-        item_enable: levelCategory.item_enable || false,
-        item: items,
-        difficulty_order: levelCategory.difficulty_order,
-        block_key: blockKeyDisplay,
-      });
-    } else {
-      setEditingLevelCategory(null);
-      // Get max difficulty_order to suggest next order
-      const maxOrder = allCategories.length > 0
-        ? Math.max(...allCategories.map(c => c.difficulty_order))
-        : 0;
-      setLevelCategoryForm({
-        category_name: '',
-        description: '',
-        item_enable: false,
-        item: null,
-        difficulty_order: maxOrder + 1,
-        block_key: '',
-      });
-    }
-    setSaveError(null);
+    setEditingLevelCategory(levelCategory);
     setLevelCategoryDialogOpen(true);
-  }, [allCategories]);
+  }, []);
 
   const handleCloseLevelCategoryDialog = useCallback(() => {
     setLevelCategoryDialogOpen(false);
     setEditingLevelCategory(null);
-    setSaveError(null);
-    setLevelCategoryForm({
-      category_name: '',
-      description: '',
-      item_enable: false,
-      item: null,
-      difficulty_order: 1,
-      block_key: null,
-      background_image: null,
-    });
   }, []);
 
-  const handleSaveLevelCategory = useCallback(async () => {
-    setSaveError(null);
-
-    // Handle block_key - support both comma-separated and JSON format
-    let blockKeyValue = null;
-    if (levelCategoryForm.block_key && levelCategoryForm.block_key.trim()) {
-      const trimmedValue = levelCategoryForm.block_key.trim();
-
-      // Try to parse as JSON first
-      try {
-        blockKeyValue = JSON.parse(trimmedValue);
-      } catch (jsonError) {
-        // If not valid JSON, treat as comma-separated string
-        // Split by comma and trim each item
-        const items = trimmedValue
-          .split(',')
-          .map(item => item.trim())
-          .filter(item => item.length > 0);
-
-        if (items.length > 0) {
-          blockKeyValue = items;
-        } else {
-          blockKeyValue = null;
-        }
-      }
-    }
-
-    // Handle item - ensure it's an array or null
-    let itemValue = null;
-    if (levelCategoryForm.item_enable && levelCategoryForm.item) {
-      if (Array.isArray(levelCategoryForm.item)) {
-        itemValue = levelCategoryForm.item.length > 0 ? levelCategoryForm.item : null;
-      } else {
-        itemValue = [levelCategoryForm.item];
-      }
-    }
-
-    const formData = {
-      ...levelCategoryForm,
-      category_name: levelCategoryForm.category_name.trim(),
-      description: levelCategoryForm.description.trim(),
-
-      item: itemValue,
-      difficulty_order: parseInt(levelCategoryForm.difficulty_order),
-      block_key: blockKeyValue,
-    };
-
-    try {
-      if (editingLevelCategory) {
-        await updateCategoryAsync({
-          categoryId: editingLevelCategory.category_id,
-          data: formData
-        });
-      } else {
-        await createCategoryAsync(formData);
-      }
-      handleCloseLevelCategoryDialog();
-      return { success: true };
-    } catch (err) {
-      const errorMessage = 'ไม่สามารถบันทึก topic ได้: ' +
-        (err.message || 'Unknown error');
-      setSaveError(errorMessage);
-      return { success: false, error: errorMessage };
-    }
-  }, [levelCategoryForm, editingLevelCategory, updateCategoryAsync, createCategoryAsync, handleCloseLevelCategoryDialog]);
-
   const handleDeleteClick = useCallback((levelCategory) => {
-    setLevelCategoryToDelete(levelCategory);
     setLevelCategoryToDelete(levelCategory);
     setDeleteDialogOpen(true);
   }, []);
@@ -245,8 +92,10 @@ const LevelCategoryManagement = () => {
       await deleteCategoryAsync(levelCategoryToDelete.category_id);
       setDeleteDialogOpen(false);
       setLevelCategoryToDelete(null);
+      toast.success('ลบหัวข้อสำเร็จ');
     } catch (err) {
       console.error(err);
+      toast.error('ไม่สามารถลบหัวข้อได้: ' + (err.message || 'Unknown error'));
     }
   }, [levelCategoryToDelete, deleteCategoryAsync]);
 
@@ -276,42 +125,6 @@ const LevelCategoryManagement = () => {
     }
   }, []);
 
-  const handleUploadImage = useCallback(async (imageFile) => {
-    if (!selectedCategory || !imageFile) {
-      setImageError('กรุณาเลือกไฟล์รูปภาพ');
-      return;
-    }
-
-    try {
-      setImageError(null);
-      await uploadImageAsync({ categoryId: selectedCategory.category_id, file: imageFile });
-
-      // Update selected category state to reflect changes immediately
-      // The query cache is already invalidated, but to update the local `selectedCategory` needed for the dialog:
-      // We can try to find it in the new data or just close/refresh.
-      // But query update is async.
-      // Simple fix: Close dialog or rely on query re-render if `selectedCategory` uses ID? 
-      // The dialog uses `selectedCategory` object passed in.
-      // We might need to fetch the single category to get the new image URL, OR just trust query invalidation updates the LIST, 
-      // and we need to re-find the category from the list.
-      // But for now let's just let it be, often list update is enough.
-
-    } catch (err) {
-      setImageError('ไม่สามารถอัปโหลดรูปภาพได้: ' + (err.message || 'Unknown error'));
-    }
-  }, [selectedCategory, uploadImageAsync]);
-
-  const handleDeleteImage = useCallback(async () => {
-    if (!selectedCategory) return;
-
-    try {
-      setImageError(null);
-      await deleteImageAsync(selectedCategory.category_id);
-    } catch (err) {
-      setImageError('ไม่สามารถลบรูปภาพได้: ' + (err.message || 'Unknown error'));
-    }
-  }, [selectedCategory, deleteImageAsync]);
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -322,11 +135,6 @@ const LevelCategoryManagement = () => {
           addButtonText="เพิ่มหัวข้อ"
         />
 
-        {/* Save error moved to inside dialog usually, but here it's global? */}
-        {/* The dialog component probably displays its own errors or we pass it? */}
-        {/* Looking at dialog usage below, we pass `onSave`. The dialog might handle error display? */}
-        {/* But we have `setSaveError` here, so we display it here. */}
-        <ErrorAlert message={saveError} />
         <ErrorAlert message={imageError} />
 
         <SearchInput
@@ -366,19 +174,13 @@ const LevelCategoryManagement = () => {
           open={levelCategoryDialogOpen}
           onOpenChange={handleCloseLevelCategoryDialog}
           editingLevelCategory={editingLevelCategory}
-          formData={levelCategoryForm}
-          onFormChange={setLevelCategoryForm}
-          onSave={handleSaveLevelCategory}
+          maxOrder={allCategories.length > 0 ? Math.max(...allCategories.map(c => c.difficulty_order)) : 0}
         />
 
         <LevelCategoryImageDialog
           open={imageDialogOpen}
           onOpenChange={handleImageDialogChange}
           selectedCategory={selectedCategory}
-          uploading={uploadingImage}
-          deleting={deletingImage}
-          onUpload={handleUploadImage}
-          onDelete={handleDeleteImage}
           getImageUrl={getImageUrl}
         />
 

@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useAuth } from '@clerk/clerk-react';
-import { UserButton } from '@clerk/clerk-react';
+import { toast } from 'sonner';
 
 import {
   useUsers,
@@ -14,11 +13,10 @@ import UserDetailsModal from '@/components/shared/userDetailProfile/UserDetailsM
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import SearchInput from '@/components/admin/formFields/SearchInput';
-import ErrorAlert from '@/components/shared/alert/ErrorAlert';
 import PaginationControls from '@/components/shared/pagination/PaginationControls';
 import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import { usePagination } from '@/hooks/usePagination';
-import { createDeleteErrorMessage } from '@/utils/errorHandler';
+
 import UserTable from '@/components/admin/user/UserTable';
 
 import PageError from '@/components/shared/Error/PageError';
@@ -26,7 +24,6 @@ import AlertDialog from '@/components/shared/dialog/AlertDialog';
 import { useAlertDialog } from '@/components/shared/dialog/useAlertDialog';
 
 const UserManagement = () => {
-  const { getToken } = useAuth();
   const { page, rowsPerPage, handlePageChange } = usePagination(1, 5);
   const [searchQuery, setSearchQuery] = useState('');
   const { alertDialog, showAlert } = useAlertDialog();
@@ -77,9 +74,11 @@ const UserManagement = () => {
   const handleRoleChange = useCallback(async (userId, newRole) => {
     try {
       await updateUserRoleAsync({ userId, role: newRole });
+      toast.success('อัปเดตบทบาทสำเร็จ');
       // Query invalidation handles refresh
     } catch (err) {
       console.error(err);
+      toast.error('อัปเดตบทบาทไม่สำเร็จ: ' + (err.message || 'Unknown error'));
     }
   }, [updateUserRoleAsync]);
 
@@ -101,9 +100,11 @@ const UserManagement = () => {
       await deleteUserAsync(userId);
       setDeleteDialogOpen(false);
       setUserToDelete(null);
+      toast.success('ลบผู้ใช้สำเร็จ');
       // Query invalidation handles refresh
     } catch (err) {
       console.error(err);
+      toast.error('ไม่สามารถลบผู้ใช้ได้: ' + (err.message || 'Unknown error'));
     }
   }, [userToDelete, deleteUserAsync]);
 

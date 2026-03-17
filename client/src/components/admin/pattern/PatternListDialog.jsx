@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useAuth } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
 import { usePatterns, useDeletePattern } from '@/services/hooks/usePattern';
 import { Button } from '@/components/ui/button';
@@ -16,7 +15,6 @@ import PatternInfoDialog from '@/components/admin/pattern/PatternInfoDialog';
 import ContentLoader from '@/components/shared/Loading/ContentLoader';
 
 const PatternListDialog = ({ open, onOpenChange, levelId, levelName }) => {
-  const { getToken } = useAuth();
   const navigate = useNavigate();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [patternToDelete, setPatternToDelete] = useState(null);
@@ -112,8 +110,8 @@ const PatternListDialog = ({ open, onOpenChange, levelId, levelName }) => {
                           {pattern.pattern_name}
                         </h3>
                         <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full ${pattern.is_available
-                            ? 'bg-green-100 text-green-700 border border-green-200'
-                            : 'bg-red-100 text-red-700 border border-red-200'
+                          ? 'bg-green-100 text-green-700 border border-green-200'
+                          : 'bg-red-100 text-red-700 border border-red-200'
                           }`}>
                           {pattern.is_available ? '🟢 ปลดล็อคแล้ว' : '🔴 ยังไม่ปลดล็อค'}
                         </span>

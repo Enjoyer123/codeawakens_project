@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "@clerk/clerk-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -25,7 +24,6 @@ const TestCreateEditModal = ({
     activeTab, // to set default type
     onSuccess
 }) => {
-    const { getToken } = useAuth();
     const [formData, setFormData] = useState({
         question: '',
         description: '',
@@ -225,8 +223,10 @@ const TestCreateEditModal = ({
                     id: testToEdit.test_id,
                     testData: dataToSave
                 });
+                toast.success('อัปเดตคำถามสำเร็จ');
             } else {
                 await createTestMutation.mutateAsync(dataToSave);
+                toast.success('สร้างคำถามสำเร็จ');
             }
 
             setSaving(false);

@@ -13,7 +13,6 @@ const PhaserMapEditor = ({
   onFormDataChange,
   onSelectedNodeChange,
   onAddMonsterRequest,
-  onEditEntityRequest,
   selectedCategory,
   coinValue = 10,
   edgeWeight = 1,
@@ -98,7 +97,6 @@ const PhaserMapEditor = ({
     onFormDataChange,
     onSelectedNodeChange,
     onAddMonsterRequest,
-    onEditEntityRequest,
     redrawPhaser,
     showAlert
   });

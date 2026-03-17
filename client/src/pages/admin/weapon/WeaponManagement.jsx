@@ -1,14 +1,8 @@
-import { useState, useCallback, useEffect } from 'react';
-import { useAuth } from '@clerk/clerk-react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import {
   useWeapons,
-  useCreateWeapon,
-  useUpdateWeapon,
   useDeleteWeapon,
-  useAddWeaponImage,
-  useDeleteWeaponImage,
 } from '../../../services/hooks/useWeapons';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
@@ -19,45 +13,25 @@ import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import WeaponImageDialog from '../../../components/admin/weapon/WeaponImageDialog';
 import WeaponFormDialog from '@/components/admin/addEditDialog/WeaponFormDialog';
 import { usePagination } from '@/hooks/usePagination';
+import { useImageDialog } from '@/hooks/useImageDialog';
 import { getImageUrl } from '@/utils/imageUtils';
-import { createDeleteErrorMessage } from '@/utils/errorHandler';
+
 import WeaponTable from '@/components/admin/weapon/WeaponTable';
 
 import PageError from '@/components/shared/Error/PageError';
 
 const WeaponManagement = () => {
-  const navigate = useNavigate();
-  const { getToken } = useAuth();
   const { page, rowsPerPage, handlePageChange } = usePagination(1, 10);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Weapon form states
   const [weaponDialogOpen, setWeaponDialogOpen] = useState(false);
   const [editingWeapon, setEditingWeapon] = useState(null);
-  const [weaponForm, setWeaponForm] = useState({
-    weapon_key: '',
-    weapon_name: '',
-    description: '',
-    combat_power: 0,
-    weapon_type: 'melee',
-  });
 
-  const [imageDialogOpen, setImageDialogOpen] = useState(false);
-  const [selectedWeapon, setSelectedWeapon] = useState(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [deletingImageId, setDeletingImageId] = useState(null);
-  const [imageForm, setImageForm] = useState({
-    type_file: 'idle',
-    type_animation: 'weapon',
-    frame: 1,
-    imageFile: null,
-  });
+
   // Delete states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [weaponToDelete, setWeaponToDelete] = useState(null);
-  const [deleting, setDeleting] = useState(false);
-  // const [saveError, setSaveError] = useState(null);
-  const [imageError, setImageError] = useState(null); // Added this as it seemed missing based on usage
 
   // TanStack Query Hooks
   const {
@@ -66,16 +40,12 @@ const WeaponManagement = () => {
     isError,
     error: queryError
   } = useWeapons(page, rowsPerPage, searchQuery);
-
+  const imageDialog = useImageDialog(weaponsData?.weapons || [], 'weapon_id');
   if (isError) {
     return <PageError message={queryError?.message} title="Failed to load weapons" />;
   }
 
-  const createWeaponMutation = useCreateWeapon();
-  const updateWeaponMutation = useUpdateWeapon();
   const deleteWeaponMutation = useDeleteWeapon();
-  const addImageMutation = useAddWeaponImage();
-  const deleteImageMutation = useDeleteWeaponImage();
 
   // Derived state from query data
   const weapons = weaponsData?.weapons || [];
@@ -86,19 +56,6 @@ const WeaponManagement = () => {
     limit: rowsPerPage,
   };
 
-  // Error handling
-  const error = isError ? (queryError?.message || 'Failed to load weapons') : null;
-
-  // Sync selectedWeapon with fresh data when weapons list updates (e.g. after adding image)
-  useEffect(() => {
-    if (selectedWeapon) {
-      const updated = weapons.find(w => w.weapon_id === selectedWeapon.weapon_id);
-      if (updated && updated !== selectedWeapon) {
-        setSelectedWeapon(updated);
-      }
-    }
-  }, [weapons, selectedWeapon]);
-
 
   // Manual loadWeapons is removed as useQuery handles it
 
@@ -108,163 +65,22 @@ const WeaponManagement = () => {
   }, [handlePageChange]);
 
   const handleOpenWeaponDialog = useCallback((weapon = null) => {
-    if (weapon) {
-      setEditingWeapon(weapon);
-      setWeaponForm({
-        weapon_key: weapon.weapon_key,
-        weapon_name: weapon.weapon_name,
-        description: weapon.description || '',
-        combat_power: weapon.combat_power || 0,
-        weapon_type: weapon.weapon_type,
-      });
-    } else {
-      setEditingWeapon(null);
-      setWeaponForm({
-        weapon_key: '',
-        weapon_name: '',
-        description: '',
-        combat_power: 0,
-        weapon_type: 'melee',
-      });
-    }
-    // setSaveError(null);
+    setEditingWeapon(weapon);
     setWeaponDialogOpen(true);
   }, []);
 
   const handleCloseWeaponDialog = useCallback(() => {
     setWeaponDialogOpen(false);
     setEditingWeapon(null);
-    // setSaveError(null);
-    setWeaponForm({
-      weapon_key: '',
-      weapon_name: '',
-      description: '',
-      combat_power: 0,
-      weapon_type: 'melee',
-    });
   }, []);
-
-  const handleSaveWeapon = useCallback(async () => {
-    // setSaveError(null);
-
-    try {
-      if (editingWeapon) {
-        await updateWeaponMutation.mutateAsync({
-          weaponId: editingWeapon.weapon_id,
-          weaponData: weaponForm
-        });
-      } else {
-        await createWeaponMutation.mutateAsync(weaponForm);
-      }
-      handleCloseWeaponDialog();
-      return { success: true };
-    } catch (err) {
-      console.error(err);
-      toast.error(err.message || 'บันทึกอาวุธไม่สำเร็จ');
-      return { success: false, error: err.message };
-    }
-  }, [weaponForm, editingWeapon, updateWeaponMutation, createWeaponMutation, handleCloseWeaponDialog]);
 
   const handleOpenImageDialog = useCallback((weapon) => {
-    setSelectedWeapon(weapon);
-    setImageError(null);
-    setImageForm({
-      type_file: 'idle',
-      type_animation: 'weapon',
-      frame: 1,
-      imageFile: null,
-    });
-    setImageDialogOpen(true);
-  }, []);
+    imageDialog.openDialog(weapon);
+  }, [imageDialog]);
 
   const handleImageDialogChange = useCallback((open) => {
-    setImageDialogOpen(open);
-    if (!open) {
-      setSelectedWeapon(null);
-      setImageError(null);
-      setImageForm({
-        type_file: 'idle',
-        type_animation: 'weapon',
-        frame: 1,
-        imageFile: null,
-      });
-    }
-  }, []);
-
-  const handleAddImage = useCallback(async () => {
-    if (!selectedWeapon || !imageForm.imageFile) {
-      setImageError('กรุณาเลือกอาวุธและไฟล์รูปภาพ');
-      return;
-    }
-
-    if (!imageForm.type_file || !imageForm.type_animation || !imageForm.frame) {
-      setImageError('กรุณากรอกข้อมูลให้ครบถ้วน: Type File, Type Animation, และ Frame');
-      return;
-    }
-
-    if (imageForm.frame < 1) {
-      setImageError('Frame ต้องมากกว่าหรือเท่ากับ 1');
-      return;
-    }
-
-    // Validation: Only 1 image for type 'weapon'
-    if (imageForm.type_animation === 'weapon') {
-      const hasWeaponImage = selectedWeapon.weapon_images?.some(img => img.type_animation === 'weapon');
-      if (hasWeaponImage) {
-        setImageError('สามารถเพิ่มรูปภาพอาวุธ (Type: Weapon) ได้เพียง 1 รูปเท่านั้น (หากต้องการเปลี่ยน ให้ลบรูปเดิมออกก่อน)');
-        return;
-      }
-    }
-
-    try {
-      setUploadingImage(true);
-      setImageError(null);
-
-      await addImageMutation.mutateAsync({
-        weaponId: selectedWeapon.weapon_id,
-        imageFile: imageForm.imageFile,
-        imageData: {
-          type_file: imageForm.type_file,
-          type_animation: imageForm.type_animation,
-          frame: imageForm.frame,
-          weapon_key: selectedWeapon.weapon_key,
-        }
-      });
-
-      // No manual update needed, React Query invalidation handles it.
-      // However, we might want to update selectedWeapon if the UI depends on it updating immediately within the dialog
-      // But for now, let's rely on the list check or simple re-select if needed.
-      // Note: selectedWeapon is local state. If the list updates, 'weapons' updates.
-      // But 'selectedWeapon' object reference might stay stale.
-      // To fix this proper, we should derive selectedWeapon from the new 'weapons' list or close dialog.
-      // For this refactor, let's just clear the form.
-
-      setImageForm({
-        type_file: 'idle',
-        type_animation: 'weapon',
-        frame: 1,
-        imageFile: null,
-      });
-      // Optionally re-sync selectedWeapon from fresh list if needed in next render?
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setUploadingImage(false);
-    }
-  }, [selectedWeapon, imageForm, addImageMutation]);
-
-  const handleDeleteImage = useCallback(async (imageId) => {
-    try {
-      setDeletingImageId(imageId);
-      setImageError(null);
-      await deleteImageMutation.mutateAsync(imageId);
-      // Invalidation happens in hook
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setDeletingImageId(null);
-    }
-  }, [deleteImageMutation]);
+    imageDialog.closeDialog(open);
+  }, [imageDialog]);
 
   const handleDeleteClick = useCallback((weapon) => {
     setWeaponToDelete(weapon);
@@ -275,25 +91,24 @@ const WeaponManagement = () => {
     if (!weaponToDelete) return;
 
     try {
-      setDeleting(true);
       await deleteWeaponMutation.mutateAsync(weaponToDelete.weapon_id);
       setDeleteDialogOpen(false);
       setWeaponToDelete(null);
+      toast.success('ลบอาวุธสำเร็จ');
     } catch (err) {
       console.error(err);
-    } finally {
-      setDeleting(false);
+      toast.error('ไม่สามารถลบอาวุธได้: ' + (err.message || 'Unknown error'));
     }
   }, [weaponToDelete, deleteWeaponMutation]);
 
   const handleDeleteDialogChange = useCallback((open) => {
-    if (!deleting) {
+    if (!deleteWeaponMutation.isPending) {
       setDeleteDialogOpen(open);
       if (!open) {
         setWeaponToDelete(null);
       }
     }
-  }, [deleting]);
+  }, [deleteWeaponMutation.isPending]);
 
 
 
@@ -309,13 +124,13 @@ const WeaponManagement = () => {
           addButtonText="เพิ่มอาวุธ"
         />
 
-        <ErrorAlert message={imageError} />
-
         <SearchInput
           defaultValue={searchQuery}
           onSearch={handleSearchChange}
           placeholder={searchPlaceholder}
         />
+
+        <ErrorAlert message={imageDialog.error} />
 
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {loading ? (
@@ -349,32 +164,27 @@ const WeaponManagement = () => {
           open={weaponDialogOpen}
           onOpenChange={handleCloseWeaponDialog}
           editingWeapon={editingWeapon}
-          formData={weaponForm}
-          onFormChange={setWeaponForm}
-          onSave={handleSaveWeapon}
         />
 
         <WeaponImageDialog
-          open={imageDialogOpen}
+          open={imageDialog.isOpen}
           onOpenChange={handleImageDialogChange}
-          selectedWeapon={selectedWeapon}
-          imageForm={imageForm}
-          onImageFormChange={setImageForm}
-          uploadingImage={uploadingImage}
-          deletingImageId={deletingImageId}
-          onAddImage={handleAddImage}
-          onDeleteImage={handleDeleteImage}
+          selectedWeapon={imageDialog.dialogItem}
           getImageUrl={getImageUrl}
         />
 
         <DeleteConfirmDialog
           open={deleteDialogOpen}
-          onOpenChange={handleDeleteDialogChange}
+          onOpenChange={(open) => handleDeleteDialogChange(open)}
           onConfirm={handleDeleteConfirm}
-          itemName={weaponToDelete?.weapon_name}
           title="ยืนยันการลบอาวุธ"
-          deleting={deleting}
+          itemName={weaponToDelete?.weapon_name}
+          description={`คุณต้องการลบอาวุธ "${weaponToDelete?.weapon_name}" ใช่หรือไม่? การลบนี้ไม่สามารถย้อนกลับได้`}
+          confirmText="ลบ"
+          cancelText="ยกเลิก"
+          deleting={deleteWeaponMutation.isPending}
         />
+
       </div>
     </div>
   );

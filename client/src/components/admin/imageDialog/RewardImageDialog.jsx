@@ -12,21 +12,19 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { useUploadRewardFrame, useDeleteRewardFrame } from '@/services/hooks/useRewards';
 
 const RewardImageDialog = ({
   open,
   onOpenChange,
   selectedReward,
-  uploadingFrame,
-  deletingFrame,
-  onUploadFrame,
-  onDeleteFrame,
   getImageUrl,
 }) => {
   const [imageFile, setImageFile] = useState(null);
   const frameImage = selectedReward?.frame1;
-  const isUploading = uploadingFrame === 1;
-  const isDeleting = deletingFrame === 1;
+
+  const { mutateAsync: uploadFrameAsync, isPending: isUploading } = useUploadRewardFrame();
+  const { mutateAsync: deleteFrameAsync, isPending: isDeleting } = useDeleteRewardFrame();
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -39,12 +37,35 @@ const RewardImageDialog = ({
     setImageFile(file);
   };
 
-  const handleUpload = () => {
-    if (imageFile) {
-      onUploadFrame(1, imageFile);
-      setImageFile(null);
-      const input = document.getElementById('reward-image-input');
-      if (input) input.value = '';
+  const handleUpload = async () => {
+    if (imageFile && selectedReward) {
+      try {
+        await uploadFrameAsync({
+          rewardId: selectedReward.reward_id,
+          frameNumber: 1,
+          imageFile: imageFile
+        });
+        setImageFile(null);
+        const input = document.getElementById('reward-image-input');
+        if (input) input.value = '';
+      } catch (err) {
+        console.error(err);
+        toast.error('Failed to upload image');
+      }
+    }
+  };
+
+  const handleDelete = async () => {
+    if (selectedReward) {
+      try {
+        await deleteFrameAsync({
+          rewardId: selectedReward.reward_id,
+          frameNumber: 1
+        });
+      } catch (err) {
+        console.error(err);
+        toast.error('Failed to delete image');
+      }
     }
   };
 
@@ -69,7 +90,7 @@ const RewardImageDialog = ({
                 variant="destructive"
                 size="sm"
                 className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => onDeleteFrame(1)}
+                onClick={handleDelete}
                 disabled={isDeleting}
               >
                 {isDeleting ? <Loader className="h-3 w-3" /> : <Trash2 className="h-3 w-3" />}

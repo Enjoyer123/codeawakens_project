@@ -1,17 +1,14 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useAuth } from '@clerk/clerk-react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { useParams } from 'react-router-dom';
+import SearchInput from '@/components/admin/formFields/SearchInput';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import ErrorAlert from '@/components/shared/alert/ErrorAlert';
 import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import { usePagination } from '@/hooks/usePagination';
 import PaginationControls from '@/components/shared/pagination/PaginationControls';
-import SearchInput from '@/components/admin/formFields/SearchInput';
-import { Plus } from 'lucide-react';
 import {
+
   useLevelHints,
   useDeleteLevelHint,
   useUploadHintImage,
@@ -19,6 +16,7 @@ import {
 } from '../../../services/hooks/useLevelHints';
 import { useLevel } from '../../../services/hooks/useLevel';
 import LevelHintImageDialog from '@/components/admin/imageDialog/LevelHintImageDialog';
+import { useImageDialog } from '@/hooks/useImageDialog';
 import { getImageUrl } from '@/utils/imageUtils';
 import LevelHintTable from '@/components/admin/level/tables/LevelHintTable';
 import LevelHintFormDialog from '@/components/admin/addEditDialog/LevelHintFormDialog';
@@ -26,8 +24,6 @@ import LevelHintFormDialog from '@/components/admin/addEditDialog/LevelHintFormD
 import PageError from '@/components/shared/Error/PageError';
 
 const LevelHintManagement = () => {
-  const { getToken } = useAuth();
-  const navigate = useNavigate();
   const { levelId } = useParams();
   const numericLevelId = parseInt(levelId, 10);
 
@@ -53,16 +49,11 @@ const LevelHintManagement = () => {
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [hintToDelete, setHintToDelete] = useState(null);
-  const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
 
   // image dialog state
-  const [imageDialogOpen, setImageDialogOpen] = useState(false);
-  const [selectedHint, setSelectedHint] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [deletingImageId, setDeletingImageId] = useState(null);
-  const [imageError, setImageError] = useState(null);
 
   if (isError) {
     return <PageError message={queryError?.message} title="Failed to load hints" />;
@@ -70,7 +61,7 @@ const LevelHintManagement = () => {
 
   // Derived State
   const allHints = hintsData || [];
-
+  const imageDialog = useImageDialog(allHints, 'hint_id');
   // Client-side filtering & pagination
   const { filteredHints, pagination } = useMemo(() => {
     const filtered = searchQuery
@@ -123,21 +114,18 @@ const LevelHintManagement = () => {
   const handleDeleteConfirm = useCallback(async () => {
     if (!hintToDelete) return;
     try {
-      setDeleting(true);
       setDeleteError(null);
       await deleteHintMutation.mutateAsync(hintToDelete.hint_id);
       setDeleteDialogOpen(false);
       setHintToDelete(null);
     } catch (err) {
       setDeleteError('ไม่สามารถลบ hint ได้: ' + (err.message || 'Unknown error'));
-    } finally {
-      setDeleting(false);
     }
   }, [hintToDelete, deleteHintMutation]);
 
   const handleDeleteDialogChange = useCallback(
     (open) => {
-      if (!deleting) {
+      if (!deleteHintMutation.isPending) {
         setDeleteDialogOpen(open);
         if (!open) {
           setHintToDelete(null);
@@ -145,26 +133,21 @@ const LevelHintManagement = () => {
         }
       }
     },
-    [deleting]
+    [deleteHintMutation.isPending]
   );
 
   const handleOpenImageDialog = useCallback((hint) => {
-    setSelectedHint(hint);
+    imageDialog.openDialog(hint);
     setImageFile(null);
-    setImageError(null);
-    setImageDialogOpen(true);
-  }, []);
+  }, [imageDialog]);
 
   const handleImageDialogChange = useCallback((open) => {
-    setImageDialogOpen(open);
+    imageDialog.closeDialog(open);
     if (!open) {
-      setSelectedHint(null);
       setImageFile(null);
       setUploadingImage(false);
-      setDeletingImageId(null);
-      setImageError(null);
     }
-  }, []);
+  }, [imageDialog]);
 
   const handleImageFileChange = useCallback((e) => {
     const file = e.target.files?.[0];
@@ -172,17 +155,17 @@ const LevelHintManagement = () => {
   }, []);
 
   const handleAddImage = useCallback(async () => {
-    if (!selectedHint || !imageFile) {
-      setImageError('กรุณาเลือก Hint และไฟล์รูปภาพ');
+    if (!imageDialog.selectedId || !imageFile) {
+      imageDialog.setError('กรุณาเลือก Hint และไฟล์รูปภาพ');
       return;
     }
 
     try {
       setUploadingImage(true);
-      setImageError(null);
+      imageDialog.setError(null);
 
       await uploadImageMutation.mutateAsync({
-        hintId: selectedHint.hint_id,
+        hintId: imageDialog.selectedId,
         file: imageFile
       });
 
@@ -192,33 +175,20 @@ const LevelHintManagement = () => {
         input.value = '';
       }
     } catch (err) {
-      setImageError('ไม่สามารถอัปโหลดรูปภาพได้: ' + (err.message || 'Unknown error'));
+      imageDialog.setError('ไม่สามารถอัปโหลดรูปภาพได้: ' + (err.message || 'Unknown error'));
     } finally {
       setUploadingImage(false);
     }
-  }, [selectedHint, imageFile, uploadImageMutation]);
+  }, [imageDialog.selectedId, imageFile, uploadImageMutation, imageDialog]);
 
   const handleDeleteImage = useCallback(async (imageId) => {
     try {
-      setDeletingImageId(imageId);
-      setImageError(null);
+      imageDialog.setError(null);
       await deleteImageMutation.mutateAsync(imageId);
     } catch (err) {
-      setImageError('ไม่สามารถลบรูปภาพได้: ' + (err.message || 'Unknown error'));
-    } finally {
-      setDeletingImageId(null);
+      imageDialog.setError('ไม่สามารถลบรูปภาพได้: ' + (err.message || 'Unknown error'));
     }
-  }, [deleteImageMutation]);
-
-  // Sync selectedHint with hintsData when it changes (for image dialog updates)
-  useEffect(() => {
-    if (selectedHint && hintsData) {
-      const updated = hintsData.find(h => h.hint_id === selectedHint.hint_id);
-      if (updated) {
-        setSelectedHint(updated);
-      }
-    }
-  }, [hintsData, selectedHint]);
+  }, [deleteImageMutation, imageDialog]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -232,7 +202,7 @@ const LevelHintManagement = () => {
         />
 
         <ErrorAlert message={deleteError} />
-        <ErrorAlert message={imageError} />
+        <ErrorAlert message={imageDialog.error} />
 
         <SearchInput
           defaultValue={searchQuery}
@@ -282,17 +252,18 @@ const LevelHintManagement = () => {
           onConfirm={handleDeleteConfirm}
           itemName={hintToDelete?.title}
           title="ยืนยันการลบ Hint"
-          deleting={deleting}
+          deleting={deleteHintMutation.isPending}
+          error={deleteError}
         />
 
         <LevelHintImageDialog
-          open={imageDialogOpen}
+          open={imageDialog.isOpen}
           onOpenChange={handleImageDialogChange}
-          selectedHint={selectedHint}
+          selectedHint={imageDialog.dialogItem}
           imageFile={imageFile}
           onImageFileChange={handleImageFileChange}
-          uploadingImage={uploadingImage}
-          deletingImageId={deletingImageId}
+          isUploading={uploadingImage}
+          isDeleting={deleteImageMutation.isPending}
           onAddImage={handleAddImage}
           onDeleteImage={handleDeleteImage}
           getImageUrl={getImageUrl}

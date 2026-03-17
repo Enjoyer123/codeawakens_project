@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useAuth } from '@clerk/clerk-react';
+
 import { toast } from 'sonner';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
@@ -10,18 +10,16 @@ import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import NotificationFormDialog from '@/components/admin/addEditDialog/NotificationFormDialog';
 import NotificationTable from '@/components/admin/notification/NotificationTable';
 import { usePagination } from '@/hooks/usePagination';
-import { createDeleteErrorMessage } from '@/utils/errorHandler';
+
 import {
-    useNotifications,
-    useCreateNotification,
     useUpdateNotification,
-    useDeleteNotification
+    useDeleteNotification,
+    useNotifications
 } from '@/services/hooks/useNotifications';
 
 import PageError from '@/components/shared/Error/PageError';
 
 const NotificationManagement = () => {
-    const { getToken } = useAuth();
     const { page, rowsPerPage, handlePageChange } = usePagination(1, 10);
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -46,23 +44,15 @@ const NotificationManagement = () => {
     };
 
     // Mutations
-    const { mutateAsync: createNotificationAsync } = useCreateNotification();
     const { mutateAsync: updateNotificationAsync } = useUpdateNotification();
     const { mutateAsync: deleteNotificationAsync, isPending: deleting } = useDeleteNotification();
 
     // Notification form states
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingNotification, setEditingNotification] = useState(null);
-    const [formData, setFormData] = useState({
-        title: '',
-        message: '',
-        expires_at: '',
-        is_active: false,
-    });
-    // Delete states
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
-    // const [saveError, setSaveError] = useState(null);
+
 
     const handleSearchChange = useCallback((value) => {
         setSearchQuery(value);
@@ -70,66 +60,14 @@ const NotificationManagement = () => {
     }, [handlePageChange]);
 
     const handleOpenDialog = useCallback((notification = null) => {
-        if (notification) {
-            setEditingNotification(notification);
-            // Format date for datetime-local input (YYYY-MM-DDThh:mm)
-            let expiresAtStr = '';
-            if (notification.expires_at) {
-                const d = new Date(notification.expires_at);
-                const offset = d.getTimezoneOffset() * 60000;
-                expiresAtStr = new Date(d.getTime() - offset).toISOString().slice(0, 16);
-            }
-
-            setFormData({
-                title: notification.title,
-                message: notification.message || '',
-                expires_at: expiresAtStr,
-                is_active: notification.is_active,
-            });
-        } else {
-            setEditingNotification(null);
-            setFormData({
-                title: '',
-                message: '',
-                expires_at: '',
-                is_active: false,
-            });
-        }
+        setEditingNotification(notification);
         setDialogOpen(true);
     }, []);
 
     const handleCloseDialog = useCallback(() => {
         setDialogOpen(false);
         setEditingNotification(null);
-        setEditingNotification(null);
-        setFormData({
-            title: '',
-            message: '',
-            expires_at: '',
-            is_active: false,
-        });
     }, []);
-
-    const handleSave = useCallback(async () => {
-        // setSaveError(null);
-
-        try {
-            if (editingNotification) {
-                await updateNotificationAsync({
-                    notificationId: editingNotification.notification_id,
-                    notificationData: formData
-                });
-            } else {
-                await createNotificationAsync(formData);
-            }
-            handleCloseDialog();
-            return { success: true };
-        } catch (err) {
-            console.error(err);
-            toast.error(err.message || 'บันทึกแจ้งเตือนไม่สำเร็จ');
-            return { success: false, error: err.message };
-        }
-    }, [formData, editingNotification, updateNotificationAsync, createNotificationAsync, handleCloseDialog]);
 
     const handleDeleteClick = useCallback((item) => {
         setItemToDelete(item);
@@ -140,8 +78,13 @@ const NotificationManagement = () => {
         if (!itemToDelete) return;
 
         try {
+            await deleteNotificationAsync(itemToDelete.notification_id);
+            setDeleteDialogOpen(false);
+            setItemToDelete(null);
+            toast.success('ลบแจ้งเตือนสำเร็จ');
         } catch (err) {
             console.error(err);
+            toast.error('ไม่สามารถลบแจ้งเตือนได้: ' + (err.message || 'Unknown error'));
         }
     }, [itemToDelete, deleteNotificationAsync]);
 
@@ -164,9 +107,10 @@ const NotificationManagement = () => {
                     is_active: true
                 }
             });
-            // Optional: Show success toast
+            toast.success('ส่งแจ้งเตือนสำเร็จ');
         } catch (err) {
             console.error("Failed to send notification:", err);
+            toast.error('ส่งแจ้งเตือนไม่สำเร็จ: ' + (err.message || 'Unknown error'));
         }
     };
 
@@ -219,9 +163,6 @@ const NotificationManagement = () => {
                     open={dialogOpen}
                     onOpenChange={handleCloseDialog}
                     editingNotification={editingNotification}
-                    formData={formData}
-                    onFormChange={setFormData}
-                    onSave={handleSave}
                 />
 
                 <DeleteConfirmDialog

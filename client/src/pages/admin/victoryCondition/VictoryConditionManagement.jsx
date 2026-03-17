@@ -1,11 +1,7 @@
-import { useState, useCallback, useEffect } from 'react';
-import { useAuth } from '@clerk/clerk-react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import {
   useVictoryConditions,
-
-  useUpdateVictoryCondition,
   useDeleteVictoryCondition,
 } from '../../../services/hooks/useVictoryConditions';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
@@ -16,30 +12,22 @@ import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import VictoryConditionFormDialog from '@/components/admin/addEditDialog/VictoryConditionFormDialog';
 import VictoryConditionTable from '@/components/admin/victoryCondition/VictoryConditionTable';
 import { usePagination } from '@/hooks/usePagination';
-import { createDeleteErrorMessage } from '@/utils/errorHandler';
+
 
 import PageError from '@/components/shared/Error/PageError';
 
 const VictoryConditionManagement = () => {
-  const navigate = useNavigate();
-  const { getToken } = useAuth();
   const { page, rowsPerPage, handlePageChange } = usePagination(1, 10);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Form States
   const [victoryConditionDialogOpen, setVictoryConditionDialogOpen] = useState(false);
   const [editingVictoryCondition, setEditingVictoryCondition] = useState(null);
-  const [victoryConditionForm, setVictoryConditionForm] = useState({
-    type: '',
-    description: '',
-    check: '',
-    is_available: true,
-  });
+
   // Delete States
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [victoryConditionToDelete, setVictoryConditionToDelete] = useState(null);
-  const [deleting, setDeleting] = useState(false);
-  // const [saveError, setSaveError] = useState(null);
+
 
   // TanStack Query Hooks
   const {
@@ -53,8 +41,6 @@ const VictoryConditionManagement = () => {
     return <PageError message={queryError?.message} title="Failed to load victory conditions" />;
   }
 
-
-  const updateVictoryConditionMutation = useUpdateVictoryCondition();
   const deleteVictoryConditionMutation = useDeleteVictoryCondition();
 
   // Derived State
@@ -66,7 +52,6 @@ const VictoryConditionManagement = () => {
     limit: rowsPerPage,
   };
 
-  const error = isError ? (queryError?.message || 'Failed to load victory conditions') : null;
 
   // No manual load effect needed
 
@@ -76,62 +61,14 @@ const VictoryConditionManagement = () => {
   }, [handlePageChange]);
 
   const handleOpenVictoryConditionDialog = useCallback((victoryCondition) => {
-    if (victoryCondition) {
-      setEditingVictoryCondition(victoryCondition);
-      setVictoryConditionForm({
-        type: victoryCondition.type,
-        description: victoryCondition.description || '',
-        check: victoryCondition.check || '',
-        is_available: victoryCondition.is_available,
-      });
-      // setSaveError(null);
-      setVictoryConditionDialogOpen(true);
-    }
+    setEditingVictoryCondition(victoryCondition);
+    setVictoryConditionDialogOpen(true);
   }, []);
 
   const handleCloseVictoryConditionDialog = useCallback(() => {
     setVictoryConditionDialogOpen(false);
     setEditingVictoryCondition(null);
-    // setSaveError(null);
-    setVictoryConditionForm({
-      type: '',
-      description: '',
-      check: '',
-      is_available: true,
-    });
   }, []);
-
-  const handleSaveVictoryCondition = useCallback(async () => {
-    // setSaveError(null);
-
-    const formData = {
-      ...victoryConditionForm,
-      type: victoryConditionForm.type.trim(),
-      description: victoryConditionForm.description.trim(),
-      check: victoryConditionForm.check.trim(),
-    };
-
-    try {
-      if (editingVictoryCondition) {
-        await updateVictoryConditionMutation.mutateAsync({
-          victoryConditionId: editingVictoryCondition.victory_condition_id,
-          data: formData
-        });
-      }
-      handleCloseVictoryConditionDialog();
-      return { success: true };
-    } catch (err) {
-      console.error(err);
-      toast.error(err.message || 'บันทึกเงื่อนไขชัยชนะไม่สำเร็จ');
-      return { success: false, error: err.message };
-    }
-  }, [
-    victoryConditionForm,
-    editingVictoryCondition,
-    updateVictoryConditionMutation,
-
-    handleCloseVictoryConditionDialog,
-  ]);
 
   const handleDeleteClick = useCallback((victoryCondition) => {
     setVictoryConditionToDelete(victoryCondition);
@@ -149,19 +86,17 @@ const VictoryConditionManagement = () => {
       setVictoryConditionToDelete(null);
     } catch (err) {
       console.error(err);
-    } finally {
-      setDeleting(false);
     }
   }, [victoryConditionToDelete, deleteVictoryConditionMutation]);
 
   const handleDeleteDialogChange = useCallback((open) => {
-    if (!deleting) {
+    if (!deleteVictoryConditionMutation.isPending) {
       setDeleteDialogOpen(open);
       if (!open) {
         setVictoryConditionToDelete(null);
       }
     }
-  }, [deleting]);
+  }, [deleteVictoryConditionMutation.isPending]);
 
 
 
@@ -212,18 +147,19 @@ const VictoryConditionManagement = () => {
           open={victoryConditionDialogOpen}
           onOpenChange={handleCloseVictoryConditionDialog}
           editingVictoryCondition={editingVictoryCondition}
-          formData={victoryConditionForm}
-          onFormChange={setVictoryConditionForm}
-          onSave={handleSaveVictoryCondition}
         />
 
         <DeleteConfirmDialog
           open={deleteDialogOpen}
-          onOpenChange={handleDeleteDialogChange}
+          onOpenChange={(open) => handleDeleteDialogChange(open)}
           onConfirm={handleDeleteConfirm}
-          itemName={victoryConditionToDelete?.type}
           title="ยืนยันการลบเงื่อนไขชัยชนะ"
-          deleting={deleting}
+          itemName={victoryConditionToDelete?.type}
+          description={`คุณต้องการลบเงื่อนไขชัยชนะ "${victoryConditionToDelete?.type}" ใช่หรือไม่? ฟาดฟันนี้ไม่สามารถย้อนกลับได้`}
+          confirmText="ลบ"
+          cancelText="ยกเลิก"
+          variant="destructive"
+          deleting={deleteVictoryConditionMutation.isPending}
         />
       </div>
     </div>

@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -12,6 +14,7 @@ import FormInput from '@/components/admin/formFields/FormInput';
 import FormSelect from '@/components/admin/formFields/FormSelect';
 import FormCheckbox from '@/components/admin/formFields/FormCheckbox';
 import FormTextarea from '@/components/admin/formFields/FormTextarea';
+import { useCreateReward, useUpdateReward } from '@/services/hooks/useRewards';
 
 const rewardTypes = [
   { value: 'weapon', label: 'Weapon' },
@@ -25,19 +28,80 @@ const RewardFormDialog = ({
   open,
   onOpenChange,
   editingReward,
-  formData,
-  onFormChange,
-  onSave,
   levels = [],
-  saving = false,
 }) => {
+  // Mutations
+  const { mutateAsync: createRewardAsync } = useCreateReward();
+  const { mutateAsync: updateRewardAsync } = useUpdateReward();
+
+  // Internal Form State
+  const [formData, setFormData] = useState({
+    level_id: '',
+    reward_type: 'weapon',
+    reward_name: '',
+    description: '',
+    required_score: 0,
+  });
+
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Sync state when dialog opens or editingReward changes
+  useEffect(() => {
+    if (open) {
+      setError(null);
+      if (editingReward) {
+        setFormData({
+          level_id: editingReward.level_id.toString(),
+          reward_type: editingReward.reward_type,
+          reward_name: editingReward.reward_name,
+          description: editingReward.description || '',
+          required_score: editingReward.required_score,
+        });
+      } else {
+        setFormData({
+          level_id: '',
+          reward_type: 'weapon',
+          reward_name: '',
+          description: '',
+          required_score: 0,
+        });
+      }
+    }
+  }, [open, editingReward]);
+
   const handleChange = (field, value) => {
-    onFormChange({ ...formData, [field]: value });
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSaveClick = async () => {
-    const result = await onSave();
-    return result;
+    setError(null);
+    try {
+      setSaving(true);
+      
+      const payload = {
+        ...formData,
+        level_id: parseInt(formData.level_id),
+        required_score: parseInt(formData.required_score),
+      };
+
+      if (editingReward) {
+        await updateRewardAsync({
+          rewardId: editingReward.reward_id,
+          rewardData: payload
+        });
+        toast.success('อัปเดตรางวัลสำเร็จ');
+      } else {
+        await createRewardAsync(payload);
+        toast.success('เพิ่มรางวัลสำเร็จ');
+      }
+      onOpenChange(false);
+    } catch (err) {
+      console.error(err);
+      setError(err.message || 'บันทึกรางวัลไม่สำเร็จ');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const dialogTitle = editingReward ? 'แก้ไขรางวัล' : 'เพิ่มรางวัลใหม่';
@@ -62,6 +126,13 @@ const RewardFormDialog = ({
           <DialogTitle>{dialogTitle}</DialogTitle>
           <DialogDescription>{dialogDescription}</DialogDescription>
         </DialogHeader>
+
+        {error && (
+          <div className="bg-red-50 text-red-500 p-3 rounded-md text-sm border border-red-200">
+            {error}
+          </div>
+        )}
+
         <div className="space-y-4 py-4">
           <div className={gridClassName}>
             <FormSelect

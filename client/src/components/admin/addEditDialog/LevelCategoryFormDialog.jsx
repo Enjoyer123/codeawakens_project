@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -12,16 +13,70 @@ import { Input } from '@/components/ui/input';
 import FormInput from '@/components/admin/formFields/FormInput';
 import FormCheckbox from '@/components/admin/formFields/FormCheckbox';
 import { AVAILABLE_ITEMS } from '@/constants/itemTypes';
+import { useCreateLevelCategory, useUpdateLevelCategory } from '@/services/hooks/useLevelCategories';
 
 const LevelCategoryFormDialog = ({
   open,
   onOpenChange,
   editingLevelCategory,
-  formData,
-  onFormChange,
-  onSave,
-  saving = false,
+  maxOrder = 0,
 }) => {
+  // Mutations
+  const { mutateAsync: createCategoryAsync } = useCreateLevelCategory();
+  const { mutateAsync: updateCategoryAsync } = useUpdateLevelCategory();
+
+  // Internal Form State
+  const [formData, setFormData] = useState({
+    category_name: '',
+    description: '',
+    item_enable: false,
+    item: null,
+    difficulty_order: 1,
+    block_key: '',
+  });
+
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Sync state when dialog opens or editingLevelCategory changes
+  useEffect(() => {
+    if (open) {
+      setError(null);
+      if (editingLevelCategory) {
+        // Convert block_key to comma-separated format for easier editing
+        let blockKeyDisplay = '';
+        if (editingLevelCategory.block_key) {
+          if (Array.isArray(editingLevelCategory.block_key)) {
+            blockKeyDisplay = editingLevelCategory.block_key.join(', ');
+          } else if (typeof editingLevelCategory.block_key === 'object') {
+            blockKeyDisplay = JSON.stringify(editingLevelCategory.block_key, null, 2);
+          } else {
+            blockKeyDisplay = String(editingLevelCategory.block_key);
+          }
+        }
+
+        const items = editingLevelCategory.category_items?.map(ci => ci.item_type) || [];
+
+        setFormData({
+          category_name: editingLevelCategory.category_name,
+          description: editingLevelCategory.description || '',
+          item_enable: editingLevelCategory.item_enable || false,
+          item: items,
+          difficulty_order: editingLevelCategory.difficulty_order,
+          block_key: blockKeyDisplay,
+        });
+      } else {
+        setFormData({
+          category_name: '',
+          description: '',
+          item_enable: false,
+          item: null,
+          difficulty_order: maxOrder + 1,
+          block_key: '',
+        });
+      }
+    }
+  }, [open, editingLevelCategory, maxOrder]);
   // Parse item from formData
   const getSelectedItems = () => {
     if (!formData.item) return [];
@@ -53,7 +108,7 @@ const LevelCategoryFormDialog = ({
   }, [formData.item]);
 
   const handleChange = (field, value) => {
-    onFormChange({ ...formData, [field]: value });
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleItemToggle = (itemValue) => {
@@ -69,25 +124,83 @@ const LevelCategoryFormDialog = ({
 
   const handleSaveClick = async () => {
     console.log('🟡 [LevelCategoryFormDialog] handleSaveClick: formData', formData);
+    setError(null);
     // Client-side validation
     if (!formData.category_name?.trim()) {
-      return { success: false, error: 'กรุณากรอก Topic Name' };
+      setError('กรุณากรอก Topic Name');
+      return;
     }
     if (!formData.description?.trim()) {
-      return { success: false, error: 'กรุณากรอก Description' };
+      setError('กรุณากรอก Description');
+      return;
     }
-
-
 
     // Validate item if item_enable is true
     if (formData.item_enable && (!selectedItems || selectedItems.length === 0)) {
-      return { success: false, error: 'กรุณาเลือก item อย่างน้อย 1 รายการเมื่อเปิดใช้งาน Item Enable' };
+      setError('กรุณาเลือก item อย่างน้อย 1 รายการเมื่อเปิดใช้งาน Item Enable');
+      return;
     }
 
-    const result = await onSave();
-    console.log('🟡 [LevelCategoryFormDialog] handleSaveClick: result', result);
+    try {
+      setSaving(true);
+      
+      // Handle block_key - support both comma-separated and JSON format
+      let blockKeyValue = null;
+      if (formData.block_key && formData.block_key.trim()) {
+        const trimmedValue = formData.block_key.trim();
 
-    return result;
+        // Try to parse as JSON first
+        try {
+          blockKeyValue = JSON.parse(trimmedValue);
+        } catch (jsonError) {
+          // If not valid JSON, treat as comma-separated string
+          const items = trimmedValue
+            .split(',')
+            .map(item => item.trim())
+            .filter(item => item.length > 0);
+
+          if (items.length > 0) {
+            blockKeyValue = items;
+          }
+        }
+      }
+
+      // Handle item - ensure it's an array or null
+      let itemValue = null;
+      if (formData.item_enable && selectedItems) {
+        if (Array.isArray(selectedItems)) {
+          itemValue = selectedItems.length > 0 ? selectedItems : null;
+        } else {
+          itemValue = [selectedItems];
+        }
+      }
+
+      const payload = {
+        ...formData,
+        category_name: formData.category_name.trim(),
+        description: formData.description.trim(),
+        item: itemValue,
+        difficulty_order: parseInt(formData.difficulty_order),
+        block_key: blockKeyValue,
+      };
+
+      if (editingLevelCategory) {
+        await updateCategoryAsync({
+          categoryId: editingLevelCategory.category_id,
+          data: payload
+        });
+        toast.success('อัปเดตหัวข้อสำเร็จ');
+      } else {
+        await createCategoryAsync(payload);
+        toast.success('เพิ่มหัวข้อสำเร็จ');
+      }
+      onOpenChange(false);
+    } catch (err) {
+      console.error(err);
+      setError('ไม่สามารถบันทึก topic ได้: ' + (err.message || 'Unknown error'));
+    } finally {
+      setSaving(false);
+    }
   };
 
   const dialogTitle = editingLevelCategory ? 'แก้ไขหัวข้อ' : 'เพิ่มหัวข้อใหม่';
@@ -105,6 +218,13 @@ const LevelCategoryFormDialog = ({
           <DialogTitle>{dialogTitle}</DialogTitle>
           <DialogDescription>{dialogDescription}</DialogDescription>
         </DialogHeader>
+
+        {error && (
+          <div className="bg-red-50 text-red-500 p-3 rounded-md text-sm border border-red-200">
+            {error}
+          </div>
+        )}
+
         <div className="space-y-4 py-4">
           <FormInput
             label="Topic Name"

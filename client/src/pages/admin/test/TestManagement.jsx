@@ -1,6 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@clerk/clerk-react';
-import { fetchAllTests, deleteTest } from '../../../services/testService';
+import { useState, useCallback } from 'react';
+import { toast } from 'sonner';
 import { useTests, useDeleteTest } from '../../../services/hooks/useTests';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
@@ -13,7 +12,6 @@ import TestCreateEditModal from '@/components/admin/test/TestCreateEditModal';
 import PageError from '@/components/shared/Error/PageError';
 
 const TestManagement = () => {
-    const { getToken } = useAuth();
 
     const [activeTab, setActiveTab] = useState('PreTest');
     const [searchQuery, setSearchQuery] = useState('');
@@ -25,7 +23,6 @@ const TestManagement = () => {
     // Delete States
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [testToDelete, setTestToDelete] = useState(null);
-    const [deleting, setDeleting] = useState(false);
 
     // TanStack Query Hooks
     const {
@@ -72,14 +69,13 @@ const TestManagement = () => {
     const handleDeleteConfirm = async () => {
         if (!testToDelete) return;
         try {
-            setDeleting(true);
             await deleteTestMutation.mutateAsync(testToDelete.test_id);
             setDeleteDialogOpen(false);
             setTestToDelete(null);
+            toast.success('ลบแบบทดสอบสำเร็จ');
         } catch (err) {
             console.error(err);
-        } finally {
-            setDeleting(false);
+            toast.error('ไม่สามารถลบแบบทดสอบได้: ' + (err.message || 'Unknown error'));
         }
     };
 
@@ -133,10 +129,20 @@ const TestManagement = () => {
 
                 <DeleteConfirmDialog
                     open={deleteDialogOpen}
-                    onOpenChange={setDeleteDialogOpen}
+                    onOpenChange={(open) => {
+                        if (!deleteTestMutation.isPending) {
+                            setDeleteDialogOpen(open);
+                            setTestToDelete(null);
+                        }
+                    }}
                     onConfirm={handleDeleteConfirm}
-                    deleting={deleting}
-                    itemName="this question"
+                    title="ยืนยันการลบแบบทดสอบ"
+                    itemName={testToDelete?.title}
+                    description="คุณต้องการลบข้อสอบนี้ใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้"
+                    confirmText="ลบ"
+                    cancelText="ยกเลิก"
+                    variant="destructive"
+                    deleting={deleteTestMutation.isPending}
                 />
             </div>
         </div>

@@ -319,7 +319,30 @@ exports.addWeaponImage = async (req, res) => {
       }
       return res.status(404).json({ message: "Weapon not found" });
     }
+    if (type_animation === 'weapon') {
+      const existingWeaponImages = await prisma.weapon_Image.findMany({
+        where: {
+          weapon_id: parseInt(weaponId),
+          type_animation: 'weapon'
+        }
+      });
 
+      for (const img of existingWeaponImages) {
+        const oldFilePath = path.join(__dirname, "..", img.path_file);
+        if (fs.existsSync(oldFilePath)) {
+          try {
+            fs.unlinkSync(oldFilePath);
+            console.log(`Deleted existing weapon image file: ${oldFilePath}`);
+          } catch (err) {
+            console.error(`Error deleting existing weapon image file ${oldFilePath}:`, err);
+          }
+        }
+        await prisma.weapon_Image.delete({
+          where: { file_id: img.file_id }
+        });
+        console.log(`Deleted existing weapon image record: ${img.file_id}`);
+      }
+    }
     // Determine correct destination folder based on type_animation
     const typeAnimation = type_animation === 'effect' ? 'weapons_effect' : 'weapons';
     const targetDir = type_animation === 'effect'
