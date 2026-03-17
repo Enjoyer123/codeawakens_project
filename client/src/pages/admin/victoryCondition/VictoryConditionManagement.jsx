@@ -34,7 +34,6 @@ const VictoryConditionManagement = () => {
   // Delete States
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [victoryConditionToDelete, setVictoryConditionToDelete] = useState(null);
-  const [deleting, setDeleting] = useState(false);
 
 
   // TanStack Query Hooks
@@ -144,19 +143,17 @@ const VictoryConditionManagement = () => {
       setVictoryConditionToDelete(null);
     } catch (err) {
       console.error(err);
-    } finally {
-      setDeleting(false);
     }
   }, [victoryConditionToDelete, deleteVictoryConditionMutation]);
 
   const handleDeleteDialogChange = useCallback((open) => {
-    if (!deleting) {
+    if (!deleteVictoryConditionMutation.isPending) {
       setDeleteDialogOpen(open);
       if (!open) {
         setVictoryConditionToDelete(null);
       }
     }
-  }, [deleting]);
+  }, [deleteVictoryConditionMutation.isPending]);
 
 
 
@@ -213,12 +210,15 @@ const VictoryConditionManagement = () => {
         />
 
         <DeleteConfirmDialog
-          open={deleteDialogOpen}
-          onOpenChange={handleDeleteDialogChange}
+          isOpen={deleteDialogOpen}
+          onClose={() => handleDeleteDialogChange(false)}
           onConfirm={handleDeleteConfirm}
-          itemName={victoryConditionToDelete?.type}
           title="ยืนยันการลบเงื่อนไขชัยชนะ"
-          deleting={deleting}
+          description={`คุณต้องการลบเงื่อนไขชัยชนะ "${victoryConditionToDelete?.type}" ใช่หรือไม่? ฟาดฟันนี้ไม่สามารถย้อนกลับได้`}
+          confirmText="ลบ"
+          cancelText="ยกเลิก"
+          variant="destructive"
+          isConfirming={deleteVictoryConditionMutation.isPending}
         />
       </div>
     </div>

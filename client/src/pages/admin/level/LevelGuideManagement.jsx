@@ -50,14 +50,12 @@ const LevelGuideManagement = () => {
   // Delete states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [guideToDelete, setGuideToDelete] = useState(null);
-  const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
 
   // Image management states
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
-  const [selectedGuide, setSelectedGuide] = useState(null);
+  const [selectedGuideId, setSelectedGuideId] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [deletingImageId, setDeletingImageId] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [imageError, setImageError] = useState(null);
 
@@ -82,20 +80,17 @@ const LevelGuideManagement = () => {
   const handleDeleteConfirm = useCallback(async () => {
     if (!guideToDelete) return;
     try {
-      setDeleting(true);
       setDeleteError(null);
       await deleteGuideMutation.mutateAsync(guideToDelete.guide_id);
       setDeleteDialogOpen(false);
       setGuideToDelete(null);
     } catch (err) {
       setDeleteError('ไม่สามารถลบ guide ได้: ' + (err.message || 'Unknown error'));
-    } finally {
-      setDeleting(false);
     }
   }, [guideToDelete, deleteGuideMutation]);
 
   const handleOpenImageDialog = useCallback((guide) => {
-    setSelectedGuide(guide);
+    setSelectedGuideId(guide.guide_id);
     setImageFile(null);
     setImageError(null);
     setImageDialogOpen(true);
@@ -104,10 +99,9 @@ const LevelGuideManagement = () => {
   const handleImageDialogChange = useCallback((open) => {
     setImageDialogOpen(open);
     if (!open) {
-      setSelectedGuide(null);
+      setSelectedGuideId(null);
       setImageFile(null);
       setUploadingImage(false);
-      setDeletingImageId(null);
       setImageError(null);
     }
   }, []);
@@ -118,7 +112,7 @@ const LevelGuideManagement = () => {
   }, []);
 
   const handleAddImage = useCallback(async () => {
-    if (!selectedGuide || !imageFile) {
+    if (!selectedGuideId || !imageFile) {
       setImageError('กรุณาเลือกไฟล์รูปภาพ');
       return;
     }
@@ -127,13 +121,12 @@ const LevelGuideManagement = () => {
       setUploadingImage(true);
       setImageError(null);
       await uploadImageMutation.mutateAsync({
-        guideId: selectedGuide.guide_id,
+        guideId: selectedGuideId,
         file: imageFile
       });
 
       // Same as in Hints, we rely on TanStack Query invalidation.
-      // But selectedGuide is local, so we should update it or clear it.
-      // Updating it via effect is better.
+      // But selectedGuideId is local, which is fine since dialogGuide derives from guidesData
 
       setImageFile(null);
       const input = document.getElementById('guide-image-input');
@@ -143,27 +136,21 @@ const LevelGuideManagement = () => {
     } finally {
       setUploadingImage(false);
     }
-  }, [selectedGuide, imageFile, uploadImageMutation]);
+  }, [selectedGuideId, imageFile, uploadImageMutation]);
 
   const handleDeleteImage = useCallback(async (imageId) => {
     try {
-      setDeletingImageId(imageId);
       setImageError(null);
       await deleteImageMutation.mutateAsync(imageId);
     } catch (err) {
       setImageError('ไม่สามารถลบรูปภาพได้: ' + (err.message || 'Unknown error'));
-    } finally {
-      setDeletingImageId(null);
     }
   }, [deleteImageMutation]);
 
-  // Sync selectedGuide with guidesData
-  useEffect(() => {
-    if (selectedGuide && guidesData) {
-      const updated = guidesData.find(g => g.guide_id === selectedGuide.guide_id);
-      if (updated) setSelectedGuide(updated);
-    }
-  }, [guidesData, selectedGuide]);
+  // Derived dialogGuide from the freshest guidesData
+  const dialogGuide = useMemo(() => {
+    return selectedGuideId && guidesData ? guidesData.find(g => g.guide_id === selectedGuideId) : null;
+  }, [selectedGuideId, guidesData]);
 
   const filteredGuides = guides.filter(g =>
     (g.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -215,21 +202,26 @@ const LevelGuideManagement = () => {
 
         <DeleteConfirmDialog
           open={deleteDialogOpen}
-          onOpenChange={(open) => !deleting && setDeleteDialogOpen(open)}
+          onOpenChange={(open) => !deleteGuideMutation.isPending && setDeleteDialogOpen(open)}
           onConfirm={handleDeleteConfirm}
           itemName={guideToDelete?.title}
           title="ยืนยันการลบ Guide"
-          deleting={deleting}
+          description={`คุณต้องการลบคำแนะนำ "${guideToDelete?.title}" ใช่หรือไม่? ฟาดฟันนี้ไม่สามารถย้อนกลับได้`}
+          confirmText="ลบ Guide"
+          cancelText="ยกเลิก"
+          variant="destructive"
+          isConfirming={deleteGuideMutation.isPending}
+          error={deleteError}
         />
 
         <GuideImageDialog
           open={imageDialogOpen}
           onOpenChange={handleImageDialogChange}
-          selectedGuide={selectedGuide}
+          selectedGuide={dialogGuide}
           imageFile={imageFile}
           onImageFileChange={handleImageFileChange}
-          uploadingImage={uploadingImage}
-          deletingImageId={deletingImageId}
+          isUploading={uploadingImage}
+          isDeleting={deleteImageMutation.isPending}
           onAddImage={handleAddImage}
           onDeleteImage={handleDeleteImage}
           getImageUrl={getImageUrl}

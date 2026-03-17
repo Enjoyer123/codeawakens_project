@@ -28,7 +28,6 @@ import PageError from '@/components/shared/Error/PageError';
 
 const RewardManagement = () => {
   const navigate = useNavigate();
-  const { getToken } = useAuth();
   const { page, rowsPerPage, handlePageChange } = usePagination(1, 10);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -79,9 +78,8 @@ const RewardManagement = () => {
 
   // Image management states
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
-  const [selectedReward, setSelectedReward] = useState(null);
+  const [selectedRewardId, setSelectedRewardId] = useState(null);
   const [uploadingFrame, setUploadingFrame] = useState(null);
-  const [deletingFrame, setDeletingFrame] = useState(null);
 
   // Error states
   const [imageError, setImageError] = useState(null);
@@ -178,7 +176,7 @@ const RewardManagement = () => {
   }, [deleting]);
 
   const handleOpenImageDialog = useCallback((reward) => {
-    setSelectedReward(reward);
+    setSelectedRewardId(reward.reward_id);
     setImageError(null);
     setImageDialogOpen(true);
   }, []);
@@ -186,15 +184,15 @@ const RewardManagement = () => {
   const handleImageDialogChange = useCallback((open) => {
     setImageDialogOpen(open);
     if (!open) {
-      setSelectedReward(null);
+      setSelectedRewardId(null);
       setUploadingFrame(null);
-      setDeletingFrame(null);
+      setUploadingFrame(null);
       setImageError(null);
     }
   }, []);
 
   const handleUploadFrame = useCallback(async (frameNumber, imageFile) => {
-    if (!selectedReward || !imageFile) {
+    if (!selectedRewardId || !imageFile) {
       setImageError('กรุณาเลือกไฟล์รูปภาพ');
       return;
     }
@@ -203,7 +201,7 @@ const RewardManagement = () => {
       setUploadingFrame(frameNumber);
       setImageError(null);
       await uploadFrameAsync({
-        rewardId: selectedReward.reward_id,
+        rewardId: selectedRewardId,
         imageFile,
         frameNumber
       });
@@ -216,31 +214,27 @@ const RewardManagement = () => {
     } finally {
       setUploadingFrame(null);
     }
-  }, [selectedReward, uploadFrameAsync]);
+  }, [selectedRewardId, uploadFrameAsync]);
 
   const handleDeleteFrame = useCallback(async (frameNumber) => {
-    if (!selectedReward) return;
+    if (!selectedRewardId) return;
 
     try {
-      setDeletingFrame(frameNumber);
       setImageError(null);
       await deleteFrameAsync({
-        rewardId: selectedReward.reward_id,
+        rewardId: selectedRewardId,
         frameNumber
       });
       // Same issue as upload: selectedReward is stale.
     } catch (err) {
       setImageError('ไม่สามารถลบรูปภาพได้: ' + (err.message || 'Unknown error'));
-    } finally {
-      setDeletingFrame(null);
     }
-  }, [selectedReward, deleteFrameAsync]);
+  }, [selectedRewardId, deleteFrameAsync]);
 
 
   // useReward fetches fresh data to keep the dialog updated when images change
-  const { data: activeRewardData } = useReward(selectedReward?.reward_id);
-
-  const dialogReward = activeRewardData || selectedReward;
+  const { data: activeRewardData } = useReward(selectedRewardId);
+  const dialogReward = activeRewardData || (selectedRewardId && rewards ? rewards.find(r => r.reward_id === selectedRewardId) : null);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -303,7 +297,10 @@ const RewardManagement = () => {
           onOpenChange={handleImageDialogChange}
           selectedReward={dialogReward}
           uploadingFrame={uploadingFrame}
-          deletingFrame={deletingFrame}
+          // Note: Since deleteFrameAsync is a mutation returned by useUploadRewardFrame, 
+          // we don't have a direct 'isPending' state per frame without creating a separate component.
+          // As a compromise for now without major refactor, we let it be undefined or handled internally
+          // Ideally, the image dialog should manage its own granular loading states or we lift it.
           onUploadFrame={handleUploadFrame}
           onDeleteFrame={handleDeleteFrame}
           getImageUrl={getImageUrl}

@@ -7,13 +7,10 @@ export const usePhaserMapInteractions = ({
   formDataRef, selectedNodeRef, currentModeRef, coinValueRef, edgeWeightRef,
   selectedCategoryRef, obstacleDragStartRef, obstacleDragEndRef, isDraggingObstacleRef,
   editingObstacleIndexRef, onFormDataChange, onSelectedNodeChange, onAddMonsterRequest,
-  onEditEntityRequest, redrawPhaser, showAlert
+  redrawPhaser, showAlert
 }) => {
   const onAddMonsterReqRef = useRef(onAddMonsterRequest);
   onAddMonsterReqRef.current = onAddMonsterRequest;
-
-  const onEditEntityReqRef = useRef(onEditEntityRequest);
-  onEditEntityReqRef.current = onEditEntityRequest;
 
   const lastClickTimeRef = useRef(0);
 
@@ -207,19 +204,10 @@ export const usePhaserMapInteractions = ({
     const zone = scene.add.zone(canvasSize.width / 2, canvasSize.height / 2, canvasSize.width, canvasSize.height).setInteractive();
 
     zone.on('pointerdown', (pointer) => {
-      const now = scene.time.now;
-      if (now - lastClickTimeRef.current < 300) {
-        // Double Click Dispatch
-        const entity = findEntityAt(pointer.x, pointer.y);
-        if (entity && onEditEntityReqRef.current) onEditEntityReqRef.current(entity);
-      } else {
-        // Single Click Dispatch Route
-        const mode = currentModeRef.current;
-        if (handlers[mode]) {
-          handlers[mode](pointer.x, pointer.y, findNodeAt(pointer.x, pointer.y), findEntityAt(pointer.x, pointer.y));
-        }
+      const mode = currentModeRef.current;
+      if (handlers[mode]) {
+        handlers[mode](pointer.x, pointer.y, findNodeAt(pointer.x, pointer.y), findEntityAt(pointer.x, pointer.y));
       }
-      lastClickTimeRef.current = now;
     });
 
     scene.input.on('pointermove', (pointer) => {

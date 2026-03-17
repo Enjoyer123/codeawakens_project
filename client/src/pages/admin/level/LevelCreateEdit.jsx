@@ -17,8 +17,6 @@ import VictoryConditionSelector from '../../../components/admin/level/forms/Vict
 import BackgroundImageUpload from '../../../components/admin/level/forms/BackgroundImageUpload';
 import LevelElementsToolbar from '../../../components/admin/level/editor/LevelElementsToolbar';
 import PatternListDialog from '../../../components/admin/pattern/PatternListDialog';
-import MonsterSelectionDialog from '../../../components/admin/level/dialogs/MonsterSelectionDialog';
-import EntityEditPopover from '../../../components/admin/level/editor/EntityEditPopover';
 import ErrorAlert from '@/components/shared/alert/ErrorAlert';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import AlertDialog from '@/components/shared/dialog/AlertDialog';
@@ -37,6 +35,8 @@ const MODE_LABELS = {
   obstacle: 'MODE: PLACE OBSTACLE',
   delete: 'MODE: DELETE',
 };
+
+const CANVAS_SIZE = { width: 1200, height: 920 };
 
 const LevelCreateEdit = () => {
   const navigate = useNavigate();
@@ -83,18 +83,12 @@ const LevelCreateEdit = () => {
   });
 
   // --- 3. UI State ---
-  const CANVAS_SIZE = { width: 1200, height: 920 };
   const [currentMode, setCurrentMode] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
   const [coinValue, setCoinValue] = useState(10);
   const [edgeWeight, setEdgeWeight] = useState(1);
   const [patternListDialogOpen, setPatternListDialogOpen] = useState(false);
-  const [monsterDialogOpen, setMonsterDialogOpen] = useState(false);
   const [selectedMonsterType, setSelectedMonsterType] = useState('vampire_1');
-
-  // Popover State
-  const [editPopoverOpen, setEditPopoverOpen] = useState(false);
-  const [editingEntity, setEditingEntity] = useState(null);
 
   // Detect level type for canvas switching (ใช้ algo_data แทน legacy columns)
   const algoType = formData.algo_data?.type || null;
@@ -137,30 +131,6 @@ const LevelCreateEdit = () => {
 
     // Direct add functionality using currently selected type from toolbar
     addMonster(selectedMonsterType, snapPos.x, snapPos.y, clickedNode.id);
-  };
-
-  const handleEditEntityRequest = (entity) => {
-    setEditingEntity(entity);
-    setEditPopoverOpen(true);
-  };
-
-  const handleEntitySave = (entity, updatedData) => {
-    // 1. ตรวจสอบว่าเป็น node หรือไม่ (ตอนนี้เราอาจยังไม่รองรับแก้ node ผ่าน popover โดยตรง แต่กันไว้ก่อน)
-    if (entity.type === 'node') {
-      const updatedNodes = formData.nodes.map(n => n.id === entity.id ? { ...n, ...updatedData } : n);
-      setFormData({ ...formData, nodes: updatedNodes });
-      return;
-    }
-
-    // 2. ถ้าเป็น entities อื่นๆ ให้หาใน formData.map_entities ด้วย index แล้วแทนที่
-    if (entity.index !== undefined && formData.map_entities) {
-      const updatedMapEntities = [...formData.map_entities];
-      updatedMapEntities[entity.index] = {
-        ...updatedMapEntities[entity.index],
-        ...updatedData
-      };
-      setFormData({ ...formData, map_entities: updatedMapEntities });
-    }
   };
 
   // --- Render ---
@@ -328,7 +298,6 @@ const LevelCreateEdit = () => {
                     onFormDataChange={setFormData}
                     onSelectedNodeChange={setSelectedNode}
                     onAddMonsterRequest={handleMonsterPlacementRequest}
-                    onEditEntityRequest={handleEditEntityRequest}
                     selectedCategory={selectedCategory}
                     coinValue={coinValue}
                     edgeWeight={edgeWeight}
@@ -355,24 +324,6 @@ const LevelCreateEdit = () => {
           levelName={formData.level_name}
         />
       )}
-
-      {/* Monster Selection Dialog (Optional: Keep if we want manual triggering, or via toolbar) */}
-      <MonsterSelectionDialog
-        open={monsterDialogOpen}
-        onOpenChange={setMonsterDialogOpen}
-        onSelectMonster={(type) => {
-          setSelectedMonsterType(type);
-          setMonsterDialogOpen(false);
-        }}
-      />
-
-      {/* Entity Edit Popover */}
-      <EntityEditPopover
-        isOpen={editPopoverOpen}
-        onClose={() => setEditPopoverOpen(false)}
-        entity={editingEntity}
-        onSave={handleEntitySave}
-      />
 
       <AlertDialog {...alertDialog} />
     </div>

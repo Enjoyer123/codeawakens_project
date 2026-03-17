@@ -23,7 +23,6 @@ import { getImageUrl } from '@/utils/imageUtils';
 import PageError from '@/components/shared/Error/PageError';
 
 const BlockManagement = () => {
-  const { getToken } = useAuth();
   const { page, rowsPerPage, handlePageChange } = usePagination(1, 10);
   const [searchQuery, setSearchQuery] = useState('');
 

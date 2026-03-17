@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { useAuth } from '@clerk/clerk-react';
 
 import {
   useUsers,
@@ -13,7 +12,6 @@ import UserDetailsModal from '@/components/shared/userDetailProfile/UserDetailsM
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import SearchInput from '@/components/admin/formFields/SearchInput';
-import ErrorAlert from '@/components/shared/alert/ErrorAlert';
 import PaginationControls from '@/components/shared/pagination/PaginationControls';
 import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import { usePagination } from '@/hooks/usePagination';
@@ -25,7 +23,6 @@ import AlertDialog from '@/components/shared/dialog/AlertDialog';
 import { useAlertDialog } from '@/components/shared/dialog/useAlertDialog';
 
 const UserManagement = () => {
-  const { getToken } = useAuth();
   const { page, rowsPerPage, handlePageChange } = usePagination(1, 5);
   const [searchQuery, setSearchQuery] = useState('');
   const { alertDialog, showAlert } = useAlertDialog();

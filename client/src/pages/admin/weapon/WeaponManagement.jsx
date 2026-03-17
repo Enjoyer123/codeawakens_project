@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import {
   useWeapons,
@@ -37,11 +37,9 @@ const WeaponManagement = () => {
     combat_power: 0,
     weapon_type: 'melee',
   });
-
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
-  const [selectedWeapon, setSelectedWeapon] = useState(null);
+  const [selectedWeaponId, setSelectedWeaponId] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [deletingImageId, setDeletingImageId] = useState(null);
   const [imageForm, setImageForm] = useState({
     type_file: 'idle',
     type_animation: 'weapon',
@@ -51,7 +49,6 @@ const WeaponManagement = () => {
   // Delete states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [weaponToDelete, setWeaponToDelete] = useState(null);
-  const [deleting, setDeleting] = useState(false);
 
   const [imageError, setImageError] = useState(null); // Added this as it seemed missing based on usage
 
@@ -83,15 +80,9 @@ const WeaponManagement = () => {
   };
 
 
-  // Sync selectedWeapon with fresh data when weapons list updates (e.g. after adding image)
-  useEffect(() => {
-    if (selectedWeapon) {
-      const updated = weapons.find(w => w.weapon_id === selectedWeapon.weapon_id);
-      if (updated && updated !== selectedWeapon) {
-        setSelectedWeapon(updated);
-      }
-    }
-  }, [weapons, selectedWeapon]);
+  const dialogWeapon = useMemo(() => {
+    return selectedWeaponId && weapons ? weapons.find(w => w.weapon_id === selectedWeaponId) : null;
+  }, [selectedWeaponId, weapons]);
 
 
   // Manual loadWeapons is removed as useQuery handles it
@@ -160,21 +151,21 @@ const WeaponManagement = () => {
   }, [weaponForm, editingWeapon, updateWeaponMutation, createWeaponMutation, handleCloseWeaponDialog]);
 
   const handleOpenImageDialog = useCallback((weapon) => {
-    setSelectedWeapon(weapon);
-    setImageError(null);
+    setSelectedWeaponId(weapon.weapon_id); // Changed to setSelectedWeaponId
     setImageForm({
       type_file: 'idle',
       type_animation: 'weapon',
       frame: 1,
       imageFile: null,
     });
+    setImageError(null);
     setImageDialogOpen(true);
   }, []);
 
   const handleImageDialogChange = useCallback((open) => {
     setImageDialogOpen(open);
     if (!open) {
-      setSelectedWeapon(null);
+      setSelectedWeaponId(null); // Changed to setSelectedWeaponId
       setImageError(null);
       setImageForm({
         type_file: 'idle',
@@ -186,8 +177,8 @@ const WeaponManagement = () => {
   }, []);
 
   const handleAddImage = useCallback(async () => {
-    if (!selectedWeapon || !imageForm.imageFile) {
-      setImageError('กรุณาเลือกอาวุธและไฟล์รูปภาพ');
+    if (!selectedWeaponId || !imageForm.imageFile) { // Changed to selectedWeaponId
+      setImageError('กรุณาเลือกไฟล์รูปภาพ'); // Simplified message as weapon is now implied by selectedWeaponId
       return;
     }
 
@@ -203,7 +194,7 @@ const WeaponManagement = () => {
 
     // Validation: Only 1 image for type 'weapon'
     if (imageForm.type_animation === 'weapon') {
-      const hasWeaponImage = selectedWeapon.weapon_images?.some(img => img.type_animation === 'weapon');
+      const hasWeaponImage = dialogWeapon?.weapon_images?.some(img => img.type_animation === 'weapon'); // Use dialogWeapon
       if (hasWeaponImage) {
         setImageError('สามารถเพิ่มรูปภาพอาวุธ (Type: Weapon) ได้เพียง 1 รูปเท่านั้น (หากต้องการเปลี่ยน ให้ลบรูปเดิมออกก่อน)');
         return;
@@ -215,13 +206,13 @@ const WeaponManagement = () => {
       setImageError(null);
 
       await addImageMutation.mutateAsync({
-        weaponId: selectedWeapon.weapon_id,
+        weaponId: selectedWeaponId, // Changed to selectedWeaponId
         imageFile: imageForm.imageFile,
         imageData: {
           type_file: imageForm.type_file,
           type_animation: imageForm.type_animation,
           frame: imageForm.frame,
-          weapon_key: selectedWeapon.weapon_key,
+          weapon_key: dialogWeapon?.weapon_key, // Use dialogWeapon
         }
       });
 
@@ -239,18 +230,15 @@ const WeaponManagement = () => {
     } finally {
       setUploadingImage(false);
     }
-  }, [selectedWeapon, imageForm, addImageMutation]);
+  }, [selectedWeaponId, imageForm, addImageMutation]);
 
   const handleDeleteImage = useCallback(async (imageId) => {
     try {
-      setDeletingImageId(imageId);
       setImageError(null);
       await deleteImageMutation.mutateAsync(imageId);
       // Invalidation happens in hook
     } catch (err) {
       console.error(err);
-    } finally {
-      setDeletingImageId(null);
     }
   }, [deleteImageMutation]);
 
@@ -263,25 +251,22 @@ const WeaponManagement = () => {
     if (!weaponToDelete) return;
 
     try {
-      setDeleting(true);
       await deleteWeaponMutation.mutateAsync(weaponToDelete.weapon_id);
       setDeleteDialogOpen(false);
       setWeaponToDelete(null);
     } catch (err) {
       console.error(err);
-    } finally {
-      setDeleting(false);
     }
   }, [weaponToDelete, deleteWeaponMutation]);
 
   const handleDeleteDialogChange = useCallback((open) => {
-    if (!deleting) {
+    if (!deleteWeaponMutation.isPending) {
       setDeleteDialogOpen(open);
       if (!open) {
         setWeaponToDelete(null);
       }
     }
-  }, [deleting]);
+  }, [deleteWeaponMutation.isPending]);
 
 
 
@@ -345,23 +330,27 @@ const WeaponManagement = () => {
         <WeaponImageDialog
           open={imageDialogOpen}
           onOpenChange={handleImageDialogChange}
-          selectedWeapon={selectedWeapon}
+          selectedWeapon={dialogWeapon}
           imageForm={imageForm}
           onImageFormChange={setImageForm}
-          uploadingImage={uploadingImage}
-          deletingImageId={deletingImageId}
+          isUploading={uploadingImage}
+          isDeleting={deleteImageMutation.isPending}
           onAddImage={handleAddImage}
           onDeleteImage={handleDeleteImage}
           getImageUrl={getImageUrl}
+          error={imageError}
         />
 
         <DeleteConfirmDialog
-          open={deleteDialogOpen}
-          onOpenChange={handleDeleteDialogChange}
+          isOpen={deleteDialogOpen}
+          onClose={() => handleDeleteDialogChange(false)}
           onConfirm={handleDeleteConfirm}
-          itemName={weaponToDelete?.weapon_name}
-          title="ยืนยันการลบอาวุธ"
-          deleting={deleting}
+          title="Confirm Deletion"
+          description={`Are you sure you want to delete the weapon "${weaponToDelete?.weapon_name}"? This action cannot be undone.`}
+          confirmText="Delete"
+          cancelText="Cancel"
+          variant="destructive"
+          isConfirming={deleteWeaponMutation.isPending}
         />
       </div>
     </div>

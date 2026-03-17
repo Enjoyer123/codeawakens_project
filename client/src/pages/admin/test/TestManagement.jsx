@@ -11,7 +11,6 @@ import TestCreateEditModal from '@/components/admin/test/TestCreateEditModal';
 import PageError from '@/components/shared/Error/PageError';
 
 const TestManagement = () => {
-    const { getToken } = useAuth();
 
     const [activeTab, setActiveTab] = useState('PreTest');
     const [searchQuery, setSearchQuery] = useState('');
@@ -23,7 +22,6 @@ const TestManagement = () => {
     // Delete States
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [testToDelete, setTestToDelete] = useState(null);
-    const [deleting, setDeleting] = useState(false);
 
     // TanStack Query Hooks
     const {
@@ -70,14 +68,11 @@ const TestManagement = () => {
     const handleDeleteConfirm = async () => {
         if (!testToDelete) return;
         try {
-            setDeleting(true);
             await deleteTestMutation.mutateAsync(testToDelete.test_id);
             setDeleteDialogOpen(false);
             setTestToDelete(null);
         } catch (err) {
             console.error(err);
-        } finally {
-            setDeleting(false);
         }
     };
 
@@ -130,11 +125,20 @@ const TestManagement = () => {
                 />
 
                 <DeleteConfirmDialog
-                    open={deleteDialogOpen}
-                    onOpenChange={setDeleteDialogOpen}
+                    isOpen={deleteDialogOpen}
+                    onClose={() => {
+                        if (!deleteTestMutation.isPending) {
+                            setDeleteDialogOpen(false);
+                            setTestToDelete(null);
+                        }
+                    }}
                     onConfirm={handleDeleteConfirm}
-                    deleting={deleting}
-                    itemName="this question"
+                    title="ยืนยันการลบแบบทดสอบ"
+                    description="คุณต้องการลบข้อสอบนี้ใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้"
+                    confirmText="ลบ"
+                    cancelText="ยกเลิก"
+                    variant="destructive"
+                    isConfirming={deleteTestMutation.isPending}
                 />
             </div>
         </div>

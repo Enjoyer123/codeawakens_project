@@ -48,15 +48,13 @@ const LevelHintManagement = () => {
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [hintToDelete, setHintToDelete] = useState(null);
-  const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
 
   // image dialog state
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
-  const [selectedHint, setSelectedHint] = useState(null);
+  const [selectedHintId, setSelectedHintId] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [deletingImageId, setDeletingImageId] = useState(null);
   const [imageError, setImageError] = useState(null);
 
   if (isError) {
@@ -118,21 +116,18 @@ const LevelHintManagement = () => {
   const handleDeleteConfirm = useCallback(async () => {
     if (!hintToDelete) return;
     try {
-      setDeleting(true);
       setDeleteError(null);
       await deleteHintMutation.mutateAsync(hintToDelete.hint_id);
       setDeleteDialogOpen(false);
       setHintToDelete(null);
     } catch (err) {
       setDeleteError('ไม่สามารถลบ hint ได้: ' + (err.message || 'Unknown error'));
-    } finally {
-      setDeleting(false);
     }
   }, [hintToDelete, deleteHintMutation]);
 
   const handleDeleteDialogChange = useCallback(
     (open) => {
-      if (!deleting) {
+      if (!deleteHintMutation.isPending) {
         setDeleteDialogOpen(open);
         if (!open) {
           setHintToDelete(null);
@@ -140,11 +135,11 @@ const LevelHintManagement = () => {
         }
       }
     },
-    [deleting]
+    [deleteHintMutation.isPending]
   );
 
   const handleOpenImageDialog = useCallback((hint) => {
-    setSelectedHint(hint);
+    setSelectedHintId(hint.hint_id);
     setImageFile(null);
     setImageError(null);
     setImageDialogOpen(true);
@@ -153,10 +148,9 @@ const LevelHintManagement = () => {
   const handleImageDialogChange = useCallback((open) => {
     setImageDialogOpen(open);
     if (!open) {
-      setSelectedHint(null);
+      setSelectedHintId(null);
       setImageFile(null);
       setUploadingImage(false);
-      setDeletingImageId(null);
       setImageError(null);
     }
   }, []);
@@ -167,7 +161,7 @@ const LevelHintManagement = () => {
   }, []);
 
   const handleAddImage = useCallback(async () => {
-    if (!selectedHint || !imageFile) {
+    if (!selectedHintId || !imageFile) {
       setImageError('กรุณาเลือก Hint และไฟล์รูปภาพ');
       return;
     }
@@ -177,7 +171,7 @@ const LevelHintManagement = () => {
       setImageError(null);
 
       await uploadImageMutation.mutateAsync({
-        hintId: selectedHint.hint_id,
+        hintId: selectedHintId,
         file: imageFile
       });
 
@@ -191,29 +185,21 @@ const LevelHintManagement = () => {
     } finally {
       setUploadingImage(false);
     }
-  }, [selectedHint, imageFile, uploadImageMutation]);
+  }, [selectedHintId, imageFile, uploadImageMutation]);
 
   const handleDeleteImage = useCallback(async (imageId) => {
     try {
-      setDeletingImageId(imageId);
       setImageError(null);
       await deleteImageMutation.mutateAsync(imageId);
     } catch (err) {
       setImageError('ไม่สามารถลบรูปภาพได้: ' + (err.message || 'Unknown error'));
-    } finally {
-      setDeletingImageId(null);
     }
   }, [deleteImageMutation]);
 
-  // Sync selectedHint with hintsData when it changes (for image dialog updates)
-  useEffect(() => {
-    if (selectedHint && hintsData) {
-      const updated = hintsData.find(h => h.hint_id === selectedHint.hint_id);
-      if (updated) {
-        setSelectedHint(updated);
-      }
-    }
-  }, [hintsData, selectedHint]);
+  // Derived dialogHint from the freshest hintsData
+  const dialogHint = useMemo(() => {
+    return selectedHintId && allHints ? allHints.find(h => h.hint_id === selectedHintId) : null;
+  }, [selectedHintId, allHints]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -277,17 +263,18 @@ const LevelHintManagement = () => {
           onConfirm={handleDeleteConfirm}
           itemName={hintToDelete?.title}
           title="ยืนยันการลบ Hint"
-          deleting={deleting}
+          isConfirming={deleteHintMutation.isPending}
+          error={deleteError}
         />
 
         <LevelHintImageDialog
           open={imageDialogOpen}
           onOpenChange={handleImageDialogChange}
-          selectedHint={selectedHint}
+          selectedHint={dialogHint}
           imageFile={imageFile}
           onImageFileChange={handleImageFileChange}
-          uploadingImage={uploadingImage}
-          deletingImageId={deletingImageId}
+          isUploading={uploadingImage}
+          isDeleting={deleteImageMutation.isPending}
           onAddImage={handleAddImage}
           onDeleteImage={handleDeleteImage}
           getImageUrl={getImageUrl}
