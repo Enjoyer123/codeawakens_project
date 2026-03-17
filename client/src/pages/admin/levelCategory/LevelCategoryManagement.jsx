@@ -1,6 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
-import { useAuth } from '@clerk/clerk-react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useCallback } from 'react';
 import {
   useLevelCategories,
   useCreateLevelCategory,
@@ -18,7 +16,7 @@ import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import LevelCategoryFormDialog from '@/components/admin/addEditDialog/LevelCategoryFormDialog';
 import LevelCategoryImageDialog from '@/components/admin/imageDialog/LevelCategoryImageDialog';
 import { usePagination } from '@/hooks/usePagination';
-import { createDeleteErrorMessage } from '@/utils/errorHandler';
+
 import LevelCategoryTable from '@/components/admin/levelCategory/LevelCategoryTable';
 import { getImageUrl } from '@/utils/imageUtils';
 
@@ -47,29 +45,12 @@ const LevelCategoryManagement = () => {
   const { mutateAsync: uploadImageAsync, isPending: uploadingImage } = useUploadCategoryBackground();
   const { mutateAsync: deleteImageAsync, isPending: deletingImage } = useDeleteCategoryBackground();
 
-  // Derived state
-  // Filter locally if API doesn't support pagination, OR rely on API if it does.
-  // The service passes 'search' to API. 
-  // However, `useLevelCategories` hook in my implementation calls `fetchAllLevelCategories(getToken, search)`.
-  // `levelCategoryService.js` fetches ALL (no page/limit params sent, only search).
-  // So we must handle pagination CLIENT-SIDE for now, OR update service to support pagination.
-  // The original component code shows `setPagination(data.pagination || { ... })`.
-  // Wait, `levelCategoryService.js` (step 226) DOES NOT send page/limit.
-  // But `LevelCategoryManagement.jsx` (step 285, line 75-81) expects `data.pagination`.
-  // If `levelCategoryService.js` returns all data, `data.pagination` might be undefined.
-  // If the API returns all data, we should paginate locally.
-  // The original code implies it expected pagination but maybe the API didn't support it strictly?
-  // Let's assume we get all categories and paginate locally.
-
+  // Client-side pagination (API returns all categories)
   const allCategories = categoriesData?.levelCategories || [];
-  // Client-side pagination logic if API returns all
   const startIndex = (page - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
   const paginatedCategories = allCategories.slice(startIndex, endIndex);
 
-  // If the API DOES return pagination (e.g. if I missed it in service), use it.
-  // But strictly looking at `levelCategoryService.js`, it only sends `search`.
-  // So client-side pagination is safer.
 
   const pagination = {
     total: allCategories.length,
@@ -234,7 +215,6 @@ const LevelCategoryManagement = () => {
 
   const handleDeleteClick = useCallback((levelCategory) => {
     setLevelCategoryToDelete(levelCategory);
-    setLevelCategoryToDelete(levelCategory);
     setDeleteDialogOpen(true);
   }, []);
 
@@ -286,16 +266,6 @@ const LevelCategoryManagement = () => {
       setImageError(null);
       await uploadImageAsync({ categoryId: selectedCategory.category_id, file: imageFile });
 
-      // Update selected category state to reflect changes immediately
-      // The query cache is already invalidated, but to update the local `selectedCategory` needed for the dialog:
-      // We can try to find it in the new data or just close/refresh.
-      // But query update is async.
-      // Simple fix: Close dialog or rely on query re-render if `selectedCategory` uses ID? 
-      // The dialog uses `selectedCategory` object passed in.
-      // We might need to fetch the single category to get the new image URL, OR just trust query invalidation updates the LIST, 
-      // and we need to re-find the category from the list.
-      // But for now let's just let it be, often list update is enough.
-
     } catch (err) {
       setImageError('ไม่สามารถอัปโหลดรูปภาพได้: ' + (err.message || 'Unknown error'));
     }
@@ -322,10 +292,6 @@ const LevelCategoryManagement = () => {
           addButtonText="เพิ่มหัวข้อ"
         />
 
-        {/* Save error moved to inside dialog usually, but here it's global? */}
-        {/* The dialog component probably displays its own errors or we pass it? */}
-        {/* Looking at dialog usage below, we pass `onSave`. The dialog might handle error display? */}
-        {/* But we have `setSaveError` here, so we display it here. */}
         <ErrorAlert message={saveError} />
         <ErrorAlert message={imageError} />
 

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useAuth } from '@clerk/clerk-react';
+
 import { toast } from 'sonner';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
@@ -10,7 +10,7 @@ import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import NotificationFormDialog from '@/components/admin/addEditDialog/NotificationFormDialog';
 import NotificationTable from '@/components/admin/notification/NotificationTable';
 import { usePagination } from '@/hooks/usePagination';
-import { createDeleteErrorMessage } from '@/utils/errorHandler';
+
 import {
     useNotifications,
     useCreateNotification,
@@ -21,7 +21,6 @@ import {
 import PageError from '@/components/shared/Error/PageError';
 
 const NotificationManagement = () => {
-    const { getToken } = useAuth();
     const { page, rowsPerPage, handlePageChange } = usePagination(1, 10);
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -62,7 +61,7 @@ const NotificationManagement = () => {
     // Delete states
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
-    // const [saveError, setSaveError] = useState(null);
+
 
     const handleSearchChange = useCallback((value) => {
         setSearchQuery(value);
@@ -101,7 +100,6 @@ const NotificationManagement = () => {
     const handleCloseDialog = useCallback(() => {
         setDialogOpen(false);
         setEditingNotification(null);
-        setEditingNotification(null);
         setFormData({
             title: '',
             message: '',
@@ -111,7 +109,7 @@ const NotificationManagement = () => {
     }, []);
 
     const handleSave = useCallback(async () => {
-        // setSaveError(null);
+
 
         try {
             if (editingNotification) {

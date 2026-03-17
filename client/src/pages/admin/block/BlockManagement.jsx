@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
-import { useAuth } from '@clerk/clerk-react'; // Still needed? Hooks handle token? Yes, but maybe unused here.
-import { useNavigate } from 'react-router-dom';
+
 
 import {
   useBlocks,
@@ -17,15 +16,14 @@ import PaginationControls from '@/components/shared/pagination/PaginationControl
 import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import BlockFormDialog from '@/components/admin/addEditDialog/BlockFormDialog';
 import { usePagination } from '@/hooks/usePagination';
-import { createDeleteErrorMessage } from '@/utils/errorHandler';
+
 import BlockTable from '@/components/admin/block/BlockTable';
 import { getImageUrl } from '@/utils/imageUtils';
 
 import PageError from '@/components/shared/Error/PageError';
 
 const BlockManagement = () => {
-  // const navigate = useNavigate(); // unused?
-  const { getToken } = useAuth(); // Hooks use token internally, but maybe we keep for consistency.
+  const { getToken } = useAuth();
   const { page, rowsPerPage, handlePageChange } = usePagination(1, 10);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -68,7 +66,7 @@ const BlockManagement = () => {
   // Delete states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [blockToDelete, setBlockToDelete] = useState(null);
-  // const [saveError, setSaveError] = useState(null);
+
 
   // Image states
   const [selectedImage, setSelectedImage] = useState(null);
@@ -131,7 +129,7 @@ const BlockManagement = () => {
   };
 
   const handleSaveBlock = useCallback(async () => {
-    // setSaveError(null);
+
 
     const formData = {
       ...blockForm,

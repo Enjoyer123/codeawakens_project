@@ -1,6 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
-import { useAuth } from '@clerk/clerk-react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import {
   useVictoryConditions,
@@ -16,13 +14,11 @@ import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import VictoryConditionFormDialog from '@/components/admin/addEditDialog/VictoryConditionFormDialog';
 import VictoryConditionTable from '@/components/admin/victoryCondition/VictoryConditionTable';
 import { usePagination } from '@/hooks/usePagination';
-import { createDeleteErrorMessage } from '@/utils/errorHandler';
+
 
 import PageError from '@/components/shared/Error/PageError';
 
 const VictoryConditionManagement = () => {
-  const navigate = useNavigate();
-  const { getToken } = useAuth();
   const { page, rowsPerPage, handlePageChange } = usePagination(1, 10);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -39,7 +35,7 @@ const VictoryConditionManagement = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [victoryConditionToDelete, setVictoryConditionToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
-  // const [saveError, setSaveError] = useState(null);
+
 
   // TanStack Query Hooks
   const {
@@ -66,7 +62,6 @@ const VictoryConditionManagement = () => {
     limit: rowsPerPage,
   };
 
-  const error = isError ? (queryError?.message || 'Failed to load victory conditions') : null;
 
   // No manual load effect needed
 
@@ -84,7 +79,7 @@ const VictoryConditionManagement = () => {
         check: victoryCondition.check || '',
         is_available: victoryCondition.is_available,
       });
-      // setSaveError(null);
+
       setVictoryConditionDialogOpen(true);
     }
   }, []);
@@ -92,7 +87,7 @@ const VictoryConditionManagement = () => {
   const handleCloseVictoryConditionDialog = useCallback(() => {
     setVictoryConditionDialogOpen(false);
     setEditingVictoryCondition(null);
-    // setSaveError(null);
+
     setVictoryConditionForm({
       type: '',
       description: '',
@@ -102,7 +97,7 @@ const VictoryConditionManagement = () => {
   }, []);
 
   const handleSaveVictoryCondition = useCallback(async () => {
-    // setSaveError(null);
+
 
     const formData = {
       ...victoryConditionForm,

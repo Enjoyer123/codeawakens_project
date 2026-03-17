@@ -2,7 +2,6 @@
 // Preview level page for admin to test patterns
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '@clerk/clerk-react';
 import GameCore from '../../../components/playgame/GameCore';
 import { useLevel } from '../../../services/hooks/useLevel';
 import { useUnlockPattern, useUnlockLevel, usePatterns } from '../../../services/hooks/usePattern';

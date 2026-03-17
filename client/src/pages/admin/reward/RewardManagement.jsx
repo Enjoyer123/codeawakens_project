@@ -1,10 +1,6 @@
 import { useState, useCallback } from 'react';
-import { useAuth } from '@clerk/clerk-react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
+
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import SearchInput from '@/components/admin/formFields/SearchInput';
@@ -15,7 +11,7 @@ import RewardImageDialog from '@/components/admin/imageDialog/RewardImageDialog'
 import RewardFormDialog from '@/components/admin/addEditDialog/RewardFormDialog';
 import { usePagination } from '@/hooks/usePagination';
 import { getImageUrl } from '@/utils/imageUtils';
-import { createDeleteErrorMessage } from '@/utils/errorHandler';
+
 import RewardTable from '../../../components/admin/reward/RewardTable';
 import {
   useRewards,
@@ -89,7 +85,7 @@ const RewardManagement = () => {
 
   // Error states
   const [imageError, setImageError] = useState(null);
-  // const [saveError, setSaveError] = useState(null); // Removed in favor of toast
+
 
   const handleSearchChange = useCallback((value) => {
     setSearchQuery(value);
@@ -116,14 +112,14 @@ const RewardManagement = () => {
         required_score: 0,
       });
     }
-    // setSaveError(null);
+
     setRewardDialogOpen(true);
   }, []);
 
   const handleCloseRewardDialog = useCallback(() => {
     setRewardDialogOpen(false);
     setEditingReward(null);
-    // setSaveError(null);
+
     setRewardForm({
       level_id: '',
       reward_type: 'weapon',

@@ -1,6 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@clerk/clerk-react';
-import { fetchAllTests, deleteTest } from '../../../services/testService';
+import { useState } from 'react';
 import { useTests, useDeleteTest } from '../../../services/hooks/useTests';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';

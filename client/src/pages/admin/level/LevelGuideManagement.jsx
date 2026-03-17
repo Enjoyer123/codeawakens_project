@@ -1,8 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useAuth } from '@clerk/clerk-react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+
 import ErrorAlert from '@/components/shared/alert/ErrorAlert';
 import SearchInput from '@/components/admin/formFields/SearchInput';
 import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
@@ -22,8 +20,6 @@ import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import PageError from '@/components/shared/Error/PageError';
 
 const LevelGuideManagement = () => {
-  const navigate = useNavigate();
-  const { getToken } = useAuth();
   const { levelId } = useParams();
   const numericLevelId = parseInt(levelId, 10);
 

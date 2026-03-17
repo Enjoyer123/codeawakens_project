@@ -1,6 +1,4 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useAuth } from '@clerk/clerk-react';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   useWeapons,
@@ -20,14 +18,12 @@ import WeaponImageDialog from '../../../components/admin/weapon/WeaponImageDialo
 import WeaponFormDialog from '@/components/admin/addEditDialog/WeaponFormDialog';
 import { usePagination } from '@/hooks/usePagination';
 import { getImageUrl } from '@/utils/imageUtils';
-import { createDeleteErrorMessage } from '@/utils/errorHandler';
+
 import WeaponTable from '@/components/admin/weapon/WeaponTable';
 
 import PageError from '@/components/shared/Error/PageError';
 
 const WeaponManagement = () => {
-  const navigate = useNavigate();
-  const { getToken } = useAuth();
   const { page, rowsPerPage, handlePageChange } = usePagination(1, 10);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -56,7 +52,7 @@ const WeaponManagement = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [weaponToDelete, setWeaponToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
-  // const [saveError, setSaveError] = useState(null);
+
   const [imageError, setImageError] = useState(null); // Added this as it seemed missing based on usage
 
   // TanStack Query Hooks
@@ -86,8 +82,6 @@ const WeaponManagement = () => {
     limit: rowsPerPage,
   };
 
-  // Error handling
-  const error = isError ? (queryError?.message || 'Failed to load weapons') : null;
 
   // Sync selectedWeapon with fresh data when weapons list updates (e.g. after adding image)
   useEffect(() => {
@@ -127,14 +121,14 @@ const WeaponManagement = () => {
         weapon_type: 'melee',
       });
     }
-    // setSaveError(null);
+
     setWeaponDialogOpen(true);
   }, []);
 
   const handleCloseWeaponDialog = useCallback(() => {
     setWeaponDialogOpen(false);
     setEditingWeapon(null);
-    // setSaveError(null);
+
     setWeaponForm({
       weapon_key: '',
       weapon_name: '',
@@ -145,7 +139,7 @@ const WeaponManagement = () => {
   }, []);
 
   const handleSaveWeapon = useCallback(async () => {
-    // setSaveError(null);
+
 
     try {
       if (editingWeapon) {
@@ -231,13 +225,7 @@ const WeaponManagement = () => {
         }
       });
 
-      // No manual update needed, React Query invalidation handles it.
-      // However, we might want to update selectedWeapon if the UI depends on it updating immediately within the dialog
-      // But for now, let's rely on the list check or simple re-select if needed.
-      // Note: selectedWeapon is local state. If the list updates, 'weapons' updates.
-      // But 'selectedWeapon' object reference might stay stale.
-      // To fix this proper, we should derive selectedWeapon from the new 'weapons' list or close dialog.
-      // For this refactor, let's just clear the form.
+      // React Query invalidation handles list refresh; reset form
 
       setImageForm({
         type_file: 'idle',

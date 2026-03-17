@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
-import { UserButton } from '@clerk/clerk-react';
 
 import {
   useUsers,
@@ -18,7 +17,7 @@ import ErrorAlert from '@/components/shared/alert/ErrorAlert';
 import PaginationControls from '@/components/shared/pagination/PaginationControls';
 import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import { usePagination } from '@/hooks/usePagination';
-import { createDeleteErrorMessage } from '@/utils/errorHandler';
+
 import UserTable from '@/components/admin/user/UserTable';
 
 import PageError from '@/components/shared/Error/PageError';

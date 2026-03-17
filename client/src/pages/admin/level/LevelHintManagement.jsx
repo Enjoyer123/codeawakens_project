@@ -1,17 +1,14 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useAuth } from '@clerk/clerk-react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { useParams } from 'react-router-dom';
+
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import ErrorAlert from '@/components/shared/alert/ErrorAlert';
 import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import { usePagination } from '@/hooks/usePagination';
 import PaginationControls from '@/components/shared/pagination/PaginationControls';
-import SearchInput from '@/components/admin/formFields/SearchInput';
-import { Plus } from 'lucide-react';
 import {
+
   useLevelHints,
   useDeleteLevelHint,
   useUploadHintImage,
@@ -26,8 +23,6 @@ import LevelHintFormDialog from '@/components/admin/addEditDialog/LevelHintFormD
 import PageError from '@/components/shared/Error/PageError';
 
 const LevelHintManagement = () => {
-  const { getToken } = useAuth();
-  const navigate = useNavigate();
   const { levelId } = useParams();
   const numericLevelId = parseInt(levelId, 10);
 

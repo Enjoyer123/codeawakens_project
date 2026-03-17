@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect } from 'react';
-import { useAuth } from '@clerk/clerk-react';
+import { useState, useCallback } from 'react';
+
 import { useNavigate } from 'react-router-dom';
 import {
   useLevels,
@@ -8,11 +8,11 @@ import {
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import SearchInput from '@/components/admin/formFields/SearchInput';
-import ErrorAlert from '@/components/shared/alert/ErrorAlert';
+
 import PaginationControls from '@/components/shared/pagination/PaginationControls';
 import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import { usePagination } from '@/hooks/usePagination';
-import { createDeleteErrorMessage } from '@/utils/errorHandler';
+
 import PatternListDialog from '../../../components/admin/pattern/PatternListDialog';
 import LevelTable from '@/components/admin/level/tables/LevelTable';
 
@@ -20,9 +20,7 @@ import PageError from '@/components/shared/Error/PageError';
 
 const LevelManagement = () => {
   const navigate = useNavigate();
-  const { getToken } = useAuth(); // Still needed for auth context if any, or maybe not if hooks handle it. Hooks handle it.
-  // Actually useLevel hooks use useAuth internally. So getToken is not needed here unless passed to something else.
-  // But LevelTable might not need it.
+
 
   const { page, rowsPerPage, handlePageChange } = usePagination(1, 10);
   const [searchQuery, setSearchQuery] = useState('');
