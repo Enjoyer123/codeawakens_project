@@ -16,6 +16,7 @@ import {
 } from '../../../services/hooks/useLevelHints';
 import { useLevel } from '../../../services/hooks/useLevel';
 import LevelHintImageDialog from '@/components/admin/imageDialog/LevelHintImageDialog';
+import { useImageDialog } from '@/hooks/useImageDialog';
 import { getImageUrl } from '@/utils/imageUtils';
 import LevelHintTable from '@/components/admin/level/tables/LevelHintTable';
 import LevelHintFormDialog from '@/components/admin/addEditDialog/LevelHintFormDialog';
@@ -51,11 +52,9 @@ const LevelHintManagement = () => {
   const [deleteError, setDeleteError] = useState(null);
 
   // image dialog state
-  const [imageDialogOpen, setImageDialogOpen] = useState(false);
-  const [selectedHintId, setSelectedHintId] = useState(null);
+  const imageDialog = useImageDialog(allHints, 'hint_id');
   const [imageFile, setImageFile] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [imageError, setImageError] = useState(null);
 
   if (isError) {
     return <PageError message={queryError?.message} title="Failed to load hints" />;
@@ -139,21 +138,17 @@ const LevelHintManagement = () => {
   );
 
   const handleOpenImageDialog = useCallback((hint) => {
-    setSelectedHintId(hint.hint_id);
+    imageDialog.openDialog(hint);
     setImageFile(null);
-    setImageError(null);
-    setImageDialogOpen(true);
-  }, []);
+  }, [imageDialog]);
 
   const handleImageDialogChange = useCallback((open) => {
-    setImageDialogOpen(open);
+    imageDialog.closeDialog(open);
     if (!open) {
-      setSelectedHintId(null);
       setImageFile(null);
       setUploadingImage(false);
-      setImageError(null);
     }
-  }, []);
+  }, [imageDialog]);
 
   const handleImageFileChange = useCallback((e) => {
     const file = e.target.files?.[0];
@@ -161,17 +156,17 @@ const LevelHintManagement = () => {
   }, []);
 
   const handleAddImage = useCallback(async () => {
-    if (!selectedHintId || !imageFile) {
-      setImageError('กรุณาเลือก Hint และไฟล์รูปภาพ');
+    if (!imageDialog.selectedId || !imageFile) {
+      imageDialog.setError('กรุณาเลือก Hint และไฟล์รูปภาพ');
       return;
     }
 
     try {
       setUploadingImage(true);
-      setImageError(null);
+      imageDialog.setError(null);
 
       await uploadImageMutation.mutateAsync({
-        hintId: selectedHintId,
+        hintId: imageDialog.selectedId,
         file: imageFile
       });
 
@@ -181,25 +176,20 @@ const LevelHintManagement = () => {
         input.value = '';
       }
     } catch (err) {
-      setImageError('ไม่สามารถอัปโหลดรูปภาพได้: ' + (err.message || 'Unknown error'));
+      imageDialog.setError('ไม่สามารถอัปโหลดรูปภาพได้: ' + (err.message || 'Unknown error'));
     } finally {
       setUploadingImage(false);
     }
-  }, [selectedHintId, imageFile, uploadImageMutation]);
+  }, [imageDialog.selectedId, imageFile, uploadImageMutation, imageDialog]);
 
   const handleDeleteImage = useCallback(async (imageId) => {
     try {
-      setImageError(null);
+      imageDialog.setError(null);
       await deleteImageMutation.mutateAsync(imageId);
     } catch (err) {
-      setImageError('ไม่สามารถลบรูปภาพได้: ' + (err.message || 'Unknown error'));
+      imageDialog.setError('ไม่สามารถลบรูปภาพได้: ' + (err.message || 'Unknown error'));
     }
-  }, [deleteImageMutation]);
-
-  // Derived dialogHint from the freshest hintsData
-  const dialogHint = useMemo(() => {
-    return selectedHintId && allHints ? allHints.find(h => h.hint_id === selectedHintId) : null;
-  }, [selectedHintId, allHints]);
+  }, [deleteImageMutation, imageDialog]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -213,7 +203,7 @@ const LevelHintManagement = () => {
         />
 
         <ErrorAlert message={deleteError} />
-        <ErrorAlert message={imageError} />
+        <ErrorAlert message={imageDialog.error} />
 
         <SearchInput
           defaultValue={searchQuery}
@@ -268,9 +258,9 @@ const LevelHintManagement = () => {
         />
 
         <LevelHintImageDialog
-          open={imageDialogOpen}
+          open={imageDialog.isOpen}
           onOpenChange={handleImageDialogChange}
-          selectedHint={dialogHint}
+          selectedHint={imageDialog.dialogItem}
           imageFile={imageFile}
           onImageFileChange={handleImageFileChange}
           isUploading={uploadingImage}

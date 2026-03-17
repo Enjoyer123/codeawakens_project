@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import {
     Dialog,
     DialogContent,
@@ -9,30 +10,87 @@ import {
 import { Button } from '@/components/ui/button';
 import FormInput from '@/components/admin/formFields/FormInput';
 import FormCheckbox from '@/components/admin/formFields/FormCheckbox';
+import { useCreateNotification, useUpdateNotification } from '@/services/hooks/useNotifications';
 
 const NotificationFormDialog = ({
     open,
     onOpenChange,
     editingNotification,
-    formData,
-    onFormChange,
-    onSave,
-    saving = false,
 }) => {
+    // Mutations
+    const { mutateAsync: createNotificationAsync } = useCreateNotification();
+    const { mutateAsync: updateNotificationAsync } = useUpdateNotification();
+
+    // Internal Form State
+    const [formData, setFormData] = useState({
+        title: '',
+        message: '',
+        expires_at: '',
+        is_active: false,
+    });
+
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState(null);
+
+    // Sync state when dialog opens or editingNotification changes
+    useEffect(() => {
+        if (open) {
+            setError(null);
+            if (editingNotification) {
+                // Format date for datetime-local input (YYYY-MM-DDThh:mm)
+                let expiresAtStr = '';
+                if (editingNotification.expires_at) {
+                    const d = new Date(editingNotification.expires_at);
+                    const offset = d.getTimezoneOffset() * 60000;
+                    expiresAtStr = new Date(d.getTime() - offset).toISOString().slice(0, 16);
+                }
+
+                setFormData({
+                    title: editingNotification.title,
+                    message: editingNotification.message || '',
+                    expires_at: expiresAtStr,
+                    is_active: editingNotification.is_active,
+                });
+            } else {
+                setFormData({
+                    title: '',
+                    message: '',
+                    expires_at: '',
+                    is_active: false,
+                });
+            }
+        }
+    }, [open, editingNotification]);
+
     const handleChange = (field, value) => {
-        onFormChange({ ...formData, [field]: value });
+        setFormData((prev) => ({ ...prev, [field]: value }));
     };
 
     const handleSaveClick = async () => {
         // Client-side validation
+        setError(null);
         if (!formData.title?.trim()) {
-            return { success: false, error: 'กรุณากรอกหัวข้อแจ้งเตือน' };
+            setError('กรุณากรอกหัวข้อแจ้งเตือน');
+            return;
         }
-        // Note: Message is mostly required but let's allow empty if needed, logic depends on requirement. 
-        // Assuming simple title/message.
-
-        const result = await onSave();
-        return result;
+        
+        try {
+            setSaving(true);
+            if (editingNotification) {
+                await updateNotificationAsync({
+                    notificationId: editingNotification.notification_id,
+                    notificationData: formData
+                });
+            } else {
+                await createNotificationAsync(formData);
+            }
+            onOpenChange(false);
+        } catch (err) {
+            console.error(err);
+            setError(err.message || 'บันทึกแจ้งเตือนไม่สำเร็จ');
+        } finally {
+            setSaving(false);
+        }
     };
 
     const dialogTitle = editingNotification ? 'แก้ไขแจ้งเตือน' : 'เพิ่มแจ้งเตือนใหม่';
@@ -49,6 +107,13 @@ const NotificationFormDialog = ({
                     <DialogTitle>{dialogTitle}</DialogTitle>
                     <DialogDescription>{dialogDescription}</DialogDescription>
                 </DialogHeader>
+
+                {error && (
+                    <div className="bg-red-50 text-red-500 p-3 rounded-md text-sm border border-red-200">
+                        {error}
+                    </div>
+                )}
+
                 <div className="space-y-4 py-4">
                     <FormInput
                         label="หัวข้อ (Title)"

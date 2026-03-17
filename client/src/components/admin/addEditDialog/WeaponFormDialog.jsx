@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -9,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import FormInput from '@/components/admin/formFields/FormInput';
 import FormSelect from '@/components/admin/formFields/FormSelect';
+import { useCreateWeapon, useUpdateWeapon } from '@/services/hooks/useWeapons';
 
 const weaponTypes = [
   { value: 'melee', label: 'Melee' },
@@ -21,18 +23,70 @@ const WeaponFormDialog = ({
   open,
   onOpenChange,
   editingWeapon,
-  formData,
-  onFormChange,
-  onSave,
-  saving = false,
 }) => {
+  // Mutations
+  const { mutateAsync: createWeaponAsync } = useCreateWeapon();
+  const { mutateAsync: updateWeaponAsync } = useUpdateWeapon();
+
+  // Internal Form State
+  const [formData, setFormData] = useState({
+    weapon_key: '',
+    weapon_name: '',
+    description: '',
+    combat_power: 0,
+    weapon_type: 'melee',
+  });
+
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Sync state when dialog opens or editingWeapon changes
+  useEffect(() => {
+    if (open) {
+      setError(null);
+      if (editingWeapon) {
+        setFormData({
+          weapon_key: editingWeapon.weapon_key,
+          weapon_name: editingWeapon.weapon_name,
+          description: editingWeapon.description || '',
+          combat_power: editingWeapon.combat_power || 0,
+          weapon_type: editingWeapon.weapon_type,
+        });
+      } else {
+        setFormData({
+          weapon_key: '',
+          weapon_name: '',
+          description: '',
+          combat_power: 0,
+          weapon_type: 'melee',
+        });
+      }
+    }
+  }, [open, editingWeapon]);
+
   const handleChange = (field, value) => {
-    onFormChange({ ...formData, [field]: value });
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSaveClick = async () => {
-    const result = await onSave();
-    return result;
+    setError(null);
+    try {
+      setSaving(true);
+      if (editingWeapon) {
+        await updateWeaponAsync({
+          weaponId: editingWeapon.weapon_id,
+          weaponData: formData
+        });
+      } else {
+        await createWeaponAsync(formData);
+      }
+      onOpenChange(false);
+    } catch (err) {
+      console.error(err);
+      setError(err.message || 'บันทึกอาวุธไม่สำเร็จ');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const dialogTitle = editingWeapon ? 'แก้ไขอาวุธ' : 'เพิ่มอาวุธใหม่';
@@ -51,6 +105,13 @@ const WeaponFormDialog = ({
           <DialogTitle>{dialogTitle}</DialogTitle>
           <DialogDescription>{dialogDescription}</DialogDescription>
         </DialogHeader>
+
+        {error && (
+          <div className="bg-red-50 text-red-500 p-3 rounded-md text-sm border border-red-200">
+            {error}
+          </div>
+        )}
+
         <div className="space-y-4 py-4">
           <div>
             <FormInput

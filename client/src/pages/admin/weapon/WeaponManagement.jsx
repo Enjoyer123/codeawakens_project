@@ -2,11 +2,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import {
   useWeapons,
-  useCreateWeapon,
-  useUpdateWeapon,
   useDeleteWeapon,
-  useAddWeaponImage,
-  useDeleteWeaponImage,
 } from '../../../services/hooks/useWeapons';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
@@ -17,6 +13,7 @@ import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import WeaponImageDialog from '../../../components/admin/weapon/WeaponImageDialog';
 import WeaponFormDialog from '@/components/admin/addEditDialog/WeaponFormDialog';
 import { usePagination } from '@/hooks/usePagination';
+import { useImageDialog } from '@/hooks/useImageDialog';
 import { getImageUrl } from '@/utils/imageUtils';
 
 import WeaponTable from '@/components/admin/weapon/WeaponTable';
@@ -30,27 +27,11 @@ const WeaponManagement = () => {
   // Weapon form states
   const [weaponDialogOpen, setWeaponDialogOpen] = useState(false);
   const [editingWeapon, setEditingWeapon] = useState(null);
-  const [weaponForm, setWeaponForm] = useState({
-    weapon_key: '',
-    weapon_name: '',
-    description: '',
-    combat_power: 0,
-    weapon_type: 'melee',
-  });
-  const [imageDialogOpen, setImageDialogOpen] = useState(false);
-  const [selectedWeaponId, setSelectedWeaponId] = useState(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [imageForm, setImageForm] = useState({
-    type_file: 'idle',
-    type_animation: 'weapon',
-    frame: 1,
-    imageFile: null,
-  });
+  const imageDialog = useImageDialog(weaponsData?.weapons || [], 'weapon_id');
+
   // Delete states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [weaponToDelete, setWeaponToDelete] = useState(null);
-
-  const [imageError, setImageError] = useState(null); // Added this as it seemed missing based on usage
 
   // TanStack Query Hooks
   const {
@@ -64,11 +45,7 @@ const WeaponManagement = () => {
     return <PageError message={queryError?.message} title="Failed to load weapons" />;
   }
 
-  const createWeaponMutation = useCreateWeapon();
-  const updateWeaponMutation = useUpdateWeapon();
   const deleteWeaponMutation = useDeleteWeapon();
-  const addImageMutation = useAddWeaponImage();
-  const deleteImageMutation = useDeleteWeaponImage();
 
   // Derived state from query data
   const weapons = weaponsData?.weapons || [];
@@ -80,11 +57,6 @@ const WeaponManagement = () => {
   };
 
 
-  const dialogWeapon = useMemo(() => {
-    return selectedWeaponId && weapons ? weapons.find(w => w.weapon_id === selectedWeaponId) : null;
-  }, [selectedWeaponId, weapons]);
-
-
   // Manual loadWeapons is removed as useQuery handles it
 
   const handleSearchChange = useCallback((value) => {
@@ -93,154 +65,22 @@ const WeaponManagement = () => {
   }, [handlePageChange]);
 
   const handleOpenWeaponDialog = useCallback((weapon = null) => {
-    if (weapon) {
-      setEditingWeapon(weapon);
-      setWeaponForm({
-        weapon_key: weapon.weapon_key,
-        weapon_name: weapon.weapon_name,
-        description: weapon.description || '',
-        combat_power: weapon.combat_power || 0,
-        weapon_type: weapon.weapon_type,
-      });
-    } else {
-      setEditingWeapon(null);
-      setWeaponForm({
-        weapon_key: '',
-        weapon_name: '',
-        description: '',
-        combat_power: 0,
-        weapon_type: 'melee',
-      });
-    }
-
+    setEditingWeapon(weapon);
     setWeaponDialogOpen(true);
   }, []);
 
   const handleCloseWeaponDialog = useCallback(() => {
     setWeaponDialogOpen(false);
     setEditingWeapon(null);
-
-    setWeaponForm({
-      weapon_key: '',
-      weapon_name: '',
-      description: '',
-      combat_power: 0,
-      weapon_type: 'melee',
-    });
   }, []);
-
-  const handleSaveWeapon = useCallback(async () => {
-
-
-    try {
-      if (editingWeapon) {
-        await updateWeaponMutation.mutateAsync({
-          weaponId: editingWeapon.weapon_id,
-          weaponData: weaponForm
-        });
-      } else {
-        await createWeaponMutation.mutateAsync(weaponForm);
-      }
-      handleCloseWeaponDialog();
-      return { success: true };
-    } catch (err) {
-      console.error(err);
-      toast.error(err.message || 'บันทึกอาวุธไม่สำเร็จ');
-      return { success: false, error: err.message };
-    }
-  }, [weaponForm, editingWeapon, updateWeaponMutation, createWeaponMutation, handleCloseWeaponDialog]);
 
   const handleOpenImageDialog = useCallback((weapon) => {
-    setSelectedWeaponId(weapon.weapon_id); // Changed to setSelectedWeaponId
-    setImageForm({
-      type_file: 'idle',
-      type_animation: 'weapon',
-      frame: 1,
-      imageFile: null,
-    });
-    setImageError(null);
-    setImageDialogOpen(true);
-  }, []);
+    imageDialog.openDialog(weapon);
+  }, [imageDialog]);
 
   const handleImageDialogChange = useCallback((open) => {
-    setImageDialogOpen(open);
-    if (!open) {
-      setSelectedWeaponId(null); // Changed to setSelectedWeaponId
-      setImageError(null);
-      setImageForm({
-        type_file: 'idle',
-        type_animation: 'weapon',
-        frame: 1,
-        imageFile: null,
-      });
-    }
-  }, []);
-
-  const handleAddImage = useCallback(async () => {
-    if (!selectedWeaponId || !imageForm.imageFile) { // Changed to selectedWeaponId
-      setImageError('กรุณาเลือกไฟล์รูปภาพ'); // Simplified message as weapon is now implied by selectedWeaponId
-      return;
-    }
-
-    if (!imageForm.type_file || !imageForm.type_animation || !imageForm.frame) {
-      setImageError('กรุณากรอกข้อมูลให้ครบถ้วน: Type File, Type Animation, และ Frame');
-      return;
-    }
-
-    if (imageForm.frame < 1) {
-      setImageError('Frame ต้องมากกว่าหรือเท่ากับ 1');
-      return;
-    }
-
-    // Validation: Only 1 image for type 'weapon'
-    if (imageForm.type_animation === 'weapon') {
-      const hasWeaponImage = dialogWeapon?.weapon_images?.some(img => img.type_animation === 'weapon'); // Use dialogWeapon
-      if (hasWeaponImage) {
-        setImageError('สามารถเพิ่มรูปภาพอาวุธ (Type: Weapon) ได้เพียง 1 รูปเท่านั้น (หากต้องการเปลี่ยน ให้ลบรูปเดิมออกก่อน)');
-        return;
-      }
-    }
-
-    try {
-      setUploadingImage(true);
-      setImageError(null);
-
-      await addImageMutation.mutateAsync({
-        weaponId: selectedWeaponId, // Changed to selectedWeaponId
-        imageFile: imageForm.imageFile,
-        imageData: {
-          type_file: imageForm.type_file,
-          type_animation: imageForm.type_animation,
-          frame: imageForm.frame,
-          weapon_key: dialogWeapon?.weapon_key, // Use dialogWeapon
-        }
-      });
-
-      // React Query invalidation handles list refresh; reset form
-
-      setImageForm({
-        type_file: 'idle',
-        type_animation: 'weapon',
-        frame: 1,
-        imageFile: null,
-      });
-      // Optionally re-sync selectedWeapon from fresh list if needed in next render?
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setUploadingImage(false);
-    }
-  }, [selectedWeaponId, imageForm, addImageMutation]);
-
-  const handleDeleteImage = useCallback(async (imageId) => {
-    try {
-      setImageError(null);
-      await deleteImageMutation.mutateAsync(imageId);
-      // Invalidation happens in hook
-    } catch (err) {
-      console.error(err);
-    }
-  }, [deleteImageMutation]);
+    imageDialog.closeDialog(open);
+  }, [imageDialog]);
 
   const handleDeleteClick = useCallback((weapon) => {
     setWeaponToDelete(weapon);
@@ -282,13 +122,13 @@ const WeaponManagement = () => {
           addButtonText="เพิ่มอาวุธ"
         />
 
-        <ErrorAlert message={imageError} />
-
         <SearchInput
           defaultValue={searchQuery}
           onSearch={handleSearchChange}
           placeholder={searchPlaceholder}
         />
+
+        <ErrorAlert message={imageDialog.error} />
 
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {loading ? (
@@ -322,23 +162,13 @@ const WeaponManagement = () => {
           open={weaponDialogOpen}
           onOpenChange={handleCloseWeaponDialog}
           editingWeapon={editingWeapon}
-          formData={weaponForm}
-          onFormChange={setWeaponForm}
-          onSave={handleSaveWeapon}
         />
 
         <WeaponImageDialog
-          open={imageDialogOpen}
+          open={imageDialog.isOpen}
           onOpenChange={handleImageDialogChange}
-          selectedWeapon={dialogWeapon}
-          imageForm={imageForm}
-          onImageFormChange={setImageForm}
-          isUploading={uploadingImage}
-          isDeleting={deleteImageMutation.isPending}
-          onAddImage={handleAddImage}
-          onDeleteImage={handleDeleteImage}
+          selectedWeapon={imageDialog.dialogItem}
           getImageUrl={getImageUrl}
-          error={imageError}
         />
 
         <DeleteConfirmDialog

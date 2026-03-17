@@ -4,9 +4,7 @@ import { toast } from 'sonner';
 
 import {
   useBlocks,
-  useUpdateBlock,
-  useDeleteBlock,
-  useUploadBlockImage
+  useDeleteBlock
 } from '../../../services/hooks/useBlocks';
 
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
@@ -18,7 +16,6 @@ import BlockFormDialog from '@/components/admin/addEditDialog/BlockFormDialog';
 import { usePagination } from '@/hooks/usePagination';
 
 import BlockTable from '@/components/admin/block/BlockTable';
-import { getImageUrl } from '@/utils/imageUtils';
 
 import PageError from '@/components/shared/Error/PageError';
 
@@ -47,29 +44,14 @@ const BlockManagement = () => {
   };
 
   // Mutations
-  const { mutateAsync: updateBlockAsync } = useUpdateBlock();
   const { mutateAsync: deleteBlockAsync, isPending: deleting } = useDeleteBlock();
-  const { mutateAsync: uploadImageAsync } = useUploadBlockImage();
 
-  // Block form states
   const [blockDialogOpen, setBlockDialogOpen] = useState(false);
   const [editingBlock, setEditingBlock] = useState(null);
-  const [blockForm, setBlockForm] = useState({
-    block_key: '',
-    block_name: '',
-    description: '',
-    category: 'movement',
-    is_available: true,
-    syntax_example: '',
-  });
+
   // Delete states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [blockToDelete, setBlockToDelete] = useState(null);
-
-
-  // Image states
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
 
   const handleSearchChange = useCallback((value) => {
     setSearchQuery(value);
@@ -79,94 +61,14 @@ const BlockManagement = () => {
   const handleOpenBlockDialog = useCallback((block = null) => {
     if (block) {
       setEditingBlock(block);
-      setBlockForm({
-        block_key: block.block_key,
-        block_name: block.block_name,
-        description: block.description || '',
-        category: block.category,
-        is_available: block.is_available,
-        syntax_example: block.syntax_example || '',
-      });
-      setSelectedImage(null);
-      setImagePreview(getImageUrl(block.block_image));
       setBlockDialogOpen(true);
     }
-    // If block is null (add mode), do nothing as we only allow edit
   }, []);
 
   const handleCloseBlockDialog = useCallback(() => {
     setBlockDialogOpen(false);
     setEditingBlock(null);
-    setBlockForm({
-      block_key: '',
-      block_name: '',
-      description: '',
-      category: 'movement',
-      is_available: true,
-      syntax_example: '',
-    });
-    setSelectedImage(null);
-    setImagePreview(null);
   }, []);
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setSelectedImage(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleImageRemove = () => {
-    setSelectedImage(null);
-    setImagePreview(null);
-    setBlockForm({ ...blockForm, block_image: '' });
-  };
-
-  const handleSaveBlock = useCallback(async () => {
-
-
-    const formData = {
-      ...blockForm,
-      block_key: blockForm.block_key.trim(),
-      block_name: blockForm.block_name.trim(),
-      description: blockForm.description?.trim() || null,
-      syntax_example: blockForm.syntax_example?.trim() || null,
-    };
-
-    try {
-      if (editingBlock) {
-        // Upload image if selected
-        let imagePath = blockForm.block_image;
-        if (selectedImage) {
-          const uploadResult = await uploadImageAsync(selectedImage);
-          imagePath = uploadResult.path;
-        }
-
-        const dataToSave = {
-          ...formData,
-          block_image: imagePath
-        };
-
-        await updateBlockAsync({
-          blockId: editingBlock.block_id,
-          blockData: dataToSave
-        });
-        handleCloseBlockDialog();
-        // Query invalidation handles refresh
-        return { success: true };
-      }
-      return { success: false, error: 'Create block is not allowed' };
-    } catch (err) {
-      console.error(err);
-      toast.error(err.message || 'บันทึกบล็อกไม่สำเร็จ');
-      return { success: false, error: err.message };
-    }
-  }, [blockForm, editingBlock, uploadImageAsync, updateBlockAsync, handleCloseBlockDialog, selectedImage]);
 
   const handleDeleteClick = useCallback((block) => {
     setBlockToDelete(block);
@@ -242,13 +144,6 @@ const BlockManagement = () => {
           open={blockDialogOpen}
           onOpenChange={handleCloseBlockDialog}
           editingBlock={editingBlock}
-          formData={blockForm}
-          onFormChange={setBlockForm}
-          onSave={handleSaveBlock}
-          selectedImage={selectedImage}
-          imagePreview={imagePreview}
-          onImageChange={handleImageChange}
-          onImageRemove={handleImageRemove}
         />
 
         <DeleteConfirmDialog

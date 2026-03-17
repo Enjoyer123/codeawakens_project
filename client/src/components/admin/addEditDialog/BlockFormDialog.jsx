@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -13,6 +14,11 @@ import FormCheckbox from '@/components/admin/formFields/FormCheckbox';
 import { Label } from '@/components/ui/label';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { getImageUrl } from '@/utils/imageUtils';
+import { toast } from 'sonner';
+
+// TanStack hooks for mutations (since BlockFormDialog handles save now)
+import { useUploadImage } from '@/services/hooks/useImageUpload';
+import { useUpdateBlock } from '@/services/hooks/useBlock';
 
 const blockCategories = [
   { value: 'movement', label: 'Movement' },
@@ -27,34 +33,132 @@ const blockCategories = [
 const BlockFormDialog = ({
   open,
   onOpenChange,
-  editingBlock,
-  formData,
-  onFormChange,
-  onSave,
-  saving = false,
-  selectedImage,
-  imagePreview,
-  onImageChange,
-  onImageRemove,
+  editingBlock, // Now used as initial data seed
 }) => {
+  // Mutations
+  const { mutateAsync: updateBlockAsync } = useUpdateBlock();
+  const { mutateAsync: uploadImageAsync } = useUploadImage('block');
+
+  // Internal Form State
+  const [formData, setFormData] = useState({
+    block_key: '',
+    block_name: '',
+    description: '',
+    category: 'movement',
+    is_available: true,
+    syntax_example: '',
+  });
+
+  // Internal Image State
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Sync state when dialog opens or editingBlock changes
+  useEffect(() => {
+    if (open) {
+      setError(null);
+      if (editingBlock) {
+        setFormData({
+          block_key: editingBlock.block_key,
+          block_name: editingBlock.block_name,
+          description: editingBlock.description || '',
+          category: editingBlock.category,
+          is_available: editingBlock.is_available,
+          syntax_example: editingBlock.syntax_example || '',
+        });
+        setSelectedImage(null);
+        setImagePreview(getImageUrl(editingBlock.block_image));
+      } else {
+        // Reset if opening for "add" (though blocks disable add currently)
+        setFormData({
+          block_key: '',
+          block_name: '',
+          description: '',
+          category: 'movement',
+          is_available: true,
+          syntax_example: '',
+        });
+        setSelectedImage(null);
+        setImagePreview(null);
+      }
+    }
+  }, [open, editingBlock]);
+
+  // Image Handlers
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleImageRemove = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    setFormData((prev) => ({ ...prev, block_image: '' }));
+  };
   const handleChange = (field, value) => {
-    onFormChange({ ...formData, [field]: value });
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSaveClick = async () => {
     // Client-side validation
+    setError(null);
     if (!formData.block_key?.trim()) {
-      return { success: false, error: 'กรุณากรอก Block Key' };
+      setError('กรุณากรอก Block Key');
+      return;
     }
     if (!formData.block_name?.trim()) {
-      return { success: false, error: 'กรุณากรอก Block Name' };
+      setError('กรุณากรอก Block Name');
+      return;
     }
     if (!formData.category) {
-      return { success: false, error: 'กรุณาเลือก Category' };
+      setError('กรุณาเลือก Category');
+      return;
     }
 
-    const result = await onSave();
-    return result;
+    try {
+      setSaving(true);
+      
+      const cleanedData = {
+        ...formData,
+        block_key: formData.block_key.trim(),
+        block_name: formData.block_name.trim(),
+        description: formData.description?.trim() || null,
+        syntax_example: formData.syntax_example?.trim() || null,
+      };
+
+      if (editingBlock) {
+        // Handle image upload if a new one is selected
+        let imagePath = formData.block_image || editingBlock.block_image; 
+        if (selectedImage) {
+          const uploadResult = await uploadImageAsync(selectedImage);
+          imagePath = uploadResult.path;
+        }
+
+        await updateBlockAsync({
+          blockId: editingBlock.block_id,
+          blockData: { ...cleanedData, block_image: imagePath }
+        });
+        
+        onOpenChange(false);
+      } else {
+        setError('Create block is not allowed');
+      }
+    } catch (err) {
+      console.error(err);
+      setError(err.message || 'บันทึกบล็อกไม่สำเร็จ');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const dialogTitle = editingBlock ? 'แก้ไขบล็อก' : 'เพิ่มบล็อกใหม่';
@@ -71,6 +175,13 @@ const BlockFormDialog = ({
           <DialogTitle>{dialogTitle}</DialogTitle>
           <DialogDescription>{dialogDescription}</DialogDescription>
         </DialogHeader>
+        
+        {error && (
+          <div className="bg-red-50 text-red-500 p-3 rounded-md text-sm border border-red-200">
+            {error}
+          </div>
+        )}
+
         <div className="space-y-4 py-4">
           <FormInput
             label="Block Key"
@@ -127,7 +238,7 @@ const BlockFormDialog = ({
                 <div className="relative w-24 h-24 border rounded overflow-hidden group">
                   <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                   <button 
-                    onClick={onImageRemove}
+                    onClick={handleImageRemove}
                     className="absolute top-0 right-0 bg-red-500 text-white p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     <X size={12} />
@@ -148,7 +259,7 @@ const BlockFormDialog = ({
                     type="file" 
                     className="hidden" 
                     accept="image/*"
-                    onChange={onImageChange}
+                    onChange={handleImageChange}
                   />
                 </label>
                 <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 5MB</p>

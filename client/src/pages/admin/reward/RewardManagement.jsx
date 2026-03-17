@@ -10,6 +10,7 @@ import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import RewardImageDialog from '@/components/admin/imageDialog/RewardImageDialog';
 import RewardFormDialog from '@/components/admin/addEditDialog/RewardFormDialog';
 import { usePagination } from '@/hooks/usePagination';
+import { useImageDialog } from '@/hooks/useImageDialog';
 import { getImageUrl } from '@/utils/imageUtils';
 
 import RewardTable from '../../../components/admin/reward/RewardTable';
@@ -17,11 +18,7 @@ import {
   useRewards,
   useReward,
   useRewardLevels,
-  useCreateReward,
-  useUpdateReward,
   useDeleteReward,
-  useUploadRewardFrame,
-  useDeleteRewardFrame
 } from '@/services/hooks/useRewards';
 
 import PageError from '@/components/shared/Error/PageError';
@@ -55,34 +52,18 @@ const RewardManagement = () => {
   };
 
   // Mutations
-  const { mutateAsync: createRewardAsync } = useCreateReward();
-  const { mutateAsync: updateRewardAsync } = useUpdateReward();
   const { mutateAsync: deleteRewardAsync, isPending: deleting } = useDeleteReward();
-  const { mutateAsync: uploadFrameAsync } = useUploadRewardFrame();
-  const { mutateAsync: deleteFrameAsync } = useDeleteRewardFrame();
 
   // Reward form states
   const [rewardDialogOpen, setRewardDialogOpen] = useState(false);
   const [editingReward, setEditingReward] = useState(null);
-  const [rewardForm, setRewardForm] = useState({
-    level_id: '',
-    reward_type: 'weapon',
-    reward_name: '',
-    description: '',
-    required_score: 0,
-  });
 
   // Delete states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [rewardToDelete, setRewardToDelete] = useState(null);
 
   // Image management states
-  const [imageDialogOpen, setImageDialogOpen] = useState(false);
-  const [selectedRewardId, setSelectedRewardId] = useState(null);
-  const [uploadingFrame, setUploadingFrame] = useState(null);
-
-  // Error states
-  const [imageError, setImageError] = useState(null);
+  const imageDialog = useImageDialog(rewards, 'reward_id');
 
 
   const handleSearchChange = useCallback((value) => {
@@ -91,63 +72,14 @@ const RewardManagement = () => {
   }, [handlePageChange]);
 
   const handleOpenRewardDialog = useCallback((reward = null) => {
-    if (reward) {
-      setEditingReward(reward);
-      setRewardForm({
-        level_id: reward.level_id.toString(),
-        reward_type: reward.reward_type,
-        reward_name: reward.reward_name,
-        description: reward.description || '',
-        required_score: reward.required_score,
-      });
-    } else {
-      setEditingReward(null);
-      setRewardForm({
-        level_id: '',
-        reward_type: 'weapon',
-        reward_name: '',
-        description: '',
-        required_score: 0,
-      });
-    }
-
+    setEditingReward(reward);
     setRewardDialogOpen(true);
   }, []);
 
   const handleCloseRewardDialog = useCallback(() => {
     setRewardDialogOpen(false);
     setEditingReward(null);
-
-    setRewardForm({
-      level_id: '',
-      reward_type: 'weapon',
-      reward_name: '',
-      description: '',
-      required_score: 0,
-    });
   }, []);
-
-  const handleSaveReward = useCallback(async () => {
-    const formData = {
-      ...rewardForm,
-      level_id: parseInt(rewardForm.level_id),
-      required_score: parseInt(rewardForm.required_score),
-    };
-
-    try {
-      if (editingReward) {
-        await updateRewardAsync({ rewardId: editingReward.reward_id, rewardData: formData });
-      } else {
-        await createRewardAsync(formData);
-      }
-      handleCloseRewardDialog();
-      return { success: true };
-    } catch (err) {
-      console.error(err);
-      toast.error(err.message || 'บันทึกรางวัลไม่สำเร็จ');
-      return { success: false, error: err.message };
-    }
-  }, [rewardForm, editingReward, updateRewardAsync, createRewardAsync, handleCloseRewardDialog]);
 
   const handleDeleteClick = useCallback((reward) => {
     setRewardToDelete(reward);
@@ -176,65 +108,19 @@ const RewardManagement = () => {
   }, [deleting]);
 
   const handleOpenImageDialog = useCallback((reward) => {
-    setSelectedRewardId(reward.reward_id);
-    setImageError(null);
-    setImageDialogOpen(true);
-  }, []);
+    imageDialog.openDialog(reward);
+  }, [imageDialog]);
 
   const handleImageDialogChange = useCallback((open) => {
-    setImageDialogOpen(open);
-    if (!open) {
-      setSelectedRewardId(null);
-      setUploadingFrame(null);
-      setUploadingFrame(null);
-      setImageError(null);
-    }
-  }, []);
+    imageDialog.closeDialog(open);
+  }, [imageDialog]);
 
-  const handleUploadFrame = useCallback(async (frameNumber, imageFile) => {
-    if (!selectedRewardId || !imageFile) {
-      setImageError('กรุณาเลือกไฟล์รูปภาพ');
-      return;
-    }
 
-    try {
-      setUploadingFrame(frameNumber);
-      setImageError(null);
-      await uploadFrameAsync({
-        rewardId: selectedRewardId,
-        imageFile,
-        frameNumber
-      });
-
-      // Data invalidation is handled by useUploadRewardFrame hook.
-      // We rely on useReward in the dialog to fetch the fresh data.
-
-    } catch (err) {
-      setImageError('ไม่สามารถอัปโหลดรูปภาพได้: ' + (err.message || 'Unknown error'));
-    } finally {
-      setUploadingFrame(null);
-    }
-  }, [selectedRewardId, uploadFrameAsync]);
-
-  const handleDeleteFrame = useCallback(async (frameNumber) => {
-    if (!selectedRewardId) return;
-
-    try {
-      setImageError(null);
-      await deleteFrameAsync({
-        rewardId: selectedRewardId,
-        frameNumber
-      });
-      // Same issue as upload: selectedReward is stale.
-    } catch (err) {
-      setImageError('ไม่สามารถลบรูปภาพได้: ' + (err.message || 'Unknown error'));
-    }
-  }, [selectedRewardId, deleteFrameAsync]);
 
 
   // useReward fetches fresh data to keep the dialog updated when images change
-  const { data: activeRewardData } = useReward(selectedRewardId);
-  const dialogReward = activeRewardData || (selectedRewardId && rewards ? rewards.find(r => r.reward_id === selectedRewardId) : null);
+  const { data: activeRewardData } = useReward(imageDialog.selectedId);
+  const dialogReward = activeRewardData || imageDialog.dialogItem;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -246,7 +132,7 @@ const RewardManagement = () => {
           addButtonText="เพิ่มรางวัล"
         />
 
-        <ErrorAlert message={imageError} />
+        <ErrorAlert message={imageDialog.error} />
 
         <SearchInput
           defaultValue={searchQuery}
@@ -286,23 +172,13 @@ const RewardManagement = () => {
           open={rewardDialogOpen}
           onOpenChange={handleCloseRewardDialog}
           editingReward={editingReward}
-          formData={rewardForm}
-          onFormChange={setRewardForm}
-          onSave={handleSaveReward}
           levels={levels}
         />
 
         <RewardImageDialog
-          open={imageDialogOpen}
+          open={imageDialog.isOpen}
           onOpenChange={handleImageDialogChange}
           selectedReward={dialogReward}
-          uploadingFrame={uploadingFrame}
-          // Note: Since deleteFrameAsync is a mutation returned by useUploadRewardFrame, 
-          // we don't have a direct 'isPending' state per frame without creating a separate component.
-          // As a compromise for now without major refactor, we let it be undefined or handled internally
-          // Ideally, the image dialog should manage its own granular loading states or we lift it.
-          onUploadFrame={handleUploadFrame}
-          onDeleteFrame={handleDeleteFrame}
           getImageUrl={getImageUrl}
         />
 

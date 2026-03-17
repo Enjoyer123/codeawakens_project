@@ -2,8 +2,6 @@ import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import {
   useVictoryConditions,
-
-  useUpdateVictoryCondition,
   useDeleteVictoryCondition,
 } from '../../../services/hooks/useVictoryConditions';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
@@ -25,12 +23,7 @@ const VictoryConditionManagement = () => {
   // Form States
   const [victoryConditionDialogOpen, setVictoryConditionDialogOpen] = useState(false);
   const [editingVictoryCondition, setEditingVictoryCondition] = useState(null);
-  const [victoryConditionForm, setVictoryConditionForm] = useState({
-    type: '',
-    description: '',
-    check: '',
-    is_available: true,
-  });
+
   // Delete States
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [victoryConditionToDelete, setVictoryConditionToDelete] = useState(null);
@@ -48,8 +41,6 @@ const VictoryConditionManagement = () => {
     return <PageError message={queryError?.message} title="Failed to load victory conditions" />;
   }
 
-
-  const updateVictoryConditionMutation = useUpdateVictoryCondition();
   const deleteVictoryConditionMutation = useDeleteVictoryCondition();
 
   // Derived State
@@ -70,62 +61,14 @@ const VictoryConditionManagement = () => {
   }, [handlePageChange]);
 
   const handleOpenVictoryConditionDialog = useCallback((victoryCondition) => {
-    if (victoryCondition) {
-      setEditingVictoryCondition(victoryCondition);
-      setVictoryConditionForm({
-        type: victoryCondition.type,
-        description: victoryCondition.description || '',
-        check: victoryCondition.check || '',
-        is_available: victoryCondition.is_available,
-      });
-
-      setVictoryConditionDialogOpen(true);
-    }
+    setEditingVictoryCondition(victoryCondition);
+    setVictoryConditionDialogOpen(true);
   }, []);
 
   const handleCloseVictoryConditionDialog = useCallback(() => {
     setVictoryConditionDialogOpen(false);
     setEditingVictoryCondition(null);
-
-    setVictoryConditionForm({
-      type: '',
-      description: '',
-      check: '',
-      is_available: true,
-    });
   }, []);
-
-  const handleSaveVictoryCondition = useCallback(async () => {
-
-
-    const formData = {
-      ...victoryConditionForm,
-      type: victoryConditionForm.type.trim(),
-      description: victoryConditionForm.description.trim(),
-      check: victoryConditionForm.check.trim(),
-    };
-
-    try {
-      if (editingVictoryCondition) {
-        await updateVictoryConditionMutation.mutateAsync({
-          victoryConditionId: editingVictoryCondition.victory_condition_id,
-          data: formData
-        });
-      }
-      handleCloseVictoryConditionDialog();
-      return { success: true };
-    } catch (err) {
-      console.error(err);
-      toast.error(err.message || 'บันทึกเงื่อนไขชัยชนะไม่สำเร็จ');
-      return { success: false, error: err.message };
-    }
-  }, [
-    victoryConditionForm,
-    editingVictoryCondition,
-    updateVictoryConditionMutation,
-
-    handleCloseVictoryConditionDialog,
-  ]);
 
   const handleDeleteClick = useCallback((victoryCondition) => {
     setVictoryConditionToDelete(victoryCondition);
@@ -204,9 +147,6 @@ const VictoryConditionManagement = () => {
           open={victoryConditionDialogOpen}
           onOpenChange={handleCloseVictoryConditionDialog}
           editingVictoryCondition={editingVictoryCondition}
-          formData={victoryConditionForm}
-          onFormChange={setVictoryConditionForm}
-          onSave={handleSaveVictoryCondition}
         />
 
         <DeleteConfirmDialog

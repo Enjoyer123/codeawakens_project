@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -9,34 +10,92 @@ import {
 import { Button } from '@/components/ui/button';
 import FormInput from '@/components/admin/formFields/FormInput';
 import FormCheckbox from '@/components/admin/formFields/FormCheckbox';
+import { useUpdateVictoryCondition } from '@/services/hooks/useVictoryConditions';
 
 const VictoryConditionFormDialog = ({
   open,
   onOpenChange,
   editingVictoryCondition,
-  formData,
-  onFormChange,
-  onSave,
-  saving = false,
 }) => {
+  // Mutations
+  const { mutateAsync: updateVictoryConditionAsync } = useUpdateVictoryCondition();
+
+  // Internal Form State
+  const [formData, setFormData] = useState({
+    type: '',
+    description: '',
+    check: '',
+    is_available: true,
+  });
+
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Sync state when dialog opens or editingVictoryCondition changes
+  useEffect(() => {
+    if (open) {
+      setError(null);
+      if (editingVictoryCondition) {
+        setFormData({
+          type: editingVictoryCondition.type,
+          description: editingVictoryCondition.description || '',
+          check: editingVictoryCondition.check || '',
+          is_available: editingVictoryCondition.is_available,
+        });
+      } else {
+        setFormData({
+          type: '',
+          description: '',
+          check: '',
+          is_available: true,
+        });
+      }
+    }
+  }, [open, editingVictoryCondition]);
+
   const handleChange = (field, value) => {
-    onFormChange({ ...formData, [field]: value });
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSaveClick = async () => {
     // Client-side validation
+    setError(null);
     if (!formData.type?.trim()) {
-      return { success: false, error: 'กรุณากรอก Type' };
+      setError('กรุณากรอก Type');
+      return;
     }
     if (!formData.description?.trim()) {
-      return { success: false, error: 'กรุณากรอก Description' };
+      setError('กรุณากรอก Description');
+      return;
     }
     if (!formData.check?.trim()) {
-      return { success: false, error: 'กรุณากรอก Check' };
+      setError('กรุณากรอก Check');
+      return;
     }
 
-    const result = await onSave();
-    return result;
+    try {
+      setSaving(true);
+      
+      const payload = {
+        ...formData,
+        type: formData.type.trim(),
+        description: formData.description.trim(),
+        check: formData.check.trim(),
+      };
+
+      if (editingVictoryCondition) {
+        await updateVictoryConditionAsync({
+          victoryConditionId: editingVictoryCondition.victory_condition_id,
+          data: payload
+        });
+      }
+      onOpenChange(false);
+    } catch (err) {
+      console.error(err);
+      setError(err.message || 'บันทึกเงื่อนไขชัยชนะไม่สำเร็จ');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const dialogTitle = editingVictoryCondition
@@ -55,6 +114,13 @@ const VictoryConditionFormDialog = ({
           <DialogTitle>{dialogTitle}</DialogTitle>
           <DialogDescription>{dialogDescription}</DialogDescription>
         </DialogHeader>
+
+        {error && (
+          <div className="bg-red-50 text-red-500 p-3 rounded-md text-sm border border-red-200">
+            {error}
+          </div>
+        )}
+
         <div className="space-y-4 py-4">
           <FormInput
             label="Type"

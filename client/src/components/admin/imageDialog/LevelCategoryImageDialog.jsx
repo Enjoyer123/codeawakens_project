@@ -11,17 +11,38 @@ import { Button } from '@/components/ui/button';
 import { Loader } from '@/components/ui/loader';
 import { Trash2 } from 'lucide-react';
 import FrameUploadInput from '@/components/admin/reward/FrameUploadInput';
+import { toast } from 'sonner';
+import { useUploadCategoryBackground, useDeleteCategoryBackground } from '@/services/hooks/useLevelCategories';
 
 const LevelCategoryImageDialog = ({
     open,
     onOpenChange,
     selectedCategory,
-    uploading,
-    deleting,
-    onUpload,
-    onDelete,
     getImageUrl,
 }) => {
+    const { mutateAsync: uploadImageAsync, isPending: uploading } = useUploadCategoryBackground();
+    const { mutateAsync: deleteImageAsync, isPending: deleting } = useDeleteCategoryBackground();
+
+    const handleUpload = async (file) => {
+        if (!selectedCategory || !file) return;
+        try {
+            await uploadImageAsync({ categoryId: selectedCategory.category_id, file });
+        } catch (err) {
+            console.error(err);
+            toast.error('ไม่สามารถอัปโหลดรูปภาพได้: ' + (err.message || 'Unknown error'));
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!selectedCategory) return;
+        try {
+            await deleteImageAsync(selectedCategory.category_id);
+        } catch (err) {
+            console.error(err);
+            toast.error('ไม่สามารถลบรูปภาพได้: ' + (err.message || 'Unknown error'));
+        }
+    };
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -49,7 +70,7 @@ const LevelCategoryImageDialog = ({
                                             variant="destructive"
                                             size="sm"
                                             className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                                            onClick={onDelete}
+                                            onClick={handleDelete}
                                             disabled={deleting}
                                         >
                                             {deleting ? (
@@ -66,7 +87,7 @@ const LevelCategoryImageDialog = ({
                                     <p className="text-sm text-gray-500 mb-2">ยังไม่มีรูปภาพ</p>
                                     <FrameUploadInput
                                         frameNumber={1}
-                                        onUpload={(frameNum, file) => onUpload(file)}
+                                        onUpload={(frameNum, file) => handleUpload(file)}
                                         isUploading={uploading}
                                     />
                                 </div>
@@ -76,7 +97,7 @@ const LevelCategoryImageDialog = ({
                                     <p className="text-xs text-gray-500 mb-2">อัปโหลดรูปใหม่ (แทนที่รูปเดิม):</p>
                                     <FrameUploadInput
                                         frameNumber={1}
-                                        onUpload={(frameNum, file) => onUpload(file)}
+                                        onUpload={(frameNum, file) => handleUpload(file)}
                                         isUploading={uploading}
                                     />
                                 </div>

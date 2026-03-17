@@ -13,6 +13,7 @@ import {
 import { useLevel } from '../../../services/hooks/useLevel';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import GuideImageDialog from '@/components/admin/imageDialog/GuideImageDialog';
+import { useImageDialog } from '@/hooks/useImageDialog';
 import { getImageUrl } from '@/utils/imageUtils';
 import LevelGuideTable from '@/components/admin/level/tables/LevelGuideTable';
 import LevelGuideFormDialog from '@/components/admin/addEditDialog/LevelGuideFormDialog';
@@ -53,11 +54,9 @@ const LevelGuideManagement = () => {
   const [deleteError, setDeleteError] = useState(null);
 
   // Image management states
-  const [imageDialogOpen, setImageDialogOpen] = useState(false);
-  const [selectedGuideId, setSelectedGuideId] = useState(null);
+  const imageDialog = useImageDialog(guidesData, 'guide_id');
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageFile, setImageFile] = useState(null);
-  const [imageError, setImageError] = useState(null);
 
   // No manual load effects
 
@@ -90,21 +89,17 @@ const LevelGuideManagement = () => {
   }, [guideToDelete, deleteGuideMutation]);
 
   const handleOpenImageDialog = useCallback((guide) => {
-    setSelectedGuideId(guide.guide_id);
+    imageDialog.openDialog(guide);
     setImageFile(null);
-    setImageError(null);
-    setImageDialogOpen(true);
-  }, []);
+  }, [imageDialog]);
 
   const handleImageDialogChange = useCallback((open) => {
-    setImageDialogOpen(open);
+    imageDialog.closeDialog(open);
     if (!open) {
-      setSelectedGuideId(null);
       setImageFile(null);
       setUploadingImage(false);
-      setImageError(null);
     }
-  }, []);
+  }, [imageDialog]);
 
   const handleImageFileChange = useCallback((e) => {
     const file = e.target.files?.[0];
@@ -112,16 +107,16 @@ const LevelGuideManagement = () => {
   }, []);
 
   const handleAddImage = useCallback(async () => {
-    if (!selectedGuideId || !imageFile) {
-      setImageError('กรุณาเลือกไฟล์รูปภาพ');
+    if (!imageDialog.selectedId || !imageFile) {
+      imageDialog.setError('กรุณาเลือกไฟล์รูปภาพ');
       return;
     }
 
     try {
       setUploadingImage(true);
-      setImageError(null);
+      imageDialog.setError(null);
       await uploadImageMutation.mutateAsync({
-        guideId: selectedGuideId,
+        guideId: imageDialog.selectedId,
         file: imageFile
       });
 
@@ -132,25 +127,20 @@ const LevelGuideManagement = () => {
       const input = document.getElementById('guide-image-input');
       if (input) input.value = '';
     } catch (err) {
-      setImageError('ไม่สามารถอัปโหลดรูปภาพได้: ' + (err.message || 'Unknown error'));
+      imageDialog.setError('ไม่สามารถอัปโหลดรูปภาพได้: ' + (err.message || 'Unknown error'));
     } finally {
       setUploadingImage(false);
     }
-  }, [selectedGuideId, imageFile, uploadImageMutation]);
+  }, [imageDialog.selectedId, imageFile, uploadImageMutation, imageDialog]);
 
   const handleDeleteImage = useCallback(async (imageId) => {
     try {
-      setImageError(null);
+      imageDialog.setError(null);
       await deleteImageMutation.mutateAsync(imageId);
     } catch (err) {
-      setImageError('ไม่สามารถลบรูปภาพได้: ' + (err.message || 'Unknown error'));
+      imageDialog.setError('ไม่สามารถลบรูปภาพได้: ' + (err.message || 'Unknown error'));
     }
-  }, [deleteImageMutation]);
-
-  // Derived dialogGuide from the freshest guidesData
-  const dialogGuide = useMemo(() => {
-    return selectedGuideId && guidesData ? guidesData.find(g => g.guide_id === selectedGuideId) : null;
-  }, [selectedGuideId, guidesData]);
+  }, [deleteImageMutation, imageDialog]);
 
   const filteredGuides = guides.filter(g =>
     (g.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -169,7 +159,7 @@ const LevelGuideManagement = () => {
         />
 
         <ErrorAlert message={deleteError} />
-        <ErrorAlert message={imageError} />
+        <ErrorAlert message={imageDialog.error} />
 
         <SearchInput
           defaultValue={searchQuery}
@@ -215,9 +205,9 @@ const LevelGuideManagement = () => {
         />
 
         <GuideImageDialog
-          open={imageDialogOpen}
+          open={imageDialog.isOpen}
           onOpenChange={handleImageDialogChange}
-          selectedGuide={dialogGuide}
+          selectedGuide={imageDialog.dialogItem}
           imageFile={imageFile}
           onImageFileChange={handleImageFileChange}
           isUploading={uploadingImage}
