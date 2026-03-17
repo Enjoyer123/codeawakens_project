@@ -98,20 +98,21 @@ const TestCaseManagement = () => {
                 />
 
                 <DeleteConfirmDialog
-                    isOpen={deleteDialogOpen}
-                    onClose={() => {
+                    open={deleteDialogOpen}
+                    onOpenChange={(open) => {
                         if (!deleteTestCaseMutation.isPending) {
-                            setDeleteDialogOpen(false);
+                            setDeleteDialogOpen(open);
                             setTestCaseToDelete(null);
                         }
                     }}
                     onConfirm={handleDeleteConfirm}
                     title="ยืนยันการลบ Test Case"
+                    itemName={testCaseToDelete?.test_case_name}
                     description={`คุณต้องการลบ Test Case "${testCaseToDelete?.test_case_name}" ใช่หรือไม่? ฟาดฟันนี้ไม่สามารถย้อนกลับได้`}
                     confirmText="ลบ Test Case"
                     cancelText="ยกเลิก"
                     variant="destructive"
-                    isConfirming={deleteTestCaseMutation.isPending}
+                    deleting={deleteTestCaseMutation.isPending}
                 />
             </div>
         </div>

@@ -13,7 +13,8 @@ import { usePagination } from '@/hooks/usePagination';
 
 import {
     useUpdateNotification,
-    useDeleteNotification
+    useDeleteNotification,
+    useNotifications
 } from '@/services/hooks/useNotifications';
 
 import PageError from '@/components/shared/Error/PageError';
@@ -80,8 +81,10 @@ const NotificationManagement = () => {
             await deleteNotificationAsync(itemToDelete.notification_id);
             setDeleteDialogOpen(false);
             setItemToDelete(null);
+            toast.success('ลบแจ้งเตือนสำเร็จ');
         } catch (err) {
             console.error(err);
+            toast.error('ไม่สามารถลบแจ้งเตือนได้: ' + (err.message || 'Unknown error'));
         }
     }, [itemToDelete, deleteNotificationAsync]);
 
@@ -104,9 +107,10 @@ const NotificationManagement = () => {
                     is_active: true
                 }
             });
-            // Optional: Show success toast
+            toast.success('ส่งแจ้งเตือนสำเร็จ');
         } catch (err) {
             console.error("Failed to send notification:", err);
+            toast.error('ส่งแจ้งเตือนไม่สำเร็จ: ' + (err.message || 'Unknown error'));
         }
     };
 

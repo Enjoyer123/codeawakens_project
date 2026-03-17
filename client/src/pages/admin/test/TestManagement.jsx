@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { toast } from 'sonner';
 import { useTests, useDeleteTest } from '../../../services/hooks/useTests';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
@@ -71,8 +72,10 @@ const TestManagement = () => {
             await deleteTestMutation.mutateAsync(testToDelete.test_id);
             setDeleteDialogOpen(false);
             setTestToDelete(null);
+            toast.success('ลบแบบทดสอบสำเร็จ');
         } catch (err) {
             console.error(err);
+            toast.error('ไม่สามารถลบแบบทดสอบได้: ' + (err.message || 'Unknown error'));
         }
     };
 
@@ -125,20 +128,21 @@ const TestManagement = () => {
                 />
 
                 <DeleteConfirmDialog
-                    isOpen={deleteDialogOpen}
-                    onClose={() => {
+                    open={deleteDialogOpen}
+                    onOpenChange={(open) => {
                         if (!deleteTestMutation.isPending) {
-                            setDeleteDialogOpen(false);
+                            setDeleteDialogOpen(open);
                             setTestToDelete(null);
                         }
                     }}
                     onConfirm={handleDeleteConfirm}
                     title="ยืนยันการลบแบบทดสอบ"
+                    itemName={testToDelete?.title}
                     description="คุณต้องการลบข้อสอบนี้ใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้"
                     confirmText="ลบ"
                     cancelText="ยกเลิก"
                     variant="destructive"
-                    isConfirming={deleteTestMutation.isPending}
+                    deleting={deleteTestMutation.isPending}
                 />
             </div>
         </div>

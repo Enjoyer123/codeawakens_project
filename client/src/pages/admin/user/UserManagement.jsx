@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { toast } from 'sonner';
 
 import {
   useUsers,
@@ -73,9 +74,11 @@ const UserManagement = () => {
   const handleRoleChange = useCallback(async (userId, newRole) => {
     try {
       await updateUserRoleAsync({ userId, role: newRole });
+      toast.success('อัปเดตบทบาทสำเร็จ');
       // Query invalidation handles refresh
     } catch (err) {
       console.error(err);
+      toast.error('อัปเดตบทบาทไม่สำเร็จ: ' + (err.message || 'Unknown error'));
     }
   }, [updateUserRoleAsync]);
 
@@ -97,9 +100,11 @@ const UserManagement = () => {
       await deleteUserAsync(userId);
       setDeleteDialogOpen(false);
       setUserToDelete(null);
+      toast.success('ลบผู้ใช้สำเร็จ');
       // Query invalidation handles refresh
     } catch (err) {
       console.error(err);
+      toast.error('ไม่สามารถลบผู้ใช้ได้: ' + (err.message || 'Unknown error'));
     }
   }, [userToDelete, deleteUserAsync]);
 

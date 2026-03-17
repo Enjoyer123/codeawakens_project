@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { toast } from 'sonner';
 import {
   useLevelCategories,
   useDeleteLevelCategory,
@@ -91,8 +92,10 @@ const LevelCategoryManagement = () => {
       await deleteCategoryAsync(levelCategoryToDelete.category_id);
       setDeleteDialogOpen(false);
       setLevelCategoryToDelete(null);
+      toast.success('ลบหัวข้อสำเร็จ');
     } catch (err) {
       console.error(err);
+      toast.error('ไม่สามารถลบหัวข้อได้: ' + (err.message || 'Unknown error'));
     }
   }, [levelCategoryToDelete, deleteCategoryAsync]);
 

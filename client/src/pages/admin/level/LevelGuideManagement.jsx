@@ -200,7 +200,7 @@ const LevelGuideManagement = () => {
           confirmText="ลบ Guide"
           cancelText="ยกเลิก"
           variant="destructive"
-          isConfirming={deleteGuideMutation.isPending}
+          deleting={deleteGuideMutation.isPending}
           error={deleteError}
         />
 

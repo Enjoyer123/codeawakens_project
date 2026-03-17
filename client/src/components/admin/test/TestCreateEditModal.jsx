@@ -223,8 +223,10 @@ const TestCreateEditModal = ({
                     id: testToEdit.test_id,
                     testData: dataToSave
                 });
+                toast.success('อัปเดตคำถามสำเร็จ');
             } else {
                 await createTestMutation.mutateAsync(dataToSave);
+                toast.success('สร้างคำถามสำเร็จ');
             }
 
             setSaving(false);

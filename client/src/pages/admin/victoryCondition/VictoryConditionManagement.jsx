@@ -150,15 +150,16 @@ const VictoryConditionManagement = () => {
         />
 
         <DeleteConfirmDialog
-          isOpen={deleteDialogOpen}
-          onClose={() => handleDeleteDialogChange(false)}
+          open={deleteDialogOpen}
+          onOpenChange={(open) => handleDeleteDialogChange(open)}
           onConfirm={handleDeleteConfirm}
           title="ยืนยันการลบเงื่อนไขชัยชนะ"
+          itemName={victoryConditionToDelete?.type}
           description={`คุณต้องการลบเงื่อนไขชัยชนะ "${victoryConditionToDelete?.type}" ใช่หรือไม่? ฟาดฟันนี้ไม่สามารถย้อนกลับได้`}
           confirmText="ลบ"
           cancelText="ยกเลิก"
           variant="destructive"
-          isConfirming={deleteVictoryConditionMutation.isPending}
+          deleting={deleteVictoryConditionMutation.isPending}
         />
       </div>
     </div>

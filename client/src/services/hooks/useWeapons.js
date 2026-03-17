@@ -115,8 +115,9 @@ export const useDeleteWeaponImage = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (imageId) => deleteWeaponImage(getToken, imageId),
-        onSuccess: () => {
+        mutationFn: ({ fileId }) => deleteWeaponImage(getToken, fileId),
+        onSuccess: (data, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['weapon', variables.weaponId] });
             queryClient.invalidateQueries({ queryKey: ['weapons'] });
         },
     });

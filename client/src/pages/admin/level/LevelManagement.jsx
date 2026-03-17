@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { toast } from 'sonner';
 
 import { useNavigate } from 'react-router-dom';
 import {
@@ -74,10 +75,12 @@ const LevelManagement = () => {
       await deleteLevelAsync(levelToDelete.level_id);
       setDeleteDialogOpen(false);
       setLevelToDelete(null);
+      toast.success('ลบด่านสำเร็จ');
       // Query automatically invalidated by mutation hook
     } catch (err) {
       // Global error handler will show toast
       console.error(err);
+      toast.error('ไม่สามารถลบด่านได้: ' + (err.message || 'Unknown error'));
     }
   }, [levelToDelete, deleteLevelAsync]);
 

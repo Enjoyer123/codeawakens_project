@@ -27,7 +27,7 @@ const WeaponManagement = () => {
   // Weapon form states
   const [weaponDialogOpen, setWeaponDialogOpen] = useState(false);
   const [editingWeapon, setEditingWeapon] = useState(null);
-  const imageDialog = useImageDialog(weaponsData?.weapons || [], 'weapon_id');
+
 
   // Delete states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -40,7 +40,7 @@ const WeaponManagement = () => {
     isError,
     error: queryError
   } = useWeapons(page, rowsPerPage, searchQuery);
-
+  const imageDialog = useImageDialog(weaponsData?.weapons || [], 'weapon_id');
   if (isError) {
     return <PageError message={queryError?.message} title="Failed to load weapons" />;
   }
@@ -94,8 +94,10 @@ const WeaponManagement = () => {
       await deleteWeaponMutation.mutateAsync(weaponToDelete.weapon_id);
       setDeleteDialogOpen(false);
       setWeaponToDelete(null);
+      toast.success('ลบอาวุธสำเร็จ');
     } catch (err) {
       console.error(err);
+      toast.error('ไม่สามารถลบอาวุธได้: ' + (err.message || 'Unknown error'));
     }
   }, [weaponToDelete, deleteWeaponMutation]);
 
@@ -172,16 +174,17 @@ const WeaponManagement = () => {
         />
 
         <DeleteConfirmDialog
-          isOpen={deleteDialogOpen}
-          onClose={() => handleDeleteDialogChange(false)}
+          open={deleteDialogOpen}
+          onOpenChange={(open) => handleDeleteDialogChange(open)}
           onConfirm={handleDeleteConfirm}
-          title="Confirm Deletion"
-          description={`Are you sure you want to delete the weapon "${weaponToDelete?.weapon_name}"? This action cannot be undone.`}
-          confirmText="Delete"
-          cancelText="Cancel"
-          variant="destructive"
-          isConfirming={deleteWeaponMutation.isPending}
+          title="ยืนยันการลบอาวุธ"
+          itemName={weaponToDelete?.weapon_name}
+          description={`คุณต้องการลบอาวุธ "${weaponToDelete?.weapon_name}" ใช่หรือไม่? การลบนี้ไม่สามารถย้อนกลับได้`}
+          confirmText="ลบ"
+          cancelText="ยกเลิก"
+          deleting={deleteWeaponMutation.isPending}
         />
+
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-
+import SearchInput from '@/components/admin/formFields/SearchInput';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import ErrorAlert from '@/components/shared/alert/ErrorAlert';
 import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
@@ -52,7 +52,6 @@ const LevelHintManagement = () => {
   const [deleteError, setDeleteError] = useState(null);
 
   // image dialog state
-  const imageDialog = useImageDialog(allHints, 'hint_id');
   const [imageFile, setImageFile] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
 
@@ -62,7 +61,7 @@ const LevelHintManagement = () => {
 
   // Derived State
   const allHints = hintsData || [];
-
+  const imageDialog = useImageDialog(allHints, 'hint_id');
   // Client-side filtering & pagination
   const { filteredHints, pagination } = useMemo(() => {
     const filtered = searchQuery
@@ -253,7 +252,7 @@ const LevelHintManagement = () => {
           onConfirm={handleDeleteConfirm}
           itemName={hintToDelete?.title}
           title="ยืนยันการลบ Hint"
-          isConfirming={deleteHintMutation.isPending}
+          deleting={deleteHintMutation.isPending}
           error={deleteError}
         />
 

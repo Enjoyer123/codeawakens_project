@@ -33,7 +33,7 @@ export const updateUsername = async (getToken, username) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/profile/profile/username`, {
+    const response = await fetch(`${API_BASE_URL}/profile/username`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -64,7 +64,7 @@ export const uploadProfileImage = async (getToken, file) => {
     const formData = new FormData();
     formData.append('profileImage', file);
 
-    const response = await fetch(`${API_BASE_URL}/profile/profile/image`, {
+    const response = await fetch(`${API_BASE_URL}/profile/image`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -91,7 +91,7 @@ export const deleteProfileImage = async (getToken) => {
       throw new Error('No authentication token available');
     }
 
-    const response = await fetch(`${API_BASE_URL}/profile/profile/image`, {
+    const response = await fetch(`${API_BASE_URL}/profile/image`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,

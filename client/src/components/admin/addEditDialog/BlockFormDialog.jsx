@@ -17,8 +17,7 @@ import { getImageUrl } from '@/utils/imageUtils';
 import { toast } from 'sonner';
 
 // TanStack hooks for mutations (since BlockFormDialog handles save now)
-import { useUploadImage } from '@/services/hooks/useImageUpload';
-import { useUpdateBlock } from '@/services/hooks/useBlock';
+import { useUpdateBlock, useUploadBlockImage } from '@/services/hooks/useBlocks';
 
 const blockCategories = [
   { value: 'movement', label: 'Movement' },
@@ -37,7 +36,7 @@ const BlockFormDialog = ({
 }) => {
   // Mutations
   const { mutateAsync: updateBlockAsync } = useUpdateBlock();
-  const { mutateAsync: uploadImageAsync } = useUploadImage('block');
+  const { mutateAsync: uploadImageAsync } = useUploadBlockImage();
 
   // Internal Form State
   const [formData, setFormData] = useState({

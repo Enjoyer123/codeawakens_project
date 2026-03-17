@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -188,8 +189,10 @@ const LevelCategoryFormDialog = ({
           categoryId: editingLevelCategory.category_id,
           data: payload
         });
+        toast.success('อัปเดตหัวข้อสำเร็จ');
       } else {
         await createCategoryAsync(payload);
+        toast.success('เพิ่มหัวข้อสำเร็จ');
       }
       onOpenChange(false);
     } catch (err) {

@@ -34,9 +34,8 @@ const WeaponImageDialog = ({
 
   const handleImageFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setImageForm({ ...imageForm, imageFile: file });
-    }
+    setImageForm({ ...imageForm, imageFile: file });
+
   };
 
   const handleAddImage = async () => {
@@ -51,9 +50,11 @@ const WeaponImageDialog = ({
       await addImageAsync({
         weaponId: selectedWeapon.weapon_id,
         imageFile: imageForm.imageFile,
-        typeFile: imageForm.type_file,
-        typeAnimation: imageForm.type_animation,
-        frame: imageForm.type_animation === 'weapon' ? 1 : imageForm.frame
+        imageData: {
+          type_file: imageForm.type_file,
+          type_animation: imageForm.type_animation,
+          frame: imageForm.type_animation === 'weapon' ? 1 : imageForm.frame
+        }
       });
 
       // Reset form on success
@@ -63,10 +64,11 @@ const WeaponImageDialog = ({
         frame: 1,
         imageFile: null
       });
+
       // Clear file input
       const fileInput = document.getElementById('weapon-image-upload');
       if (fileInput) fileInput.value = '';
-      
+
     } catch (err) {
       console.error(err);
       toast.error(err.message || 'Error uploading image');

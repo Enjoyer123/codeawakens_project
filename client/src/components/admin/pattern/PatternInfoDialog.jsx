@@ -138,13 +138,9 @@ const PatternInfoDialog = ({ open, onOpenChange, patternId, levelId }) => {
                                         ยกเลิก
                                     </Button>
                                     <div className="flex gap-2">
-                                        <Button variant="outline" onClick={() => handleSave(false)} disabled={isPending}>
-                                            {isPending && <Loader className="mr-2 h-4 w-4 animate-spin" />}
-                                            สร้าง (ร่าง)
-                                        </Button>
                                         <Button onClick={() => handleSave(true)} disabled={isPending}>
                                             {isPending && <Loader className="mr-2 h-4 w-4 animate-spin" />}
-                                            สร้างและแก้ไข Logic
+                                            สร้าง
                                         </Button>
                                     </div>
                                 </>

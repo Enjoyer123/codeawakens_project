@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -89,8 +90,10 @@ const RewardFormDialog = ({
           rewardId: editingReward.reward_id,
           rewardData: payload
         });
+        toast.success('อัปเดตรางวัลสำเร็จ');
       } else {
         await createRewardAsync(payload);
+        toast.success('เพิ่มรางวัลสำเร็จ');
       }
       onOpenChange(false);
     } catch (err) {

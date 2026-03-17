@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -77,8 +78,10 @@ const WeaponFormDialog = ({
           weaponId: editingWeapon.weapon_id,
           weaponData: formData
         });
+        toast.success('อัปเดตอาวุธสำเร็จ');
       } else {
         await createWeaponAsync(formData);
+        toast.success('เพิ่มอาวุธสำเร็จ');
       }
       onOpenChange(false);
     } catch (err) {

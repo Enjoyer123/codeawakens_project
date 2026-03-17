@@ -43,7 +43,7 @@ const RewardImageDialog = ({
         await uploadFrameAsync({
           rewardId: selectedReward.reward_id,
           frameNumber: 1,
-          file: imageFile
+          imageFile: imageFile
         });
         setImageFile(null);
         const input = document.getElementById('reward-image-input');

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import {
     Dialog,
     DialogContent,
@@ -81,8 +82,10 @@ const NotificationFormDialog = ({
                     notificationId: editingNotification.notification_id,
                     notificationData: formData
                 });
+                toast.success('อัปเดตแจ้งเตือนสำเร็จ');
             } else {
                 await createNotificationAsync(formData);
+                toast.success('สร้างแจ้งเตือนสำเร็จ');
             }
             onOpenChange(false);
         } catch (err) {

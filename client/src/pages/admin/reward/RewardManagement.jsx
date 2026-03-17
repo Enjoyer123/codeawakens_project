@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
-
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import SearchInput from '@/components/admin/formFields/SearchInput';
@@ -24,7 +23,6 @@ import {
 import PageError from '@/components/shared/Error/PageError';
 
 const RewardManagement = () => {
-  const navigate = useNavigate();
   const { page, rowsPerPage, handlePageChange } = usePagination(1, 10);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -93,8 +91,10 @@ const RewardManagement = () => {
       await deleteRewardAsync(rewardToDelete.reward_id);
       setDeleteDialogOpen(false);
       setRewardToDelete(null);
+      toast.success('ลบรางวัลสำเร็จ');
     } catch (err) {
       console.error(err);
+      toast.error('ไม่สามารถลบรางวัลได้: ' + (err.message || 'Unknown error'));
     }
   }, [rewardToDelete, deleteRewardAsync]);
 
