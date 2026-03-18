@@ -1,4 +1,4 @@
-﻿import {
+import {
     checkVictoryConditions,
     generateVictoryHint,
 } from '../game/victoryUtils';
