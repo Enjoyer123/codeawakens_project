@@ -1,17 +1,9 @@
-﻿// Pattern Matching — XML analysis + subsequence matching + best pattern selection
+// Pattern Matching — Blockly Workspace analysis + subsequence matching + best pattern selection
+// Refactored: uses Blockly Headless Workspace for XML → block analysis (no more manual XML parsing)
 
-// ─── XML Utilities ──────────────────────────────────────────────
+import * as Blockly from 'blockly/core';
 
-function getWorkspaceXml(workspace) {
-  if (!workspace || !window.Blockly?.Xml?.workspaceToDom) return null;
-  try {
-    return window.Blockly.Xml.workspaceToDom(workspace);
-  } catch (err) {
-    return null;
-  }
-}
-
-// ─── Variable Resolution ────────────────────────────────────────
+// ─── Variable Name Normalization ────────────────────────────────
 
 /** ลบ suffix _number ออก เช่น "neighbor_1" → "neighbor" */
 function normalizeVariableName(varValue) {
@@ -20,94 +12,70 @@ function normalizeVariableName(varValue) {
   return match ? match[1] : varValue;
 }
 
-/** สร้าง variable ID → name mapping จาก XML <variables> section หรือ workspace */
-function buildVariableMap(xml, workspace) {
-  const map = new Map();
-  const variablesSection = xml.getElementsByTagName('variables')[0];
-
-  if (variablesSection) {
-    const vars = variablesSection.getElementsByTagName('variable');
-    for (let i = 0; i < vars.length; i++) {
-      const id = vars[i].getAttribute('id');
-      const name = vars[i].textContent || vars[i].getAttribute('name') || '';
-      if (id && name) map.set(id, name);
-    }
-  } else if (workspace?.getVariableMap) {
-    try {
-      workspace.getVariableMap().getAllVariables().forEach(v => {
-        if (v.getId() && v.name) map.set(v.getId(), v.name);
-      });
-    } catch (e) { /* ignore */ }
-  }
-
-  return map;
-}
-
-/** Resolve variable field → actual name (XML map → workspace API → raw value) */
-function resolveVarName(varField, variableMap, workspace) {
-  const raw = varField.getAttribute('id') || varField.textContent || varField.getAttribute('value') || '';
-
-  if (variableMap.has(raw)) return normalizeVariableName(variableMap.get(raw));
-
-  if (workspace?.getVariableMap) {
-    try {
-      const v = workspace.getVariableMap().getVariableById(raw);
-      if (v) return normalizeVariableName(v.name);
-    } catch (e) { /* ignore */ }
-  }
-
-  return normalizeVariableName(raw);
-}
-
-// ─── XML Structure Analysis ─────────────────────────────────────
+// ─── Workspace → Block Analysis ─────────────────────────────────
 
 /**
- * วิเคราะห์ XML → block array ที่เรียงตาม tree structure
+ * วิเคราะห์ workspace → block array ที่เรียงตาม tree structure
+ * ใช้ Blockly API จริง (ไม่ต้องแกะ XML ด้วยมือ)
  * แต่ละ block มี treeId เพื่อระบุว่าอยู่กลุ่มไหนที่ต่อกัน
+ *
+ * Output format เหมือนเดิมทุกประการ:
+ * { index, type, treeId, varName?, procedureName?, fields?, hasStatement, hasValue, hasNext }
  */
-function analyzeXmlStructure(xml, workspace = null) {
-  if (!xml) return [];
+function analyzeWorkspace(workspace) {
+  if (!workspace) return [];
 
-  const variableMap = buildVariableMap(xml, workspace);
   const analysis = [];
   let blockIndex = 0;
-  let currentTreeId = 0;
 
   function traverseBlock(block, treeId) {
-    if (!block || (block.tagName !== 'block' && block.localName !== 'block')) return;
-    const type = block.getAttribute('type');
+    if (!block) return;
+    const type = block.type;
     if (!type) return;
 
-    const info = { index: blockIndex++, type, treeId, hasStatement: false, hasValue: false, hasNext: false };
+    const info = {
+      index: blockIndex++,
+      type,
+      treeId,
+      hasStatement: false,
+      hasValue: false,
+      hasNext: false
+    };
 
-    // Resolve variable name
+    // Resolve variable name (same logic as before)
     if (type === 'variables_set' || type === 'variables_get') {
-      for (const f of block.getElementsByTagName('field')) {
-        if (f.getAttribute('name') === 'VAR' && f.parentNode === block) {
-          info.varName = resolveVarName(f, variableMap, workspace);
-          break;
+      try {
+        const varField = block.getField('VAR');
+        if (varField) {
+          // getText() returns the display name of the variable
+          const rawName = varField.getText ? varField.getText() : (varField.getValue ? varField.getValue() : '');
+          info.varName = normalizeVariableName(rawName);
         }
-      }
+      } catch (e) { /* ignore */ }
     }
 
     // Resolve procedure name
     if (type?.includes('procedures_')) {
-      for (const f of block.getElementsByTagName('field')) {
-        if (f.getAttribute('name') === 'NAME' && f.parentNode === block) {
-          info.procedureName = f.textContent || f.getAttribute('value') || '';
-          break;
+      try {
+        const nameField = block.getField('NAME');
+        if (nameField) {
+          info.procedureName = nameField.getText ? nameField.getText() : (nameField.getValue ? nameField.getValue() : '');
         }
-      }
+      } catch (e) { /* ignore */ }
     }
 
-    // Collect field values (direct children only)
+    // Collect field values (skip VAR and NAME as they are handled above)
     const fields = {};
-    for (const child of block.children) {
-      const tag = child.tagName || child.localName;
-      if (tag === 'field') {
-        const name = child.getAttribute('name');
+    const inputList = block.inputList || [];
+    for (const input of inputList) {
+      const fieldRow = input.fieldRow || [];
+      for (const field of fieldRow) {
+        const name = field.name;
         if (name && name !== 'VAR' && name !== 'NAME') {
-          fields[name] = child.textContent || '';
+          const value = field.getText ? field.getText() : (field.getValue ? field.getValue() : '');
+          if (value !== undefined && value !== null) {
+            fields[name] = String(value);
+          }
         }
       }
     }
@@ -115,35 +83,101 @@ function analyzeXmlStructure(xml, workspace = null) {
 
     analysis.push(info);
 
-    // Traverse children (value, statement, next) — same treeId
-    for (const child of block.children) {
-      const tag = child.tagName || child.localName;
-      if (tag === 'value' || tag === 'statement' || tag === 'next') {
-        if (tag === 'value') info.hasValue = true;
-        else if (tag === 'statement') info.hasStatement = true;
-        else info.hasNext = true;
-
-        for (const inner of child.children) {
-          if (inner.tagName === 'block' || inner.localName === 'block') {
-            traverseBlock(inner, treeId);
-          }
+    // Traverse children: value inputs, statement inputs, next connection
+    const INPUT_VALUE = Blockly.inputs.inputTypes.VALUE;
+    const INPUT_STATEMENT = Blockly.inputs.inputTypes.STATEMENT;
+    for (const input of inputList) {
+      if (input.type === INPUT_VALUE) {
+        const child = input.connection?.targetBlock();
+        if (child) {
+          info.hasValue = true;
+          traverseBlock(child, treeId);
+        }
+      } else if (input.type === INPUT_STATEMENT) {
+        const child = input.connection?.targetBlock();
+        if (child) {
+          info.hasStatement = true;
+          // Only traverse the first child — subsequent blocks in the chain
+          // are handled by each block's own getNextBlock() at the end
+          traverseBlock(child, treeId);
         }
       }
     }
+
+    // Next block in the stack (skip if already traversed in statement chain above)
+    const nextBlock = block.getNextBlock();
+    if (nextBlock) {
+      info.hasNext = true;
+      traverseBlock(nextBlock, treeId);
+    }
   }
 
-  // Root blocks — แต่ละ root ได้ treeId ใหม่
-  const root = xml;
-  for (const child of root.children) {
-    if (child.tagName === 'block' || child.localName === 'block') {
-      traverseBlock(child, currentTreeId++);
-    }
+  // Get only top-level blocks (blocks without a parent)
+  const topBlocks = workspace.getTopBlocks(true);
+  let currentTreeId = 0;
+
+  for (const topBlock of topBlocks) {
+    traverseBlock(topBlock, currentTreeId++);
   }
 
   return analysis;
 }
 
-// ─── Block Matching ─────────────────────────────────────────────
+// ─── Headless Workspace: XML String → Block Analysis ────────────
+
+/**
+ * แปลง XML String → block analysis โดยใช้ Blockly Headless Workspace
+ * สร้าง workspace ชั่วคราว โหลด XML เข้าไป วิเคราะห์ แล้ว dispose ทิ้ง
+ */
+function parseXmlToAnalysis(xmlString) {
+  if (!xmlString) return [];
+
+  let tempWorkspace = null;
+  try {
+    tempWorkspace = new Blockly.Workspace();
+    const dom = Blockly.utils.xml.textToDom(xmlString);
+    Blockly.Xml.domToWorkspace(dom, tempWorkspace);
+    return analyzeWorkspace(tempWorkspace);
+  } catch (e) {
+    console.warn('Failed to parse XML via Headless Workspace:', e.message);
+    return [];
+  } finally {
+    if (tempWorkspace) {
+      try { tempWorkspace.dispose(); } catch (e) { /* ignore */ }
+    }
+  }
+}
+
+// ─── Pattern Cache ──────────────────────────────────────────────
+
+/**
+ * Pre-parse ทุก hint ของทุก pattern ครั้งเดียว เก็บเป็น cached analysis
+ * เรียกตอนโหลด patterns ครั้งแรก ไม่ต้อง parse XML ซ้ำทุกครั้งที่ผู้เล่นขยับบล็อก
+ *
+ * @param {Array} patterns - Array ของ pattern objects จาก DB
+ * @returns {Array} cachedPatterns — เหมือน patterns เดิม แต่เพิ่ม _cachedHintAnalysis
+ */
+export function preparePatternsCache(patterns) {
+  if (!patterns || patterns.length === 0) return [];
+
+  return patterns.map(pattern => {
+    const hints = Array.isArray(pattern.hints) ? pattern.hints : [];
+    const cachedHints = hints.map(hint => {
+      const xmlCheck = hint.xmlCheck || hint.xmlcheck;
+      return {
+        ...hint,
+        _cachedAnalysis: xmlCheck ? parseXmlToAnalysis(xmlCheck) : []
+      };
+    });
+
+    return {
+      ...pattern,
+      hints: cachedHints
+    };
+  });
+}
+
+// ─── Block Matching (คงเดิม 100%) ──────────────────────────────
 
 /** เทียบ 2 blocks ว่าตรงกันหรือไม่ (type, varName, procedureName, fields) */
 function isBlockMatch(current, target) {
@@ -239,48 +273,39 @@ const EMPTY_RESULT = {
   isComplete: false, effects: [], matchedBlocks: 0, totalBlocks: 0
 };
 
-/** นับจำนวน step ที่ผ่าน (full match ตามลำดับ) */
-function countMatchedSteps(currentAnalysis, hints, parser, workspace) {
+/** นับจำนวน step ที่ผ่าน (full match ตามลำดับ) — ใช้ cached analysis */
+function countMatchedSteps(currentAnalysis, hints) {
   let stepsMatched = 0;
   for (const hint of hints) {
-    const xmlCheck = hint.xmlCheck || hint.xmlcheck;
-    if (!xmlCheck) continue;
-    try {
-      const targetAnalysis = analyzeXmlStructure(parser.parseFromString(xmlCheck, 'text/xml').documentElement, workspace);
-      if (matchSubsequenceByTree(currentAnalysis, targetAnalysis).isFullMatch) {
-        stepsMatched++;
-      } else {
-        break;
-      }
-    } catch (e) { break; }
+    const targetAnalysis = hint._cachedAnalysis;
+    if (!targetAnalysis || targetAnalysis.length === 0) continue;
+    if (matchSubsequenceByTree(currentAnalysis, targetAnalysis).isFullMatch) {
+      stepsMatched++;
+    } else {
+      break;
+    }
   }
   return stepsMatched;
 }
 
-/** นับ block ที่ตรงกับ final hint ของ pattern (สำหรับ % และ tie-breaking) */
-function countBlockMatch(currentAnalysis, hints, parser, workspace) {
+/** นับ block ที่ตรงกับ final hint ของ pattern (สำหรับ % และ tie-breaking) — ใช้ cached analysis */
+function countBlockMatch(currentAnalysis, hints) {
   const lastHint = hints[hints.length - 1];
-  const xml = lastHint?.xmlCheck || lastHint?.xmlcheck;
-  if (!xml) return { matched: 0, total: 0 };
-  try {
-    const targetAnalysis = analyzeXmlStructure(parser.parseFromString(xml, 'text/xml').documentElement, workspace);
-    const result = matchSubsequenceByTree(currentAnalysis, targetAnalysis);
-    return { matched: result.matched, total: result.total };
-  } catch (e) {
-    return { matched: 0, total: 0 };
-  }
+  const targetAnalysis = lastHint?._cachedAnalysis;
+  if (!targetAnalysis || targetAnalysis.length === 0) return { matched: 0, total: 0 };
+  const result = matchSubsequenceByTree(currentAnalysis, targetAnalysis);
+  return { matched: result.matched, total: result.total };
 }
 
 /** ฟังก์ชันหลัก: หา pattern ที่ตรงมากสุดจาก workspace */
-export function findBestMatch(workspace, patterns) {
-  if (!workspace || !patterns || patterns.length === 0) return EMPTY_RESULT;
+export function findBestMatch(workspace, cachedPatterns) {
+  if (!workspace || !cachedPatterns || cachedPatterns.length === 0) return EMPTY_RESULT;
 
-  const currentXml = getWorkspaceXml(workspace);
-  if (!currentXml) return EMPTY_RESULT;
+  // วิเคราะห์ workspace ปัจจุบันของผู้เล่น (ใช้ Blockly API โดยตรง)
+  const currentAnalysis = analyzeWorkspace(workspace);
+  if (currentAnalysis.length === 0) return EMPTY_RESULT;
 
-  const currentAnalysis = analyzeXmlStructure(currentXml, workspace);
-  const sortedPatterns = [...patterns].sort((a, b) => (a.pattern_type_id || 999) - (b.pattern_type_id || 999));
-  const parser = new DOMParser();
+  const sortedPatterns = [...cachedPatterns].sort((a, b) => (a.pattern_type_id || 999) - (b.pattern_type_id || 999));
 
   // หา pattern ที่ match ดีที่สุด (block count > step count)
   let best = null, bestSteps = -1, bestMatchedBlocks = -1, bestTotalBlocks = 0;
@@ -289,8 +314,8 @@ export function findBestMatch(workspace, patterns) {
     const hints = Array.isArray(pattern.hints) ? pattern.hints : [];
     if (hints.length === 0) continue;
 
-    const stepsMatched = countMatchedSteps(currentAnalysis, hints, parser, workspace);
-    const { matched, total } = countBlockMatch(currentAnalysis, hints, parser, workspace);
+    const stepsMatched = countMatchedSteps(currentAnalysis, hints);
+    const { matched, total } = countBlockMatch(currentAnalysis, hints);
 
     if (matched > bestMatchedBlocks || (matched === bestMatchedBlocks && stepsMatched > bestSteps)) {
       best = pattern;
