@@ -7,8 +7,6 @@ import ProgressModal from '../../pages/user/ProgressModal';
 import * as Blockly from "blockly/core";
 import "blockly/blocks";
 import "blockly/javascript";
-window.Blockly = Blockly;
-
 // Import utilities and data
 import { clearRescuedPeople } from '../../gameutils/entities/personUtils';
 import { clearPlayerCoins } from '../../gameutils/entities/coinUtils';
@@ -192,42 +190,9 @@ const GameCore = ({
     setCurrentWeaponData,
   });
 
-  // Load pattern XML if provided (Admin Preview Pattern Selector)
-  // ใช้ ref เพื่อจำค่าเก่า ป้องกันไม่ให้ยิงตอนเข้าด่านครั้งแรก (useBlocklySetup จัดการเองแล้ว)
-  const prevPatternXmlRef = React.useRef(undefined);
 
-  useEffect(() => {
-    if (!isPreview || !workspaceRef.current || !blocklyLoaded) return;
 
-    const prev = prevPatternXmlRef.current;
-    prevPatternXmlRef.current = patternXml;
-
-    // ถ้าเลือก Pattern → โหลด XML ของ Pattern นั้น
-    if (patternXml) {
-      try {
-        workspaceRef.current.clear();
-        const xmlDom = Blockly.utils.xml.textToDom(patternXml);
-        Blockly.Xml.domToWorkspace(xmlDom, workspaceRef.current);
-      } catch (e) {
-        console.error("Error loading pattern XML into workspace:", e);
-      }
-    }
-    // ถ้ายกเลิกเลือก (จาก Pattern กลับมา "เล่นเฉยๆ") → โหลด starter XML ของด่าน
-    else if (prev) {
-      try {
-        workspaceRef.current.clear();
-        if (currentLevel?.starter_xml) {
-          const xmlDom = Blockly.utils.xml.textToDom(currentLevel.starter_xml);
-          Blockly.Xml.domToWorkspace(xmlDom, workspaceRef.current);
-        }
-      } catch (e) {
-        console.error("Error loading starter XML into workspace:", e);
-      }
-    }
-    // ถ้าทั้ง patternXml และ prev เป็น null/undefined → เพิ่งเข้าด่าน, ไม่ต้องทำอะไร (useBlocklySetup จัดการแล้ว)
-  }, [patternXml, blocklyLoaded, isPreview]);
-
-  // Clean up Phaser & Blockly ตอนออกจากด่าน
+  // Init Blockly & Phaser + cleanup ตอนออกจากด่าน
   useEffect(() => {
     if (!currentLevel || !blocklyRef.current || Object.keys(enabledBlocks).length === 0) {
       return;
@@ -259,7 +224,10 @@ const GameCore = ({
         }
       }
     };
-  }, [currentLevel, blocklyRef.current]);
+  }, [currentLevel, enabledBlocks, isWeaponsLoading]);
+
+  // Load pattern XML if provided (Admin Preview Pattern Selector)
+  const prevPatternXmlRef = React.useRef(undefined);
 
   useEffect(() => {
     if (!isPreview || !workspaceRef.current || !blocklyLoaded) return;

@@ -28,7 +28,7 @@ function analyzeWorkspace(workspace) {
   const analysis = [];
   let blockIndex = 0;
 
-  function traverseBlock(block, treeId) {
+  function traverseBlock(block, treeId, depth = 0) {
     if (!block) return;
     const type = block.type;
     if (!type) return;
@@ -37,6 +37,7 @@ function analyzeWorkspace(workspace) {
       index: blockIndex++,
       type,
       treeId,
+      depth,
       hasStatement: false,
       hasValue: false,
       hasNext: false
@@ -47,7 +48,6 @@ function analyzeWorkspace(workspace) {
       try {
         const varField = block.getField('VAR');
         if (varField) {
-          // getText() returns the display name of the variable
           const rawName = varField.getText ? varField.getText() : (varField.getValue ? varField.getValue() : '');
           info.varName = normalizeVariableName(rawName);
         }
@@ -91,24 +91,22 @@ function analyzeWorkspace(workspace) {
         const child = input.connection?.targetBlock();
         if (child) {
           info.hasValue = true;
-          traverseBlock(child, treeId);
+          traverseBlock(child, treeId, depth + 1);
         }
       } else if (input.type === INPUT_STATEMENT) {
         const child = input.connection?.targetBlock();
         if (child) {
           info.hasStatement = true;
-          // Only traverse the first child — subsequent blocks in the chain
-          // are handled by each block's own getNextBlock() at the end
-          traverseBlock(child, treeId);
+          traverseBlock(child, treeId, depth + 1);
         }
       }
     }
 
-    // Next block in the stack (skip if already traversed in statement chain above)
+    // Next block in the stack (same depth — siblings)
     const nextBlock = block.getNextBlock();
     if (nextBlock) {
       info.hasNext = true;
-      traverseBlock(nextBlock, treeId);
+      traverseBlock(nextBlock, treeId, depth);
     }
   }
 
@@ -159,7 +157,6 @@ function parseXmlToAnalysis(xmlString) {
  */
 export function preparePatternsCache(patterns) {
   if (!patterns || patterns.length === 0) return [];
-
   return patterns.map(pattern => {
     const hints = Array.isArray(pattern.hints) ? pattern.hints : [];
     const cachedHints = hints.map(hint => {
@@ -179,9 +176,10 @@ export function preparePatternsCache(patterns) {
 
 // ─── Block Matching (คงเดิม 100%) ──────────────────────────────
 
-/** เทียบ 2 blocks ว่าตรงกันหรือไม่ (type, varName, procedureName, fields) */
+/** เทียบ 2 blocks ว่าตรงกันหรือไม่ (type, depth, varName, procedureName, fields) */
 function isBlockMatch(current, target) {
   if (current.type !== target.type) return false;
+  if (target.depth !== undefined && current.depth !== target.depth) return false;
   if (target.varName !== undefined && current.varName !== target.varName) return false;
   if (target.procedureName !== undefined && current.procedureName !== undefined
     && current.procedureName !== target.procedureName) return false;

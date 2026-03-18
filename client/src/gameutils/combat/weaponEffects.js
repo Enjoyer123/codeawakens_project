@@ -1,4 +1,4 @@
-// Combat Weapon Attack Effects
+﻿// Combat Weapon Attack Effects
 import { getCurrentGameState } from '../shared/game/gameState';
 import { createCanvasBasedEffect } from './animationUtils';
 
@@ -140,7 +140,7 @@ export function animateWeaponAttack(scene, weaponType, targetContainer = null) {
 // ─── Attack Effects ─────────────────────────────────────────────
 
 /** ยิง effect กระจายจากตัวผู้เล่นเมื่อโจมตีศัตรู */
-export function showEffectWeaponFixed(enemy, damage, weaponKey = 'stick', weaponSprite, effectType = '') {
+export function showEffectWeaponFixed(enemy, damage, weaponKey = 'stick', weaponSprite, effectType = 'attack') {
     const container = getPlayerWeaponSprite();
     const scene = getCurrentGameState().currentScene;
     if (!scene || !enemy?.sprite) return;
