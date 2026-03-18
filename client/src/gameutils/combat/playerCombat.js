@@ -2,6 +2,8 @@ import { playAttack } from '../movement/playerAnimation.js';
 import { getDirectionFromAngle } from './combatHelpers';
 import { cleanupMonsterUI } from './battleUI';
 import { showMonsterDeathEffect } from './deathEffects';
+import { playSound } from '../sound/soundManager';
+
 export function haveEnemy(player) {
     return findNearbyEnemy(player) !== null;
 }
@@ -65,6 +67,7 @@ export function hitEnemyWithDamage(player, targetMonster = null, damage = 50) {
     killEnemy(player, enemySprite);
 
     playAttack(player);
+    playSound('hit');
     return true;
 }
 

@@ -1,6 +1,7 @@
 // Phaser Game Battle Functions
 import Phaser from "phaser";
 import { getWeaponData } from '../entities/weaponUtils';
+import { playSound } from '../sound/soundManager';
 
 import { getCurrentGameState, setCurrentGameState, getPlayerHp, setPlayerHp as setGlobalPlayerHp, } from '../shared/game/gameState';
 import { isDefeat } from './enemyUtils';
@@ -85,6 +86,7 @@ export function startBattle(scene, monster, setPlayerHp, setIsGameOver, isPlayer
                 ease: 'Power2',
                 onComplete: () => {
                   // Apply damage to player
+                  playSound('hit');
                   if (finalDamage > 0) {
                     if (scene.player.takeDamage) {
                       scene.player.takeDamage(finalDamage);
@@ -122,6 +124,7 @@ export function startBattle(scene, monster, setPlayerHp, setIsGameOver, isPlayer
         const playerAttacks = () => {
           return new Promise((pResolve) => {
             // Player attacks monster - Always 100 damage (Monster dies in 1 hit)
+            playSound('hit');
             monster.data.hp = 0;
             monster.data.defeated = true;
 

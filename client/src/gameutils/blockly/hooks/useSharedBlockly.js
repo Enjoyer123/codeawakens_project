@@ -18,6 +18,7 @@ import { createToolboxConfig } from '../core/toolbox';
 import { ensureStandardBlocks } from '../core/standard';
 import { defineAllBlocks } from '../core/definitions';
 import { defineAllGenerators } from '../core/generators';
+import { isMuted, getVolume } from '../../sound/soundManager';
 
 export function useSharedBlockly({
   blocklyRef,                  // DOM Element
@@ -75,7 +76,7 @@ export function useSharedBlockly({
           blockDragger: ScrollBlockDragger,
           metricsManager: ScrollMetricsManager,
         },
-        sounds: false,
+        sounds: true,
         oneBasedIndex: false, // หรือ true ขึ้นอยู่กับการใช้งาน (เดิม GameCore ใช้ false, Admin ใช้ true แต่จริงๆ ไม่น่ากระทบมาก)
         variables: enabledBlocks["variables_get"] ||
           enabledBlocks["variables_set"] ||
@@ -101,6 +102,19 @@ export function useSharedBlockly({
 
       const workspace = Blockly.inject(blocklyRef.current, workspaceConfig);
       workspaceRef.current = workspace;
+
+      // Sync Blockly sounds with our global Sound Manager (Mute & Volume slider)
+      if (workspace.getAudioManager) {
+        const audioManager = workspace.getAudioManager();
+        if (audioManager && !audioManager._originalPlay) {
+          audioManager._originalPlay = audioManager.play;
+          audioManager.play = function (name, volume) {
+            if (isMuted()) return;
+            const defaultVol = typeof volume === 'number' ? volume : 1;
+            this._originalPlay.call(this, name, defaultVol * getVolume());
+          };
+        }
+      }
 
       // Install Scroll Options plugin for standard smooth scrolling
       const scrollOptions = new ScrollOptions(workspace);

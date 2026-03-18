@@ -9,6 +9,8 @@ import {
     getPlayerAuraSprite,
     getPlayerCircleSprite
 } from './weaponEffects';
+import { playSound } from '../sound/soundManager';
+
 export function playCombatSequence(scene, isWin, onComplete) {
     // Check condition: Only play if level has no nodes (OR if it falls back to cinematic mode like drawPlayer)
     const hasNodes = scene.levelData?.nodes && scene.levelData.nodes.length > 0;
@@ -266,6 +268,7 @@ function playVictorySequence(scene, player, monster, weaponRing, monsterDeathAni
         ease: 'Power2',
         onYoyo: () => {
             // HIT FRAME (Middle of lunge)
+            playSound('hit');
 
             // 2. Player Attack Animation
             const attackAnimKey = player.customAnims ? player.customAnims.attack : 'actack-side';
@@ -356,6 +359,7 @@ function playDefeatSequence(scene, player, monster, monsterAttackAnim, onComplet
             duration: 300,
             yoyo: true,
             onYoyo: () => {
+                playSound('hit');
                 player.setTint(0xff0000);
                 scene.cameras.main.shake(100, 0.01);
 
