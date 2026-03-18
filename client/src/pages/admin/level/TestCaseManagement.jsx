@@ -59,7 +59,7 @@ const TestCaseManagement = () => {
             setDeleteDialogOpen(false);
             setTestCaseToDelete(null);
         } catch (err) {
-            toast.error('ไม่สามารถลบ Test Case ได้: ' + (err.message || 'Unknown error'));
+            console.error(err);
         }
     }, [testCaseToDelete, deleteTestCaseMutation]);
 

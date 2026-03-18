@@ -11,7 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { toast } from 'sonner';
 import { useUploadRewardFrame, useDeleteRewardFrame } from '@/services/hooks/useRewards';
 
 const RewardImageDialog = ({
@@ -29,11 +28,6 @@ const RewardImageDialog = ({
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('ไฟล์ใหญ่เกิน 2MB');
-      e.target.value = '';
-      return;
-    }
     setImageFile(file);
   };
 
@@ -50,7 +44,6 @@ const RewardImageDialog = ({
         if (input) input.value = '';
       } catch (err) {
         console.error(err);
-        toast.error('Failed to upload image');
       }
     }
   };
@@ -64,7 +57,6 @@ const RewardImageDialog = ({
         });
       } catch (err) {
         console.error(err);
-        toast.error('Failed to delete image');
       }
     }
   };

@@ -94,11 +94,6 @@ const TestCreateEditModal = ({
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            if (file.size > 2 * 1024 * 1024) { // 2MB
-                toast.error('Image file is too large. Max size is 2MB.');
-                e.target.value = '';
-                return;
-            }
             setSelectedImage(file);
             const reader = new FileReader();
             reader.onloadend = () => setImagePreview(reader.result);
@@ -115,11 +110,6 @@ const TestCreateEditModal = ({
     const handleChoiceImageChange = (index, e) => {
         const file = e.target.files[0];
         if (file) {
-            if (file.size > 2 * 1024 * 1024) { // 2MB
-                toast.error('Image file is too large. Max size is 2MB.');
-                e.target.value = '';
-                return;
-            }
             setChoiceImages(prev => ({ ...prev, [index]: file }));
             const reader = new FileReader();
             reader.onloadend = () => {

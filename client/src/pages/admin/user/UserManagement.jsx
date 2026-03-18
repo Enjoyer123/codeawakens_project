@@ -78,7 +78,6 @@ const UserManagement = () => {
       // Query invalidation handles refresh
     } catch (err) {
       console.error(err);
-      toast.error('อัปเดตบทบาทไม่สำเร็จ: ' + (err.message || 'Unknown error'));
     }
   }, [updateUserRoleAsync]);
 
@@ -104,7 +103,6 @@ const UserManagement = () => {
       // Query invalidation handles refresh
     } catch (err) {
       console.error(err);
-      toast.error('ไม่สามารถลบผู้ใช้ได้: ' + (err.message || 'Unknown error'));
     }
   }, [userToDelete, deleteUserAsync]);
 

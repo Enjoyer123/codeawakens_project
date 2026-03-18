@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/button';
 import { Loader } from '@/components/ui/loader';
 import { Trash2 } from 'lucide-react';
 import FrameUploadInput from '@/components/admin/reward/FrameUploadInput';
-import { toast } from 'sonner';
 import { useUploadCategoryBackground, useDeleteCategoryBackground } from '@/services/hooks/useLevelCategories';
 
 const LevelCategoryImageDialog = ({
@@ -29,7 +28,6 @@ const LevelCategoryImageDialog = ({
             await uploadImageAsync({ categoryId: selectedCategory.category_id, file });
         } catch (err) {
             console.error(err);
-            toast.error('ไม่สามารถอัปโหลดรูปภาพได้: ' + (err.message || 'Unknown error'));
         }
     };
 
@@ -39,7 +37,6 @@ const LevelCategoryImageDialog = ({
             await deleteImageAsync(selectedCategory.category_id);
         } catch (err) {
             console.error(err);
-            toast.error('ไม่สามารถลบรูปภาพได้: ' + (err.message || 'Unknown error'));
         }
     };
 

@@ -58,4 +58,22 @@ app.get("/", (req, res) => {
   res.send("Hello World - Server is running!");
 });
 
+// Global error handler – must be defined after all routes
+// Catches multer errors (file size, unexpected field, invalid type) and
+// any other errors that are passed via next(err).
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  if (err.code === "LIMIT_FILE_SIZE") {
+    return res.status(400).json({ message: "ไฟล์มีขนาดใหญ่เกินกว่าที่กำหนด" });
+  }
+  if (err.code === "LIMIT_UNEXPECTED_FILE") {
+    return res.status(400).json({ message: "ชื่อ field ของไฟล์ไม่ถูกต้อง" });
+  }
+  if (err.message && err.message.includes("Invalid file type")) {
+    return res.status(400).json({ message: "ประเภทไฟล์ไม่ถูกต้อง อนุญาตเฉพาะไฟล์รูปภาพ (JPEG, PNG, GIF, WebP)" });
+  }
+  console.error("Unhandled error:", err);
+  res.status(err.status || 500).json({ message: err.message || "เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์" });
+});
+
 app.listen(port);

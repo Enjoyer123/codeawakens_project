@@ -410,7 +410,8 @@ model Weapon_Image {
   created_at     DateTime      @default(now())
   updated_at     DateTime      @updatedAt
   weapon         Weapon        @relation(fields: [weapon_id], references: [weapon_id], onDelete: Cascade)
-
+  
+  @@unique([weapon_id, type_file, type_animation, frame])
   @@map("weapon_image")
 }
 

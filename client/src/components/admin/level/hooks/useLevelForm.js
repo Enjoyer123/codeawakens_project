@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
 import {
     useCreateLevel,
     useUpdateLevel,
@@ -137,7 +136,7 @@ export const useLevelForm = ({
                     const uploadResult = await uploadBackgroundMutation.mutateAsync(backgroundImage);
                     backgroundImagePath = uploadResult.imageUrl;
                 } catch (err) {
-                    toast.error('Failed to upload background image. Please try again.');
+                    console.error('Failed to upload background image:', err);
                     return;
                 }
             } else if (backgroundImageUrl && backgroundImageUrl.startsWith('/uploads/')) {
@@ -180,7 +179,7 @@ export const useLevelForm = ({
 
             navigate('/admin/levels');
         } catch (err) {
-            toast.error('เกิดข้อผิดพลาดในการบันทึก: ' + (err.message || ''));
+            console.error('Level save error:', err);
         }
     };
 

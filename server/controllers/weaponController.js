@@ -404,6 +404,32 @@ exports.addWeaponImage = async (req, res) => {
       targetPath,
     });
 
+    // Check if an image with the same weapon_id, type_file, type_animation, and frame already exists
+    const existingImage = await prisma.weapon_Image.findFirst({
+      where: {
+        weapon_id: parseInt(weaponId),
+        type_file,
+        type_animation,
+        frame: parseInt(frame),
+      },
+    });
+
+    if (existingImage) {
+      // Delete the newly uploaded file to prevent orphans
+      if (req.file && req.file.path) {
+        try {
+          fs.unlinkSync(req.file.path);
+          console.log(`Deleted newly uploaded file because frame already exists: ${req.file.path}`);
+        } catch (unlinkError) {
+          console.error("Error deleting file:", unlinkError);
+        }
+      }
+      return res.status(400).json({ 
+        message: "เฟรมนี้มีรูปภาพอยู่แล้ว กรุณาลบรูปเดิมออกก่อนหากต้องการอัปโหลดใหม่" 
+      });
+    }
+
+    // Create a new record since it doesn't exist
     const weaponImage = await prisma.weapon_Image.create({
       data: {
         weapon_id: parseInt(weaponId),
@@ -413,6 +439,7 @@ exports.addWeaponImage = async (req, res) => {
         frame: parseInt(frame),
       },
     });
+    console.log("New weapon image record created:", weaponImage.file_id);
 
     console.log("Weapon image created successfully:", weaponImage);
 

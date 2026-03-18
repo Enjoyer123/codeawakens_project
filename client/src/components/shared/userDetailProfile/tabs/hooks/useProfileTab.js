@@ -71,10 +71,6 @@ export const useProfileTab = ({ userDetails, getToken, onUpdateSuccess, showAler
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size must be less than 5MB');
-      return;
-    }
 
     setImageSuccess('');
 

@@ -75,7 +75,6 @@ const TestManagement = () => {
             toast.success('ลบแบบทดสอบสำเร็จ');
         } catch (err) {
             console.error(err);
-            toast.error('ไม่สามารถลบแบบทดสอบได้: ' + (err.message || 'Unknown error'));
         }
     };
 
