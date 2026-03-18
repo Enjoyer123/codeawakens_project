@@ -6,8 +6,7 @@
 import { useEffect, useRef } from 'react';
 import {
   getWeaponData,
-  getWeaponsData,
-  loadWeaponsData
+  getWeaponsData
 } from '../../../gameutils/entities/weaponUtils';
 
 import { ensureDefaultBlocks } from '../../../gameutils/blockly/core/defaults';
@@ -132,16 +131,7 @@ const extractTestCases = (levelResponse) =>
       display_order: tc.display_order || 0
     }));
 
-// ─── Helper: Parse JSON-string fields from API ───
-const JSON_FIELDS_ARRAY = ['map_entities', 'coins'];
-const JSON_FIELDS_OBJECT = ['algo_data', 'applied_data', 'custom_data'];
 
-const parseJsonFields = (data) => {
-  const parsed = {};
-  JSON_FIELDS_ARRAY.forEach(key => { parsed[key] = safeParse(data[key], []); });
-  JSON_FIELDS_OBJECT.forEach(key => { parsed[key] = safeParse(data[key], null); });
-  return parsed;
-};
 
 // ═══════════════════════════════════════════
 // Main Hook
@@ -149,7 +139,7 @@ const parseJsonFields = (data) => {
 
 export function useLevelInitializer({
   levelData,
-  getToken,
+  weaponsData,
   isPreview,
   patternId,
   setEnabledBlocks,
@@ -175,17 +165,12 @@ export function useLevelInitializer({
 
     const initializeLevel = async () => {
       try {
-        // 0. Ensure weapons data is loaded from API before processing
-        await loadWeaponsData(getToken);
-
         // 1. Build enabled blocks + patterns
         const enabledBlocks = buildEnabledBlocks(levelData);
         const goodPatterns = buildPatterns(levelData, isPreview, patternId);
 
-        // 3. Build formatted level data (spread API data + computed fields)
         const formatted = {
           ...levelData,
-          ...parseJsonFields(levelData),
           background_image: resolveBackgroundUrl(levelData),
           nodes: normalizeNodes(levelData.nodes),
           edges: normalizeEdges(levelData.edges),
@@ -218,7 +203,7 @@ export function useLevelInitializer({
           levelData: formatted
         });
 
-        resetPlayerHp(setPlayerHp);
+        resetPlayerHp();
         setPlayerHp(100);
         setIsCompleted(false);
         setIsGameOver(false);
@@ -238,5 +223,5 @@ export function useLevelInitializer({
     };
 
     initializeLevel();
-  }, [levelData, getToken]);
+  }, [levelData, weaponsData]);
 }

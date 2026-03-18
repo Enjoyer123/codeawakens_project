@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { removeStarterListener, loadStarterXml } from './hooks/blocklysetup/xmlLoader';
 import { useParams } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
@@ -12,6 +12,7 @@ window.Blockly = Blockly;
 // Import utilities and data
 import { clearRescuedPeople } from '../../gameutils/entities/personUtils';
 import { clearPlayerCoins } from '../../gameutils/entities/coinUtils';
+import { seedWeaponsData } from '../../gameutils/entities/weaponUtils';
 
 // Import components
 import GameArea from './GameArea';
@@ -25,6 +26,7 @@ import { useBlocklySetup } from './hooks/blocklysetup/useBlocklySetup';
 import { useCodeExecution } from './hooks/execution/useCodeExecution';
 import { useProfile } from '../../services/hooks/useProfile';
 import { useLevel, useLevels } from '../../services/hooks/useLevel';
+import { useWeapons } from '../../services/hooks/useWeapons';
 
 import { useLevelInitializer } from './hooks/useLevelLoader';
 import { usePatternAnalysis } from './hooks/usePatternAnalysis';
@@ -149,11 +151,19 @@ const GameCore = ({
   // ═══════════════════════════════════════════
 
   const { data: levelData, isLoading: isLevelLoading, isError: isLevelError, error: levelError } = useLevel(levelId);
+  const { data: weaponsResponse, isLoading: isWeaponsLoading } = useWeapons(1, 1000);
+  
+  // Seed physical cache early so Phraser/Blockly formatters can use synchronous getWeaponData
+  useEffect(() => {
+    if (weaponsResponse?.weapons) {
+      seedWeaponsData(weaponsResponse.weapons);
+    }
+  }, [weaponsResponse]);
 
-  // Initialize level after levelData is ready
+  // Initialize level after levelData and weaponsCache are ready
   useLevelInitializer({
     levelData,
-    getToken,
+    weaponsData: weaponsResponse?.weapons,
     isPreview,
     patternId,
     setEnabledBlocks,
@@ -365,7 +375,7 @@ const GameCore = ({
 
   const { showHint, hints, closeHint, openHint, hasHints } = useHintSystem(currentLevel);
 
-  if (!levelData && isLevelLoading) {
+  if ((!levelData && isLevelLoading) || isWeaponsLoading) {
     return <PageLoader message="Loading level..." />;
   }
 

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * algoTestRunner.js — Record & Playback System
  *
  * ตรวจผลลัพธ์ที่ได้จาก algoExecutor กับ Test Cases
@@ -40,21 +40,16 @@ export async function checkAlgoTestCases(primaryResult, testCases, functionName,
         let input = tc.input_params || {};
         if (typeof input === 'string') try { input = JSON.parse(input); } catch { input = {}; }
 
-        console.groupCollapsed(`🧪 Testing: ${tc.test_case_name} (${tc.is_primary ? 'Primary - ใช้ข้อมูลด่าน' : 'Secondary - แยกข้อมูล'})`);
-
         // Primary test case: use the result from the visual run
         if (tc.is_primary && primaryResult !== undefined && primaryResult !== null) {
-            console.log('📌 Input data: [ดึงผลลัพธ์จาก Primary Run โดยตรง]');
             actual = primaryResult;
         } else {
             // Secondary test cases: re-execute with test-specific inputs
             const testLevelData = buildTestLevelData(levelData, input, functionName);
-            console.log('📦 Built Test Level Data (Strict Isolation):', testLevelData);
-
             const { result, error } = await executeAlgoCode(code, testLevelData);
 
             if (error) {
-                console.error('🔴 [algoTestRunner] TC Error:', { message: error.message, stack: error.stack, tc: tc.test_case_name });
+                console.error('🔴 [algoTestRunner] TC Error:', { message: error.message, tc: tc.test_case_name });
                 actual = undefined;
             } else {
                 actual = result;
@@ -67,11 +62,6 @@ export async function checkAlgoTestCases(primaryResult, testCases, functionName,
         let passed;
 
         passed = compareOutput(actual, expected, comparisonType);
-
-        console.log(`✅ Expected:`, expected);
-        console.log(`🔄 Actual:`, actual);
-        console.log(`⚖️ Comparison (${comparisonType}):`, passed ? 'PASSED 🟢' : 'FAILED 🔴');
-        console.groupEnd();
 
         const result = {
             test_case_id: tc.test_case_id,
