@@ -6,9 +6,17 @@ import {
 } from "../../ui/dialog";
 import HistorySidebar from '../history/HistorySidebar';
 import HistoryViewer from '../history/HistoryViewer';
+import { playSound } from '../../../gameutils/sound/soundManager';
 
 const HistoryModal = ({ isOpen, onClose, userProgress, levels, currentLevelId }) => {
     const [selectedLevelId, setSelectedLevelId] = useState(null);
+
+    // Play sound when opening
+    useEffect(() => {
+        if (isOpen) {
+            playSound('paper');
+        }
+    }, [isOpen]);
     const [displayMode, setDisplayMode] = useState('blockly'); // 'blockly' or 'text'
     const blocklyRef = useRef(null);
     const workspaceRef = useRef(null);
@@ -50,6 +58,13 @@ const HistoryModal = ({ isOpen, onClose, userProgress, levels, currentLevelId })
         setSelectedLevelId(levelId);
     };
 
+    const handleDisplayModeChange = (mode) => {
+        if (mode !== displayMode) {
+            playSound('tab_editor');
+            setDisplayMode(mode);
+        }
+    };
+
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="w-full max-w-6xl h-[80vh] p-0 bg-transparent border-none shadow-none overflow-hidden">
@@ -88,7 +103,7 @@ const HistoryModal = ({ isOpen, onClose, userProgress, levels, currentLevelId })
                             selectedLevelId={selectedLevelId}
                             currentLevelId={currentLevelId}
                             displayMode={displayMode}
-                            onDisplayModeChange={setDisplayMode}
+                            onDisplayModeChange={handleDisplayModeChange}
                             currentProgress={currentProgress}
                             blocklyRef={blocklyRef}
                             workspaceRef={workspaceRef}

@@ -8,6 +8,7 @@ import CodeEditorTab from './editor/CodeEditorTab';
 import TestResultsTab from './editor/TestResultsTab';
 import GameControls from './controls/GameControls';
 import HistoryModal from './modals/HistoryModal';
+import { playSound } from '../../gameutils/sound/soundManager';
 
 const BlocklyArea = ({
   blocklyRef,
@@ -64,10 +65,17 @@ const BlocklyArea = ({
     }
   }, [debugCode]);
 
+  const handleTabChange = (value) => {
+    if (value !== activeTab) {
+      playSound('tab_editor');
+      setActiveTab(value);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-transparent">
       {/* Tabs Header */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col min-h-0">
         <div className="bg-[#1e1b4b] border-b border-purple-900/50 px-4 pt-2">
           <TabsList className="bg-[#2e1065] border border-purple-900/50">
             <TabsTrigger value="blocks" className="data-[state=active]:bg-[#4c1d95] text-purple-200 data-[state=active]:text-white flex items-center gap-2">

@@ -24,6 +24,9 @@ const SFX_MAP = {
   weapon_magic: '/audio/sfx/weapons/sfx_weapon_magic.mp3',
   rescue: '/audio/sfx/sfx_recucepeople.mp3',
   enemy_defeat: '/audio/sfx/sfx_enemydefeat.mp3',
+  select_map: '/audio/sfx/stx_select_map.mp3',
+  paper: '/audio/sfx/stx_papersound.mp3',
+  tab_editor: '/audio/sfx/stx_tabeditor.mp3',
 };
 
 const BGM_MAP = {

@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '../../ui/dialog';
 import { API_BASE_URL } from '../../../config/apiConfig';
+import { playSound } from '../../../gameutils/sound/soundManager';
 
 const HintPopup = ({ hints, isOpen, onClose }) => {
     const [currentHintIndex, setCurrentHintIndex] = useState(0);
 
-    // Reset to 0 when opening
+    // Reset to 0 when opening & play sound
     useEffect(() => {
         if (isOpen) {
             setCurrentHintIndex(0);
+            playSound('paper');
         }
     }, [isOpen]);
 

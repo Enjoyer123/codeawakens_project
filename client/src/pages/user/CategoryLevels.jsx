@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import useUserStore from '../../store/useUserStore';
-import { playBGM, stopBGM } from '../../gameutils/sound/soundManager';
+import { playSound, playBGM, stopBGM } from '../../gameutils/sound/soundManager';
 
 import { useLevelCategory } from '../../services/hooks/useLevelCategories';
 import { getImageUrl } from '@/utils/imageUtils';
@@ -38,6 +38,7 @@ const CategoryLevels = () => {
   const levels = categoryInfo?.levels || [];
 
   const handleLevelSelect = (levelId) => {
+    playSound('select_map');
     navigate(`/user/mapselection/${levelId}`);
   };
 
