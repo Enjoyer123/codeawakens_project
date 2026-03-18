@@ -70,9 +70,8 @@ export function setPlayerHp(hp) {
   playerHp = hp;
 }
 
-// รีเซ็ตเลือดเป็น 100 (และถ้าส่ง React setter มา ก็เซ็ตของ React ด้วย)
-export function resetPlayerHp(setPlayerHpState) {
+// รีเซ็ตเลือดเป็น 100
+export function resetPlayerHp() {
   playerHp = 100;
-  if (setPlayerHpState) setPlayerHpState(100);
 }
 

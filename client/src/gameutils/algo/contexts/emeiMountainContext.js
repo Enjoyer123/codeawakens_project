@@ -9,7 +9,7 @@ export function injectEmeiMountainStubs(context, levelData, trace, code = "") {
     /* ==========================================
        1. EXTRACT GAME VARIABLES
        ========================================== */
-    const payload = levelData.applied_data?.payload || {};
+    const payload = levelData.algo_data?.payload || {};
     
     // ดึงจำนวนโหนด
     context.n = levelData.emeiN ?? payload.n ?? (levelData.nodes ? levelData.nodes.length : 6);
@@ -32,12 +32,9 @@ export function injectEmeiMountainStubs(context, levelData, trace, code = "") {
         });
     }
     
-    // ถ้าไม่มีข้อมูลเลย ให้ใช้แผนที่พื้นฐาน
+    // ถ้าไม่มีข้อมูลเลย ให้เตือนแทนที่จะใช้ข้อมูลปลอม
     if (extractedEdges.length === 0) {
-        extractedEdges = [
-            [0, 1, 10], [0, 2, 8], [1, 3, 5],
-            [2, 3, 12], [2, 4, 15], [3, 5, 20], [4, 5, 7]
-        ];
+        console.warn('⚠️ [EmeiContext] ไม่พบข้อมูล edges จาก DB — ด่านอาจไม่ถูกตั้งค่า');
     }
     context.edges = extractedEdges;
 

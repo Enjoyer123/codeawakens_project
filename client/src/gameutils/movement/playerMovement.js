@@ -50,7 +50,6 @@ export async function moveToNode(player, nodeId) {
     player.currentNodeIndex = nodeId;
 
     if (levelData.goal_node_id === nodeId) {
-        const { getCurrentGameState, setCurrentGameState } = await import('../shared/game/gameState');
         setCurrentGameState({ goalReached: true });
         player.scene.events.emit('goalReached');
     }

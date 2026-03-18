@@ -1,5 +1,4 @@
 ﻿// Combat Animation Utilities
-import { preloadWeaponEffectSafe, checkImageExistsSafe } from './combatPreload';
 
 export function createCanvasBasedEffect(scene, posOrSprite, validFrames, weaponKey) {
 

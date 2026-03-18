@@ -12,6 +12,19 @@ import { mapRuntimeErrorToMessage } from './codeValidator';
 
 const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
 
+/** Wraps user code with safety flags and a return statement */
+function prepareExecutableCode(code, varName) {
+    return `
+        // Safety: visual runs MUST yield
+        if (typeof globalThis !== 'undefined') { globalThis.__isVisualRun = true; }
+        // Safety: Reset step counter
+        if (typeof globalThis !== 'undefined') { globalThis.__stepCount = 0; }
+        
+        ${code}
+        try { return ${varName}; } catch(e) { return undefined; }
+    `;
+}
+
 /**
  * Run the Legacy execution path.
  * @param {string} code - Generated code from Blockly
@@ -65,21 +78,7 @@ export async function runLegacyPath(code, {
         currentLevel
     });
 
-function prepareExecutableCodeLocal(code, analysisResult) {
-    const { varName } = analysisResult;
-    return `
-        // Safety: visual runs MUST yield
-        if (typeof globalThis !== 'undefined') { globalThis.__isVisualRun = true; }
-        // Safety: Reset step counter
-        if (typeof globalThis !== 'undefined') { globalThis.__stepCount = 0; }
-        
-        ${code}
-        try { return ${varName}; } catch(e) { return undefined; }
-    `;
-}
-
-    const varName = 'result';
-    const finalExecutableCode = prepareExecutableCodeLocal(sanitizedCode, { varName });
+    const finalExecutableCode = prepareExecutableCode(sanitizedCode, 'result');
 
     // 4. Execute code
     let executionErrorLocal = null;
@@ -115,11 +114,6 @@ function prepareExecutableCodeLocal(code, analysisResult) {
     if (executionErrorLocal && !levelCompleted) {
         setGameState('ready');
         const friendlyMessage = mapRuntimeErrorToMessage(executionErrorLocal);
-
-        if (executionErrorLocal.message?.includes('infinite loop') || executionErrorLocal.message?.includes('timeout')) {
-
-        }
-
         setExecutionError({ title: 'เกิดข้อผิดพลาดขณะทำงาน', message: friendlyMessage });
         setIsRunning(false);
     }

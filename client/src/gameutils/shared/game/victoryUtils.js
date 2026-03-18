@@ -65,7 +65,9 @@ function checkSingleVictoryCondition(condition, currentState, levelData) {
       if (playerCoins.length === 0) {
         return { completed: false, reason: "ยังไม่ได้เก็บเหรียญเลย" };
       }
+      
       const isSorted = playerCoins.every((c, i, arr) => i === 0 || arr[i - 1].value <= c.value);
+
       return {
         completed: isSorted,
         reason: isSorted ? "" : "เหรียญยังไม่เรียงถูกต้อง"
@@ -146,14 +148,9 @@ export function generateVictoryHint(failedConditions, levelData) {
       case "reach_goal":
         hints.push(`❌ ยังไม่ถึง Node ${levelData.goal_node_id}`);
         break;
-      case "coins_sorted": {
-        const coins = getPlayerCoins();
-        hints.push(coins.length > 0
-          ? `❌ เหรียญยังไม่เรียงถูกต้อง ลำดับปัจจุบัน: ${coins.map(c => c.value).join(', ')}`
-          : "❌ ยังไม่ได้เก็บเหรียญเลย"
-        );
+      case "coins_sorted":
+        hints.push("❌ เหรียญยังไม่เรียงถูกต้อง");
         break;
-      }
       case "all_people_rescued": {
         const rescued = getRescuedPeople().length;
         const peopleEntities = levelData.map_entities?.filter(e => e.entity_type === 'PEOPLE') || [];

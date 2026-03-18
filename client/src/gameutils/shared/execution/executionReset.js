@@ -53,10 +53,11 @@ export const resetGameExecutionState = async ({
     // แต่ยังเก็บโครงสร้างไว้เผื่อย้อนกลับ
 
     // รีเซ็ตเหรียญในเกมให้กลับมาแสดง
-    if (getCurrentGameState().currentScene) {
+    const scene = getCurrentGameState().currentScene;
+    if (scene) {
         // รีเซ็ตเหรียญที่เก็บไว้แล้วให้กลับมาแสดง
-        if (getCurrentGameState().currentScene.coins) {
-            getCurrentGameState().currentScene.coins.forEach(coin => {
+        if (scene.coins) {
+            scene.coins.forEach(coin => {
                 coin.collected = false;
                 coin.sprite.setVisible(true);
                 const valueText = coin.sprite.getData('valueText');
@@ -67,8 +68,8 @@ export const resetGameExecutionState = async ({
         }
 
         // รีเซ็ตคนที่ถูกช่วยไว้ให้กลับมาแสดง
-        if (getCurrentGameState().currentScene.people) {
-            getCurrentGameState().currentScene.people.forEach(person => {
+        if (scene.people) {
+            scene.people.forEach(person => {
                 person.setVisible(true);
                 if (person.nameLabel) {
                     person.nameLabel.setVisible(true);
@@ -82,8 +83,8 @@ export const resetGameExecutionState = async ({
 
     // Clear DFS visual feedback before starting (Handled by GraphPlayback)
     // Reset monsters state using new utility functions
-    if (getCurrentGameState().currentScene && getCurrentGameState().currentScene.monsters) {
-        getCurrentGameState().currentScene.monsters.forEach(monster => {
+    if (scene && scene.monsters) {
+        scene.monsters.forEach(monster => {
             monster.data.defeated = false;
             monster.data.inBattle = false;
             monster.data.isChasing = false;
@@ -109,10 +110,8 @@ export const resetGameExecutionState = async ({
     // Set direction in game state first
     setCurrentGameState({ direction: 0 });
 
-    // Update player position in Phaser (HP bar now handled in bottom UI)
-    // Pass direction 0 (right) explicitly to ensure correct initial direction
-    if (getCurrentGameState().currentScene) {
-        const scene = getCurrentGameState().currentScene;
+    // Update player position in Phaser
+    if (scene) {
         if (scene.player) {
             scene.player.directionIndex = 0;
             scene.player.currentNodeIndex = currentLevel.start_node_id;

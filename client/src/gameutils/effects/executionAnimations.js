@@ -55,8 +55,6 @@ export const playVictorySequence = async (currentLevel, initialScene) => {
                     });
                 });
             }
-        } else {
-            // Graph/Regular: No pre-banner delay needed
         }
 
         // 4. Show Victory Banner

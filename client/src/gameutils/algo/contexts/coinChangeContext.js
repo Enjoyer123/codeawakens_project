@@ -3,6 +3,9 @@
  */
 import { getAlgoPayload } from '../../shared/levelType';
 
+/** Sentinel value จาก Blockly generator: ถ้า exclude === DP_MODE_SENTINEL → บันทึกเป็น dp_update */
+const DP_MODE_SENTINEL = -2;
+
 export function injectCoinChangeStubs(context, levelData, trace) {
     const payload = getAlgoPayload(levelData, 'COINCHANGE');
     if (!payload) return;
@@ -30,10 +33,11 @@ export function injectCoinChangeStubs(context, levelData, trace) {
     
     /**
      * บันทึกการตัดสินใจว่าใช้เหรียญหรือไม่
-     * ป้องกันโค้ดงงด้วยการแยก dp_update กับ coin_decision ชัดเจน
+     * - ถ้า exclude === DP_MODE_SENTINEL (-2) → บันทึกเป็น dp_update (โหมด DP)
+     * - ถ้าไม่ใช่ → บันทึกเป็น coin_decision (โหมด Backtrack)
      */
     context.trackCoinChangeDecision = (amount, index, include, exclude) => {
-        if (exclude === -2) {
+        if (exclude === DP_MODE_SENTINEL) {
             trace.push({
                 action: 'dp_update',
                 amount: amount,

@@ -1,5 +1,60 @@
 import Phaser from 'phaser';
-import { getCurrentGameState } from '../shared/game/gameState';
+import { getCurrentGameState, setCurrentGameState, getPlayerHp } from '../shared/game/gameState';
+import { getWeaponData } from '../entities/weaponUtils';
+import { showGameOver } from '../effects/gameEffects';
+
+/**
+ * Applies damage to the player, calculates minimum HP thresholds based on the equipped weapon,
+ * syncs with the React UI, shows a visual hit effect, and checks for Game Over conditions.
+ */
+export function applyPlayerDamage(scene, damage, forceKill = false) {
+    const currentState = getCurrentGameState();
+    if (currentState.isGameOver || currentState.goalReached) return;
+
+    const currentHP = getPlayerHp();
+
+    let minHP = 0;
+    if (!forceKill) {
+        const weapon = getWeaponData(currentState.weaponKey);
+        minHP = weapon ? (weapon.combat_power || weapon.power || 10) : 10;
+    }
+
+    let newHP = currentHP - damage;
+
+    if (!forceKill) {
+        newHP = Math.max(minHP, newHP);
+    } else {
+        newHP = Math.max(0, newHP);
+    }
+
+    setCurrentGameState({ playerHP: newHP });
+
+    if (scene && scene.externalHandlers && typeof scene.externalHandlers.setPlayerHp === 'function') {
+        scene.externalHandlers.setPlayerHp(newHP);
+    }
+
+    if (scene && scene.player) {
+        scene.tweens.add({
+            targets: [scene.player],
+            tint: 0xff0000,
+            duration: 100,
+            yoyo: true,
+            repeat: 1,
+            onComplete: () => {
+                if (scene.player) scene.player.clearTint();
+            }
+        });
+    }
+
+    if (newHP <= 0) {
+        setCurrentGameState({ isGameOver: true });
+        if (scene && scene.externalHandlers && typeof scene.externalHandlers.setIsGameOver === 'function') {
+            scene.externalHandlers.setIsGameOver(true);
+        }
+
+        showGameOver(scene);
+    }
+}
 
 /**
  * Pure logic for hitting an enemy.

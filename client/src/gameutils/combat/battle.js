@@ -45,7 +45,6 @@ export function startBattle(scene, monster, setPlayerHp, setIsGameOver, isPlayer
 
         const currentState = getCurrentGameState();
         const weaponData = currentState.weaponData || getWeaponData(currentState.weaponKey || 'stick');
-        console.log("weaponDataิฟะ", weaponData);
         const monsterDamage = monster.data.damage || 25;
         const finalDamage = calculateDamage(monsterDamage, weaponData);
 
@@ -85,7 +84,6 @@ export function startBattle(scene, monster, setPlayerHp, setIsGameOver, isPlayer
                 yoyo: true,
                 ease: 'Power2',
                 onComplete: () => {
-                  // Apply damage to player
                   // Apply damage to player
                   if (finalDamage > 0) {
                     if (scene.player.takeDamage) {

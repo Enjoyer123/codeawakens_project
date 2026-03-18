@@ -17,10 +17,24 @@ import { playKruskalAnimation } from './playback/kruskalPlayback.js';
 import { playGraphAnimation } from './playback/graphPlayback.js';
 import { playEmeiAnimation } from './playback/emeiPlayback.js';
 
-import { isAlgoLevel as checkAlgoLevel, detectAlgoType as checkAlgoType } from '../shared/levelType';
 
-export const isAlgoLevel = checkAlgoLevel;
-export const detectAlgoType = checkAlgoType;
+
+// ─── ตรวจประเภทด่าน (DP / Greedy / Backtrack) ───
+function isDpLevel(scene) {
+    const ld = scene.levelData || {};
+    const catName = (ld.category?.category_name || '').toLowerCase();
+    const algoType = (ld.algo_data?.type || '').toLowerCase();
+    const gameType = (ld.game_type || '').toLowerCase();
+    return catName.includes('dynamic') || algoType.includes('dp') || gameType.includes('dp');
+}
+
+function isGreedyLevel(scene) {
+    const ld = scene.levelData || {};
+    const catName = (ld.category?.category_name || '').toLowerCase();
+    const algoType = (ld.algo_data?.type || '').toLowerCase();
+    const gameType = (ld.game_type || '').toLowerCase();
+    return catName.includes('greedy') || algoType.includes('greedy') || gameType.includes('greedy');
+}
 
 /**
  * เล่น Animation ตาม trace array
@@ -31,7 +45,6 @@ export const detectAlgoType = checkAlgoType;
  */
 export async function playAlgoAnimation(scene, algoType, trace, options = {}) {
     const { speed = 1.0 } = options;
-
 
     switch (algoType) {
         case 'DFS':
@@ -47,56 +60,17 @@ export async function playAlgoAnimation(scene, algoType, trace, options = {}) {
         case 'NQUEEN':
             return playNQueenAnimation(scene, trace, { speed, result: options.result });
 
-        case 'COINCHANGE': {
-            const levelData = scene.levelData || {};
-            const catName = (levelData.category?.category_name || '').toLowerCase();
-            const catId = levelData.category_id;
-            const appliedType = (levelData.algo_data?.type || '').toLowerCase();
-            const gameType = (levelData.game_type || '').toLowerCase();
+        case 'COINCHANGE':
+            if (isDpLevel(scene)) return playCoinChangeDpAnimation(scene, trace, { speed });
+            return playCoinChangeBacktrackAnimation(scene, trace, { speed, isGreedy: isGreedyLevel(scene) });
 
-            const isDP = catName.includes('dynamic') || catId === 6 || appliedType.includes('dp') || gameType.includes('dp');
-            const isGreedy = catName.includes('greedy') || catId === 4 || appliedType.includes('greedy') || gameType.includes('greedy');
+        case 'KNAPSACK':
+            if (isDpLevel(scene)) return playKnapsackDpAnimation(scene, trace, { speed, result: options.result });
+            return playKnapsackBacktrackAnimation(scene, trace, { speed, result: options.result });
 
-            if (isDP) {
-                return playCoinChangeDpAnimation(scene, trace, { speed });
-            } else if (isGreedy) {
-                return playCoinChangeBacktrackAnimation(scene, trace, { speed, isGreedy: true });
-            } else {
-                return playCoinChangeBacktrackAnimation(scene, trace, { speed, isGreedy: false });
-            }
-        }
-
-        case 'KNAPSACK': {
-            const levelData = scene.levelData || {};
-            const catName = (levelData.category?.category_name || '').toLowerCase();
-            const catId = levelData.category_id;
-            const appliedType = (levelData.algo_data?.type || '').toLowerCase();
-            const gameType = (levelData.game_type || '').toLowerCase();
-
-            const isDP = catName.includes('dynamic') || catId === 6 || appliedType.includes('dp') || gameType.includes('dp');
-
-            if (isDP) {
-                return playKnapsackDpAnimation(scene, trace, { speed, result: options.result });
-            } else {
-                return playKnapsackBacktrackAnimation(scene, trace, { speed, result: options.result });
-            }
-        }
-
-        case 'SUBSETSUM': {
-            const levelData = scene.levelData || {};
-            const catName = (levelData.category?.category_name || '').toLowerCase();
-            const catId = levelData.category_id;
-            const appliedType = (levelData.algo_data?.type || '').toLowerCase();
-            const gameType = (levelData.game_type || '').toLowerCase();
-
-            const isDP = catName.includes('dynamic') || catId === 6 || appliedType.includes('dp') || gameType.includes('dp');
-
-            if (isDP) {
-                return playSubsetSumDpAnimation(scene, trace, { speed, result: options.result });
-            } else {
-                return playSubsetSumBacktrackAnimation(scene, trace, { speed, result: options.result });
-            }
-        }
+        case 'SUBSETSUM':
+            if (isDpLevel(scene)) return playSubsetSumDpAnimation(scene, trace, { speed, result: options.result });
+            return playSubsetSumBacktrackAnimation(scene, trace, { speed, result: options.result });
 
         case 'EMEI':
             return playEmeiAnimation(scene, trace, { speed, result: options.result });

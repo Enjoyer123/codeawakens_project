@@ -1,9 +1,9 @@
-﻿import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import * as Blockly from "blockly/core";
 import { getWeaponData } from '../../../gameutils/entities/weaponUtils';
 import { displayPlayerWeapon } from '../../../gameutils/combat/weaponEffects';
 import { getCurrentGameState, setCurrentGameState } from '../../../gameutils/shared/game/gameState';
-import { findBestMatch } from '../../../gameutils/shared/hint/hintMatcher';
+import { findBestMatch, preparePatternsCache } from '../../../gameutils/shared/hint/hintMatcher';
 
 import { toast } from 'sonner';
 
@@ -33,6 +33,8 @@ export function usePatternAnalysis({
 }) {
   const debounceTimerRef = useRef(null);
   const notifiedPatternsRef = useRef(new Set());
+  const cachedPatternsRef = useRef([]);
+  const lastWeaponKeyRef = useRef(null);
 
   const valuesRef = useRef({ goodPatterns, setPatternData, setCurrentWeaponData });
 
@@ -46,6 +48,9 @@ export function usePatternAnalysis({
     }
     const workspace = workspaceRef.current;
     if (!workspace) return;
+
+    // Pre-parse: Cache ทุก hint XML ครั้งเดียว
+    cachedPatternsRef.current = preparePatternsCache(goodPatterns || []);
 
 
     const analyzePattern = () => {
@@ -77,8 +82,8 @@ export function usePatternAnalysis({
       }
 
 
-      // ─── เรียกฟังก์ชันเดียว ได้ทุกอย่าง ──────────────────
-      const result = findBestMatch(workspace, goodPatterns);
+      // ─── เรียกฟังก์ชันเดียว ได้ทุกอย่าง (ใช้ cached patterns) ──
+      const result = findBestMatch(workspace, cachedPatternsRef.current);
 
       // ─── Real-time Notification ──────────────────────────
       if (result.isComplete && result.percentage === 100 && result.bestPattern) {
@@ -118,9 +123,12 @@ export function usePatternAnalysis({
           updateWeapon(weaponKey, setCurrentWeaponData, { patternTypeId: result.bestPattern.pattern_type_id });
         }
       } else {
-        const defaultWeaponKey = getCurrentGameState().levelData?.defaultWeaponKey || "stick";
-        // ถ้า Pattern ไม่ถูก 100% คืนค่าเป็น Stick
-        updateWeapon(defaultWeaponKey, setCurrentWeaponData, { patternTypeId: 0 });
+        const currentState = getCurrentGameState();
+        const defaultWeaponKey = currentState.levelData?.defaultWeaponKey || "stick";
+        // ถ้า Pattern ไม่ถูก 100% คืนค่าเป็น Stick (แต่ถ้าเป็น Stick อยู่แล้วไม่ต้อง update ซ้ำ)
+        if (currentState.weaponKey !== defaultWeaponKey) {
+          updateWeapon(defaultWeaponKey, setCurrentWeaponData, { patternTypeId: 0 });
+        }
       }
     };
 

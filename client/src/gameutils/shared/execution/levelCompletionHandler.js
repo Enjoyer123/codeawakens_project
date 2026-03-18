@@ -1,4 +1,4 @@
-﻿import {
+import {
     checkVictoryConditions,
     generateVictoryHint,
 } from '../game/victoryUtils';
@@ -9,8 +9,7 @@ import {
 import {
     showGameOver,
 } from '../../effects/gameEffects';
-import { updatePlayer } from '../../phaser/player/phaserGamePlayer';
-import { resetEnemy } from '../../combat/enemyUtils';
+
 import { playCombatSequence } from '../../combat/battleAnimation';
 import {
     calculateLevelScore
@@ -202,11 +201,6 @@ const handleSuccess = async ({
     );
     setFinalScore(scoreData);
 
-    const weaponInfo = execFinalState.weaponData;
-    if (completionMessage) {
-
-    }
-
 
     setGameResult('victory');
 
@@ -234,13 +228,9 @@ const handleSuccess = async ({
 
             // Only unlock the level if a pattern was successfully validated at 100%
             // and the level is not already published/unlocked
-            if (patternUnlocked && onUnlockLevel && currentLevel) {
-                if (!currentLevel.is_unlocked) {
-                    await onUnlockLevel(currentLevel.level_id);
-                } else {
-                }
+            if (patternUnlocked && onUnlockLevel && currentLevel && !currentLevel.is_unlocked) {
+                await onUnlockLevel(currentLevel.level_id);
             }
-        } else {
         }
 
     } else {

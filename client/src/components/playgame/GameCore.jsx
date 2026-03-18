@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { removeStarterListener, loadStarterXml } from './hooks/blocklysetup/xmlLoader';
 import { useParams } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
@@ -7,11 +7,10 @@ import ProgressModal from '../../pages/user/ProgressModal';
 import * as Blockly from "blockly/core";
 import "blockly/blocks";
 import "blockly/javascript";
-window.Blockly = Blockly;
-
 // Import utilities and data
 import { clearRescuedPeople } from '../../gameutils/entities/personUtils';
 import { clearPlayerCoins } from '../../gameutils/entities/coinUtils';
+import { seedWeaponsData } from '../../gameutils/entities/weaponUtils';
 
 // Import components
 import GameArea from './GameArea';
@@ -25,6 +24,7 @@ import { useBlocklySetup } from './hooks/blocklysetup/useBlocklySetup';
 import { useCodeExecution } from './hooks/execution/useCodeExecution';
 import { useProfile } from '../../services/hooks/useProfile';
 import { useLevel, useLevels } from '../../services/hooks/useLevel';
+import { useWeapons } from '../../services/hooks/useWeapons';
 
 import { useLevelInitializer } from './hooks/useLevelLoader';
 import { usePatternAnalysis } from './hooks/usePatternAnalysis';
@@ -149,11 +149,19 @@ const GameCore = ({
   // ═══════════════════════════════════════════
 
   const { data: levelData, isLoading: isLevelLoading, isError: isLevelError, error: levelError } = useLevel(levelId);
+  const { data: weaponsResponse, isLoading: isWeaponsLoading } = useWeapons(1, 1000);
+  
+  // Seed physical cache early so Phraser/Blockly formatters can use synchronous getWeaponData
+  useEffect(() => {
+    if (weaponsResponse?.weapons) {
+      seedWeaponsData(weaponsResponse.weapons);
+    }
+  }, [weaponsResponse]);
 
-  // Initialize level after levelData is ready
+  // Initialize level after levelData and weaponsCache are ready
   useLevelInitializer({
     levelData,
-    getToken,
+    weaponsData: weaponsResponse?.weapons,
     isPreview,
     patternId,
     setEnabledBlocks,
@@ -182,42 +190,9 @@ const GameCore = ({
     setCurrentWeaponData,
   });
 
-  // Load pattern XML if provided (Admin Preview Pattern Selector)
-  // ใช้ ref เพื่อจำค่าเก่า ป้องกันไม่ให้ยิงตอนเข้าด่านครั้งแรก (useBlocklySetup จัดการเองแล้ว)
-  const prevPatternXmlRef = React.useRef(undefined);
 
-  useEffect(() => {
-    if (!isPreview || !workspaceRef.current || !blocklyLoaded) return;
 
-    const prev = prevPatternXmlRef.current;
-    prevPatternXmlRef.current = patternXml;
-
-    // ถ้าเลือก Pattern → โหลด XML ของ Pattern นั้น
-    if (patternXml) {
-      try {
-        workspaceRef.current.clear();
-        const xmlDom = Blockly.utils.xml.textToDom(patternXml);
-        Blockly.Xml.domToWorkspace(xmlDom, workspaceRef.current);
-      } catch (e) {
-        console.error("Error loading pattern XML into workspace:", e);
-      }
-    }
-    // ถ้ายกเลิกเลือก (จาก Pattern กลับมา "เล่นเฉยๆ") → โหลด starter XML ของด่าน
-    else if (prev) {
-      try {
-        workspaceRef.current.clear();
-        if (currentLevel?.starter_xml) {
-          const xmlDom = Blockly.utils.xml.textToDom(currentLevel.starter_xml);
-          Blockly.Xml.domToWorkspace(xmlDom, workspaceRef.current);
-        }
-      } catch (e) {
-        console.error("Error loading starter XML into workspace:", e);
-      }
-    }
-    // ถ้าทั้ง patternXml และ prev เป็น null/undefined → เพิ่งเข้าด่าน, ไม่ต้องทำอะไร (useBlocklySetup จัดการแล้ว)
-  }, [patternXml, blocklyLoaded, isPreview]);
-
-  // Clean up Phaser & Blockly ตอนออกจากด่าน
+  // Init Blockly & Phaser + cleanup ตอนออกจากด่าน
   useEffect(() => {
     if (!currentLevel || !blocklyRef.current || Object.keys(enabledBlocks).length === 0) {
       return;
@@ -249,7 +224,10 @@ const GameCore = ({
         }
       }
     };
-  }, [currentLevel, blocklyRef.current]);
+  }, [currentLevel, enabledBlocks, isWeaponsLoading]);
+
+  // Load pattern XML if provided (Admin Preview Pattern Selector)
+  const prevPatternXmlRef = React.useRef(undefined);
 
   useEffect(() => {
     if (!isPreview || !workspaceRef.current || !blocklyLoaded) return;
@@ -365,7 +343,7 @@ const GameCore = ({
 
   const { showHint, hints, closeHint, openHint, hasHints } = useHintSystem(currentLevel);
 
-  if (!levelData && isLevelLoading) {
+  if ((!levelData && isLevelLoading) || isWeaponsLoading) {
     return <PageLoader message="Loading level..." />;
   }
 

@@ -42,7 +42,7 @@ export const buildExecutionContext = ({
     // Destructure game actions
     const {
         moveForward, turnLeft, turnRight, hit, foundMonster,
-        canMoveForward, nearPit, atGoal
+        nearPit, atGoal
     } = gameActions;
 
     // Destructure wrappers
@@ -54,7 +54,7 @@ export const buildExecutionContext = ({
     // Prepare context for execution (all API functions and variables)
     const context = {
         map, all_nodes,
-        moveForward, turnLeft, turnRight, hit, foundMonster, canMoveForward, nearPit, atGoal,
+        moveForward, turnLeft, turnRight, hit, foundMonster, nearPit, atGoal,
         collectCoin, haveCoin, getCoinCount, getCoinValue, swapCoins, compareCoins, isSorted,
         getPlayerCoins, addCoinToPlayer, clearPlayerCoins: clearPlayerCoinsUtil, swapPlayerCoins, comparePlayerCoins,
         getPlayerCoinValue, getPlayerCoinCount, arePlayerCoinsSorted,

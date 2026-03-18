@@ -125,7 +125,7 @@ const bfsExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                                   <block type="graph_get_neighbors" id="get_neighbors">
                                     <value name="GRAPH">
                                       <block type="variables_get" id="graph_var">
-                                        <field name="VAR">garph</field>
+                                        <field name="VAR">graph</field>
                                       </block>
                                     </value>
                                     <value name="NODE">
@@ -229,7 +229,7 @@ const bfsExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
     <value name="VALUE">
       <block type="procedures_callreturn" id="call_bfs">
         <mutation name="BFS">
-          <arg name="garph"></arg>
+          <arg name="graph"></arg>
           <arg name="start"></arg>
           <arg name="goal"></arg>
         </mutation>
@@ -283,7 +283,7 @@ export function loadBfsExampleBlocks(workspace) {
         Blockly.Xml.domToWorkspace(xmlDom, workspace);
 
         // Ensure variables exist
-        const variableNames = ['container', 'visited', 'result', 'node', 'neighbor', 'garph', 'start', 'goal', 'map'];
+        const variableNames = ['container', 'visited', 'result', 'node', 'neighbor', 'graph', 'start', 'goal', 'map'];
         variableNames.forEach(varName => {
           try {
             workspace.createVariable(varName);

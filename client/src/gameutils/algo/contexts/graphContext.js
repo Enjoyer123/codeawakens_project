@@ -12,7 +12,7 @@ export function buildGraphContext(levelData, trace) {
            ========================================== */
         trace, // Expose trace array to Blockly generated code
         map,
-        garph: map,    // Alias (DFS example uses "garph" typo as param name)
+        graph: map,    // Alias สำหรับ Blockly example ที่ใช้ "graph" เป็นชื่อ parameter
         all_nodes,
         start: startNode,
         goal: goalNode,
@@ -20,14 +20,6 @@ export function buildGraphContext(levelData, trace) {
         /* ==========================================
            2. NEIGHBOR & TRAVERSAL HELPERS (DFS / BFS)
            ========================================== */
-        getGraphNeighbors: (nodeKey) => {
-            const key = String(nodeKey);
-            const neighbors = map[key] || [];
-            if (neighbors.length > 0 && Array.isArray(neighbors[0])) {
-                return neighbors.map(n => n[0]);
-            }
-            return neighbors;
-        },
         getGraphNeighborsWithWeight: (n) => {
             const key = String(n);
             return map[key] || [];

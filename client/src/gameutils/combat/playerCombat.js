@@ -1,6 +1,7 @@
 import { playAttack } from '../movement/playerAnimation.js';
 import { getDirectionFromAngle } from './combatHelpers';
 import { cleanupMonsterUI } from './battleUI';
+import { showMonsterDeathEffect } from './deathEffects';
 export function haveEnemy(player) {
     return findNearbyEnemy(player) !== null;
 }
@@ -49,7 +50,6 @@ export function hitEnemyWithDamage(player, targetMonster = null, damage = 50) {
     if (!enemySprite) return false;
 
     // ศัตรูตายใน 1 hit
-    const currentHP = targetMonster.data?.hp || 3;
     const newHP = 0; // ตายทันที
 
     targetMonster.data.hp = newHP;
@@ -89,7 +89,7 @@ function updateEnemyHealthBar(enemySprite, currentHealth) {
 }
 
 
-import { showMonsterDeathEffect } from './deathEffects';
+
 
 async function killEnemy(player, enemySprite) {
     enemySprite.setData('defeated', true);
