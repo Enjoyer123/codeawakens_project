@@ -1,4 +1,4 @@
-﻿/**
+/**
  * algoExecutor.js — Record & Playback System
  *
  * รันโค้ด Blockly ที่ gen มาแบบ "Pure Logic" (ไม่มี Phaser/Visual)
@@ -13,6 +13,7 @@ import { injectKnapsackStubs } from './contexts/knapsackContext';
 import { injectSubsetSumStubs } from './contexts/subsetSumContext';
 import { injectCoinChangeStubs } from './contexts/coinChangeContext';
 import { injectEmeiMountainStubs } from './contexts/emeiMountainContext';
+import { detectAlgoType } from '../shared/levelType';
 
 const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
 
@@ -24,12 +25,16 @@ function buildAlgoContext(levelData, trace, code = "") {
     // 1. Build base context (Graph utilities & general helpers)
     const context = buildGraphContext(levelData, trace);
 
-    // 2. Inject algorithm-specific data and stubs
-    injectNQueenStubs(context, levelData, trace);
-    injectKnapsackStubs(context, levelData, trace);
-    injectSubsetSumStubs(context, levelData, trace);
-    injectCoinChangeStubs(context, levelData, trace);
-    injectEmeiMountainStubs(context, levelData, trace, code);
+    // 2. Inject algorithm-specific stubs based on detected type (avoid unnecessary setup)
+    const algoType = detectAlgoType(levelData);
+    switch (algoType) {
+        case 'NQUEEN':      injectNQueenStubs(context, levelData, trace); break;
+        case 'KNAPSACK':    injectKnapsackStubs(context, levelData, trace); break;
+        case 'SUBSETSUM':   injectSubsetSumStubs(context, levelData, trace); break;
+        case 'COINCHANGE':  injectCoinChangeStubs(context, levelData, trace); break;
+        case 'EMEI':        injectEmeiMountainStubs(context, levelData, trace, code); break;
+        // DFS/BFS/DIJKSTRA/PRIM/KRUSKAL use graphContext only — no extra stubs needed
+    }
 
     return context;
 }
@@ -65,9 +70,7 @@ export async function executeAlgoCode(code, levelData, timeoutMs = 5000) {
 
         const result = await Promise.race([fn(...argValues), timeoutPromise]);
 
-        let finalResult = result;
-
-        return { result: finalResult, trace, error: null };
+        return { result, trace, error: null };
 
     } catch (error) {
         return { result: undefined, trace, error };

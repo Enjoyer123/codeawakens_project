@@ -17,10 +17,7 @@ import { playKruskalAnimation } from './playback/kruskalPlayback.js';
 import { playGraphAnimation } from './playback/graphPlayback.js';
 import { playEmeiAnimation } from './playback/emeiPlayback.js';
 
-import { isAlgoLevel as checkAlgoLevel, detectAlgoType as checkAlgoType } from '../shared/levelType';
 
-export const isAlgoLevel = checkAlgoLevel;
-export const detectAlgoType = checkAlgoType;
 
 // ─── ตรวจประเภทด่าน (DP / Greedy / Backtrack) ───
 function isDpLevel(scene) {
@@ -28,7 +25,7 @@ function isDpLevel(scene) {
     const catName = (ld.category?.category_name || '').toLowerCase();
     const algoType = (ld.algo_data?.type || '').toLowerCase();
     const gameType = (ld.game_type || '').toLowerCase();
-    return catName.includes('dynamic') || ld.category_id === 6 || algoType.includes('dp') || gameType.includes('dp');
+    return catName.includes('dynamic') || algoType.includes('dp') || gameType.includes('dp');
 }
 
 function isGreedyLevel(scene) {
@@ -36,7 +33,7 @@ function isGreedyLevel(scene) {
     const catName = (ld.category?.category_name || '').toLowerCase();
     const algoType = (ld.algo_data?.type || '').toLowerCase();
     const gameType = (ld.game_type || '').toLowerCase();
-    return catName.includes('greedy') || ld.category_id === 4 || algoType.includes('greedy') || gameType.includes('greedy');
+    return catName.includes('greedy') || algoType.includes('greedy') || gameType.includes('greedy');
 }
 
 /**
