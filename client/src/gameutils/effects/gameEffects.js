@@ -1,6 +1,7 @@
 // Phaser Game Effects Functions
 import Phaser from "phaser";
 import { createFirework } from './victory';
+import { playSound, stopBGM } from '../sound/soundManager';
 
 // Function to create pit fall effect
 export function createPitFallEffect(scene) {
@@ -48,6 +49,9 @@ export function createPitFallEffect(scene) {
 export function showGameOver(scene) {
   if (scene.gameOverTriggered) return;
   scene.gameOverTriggered = true;
+
+  stopBGM();
+  playSound('defeat');
 
   // Player died
 
@@ -108,6 +112,8 @@ export function clearGameOverScreen(scene) {
 
 // Function to show Victory screen
 export function showVictory(scene) {
+  stopBGM();
+  playSound('victory');
   const victoryText = scene.add.text(scene.cameras.main.centerX, scene.cameras.main.centerY - 50,
     'VICTORY!', {
     fontSize: '48px',

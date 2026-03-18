@@ -2,6 +2,7 @@ import { playWalk, playIdle } from './playerAnimation';
 import { updateWeaponPosition } from '../combat/weaponEffects';
 import { setCurrentGameState } from '../shared/game/gameState';
 import { updatePlayerArrow } from '../effects/arrow';
+import { playSound } from '../sound/soundManager';
 
 // Node-based movement function
 export async function moveToNode(player, nodeId) {
@@ -59,6 +60,7 @@ export async function moveToNode(player, nodeId) {
 
 // Basic position movement with animation
 export async function moveToPosition(player, x, y, directionIndex = null) {
+    playSound('walk');
     // Calculate direction based on movement vector if not provided
     if (directionIndex === null) {
         const dx = x - player.x;

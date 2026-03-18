@@ -11,9 +11,7 @@ import {
 } from '../../effects/gameEffects';
 
 import { playCombatSequence } from '../../combat/battleAnimation';
-import {
-    calculateLevelScore
-} from './executionScoring';
+import { calculateLevelScore } from './executionScoring';
 import { playVictorySequence } from '../../effects/executionAnimations';
 
 /**

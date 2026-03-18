@@ -4,6 +4,7 @@ import { getWeaponData } from '../../../gameutils/entities/weaponUtils';
 import { displayPlayerWeapon } from '../../../gameutils/combat/weaponEffects';
 import { getCurrentGameState, setCurrentGameState } from '../../../gameutils/shared/game/gameState';
 import { findBestMatch, preparePatternsCache } from '../../../gameutils/shared/hint/hintMatcher';
+import { playSound } from '../../../gameutils/sound/soundManager';
 
 import { toast } from 'sonner';
 
@@ -35,6 +36,7 @@ export function usePatternAnalysis({
   const notifiedPatternsRef = useRef(new Set());
   const cachedPatternsRef = useRef([]);
   const lastWeaponKeyRef = useRef(null);
+  const lastCompletedPatternRef = useRef(null);
 
   const valuesRef = useRef({ goodPatterns, setPatternData, setCurrentWeaponData });
 
@@ -85,16 +87,28 @@ export function usePatternAnalysis({
       // ─── เรียกฟังก์ชันเดียว ได้ทุกอย่าง (ใช้ cached patterns) ──
       const result = findBestMatch(workspace, cachedPatternsRef.current);
 
-      // ─── Real-time Notification ──────────────────────────
-      if (result.isComplete && result.percentage === 100 && result.bestPattern) {
+      // ─── Real-time Notification & Sound ──────────────────────────
+      if (result.isComplete && result.bestPattern) {
         const patternName = result.bestPattern.pattern_name || result.bestPattern.pattern_type?.type_name || "Pattern";
-        if (!notifiedPatternsRef.current.has(result.bestPattern.pattern_id)) {
+        const patternId = result.bestPattern.pattern_id;
+
+        if (!notifiedPatternsRef.current.has(patternId)) {
+          // ครั้งแรกสุด — เสียงปลดล็อกอลังการ + Toast ยาว 4 วิ
+          playSound('unlock_pattern');
           toast.success(`ต่อบล็อกถูกต้องตาม ${patternName}! \nได้รับอาวุธ: ${(result.bestPattern.weapon?.name || "อาวุธใหม่")}`, {
             duration: 4000,
             position: 'top-center'
           });
-          notifiedPatternsRef.current.add(result.bestPattern.pattern_id);
+          notifiedPatternsRef.current.add(patternId);
+          lastCompletedPatternRef.current = patternId;
+        } else if (lastCompletedPatternRef.current !== patternId) {
+          // ครั้งต่อๆ ไป (ดึงบล็อกออกแล้วใส่กลับเข้าไปใหม่) — เสียงสั้นๆ ติ๊งเดียว ให้รู้ว่ากลับมาครบแล้ว
+          playSound('level_up');
+          lastCompletedPatternRef.current = patternId;
         }
+      } else {
+        // เมื่อหลุดจากความสมบูรณ์ (ดึงบล็อกออก)
+        lastCompletedPatternRef.current = null;
       }
 
       // ─── อัปเดต patternData ─────

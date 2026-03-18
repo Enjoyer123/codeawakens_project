@@ -1,12 +1,14 @@
-﻿// Coin management functions
+// Coin management functions
 import { getCurrentGameState, setCurrentGameState, getCurrentScene } from '../shared/game/gameState';
 import { updateGoalUI } from '../setup/uiManager';
+import { playSound } from '../sound/soundManager';
 
 export function getPlayerCoins() {
   return getCurrentGameState().playerCoins || [];
 }
 
 export function addCoinToPlayer(coin) {
+  playSound('coin');
   const currentState = getCurrentGameState();
   const coins = [...(currentState.playerCoins || [])];
   coins.push(coin);

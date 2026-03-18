@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { playBGM, stopBGM } from '../../gameutils/sound/soundManager';
 import { removeStarterListener, loadStarterXml } from './hooks/blocklysetup/xmlLoader';
 import { useParams } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
@@ -200,11 +201,14 @@ const GameCore = ({
 
     initBlocklyAndPhaser();
     setWorkspaceVersion(v => v + 1);
+    playBGM('game');
 
     return () => {
       setBlocklyLoaded(false);
       clearPlayerCoins();
       clearRescuedPeople();
+
+      stopBGM();
 
       if (phaserGameRef.current) {
         try {
