@@ -5,7 +5,7 @@ import { playIdle } from '../movement/playerAnimation';
 import { updatePlayerArrow } from '../effects/arrow';
 import { showGameOver } from '../effects/gameEffects';
 import { getCurrentGameState, setCurrentGameState, getPlayerHp } from '../shared/game/gameState';
-import { getWeaponData } from '../entities/weaponUtils';
+import { applyPlayerDamage } from '../combat/combatLogic';
 
 /**
  * Draw player character sprite
@@ -91,60 +91,7 @@ export function drawPlayer(scene) {
 
         // ✅ Add takeDamage method to player sprite for combat handling
         scene.player.takeDamage = (damage, forceKill = false) => {
-            const currentState = getCurrentGameState();
-            if (currentState.isGameOver || currentState.goalReached) return;
-
-            const currentHP = getPlayerHp();
-
-            // Calculate minimum HP allowed based on weapon defense
-            // If forceKill is true (e.g. falling in pit, fleeing battle), allow dropping to 0
-            let minHP = 0;
-            if (!forceKill) {
-                const weapon = getWeaponData(currentState.weaponKey);
-                // Use combat_power or power or default to 10. Stick usually has power: 10, combat_power: 0.
-                // We want Stick to give 10 minHP.
-                minHP = weapon ? (weapon.combat_power || weapon.power || 10) : 10;
-            }
-
-            // Calculate newHP: It reduces by damage, but cannot go below minHP (unless forceKill)
-            let newHP = currentHP - damage;
-
-            if (!forceKill) {
-                newHP = Math.max(minHP, newHP);
-            } else {
-                newHP = Math.max(0, newHP);
-            }
-
-
-            // Update global state
-            setCurrentGameState({ playerHP: newHP });
-
-            // Update UI (if React setters/callbacks are available)
-            if (typeof scene.externalHandlers.setPlayerHp === 'function') {
-                scene.externalHandlers.setPlayerHp(newHP);
-            }
-
-            // Visual feedback
-            scene.tweens.add({
-                targets: [scene.player],
-                tint: 0xff0000,
-                duration: 100,
-                yoyo: true,
-                repeat: 1,
-                onComplete: () => {
-                    if (scene.player) scene.player.clearTint();
-                }
-            });
-
-            // Check Game Over
-            if (newHP <= 0) {
-                setCurrentGameState({ isGameOver: true });
-                if (typeof scene.externalHandlers.setIsGameOver === 'function') {
-                    scene.externalHandlers.setIsGameOver(true);
-                }
-
-                showGameOver(scene);
-            }
+            applyPlayerDamage(scene, damage, forceKill);
         };
     } catch (error) {
         console.error('❌ Error creating player:', error);
@@ -168,13 +115,15 @@ export function drawCinematicMonster(scene) {
 
     if (!isCinematic) return; // Skip for normal node-based levels
 
+    const PADDING_BOTTOM = 100;
+    const PADDING_RIGHT = 100;
+
     const width = scene.scale.width;
     const height = scene.scale.height;
+    
     // Match the specific height used in drawPlayer fallback (bottom-left)
-    // drawPlayer uses: scene.scale.height - 100
-    // So we use same Y for alignment
-    const monsterY = height - 100;
-    const monsterX = width - 100;
+    const monsterY = height - PADDING_BOTTOM;
+    const monsterX = width - PADDING_RIGHT;
 
 
     try {
@@ -198,9 +147,10 @@ export function drawCinematicMonster(scene) {
             }
         }
 
+        const CINEMATIC_MONSTER_SCALE = 2.2;
         const monster = scene.add.sprite(monsterX, monsterY, textureKey);
-        monster.setScale(2.2); // Matching combat animation scale
-        monster.setData('defaultScale', 2.2);
+        monster.setScale(CINEMATIC_MONSTER_SCALE); // Matching combat animation scale
+        monster.setData('defaultScale', CINEMATIC_MONSTER_SCALE);
         monster.setOrigin(0.5, 0.5);
         monster.setData('idleAnim', idleAnim);
         monster.setDepth(8);

@@ -11,6 +11,7 @@ import { setupSubsetSum } from '../../algo/setup/subsetSumSetup';
 import { setupCoinChange } from '../../algo/setup/coinChangeSetup';
 import { setupGoalUI } from '../../setup/uiManager';
 import { updateMonsters } from '../../combat/enemyMovement';
+import { detectAlgoType } from '../../shared/levelType';
 // Removed Legacy Anims
 import { createVampire_1Anims } from '../../../anims/Vampire_1Anims';
 import { createMain_1Anims } from '../../../anims/Main_1Anims';
@@ -60,14 +61,36 @@ export class GameScene extends Phaser.Scene {
             this.load.image('bg', '/Mapdefault.png');
         }
 
-        // Load sprites
-        this.load.atlas('Vampire_1', '/enemies/Vampire1.png', '/enemies/Vampire1.json');
-        this.load.atlas('Vampire_2', '/enemies/Vampire2.png', '/enemies/Vampire2.json');
-        this.load.atlas('Vampire_3', '/enemies/Vampire3.png', '/enemies/Vampire3.json');
+        // ─── Character Sprites (Load only what we need) ───
+        const charKey = (this.currentLevel?.character === 'player' || !this.currentLevel?.character)
+            ? 'main_1'
+            : this.currentLevel?.character;
 
-        this.load.atlas('main_1', '/characters/Main1.png', '/characters/Main1.json');
-        this.load.atlas('main_2', '/characters/Main2.png', '/characters/Main2.json');
-        this.load.atlas('main_3', '/characters/Main3.png', '/characters/Main3.json');
+        if (charKey === 'main_1' || charKey === 'player') {
+            this.load.atlas('main_1', '/characters/Main1.png', '/characters/Main1.json');
+        } else if (charKey === 'main_2') {
+            this.load.atlas('main_2', '/characters/Main2.png', '/characters/Main2.json');
+        } else if (charKey === 'main_3') {
+            this.load.atlas('main_3', '/characters/Main3.png', '/characters/Main3.json');
+        }
+
+        // ─── Monster Sprites (Load only what we need) ───
+        const monsters = this.currentLevel?.map_entities?.filter(e => e.entity_type === 'MONSTER') || [];
+        const monsterTypes = new Set(monsters.map(m => m.type || 'vampire_1'));
+        // If there's no node and no start_node but it's an old legacy map, it might spawn cinematic monster. Let's add vampire_1 just in case, but usually we just load what's in map_entities.
+        if (monsters.length === 0 && (!this.currentLevel?.nodes || this.currentLevel.nodes.length === 0)) {
+            monsterTypes.add('vampire_1'); // Fallback for cinematic
+        }
+
+        if (monsterTypes.has('vampire_1')) {
+            this.load.atlas('Vampire_1', '/enemies/Vampire1.png', '/enemies/Vampire1.json');
+        }
+        if (monsterTypes.has('vampire_2')) {
+            this.load.atlas('Vampire_2', '/enemies/Vampire2.png', '/enemies/Vampire2.json');
+        }
+        if (monsterTypes.has('vampire_3')) {
+            this.load.atlas('Vampire_3', '/enemies/Vampire3.png', '/enemies/Vampire3.json');
+        }
 
         // Load Org bots for Coin Change
         this.load.image('bot_slime1', '/bot/slime1.png');
@@ -172,13 +195,14 @@ export class GameScene extends Phaser.Scene {
         this.levelData = this.currentLevel;
 
 
-        // Create animations
-        createVampire_1Anims(this.anims);
-        createMain_1Anims(this.anims);
-        createMain_2Anims(this.anims);
-        createMain_3Anims(this.anims);
-        createVampire_2Anims(this.anims);
-        createVampire_3Anims(this.anims);
+        // Create animations (Only create if textures exist, save processing power)
+        if (this.textures.exists('Vampire_1')) createVampire_1Anims(this.anims);
+        if (this.textures.exists('Vampire_2')) createVampire_2Anims(this.anims);
+        if (this.textures.exists('Vampire_3')) createVampire_3Anims(this.anims);
+
+        if (this.textures.exists('main_1')) createMain_1Anims(this.anims);
+        if (this.textures.exists('main_2')) createMain_2Anims(this.anims);
+        if (this.textures.exists('main_3')) createMain_3Anims(this.anims);
 
 
         // Helper for safe setup (Cleaner Version)
@@ -223,9 +247,15 @@ export class GameScene extends Phaser.Scene {
             setupObstacles(this);
             setupCoins(this);
             setupPeople(this);
-            setupKnapsack(this);
-            setupSubsetSum(this);
-            setupCoinChange(this);
+
+            const algoType = detectAlgoType(this.levelData);
+            if (algoType === 'KNAPSACK') {
+                setupKnapsack(this);
+            } else if (algoType === 'SUBSETSUM') {
+                setupSubsetSum(this);
+            } else if (algoType === 'COINCHANGE') {
+                setupCoinChange(this);
+            }
 
             // Setup new Goal UI for tracking items
             setupGoalUI(this);
