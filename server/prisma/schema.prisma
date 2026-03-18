@@ -461,9 +461,7 @@ enum RewardType {
 
 enum WeaponType {
   melee
-  ranged
   magic
-  special
 }
 
 enum BlockCategory {

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import useUserStore from '../../store/useUserStore';
+import { playBGM, stopBGM } from '../../gameutils/sound/soundManager';
 
 import { useLevelCategories } from '../../services/hooks/useLevelCategories';
 import { useProfile } from '../../services/hooks/useProfile';
@@ -37,6 +38,12 @@ const MapSelect = () => {
     isError,
     error: queryError
   } = useLevelCategories();
+
+  // Handle BGM
+  useEffect(() => {
+    playBGM('map');
+    return () => stopBGM();
+  }, []);
 
   if (isError) {
     return <PageError message={queryError?.message} title="Failed to fetch categories" />;

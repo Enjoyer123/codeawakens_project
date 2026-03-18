@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import useUserStore from '../../store/useUserStore';
+import { playBGM, stopBGM } from '../../gameutils/sound/soundManager';
 
 import { useLevelCategory } from '../../services/hooks/useLevelCategories';
 import { getImageUrl } from '@/utils/imageUtils';
@@ -25,6 +26,12 @@ const CategoryLevels = () => {
     isLoading: loading,
     error: errorCategory
   } = useLevelCategory(categoryId);
+
+  // Handle BGM
+  useEffect(() => {
+    playBGM('map');
+    return () => stopBGM();
+  }, []);
 
   const error = errorCategory?.message || null;
   const categoryInfo = categoryRes?.levelCategory || categoryRes?.data?.levelCategory || categoryRes || null;

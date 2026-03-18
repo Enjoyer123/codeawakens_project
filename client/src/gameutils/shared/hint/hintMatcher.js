@@ -191,37 +191,53 @@ function isBlockMatch(current, target) {
   return true;
 }
 
-/** Subsequence matching — หา target blocks ใน current ตามลำดับ */
-function matchSubsequence(currentAnalysis, targetAnalysis) {
-  if (!Array.isArray(currentAnalysis) || !Array.isArray(targetAnalysis) || targetAnalysis.length === 0) {
-    return { matched: 0, total: 0, isFullMatch: false };
-  }
+/** Subsequence matching — หา target blocks ใน current ตามลำดับ (รองรับทั้งแบบ Loose และ Strict) */
+function matchSubsequence(currentAnalysis, targetAnalysis, isStrict = false) {
+  if (targetAnalysis.length === 0) return { matched: 0, total: 0, isFullMatch: true };
 
-  let matched = 0;
-  let ci = 0;
-
-  for (const target of targetAnalysis) {
-    let found = false;
-    while (ci < currentAnalysis.length) {
-      if (isBlockMatch(currentAnalysis[ci], target)) {
-        matched++;
-        ci++;
-        found = true;
-        break;
+  if (isStrict) {
+    // ─── STRICT SEQUENTIAL (ห้ามมีบล็อกอื่นแทรกกลาง) ───
+    let bestMatched = 0;
+    for (let i = 0; i < currentAnalysis.length; i++) {
+      let matched = 0;
+      for (let j = 0; j < targetAnalysis.length; j++) {
+        if (i + j >= currentAnalysis.length) break;
+        if (isBlockMatch(currentAnalysis[i + j], targetAnalysis[j])) {
+          matched++;
+        } else {
+          break;
+        }
       }
-      ci++;
+      bestMatched = Math.max(bestMatched, matched);
+      if (bestMatched === targetAnalysis.length) break;
     }
-    if (!found) break;
+    return { matched: bestMatched, total: targetAnalysis.length, isFullMatch: bestMatched === targetAnalysis.length };
+  } else {
+    // ─── LOOSE SUBSEQUENCE (อนุญาตให้มีบล็อกอื่นแทรกกลางได้) ───
+    let matched = 0;
+    let ci = 0;
+    for (const target of targetAnalysis) {
+      let found = false;
+      while (ci < currentAnalysis.length) {
+        if (isBlockMatch(currentAnalysis[ci], target)) {
+          matched++;
+          ci++;
+          found = true;
+          break;
+        }
+        ci++;
+      }
+      if (!found) break;
+    }
+    return { matched, total: targetAnalysis.length, isFullMatch: matched === targetAnalysis.length };
   }
-
-  return { matched, total: targetAnalysis.length, isFullMatch: matched === targetAnalysis.length };
 }
 
 /**
  * Tree-aware matching — เทียบแต่ละ target tree กับ workspace tree แยกกัน
  * ป้องกัน loose blocks จาก tree อื่นมาเพิ่ม % ผิดๆ
  */
-function matchSubsequenceByTree(currentAnalysis, targetAnalysis) {
+function matchSubsequenceByTree(currentAnalysis, targetAnalysis, isStrict = false) {
   if (!Array.isArray(currentAnalysis) || !Array.isArray(targetAnalysis) || targetAnalysis.length === 0) {
     return { matched: 0, total: 0, isFullMatch: false };
   }
@@ -250,7 +266,8 @@ function matchSubsequenceByTree(currentAnalysis, targetAnalysis) {
 
     for (const [treeId, currentBlocks] of currentTrees) {
       if (usedTrees.has(treeId)) continue;
-      const { matched } = matchSubsequence(currentBlocks, targetBlocks);
+      // Pass isStrict flag down
+      const { matched } = matchSubsequence(currentBlocks, targetBlocks, isStrict);
       if (matched > bestMatch) {
         bestMatch = matched;
         bestTreeId = treeId;
@@ -272,12 +289,14 @@ const EMPTY_RESULT = {
 };
 
 /** นับจำนวน step ที่ผ่าน (full match ตามลำดับ) — ใช้ cached analysis */
+/** นับจำนวน step ที่ผ่าน (full match ตามลำดับ) — ใช้ LOOSE matching เพื่อช่วยผู้เล่น */
 function countMatchedSteps(currentAnalysis, hints) {
   let stepsMatched = 0;
   for (const hint of hints) {
     const targetAnalysis = hint._cachedAnalysis;
     if (!targetAnalysis || targetAnalysis.length === 0) continue;
-    if (matchSubsequenceByTree(currentAnalysis, targetAnalysis).isFullMatch) {
+    // ใช้ Loose matching (isStrict = false) สำหรับขั้นบันได (Hints)
+    if (matchSubsequenceByTree(currentAnalysis, targetAnalysis, false).isFullMatch) {
       stepsMatched++;
     } else {
       break;
@@ -286,12 +305,14 @@ function countMatchedSteps(currentAnalysis, hints) {
   return stepsMatched;
 }
 
-/** นับ block ที่ตรงกับ final hint ของ pattern (สำหรับ % และ tie-breaking) — ใช้ cached analysis */
+/** นับ block ที่ตรงกับ final hint (ใช้ STRICT matching เพื่อวัดความสมบูรณ์แบบสูงสุด) */
 function countBlockMatch(currentAnalysis, hints) {
   const lastHint = hints[hints.length - 1];
   const targetAnalysis = lastHint?._cachedAnalysis;
   if (!targetAnalysis || targetAnalysis.length === 0) return { matched: 0, total: 0 };
-  const result = matchSubsequenceByTree(currentAnalysis, targetAnalysis);
+  
+  // ใช้ Strict matching (isStrict = true) สำหรับการเช็ค 100% และปลดล็อกอาวุธ
+  const result = matchSubsequenceByTree(currentAnalysis, targetAnalysis, true);
   return { matched: result.matched, total: result.total };
 }
 
@@ -334,7 +355,7 @@ export function findBestMatch(workspace, cachedPatterns) {
     : totalSteps > 0 ? Math.round((matchedSteps / totalSteps) * 100) : 0;
   percentage = Math.min(percentage, 100);
 
-  const isComplete = percentage === 100 || (matchedSteps >= totalSteps && totalSteps > 0);
+  const isComplete = percentage === 100 && totalSteps > 0;
 
   // Collect effects (cumulative: ทุก step ที่ผ่าน)
   const effects = best.hints?.slice(0, matchedSteps).map(h => h.effect).filter(Boolean) || [];

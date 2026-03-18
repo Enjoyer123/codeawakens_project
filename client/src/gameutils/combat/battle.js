@@ -124,7 +124,12 @@ export function startBattle(scene, monster, setPlayerHp, setIsGameOver, isPlayer
         const playerAttacks = () => {
           return new Promise((pResolve) => {
             // Player attacks monster - Always 100 damage (Monster dies in 1 hit)
-            playSound('hit');
+            const wType = weaponData?.weaponType || 'melee';
+            const wKey = weaponData?.weapon_key || weaponData?.weaponKey || 'stick';
+            const sfxKey = (wKey === 'stick')
+              ? 'hit'
+              : (wType === 'magic' ? 'weapon_magic' : 'weapon_melee');
+            playSound(sfxKey);
             monster.data.hp = 0;
             monster.data.defeated = true;
 

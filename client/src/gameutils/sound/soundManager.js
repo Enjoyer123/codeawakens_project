@@ -3,45 +3,45 @@
  * Uses HTML5 Audio API — no extra dependencies needed.
  * 
  * Usage:
- *   import { playSound, playBGM, stopBGM, toggleMute } from '@/gameutils/sound/soundManager';
+ *   import { playSound, startLoopingSFX, stopLoopingSFX, startManagedLoop, stopManagedLoop, playBGM, stopBGM, toggleMute } from '@/gameutils/sound/soundManager';
  *   playSound('hit');      // plays /audio/sfx/sfx_hit.wav
- *   playBGM('game');       // plays /audio/bgm/bgm_game.wav (loops)
- *   stopBGM();             // stops background music
- *   toggleMute();          // mute/unmute all audio
+ *   startManagedLoop('walk'); // plays /audio/sfx/sfx_walk.mp3 (loops with auto-debounce)
+ *   stopManagedLoop('walk');  // stops looping sound after a small delay
  */
 
 // ─── Sound Registry ─────────────────────────────────────────────
-// Maps short names → actual file paths under /audio/
 const SFX_MAP = {
-  click:    '/audio/sfx/sfx_click.wav',
-  coin:     '/audio/sfx/sfx_coin.mp3',
-  defeat:   '/audio/sfx/sfx_defeat.wav',
-  hit:      '/audio/sfx/sfx_hit.wav',
+  click: '/audio/sfx/sfx_click.wav',
+  coin: '/audio/sfx/sfx_coin.mp3',
+  defeat: '/audio/sfx/sfx_defeat.mp3',
+  hit: '/audio/sfx/sfx_hit.wav',
   level_up: '/audio/sfx/sfx_level_up.wav',
-  run:      '/audio/sfx/sfx_run.wav',
-  victory:  '/audio/sfx/sfx_victory.mp3',
-  walk:           '/audio/sfx/sfx_walk.wav',
+  run: '/audio/sfx/sfx_run.wav',
+  victory: '/audio/sfx/sfx_victory.mp3',
+  walk: '/audio/sfx/sfx_walk.mp3',
   unlock_pattern: '/audio/sfx/sfx_unlock_pattern.wav',
+  weapon_melee: '/audio/sfx/weapons/sfx_weapon_malee.mp3',
+  weapon_magic: '/audio/sfx/weapons/sfx_weapon_magic.mp3',
+  rescue: '/audio/sfx/sfx_recucepeople.mp3',
+  enemy_defeat: '/audio/sfx/sfx_enemydefeat.mp3',
 };
 
 const BGM_MAP = {
-  game: '/audio/bgm/bgm_game.wav',
-  map:  '/audio/bgm/bgm_map.wav',
+  game: '/audio/bgm/bgm_game.mp3',
+  map: '/audio/bgm/bgm_map.mp3',
 };
 
 // ─── State ───────────────────────────────────────────────────────
 let muted = false;
 let bgmAudio = null;
-let bgmVolume = 0.3;   // BGM default volume (0-1)
-let sfxVolume = 0.5;    // SFX default volume (0-1)
-let masterVolume = 1.0; // Global volume (controlled by UI)
+let bgmVolume = 0.3;
+let sfxVolume = 0.5;
+let masterVolume = 1.0;
+const activeLoopingSFX = new Map();
+const loopTimers = new Map();
 
 // ─── SFX ─────────────────────────────────────────────────────────
 
-/**
- * Play a sound effect once.
- * @param {string} name - Key from SFX_MAP (e.g. 'hit', 'run', 'victory')
- */
 export function playSound(name) {
   if (muted) return;
   const src = SFX_MAP[name];
@@ -50,22 +50,64 @@ export function playSound(name) {
   try {
     const audio = new Audio(src);
     audio.volume = sfxVolume * masterVolume;
-    audio.play().catch(() => { /* fail silently — file might not exist */ });
-  } catch {
-    // fail silently
+    audio.play().catch(() => { });
+  } catch { }
+}
+
+export function startLoopingSFX(name) {
+  if (muted || activeLoopingSFX.has(name)) return;
+  const src = SFX_MAP[name];
+  if (!src) return;
+
+  try {
+    const audio = new Audio(src);
+    audio.loop = true;
+    audio.volume = sfxVolume * masterVolume;
+    audio.play().catch(() => { });
+    activeLoopingSFX.set(name, audio);
+  } catch { }
+}
+
+export function stopLoopingSFX(name) {
+  const audio = activeLoopingSFX.get(name);
+  if (audio) {
+    try {
+      audio.pause();
+      audio.currentTime = 0;
+    } catch { }
+    activeLoopingSFX.delete(name);
   }
+}
+
+/**
+ * Start a looping SFX with management (handles overlapping calls).
+ */
+export function startManagedLoop(name) {
+  if (loopTimers.has(name)) {
+    clearTimeout(loopTimers.get(name));
+    loopTimers.delete(name);
+  }
+  startLoopingSFX(name);
+}
+
+/**
+ * Stop a looping SFX with a small delay to avoid clicking between consecutive movements.
+ */
+export function stopManagedLoop(name, delay = 100) {
+  if (loopTimers.has(name)) clearTimeout(loopTimers.get(name));
+
+  const timerId = setTimeout(() => {
+    stopLoopingSFX(name);
+    loopTimers.delete(name);
+  }, delay);
+
+  loopTimers.set(name, timerId);
 }
 
 // ─── BGM ─────────────────────────────────────────────────────────
 
-/**
- * Play background music (loops automatically).
- * Stops any currently playing BGM first.
- * @param {string} name - Key from BGM_MAP (e.g. 'game', 'map')
- */
 export function playBGM(name) {
   stopBGM();
-
   const src = BGM_MAP[name];
   if (!src) return;
 
@@ -73,15 +115,10 @@ export function playBGM(name) {
     bgmAudio = new Audio(src);
     bgmAudio.loop = true;
     bgmAudio.volume = muted ? 0 : (bgmVolume * masterVolume);
-    bgmAudio.play().catch(() => { /* fail silently */ });
-  } catch {
-    // fail silently
-  }
+    bgmAudio.play().catch(() => { });
+  } catch { }
 }
 
-/**
- * Stop background music.
- */
 export function stopBGM() {
   if (bgmAudio) {
     try {
@@ -96,10 +133,6 @@ export function stopBGM() {
 
 // ─── Mute Controls ───────────────────────────────────────────────
 
-/**
- * Toggle mute on/off. Returns new muted state.
- * @returns {boolean} isMuted
- */
 export function toggleMute() {
   muted = !muted;
   if (bgmAudio) {
@@ -108,10 +141,6 @@ export function toggleMute() {
   return muted;
 }
 
-/**
- * Set muted state directly.
- * @param {boolean} value
- */
 export function setMuted(value) {
   muted = !!value;
   if (bgmAudio) {
@@ -119,10 +148,6 @@ export function setMuted(value) {
   }
 }
 
-/**
- * Set master volume directly.
- * @param {number} value (0.0 - 1.0)
- */
 export function setVolume(value) {
   masterVolume = Math.max(0, Math.min(1, value));
   if (bgmAudio) {
@@ -130,18 +155,5 @@ export function setVolume(value) {
   }
 }
 
-/**
- * Get current master volume.
- * @returns {number}
- */
-export function getVolume() {
-  return masterVolume;
-}
-
-/**
- * Check if audio is muted.
- * @returns {boolean}
- */
-export function isMuted() {
-  return muted;
-}
+export function getVolume() { return masterVolume; }
+export function isMuted() { return muted; }

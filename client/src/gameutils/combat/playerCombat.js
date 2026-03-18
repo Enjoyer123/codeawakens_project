@@ -3,6 +3,8 @@ import { getDirectionFromAngle } from './combatHelpers';
 import { cleanupMonsterUI } from './battleUI';
 import { showMonsterDeathEffect } from './deathEffects';
 import { playSound } from '../sound/soundManager';
+import { getCurrentGameState } from '../shared/game/gameState';
+import { getWeaponData } from '../entities/weaponUtils';
 
 export function haveEnemy(player) {
     return findNearbyEnemy(player) !== null;
@@ -67,7 +69,17 @@ export function hitEnemyWithDamage(player, targetMonster = null, damage = 50) {
     killEnemy(player, enemySprite);
 
     playAttack(player);
-    playSound('hit');
+
+    // Weapon Specific Sound
+    const state = getCurrentGameState();
+    const weaponKey = state?.weaponKey || 'stick';
+    const wData = getWeaponData(weaponKey);
+    const wType = wData?.weaponType || 'melee';
+    const sfxKey = (weaponKey === 'stick')
+        ? 'hit'
+        : (wType === 'magic' ? 'weapon_magic' : 'weapon_melee');
+    playSound(sfxKey);
+
     return true;
 }
 
@@ -95,6 +107,7 @@ function updateEnemyHealthBar(enemySprite, currentHealth) {
 
 
 async function killEnemy(player, enemySprite) {
+    playSound('enemy_defeat');
     enemySprite.setData('defeated', true);
 
     // Stop input/interaction on enemy
