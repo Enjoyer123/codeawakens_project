@@ -3,6 +3,7 @@
  * Execute → Test → Score → Save → Animate → Complete
  */
 
+import * as Blockly from 'blockly/core';
 import { getCurrentGameState } from '@/gameutils/shared/game/gameState';
 import { extractFunctionName } from '@/gameutils/algo/codeParser';
 import { executeAlgoCode } from '@/gameutils/algo/algoExecutor';
@@ -79,7 +80,6 @@ export async function runAlgoPath(code, {
             let blocklyXml = null;
             try {
                 if (workspaceRef.current) {
-                    const Blockly = await import('blockly/core');
                     blocklyXml = Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspaceRef.current));
                 }
             } catch (e) { /* ignore */ }
