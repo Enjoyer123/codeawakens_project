@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/tooltip';
 
 import { API_BASE_URL } from '../../../config/apiConfig';
+import { playSound } from '../../../gameutils/sound/soundManager';
 
 function Navbar({ navItems = [], isLoading = false, isGamePage = false, isTransparent = false }) {
   const navigate = useNavigate();
@@ -126,6 +127,7 @@ function Navbar({ navItems = [], isLoading = false, isGamePage = false, isTransp
               <button
                 key={index}
                 onClick={() => {
+                  playSound('tab_editor');
                   if (item.onClick) {
                     item.onClick();
                   } else if (item.path) {
@@ -182,7 +184,10 @@ function Navbar({ navItems = [], isLoading = false, isGamePage = false, isTransp
                     </Tooltip>
                     <DropdownMenuContent align="end" className="w-56 bg-[#1e1430] border-[#a855f7] text-white">
                       <DropdownMenuItem
-                        onClick={() => navigate('/user/profile')}
+                        onClick={() => {
+                          playSound('tab_editor');
+                          navigate('/user/profile');
+                        }}
                         className="focus:bg-[#a855f7] focus:text-white cursor-pointer"
                       >
                         Profile
@@ -213,6 +218,7 @@ function Navbar({ navItems = [], isLoading = false, isGamePage = false, isTransp
               key={index}
               onClick={() => {
                 setIsOpen(false);
+                playSound('tab_editor');
                 if (item.onClick) item.onClick();
                 else if (item.path) navigate(item.path);
               }}

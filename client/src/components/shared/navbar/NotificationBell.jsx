@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { Bell } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import {
@@ -9,6 +9,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useUserNotifications, useMarkNotificationAsRead } from '@/services/hooks/useNotifications';
 import { formatDate } from '@/utils/formatters';
+import { playSound } from '@/gameutils/sound/soundManager';
 
 const NotificationBell = () => {
     const { userId } = useAuth();
@@ -28,6 +29,15 @@ const NotificationBell = () => {
         if (notification.is_read) return;
         markAsRead(notification.notification_id);
     };
+
+    // Play sound when unreadCount increases
+    const prevUnreadCount = useRef(unreadCount);
+    useEffect(() => {
+        if (unreadCount > prevUnreadCount.current) {
+            playSound('unlock_pattern');
+        }
+        prevUnreadCount.current = unreadCount;
+    }, [unreadCount]);
 
     return (
         <Popover open={isOpen} onOpenChange={setIsOpen}>

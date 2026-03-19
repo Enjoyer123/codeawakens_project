@@ -15,9 +15,7 @@ import { useCreateWeapon, useUpdateWeapon } from '@/services/hooks/useWeapons';
 
 const weaponTypes = [
   { value: 'melee', label: 'Melee' },
-  { value: 'ranged', label: 'Ranged' },
   { value: 'magic', label: 'Magic' },
-  { value: 'special', label: 'Special' },
 ];
 
 const WeaponFormDialog = ({

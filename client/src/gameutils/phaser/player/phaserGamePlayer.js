@@ -1,4 +1,4 @@
-﻿// Phaser Game Player Functions
+// Phaser Game Player Functions
 import { updateWeaponPosition } from '../../combat/weaponEffects';
 
 import { getCurrentGameState, setCurrentGameState, getPlayerHp } from '../../shared/game/gameState';
@@ -7,6 +7,7 @@ import { checkObstacleCollisionWithRadius } from '../../movement/collisionUtils'
 import { playIdle, playWalk } from '../../movement/playerAnimation';
 import { moveToPosition } from '../../movement/playerMovement';
 import { updatePlayerArrow } from '../../effects/arrow';
+import { startManagedLoop, stopManagedLoop } from '../../sound/soundManager';
 
 export function updatePlayer(scene, nodeId, direction) {
   // ตรวจสอบว่ามี nodes หรือไม่
@@ -126,6 +127,7 @@ export function movePlayerWithCollisionDetection(scene, fromNode, toNode, forced
     setCurrentGameState({ direction: directionIndex });
 
     // Play walk animation with correct direction
+    startManagedLoop('walk');
     playWalk(scene.player);
 
     let hitObstacle = false;
@@ -155,6 +157,7 @@ export function movePlayerWithCollisionDetection(scene, fromNode, toNode, forced
             stopY = scene.player.y;
 
             // Movement stopped: Player HP is 0 or game over
+            stopManagedLoop('walk');
             moveTween.stop();
 
             // หยุดที่ตำแหน่งปัจจุบัน
@@ -185,6 +188,7 @@ export function movePlayerWithCollisionDetection(scene, fromNode, toNode, forced
               ease: 'Back.easeOut',
               yoyo: true,
               onComplete: () => {
+                stopManagedLoop('walk');
                 resolve({
                   success: false,
                   hitObstacle: true,
@@ -222,6 +226,7 @@ export function movePlayerWithCollisionDetection(scene, fromNode, toNode, forced
           // Update arrow position after movement completes with calculated direction
           updatePlayerArrow(scene, endX, endY, directionIndex);
           // Weapon icon position update removed - now only shown in bottom UI
+          stopManagedLoop('walk');
           resolve({
             success: true,
             hitObstacle: false,

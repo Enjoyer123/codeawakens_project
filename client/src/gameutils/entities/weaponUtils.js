@@ -10,9 +10,9 @@ export function getWeaponsData() {
 // เอา Array อาวุธจาก React Query มายัดลง Cache ให้ Phaser ใช้แบบ Sync
 export function seedWeaponsData(weaponList) {
   if (!weaponList || !Array.isArray(weaponList)) return;
-  
+
   weaponsData = {}; // เตรียมถังเปล่า
-  
+
   // แปลง List เป็น Object โดยใช้ weapon_key เป็นดัชนี (เพื่อให้ค้นหาไวระดับ O(1))
   weaponList.forEach(weapon => {
     if (!weapon?.weapon_key) return;

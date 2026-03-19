@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import useUserStore from '../../store/useUserStore';
+import { playSound, playBGM, stopBGM } from '../../gameutils/sound/soundManager';
 
 import { useLevelCategories } from '../../services/hooks/useLevelCategories';
 import { useProfile } from '../../services/hooks/useProfile';
@@ -38,6 +39,12 @@ const MapSelect = () => {
     error: queryError
   } = useLevelCategories();
 
+  // Handle BGM
+  useEffect(() => {
+    playBGM('map');
+    return () => stopBGM();
+  }, []);
+
   if (isError) {
     return <PageError message={queryError?.message} title="Failed to fetch categories" />;
   }
@@ -46,6 +53,7 @@ const MapSelect = () => {
 
 
   const handleCategorySelect = (categoryId) => {
+    playSound('select_map');
     // ไปหน้าแสดงด่านในประเภทที่เลือก
     navigate(`/user/mapselect/${categoryId}`);
   };

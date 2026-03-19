@@ -267,21 +267,24 @@ function playVictorySequence(scene, player, monster, weaponRing, monsterDeathAni
         yoyo: true,
         ease: 'Power2',
         onYoyo: () => {
-            // HIT FRAME (Middle of lunge)
-            playSound('hit');
-
-            // 2. Player Attack Animation
-            const attackAnimKey = player.customAnims ? player.customAnims.attack : 'actack-side';
-            if (player.anims && scene.anims.exists(attackAnimKey)) {
-                player.play(attackAnimKey);
-            }
-
-            // 3. Trigger Weapon Ring Attack
+            // 2. Play Weapon Specific Sound
             const state = getCurrentGameState();
             const weaponKey = (state && state.weaponKey) ? state.weaponKey : 'stick';
             const wData = getWeaponData(weaponKey);
             const wType = wData ? wData.weaponType : 'melee';
 
+            const sfxKey = (weaponKey === 'stick')
+                ? 'hit'
+                : (wType === 'magic' ? 'weapon_magic' : 'weapon_melee');
+            playSound(sfxKey);
+
+            // 3. Player Attack Animation
+            const attackAnimKey = player.customAnims ? player.customAnims.attack : 'actack-side';
+            if (player.anims && scene.anims.exists(attackAnimKey)) {
+                player.play(attackAnimKey);
+            }
+
+            // 4. Trigger Weapon Ring Attack
             if (weaponRing && weaponRing.active) {
                 animateWeaponAttack(scene, wType, weaponRing);
             }

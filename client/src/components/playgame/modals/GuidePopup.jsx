@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '../../ui/dialog';
 import { API_BASE_URL } from '../../../config/apiConfig';
+import { playSound } from '../../../gameutils/sound/soundManager';
 
 const GuidePopup = ({ guides, onClose }) => {
   const [currentGuideIndex, setCurrentGuideIndex] = useState(0);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // Play sound when guide opens
+  useEffect(() => {
+    playSound('paper');
+  }, []);
 
   if (!guides || guides.length === 0) return null;
 

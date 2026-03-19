@@ -2,7 +2,7 @@ import { playWalk, playIdle } from './playerAnimation';
 import { updateWeaponPosition } from '../combat/weaponEffects';
 import { setCurrentGameState } from '../shared/game/gameState';
 import { updatePlayerArrow } from '../effects/arrow';
-import { playSound } from '../sound/soundManager';
+import { startManagedLoop, stopManagedLoop } from '../sound/soundManager';
 
 // Node-based movement function
 export async function moveToNode(player, nodeId) {
@@ -29,21 +29,15 @@ export async function moveToNode(player, nodeId) {
 
     let directionIndex = null;
     if (currentNode && currentNodeId !== nodeId) {
-        // Calculate direction based on node positions, not player position
         const dx = targetNode.x - currentNode.x;
         const dy = targetNode.y - currentNode.y;
 
-        // Determine direction index based on movement
-        // 0 = right, 1 = down, 2 = left, 3 = up
         if (Math.abs(dx) > Math.abs(dy)) {
-            // Horizontal movement
             directionIndex = dx > 0 ? 0 : 2; // right : left
         } else {
-            // Vertical movement
             directionIndex = dy > 0 ? 1 : 3; // down : up
         }
     } else {
-        // If at same node or no current node, use current direction
         directionIndex = player.directionIndex || 0;
     }
 
@@ -60,36 +54,28 @@ export async function moveToNode(player, nodeId) {
 
 // Basic position movement with animation
 export async function moveToPosition(player, x, y, directionIndex = null) {
-    playSound('walk');
-    // Calculate direction based on movement vector if not provided
+    startManagedLoop('walk');
+
+    // Calculate direction if not provided
     if (directionIndex === null) {
         const dx = x - player.x;
         const dy = y - player.y;
-
-        // Determine direction index based on movement
-        // 0 = right, 1 = down, 2 = left, 3 = up
         if (Math.abs(dx) > Math.abs(dy)) {
-            // Horizontal movement
-            directionIndex = dx > 0 ? 0 : 2; // right : left
+            directionIndex = dx > 0 ? 0 : 2;
         } else {
-            // Vertical movement
-            directionIndex = dy > 0 ? 1 : 3; // down : up
+            directionIndex = dy > 0 ? 1 : 3;
         }
     }
 
-    // Update player direction in both player sprite and gameState
-    // Ensure directions array exists
-    if (!player.directions) {
-        player.directions = ['right', 'down', 'left', 'up'];
-    }
-
-    // Update directionIndex BEFORE calling playWalk
+    // Update player direction
+    if (!player.directions) player.directions = ['right', 'down', 'left', 'up'];
     player.directionIndex = directionIndex;
     setCurrentGameState({ direction: directionIndex });
 
-    // Play walk animation with correct direction (directionIndex is already set)
+    // Play walk animation
     playWalk(player);
 
+    // Trail effect
     const trailColor = 0x00ff00;
     const trail = player.scene.add.circle(player.x, player.y, 12, trailColor, 0.3);
     trail.setDepth(5);
@@ -110,37 +96,26 @@ export async function moveToPosition(player, x, y, directionIndex = null) {
             duration: 500,
             ease: 'Power2.easeInOut',
             onUpdate: () => {
-                // Update weapon position during movement
                 updateWeaponPosition(player.scene);
-                // Update arrow position during movement
                 updatePlayerArrow(player.scene, player.x, player.y, directionIndex);
             },
             onComplete: () => {
                 playIdle(player);
-                // Update weapon position after movement completes
                 updateWeaponPosition(player.scene);
-                // Update arrow position after movement completes
                 updatePlayerArrow(player.scene, x, y, directionIndex);
+
+                stopManagedLoop('walk');
                 resolve();
             }
         });
     });
 }
 
-
 // Rotate player to new direction
 export function rotatePlayer(scene, newDirection) {
     if (!scene || !scene.player) return;
-
-    // Update player direction in Phaser sprite
     scene.player.directionIndex = newDirection;
-
-    // Update global game state
     setCurrentGameState({ direction: newDirection });
-
-    // Update visual arrow
     updatePlayerArrow(scene, null, null, newDirection);
-
-    // Update visual sprite (animation & flip)
     playIdle(scene.player);
 }
