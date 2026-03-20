@@ -186,6 +186,7 @@ export function useLevelInitializer({
         // 4. Set global + React state
         setLevelData(formatted);
         setCurrentLevelState(formatted);
+        // console.log("formatted", formatted);
         setEnabledBlocks(enabledBlocks);
         setGoodPatterns(goodPatterns);
 

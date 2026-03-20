@@ -6,6 +6,7 @@ import useUserStore from '../../store/useUserStore';
 import { playSound, playBGM, stopBGM } from '../../gameutils/sound/soundManager';
 
 import { useLevelCategory } from '../../services/hooks/useLevelCategories';
+import { useProfile } from '../../services/hooks/useProfile';
 import { getImageUrl } from '@/utils/imageUtils';
 import MapCoordinatePicker from '../../components/tools/MapCoordinatePicker';
 import PageLoader from '../../components/shared/Loading/PageLoader';
@@ -27,6 +28,10 @@ const CategoryLevels = () => {
     error: errorCategory
   } = useLevelCategory(categoryId);
 
+  // Fetch user profile to check completed levels
+  const { data: userProfileData, isLoading: profileLoading } = useProfile();
+  const userProgress = userProfileData?.user_progress || [];
+
   // Handle BGM
   useEffect(() => {
     playBGM('map');
@@ -37,12 +42,25 @@ const CategoryLevels = () => {
   const categoryInfo = categoryRes?.levelCategory || categoryRes?.data?.levelCategory || categoryRes || null;
   const levels = categoryInfo?.levels || [];
 
+  // Find all current playable levels (unlocked but NOT completed)
+  const currentLevelNodes = levels.filter((lvl) => {
+    const isLocked = lvl.is_locked || !lvl.is_unlocked;
+    // Skip locked/draft levels
+    if (isLocked) return false;
+    
+    // Check if user has passed this level
+    const progress = userProgress.find(p => String(p.level_id) === String(lvl.level_id));
+    
+    // If NO progress exists, or status is NOT 'completed', it means they haven't finished it
+    return !progress || progress.status !== 'completed';
+  });
+
   const handleLevelSelect = (levelId) => {
     playSound('select_map');
     navigate(`/user/mapselection/${levelId}`);
   };
 
-  if (loading) {
+  if (loading || profileLoading) {
     return <PageLoader message="Loading Levels..." />;
   }
 
@@ -123,6 +141,56 @@ const CategoryLevels = () => {
           alt="Level Map"
           className="w-full h-auto object-contain lg:w-full lg:h-full lg:object-fill block pixelated"
         />
+
+        {/* SVG Connecting Path Lines */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none z-0 hover:z-0">
+          {levels.map((level, i) => {
+            const nextLevel = levels[i + 1];
+            if (!level.coordinates || !nextLevel || !nextLevel.coordinates) return null;
+            
+            const isNextLocked = nextLevel.is_locked || !nextLevel.is_unlocked;
+            const strokeColor = isNextLocked ? "rgba(156, 163, 175, 0.4)" : "rgba(112, 72, 232, 0.9)";
+            
+            return (
+              <line
+                key={`line-${level.level_id}`}
+                x1={`${level.coordinates.left}%`}
+                y1={`${level.coordinates.top}%`}
+                x2={`${nextLevel.coordinates.left}%`}
+                y2={`${nextLevel.coordinates.top}%`}
+                stroke={strokeColor}
+                strokeWidth="4"
+                strokeDasharray={isNextLocked ? "8, 8" : "12, 12"}
+                strokeLinecap="round"
+                className={`transition-all duration-1000 ${!isNextLocked ? 'animate-pulse' : ''}`}
+                style={!isNextLocked ? { filter: 'drop-shadow(0 0 6px rgba(112,72,232,0.8))' } : {}}
+              />
+            );
+          })}
+        </svg>
+
+        {/* Current Level Bouncing Avatar(s) */}
+        {currentLevelNodes.map(node => node.coordinates && (
+          <div 
+            key={`avatar-${node.level_id}`}
+            className="absolute z-30 pointer-events-none transform -translate-x-1/2 -translate-y-full"
+            style={{ 
+              left: `${node.coordinates.left}%`, 
+              top: `calc(${node.coordinates.top}% - 12px)` 
+            }}
+          >
+            <div className="animate-bounce relative drop-shadow-[0_10px_10px_rgba(0,0,0,0.6)]">
+              <img 
+                src="/characters/main_1.png" 
+                alt="Current Player" 
+                className="w-12 h-12 md:w-16 md:h-16 object-contain"
+                style={{ imageRendering: 'pixelated' }}
+              />
+            </div>
+            {/* Soft ground shadow below bouncing character */}
+            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-6 h-2 bg-black/60 rounded-full blur-[3px]" />
+          </div>
+        ))}
 
         {/* Level Nodes */}
         {levels.map((level) => {

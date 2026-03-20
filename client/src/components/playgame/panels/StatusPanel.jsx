@@ -6,6 +6,7 @@
  */
 
 import React from 'react';
+import AuraEffect from './AuraEffect';
 
 /**
  * StatusPanel - Displays sprite-based HP bar with weapon information
@@ -40,22 +41,27 @@ const StatusPanel = ({ playerHpState, currentWeaponData, characterName = 'main_1
 
           {/* 2. Character Avatar - วางซ้อนในวงกลม */}
           <div
-            className="absolute overflow-hidden rounded-full flex items-center justify-center"
+            className="absolute rounded-full flex items-center justify-center"
             style={{
               top: '11%',      // ปรับขึ้น-ลง
               left: '4%',      // ปรับซ้าย-ขวา
               width: '26%',    // ขนาดความกว้างของหน้าตัวละคร (เพิ่มจาก 21.5%)
               aspectRatio: '1/1',
               zIndex: 10,
-              backgroundColor: 'rgba(0,0,0,0.5)'
             }}
           >
+            {/* พื้นหลังดำวงกลมแยกต่างหาก ตัด clip-path แบบกลม เพื่อให้ Aura พุ่งออกไปได้ */}
+            <div className="absolute inset-0 bg-black/50 rounded-full overflow-hidden" />
+            
             <img
               src={`/characters/${characterName}.png`}
               alt="Char"
-              className="w-[85%] h-[85%] object-contain" // ปรับขนาดรูปข้างในวงกลมเล็กน้อยไม่ให้ชิดขอบไป
+              className="w-[85%] h-[85%] object-contain relative z-10" 
               style={{ imageRendering: 'pixelated' }}
             />
+
+            {/* อนิเมชัน Aura รอบตัวละคร (Sync กับ Phaser Active Effects อัตโนมัติ) */}
+            <AuraEffect />
           </div>
 
           {/* 3. HP Text - วางไว้ใต้หลอดเลือดตามภาพ */}

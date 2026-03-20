@@ -313,7 +313,7 @@ function playVictorySequence(scene, player, monster, weaponRing, monsterDeathAni
 
             // 6. Monster Death Sequence
             monster.setTint(0xff0000);
-            scene.cameras.main.shake(100, 0.01);
+            scene.cameras.main.shake(200, 0.02);
 
             const onDeathDone = () => {
                 monster.destroy();
@@ -364,7 +364,8 @@ function playDefeatSequence(scene, player, monster, monsterAttackAnim, onComplet
             onYoyo: () => {
                 playSound('hit');
                 player.setTint(0xff0000);
-                scene.cameras.main.shake(100, 0.01);
+                scene.cameras.main.shake(200, 0.02);
+                scene.cameras.main.flash(100, 255, 0, 0);
 
                 if (currentAttack >= attackCount) {
                     scene.time.delayedCall(200, () => {

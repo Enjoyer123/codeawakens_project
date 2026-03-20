@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useSaveUserProgress, useCheckRewards } from '../../services/hooks/useProfile';
 import { API_BASE_URL } from '../../config/apiConfig';
+import confetti from 'canvas-confetti';
 
 // ─── Sub-components ────────────────────────────────────────────
 
@@ -125,6 +126,17 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, blocklyXml, tex
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, levelData, getToken, gameResult]);
+
+  // 🎊 Victory Confetti!
+  useEffect(() => {
+    if (!isOpen || !isVictory) return;
+    // Burst 1: Center explosion
+    confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+    // Burst 2: Left side
+    setTimeout(() => confetti({ particleCount: 40, angle: 60, spread: 55, origin: { x: 0, y: 0.65 } }), 250);
+    // Burst 3: Right side
+    setTimeout(() => confetti({ particleCount: 40, angle: 120, spread: 55, origin: { x: 1, y: 0.65 } }), 400);
+  }, [isOpen, isVictory]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
