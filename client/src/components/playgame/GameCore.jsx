@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+﻿import React, { useEffect, useRef, useState } from "react";
 import { playBGM, stopBGM } from '../../gameutils/sound/soundManager';
 import { removeStarterListener, loadStarterXml } from './hooks/blocklysetup/xmlLoader';
 import { useParams } from "react-router-dom";
@@ -154,7 +154,7 @@ const GameCore = ({
 
   const { data: levelData, isLoading: isLevelLoading, isError: isLevelError, error: levelError } = useLevel(levelId);
   const { data: weaponsResponse, isLoading: isWeaponsLoading } = useWeapons(1, 1000);
-  
+
   // Seed physical cache early so Phraser/Blockly formatters can use synchronous getWeaponData
   useEffect(() => {
     if (weaponsResponse?.weapons) {

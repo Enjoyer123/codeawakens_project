@@ -45,7 +45,7 @@ export function useBlocklySetup({
     try {
       // 1. สร้าง Workspace จาก Shared Hook
       const workspace = initBlockly();
-      
+
       if (!workspace) return;
 
       // 2. อัปเดตสถานะว่าพร้อมแล้ว (ให้ GameCore.jsx รู้)

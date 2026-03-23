@@ -46,7 +46,9 @@ export async function runAlgoPath(code, {
 
     // Phase 1: Execute pure logic (no visuals)
     const { result, trace, error } = await executeAlgoCode(code, currentLevel);
-
+    console.log("result", result);
+    console.log("trace", trace);
+    console.log("error", error);
     if (error) {
         const friendlyMsg = mapRuntimeErrorToMessage(error);
         setExecutionError({ title: 'เกิดข้อผิดพลาดขณะทำงาน', message: friendlyMsg });

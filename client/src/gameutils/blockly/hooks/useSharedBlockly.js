@@ -32,15 +32,12 @@ export function useSharedBlockly({
   const internalRef = useRef(null);
   const workspaceRef = externalRef || internalRef;
   const [blocklyLoaded, setBlocklyLoaded] = useState(false);
-  const [error, setError] = useState(null);
 
   const initBlockly = useCallback(() => {
     if (!blocklyRef.current || !enabledBlocks || Object.keys(enabledBlocks).length === 0) {
       return null;
     }
-
-    try {
-      if (workspaceRef.current) {
+    if (workspaceRef.current) {
         workspaceRef.current.dispose();
       }
       blocklyRef.current.innerHTML = '';
@@ -123,21 +120,15 @@ export function useSharedBlockly({
       setBlocklyLoaded(true);
 
       if (onWorkspaceReady) {
-          onWorkspaceReady(workspace);
+        onWorkspaceReady(workspace);
       }
 
       return workspace;
-
-    } catch (err) {
-      console.error("Error initializing Blockly:", err);
-      setError('เกิดข้อผิดพลาดในการโหลด Blockly: ' + (err?.message || 'ไม่ทราบสาเหตุ'));
-      return null;
-    }
   }, [enabledBlocks, readOnly, blocklyRef, refReady]);
 
   useEffect(() => {
     if (autoInject) {
-        initBlockly();
+      initBlockly();
     }
     return () => {
       if (autoInject && workspaceRef.current) {
@@ -148,5 +139,5 @@ export function useSharedBlockly({
     };
   }, [initBlockly, autoInject]);
 
-  return { initBlockly, workspaceRef, blocklyLoaded, error };
+  return { initBlockly, workspaceRef, blocklyLoaded };
 }

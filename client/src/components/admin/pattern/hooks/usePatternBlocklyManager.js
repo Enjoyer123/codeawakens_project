@@ -114,34 +114,22 @@ export const usePatternBlocklyManager = ({
 
         setGlobalXmlLoading(true);
 
-        try {
-            await new Promise(r => setTimeout(r, 50));
-            workspaceRef.current.clear();
+        workspaceRef.current.clear();
 
-            let finalXml = xmlToLoad;
-            if (!finalXml || !finalXml.trim()) {
-                finalXml = '<xml xmlns="https://developers.google.com/blockly/xml"></xml>';
-            }
-
-            const xmlDom = Blockly.utils.xml.textToDom(finalXml);
-
-            // ⚡ Performance: Set flag to skip event processing during load
-            setGlobalXmlLoading(true);
-
-            Blockly.Xml.domToWorkspace(xmlDom, workspaceRef.current);
-
-
-
-            setGlobalXmlLoading(false);
-
-            // Removed cleanupDuplicateProcedures
-
-        } catch (err) {
-            console.error("Error loading XML for step", index, err);
-        } finally {
-            setGlobalXmlLoading(false);
-            lastLoadedXmlRef.current = index;
+        let finalXml = xmlToLoad;
+        if (!finalXml || !finalXml.trim()) {
+            finalXml = '<xml xmlns="https://developers.google.com/blockly/xml"></xml>';
         }
+
+        const xmlDom = Blockly.utils.xml.textToDom(finalXml);
+
+        // ⚡ Performance: Set flag to skip event processing during load
+        setGlobalXmlLoading(true);
+
+        Blockly.Xml.domToWorkspace(xmlDom, workspaceRef.current);
+
+        setGlobalXmlLoading(false);
+        lastLoadedXmlRef.current = index;
     }, [levelData, isViewMode]);
 
     // Initial Load

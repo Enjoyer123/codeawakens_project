@@ -66,6 +66,7 @@ export function useCodeExecution({
         try {
             // ─── 3. Generate code from Blockly ───
             const code = await generateAndInstrumentCode(workspaceRef, currentLevel);
+            console.log("Generated code:", code);
 
             if (!code.trim()) {
                 setters.setGameState('ready');
@@ -74,6 +75,7 @@ export function useCodeExecution({
             }
 
             // ─── 4. Delegate to the right runner ───
+            console.log("isAlgoLevel(currentLevel):", isAlgoLevel(currentLevel));
             if (isAlgoLevel(currentLevel)) {
                 await runAlgoPath(code, {
                     workspaceRef, currentLevel, isPreview,

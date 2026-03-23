@@ -83,4 +83,46 @@ export function defineLoopGenerators() {
             return 'continue;\n';
         }
     };
+
+    // --- หุ้มเกราะป้องกัน Loop ว่างเปล่า (Sync Infinite Loop Starvation) ---
+    const yieldCode = `if (typeof globalThis !== 'undefined' && globalThis.__isVisualRun !== false) await new Promise(r => setTimeout(r, 0));\n`;
+    
+    javascriptGenerator.forBlock['controls_whileUntil'] = function(block) {
+        const until = block.getFieldValue('MODE') === 'UNTIL';
+        const argument0 = javascriptGenerator.valueToCode(block, 'BOOL', until ? javascriptGenerator.ORDER_LOGICAL_NOT : javascriptGenerator.ORDER_NONE) || 'false';
+        let branch = javascriptGenerator.statementToCode(block, 'DO') || '';
+        branch = javascriptGenerator.addLoopTrap(branch, block);
+        
+        // ถ้าเป็นโหมดเล่นจริง ให้ฉีด Yield เข้าไปในทุกๆ รอบลูป
+        if (!javascriptGenerator.isCleanMode) {
+            branch = yieldCode + branch;
+        }
+
+        if (until) {
+            return 'while (!(' + argument0 + ')) {\n' + branch + '}\n';
+        } else {
+            return 'while (' + argument0 + ') {\n' + branch + '}\n';
+        }
+    };
+
+    javascriptGenerator.forBlock['controls_repeat_ext'] = function(block) {
+        let repeats = javascriptGenerator.valueToCode(block, 'TIMES', javascriptGenerator.ORDER_ASSIGNMENT) || '0';
+        let branch = javascriptGenerator.statementToCode(block, 'DO') || '';
+        branch = javascriptGenerator.addLoopTrap(branch, block);
+
+        if (!javascriptGenerator.isCleanMode) {
+            branch = yieldCode + branch;
+        }
+
+        let code = '';
+        const loopVar = javascriptGenerator.nameDB_.getDistinctName('count', Blockly.Names.NameType.VARIABLE);
+        let endVar = repeats;
+        if (!repeats.match(/^\w+$/) && !String(repeats).match(/^\d+$/)) {
+            endVar = javascriptGenerator.nameDB_.getDistinctName('repeat_end', Blockly.Names.NameType.VARIABLE);
+            code += 'const ' + endVar + ' = ' + repeats + ';\n';
+        }
+        code += 'for (let ' + loopVar + ' = 0; ' + loopVar + ' < ' + endVar + '; ' + loopVar + '++) {\n' +
+            branch + '}\n';
+        return code;
+    };
 }

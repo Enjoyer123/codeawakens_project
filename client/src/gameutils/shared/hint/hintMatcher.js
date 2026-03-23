@@ -12,6 +12,47 @@ function normalizeVariableName(varValue) {
   return match ? match[1] : varValue;
 }
 
+/** ดึงข้อมูลตัวแปร, ฟังก์ชัน, และ Field ย่อยอื่นๆ ออกจากบล็อก */
+function extractBlockData(block, type, info) {
+  // Resolve variable name
+  if (type === 'variables_set' || type === 'variables_get') {
+    try {
+      const varField = block.getField('VAR');
+      if (varField) {
+        const rawName = varField.getText ? varField.getText() : (varField.getValue ? varField.getValue() : '');
+        info.varName = normalizeVariableName(rawName);
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  // Resolve procedure name
+  if (type?.includes('procedures_')) {
+    try {
+      const nameField = block.getField('NAME');
+      if (nameField) {
+        info.procedureName = nameField.getText ? nameField.getText() : (nameField.getValue ? nameField.getValue() : '');
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  // Collect field values (skip VAR and NAME as they are handled above)
+  const fields = {};
+  const inputList = block.inputList || [];
+  for (const input of inputList) {
+    const fieldRow = input.fieldRow || [];
+    for (const field of fieldRow) {
+      const name = field.name;
+      if (name && name !== 'VAR' && name !== 'NAME') {
+        const value = field.getText ? field.getText() : (field.getValue ? field.getValue() : '');
+        if (value !== undefined && value !== null) {
+          fields[name] = String(value);
+        }
+      }
+    }
+  }
+  if (Object.keys(fields).length > 0) info.fields = fields;
+}
+
 // ─── Workspace → Block Analysis ─────────────────────────────────
 
 /**
@@ -23,6 +64,7 @@ function normalizeVariableName(varValue) {
  * { index, type, treeId, varName?, procedureName?, fields?, hasStatement, hasValue, hasNext }
  */
 function analyzeWorkspace(workspace) {
+  console.log("🧩 [Block extraction] วิเคราะห์ workspace:", workspace);
   if (!workspace) return [];
 
   const analysis = [];
@@ -43,47 +85,12 @@ function analyzeWorkspace(workspace) {
       hasNext: false
     };
 
-    // Resolve variable name (same logic as before)
-    if (type === 'variables_set' || type === 'variables_get') {
-      try {
-        const varField = block.getField('VAR');
-        if (varField) {
-          const rawName = varField.getText ? varField.getText() : (varField.getValue ? varField.getValue() : '');
-          info.varName = normalizeVariableName(rawName);
-        }
-      } catch (e) { /* ignore */ }
-    }
-
-    // Resolve procedure name
-    if (type?.includes('procedures_')) {
-      try {
-        const nameField = block.getField('NAME');
-        if (nameField) {
-          info.procedureName = nameField.getText ? nameField.getText() : (nameField.getValue ? nameField.getValue() : '');
-        }
-      } catch (e) { /* ignore */ }
-    }
-
-    // Collect field values (skip VAR and NAME as they are handled above)
-    const fields = {};
-    const inputList = block.inputList || [];
-    for (const input of inputList) {
-      const fieldRow = input.fieldRow || [];
-      for (const field of fieldRow) {
-        const name = field.name;
-        if (name && name !== 'VAR' && name !== 'NAME') {
-          const value = field.getText ? field.getText() : (field.getValue ? field.getValue() : '');
-          if (value !== undefined && value !== null) {
-            fields[name] = String(value);
-          }
-        }
-      }
-    }
-    if (Object.keys(fields).length > 0) info.fields = fields;
+    extractBlockData(block, type, info);
 
     analysis.push(info);
 
     // Traverse children: value inputs, statement inputs, next connection
+    const inputList = block.inputList || [];
     const INPUT_VALUE = Blockly.inputs.inputTypes.VALUE;
     const INPUT_STATEMENT = Blockly.inputs.inputTypes.STATEMENT;
     for (const input of inputList) {
@@ -118,6 +125,7 @@ function analyzeWorkspace(workspace) {
     traverseBlock(topBlock, currentTreeId++);
   }
 
+  console.log("🧩 [Block extraction] กางบล็อกออกมา 1D (ดู depth/treeId):", analysis);
   return analysis;
 }
 
@@ -288,6 +296,34 @@ const EMPTY_RESULT = {
   isComplete: false, effects: [], matchedBlocks: 0, totalBlocks: 0
 };
 
+/** คำนวณรวบยอดว่าคะแนนการแมตช์สุดท้าย ได้กี่เปอร์เซ็นต์ */
+function calculateMatchResult(bestPattern, bestSteps, bestMatchedBlocks, bestTotalBlocks) {
+  if (!bestPattern) return EMPTY_RESULT;
+
+  const totalSteps = bestPattern.hints?.length || 0;
+  const matchedSteps = Math.min(bestSteps, totalSteps);
+
+  let percentage = bestTotalBlocks > 0
+    ? Math.round((bestMatchedBlocks / bestTotalBlocks) * 100)
+    : totalSteps > 0 ? Math.round((matchedSteps / totalSteps) * 100) : 0;
+  percentage = Math.min(percentage, 100);
+
+  const isComplete = percentage === 100 && totalSteps > 0;
+
+  // Collect effects (cumulative: ทุก step ที่ผ่าน)
+  const effects = bestPattern.hints?.slice(0, matchedSteps).map(h => h.effect).filter(Boolean) || [];
+
+  return { 
+    bestPattern, 
+    matchedSteps, 
+    percentage, 
+    isComplete, 
+    effects, 
+    matchedBlocks: bestMatchedBlocks, 
+    totalBlocks: bestTotalBlocks 
+  };
+}
+
 /** นับจำนวน step ที่ผ่าน (full match ตามลำดับ) — ใช้ cached analysis */
 /** นับจำนวน step ที่ผ่าน (full match ตามลำดับ) — ใช้ LOOSE matching เพื่อช่วยผู้เล่น */
 function countMatchedSteps(currentAnalysis, hints) {
@@ -310,7 +346,7 @@ function countBlockMatch(currentAnalysis, hints) {
   const lastHint = hints[hints.length - 1];
   const targetAnalysis = lastHint?._cachedAnalysis;
   if (!targetAnalysis || targetAnalysis.length === 0) return { matched: 0, total: 0 };
-  
+
   // ใช้ Strict matching (isStrict = true) สำหรับการเช็ค 100% และปลดล็อกอาวุธ
   const result = matchSubsequenceByTree(currentAnalysis, targetAnalysis, true);
   return { matched: result.matched, total: result.total };
@@ -336,6 +372,11 @@ export function findBestMatch(workspace, cachedPatterns) {
     const stepsMatched = countMatchedSteps(currentAnalysis, hints);
     const { matched, total } = countBlockMatch(currentAnalysis, hints);
 
+    console.log(`🔍 กำลังตรวจเฉลย: Pattern "${pattern.name || pattern.id || 'Unknown'}"`);
+    console.log(`  ➔ ค่าเฉลย (Target):`, hints[hints.length - 1]?._cachedAnalysis);
+    console.log(`  ➔ โหมดใจดี (Loose Steps): ผ่านไปแล้ว ${stepsMatched}/${hints.length} ขั้น`);
+    console.log(`  ➔ โหมดดุ (Strict Blocks): ตรงล็อกเป๊ะๆ ${matched}/${total} บล็อก`);
+
     if (matched > bestMatchedBlocks || (matched === bestMatchedBlocks && stepsMatched > bestSteps)) {
       best = pattern;
       bestSteps = stepsMatched;
@@ -346,19 +387,5 @@ export function findBestMatch(workspace, cachedPatterns) {
 
   if (!best) return EMPTY_RESULT;
 
-  // คำนวณผลลัพธ์
-  const totalSteps = best.hints?.length || 0;
-  const matchedSteps = Math.min(bestSteps, totalSteps);
-
-  let percentage = bestTotalBlocks > 0
-    ? Math.round((bestMatchedBlocks / bestTotalBlocks) * 100)
-    : totalSteps > 0 ? Math.round((matchedSteps / totalSteps) * 100) : 0;
-  percentage = Math.min(percentage, 100);
-
-  const isComplete = percentage === 100 && totalSteps > 0;
-
-  // Collect effects (cumulative: ทุก step ที่ผ่าน)
-  const effects = best.hints?.slice(0, matchedSteps).map(h => h.effect).filter(Boolean) || [];
-
-  return { bestPattern: best, matchedSteps, percentage, isComplete, effects, matchedBlocks: bestMatchedBlocks, totalBlocks: bestTotalBlocks };
+  return calculateMatchResult(best, bestSteps, bestMatchedBlocks, bestTotalBlocks);
 }

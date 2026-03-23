@@ -39,7 +39,10 @@ export function createGameActions(setters, currentLevel, isPreview) {
         const scene = getCurrentGameState().currentScene;
         const result = calculateMoveForward(scene);
 
-        if (!result.success) return false;
+        if (!result.success) {
+            await new Promise(resolve => setTimeout(resolve, 50));
+            return false;
+        }
 
         if (scene) {
             const playbackResult = await playMoveAnimation(scene, result);
@@ -68,6 +71,8 @@ export function createGameActions(setters, currentLevel, isPreview) {
             setCurrentGameState({ direction: result.newDirection });
             const scene = getCurrentGameState().currentScene;
             if (scene) await playTurnAnimation(scene, result);
+        } else {
+            await new Promise(resolve => setTimeout(resolve, 50));
         }
     };
 
@@ -77,6 +82,8 @@ export function createGameActions(setters, currentLevel, isPreview) {
             setCurrentGameState({ direction: result.newDirection });
             const scene = getCurrentGameState().currentScene;
             if (scene) await playTurnAnimation(scene, result);
+        } else {
+            await new Promise(resolve => setTimeout(resolve, 50));
         }
     };
 
@@ -86,6 +93,7 @@ export function createGameActions(setters, currentLevel, isPreview) {
         const result = calculateHit(scene);
 
         if (!result.success) {
+            await new Promise(resolve => setTimeout(resolve, 50));
             return false;
         }
 
