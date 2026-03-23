@@ -1,4 +1,4 @@
-﻿import { hitEnemyWithDamage } from './playerCombat';
+import { hitEnemyWithDamage } from './playerCombat';
 import { showEffectWeaponFixed } from './weaponEffects';
 
 /**
@@ -20,6 +20,9 @@ export async function playHitAnimation(scene, hitResult) {
     if (success) {
         // แสดง weapon effect
         showEffectWeaponFixed(targetEnemy, damage, weaponKey, playerSprite);
+
+        // จอสั่นและกระพริบเมื่อใช้ block โจมตีโดนศัตรู
+        scene.cameras.main.shake(200, 0.02);
 
         // รอให้ animation เสร็จก่อนเดินต่อ (killEnemy ใช้อนิเมชันประมาณ 800ms)
         await new Promise((resolve) => setTimeout(resolve, 900));

@@ -87,6 +87,8 @@ export function startBattle(scene, monster, setPlayerHp, setIsGameOver, isPlayer
                 onComplete: () => {
                   // Apply damage to player
                   playSound('hit');
+                  scene.cameras.main.shake(200, 0.02);
+
                   if (finalDamage > 0) {
                     if (scene.player.takeDamage) {
                       scene.player.takeDamage(finalDamage);
@@ -143,6 +145,10 @@ export function startBattle(scene, monster, setPlayerHp, setIsGameOver, isPlayer
               tint: 0xff0000,
               duration: 200,
               yoyo: true,
+              onStart: () => {
+                scene.cameras.main.shake(200, 0.02);
+                scene.cameras.main.flash(100, 255, 255, 255); // Flash white on monster hit
+              },
               onComplete: () => {
                 monster.sprite.setTint(0x333333);
                 monster.glow.setVisible(false);

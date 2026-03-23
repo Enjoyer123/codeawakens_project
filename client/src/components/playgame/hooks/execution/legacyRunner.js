@@ -61,6 +61,7 @@ export async function runLegacyPath(code, {
 
     // 2. Sanitize code (fix duplicate declarations)
     let sanitizedCode = code;
+    console.log("Sanitizing code:", sanitizedCode);
     if ((sanitizedCode.match(/\b(?:const|let)\s+listItems\b/g) || []).length > 1) {
         sanitizedCode = sanitizedCode.replace(/\b(?:const|let)\s+listItems\b/g, 'var listItems');
     }
@@ -79,7 +80,6 @@ export async function runLegacyPath(code, {
     });
 
     const finalExecutableCode = prepareExecutableCode(sanitizedCode, 'result');
-
     // 4. Execute code
     let executionErrorLocal = null;
 

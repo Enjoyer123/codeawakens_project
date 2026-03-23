@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+﻿import React, { useEffect, useRef, useState } from "react";
 import { playBGM, stopBGM } from '../../gameutils/sound/soundManager';
 import { removeStarterListener, loadStarterXml } from './hooks/blocklysetup/xmlLoader';
 import { useParams } from "react-router-dom";
@@ -18,6 +18,7 @@ import GameArea from './GameArea';
 import BlocklyArea from './BlocklyArea';
 import GuidePopup from './modals/GuidePopup';
 import LoadXmlModal from './modals/LoadXmlModal';
+import MissionBriefing from './modals/MissionBriefingModal';
 
 // Import custom hooks
 import { usePhaserGame } from './hooks/usePhaserGame';
@@ -74,6 +75,8 @@ const GameCore = ({
   // Progress tracking
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [gameResult, setGameResult] = useState(null);
+  const [showMissionBriefing, setShowMissionBriefing] = useState(false);
+  const missionAcceptedRef = useRef(false);
 
   // Level data
   const [currentLevel, setCurrentLevel] = useState(null);
@@ -151,7 +154,7 @@ const GameCore = ({
 
   const { data: levelData, isLoading: isLevelLoading, isError: isLevelError, error: levelError } = useLevel(levelId);
   const { data: weaponsResponse, isLoading: isWeaponsLoading } = useWeapons(1, 1000);
-  
+
   // Seed physical cache early so Phraser/Blockly formatters can use synchronous getWeaponData
   useEffect(() => {
     if (weaponsResponse?.weapons) {
@@ -201,7 +204,14 @@ const GameCore = ({
 
     initBlocklyAndPhaser();
     setWorkspaceVersion(v => v + 1);
-    playBGM('game');
+
+    // Show mission briefing for normal play (not preview/admin)
+    // BGM will start on first user click (browser autoplay policy)
+    if (!isPreview && !missionAcceptedRef.current) {
+      setShowMissionBriefing(true);
+    } else {
+      playBGM('game');
+    }
 
     return () => {
       setBlocklyLoaded(false);
@@ -357,16 +367,27 @@ const GameCore = ({
 
   return (
     <>
-      {showGuide && (
+      {showGuide && !showMissionBriefing && (
         <GuidePopup
           guides={guides}
           onClose={closeGuide}
           levelName={currentLevel?.level_name || 'ด่าน'}
         />
       )}
+
+      {/* Mission Briefing Modal */}
+      <MissionBriefing
+        isOpen={showMissionBriefing}
+        levelData={currentLevel}
+        onStart={() => {
+          setShowMissionBriefing(false);
+          missionAcceptedRef.current = true;
+        }}
+      />
+
       <div className={`flex ${isPreview ? 'h-full' : 'h-screen'} bg-[#0f111a]`}>
-        {/* Game Area - 50% */}
-        <div className="w-[50%] relative bg-[#0f111a]">
+        {/* Game Area - 60% */}
+        <div className="w-[60%] relative bg-[#0f111a]">
           {/* Floating Level Name */}
           <div className="absolute top-4 left-4 z-40 pointer-events-none">
             <h2 className="text-xl font-bold text-white/90 drop-shadow-md bg-[#2e1065]/80 backdrop-blur-md px-3 py-1 rounded-lg border border-purple-500/30">
@@ -393,8 +414,8 @@ const GameCore = ({
           />
         </div>
 
-        {/* Blockly Area - 50% */}
-        <div className="w-[50%] border-l border-black flex flex-col backdrop-blur-sm overflow-hidden">
+        {/* Blockly Area - 40% */}
+        <div className="w-[40%] border-l border-black flex flex-col backdrop-blur-sm overflow-hidden">
           <div className="flex flex-col h-full relative">
             <div className="flex-1 min-h-0 relative shadow-2xl rounded-lg overflow-hidden">
               <BlocklyArea

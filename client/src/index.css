@@ -122,6 +122,11 @@
 
   body {
     @apply bg-background text-foreground;
+    cursor: url('/cursors/default.svg'), auto;
+  }
+
+  a, button, [role="button"], input[type="submit"], input[type="button"], select, .cursor-pointer {
+    cursor: url('/cursors/pointer.svg'), pointer !important;
   }
 }
 

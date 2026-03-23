@@ -26,6 +26,8 @@ const SFX_MAP = {
   enemy_defeat: '/audio/sfx/sfx_enemydefeat.mp3',
   select_map: '/audio/sfx/stx_select_map.mp3',
   paper: '/audio/sfx/stx_papersound.mp3',
+  // mission_start: '/audio/sfx/sfx_mission_start.wav',
+  mission_start: '/audio/sfx/sfx_click.wav',
   tab_editor: '/audio/sfx/stx_tabeditor.mp3',
 };
 

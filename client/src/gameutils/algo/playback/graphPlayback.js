@@ -1,4 +1,4 @@
-﻿/**
+/**
  * graphPlayback.js — DFS/BFS Animation Playback
  *
  * เล่น Animation สำรวจ Graph แบบเห็น backtrack ชัดเจน โดยใช้ Router Pattern:

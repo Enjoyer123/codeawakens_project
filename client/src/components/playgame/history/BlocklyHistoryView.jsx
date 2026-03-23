@@ -12,26 +12,10 @@ const BlocklyHistoryView = ({ blocklyRef, blocklyCode, isOpen, displayMode, sele
                 return;
             }
 
-            try {
                 // Dispose existing workspace if any
                 if (workspaceRef.current) {
                     workspaceRef.current.dispose();
                 }
-
-                // Create custom light brown theme
-                // const customTheme = Blockly.Theme.defineTheme('lightBrown', {
-                //     'base': Blockly.Themes.Classic,
-                //     'componentStyles': {
-                //         'workspaceBackgroundColour': '#E1D09F',
-                //         'toolboxBackgroundColour': '#d4b896',
-                //         'toolboxForegroundColour': '#2d1b0e',
-                //         'flyoutBackgroundColour': '#e8d4bc',
-                //         'flyoutForegroundColour': '#2d1b0e',
-                //         'flyoutOpacity': 0.95,
-                //         'scrollbarColour': '#8b6f47',
-                //         'scrollbarOpacity': 0.6
-                //     }
-                // });
 
                 // Inject Blockly
                 currentWorkspace = Blockly.inject(blocklyRef.current, {
@@ -64,15 +48,6 @@ const BlocklyHistoryView = ({ blocklyRef, blocklyCode, isOpen, displayMode, sele
 
                 // Force resize to ensure visibility
                 Blockly.svgResize(currentWorkspace);
-
-                // One more resize after a short delay just in case container was still animating
-                setTimeout(() => {
-                    if (currentWorkspace) Blockly.svgResize(currentWorkspace);
-                }, 100);
-
-            } catch (e) {
-                console.error("Failed to load blocks into history workspace:", e);
-            }
         };
 
         if (isOpen && displayMode === 'blockly') {

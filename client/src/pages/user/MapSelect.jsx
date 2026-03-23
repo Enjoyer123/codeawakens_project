@@ -76,6 +76,18 @@ const MapSelect = () => {
     return 0;
   };
 
+  const getUnplayedLevelsCount = (category) => {
+    if (!Array.isArray(category.levels)) return 0;
+    const progressList = userProfile?.user_progress || [];
+    
+    return category.levels.filter(level => {
+      const isLocked = level.is_locked || !level.is_unlocked;
+      if (isLocked) return false;
+      const progress = progressList.find(p => String(p.level_id) === String(level.level_id));
+      return !progress || progress.status !== 'completed';
+    }).length;
+  };
+
   if (showDevTool) {
     return (
       <div className="min-h-screen bg-white relative">
@@ -121,6 +133,8 @@ const MapSelect = () => {
             // Use coordinates from DB
             const position = category.coordinates;
             const count = getCategoryCount(category);
+            const unplayedCount = getUnplayedLevelsCount(category);
+            
             // Category is locked if it has levels AND every level is locked for this user
             const hasLevels = Array.isArray(category.levels) && category.levels.length > 0;
             const isLocked = !hasLevels || category.levels.every(level => level.is_locked === true || !level.is_unlocked);
@@ -149,10 +163,19 @@ const MapSelect = () => {
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                         </svg>
-                      ) : count > 0 && (
-                        <span className="bg-[#7048e8]/80 text-white text-[8px] md:text-[10px] font-bold px-1.5 py-0.2 rounded-sm group-hover:bg-[#7048e8]">
-                          {count}
-                        </span>
+                      ) : (
+                        <div className="flex gap-1 items-center">
+                          {unplayedCount > 0 && (
+                            <span className="bg-red-500 animate-pulse text-white text-[8px] md:text-[9px] font-bold px-1.5 py-0.5 rounded-sm shadow-[0_0_8px_rgba(239,68,68,0.8)]">
+                              {unplayedCount} New
+                            </span>
+                          )}
+                          {count > 0 && (
+                            <span className="bg-[#7048e8]/80 text-white text-[8px] md:text-[10px] font-bold px-1.5 py-0.5 rounded-sm group-hover:bg-[#7048e8]">
+                              {count}
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
