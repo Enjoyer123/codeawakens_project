@@ -2,6 +2,7 @@
 // 2D Spreadsheet Display Mode
 import { animationController, createTraceBuffer } from './AnimationController';
 import { createDpTableRenderer } from './DpTableRenderer';
+import { playSound } from '../../sound/soundManager';
 
 export async function playSubsetSumDpAnimation(scene, trace, options = {}) {
     // สลับ Display Mode ตรงนี้:
@@ -48,7 +49,7 @@ async function playClassicDisplay(scene, trace, options = {}) {
 
     const statusText = scene.add.text(
         centerX, startY - 90,
-        'สร้างกระดาน DP Spreadsheet (2D Array)',
+        'สร้างตารางคำนวณ DP (2D)',
         { fontSize: '24px', color: '#FFFF00', fontStyle: 'bold', stroke: '#000', strokeThickness: 4, align: 'center' }
     ).setOrigin(0.5).setDepth(20);
 
@@ -87,6 +88,7 @@ async function playClassicDisplay(scene, trace, options = {}) {
             if (r === undefined || c === undefined || !table.isValid(r, c)) continue;
 
             table.setPointer(r, c);
+            playSound('run');
 
             const textStr = val ? 'T' : 'F';
             table.updateCell(r, c, val, textStr);
@@ -94,7 +96,7 @@ async function playClassicDisplay(scene, trace, options = {}) {
             // Set permanent color purely for aesthetic correctness after flash
             const cellTextObj = table.getCell(r, c).text;
 
-            statusText.setText(`อัปเดตช่อง Item=${r}, Sum=${c} -> ค่าใหม่: ${textStr}`);
+            statusText.setText(`อัปเดตตารางค่าใหม่: ${textStr}`);
 
             // Flash highlight over the setup warrior for this row
             const w = warriors[r - 1];
@@ -110,7 +112,7 @@ async function playClassicDisplay(scene, trace, options = {}) {
     }
 
     table.hidePointer();
-    statusText.setText('การคำนวณตาราง DP เสร็จสิ้น!');
+    statusText.setText('คำนวณตาราง DP เสร็จสิ้น');
 
     // Restore opacities for visual pop
     if (scene.subsetSum.side1) scene.subsetSum.side1.setAlpha(1);
@@ -124,7 +126,7 @@ async function playClassicDisplay(scene, trace, options = {}) {
 
     // --- Traceback: Highlight Path & Bring Included Items to Scale ---
     if (options.result) {
-        statusText.setText('แกะรอยกลับ (Traceback) เพื่อหาคำตอบ...');
+        statusText.setText('ย้อนรอยหาชุดตัวเลขที่เป็นคำตอบ...');
         await sleep(baseDelay);
 
         let currR = numItems;
@@ -178,13 +180,16 @@ async function playClassicDisplay(scene, trace, options = {}) {
                 const w = warriors[currR - 1]; // 0-based index for warriors
                 const wVal = w.power;
 
-                statusText.setText(`พบว่า W[${currR}] ถูกเลือกนำมาบวก!`);
+                statusText.setText(`เลือกตัวเลขนี้มารวม`);
                 if (currentCellInfo) currentCellInfo.bg.setFillStyle(0x2ecc71, 0.8); // Green for included
 
                 // Animate Warrior to Center Row (Below Table) keeping correct label offsets
                 const px = startHeroX + (warriorIdx * spacing);
                 if (w.sprite) {
-                    scene.tweens.add({ targets: w.sprite, x: px, y: scaleBaseY, duration: 600, ease: 'Bounce.easeOut' });
+                    scene.tweens.add({
+                        targets: w.sprite, x: px, y: scaleBaseY, duration: 600, ease: 'Bounce.easeOut',
+                        onStart: () => playSound('paper')
+                    });
                 }
                 if (w.powerText) {
                     scene.tweens.add({ targets: w.powerText, x: px, y: scaleBaseY + 45, duration: 600, ease: 'Bounce.easeOut' });

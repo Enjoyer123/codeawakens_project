@@ -7,7 +7,7 @@ import { ITEM_TYPES } from '@/constants/itemTypes';
 import { useLevelElements } from '../hooks/useLevelElements';
 import AlgoDataForm from '../forms/AlgoDataForm';
 
-const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, onAddMonster, onAddObstacle, selectedCategory, selectedMonsterType, onMonsterTypeChange, coinValue, onCoinValueChange, edgeWeight, onEdgeWeightChange, onFormDataChange }) => {
+const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, onAddMonster, onAddObstacle, selectedCategory, selectedMonsterType, onMonsterTypeChange, coinValue, onCoinValueChange, edgeWeight, onEdgeWeightChange, onFormDataChange, showAlert }) => {
   const { isItemTypeEnabled, isWeightedGraphCategory } = useLevelElements(selectedCategory);
   const [showPlayerSelect, setShowPlayerSelect] = useState(false);
 
@@ -105,6 +105,7 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
           algoType={algoType}
           data={formData.algo_data?.payload}
           onChange={(newPayload) => onFormDataChange({ ...formData, algo_data: { ...formData.algo_data, payload: newPayload } })}
+          showAlert={showAlert}
         />
       </div>
     );
@@ -359,6 +360,7 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
             algoType={algoType}
             data={formData.algo_data?.payload}
             onChange={(newPayload) => onFormDataChange({ ...formData, algo_data: { ...formData.algo_data, payload: newPayload } })}
+            showAlert={showAlert}
           />
         </div>
       )}

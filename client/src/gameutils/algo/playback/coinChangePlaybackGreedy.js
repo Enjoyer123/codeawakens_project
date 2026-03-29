@@ -3,6 +3,7 @@
  * เล่น Animation แบบ Greedy (หยิบเหรียญที่ใหญ่ที่สุดที่ใส่ได้เสมอ)
  */
 import { animationController, createTraceBuffer } from './AnimationController';
+import { playSound } from '../../sound/soundManager';
 
 export async function playCoinChangeGreedyAnimation(scene, trace, options = {}) {
     const baseDelay = 1000;
@@ -19,7 +20,7 @@ export async function playCoinChangeGreedyAnimation(scene, trace, options = {}) 
     const canvasH = scene.scale.height || 920;
 
     const statusText = scene.add.text(
-        canvasW / 2, 80,
+        canvasW / 2, 400,
         'เริ่มการค้นหาแบบ Greedy',
         { fontSize: '26px', color: '#FFFF00', fontStyle: 'bold', stroke: '#000', strokeThickness: 5, align: 'center' }
     ).setOrigin(0.5).setDepth(20);
@@ -27,7 +28,7 @@ export async function playCoinChangeGreedyAnimation(scene, trace, options = {}) 
     // Filter หาจำนวนเหรียญที่โดนหยิบทั้งหมด เพื่อให้มาเรียงกลางจอสวยๆ
     const selectSteps = trace.filter(s => s.action === 'select_coin');
     const totalCoins = selectSteps.length;
-    
+
     // คำนวณขอบเขต UI
     const paddingX = 120; // องศาความห่างที่กว้างขึ้นเพราะปรับ Scale ใหญ่
     const totalWidth = (totalCoins <= 1) ? 0 : (totalCoins - 1) * paddingX;
@@ -35,7 +36,7 @@ export async function playCoinChangeGreedyAnimation(scene, trace, options = {}) 
     const startY = canvasH / 2 + 50; // ให้อยู่กลางค่อนลงล่างนิดนึง
 
     const hpText = scene.add.text(canvasW / 2, startY - 150, `เป้าหมาย: ${targetAmount}`, {
-        fontSize: '34px', color: '#FFF', fontStyle: 'bold', stroke: '#000', strokeThickness: 6
+        fontSize: '34px', color: '#FFFF00', fontStyle: 'bold', stroke: '#000', strokeThickness: 6
     }).setOrigin(0.5).setDepth(20);
 
     let currentX = startX;
@@ -59,7 +60,7 @@ export async function playCoinChangeGreedyAnimation(scene, trace, options = {}) 
             if (idx < 0 || idx >= warriors.length) continue;
 
             const w = warriors[idx];
-            
+
             // กระพริบตัวตั้งต้นก่อน
             const flash = scene.add.rectangle(w.x, w.y, 80, 80, 0x00ffff, 0.7).setDepth(12);
             scene.tweens.add({ targets: flash, alpha: 0, duration: 400 / animationController.speed, onComplete: () => flash.destroy() });
@@ -80,6 +81,7 @@ export async function playCoinChangeGreedyAnimation(scene, trace, options = {}) 
                 y: startY,
                 duration: 600 / animationController.speed,
                 ease: 'Back.easeOut',
+                onStart: () => playSound('paper'),
                 onComplete: () => {
                     scene.tweens.add({
                         targets: clone, y: '-=20', yoyo: true, duration: 200 / animationController.speed
@@ -106,7 +108,7 @@ export async function playCoinChangeGreedyAnimation(scene, trace, options = {}) 
             // อัปเดต state ตัวเลขเลือด
             currentX += paddingX;
             currentSum += w.power;
-            
+
             updateHpText();
             if (currentSum > targetAmount) {
                 clone.setTint(0xFF5555);

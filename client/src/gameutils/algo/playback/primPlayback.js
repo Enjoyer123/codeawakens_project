@@ -7,6 +7,7 @@
  *   { action: 'prim_relax',       from, to, newDist } ← from prim_relax block
  */
 import { animationController, createTraceBuffer } from './AnimationController';
+import { playSound } from '../../sound/soundManager';
 
 export async function playPrimAnimation(scene, trace, options = {}) {
     // สลับ Display Mode ตรงนี้:
@@ -35,8 +36,8 @@ async function playClassicDisplay(scene, trace, options = {}) {
     let totalMstWeight = 0;
 
     // Status text
-    const statusText = scene.add.text(400, 20, 'Prim: เริ่มสร้าง MST...', {
-        fontSize: '20px', color: '#00ff88', fontStyle: 'bold',
+    const statusText = scene.add.text(scene.scale.width / 2, 870, 'เริ่มสร้าง Minimum Spanning Tree...', {
+        fontSize: '20px', color: '#FFFF00', fontStyle: 'bold',
         stroke: '#000000', strokeThickness: 4
     }).setOrigin(0.5).setDepth(20);
 
@@ -56,7 +57,8 @@ async function playClassicDisplay(scene, trace, options = {}) {
                 if (!pos) break;
 
                 lightNode(scene, node, 0xff8800, 500 / animationController.speed);
-                statusText.setText(`สำรวจเพื่อนบ้านของโหนด ${node}...`);
+                playSound('run');
+                statusText.setText(`สำรวจเส้นทางจากโหนด ${node}...`);
 
                 if (neighbors && neighbors.length > 0) {
                     neighbors.forEach(nbr => {
@@ -81,10 +83,10 @@ async function playClassicDisplay(scene, trace, options = {}) {
                 const pos = getNodePos(scene, node);
                 if (!pos) break;
 
-                statusText.setText(`เลือกโหนด ${node} เข้าสู่ MST (น้ำหนัก = ${dist})`);
+                statusText.setText(`เชื่อมต่อโหนด ${node} (น้ำหนัก = ${dist})`);
 
-                // Highlight the node permanently (or long duration)
                 lightNode(scene, node, 0x00ff88, 1000 / animationController.speed);
+                playSound('run');
 
                 // Draw solid green line from parent to node to represent MST edge
                 if (parent !== undefined && parent !== null && parent !== node) {
@@ -113,9 +115,9 @@ async function playClassicDisplay(scene, trace, options = {}) {
                 const posB = getNodePos(scene, to);
                 if (!posA || !posB) break;
 
-                statusText.setText(`พบเส้นทางไป ${to} ที่ดีกว่า (น้ำหนัก = ${newDist})`);
+                statusText.setText(`พบเส้นทางใกล้กว่าเชื่อมไป ${to} (น้ำหนัก = ${newDist})`);
+                playSound('paper');
 
-                // Flash yellow for potential edge
                 edgeGraphics.lineStyle(5, 0xffdd00, 1.0);
                 edgeGraphics.lineBetween(posA.x, posA.y, posB.x, posB.y);
 
@@ -134,7 +136,7 @@ async function playClassicDisplay(scene, trace, options = {}) {
 
     // Finished
     const finalWeight = options.result !== undefined ? options.result : totalMstWeight;
-    statusText.setText(`สร้าง Minimum Spanning Tree สำเร็จ!\nน้ำหนักรวม (Weight) = ${finalWeight}`);
+    statusText.setText(`สร้าง Minimum Spanning Tree เสร็จสิ้น\nน้ำหนักรวม: ${finalWeight}`).setColor('#00FF00');
     await sleep(4000);
     statusText.destroy();
 }

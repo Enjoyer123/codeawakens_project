@@ -32,21 +32,7 @@ export function defineMathBlocks() {
     },
   };
 
-  Blockly.Blocks["math_max"] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField("Max");
-      this.appendValueInput("A")
-        .setCheck("Number")
-        .appendField("between");
-      this.appendValueInput("B")
-        .setCheck("Number")
-        .appendField("and");
-      this.setOutput(true, "Number");
-      this.setColour(230);
-      this.setTooltip("หาค่าสูงสุดระหว่าง 2 จำนวน");
-    },
-  };
+
 
   Blockly.Blocks["math_min"] = {
     init: function () {
@@ -82,25 +68,7 @@ export function defineMathBlocks() {
     },
   };
 
-  // math_min_max (fallback for non-existent blocks in XML)
-  Blockly.Blocks["math_min_max"] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField(new Blockly.FieldDropdown([
-          ["Max", "MAX"],
-          ["Min", "MIN"]
-        ]), "OP");
-      this.appendValueInput("A")
-        .setCheck("Number")
-        .appendField("between");
-      this.appendValueInput("B")
-        .setCheck("Number")
-        .appendField("and");
-      this.setOutput(true, "Number");
-      this.setColour(230);
-      this.setTooltip("หาค่าสูงสุดหรือต่ำสุดระหว่าง 2 จำนวน");
-    },
-  };
+
 
   Blockly.Blocks["text"] = {
     init: function () {

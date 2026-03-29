@@ -1,4 +1,4 @@
-import { rescuePersonVisual, collectTreasureVisual } from './collection';
+import { rescuePersonVisual } from './collection';
 import { playSound } from '../sound/soundManager';
 
 /**
@@ -19,13 +19,3 @@ export async function playRescueAnimation(scene, actionData, options = {}) {
     }
 }
 
-/**
- * Handles playing the visual animation for collecting a treasure.
- */
-export async function playCollectAnimation(scene, actionData, options = {}) {
-    if (!scene || !actionData.success) return;
-
-    if (collectTreasureVisual) {
-        collectTreasureVisual(scene, actionData.nodeId);
-    }
-}

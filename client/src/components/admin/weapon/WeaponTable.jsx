@@ -32,11 +32,6 @@ const WeaponTable = ({ weapons, onEdit, onDelete, onManageImages }) => {
                     <div className="text-sm font-medium text-gray-900">
                       {weapon.weapon_name}
                     </div>
-                    {weapon.description && (
-                      <div className="text-sm text-gray-500">
-                        {weapon.description}
-                      </div>
-                    )}
                   </div>
                 </div>
               </td>

@@ -37,7 +37,7 @@ const TestPage = () => {
   if (isTestsError) {
     const isMissingLevelsError = testsError?.response?.status === 403 && testsError?.response?.data?.missing_levels;
     if (!isMissingLevelsError) {
-      return <PageError message={testsError?.message} title="Failed to load tests" />;
+      return <PageError message={testsError?.message} title="เกิดข้อผิดพลาดในการโหลดข้อสอบ" />;
     }
   }
 
@@ -45,7 +45,7 @@ const TestPage = () => {
   const [result, setResult] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  
+
   const { alertDialog, showAlert } = useAlertDialog();
 
   // Derived State
@@ -117,7 +117,7 @@ const TestPage = () => {
     if (unansweredCount > 0) {
       showAlert(
         'ยืนยันการส่งคำตอบ',
-        `You have ${unansweredCount} unanswered questions.\nAre you sure you want to submit?`,
+        `คุณยังไม่ได้ตอบคำถาม ${unansweredCount} ข้อ\nคุณแน่ใจหรือไม่ว่าต้องการส่งคำตอบ?`,
         performSubmit,
         { showCancel: true }
       );
@@ -151,7 +151,7 @@ const TestPage = () => {
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <h1 className="text-2xl font-bold text-gray-900">{displayType}</h1>
-          <p className="text-gray-500">Please answer all questions to proceed.</p>
+          <p className="text-gray-500">โปรดตอบคำถามให้ครบถ้วนก่อนส่งคำตอบ</p>
         </div>
 
         {error && (
@@ -224,9 +224,9 @@ const TestPage = () => {
             onClick={handleSubmit}
             disabled={submitting}
             size="lg"
-            className="w-full md:w-auto min-w-[200px]"
+            className="w-full md:w-auto min-w-[200px] bg-[#7048e8] hover:bg-[#5b37cc]"
           >
-            {submitting ? 'Submitting...' : 'Submit Answers'}
+            {submitting ? 'กำลังส่งคำตอบ...' : 'ส่งคำตอบ'}
           </Button>
         </div>
       </div>

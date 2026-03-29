@@ -1,6 +1,6 @@
-// Subset Sum Backtracking Animation Playback
 import { animationController, createTraceBuffer } from './AnimationController';
 import { createTreeRenderer } from './TreeRenderer';
+import { playSound } from '../../sound/soundManager';
 
 export async function playSubsetSumBacktrackAnimation(scene, trace, options = {}) {
     // สลับ Display Mode ตรงนี้:
@@ -69,19 +69,20 @@ async function playTreeDisplay(scene, trace, options) {
 
             if (currentSum === targetSum) {
                 tree.setState(id, 'solved');
-                statusText.setText(`✅ ผลรวมพอดีเป๊ะ! (Sum = ${currentSum})`).setColor('#00FF88');
+                statusText.setText(`ผลรวมตรงตามเป้าหมาย (Sum = ${currentSum})`)
             } else if (currentSum > targetSum) {
                 tree.setState(id, 'dead');
-                statusText.setText(`❌ ผลรวมเกิน! (${currentSum} > ${targetSum})`).setColor('#FF4444');
+                statusText.setText(`ผลรวมเกินเป้าหมาย (${currentSum} > ${targetSum})`)
             } else {
                 tree.setState(id, 'active');
-                statusText.setText(`หยิบชิ้น ${idx + 1} (Sum = ${currentSum})`).setColor('#00FF88');
+                statusText.setText(`เลือกชิ้น ${idx + 1} (Sum = ${currentSum})`)
             }
 
             path.push(id);
 
             tree.relayout();
             tree.redraw();
+            playSound('run');
             await sleep(baseDelay * 0.6);
         }
         else if (step.action === 'exclude') {
@@ -102,12 +103,13 @@ async function playTreeDisplay(scene, trace, options) {
             const id = tree.addNode(parentId, -1, currentSum, `Skip`); // -1 = ไม่ได้ใช้นักรบตัวไหนเลย
 
             tree.setState(id, 'active');
-            statusText.setText(`⏭️ ข้ามชิ้น ${idx + 1} (Sum = ${currentSum})`).setColor('#FFA500');
+            statusText.setText(`ไม่เลือกชิ้น ${idx + 1} (Sum = ${currentSum})`)
 
             path.push(id);
 
             tree.relayout();
             tree.redraw();
+            playSound('run');
             await sleep(baseDelay * 0.6);
         }
         else if (step.action === 'reset' || step.action === 'backtrack') {
@@ -124,13 +126,13 @@ async function playTreeDisplay(scene, trace, options) {
                 currentSum = tree.nodes[parentId].amount;
             }
 
-            statusText.setText('↩ Backtrack (ย้อนกลับ)').setColor('#FF9944');
+            statusText.setText('ย้อนกลับไปทางเลือกก่อนหน้า')
             await sleep(baseDelay * 0.4);
         }
         else if (step.action === 'consider') {
             const idx = step.index;
             const warrior = warriors[idx];
-            statusText.setText(`พิจารณาชิ้นที่ ${idx + 1}` + (warrior ? ` (Power: ${warrior.power})` : '')).setColor('#3498db');
+            statusText.setText(`พิจารณาชิ้นที่ ${idx + 1}` + (warrior ? ` (Power: ${warrior.power})` : ''))
             await sleep(baseDelay * 0.4);
         }
     }
@@ -160,7 +162,7 @@ async function playTreeDisplay(scene, trace, options) {
     tree.redraw();
 
     if (foundSolution) {
-        statusText.setText(`✅ สำเร็จ! พบผลรวมตรงตามเป้าหมาย (Sum = ${targetSum})`).setColor('#00FF88');
+        statusText.setText(`ค้นหาเสร็จสิ้น พบผลรวมตรงเป้า`).setColor('#00FF88');
         await sleep(baseDelay);
 
         // ให้ Tree จางหายไปเพื่อให้เห็นฉากกระโดดชัดเจน (ตามแผน ไม่จางก็ได้ แต่เคืองตา อาจจะจางแค่ 0.1 หรือปล่อยไว้)
@@ -183,9 +185,10 @@ async function playTreeDisplay(scene, trace, options) {
                 targets: w.sprite,
                 x: px,
                 y: centerY,
-                scale: 2.0, // ขยายขนาดตอนบินมาโชว์ตัว
+                scale: 2.0,
                 duration: 800 / animationController.speed,
                 ease: 'Back.easeOut',
+                onStart: () => playSound('paper'),
                 onComplete: () => {
                     scene.tweens.add({
                         targets: w.sprite,
@@ -214,7 +217,7 @@ async function playTreeDisplay(scene, trace, options) {
 
         await sleep(baseDelay * 1.5);
     } else {
-        statusText.setText(`❌ ไม่พบคำตอบที่ทำผลรวมได้ ${targetSum}`).setColor('#FF4444');
+        statusText.setText(`ค้นหาเสร็จสิ้น ไม่พบชุดตัวเลขที่รวมได้ตรงเป้า`).setColor('#FF4444');
         await sleep(baseDelay * 2.0);
     }
 }

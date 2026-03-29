@@ -13,7 +13,7 @@ import EmeiForm from '../algo_forms/EmeiForm';
  * Uses algo_data.type to render the specific sub-form.
  * data = algo_data.payload
  */
-const AlgoDataForm = ({ algoType, data, onChange }) => {
+const AlgoDataForm = ({ algoType, data, onChange, showAlert }) => {
     const [showJson, setShowJson] = useState(false);
     const [jsonString, setJsonString] = useState('');
     const [jsonError, setJsonError] = useState(null);
@@ -66,11 +66,11 @@ const AlgoDataForm = ({ algoType, data, onChange }) => {
 
     // Dynamic Form Rendering
     const forms = {
-        'COINCHANGE': <CoinChangeForm data={data} onChange={onChange} />,
-        'KNAPSACK': <KnapsackForm data={data} onChange={onChange} />,
-        'SUBSETSUM': <SubsetSumForm data={data} onChange={onChange} />,
-        'NQUEEN': <NQueenForm data={data} onChange={onChange} />,
-        'EMEI': <EmeiForm data={data} onChange={onChange} />
+        'COINCHANGE': <CoinChangeForm data={data} onChange={onChange} showAlert={showAlert} />,
+        'KNAPSACK': <KnapsackForm data={data} onChange={onChange} showAlert={showAlert} />,
+        'SUBSETSUM': <SubsetSumForm data={data} onChange={onChange} showAlert={showAlert} />,
+        'NQUEEN': <NQueenForm data={data} onChange={onChange} showAlert={showAlert} />,
+        'EMEI': <EmeiForm data={data} onChange={onChange} showAlert={showAlert} />
     };
 
     const SpecificForm = forms[algoType];

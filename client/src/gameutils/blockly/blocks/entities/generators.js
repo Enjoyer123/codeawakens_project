@@ -9,11 +9,9 @@ export function defineEntityGenerators() {
         return 'await collectCoin();\n';
     };
 
-    javascriptGenerator.forBlock["have_coin"] = function (block) {
-        return ['haveCoin()', javascriptGenerator.ORDER_FUNCTION_CALL];
+    javascriptGenerator.forBlock["has_coin"] = function (block) {
+        return ['hasCoin()', javascriptGenerator.ORDER_FUNCTION_CALL];
     };
-
-    javascriptGenerator.forBlock["has_coin"] = javascriptGenerator.forBlock["have_coin"];
 
     javascriptGenerator.forBlock["swap_coins"] = function (block) {
         const index1 = javascriptGenerator.valueToCode(block, 'INDEX1', javascriptGenerator.ORDER_ATOMIC) || '0';

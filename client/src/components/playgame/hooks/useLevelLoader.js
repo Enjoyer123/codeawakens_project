@@ -158,11 +158,6 @@ export function useLevelInitializer({
   useEffect(() => {
     if (!levelData) return;
 
-    // Check if we already initialized this exact level
-    if (initRef.current === levelData.level_id) {
-      return; // Skip re-initialization on background refetch
-    }
-
     const initializeLevel = async () => {
       try {
         // 1. Build enabled blocks + patterns

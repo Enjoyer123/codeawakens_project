@@ -31,7 +31,6 @@ const WeaponFormDialog = ({
   const [formData, setFormData] = useState({
     weapon_key: '',
     weapon_name: '',
-    description: '',
     combat_power: 0,
     weapon_type: 'melee',
   });
@@ -47,7 +46,6 @@ const WeaponFormDialog = ({
         setFormData({
           weapon_key: editingWeapon.weapon_key,
           weapon_name: editingWeapon.weapon_name,
-          description: editingWeapon.description || '',
           combat_power: editingWeapon.combat_power || 0,
           weapon_type: editingWeapon.weapon_type,
         });
@@ -55,7 +53,6 @@ const WeaponFormDialog = ({
         setFormData({
           weapon_key: '',
           weapon_name: '',
-          description: '',
           combat_power: 0,
           weapon_type: 'melee',
         });
@@ -137,13 +134,6 @@ const WeaponFormDialog = ({
             onChange={(e) => handleChange('weapon_name', e.target.value)}
             placeholder="มือเปล่า"
             required
-          />
-          <FormInput
-            label="Description"
-            name="description"
-            value={formData.description || ''}
-            onChange={(e) => handleChange('description', e.target.value)}
-            placeholder="อาวุธพื้นฐานสำหรับผู้เริ่มต้น"
           />
           <div className={gridClassName}>
             <FormInput

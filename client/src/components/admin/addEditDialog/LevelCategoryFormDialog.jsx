@@ -31,7 +31,6 @@ const LevelCategoryFormDialog = ({
     description: '',
     item_enable: false,
     item: null,
-    difficulty_order: 1,
     block_key: '',
   });
 
@@ -60,9 +59,8 @@ const LevelCategoryFormDialog = ({
         setFormData({
           category_name: editingLevelCategory.category_name,
           description: editingLevelCategory.description || '',
-          item_enable: editingLevelCategory.item_enable || false,
+          item_enable: items.length > 0,
           item: items,
-          difficulty_order: editingLevelCategory.difficulty_order,
           block_key: blockKeyDisplay,
         });
       } else {
@@ -71,7 +69,6 @@ const LevelCategoryFormDialog = ({
           description: '',
           item_enable: false,
           item: null,
-          difficulty_order: maxOrder + 1,
           block_key: '',
         });
       }
@@ -180,7 +177,6 @@ const LevelCategoryFormDialog = ({
         category_name: formData.category_name.trim(),
         description: formData.description.trim(),
         item: itemValue,
-        difficulty_order: parseInt(formData.difficulty_order),
         block_key: blockKeyValue,
       };
 

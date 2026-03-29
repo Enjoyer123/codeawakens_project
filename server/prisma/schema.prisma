@@ -37,8 +37,7 @@ model LevelCategory {
   category_id      Int                 @id @default(autoincrement())
   category_name    String
   description      String
-  item_enable      Boolean
-  difficulty_order Int
+  item_enable      Boolean  @default(false)
   block_key        Json?
   background_image String?
   coordinates      Json?    // { "top": 20.44, "left": 73.3 }
@@ -243,7 +242,6 @@ model Test {
   test_id       Int        @id @default(autoincrement())
   test_type     TestType
   question      String     @db.Text
-  description   String?    @db.Text
   test_image    String?
   is_active     Boolean    @default(true)
   created_at    DateTime   @default(now())
@@ -322,7 +320,6 @@ model UserNotification {
   notification_id      Int
   user_id              Int
   is_read              Boolean      @default(false)
-  read_at              DateTime?
   created_at           DateTime     @default(now())
   notification         Notification @relation(fields: [notification_id], references: [notification_id], onDelete: Cascade)
   user                 User         @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
@@ -335,7 +332,6 @@ model Weapon {
   weapon_id     Int            @id @default(autoincrement())
   weapon_key    String         @unique
   weapon_name   String
-  description   String?
   combat_power  Int            @default(0)
   weapon_type   WeaponType
   created_at    DateTime       @default(now())
@@ -366,7 +362,6 @@ model LevelBlock {
   level_block_id Int   @id @default(autoincrement())
   level_id       Int
   block_id       Int
-  order_sequence Int?
   block          Block @relation(fields: [block_id], references: [block_id], onDelete: Cascade)
   level          Level @relation(fields: [level_id], references: [level_id], onDelete: Cascade)
 
@@ -452,11 +447,7 @@ enum NotificationType {
 }
 
 enum RewardType {
-  weapon
-  block
   badge
-  experience
-  coin
 }
 
 enum WeaponType {
@@ -478,7 +469,6 @@ enum BlockCategory {
 enum ItemType {
   coin_positions
   people
-  treasures
 }
 
 enum TestType {

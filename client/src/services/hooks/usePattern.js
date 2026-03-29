@@ -82,9 +82,11 @@ export const useCreatePattern = () => {
             return await createPattern(getToken, patternData);
         },
         onSuccess: (data, variables) => {
-            // Invalidate level-related pattern lists if any (optional)
-            queryClient.invalidateQueries(['patterns', variables.levelId]);
-            // Maybe invalidate checks later
+            // Invalidate level-related pattern lists
+            queryClient.invalidateQueries({ queryKey: ['patterns'] });
+            // Invalidate the level data itself because GameCore uses embedded patterns
+            queryClient.invalidateQueries({ queryKey: ['level'] });
+            queryClient.invalidateQueries({ queryKey: ['levels'] });
         }
     });
 };
@@ -100,7 +102,12 @@ export const useUpdatePattern = () => {
         },
         onSuccess: (data, variables) => {
             // Update the cache for this specific pattern
-            queryClient.invalidateQueries(['pattern', variables.patternId]);
+            queryClient.invalidateQueries({ queryKey: ['pattern', variables.patternId] });
+            // Invalidate the patterns list so the preview array gets fresh XML data
+            queryClient.invalidateQueries({ queryKey: ['patterns'] });
+            // Invalidate the level data itself because GameCore uses embedded patterns
+            queryClient.invalidateQueries({ queryKey: ['level'] });
+            queryClient.invalidateQueries({ queryKey: ['levels'] });
         }
     });
 };
@@ -117,6 +124,9 @@ export const useDeletePattern = () => {
         onSuccess: (data, variables) => {
             // Invalidate all pattern lists
             queryClient.invalidateQueries({ queryKey: ['patterns'] });
+            // Invalidate levels since their pattern counts/data might change
+            queryClient.invalidateQueries({ queryKey: ['level'] });
+            queryClient.invalidateQueries({ queryKey: ['levels'] });
         }
     });
 };
@@ -132,8 +142,8 @@ export const useUnlockPattern = () => {
         },
         onSuccess: (data, patternId) => {
             // Invalidate specific pattern and patterns list
-            queryClient.invalidateQueries(['pattern', patternId]);
-            queryClient.invalidateQueries(['patterns']);
+            queryClient.invalidateQueries({ queryKey: ['pattern', patternId] });
+            queryClient.invalidateQueries({ queryKey: ['patterns'] });
         }
     });
 };
@@ -149,8 +159,8 @@ export const useUnlockLevel = () => {
         },
         onSuccess: (data, levelId) => {
             // Invalidate specific level and levels list
-            queryClient.invalidateQueries(['level', levelId]);
-            queryClient.invalidateQueries(['levels']);
+            queryClient.invalidateQueries({ queryKey: ['level', levelId] });
+            queryClient.invalidateQueries({ queryKey: ['levels'] });
         }
     });
 };

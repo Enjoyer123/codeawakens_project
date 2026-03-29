@@ -67,7 +67,56 @@ exports.getVictoryConditionById = async (req, res) => {
   }
 };
 
-// Create victory condition function removed: Creation only allowed via seed/migration
+// Create victory condition
+exports.createVictoryCondition = async (req, res) => {
+  try {
+    const {
+      type,
+      description,
+      check,
+      is_available,
+    } = req.body;
+
+    if (!type || !description || !check) {
+      return res.status(400).json({
+        message: "Missing required fields: type, description, check"
+      });
+    }
+
+    const trimmedType = type.trim();
+
+    // Check case-insensitive
+    const existingVictoryCondition = await prisma.victoryCondition.findFirst({
+      where: {
+        type: {
+          equals: trimmedType,
+          mode: 'insensitive'
+        }
+      },
+    });
+
+    if (existingVictoryCondition) {
+      return res.status(409).json({ message: `A victory condition with this type "${trimmedType}" already exists.` });
+    }
+
+    const victoryCondition = await prisma.victoryCondition.create({
+      data: {
+        type: trimmedType,
+        description: description.trim(),
+        check: check.trim(),
+        is_available: is_available === true || is_available === 'true' || is_available === undefined,
+      },
+    });
+
+    res.status(201).json({
+      message: "Victory condition created successfully",
+      victoryCondition,
+    });
+  } catch (error) {
+    console.error("Error creating victory condition:", error);
+    res.status(500).json({ message: "Error creating victory condition", error: error.message });
+  }
+};
 
 // Update victory condition
 exports.updateVictoryCondition = async (req, res) => {

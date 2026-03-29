@@ -1,5 +1,5 @@
 import {
-    collectCoin, haveCoin, getCoinCount, getCoinValue, swapCoins, compareCoins, isSorted
+    collectCoin, hasCoin, getCoinCount, getCoinValue, swapCoins, compareCoins, isSorted
 } from '../../blockly/blocks/entities/coin_helpers';
 import {
     rescuePersonAtNode, hasPerson, personRescued, getPersonCount
@@ -55,7 +55,7 @@ export const buildExecutionContext = ({
     const context = {
         map, all_nodes,
         moveForward, turnLeft, turnRight, hit, foundMonster, nearPit, atGoal,
-        collectCoin, haveCoin, getCoinCount, getCoinValue, swapCoins, compareCoins, isSorted,
+        collectCoin, hasCoin, getCoinCount, getCoinValue, swapCoins, compareCoins, isSorted,
         getPlayerCoins, addCoinToPlayer, clearPlayerCoins: clearPlayerCoinsUtil, swapPlayerCoins, comparePlayerCoins,
         getPlayerCoinValue, getPlayerCoinCount, arePlayerCoinsSorted,
         rescuePersonAtNode,

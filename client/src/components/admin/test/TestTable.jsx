@@ -35,7 +35,6 @@ const TestTable = ({ tests, onEdit, onDelete }) => {
               </td>
               <td className="px-6 py-4">
                 <div className="text-sm font-medium text-gray-900">{test.question}</div>
-                {test.description && <div className="text-xs text-gray-500">{test.description}</div>}
               </td>
               <td className="px-6 py-4 text-sm text-gray-500">
                 <ul className="list-disc pl-4 space-y-1">

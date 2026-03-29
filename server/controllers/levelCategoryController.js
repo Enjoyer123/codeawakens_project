@@ -39,9 +39,6 @@ exports.getAllLevelCategories = async (req, res) => {
           },
         },
       },
-      orderBy: {
-        difficulty_order: "asc",
-      },
     });
 
     // Data for dynamic unlocks and visibility
@@ -268,19 +265,16 @@ exports.getLevelCategoryById = async (req, res) => {
 exports.createLevelCategory = async (req, res) => {
   try {
     const {
-      category_name,
-      description,
       item_enable,
       item,
-      difficulty_order,
       block_key,
       background_image,
       coordinates
     } = req.body;
 
-    if (!category_name || !description || !difficulty_order) {
+    if (!category_name || !description) {
       return res.status(400).json({
-        message: "Missing required fields: category_name, description, difficulty_order"
+        message: "Missing required fields: category_name, description"
       });
     }
 
@@ -311,8 +305,7 @@ exports.createLevelCategory = async (req, res) => {
       data: {
         category_name: trimmedCategoryName,
         description: description.trim(),
-        item_enable: item_enable === true || item_enable === 'true' || item_enable === false,
-        difficulty_order: parseInt(difficulty_order),
+        item_enable: item_enable === true || item_enable === 'true',
         block_key: (block_key && block_key !== 'null' && block_key !== '') ? block_key : null,
         background_image: background_image || null,
         coordinates: coordinates ? JSON.parse(JSON.stringify(coordinates)) : null, // Ensure valid JSON
@@ -360,9 +353,9 @@ exports.updateLevelCategory = async (req, res) => {
       coordinates,
     } = req.body;
 
-    if (!category_name || !description || !difficulty_order) {
+    if (!category_name || !description) {
       return res.status(400).json({
-        message: "Missing required fields: category_name, description, difficulty_order"
+        message: "Missing required fields: category_name, description"
       });
     }
 
@@ -404,7 +397,6 @@ exports.updateLevelCategory = async (req, res) => {
         category_name: category_name.trim(),
         description: description.trim(),
         item_enable: item_enable === true || item_enable === 'true',
-        difficulty_order: parseInt(difficulty_order),
 
         block_key: (block_key && block_key !== 'null' && block_key !== '') ? block_key : null,
         background_image: background_image !== undefined ? background_image : undefined,

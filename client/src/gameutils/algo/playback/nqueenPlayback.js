@@ -7,6 +7,7 @@
  */
 import { animationController, createTraceBuffer } from './AnimationController';
 import { createTreeRenderer } from './TreeRenderer';
+import { playSound } from '../../sound/soundManager';
 
 /**
  * Router: เรียก Display Mode ที่ต้องการ (แค่นี้เท่านั้น ไม่ทำอะไรเพิ่ม)
@@ -33,19 +34,19 @@ async function playTreeDisplay(scene, trace, options) {
     const sleep = (ms) => animationController.sleep(ms);
 
     // Status text (ย้ายไปอยู่มุมขวาล่างให้เหมือนด่านอื่นๆ)
-    const statusText = scene.add.text(1050, 420, 'เริ่มสร้าง Tree เครือข่ายการวาง...', {
+    const statusText = scene.add.text(1050, 420, 'เริ่มสำรวจรูปแบบการจัดวาง...', {
         fontSize: '20px', color: '#FFFF00', fontStyle: 'bold', stroke: '#000', strokeThickness: 4, align: 'center', wordWrap: { width: 220 }
     }).setOrigin(0.5, 0).setDepth(20);
 
     const tree = createTreeRenderer(scene, canvasW, canvasH);
     tree.container.setY(30);
-    
+
     // Root node: start with an empty board represented by amount=0 just to show root
     const rootId = tree.addNode(null, -1, 0, 'Root');
     tree.setState(rootId, 'active');
-    
+
     // stack เก็บ node id เอาไว้ backtracking
-    const path = [rootId]; 
+    const path = [rootId];
     let currentQueensPlaced = 0;
 
     tree.relayout();
@@ -53,14 +54,14 @@ async function playTreeDisplay(scene, trace, options) {
 
     for await (const step of createTraceBuffer(trace)) {
         if (!scene?.scene?.isActive(scene.scene.key)) break;
-        
+
         // nQueens trace events: consider, place, remove
         if (step.action === 'consider') {
             const r = step.row;
             const c = step.col;
             const isSafe = step.safe !== undefined ? step.safe : true;
-            statusText.setText(`กำลังพิจารณา (Row ${r}, Col ${c})`).setColor('#3498db');
-            
+            statusText.setText(`พิจารณาช่อง (แถว ${r}, คอลัมน์ ${c})`)
+
             // Highlight the fact we are considering
             await sleep(baseDelay * 0.4);
         }
@@ -68,38 +69,39 @@ async function playTreeDisplay(scene, trace, options) {
             const r = step.row;
             const c = step.col;
             const parentId = path[path.length - 1];
-            
-            const currentQueensPlaced = (parentId !== null && tree.nodes[parentId].amount !== undefined) 
+
+            const currentQueensPlaced = (parentId !== null && tree.nodes[parentId].amount !== undefined)
                 ? tree.nodes[parentId].amount + 1 : 1;
-            
+
             // Edge label โชว์ Row,Col
             const id = tree.addNode(parentId, c, currentQueensPlaced, `(R${r},C${c})`);
-            
+
             if (currentQueensPlaced === n) {
                 tree.setState(id, 'solved');
-                statusText.setText(`✅ วางครบทั้ง ${n} ตัว! พบคำตอบ`).setColor('#00FF88');
+                statusText.setText(`วางกระดานได้สมบูรณ์ พบการจัดวางที่ถูกต้อง`)
             } else {
                 tree.setState(id, 'active');
-                statusText.setText(`วาง Queen ที่ (Row ${r}, Col ${c}) | รวม: ${currentQueensPlaced}/${n}`).setColor('#00FF88');
+                statusText.setText(`วางหมากที่ (แถว ${r}, คอลัมน์ ${c})`)
             }
 
             path.push(id);
-            
+
             tree.relayout();
             tree.redraw();
+            playSound('run');
             await sleep(baseDelay * 0.6);
         }
         else if (step.action === 'remove') {
             const r = step.row;
             const c = step.col;
             const deadId = path.pop();
-            
+
             if (deadId !== undefined && tree.nodes[deadId]?.state !== 'solved') {
                 tree.setState(deadId, 'dead');
                 tree.redraw();
             }
-            
-            statusText.setText(`↩ หยิบ Queen ออกจาก (Row ${r}, Col ${c}) (Backtrack)`).setColor('#FF9944');
+
+            statusText.setText(`นำหมากออกจาก (แถว ${r}, คอลัมน์ ${c}) และพิจารณาช่องถัดไป`).setColor('#FF9944');
             await sleep(baseDelay * 0.5);
         }
     }
@@ -119,11 +121,11 @@ async function playTreeDisplay(scene, trace, options) {
 
     tree.relayout();
     tree.redraw();
-    
+
     if (foundSolution) {
-        statusText.setText(`✅ เสร็จแล้ว! ค้นพบรูปแบบการวางที่เป็นไปได้`).setColor('#00FF88');
+        statusText.setText(`ค้นหาเสร็จสิ้น พบแบบจำลองการจัดวาง`).setColor('#00FF88');
     } else {
-        statusText.setText(`❌ ไม่พบรูปแบบการวางที่ตารางขนาด ${n}x${n}`).setColor('#FF4444');
+        statusText.setText(`ค้นหาเสร็จสิ้น ไม่พบชุดรูปแบบการจัดวาง`).setColor('#FF4444');
     }
 
     await sleep(baseDelay * 2.0);

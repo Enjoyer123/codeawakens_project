@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Hook for Phaser game initialization
  */
 
@@ -48,12 +48,25 @@ export function usePhaserGame({
       },
       scale: {
         mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.NO_CENTER
+        autoCenter: Phaser.Scale.CENTER_BOTH
       }
     };
 
     const game = new Phaser.Game(config);
     phaserGameRef.current = game;
+
+    // Use ResizeObserver to detect when the React layout actually finishes settling
+    // and forces Phaser to update its scale based on the real final dimensions.
+    const resizeObserver = new ResizeObserver(() => {
+      if (game && game.scale) {
+        game.scale.refresh();
+      }
+    });
+    resizeObserver.observe(gameRef.current);
+
+    game.events.once('destroy', () => {
+      resizeObserver.disconnect();
+    });
 
     // Prepare data to pass to the scene
     const sceneData = {

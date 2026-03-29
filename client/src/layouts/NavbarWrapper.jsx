@@ -43,7 +43,10 @@ const NavbarWrapper = (props) => {
     navItems = [
       {
         label: 'Contact',
-        path: '/Contact'
+        onClick: () => {
+          if (pathname !== '/') window.location.href = '/#contact';
+          else document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+        }
       },
     ];
   } else if (role === 'admin') {
@@ -54,7 +57,10 @@ const NavbarWrapper = (props) => {
       },
       {
         label: 'Contact',
-        path: '/Contact'
+        onClick: () => {
+          if (pathname !== '/') window.location.href = '/#contact';
+          else document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+        }
       },
       {
         label: 'Play',
@@ -85,7 +91,10 @@ const NavbarWrapper = (props) => {
       },
       {
         label: 'Contact',
-        path: '/Contact'
+        onClick: () => {
+          if (pathname !== '/') window.location.href = '/#contact';
+          else document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+        }
       },
       {
         label: 'Play',

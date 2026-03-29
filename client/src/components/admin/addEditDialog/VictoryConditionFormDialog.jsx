@@ -10,15 +10,15 @@ import {
 import { Button } from '@/components/ui/button';
 import FormInput from '@/components/admin/formFields/FormInput';
 import FormCheckbox from '@/components/admin/formFields/FormCheckbox';
-import { useUpdateVictoryCondition } from '@/services/hooks/useVictoryConditions';
+import { useUpdateVictoryCondition, useCreateVictoryCondition } from '@/services/hooks/useVictoryConditions';
 
 const VictoryConditionFormDialog = ({
   open,
   onOpenChange,
   editingVictoryCondition,
 }) => {
-  // Mutations
   const { mutateAsync: updateVictoryConditionAsync } = useUpdateVictoryCondition();
+  const { mutateAsync: createVictoryConditionAsync } = useCreateVictoryCondition();
 
   // Internal Form State
   const [formData, setFormData] = useState({
@@ -88,6 +88,8 @@ const VictoryConditionFormDialog = ({
           victoryConditionId: editingVictoryCondition.victory_condition_id,
           data: payload
         });
+      } else {
+        await createVictoryConditionAsync(payload);
       }
       onOpenChange(false);
     } catch (err) {

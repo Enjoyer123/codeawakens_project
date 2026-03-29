@@ -26,7 +26,6 @@ const TestCreateEditModal = ({
 }) => {
     const [formData, setFormData] = useState({
         question: '',
-        description: '',
         test_type: 'PreTest',
         part: 1,
         is_active: true,
@@ -55,7 +54,6 @@ const TestCreateEditModal = ({
             if (testToEdit) {
                 setFormData({
                     question: testToEdit.question,
-                    description: testToEdit.description || '',
                     test_type: testToEdit.test_type,
                     part: testToEdit.part || 1,
                     is_active: testToEdit.is_active,
@@ -71,7 +69,6 @@ const TestCreateEditModal = ({
             } else {
                 setFormData({
                     question: '',
-                    description: '',
                     test_type: activeTab || 'PreTest',
                     part: 1,
                     is_active: true,
@@ -244,14 +241,6 @@ const TestCreateEditModal = ({
                         <Textarea
                             value={formData.question}
                             onChange={(e) => setFormData({ ...formData, question: e.target.value })}
-                        />
-                    </div>
-
-                    <div className="grid gap-2">
-                        <Label>Description</Label>
-                        <Input
-                            value={formData.description}
-                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         />
                     </div>
 

@@ -10,6 +10,7 @@
 import Phaser from 'phaser';
 import { updateWeaponPosition } from '../../combat/weaponEffects';
 import { animationController, createTraceBuffer } from './AnimationController';
+import { playSound } from '../../sound/soundManager';
 
 /**
  * เล่น DFS/BFS Animation จาก trace array (Router Function)
@@ -42,7 +43,7 @@ async function playDfsBfsDisplay(scene, trace, options = {}) {
     const deadEndGraphics = scene.add.graphics().setDepth(2.2);       // เส้นตาย (เทา)
     const answerGraphics = scene.add.graphics().setDepth(3);          // เส้นคำตอบ (ฟ้า)
 
-    const statusText = scene.add.text(scene.scale.width / 2, 50, 'เริ่มการสำรวจกราฟ...', {
+    const statusText = scene.add.text(scene.scale.width / 2, 870, 'เริ่มการสำรวจกราฟ...', {
         fontSize: '24px', color: '#FFFF00', fontStyle: 'bold', stroke: '#000', strokeThickness: 4
     }).setOrigin(0.5).setDepth(100);
 
@@ -65,7 +66,7 @@ async function playDfsBfsDisplay(scene, trace, options = {}) {
                     const backtrackTo = findCommonPrefixLength(prevPath, newPath);
 
                     if (backtrackTo < backtrackFrom) {
-                        statusText.setText(`เจอทางตัน! ถอยกลับ (Backtrack) จากโหนด ${prevPath[prevPath.length - 1]}`).setColor('#FF4444');
+                        statusText.setText(`ย้อนกลับจากโหนด ${prevPath[prevPath.length - 1]}`).setColor('#FF4444');
                         // เจอจุดย้อน ทิ้งรอยเส้นสีแดง (Dead end, เปลี่ยนจากสีเทาเพื่อความชัดเจน)
                         drawPath(deadEndGraphics, scene, prevPath.slice(Math.max(0, backtrackTo - 1)), 0xff4444, 0.8, 5);
                         await sleep(baseDelay * 0.4);
@@ -73,7 +74,7 @@ async function playDfsBfsDisplay(scene, trace, options = {}) {
                 }
 
                 const tipNode = currentPath[currentPath.length - 1];
-                statusText.setText(`กำลังเดินไปที่โหนด ${tipNode} (เส้นทาง: ${currentPath.join(' → ')})`).setColor('#FFFF00');
+                statusText.setText(`กำลังพิจารณาโหนด ${tipNode} (เส้นทาง: ${currentPath.join(' → ')})`).setColor('#FFFF00');
 
                 // วาดเส้นสำรวจปัจจุบัน (สีเหลือง)
                 explorationGraphics.clear();
@@ -84,6 +85,7 @@ async function playDfsBfsDisplay(scene, trace, options = {}) {
                 // Highlight โหนดที่กำลังยืนอยู่ (ปลายทางของ path)
                 clearScanningHighlights(scene);
                 highlightNode(scene, tipNode, 0x00ff00, 700);
+                playSound('run');
                 markNodeAsVisited(scene, tipNode);
 
                 await sleep(baseDelay * 0.4);
@@ -92,8 +94,8 @@ async function playDfsBfsDisplay(scene, trace, options = {}) {
 
             case 'visit': {
                 const tipNode = step.node;
-                
-                statusText.setText(`มองหาทางไปต่อจากโหนด ${tipNode}...`).setColor('#00FFFF');
+
+                statusText.setText(`สำรวจเส้นทางจากโหนด ${tipNode}...`).setColor('#FFFF00');
 
                 // แสดง neighbors (flash สั้นๆ)
                 if (step.neighbors && step.neighbors.length > 0) {
@@ -113,10 +115,11 @@ async function playDfsBfsDisplay(scene, trace, options = {}) {
             }
 
             case 'move_along_path': {
-                statusText.setText(`เดินตามเส้นทางคำตอบไปยังเป้าหมาย!`).setColor('#00FF88');
+                statusText.setText(`เส้นทางไปสู่เป้าหมาย`).setColor('#00FF88');
                 clearScanningHighlights(scene);
                 explorationGraphics.clear();
-                deadEndGraphics.clear(); // ลบเส้นตายตอนจบ
+                deadEndGraphics.clear();
+                playSound('paper');
 
                 if (step.path && step.path.length >= 2) {
                     statusText.setText(`เส้นทาง: ${step.path.join(' → ')}`).setColor('#00FF88');

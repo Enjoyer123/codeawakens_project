@@ -6,7 +6,6 @@
 export const ITEM_TYPES = {
   COIN_POSITIONS: 'coin_positions',
   PEOPLE: 'people',
-  TREASURES: 'treasures',
 };
 
 /**
@@ -15,7 +14,6 @@ export const ITEM_TYPES = {
 export const ITEM_TYPE_LABELS = {
   [ITEM_TYPES.COIN_POSITIONS]: 'Coins (เหรียญ)',
   [ITEM_TYPES.PEOPLE]: 'People (คน)',
-  [ITEM_TYPES.TREASURES]: 'Treasures (สมบัติ)',
 };
 
 /**
@@ -24,7 +22,6 @@ export const ITEM_TYPE_LABELS = {
 export const ITEM_TYPE_SHORT_LABELS = {
   [ITEM_TYPES.COIN_POSITIONS]: 'Coins',
   [ITEM_TYPES.PEOPLE]: 'People',
-  [ITEM_TYPES.TREASURES]: 'Treasures',
 };
 
 /**
@@ -33,7 +30,6 @@ export const ITEM_TYPE_SHORT_LABELS = {
 export const AVAILABLE_ITEMS = [
   { value: ITEM_TYPES.COIN_POSITIONS, label: ITEM_TYPE_LABELS[ITEM_TYPES.COIN_POSITIONS] },
   { value: ITEM_TYPES.PEOPLE, label: ITEM_TYPE_LABELS[ITEM_TYPES.PEOPLE] },
-  { value: ITEM_TYPES.TREASURES, label: ITEM_TYPE_LABELS[ITEM_TYPES.TREASURES] },
 ];
 
 /**

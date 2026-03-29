@@ -3,6 +3,7 @@
  * เลน Animation แบบ DP (Spreadsheet Array 1D / Top-Down)
  */
 import { animationController, createTraceBuffer } from './AnimationController';
+import { playSound } from '../../sound/soundManager';
 
 export async function playCoinChangeDpAnimation(scene, trace, options = {}) {
     // เปลยนไปใช Top-Down ไดถาเพม options.topDown
@@ -54,13 +55,13 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
     let statusText, detailText;
     try {
         statusText = scene.add.text(
-            centerX, startY - 90,
+            centerX, startY - 120,
             'สร้างกระดาน DP Spreadsheet (1D Array)',
             { fontSize: '24px', color: '#FFFF00', fontStyle: 'bold', stroke: '#000', strokeThickness: 4, align: 'center' }
         ).setOrigin(0.5).setDepth(20);
 
         detailText = scene.add.text(
-            centerX, startY - 50,
+            centerX, startY - 80,
             'เตรียมตาราง dp[amount]...',
             { fontSize: '18px', color: '#FFFFFF', fontStyle: 'bold', stroke: '#000', strokeThickness: 3, align: 'center' }
         ).setOrigin(0.5).setDepth(20);
@@ -89,6 +90,7 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
             if (currentAmount <= targetAmount && currentAmount >= 0) {
                 const c = cells[currentAmount];
                 pointerDest.setVisible(true).setPosition(c.cx, c.cy);
+                playSound('run');
                 statusText.setText(`ค้นหาคำตอบสำหรับกระดานช่อง dp[${currentAmount}]`);
                 statusText.setColor('#FFFF00');
                 detailText.setText('เริ่มประเมินกำลังพลแต่ละรูปแบบ...');
@@ -267,6 +269,7 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
                     alpha: 1, x: px, y: py,
                     duration: 800 / animationController.speed,
                     ease: 'Power2',
+                    onStart: () => playSound('paper'),
                     onComplete: () => {
                         // โดดขย่มฉลองชัยชนะ (ตัวละครเท่านั้น)
                         scene.tweens.add({

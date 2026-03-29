@@ -228,26 +228,26 @@ const MapSelect = () => {
       )}
       {/* Pretest Requirement Alert - Blocking Overlay */}
       {isPretestRequired && !loading && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full text-center border-4 border-yellow-400">
-            <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <span className="text-4xl">⚠️</span>
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md border border-gray-100 transform transition-all">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-[#7048e8]/10 rounded-full flex items-center justify-center mb-6 shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#7048e8]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">แจ้งเตือนจากระบบ</h2>
+              <div className="text-base text-gray-600 mb-8 space-y-2">
+                <p>คุณยังไม่ได้ทำแบบทดสอบก่อนเรียน (Pre-test)</p>
+                <p>กรุณาทำแบบทดสอบก่อนเข้าสู่ระบบแผนที่</p>
+              </div>
+              <button
+                onClick={() => navigate('/test/pre')}
+                className="w-full inline-flex justify-center items-center px-6 py-3 bg-[#7048e8] text-white text-lg font-bold rounded-lg hover:bg-[#5b37cc] focus:outline-none focus:ring-4 focus:ring-[#7048e8]/30 transition-all shadow-md active:scale-[0.98]"
+              >
+                เริ่มทำแบบทดสอบ
+              </button>
             </div>
-
-            <h2 className="text-2xl font-bold text-gray-800 mb-2 font-pixel">
-              กรุณาทำแบบทดสอบ
-            </h2>
-            <p className="text-gray-600 mb-8 text-lg">
-              คุณยังไม่มีคะแนน Pre-test<br />
-              โปรดทำแบบทดสอบก่อนเข้าเล่นเกม
-            </p>
-
-            <button
-              onClick={() => navigate('/test/pre')}
-              className="w-full py-4 bg-yellow-500 hover:bg-yellow-400 text-white font-bold text-xl rounded-lg shadow-lg transform transition hover:scale-105 active:scale-95 font-pixel border-b-4 border-yellow-700"
-            >
-              ทำแบบทดสอบ Pretest
-            </button>
           </div>
         </div>
       )}

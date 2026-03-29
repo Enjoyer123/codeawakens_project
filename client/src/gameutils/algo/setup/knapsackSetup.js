@@ -26,7 +26,7 @@ export function setupKnapsack(scene) {
 
     // ความจุของกระเป๋า (วางไว้ด้านล่าง)
     const capacityStr = data.capacity ? `Max: ${data.capacity} kg` : 'กระเป๋า';
-    const capacityText = scene.add.text(bagX, bagY + 100, capacityStr, {
+    const capacityText = scene.add.text(bagX, bagY + 150, capacityStr, {
       fontSize: '24px',
       color: '#ff5555',
       fontStyle: 'bold',

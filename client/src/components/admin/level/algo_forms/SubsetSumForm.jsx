@@ -2,7 +2,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2 } from 'lucide-react';
 
-const SubsetSumForm = ({ data, onChange }) => {
+const SubsetSumForm = ({ data, onChange, showAlert }) => {
     // Both arrays must be synced 
     const warriorsDisplay = data?.warriors_display || [];
 
@@ -31,7 +31,8 @@ const SubsetSumForm = ({ data, onChange }) => {
 
     const addWarrior = () => {
         if (warriorsDisplay.length >= 8) {
-            alert('เพิ่มนักรบได้สูงสุด 8 ตัว เพื่อป้องกันปัญหาประสิทธิภาพของบราวเซอร์');
+            if (showAlert) showAlert('คำเตือน', 'เพิ่มนักรบได้สูงสุด 8 ตัว เพื่อป้องกันปัญหาประสิทธิภาพของบราวเซอร์');
+            else alert('เพิ่มนักรบได้สูงสุด 8 ตัว เพื่อป้องกันปัญหาประสิทธิภาพของบราวเซอร์');
             return;
         }
         const spacing = 150;

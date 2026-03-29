@@ -45,15 +45,13 @@ export const useProfileTab = ({ userDetails, getToken, onUpdateSuccess, showAler
     setUsernameSuccess('');
 
     if (!usernameInput || usernameInput.trim().length < 3) {
-      // We can manage local validation error if we want, or rely on backend
-      // But keeping local simple validation is good UX
-      alert('Username must be at least 3 characters');
+      toast.error('ชื่อผู้ใช้ต้องมีความยาวอย่างน้อย 3 ตัวอักษร');
       return;
     }
 
     try {
       await updateUsernameAsync(usernameInput.trim());
-      setUsernameSuccess('Username updated successfully');
+      setUsernameSuccess('อัปเดตชื่อผู้ใช้เรียบร้อยแล้ว');
       setTimeout(() => setUsernameSuccess(''), 3000);
       setIsEditing(false); // Exit edit mode on success
       if (onUpdateSuccess) onUpdateSuccess();
@@ -67,7 +65,7 @@ export const useProfileTab = ({ userDetails, getToken, onUpdateSuccess, showAler
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file');
+      toast.error('กรุณาเลือกไฟล์รูปภาพ');
       return;
     }
 
@@ -76,7 +74,7 @@ export const useProfileTab = ({ userDetails, getToken, onUpdateSuccess, showAler
 
     try {
       await uploadImageAsync(file);
-      setImageSuccess('Profile image updated successfully');
+      setImageSuccess('อัปเดตรูปโปรไฟล์เรียบร้อยแล้ว');
       setTimeout(() => setImageSuccess(''), 3000);
       if (onUpdateSuccess) onUpdateSuccess();
     } catch (error) {
@@ -89,11 +87,11 @@ export const useProfileTab = ({ userDetails, getToken, onUpdateSuccess, showAler
   };
 
   const handleDeleteImage = () => {
-    showAlert?.('ยืนยันการลบรูป', 'Are you sure you want to delete your profile image?', async () => {
+    showAlert?.('ยืนยันการลบรูป', 'คุณแน่ใจหรือไม่ว่าต้องการลบรูปโปรไฟล์นี้?', async () => {
       setImageSuccess('');
       try {
         await deleteImageAsync();
-        setImageSuccess('Profile image deleted successfully');
+        setImageSuccess('ลบรูปโปรไฟล์เรียบร้อยแล้ว');
         setTimeout(() => setImageSuccess(''), 3000);
         if (onUpdateSuccess) onUpdateSuccess();
       } catch (error) {
