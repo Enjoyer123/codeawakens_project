@@ -176,54 +176,37 @@ const subsetSumExampleXml = `<xml xmlns="https://developers.google.com/blockly/x
                                   </block>
                                 </value>
                                 <next>
-                              <!-- return subsetSum(arr, index+1, sum, target_sum) -->
-                              <block type="procedures_return" id="return_exclude">
-                                <value name="VALUE">
-                                  <block type="procedures_callreturn" id="call_exclude">
-                                    <mutation name="subsetSum">
-                                      <arg name="arr"></arg>
-                                      <arg name="index"></arg>
-                                      <arg name="sum"></arg>
-                                      <arg name="target_sum"></arg>
-                                    </mutation>
-                                    <field name="NAME">subsetSum</field>
-                                    <value name="ARG0">
-                                      <block type="variables_get" id="arr_var_exclude">
-                                        <field name="VAR">arr</field>
+                                  <block type="controls_if" id="try_exclude_item">
+                                    <value name="IF0">
+                                      <block type="procedures_callreturn" id="call_exclude">
+                                        <mutation name="subsetSum"><arg name="arr"></arg><arg name="index"></arg><arg name="sum"></arg><arg name="target_sum"></arg></mutation>
+                                        <field name="NAME">subsetSum</field>
+                                        <value name="ARG0"><block type="variables_get" id="arr_var_exclude"><field name="VAR">arr</field></block></value>
+                                        <value name="ARG1"><block type="math_arithmetic" id="index_plus_one_exclude"><value name="A"><block type="variables_get" id="index_var_exclude"><field name="VAR">index</field></block></value><field name="OP">ADD</field><value name="B"><block type="math_number" id="one_exclude"><field name="NUM">1</field></block></value></block></value>
+                                        <value name="ARG2"><block type="variables_get" id="sum_var_exclude"><field name="VAR">sum</field></block></value>
+                                        <value name="ARG3"><block type="variables_get" id="target_var_exclude"><field name="VAR">target_sum</field></block></value>
                                       </block>
                                     </value>
-                                    <value name="ARG1">
-                                      <block type="math_arithmetic" id="index_plus_one_exclude">
-                                        <value name="A">
-                                          <block type="variables_get" id="index_var_exclude">
-                                            <field name="VAR">index</field>
+                                    <statement name="DO0">
+                                      <block type="procedures_return" id="return_true_exclude">
+                                        <value name="VALUE"><block type="logic_boolean" id="true_value_exclude"><field name="BOOL">TRUE</field></block></value>
+                                      </block>
+                                    </statement>
+                                    <next>
+                                      <block type="subset_sum_reset" id="reset_warrior_end">
+                                        <value name="WARRIOR_INDEX"><block type="variables_get" id="index_var_visual_reset_end"><field name="VAR">index</field></block></value>
+                                        <next>
+                                          <block type="procedures_return" id="return_false_end">
+                                            <value name="VALUE"><block type="logic_boolean" id="false_value_end"><field name="BOOL">FALSE</field></block></value>
                                           </block>
-                                        </value>
-                                        <field name="OP">ADD</field>
-                                        <value name="B">
-                                          <block type="math_number" id="one_exclude">
-                                            <field name="NUM">1</field>
-                                          </block>
-                                        </value>
+                                        </next>
                                       </block>
-                                    </value>
-                                    <value name="ARG2">
-                                      <block type="variables_get" id="sum_var_exclude">
-                                        <field name="VAR">sum</field>
-                                      </block>
-                                    </value>
-                                    <value name="ARG3">
-                                      <block type="variables_get" id="target_var_exclude">
-                                        <field name="VAR">target_sum</field>
-                                      </block>
-                                    </value>
+                                    </next>
                                   </block>
-                                </value>
+                                </next>
                               </block>
                             </next>
                           </block>
-                        </next>
-                      </block>
                     </next>
                   </block>
                 </next>

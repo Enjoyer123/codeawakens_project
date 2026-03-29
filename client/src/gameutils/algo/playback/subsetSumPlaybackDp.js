@@ -1,5 +1,7 @@
 // Subset Sum Dynamic Programming Animation Playback
 // 2D Spreadsheet Display Mode
+import { animationController, createTraceBuffer } from './AnimationController';
+import { createDpTableRenderer } from './DpTableRenderer';
 
 export async function playSubsetSumDpAnimation(scene, trace, options = {}) {
     // สลับ Display Mode ตรงนี้:
@@ -10,10 +12,9 @@ export async function playSubsetSumDpAnimation(scene, trace, options = {}) {
 // Display Mode 1: Classic Display (self-contained)
 // ============================================================================
 async function playClassicDisplay(scene, trace, options = {}) {
-    const { speed = 1.0 } = options;
-    const baseDelay = 1000 / speed;
+    const baseDelay = 1000;
 
-    if (!scene || !scene.subsetSum || !trace || trace.length === 0) {
+    if (!scene || !scene.subsetSum || !trace) {
         console.warn('⚠️ [subsetSumPlaybackDp] No scene.subsetSum or trace');
         return;
     }
@@ -28,69 +29,41 @@ async function playClassicDisplay(scene, trace, options = {}) {
     const rows = numItems + 1;
     const cols = targetSum + 1;
 
-    const sleep = (ms) => new Promise(res => setTimeout(res, ms));
+    const sleep = (ms) => animationController.sleep(ms);
+
+    const canvasW = scene.scale.width || 1200;
+    const canvasH = scene.scale.height || 920;
+    const centerX = canvasW / 2;
+    const centerY = canvasH / 2;
+
+    const cellW = Math.min(50, 800 / (cols + 2)); // Dynamic scaling if table is too wide
+    const cellH = 40;
+
+    const tableWidth = cols * cellW;
+    const tableHeight = rows * cellH;
+
+    // Center Dynamic (x, y)
+    const startX = centerX - (tableWidth / 2) + (cellW / 2);
+    const startY = centerY - (tableHeight / 2) + 40;
 
     const statusText = scene.add.text(
-        400, 750,
+        centerX, startY - 90,
         'สร้างกระดาน DP Spreadsheet (2D Array)',
         { fontSize: '24px', color: '#FFFF00', fontStyle: 'bold', stroke: '#000', strokeThickness: 4, align: 'center' }
     ).setOrigin(0.5).setDepth(20);
 
-    // ==========================================
-    // UI: DP Table Array (Spreadsheet)
-    // ==========================================
-    const cellW = Math.min(50, 800 / (cols + 2)); // Dynamic scaling if table is too wide
-    const cellH = 40;
+    const table = createDpTableRenderer(scene, startX, startY, rows, cols, cellW, cellH);
 
-    // Center the table, shifted to the right to avoid overlapping warriors
-    const tableWidth = cols * cellW;
-    const startX = 750 - (tableWidth / 2) + (cellW / 2);
-    const startY = 300; // Moved down to avoid overlapping the warrior scale
+    // Headers
+    const colLabels = Array.from({ length: cols }, (_, i) => i.toString());
+    table.setColHeaders(colLabels, -30);
 
-    const cells = []; // 2D array of cells
+    const rowLabels = ['0', ...warriors.map((w, i) => `W[${i + 1}]: ${w.power}`)];
+    table.setRowHeaders(rowLabels, -60);
 
-    // Column Headers (Target Sums)
-    for (let c = 0; c <= targetSum; c++) {
-        scene.add.text(startX + (c * cellW), startY - 30, c.toString(), {
-            fontSize: '14px', color: '#ffffff', fontStyle: 'bold'
-        }).setOrigin(0.5).setDepth(11);
-    }
-
-    // Row Headers (Warriors)
-    scene.add.text(startX - 40, startY, '0', {
-        fontSize: '14px', color: '#ffffff', fontStyle: 'bold'
-    }).setOrigin(0.5).setDepth(11);
-
-    for (let r = 1; r <= numItems; r++) {
-        const warrior = warriors[r - 1];
-        scene.add.text(startX - 60, startY + (r * cellH), `W[${r}]: ${warrior.power}`, {
-            fontSize: '12px', color: '#ffffff', fontStyle: 'bold'
-        }).setOrigin(0.5).setDepth(11);
-    }
-
-    // Create Table Cells
-    for (let r = 0; r <= numItems; r++) {
-        cells[r] = [];
-        for (let c = 0; c <= targetSum; c++) {
-            const cx = startX + (c * cellW);
-            const cy = startY + (r * cellH);
-
-            const bg = scene.add.rectangle(cx, cy, cellW, cellH, 0x111111, 0.9)
-                .setStrokeStyle(1, 0x555555).setDepth(10);
-
-            // Base case initialization
-            const initVal = (c === 0) ? 'T' : 'F';
-            const textVal = scene.add.text(cx, cy, initVal, {
-                fontSize: '18px', color: initVal === 'T' ? '#2ecc71' : '#ffffff', fontStyle: 'bold'
-            }).setOrigin(0.5).setDepth(11);
-
-            cells[r][c] = { bg, text: textVal, cx, cy, val: initVal === 'T' ? true : false };
-        }
-    }
-
-    // Pointers
-    const pointerDest = scene.add.rectangle(0, 0, cellW + 4, cellH + 4, 0x000000, 0)
-        .setStrokeStyle(3, 0xFFFF00).setDepth(15).setVisible(false);
+    // Initial Base Cases
+    table.initRow(0, false, '#ffffff', 'F'); // Row 0 (0 items) -> False
+    table.initCol(0, true, '#2ecc71', 'T');  // Col 0 (target 0) -> True
 
     // Fade out original graphics somewhat to focus on table
     if (scene.subsetSum.side1) scene.subsetSum.side1.setAlpha(0.2);
@@ -102,50 +75,41 @@ async function playClassicDisplay(scene, trace, options = {}) {
         }
     });
 
-    await sleep(baseDelay);
-
     // 2. Play Trace 
-    for (let i = 0; i < trace.length; i++) {
+    for await (const step of createTraceBuffer(trace)) {
         if (!scene || !scene.scene || !scene.scene.isActive(scene.scene.key)) break;
-        const step = trace[i];
 
         if (step.action === 'dp_update') {
             const r = step.index; // itemIndex (1 to numItems)
             const c = step.sum;
-            const val = step.value;
+            const val = step.value; // true/false
 
-            if (r === undefined || c === undefined || !cells[r] || !cells[r][c]) continue;
+            if (r === undefined || c === undefined || !table.isValid(r, c)) continue;
 
-            const targetCell = cells[r][c];
+            table.setPointer(r, c);
 
-            pointerDest.setPosition(targetCell.cx, targetCell.cy)
-                .setVisible(true)
-                .setStrokeStyle(3, 0xFFFF00); // Yellow targeting
-
-            // Write Value
-            targetCell.val = val;
             const textStr = val ? 'T' : 'F';
-            targetCell.text.setText(textStr);
-            targetCell.text.setColor('#FFFF00'); // Yellow when writing
+            table.updateCell(r, c, val, textStr);
 
-            // Flash cell background
-            scene.tweens.add({
-                targets: targetCell.bg,
-                fillColor: 0x333300,
-                duration: 200,
-                yoyo: true
-            });
+            // Set permanent color purely for aesthetic correctness after flash
+            const cellTextObj = table.getCell(r, c).text;
 
             statusText.setText(`อัปเดตช่อง Item=${r}, Sum=${c} -> ค่าใหม่: ${textStr}`);
 
+            // Flash highlight over the setup warrior for this row
+            const w = warriors[r - 1];
+            if (w && w.sprite) {
+                const flash = scene.add.rectangle(w.sprite.x, w.sprite.y, 60, 60, 0x00FFFF, 0.6).setDepth(12);
+                scene.tweens.add({ targets: flash, alpha: 0, duration: 400 / animationController.speed, onComplete: () => flash.destroy() });
+            }
+
             await sleep(baseDelay * 0.4);
 
-            // Revert text color to normal state
-            targetCell.text.setColor(val ? '#2ecc71' : '#e74c3c');
+            cellTextObj.setColor(val ? '#2ecc71' : '#e74c3c');
         }
     }
 
-    pointerDest.setVisible(false);
+    table.hidePointer();
     statusText.setText('การคำนวณตาราง DP เสร็จสิ้น!');
 
     // Restore opacities for visual pop
@@ -168,30 +132,43 @@ async function playClassicDisplay(scene, trace, options = {}) {
 
         // Reset positions smoothly before traceback brings them in
         warriors.forEach(w => {
-            scene.tweens.add({
-                targets: [w.sprite, w.sprite.powerText, w.sprite.labelText].filter(Boolean),
-                x: w.originalX,
-                y: w.originalY,
-                duration: 500,
-                ease: 'Power2'
-            });
+            if (w.sprite) {
+                scene.tweens.add({ targets: w.sprite, x: w.originalX, y: w.originalY, duration: 500, ease: 'Power2' });
+            }
+            if (w.powerText) {
+                scene.tweens.add({ targets: w.powerText, x: w.originalX, y: w.originalY + 45, duration: 500, ease: 'Power2' });
+            }
         });
         await sleep(600);
 
-        let scaleStackHeight = 0;
-        const scaleBaseY = scene.subsetSum.side1.y - 120;
-        const scaleX = scene.subsetSum.side1.x;
+        // คำนวณหาจำนวนไอเทมที่ถูกเลือกทั้งหมดก่อนเพื่อจัดกึ่งกลางแถว
+        const finalWarriors = [];
+        let tempR = numItems, tempC = targetSum;
+        while (tempR > 0 && tempC > 0) {
+            const currentVal = table.getCellValue(tempR, tempC) === true || table.getCellValue(tempR, tempC) === 'true' || table.getCellValue(tempR, tempC) === 1;
+            const aboveVal = table.getCellValue(tempR - 1, tempC) === true || table.getCellValue(tempR - 1, tempC) === 'true' || table.getCellValue(tempR - 1, tempC) === 1;
+            if (aboveVal) tempR--;
+            else {
+                const w = warriors[tempR - 1];
+                finalWarriors.push(w);
+                tempC -= w.power;
+                tempR--;
+            }
+        }
 
+        const spacing = 180;
+        const totalW = finalWarriors.length;
+        const startHeroX = centerX - ((totalW * spacing) / 2) + (spacing / 2);
+        const tableHeight = rows * cellH;
+        const scaleBaseY = startY + tableHeight + 60;
+
+        let warriorIdx = 0;
         while (currR > 0 && currC > 0) {
-            const currentCell = cells[currR][currC];
-            currentCell.bg.setFillStyle(0xffff00, 0.5); // Highlight traceback path
+            const currentCellInfo = table.getCell(currR, currC);
+            if (currentCellInfo) currentCellInfo.bg.setFillStyle(0xffff00, 0.5);
 
-            // Check if it came from top (excluded) or from top-left (included)
-            const prevCellAbove = cells[currR - 1][currC];
-
-            // Type-safe boolean parse (Blockly might send "true", "false", 1, 0, or actual booleans)
-            const currentVal = currentCell.val === true || currentCell.val === 'true' || currentCell.val === 1;
-            const aboveVal = prevCellAbove && (prevCellAbove.val === true || prevCellAbove.val === 'true' || prevCellAbove.val === 1);
+            const currentVal = table.getCellValue(currR, currC) === true || table.getCellValue(currR, currC) === 'true' || table.getCellValue(currR, currC) === 1;
+            const aboveVal = table.getCellValue(currR - 1, currC) === true || table.getCellValue(currR - 1, currC) === 'true' || table.getCellValue(currR - 1, currC) === 1;
 
             if (aboveVal) {
                 // We can achieve this sum without the current item (Excluded)
@@ -202,18 +179,18 @@ async function playClassicDisplay(scene, trace, options = {}) {
                 const wVal = w.power;
 
                 statusText.setText(`พบว่า W[${currR}] ถูกเลือกนำมาบวก!`);
-                currentCell.bg.setFillStyle(0x2ecc71, 0.8); // Green for included
+                if (currentCellInfo) currentCellInfo.bg.setFillStyle(0x2ecc71, 0.8); // Green for included
 
-                // Animate Warrior to Scale
-                scene.tweens.add({
-                    targets: [w.sprite, w.sprite.powerText, w.sprite.labelText].filter(Boolean),
-                    x: scaleX,
-                    y: scaleBaseY - scaleStackHeight,
-                    duration: 600,
-                    ease: 'Bounce.easeOut'
-                });
+                // Animate Warrior to Center Row (Below Table) keeping correct label offsets
+                const px = startHeroX + (warriorIdx * spacing);
+                if (w.sprite) {
+                    scene.tweens.add({ targets: w.sprite, x: px, y: scaleBaseY, duration: 600, ease: 'Bounce.easeOut' });
+                }
+                if (w.powerText) {
+                    scene.tweens.add({ targets: w.powerText, x: px, y: scaleBaseY + 45, duration: 600, ease: 'Bounce.easeOut' });
+                }
 
-                scaleStackHeight += 60; // Stack vertically
+                warriorIdx++;
 
                 currR--;
                 currC -= wVal;
@@ -224,7 +201,8 @@ async function playClassicDisplay(scene, trace, options = {}) {
 
         // Highlight the remaining path up to row 0 if sum is 0
         while (currR >= 0) {
-            cells[currR][currC].bg.setFillStyle(0xffff00, 0.5);
+            const cellInf = table.getCell(currR, currC);
+            if (cellInf) cellInf.bg.setFillStyle(0xffff00, 0.5);
             currR--;
             await sleep(baseDelay * 0.2);
         }
@@ -234,7 +212,9 @@ async function playClassicDisplay(scene, trace, options = {}) {
     if (options.result !== undefined) {
         const resultText = options.result ? 'พบคำตอบ (True)' : 'ไม่พบคำตอบ (False)';
         const resultColor = options.result ? '#2ecc71' : '#e74c3c';
-        scene.add.text(400, 500, resultText, {
+        const canvasW = scene.scale.width || 1200;
+        const centerX = canvasW / 2;
+        scene.add.text(centerX, startY - 160, resultText, {
             fontSize: '48px',
             color: resultColor,
             fontStyle: 'bold',

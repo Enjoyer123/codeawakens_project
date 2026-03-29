@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { playBGM, stopBGM } from '../../gameutils/sound/soundManager';
 import { removeStarterListener, loadStarterXml } from './hooks/blocklysetup/xmlLoader';
 import { useParams } from "react-router-dom";
@@ -12,6 +12,7 @@ import "blockly/javascript";
 import { clearRescuedPeople } from '../../gameutils/entities/personUtils';
 import { clearPlayerCoins } from '../../gameutils/entities/coinUtils';
 import { seedWeaponsData } from '../../gameutils/entities/weaponUtils';
+import { animationController } from '../../gameutils/algo/playback/AnimationController';
 
 // Import components
 import GameArea from './GameArea';
@@ -218,6 +219,9 @@ const GameCore = ({
       clearPlayerCoins();
       clearRescuedPeople();
 
+      // หยุด animation ทันทีเมื่อออกจากด่าน ป้องกันไม่ให้ animation ที่ค้างอยู่รันต่อแล้วไปตีกันในด่านใหม่
+      animationController.abort();
+
       stopBGM();
 
       if (phaserGameRef.current) {
@@ -321,11 +325,40 @@ const GameCore = ({
     setShowBigOQuiz(false);
   };
 
+  const handleReplayGame = () => {
+    // 1. Reset execution states
+    setShowProgressModal(false);
+    setIsCompleted(false);
+    setIsRunning(false);
+    setIsGameOver(false);
+    setGameState("ready");
+    setGameResult(null);
+    setTestCaseResult(null);
+
+    // 2. Abort running animations
+    animationController.abort();
+
+    // 3. Clear global entity states
+    clearPlayerCoins();
+    clearRescuedPeople();
+
+    // 4. Clean start Phaser Game
+    initPhaserGame();
+  };
+
   const handleRunClick = () => {
     if (patternData?.patternPercentage === 100 && patternData?.bestPatternBigO && !userBigO) {
       setShowBigOQuiz(true);
       return;
     }
+    
+    // Prevent overlapping animations by cleanly restarting if already executed
+    if (isCompleted || isGameOver || testCaseResult) {
+      handleReplayGame();
+      setTimeout(runCode, 50);
+      return;
+    }
+
     runCode();
   };
 
@@ -411,6 +444,7 @@ const GameCore = ({
             onCloseBigOQuiz={() => setShowBigOQuiz(false)}
             hasGuides={hasGuides}
             onOpenGuide={openGuide}
+            isRunning={isRunning}
           />
         </div>
 
@@ -448,6 +482,7 @@ const GameCore = ({
           <ProgressModal
             isOpen={showProgressModal}
             onClose={() => setShowProgressModal(false)}
+            onReplay={handleReplayGame}
             gameResult={gameResult}
             levelData={currentLevel}
             blocklyXml={workspaceRef.current ? Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspaceRef.current)) : null}

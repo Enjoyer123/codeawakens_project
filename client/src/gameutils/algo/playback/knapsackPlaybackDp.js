@@ -1,5 +1,7 @@
 // Knapsack Dynamic Programming Animation Playback
 // 2D Spreadsheet Display Mode
+import { animationController, createTraceBuffer } from './AnimationController';
+import { createDpTableRenderer } from './DpTableRenderer';
 
 export async function playKnapsackDpAnimation(scene, trace, options = {}) {
     // สลับ Display Mode ตรงนี้:
@@ -10,10 +12,9 @@ export async function playKnapsackDpAnimation(scene, trace, options = {}) {
 // Display Mode 1: Classic Display (self-contained)
 // ============================================================================
 async function playClassicDisplay(scene, trace, options = {}) {
-    const { speed = 1.0 } = options;
-    const baseDelay = 1000 / speed;
+    const baseDelay = 1000;
 
-    if (!scene || !scene.knapsack || !trace || trace.length === 0) {
+    if (!scene || !scene.knapsack || !trace) {
         console.warn('⚠️ [knapsackPlaybackDp] No scene.knapsack or trace');
         return;
     }
@@ -28,72 +29,41 @@ async function playClassicDisplay(scene, trace, options = {}) {
     const rows = numItems + 1;
     const cols = capacity + 1;
 
-    const sleep = (ms) => new Promise(res => setTimeout(res, ms));
+    const sleep = (ms) => animationController.sleep(ms);
+
+    const canvasW = scene.scale.width || 1200;
+    const canvasH = scene.scale.height || 920;
+    const centerX = canvasW / 2;
+    const centerY = canvasH / 2;
+
+    const cellW = 50;
+    const cellH = 40;
+
+    const tableWidth = cols * cellW;
+    const tableHeight = rows * cellH;
+
+    // Center Dynamic (x, y)
+    const startX = centerX - (tableWidth / 2) + (cellW / 2);
+    const startY = centerY - (tableHeight / 2) + 40;
 
     const statusText = scene.add.text(
-        660, 650,
+        centerX, startY - 90,
         'สร้างกระดาน DP Spreadsheet (2D Array)',
         { fontSize: '24px', color: '#FFFF00', fontStyle: 'bold', stroke: '#000', strokeThickness: 4, align: 'center' }
     ).setOrigin(0.5).setDepth(20);
 
-    // ==========================================
-    // UI: DP Table Array (Spreadsheet)
-    // ==========================================
-    const cellW = 50;
-    const cellH = 40;
+    const table = createDpTableRenderer(scene, startX, startY, rows, cols, cellW, cellH);
 
-    // Position table on the middle-right side of the screen (game width is 800)
-    const tableWidth = cols * cellW;
-    const tableHeight = rows * cellH;
+    // Headers
+    const colLabels = Array.from({length: cols}, (_, i) => i.toString());
+    table.setColHeaders(colLabels, -30);
 
-    // Push further to the right by adding an offset (e.g., +80px)
-    const startX = 800 - tableWidth + (cellW / 2) + 80;
-    const startY = 400; // Moved further down from 260
+    const rowLabels = ['0', ...items.map(item => `W:${item.weight} V:${item.price}`)];
+    table.setRowHeaders(rowLabels, -60);
 
-    const cells = []; // 2D array of cells
-
-    // Column Headers (Capacity)
-    for (let c = 0; c <= capacity; c++) {
-        scene.add.text(startX + (c * cellW), startY - 30, c.toString(), {
-            fontSize: '16px', color: '#DDDDDD', fontStyle: 'bold'
-        }).setOrigin(0.5).setDepth(11);
-    }
-
-    // Row Headers (Items)
-    scene.add.text(startX - 40, startY, '0', {
-        fontSize: '16px', color: '#DDDDDD', fontStyle: 'bold'
-    }).setOrigin(0.5).setDepth(11);
-
-    for (let r = 1; r <= numItems; r++) {
-        const item = items[r - 1];
-        scene.add.text(startX - 60, startY + (r * cellH), `W:${item.weight} V:${item.price}`, {
-            fontSize: '14px', color: '#FFFFFF', fontStyle: 'bold'
-        }).setOrigin(0.5).setDepth(11);
-    }
-
-    // Create Table Cells
-    for (let r = 0; r <= numItems; r++) {
-        cells[r] = [];
-        for (let c = 0; c <= capacity; c++) {
-            const cx = startX + (c * cellW);
-            const cy = startY + (r * cellH);
-
-            const bg = scene.add.rectangle(cx, cy, cellW, cellH, 0x111111, 0.9)
-                .setStrokeStyle(1, 0x555555).setDepth(10);
-
-            // Base case initialization
-            const initVal = (r === 0 || c === 0) ? '0' : '';
-            const textVal = scene.add.text(cx, cy, initVal, {
-                fontSize: '18px', color: initVal === '0' ? '#00FF00' : '#FFFFFF', fontStyle: 'bold'
-            }).setOrigin(0.5).setDepth(11);
-
-            cells[r][c] = { bg, text: textVal, cx, cy, val: initVal === '0' ? 0 : null };
-        }
-    }
-
-    // Pointers
-    const pointerDest = scene.add.rectangle(0, 0, cellW + 4, cellH + 4, 0x000000, 0)
-        .setStrokeStyle(3, 0xFFFF00).setDepth(15).setVisible(false);
+    // Initial Base Cases
+    table.initCol(0, 0); // r=0..numItems, c=0 -> 0
+    table.initRow(0, 0); // c=0..capacity, r=0 -> 0
 
     // Fade out original graphics somewhat to focus on table
     if (scene.knapsack.bag) scene.knapsack.bag.setAlpha(0.2);
@@ -102,8 +72,6 @@ async function playClassicDisplay(scene, trace, options = {}) {
         if (item.labelText) item.labelText.setAlpha(0.2);
         if (item.glowEffect) item.glowEffect.setAlpha(0);
     });
-
-    await sleep(baseDelay);
 
     // --- NEW: Detect if DP table loop is 0-indexed or 1-indexed ---
     let minItemIdx = 999;
@@ -116,46 +84,33 @@ async function playClassicDisplay(scene, trace, options = {}) {
     const idxOffset = (minItemIdx === 0) ? 1 : 0;
 
     // 2. ลุยรัน Trace เติมตาราง
-    for (let i = 0; i < trace.length; i++) {
+    for await (const step of createTraceBuffer(trace)) {
         if (!scene || !scene.scene || !scene.scene.isActive(scene.scene.key)) break;
-        const step = trace[i];
 
         if (step.action === 'dp_update') {
             const r = step.index + idxOffset; // mapped index (1-based internally)
             const c = step.capacity;
             const val = step.value;
 
-            if (r === undefined || c === undefined || !cells[r] || !cells[r][c]) continue;
+            if (r === undefined || c === undefined || !table.isValid(r, c)) continue;
 
-            const targetCell = cells[r][c];
-
-            pointerDest.setPosition(targetCell.cx, targetCell.cy)
-                .setVisible(true)
-                .setStrokeStyle(3, 0xFFFF00); // Yellow targeting
-
-            // Write Value
-            targetCell.val = val;
-            targetCell.text.setText(val.toString());
-            targetCell.text.setColor('#FFFF00'); // Yellow when writing
-
-            // Flash cell background
-            scene.tweens.add({
-                targets: targetCell.bg,
-                fillColor: 0x333300,
-                duration: 200,
-                yoyo: true
-            });
+            table.setPointer(r, c);
+            table.updateCell(r, c, val);
 
             statusText.setText(`อัปเดตช่อง Item=${r}, Cap=${c} -> ค่าใหม่: ${val}`);
 
-            await sleep(baseDelay * 0.4);
+            // Flash highlight over the setup item for this row
+            const item = items[r - 1];
+            if (item && item.sprite) {
+                const flash = scene.add.rectangle(item.sprite.x, item.sprite.y, 60, 60, 0x00FFFF, 0.6).setDepth(12);
+                scene.tweens.add({ targets: flash, alpha: 0, duration: 400 / animationController.speed, onComplete: () => flash.destroy() });
+            }
 
-            // Revert text color to normal white
-            targetCell.text.setColor('#FFFFFF');
+            await sleep(baseDelay * 0.4);
         }
     }
 
-    pointerDest.setVisible(false);
+    table.hidePointer();
     statusText.setText('การคำนวณตาราง DP เสร็จสิ้น!');
 
     // Restore opacities 
@@ -167,7 +122,9 @@ async function playClassicDisplay(scene, trace, options = {}) {
 
     // Show Result Text first
     if (options.result !== undefined) {
-        scene.add.text(400, 250, `Max Value: $${options.result}`, {
+        const canvasW = scene.scale.width || 1200;
+        const centerX = canvasW / 2;
+        scene.add.text(centerX, startY - 160, `Max Value: $${options.result}`, {
             fontSize: '48px',
             color: '#2ecc71',
             fontStyle: 'bold',
@@ -177,7 +134,6 @@ async function playClassicDisplay(scene, trace, options = {}) {
     }
 
     // --- NEW: Trace back DP table to find chosen items and animate them to bag ---
-    statusText.setPosition(400, 750); // Move below the table
     statusText.setText('กำลังคำนวณย้อนกลับ (Traceback) เพื่อหยิบของใส่เป้...');
     await sleep(baseDelay);
 
@@ -188,8 +144,8 @@ async function playClassicDisplay(scene, trace, options = {}) {
     // Find items
     while (currR > 0 && currC > 0) {
         // Ensure values are numbers for comparison. Unfilled cells are 0.
-        const currentVal = Number(cells[currR][currC].val) || 0;
-        const aboveVal = Number(cells[currR - 1][currC].val) || 0;
+        const currentVal = Number(table.getCellValue(currR, currC)) || 0;
+        const aboveVal = Number(table.getCellValue(currR - 1, currC)) || 0;
 
         // If value came from the cell above, item R was NOT included
         if (currentVal === aboveVal) {
@@ -235,13 +191,13 @@ async function playClassicDisplay(scene, trace, options = {}) {
                     y: bagY + offset,
                     scaleX: 0.8,
                     scaleY: 0.8,
-                    duration: 600 / speed,
+                    duration: 600 / animationController.speed,
                     ease: 'Power2'
                 });
             }
             if (item.labelText) item.labelText.setVisible(false);
 
-            await sleep(800 / speed);
+            await sleep(800);
         }
 
         statusText.setText('หยิบของใส่เป้เสร็จสมบูรณ์!');

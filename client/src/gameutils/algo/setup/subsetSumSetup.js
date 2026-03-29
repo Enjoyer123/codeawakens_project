@@ -5,175 +5,63 @@ import { getAlgoPayload } from '../../shared/levelType';
 // Function to setup Subset Sum problem display
 export function setupSubsetSum(scene) {
 
-  const subsetSumData = getAlgoPayload(scene.levelData, 'SUBSETSUM');
-  if (!subsetSumData) {
+  const data = getAlgoPayload(scene.levelData, 'SUBSETSUM');
+  if (!data) {
     return;
   }
 
+  const targetSum = data.target_sum !== undefined ? data.target_sum : 0;
+  // Get warriors array from warriors_display or fallback to warriors
+  const warriorsData = data.warriors_display && Array.isArray(data.warriors_display)
+    ? data.warriors_display.map(w => w.power !== undefined ? w.power : w)
+    : (Array.isArray(data.warriors) ? data.warriors : []);
+
   scene.subsetSum = {
-    side1: null,
-    side2: null,
-    warriors: []
+    monster: null,
+    warriors: [],
+    targetSum: targetSum
   };
 
-  // Setup side1 (ตาชั่งสำหรับผลรวมปัจจุบัน)
-  if (subsetSumData.side1) {
-    const side1X = 400; // Center it visually if possible, or keep original if needed.
-    const side1Y = subsetSumData.side1.y || 400;
-    const side1Label = 'ผลรวม (Sum)';
-    const side1Width = 150;
-    const side1Height = 100;
-    const targetSum = subsetSumData.target_sum !== undefined ? subsetSumData.target_sum : 0;
+  // Setup Warriors (นักรบ) ชิดซ้าย เรียงแนวตั้งเหมือน Coin Change
+  const startX = 90;
+  const startY = 280;
+  const spacingY = 120;
 
-    // สร้าง label ที่รวม target_sum
-    const side1LabelWithTarget = `${side1Label}\n${targetSum}`;
+  warriorsData.forEach((power, index) => {
+    const warriorX = startX;
+    const spriteY = startY + (index * spacingY);
 
-    // Create side1 as rectangle with transparent fill and transparent stroke (hidden)
-    const side1 = scene.add.rectangle(side1X, side1Y, side1Width, side1Height);
-    side1.setFillStyle(0x000000, 0);
-    side1.setStrokeStyle(0, 0x000000, 0); // Removed yellow stroke
-    side1.setDepth(5);
+    // สุ่มหรือเรียงรูปภาพ sprite เพื่อความหลากหลาย
+    const spriteKeys = ['bot_slime1', 'org1', 'org2', 'org3'];
+    const safeIndex = index % spriteKeys.length;
 
-    // Add side1 label with target_sum
-    const side1LabelText = scene.add.text(side1X, side1Y - 60, side1LabelWithTarget, {
-      fontSize: '24px', // Increased size
-      color: '#ffffff',
-      fontStyle: 'bold',
-      // Removed black background for cleaner look, added stroke
-      stroke: '#000000',
-      strokeThickness: 4,
-      align: 'center'
+    const characterSprite = scene.add.image(warriorX, spriteY, spriteKeys[safeIndex]).setScale(1.6).setDepth(8);
+
+    const powerText = scene.add.text(warriorX, spriteY + 45, `Power: ${power}`, {
+      fontSize: '20px', color: '#ffffff', fontStyle: 'bold', stroke: '#000000', strokeThickness: 4
+    }).setOrigin(0.5, 0.5).setDepth(9);
+
+    scene.subsetSum.warriors.push({
+      power, index, id: index + 1,
+      sprite: characterSprite, powerText,
+      x: warriorX, y: spriteY, originalX: warriorX, originalY: spriteY
     });
-    side1LabelText.setOrigin(0.5, 0.5);
-    side1LabelText.setDepth(6);
+  });
 
-    side1.labelText = side1LabelText;
-    scene.subsetSum.side1 = side1;
+  // Setup Target Entity (บอสฝั่งขวา) ตัวแทนของ Target Sum
+  const monsterX = 1050;
+  const monsterY = 300;
 
-  }
+  // ใช้ sprite บอสเพื่อความสวยงาม
+  const monsterSprite = scene.add.image(monsterX, monsterY + 60, 'bot_humen1').setScale(2.2).setDepth(7);
 
-  // NOTE: side2 is obsolete in the new single-platform design
-  // We ignore subsetSumData.side2 even if it is passed in the JSON.
+  const monsterPowerText = scene.add.text(monsterX, monsterY, `Target: ${targetSum}`, {
+    fontSize: '24px', color: '#ff5555', fontStyle: 'bold', stroke: '#000000', strokeThickness: 4
+  }).setOrigin(0.5).setDepth(8);
 
-  // Setup warriors (นักรบ) - วงกลมสีแดง
-  if (subsetSumData.warriors_display && Array.isArray(subsetSumData.warriors_display)) {
-    subsetSumData.warriors_display.forEach((warriorData) => {
-      const warriorX = warriorData.x || 200;
-      const warriorY = warriorData.y || 150;
-      const warriorPower = warriorData.power || 0;
-      const warriorLabel = warriorData.label || `${warriorPower}`;
+  scene.subsetSum.monster = {
+    power: targetSum, powerText: monsterPowerText, sprite: monsterSprite,
+    x: monsterX, y: monsterY
+  };
 
-      // Create warrior as org1 Sprite
-      const warrior = scene.add.image(warriorX, warriorY, 'org1');
-      warrior.setScale(1.5);
-      warrior.setDepth(7);
-
-      // Add warrior data
-      warrior.setData({
-        id: warriorData.id,
-        power: warriorPower,
-        label: warriorLabel
-      });
-
-      // Create warrior label (à¹ à¸ªà¸”à¸‡à¸žà¸¥à¸±à¸‡) - Moved higher
-      const warriorLabelText = scene.add.text(warriorX, warriorY - 50, warriorLabel, {
-        fontSize: '14px',
-        color: '#ffffff',
-        fontStyle: 'bold',
-        stroke: '#000000',
-        strokeThickness: 3
-      });
-      warriorLabelText.setOrigin(0.5, 0.5);
-      warriorLabelText.setDepth(8);
-
-      // Add power text above sprite (replaces inside circle text)
-      const powerText = scene.add.text(warriorX, warriorY - 70, warriorPower.toString(), {
-        fontSize: '20px',
-        color: '#ffffff',
-        fontStyle: 'bold',
-        stroke: '#000000',
-        strokeThickness: 4
-      });
-      powerText.setOrigin(0.5, 0.5);
-      powerText.setDepth(8);
-
-      // Store references
-      warrior.labelText = warriorLabelText;
-      warrior.powerText = powerText;
-
-      scene.subsetSum.warriors.push({
-        id: warriorData.id,
-        sprite: warrior,
-        power: warriorPower,
-        label: warriorLabel,
-        x: warriorX,
-        y: warriorY,
-        originalX: warriorX, // Store original position for reset
-        originalY: warriorY
-      });
-    });
-
-  } else if (subsetSumData.warriors && Array.isArray(subsetSumData.warriors)) {
-    // à¸–à¹‰à¸²à¹„à¸¡à¹ˆà¸¡à¸µ warriors_display à¹ƒà¸«à¹‰à¹ƒà¸Šà¹‰ warriors array à¸¡à¸²à¸ªà¸£à¹‰à¸²à¸‡à¹€à¸­à¸‡
-    const spacing = 150;
-    const startX = 200;
-    const startY = 150;
-
-    subsetSumData.warriors.forEach((power, index) => {
-      const warriorX = startX + (index * spacing);
-      const warriorY = startY;
-      const warriorLabel = power.toString();
-
-      // Create warrior as org1 Sprite
-      const warrior = scene.add.image(warriorX, warriorY, 'org1');
-      warrior.setScale(1.5);
-      warrior.setDepth(7);
-
-      // Add warrior data
-      warrior.setData({
-        id: index + 1,
-        power: power,
-        label: warriorLabel
-      });
-
-      // Create warrior label
-      const warriorLabelText = scene.add.text(warriorX, warriorY - 50, warriorLabel, {
-        fontSize: '14px',
-        color: '#ffffff',
-        fontStyle: 'bold',
-        stroke: '#000000',
-        strokeThickness: 3
-      });
-      warriorLabelText.setOrigin(0.5, 0.5);
-      warriorLabelText.setDepth(8);
-
-      // Add power text
-      const powerText = scene.add.text(warriorX, warriorY - 70, power.toString(), {
-        fontSize: '20px',
-        color: '#ffffff',
-        fontStyle: 'bold',
-        stroke: '#000000',
-        strokeThickness: 4
-      });
-      powerText.setOrigin(0.5, 0.5);
-      powerText.setDepth(8);
-
-      // Store references
-      warrior.labelText = warriorLabelText;
-      warrior.powerText = powerText;
-
-      scene.subsetSum.warriors.push({
-        id: index + 1,
-        sprite: warrior,
-        power: power,
-        label: warriorLabel,
-        x: warriorX,
-        y: warriorY,
-        originalX: warriorX, // Store original position for reset
-        originalY: warriorY
-      });
-    });
-
-  }
 }
-

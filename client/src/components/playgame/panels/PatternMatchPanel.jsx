@@ -47,7 +47,7 @@ const PatternMatchPanel = ({ patternData, currentLevel, currentWeaponData }) => 
   };
 
   return (
-    <div className="flex-1 bg-black/30 rounded-lg p-3 border border-gray-700/50">
+    <div className="flex-1 bg-[#18113c]/80 backdrop-blur-md rounded-2xl w-full h-full p-2 lg:p-3 border border-purple-500/40 shadow-xl relative font-sans">
       <Dialog open={showHelp} onOpenChange={(open) => {
         setShowHelp(open);
         if (open) setCurrentImageIndex(0);
@@ -95,93 +95,67 @@ const PatternMatchPanel = ({ patternData, currentLevel, currentWeaponData }) => 
 
       <div className="flex items-stretch h-full">
         {/* Left: Progress Bar & Stats (50%) */}
-        <div className="w-1/2 flex flex-col items-center gap-2 pr-2 border-r border-gray-700/50">
-          <div className="flex flex-col items-center">
-            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">MATCH</span>
-            <span className="text-[10px] text-gray-500 font-mono">
-              {patternData?.matchedBlocks || 0}/{patternData?.totalBlocks || 0}
-            </span>
-          </div>
-
+        <div className="w-1/2 flex flex-col items-center justify-center gap-1.5 pr-3 border-r border-purple-500/30">
+          
           {idealPattern && (
-            <div className="flex flex-col items-center gap-1.5 w-full max-w-[120px]">
-              {/* Weapon Progress Bar (อิง tier) */}
-              <div className="w-full bg-gray-700/50 rounded-full h-3 overflow-hidden border border-gray-600/50">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ${getProgressColor(weaponProgress)}`}
-                  style={{ width: `${Math.min(weaponProgress, 100)}%` }}
-                />
+            <div className="flex flex-col items-center gap-2 w-full max-w-[140px]">
+              
+              {/* SYNCHRONIZATION Bar */}
+              <div className="w-full relative">
+                <div className="text-[10px] text-yellow-300 drop-shadow-sm mb-1 font-bold tracking-widest text-center">
+                  SYNCHRONIZATION
+                </div>
+                <div className="w-full bg-black/50 rounded-full h-2 overflow-hidden border border-gray-700/50">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${getProgressColor(weaponProgress)}`}
+                    style={{ width: `${Math.min(weaponProgress, 100)}%`, boxShadow: '0 0 10px currentColor' }}
+                  />
+                </div>
               </div>
 
-              {/* Weapon Name & Percentage */}
-              <div className="flex items-center justify-between gap-1 w-full text-[10px] font-bold leading-none">
-                <span className="text-yellow-400 truncate flex-1 text-left">
-                  {(currentWeaponData?.name || '').toUpperCase().replace(/🏭|✨/g, '').trim()}
-                </span>
-                <span className="text-white bg-white/10 px-1 rounded-sm text-[9px] shrink-0">
-                  {weaponProgress}%
-                </span>
+              {/* RESONANCE Bar */}
+              <div className="w-full relative mt-1">
+                <div className="text-[10px] text-blue-300 drop-shadow-sm mb-1 font-bold tracking-widest text-center">
+                  RESONANCE
+                </div>
+                <div className="w-full bg-black/50 rounded-full h-2 overflow-hidden border border-gray-700/50">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${getProgressColor(patternData?.patternPercentage || 0)}`}
+                    style={{ width: `${Math.min(patternData?.patternPercentage || 0, 100)}%`, boxShadow: '0 0 10px currentColor' }}
+                  />
+                </div>
               </div>
-
-              {/* Pattern Match Progress Bar (ตรง Pattern จริงกี่ %) */}
-              <div className="w-full bg-gray-700/50 rounded-full h-2 overflow-hidden border border-gray-600/50 mt-1">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ${getProgressColor(patternData?.patternPercentage || 0)}`}
-                  style={{ width: `${Math.min(patternData?.patternPercentage || 0, 100)}%` }}
-                />
-              </div>
-
-              {/* Pattern Name & Percentage */}
-              <div className="flex items-center justify-between gap-1 w-full text-[10px] font-bold leading-none">
-                <span className="text-blue-300 truncate flex-1 text-left text-[8px]">
-                  {patternData?.bestPattern?.pattern_name || 'Pattern'}
-                </span>
-                <span className="text-white bg-blue-500/20 px-1 rounded-sm text-[9px] shrink-0">
-                  {patternData?.patternPercentage || 0}%
-                </span>
-              </div>
+              
             </div>
           )}
         </div>
 
         {/* Right: Pattern Info (50%) */}
-        <div className="w-1/2 flex flex-col pl-2">
+        <div className="w-1/2 flex flex-col pl-3 justify-center">
           {patternData && patternData.showPatternProgress ? (
-            <div className="flex flex-col items-center gap-2 w-full">
-              <div className="flex flex-col items-center">
-                <div className="flex items-center gap-1 mb-0.5">
-                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">
-                    Pattern
-                  </span>
-                  <button
-                    onClick={() => setShowHelp(true)}
-                    className="text-[9px] bg-gray-600 hover:bg-gray-500 text-white rounded-full w-4 h-4 flex items-center justify-center transition-colors shadow-sm"
-                    title="How Pattern works?"
-                  >
-                    ?
-                  </button>
+            <div className="flex flex-col items-center gap-3 w-full">
+              <div className="flex flex-col items-center relative group cursor-pointer" onClick={() => setShowHelp(true)}>
+                <div className="text-[10px] text-gray-400 drop-shadow-sm mb-0.5 font-bold tracking-widest flex items-center gap-1">
+                  SYSTEM CORE <span className="text-blue-400 text-[10px] opacity-80 hover:opacity-100">[?]</span>
                 </div>
-                <span className="text-[10px] text-blue-300 truncate font-bold leading-tight max-w-full text-center mb-1">
-                  {patternData?.bestPattern?.pattern_name || patternData?.bestPattern?.pattern_type?.type_name || 'กำลังวิเคราะห์...'}
-                </span>
-                <span className="text-[10px] text-gray-300 truncate font-medium leading-tight max-w-full text-center">
-                  จำนวน Pattern Part
+                <span className="text-[13px] text-[#4ade80] drop-shadow-md truncate font-black uppercase tracking-wider text-center">
+                  ACTIVE
                 </span>
               </div>
 
-              {/* Three Parts Match Indicator - Bar-based */}
+              {/* Three Parts Match Indicator - Sleek Style */}
               {patternData.threePartsMatch && (
-                <div className="flex flex-col items-center gap-1.5 bg-black/20 rounded p-1.5 w-full">
-                  <span className="text-[9px] text-gray-400 w-full text-center font-bold tracking-tight">
-                    PARTS: {patternData.threePartsMatch.matchedParts || 0}/3
+                <div className="flex flex-col items-center gap-1.5 w-full">
+                  <span className="text-[10px] text-purple-300 drop-shadow-sm w-full text-center font-bold tracking-widest">
+                    CORE NODES
                   </span>
-                  <div className="flex gap-1 w-full h-1.5 px-1">
+                  <div className="flex gap-2 w-full h-2 px-1">
                     {[1, 2, 3].map((part) => {
                       const matchedParts = patternData.threePartsMatch.matchedParts || 0;
                       return (
                         <div
                           key={part}
-                          className={`flex-1 ${part <= matchedParts ? 'bg-green-500' : 'bg-gray-700'} rounded-full transition-colors duration-300 shadow-[0_0_5px_rgba(0,0,0,0.5)]`}
+                          className={`flex-1 rounded-full border border-gray-700/50 ${part <= matchedParts ? 'bg-[#ffca28] shadow-[0_0_8px_#ffca28]' : 'bg-black/40'} transition-all duration-500`}
                         />
                       );
                     })}

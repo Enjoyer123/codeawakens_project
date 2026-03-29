@@ -15,6 +15,11 @@ export function defineKnapsackGenerators() {
         return `trackKnapsackDecision('consider', ${itemIndex});\n`;
     };
 
+    javascriptGenerator.forBlock["knapsack_skip_item"] = function (block) {
+        const itemIndex = javascriptGenerator.valueToCode(block, 'ITEM_INDEX', javascriptGenerator.ORDER_NONE) || '0';
+        return `trackKnapsackDecision('skip', ${itemIndex});\n`;
+    };
+
     javascriptGenerator.forBlock["knapsack_dp_update"] = function (block) {
         const itemIndex = javascriptGenerator.valueToCode(block, 'ITEM_INDEX', javascriptGenerator.ORDER_NONE) || '0';
         const capacity = javascriptGenerator.valueToCode(block, 'CAPACITY', javascriptGenerator.ORDER_NONE) || '0';

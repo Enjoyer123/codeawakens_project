@@ -6,6 +6,7 @@
 
 import { playCoinChangeBacktrackAnimation } from './playback/coinChangePlaybackBacktrack';
 import { playCoinChangeDpAnimation } from './playback/coinChangePlaybackDp';
+import { playCoinChangeGreedyAnimation } from './playback/coinChangePlaybackGreedy';
 import { playNQueenAnimation } from "./playback/nqueenPlayback.js";
 import { playKnapsackBacktrackAnimation } from './playback/knapsackPlaybackBt';
 import { playKnapsackDpAnimation } from './playback/knapsackPlaybackDp';
@@ -62,7 +63,8 @@ export async function playAlgoAnimation(scene, algoType, trace, options = {}) {
 
         case 'COINCHANGE':
             if (isDpLevel(scene)) return playCoinChangeDpAnimation(scene, trace, { speed });
-            return playCoinChangeBacktrackAnimation(scene, trace, { speed, isGreedy: isGreedyLevel(scene) });
+            if (isGreedyLevel(scene)) return playCoinChangeGreedyAnimation(scene, trace, { speed });
+            return playCoinChangeBacktrackAnimation(scene, trace, { speed });
 
         case 'KNAPSACK':
             if (isDpLevel(scene)) return playKnapsackDpAnimation(scene, trace, { speed, result: options.result });

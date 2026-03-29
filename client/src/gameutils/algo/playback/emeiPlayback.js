@@ -1,4 +1,4 @@
-﻿/**
+/**
  * emeiPlayback.js — Emei Mountain Cable Car Animation Playback
  * 
  * Trace Events handled:
@@ -8,6 +8,7 @@
  *   { action: 'emei_path', path, bottleneck }   ← path = [start, ..., end] array
  */
 // All visual methods are now internal to playback.
+import { animationController, createTraceBuffer } from './AnimationController';
 
 export async function playEmeiAnimation(scene, trace, options = {}) {
     // สลับ Display Mode ตรงนี้:
@@ -18,12 +19,11 @@ export async function playEmeiAnimation(scene, trace, options = {}) {
 // Display Mode 1: Classic Display (self-contained)
 // ============================================================================
 async function playClassicDisplay(scene, trace, options = {}) {
-    const { speed = 1.0 } = options;
-    const baseDelay = 700 / speed;
-    const sleep = ms => new Promise(r => setTimeout(r, Math.max(0, ms)));
+    const baseDelay = 700;
+    const sleep = ms => animationController.sleep(Math.max(0, ms));
 
-    if (!scene || !trace || trace.length === 0) {
-        console.warn('⚠️ [emeiPlayback] No scene or trace');
+    if (!scene || !trace) {
+        console.warn('⚠️ [emeiPlayback] No scene or trace found');
         return;
     }
 
@@ -50,9 +50,8 @@ async function playClassicDisplay(scene, trace, options = {}) {
     // Persistent graphics for the final path highlight
     const pathGraphics = scene.add.graphics().setDepth(100);
 
-    for (let i = 0; i < trace.length; i++) {
+    for await (const step of createTraceBuffer(trace)) {
         if (!scene || !scene.scene || !scene.scene.isActive(scene.scene.key)) break;
-        const step = trace[i];
 
         switch (step.action) {
             case 'emei_peak': {
@@ -124,7 +123,7 @@ function drawEdgeLine(graphics, scene, u, v, color, lineWidth = 8) {
 }
 
 /** Flash edge แบบชั่วคราว (แสดงแล้วหายไป) */
-async function flashEdge(scene, u, v, color, speed = 1.0) {
+async function flashEdge(scene, u, v, color) {
     const from = getNodePos(scene, u);
     const to = getNodePos(scene, v);
     if (!from || !to) return;
@@ -133,12 +132,12 @@ async function flashEdge(scene, u, v, color, speed = 1.0) {
     g.lineStyle(5, color, 0.8);
     g.lineBetween(from.x, from.y, to.x, to.y);
 
-    await new Promise(r => setTimeout(r, 400 / speed));
+    await animationController.sleep(400);
     g.destroy();
 }
 
 /** Animate กล่อง cable car วิ่งจาก u ไป v แล้วหายไป */
-function animateCableCar(scene, u, v, speed = 1.0) {
+function animateCableCar(scene, u, v) {
     const from = getNodePos(scene, u);
     const to = getNodePos(scene, v);
     if (!from || !to) return Promise.resolve();
@@ -152,7 +151,7 @@ function animateCableCar(scene, u, v, speed = 1.0) {
             targets: car,
             x: to.x,
             y: to.y,
-            duration: 600 / speed,
+            duration: 600 / animationController.speed,
             ease: 'Power1',
             onComplete: () => {
                 car.destroy();

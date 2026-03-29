@@ -18,6 +18,10 @@ const CoinChangeForm = ({ data, onChange }) => {
     };
 
     const addWarrior = () => {
+        if (warriors.length >= 7) {
+            alert('เพิ่มเหรียญ (Warriors) ได้สูงสุด 7 ชนิด');
+            return;
+        }
         updateField('warriors', [...warriors, null]);
     };
 
@@ -28,9 +32,15 @@ const CoinChangeForm = ({ data, onChange }) => {
                 <Input
                     type="number"
                     min="1"
+                    max="1000"
                     value={data?.monster_power ?? ''}
-                    onChange={(e) => updateField('monster_power', parseInt(e.target.value) || null)}
-                    placeholder="เช่น 32"
+                    onChange={(e) => {
+                        let val = parseInt(e.target.value);
+                        if (!val && val !== 0) return updateField('monster_power', null);
+                        if (val > 1000) val = 1000;
+                        updateField('monster_power', val);
+                    }}
+                    placeholder="สูงสุด 1000"
                     className="mt-1"
                 />
             </div>

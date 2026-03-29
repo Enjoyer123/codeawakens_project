@@ -169,28 +169,7 @@ const CategoryLevels = () => {
           })}
         </svg>
 
-        {/* Current Level Bouncing Avatar(s) */}
-        {currentLevelNodes.map(node => node.coordinates && (
-          <div 
-            key={`avatar-${node.level_id}`}
-            className="absolute z-30 pointer-events-none transform -translate-x-1/2 -translate-y-full"
-            style={{ 
-              left: `${node.coordinates.left}%`, 
-              top: `calc(${node.coordinates.top}% - 12px)` 
-            }}
-          >
-            <div className="animate-bounce relative drop-shadow-[0_10px_10px_rgba(0,0,0,0.6)]">
-              <img 
-                src="/characters/main_1.png" 
-                alt="Current Player" 
-                className="w-12 h-12 md:w-16 md:h-16 object-contain"
-                style={{ imageRendering: 'pixelated' }}
-              />
-            </div>
-            {/* Soft ground shadow below bouncing character */}
-            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-6 h-2 bg-black/60 rounded-full blur-[3px]" />
-          </div>
-        ))}
+        {/* Bouncing Avatar has been replaced by Star UI Indicators */}
 
         {/* Level Nodes */}
         {levels.map((level) => {
@@ -198,6 +177,11 @@ const CategoryLevels = () => {
           const position = level.coordinates;
           // Level is locked if user hasn't unlocked it yet OR if it's a DRAFT (is_unlocked === false)
           const isLocked = level.is_locked || !level.is_unlocked;
+
+          // Calculate stars
+          const progress = userProgress.find(p => String(p.level_id) === String(level.level_id));
+          const isCompleted = progress && progress.status === 'completed';
+          const starsEarned = isCompleted ? (progress.stars_earned || 0) : 0;
 
           if (!position) return null;
 
@@ -231,6 +215,12 @@ const CategoryLevels = () => {
                       </span>
                     )}
 
+                    {level.required_for_post_test && (
+                      <span className="bg-amber-500/90 text-white text-[8px] md:text-[9px] font-bold px-1 py-0.5 rounded-sm shadow-sm flex items-center gap-0.5" title="จำเป็นต้องผ่านด่านนี้เพื่อทำ Post-test">
+                        <span className="text-[10px]">⭐</span> Post-Test
+                      </span>
+                    )}
+
                     <span className={`font-bold text-[9px] md:text-xs tracking-wide ${isLocked ? 'text-gray-400' : 'text-[#e0e7ff]'}`}>
                       {level.title || level.level_name}
                     </span>
@@ -255,6 +245,31 @@ const CategoryLevels = () => {
                 {/* Subtle Glow under the dot (Only if unlocked) */}
                 {!isLocked && (
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 bg-[#7048e8]/10 rounded-full blur-md -z-1" />
+                )}
+
+                {/* 3-Star Rating Indicator (Below the dot) */}
+                {!isLocked && (
+                  <div className="absolute top-full mt-2 flex gap-1 justify-center items-center z-20 pointer-events-none transition-transform group-hover:scale-110">
+                    {[1, 2, 3].map((starNum) => {
+                      const isEarned = starNum <= starsEarned;
+                      return (
+                        <svg 
+                          key={starNum} 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          className={`w-4 h-4 md:w-5 md:h-5 drop-shadow-md transition-colors ${
+                            isEarned 
+                              ? 'text-yellow-400 fill-yellow-400' 
+                              : 'text-gray-500/60 fill-gray-800/80'
+                          }`} 
+                          viewBox="0 0 24 24" 
+                          stroke="currentColor" 
+                          strokeWidth="1.5"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                        </svg>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
 

@@ -1,205 +1,220 @@
 // Subset Sum Backtracking Animation Playback
+import { animationController, createTraceBuffer } from './AnimationController';
+import { createTreeRenderer } from './TreeRenderer';
 
 export async function playSubsetSumBacktrackAnimation(scene, trace, options = {}) {
     // สลับ Display Mode ตรงนี้:
-    return playClassicDisplay(scene, trace, options);
+    return playTreeDisplay(scene, trace, options);
 }
 
 // ============================================================================
-// Display Mode 1: Classic Display (self-contained)
+// Display Mode 2: Tree Display (Reingold-Tilford)
 // ============================================================================
-async function playClassicDisplay(scene, trace, options = {}) {
-    if (!scene.subsetSum || !scene.subsetSum.warriors) return;
-
-    const { speed = 1.0 } = options;
-    const baseWait = 800 / speed;
+async function playTreeDisplay(scene, trace, options) {
+    const baseDelay = 800;
+    if (!scene || !scene.subsetSum || !scene.subsetSum.warriors || !trace) return;
 
     const warriors = scene.subsetSum.warriors;
-    const side1 = scene.subsetSum.side1;
-
-    let currentSum = 0;
-    const side1Contents = [];
-
-    // Text to show current sum on side 1
-    const currentSumText = scene.add.text(side1.x, side1.y + 60, '', {
-        fontSize: '24px',
-        color: '#ffd700',
-        fontStyle: 'bold',
-        stroke: '#000000',
-        strokeThickness: 5
-    }).setOrigin(0.5).setDepth(20);
-
     const targetSum = scene.levelData?.algo_data?.payload?.target_sum || 0;
 
-    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    const canvasW = scene.scale.width || 800;
+    const canvasH = scene.scale.height || 600;
+    const sleep = (ms) => animationController.sleep(ms);
 
-    // Draw event text box
-    let infoGraphics = scene.add.graphics().setDepth(15);
-    let infoText = scene.add.text(400, 50, '', { fontSize: '20px', color: '#fff' }).setOrigin(0.5).setDepth(16);
+    if (!scene || !trace) {
+        console.warn('⚠️ [primPlayback] No scene or trace found');
+        return;
+    }
 
-    const updateInfo = (text, color = 0x000000) => {
-        infoGraphics.clear();
-        infoGraphics.fillStyle(color, 0.7);
-        infoGraphics.fillRoundedRect(100, 25, 600, 50, 10);
-        infoText.setText(text);
-    };
+    // Status text (ย้ายไปอยู่มุมขวาล่างใต้ Target Sum เหมือน Coin Change)
+    const statusText = scene.add.text(1050, 420, 'เริ่มสร้าง Tree...', {
+        fontSize: '20px', color: '#FFFF00', fontStyle: 'bold', stroke: '#000', strokeThickness: 4, align: 'center', wordWrap: { width: 220 }
+    }).setOrigin(0.5, 0).setDepth(20);
 
-    updateInfo("เริ่มการค้นหาแบบ Backtracking (Subset Sum)", 0x333333);
-    await sleep(baseWait);
+    // ดันต้นไม้ลงมาให้พ้น UI ด้านบน
+    const tree = createTreeRenderer(scene, canvasW, canvasH);
+    tree.container.setY(30);
 
-    for (let step of trace) {
-        if (!scene || !scene.scene || !scene.scene.isActive(scene.scene.key)) break;
+    // Root node โชว์ผลรวมเริ่มต้น (0)
+    const rootId = tree.addNode(null, -1, 0);
+    tree.setState(rootId, 'active');
 
-        const idx = step.index; // Trace uses 0-based indexing
-        if (idx < 0 || idx >= warriors.length) continue;
-        const warrior = warriors[idx];
+    // stack เก็บ node id เอาไว้ backtracking
+    const path = [rootId];
+    let currentSum = 0;
 
-        // --- Auto-Cleanup Deeper Recursions ---
-        // When backtracking to a smaller index, any warriors with a larger index
-        // that are still on the board (Side 1 or Side 2) must be reset to their original position.
-        let cleanedUp = false;
-        for (let i = idx + 1; i < warriors.length; i++) {
-            const w = warriors[i];
-            const s1Idx = side1Contents.indexOf(w);
+    tree.relayout();
+    tree.redraw();
 
-            // Clean up from board if it was there
-            if (s1Idx !== -1) {
-                cleanedUp = true;
-                side1Contents.splice(s1Idx, 1);
-                currentSum -= w.power;
-                currentSumText.setText(currentSum > 0 ? `Sum: ${currentSum} / ${targetSum}` : '');
+    for await (const step of createTraceBuffer(trace)) {
+        if (!scene?.scene?.isActive(scene.scene.key)) break;
+
+        // SubsetSum trace events: consider, include, exclude, reset
+        if (step.action === 'include') {
+            const idx = step.index;
+            const parentId = path[path.length - 1];
+            const warrior = warriors[idx];
+
+            const parentSum = parentId !== null ? tree.nodes[parentId].amount : 0;
+            currentSum = Number(parentSum) + Number(warrior.power);
+
+            // Flash highlight over the setup warrior
+            if (warrior && warrior.sprite) {
+                const flash = scene.add.rectangle(warrior.sprite.x, warrior.sprite.y, 60, 60, 0x00FFFF, 0.6).setDepth(12);
+                scene.tweens.add({ targets: flash, alpha: 0, duration: 400 / animationController.speed, onComplete: () => flash.destroy() });
             }
 
-            // Always reset visual state for deeper warriors
-            if (w.sprite.alpha < 1.0 || w.sprite.x !== w.originalX || w.sprite.y !== w.originalY) {
-                cleanedUp = true;
-                scene.tweens.add({
-                    targets: [w.sprite, w.powerText],
-                    x: w.originalX,
-                    y: w.originalY,
-                    scaleX: 1.5,
-                    scaleY: 1.5,
-                    alpha: 1.0,
-                    duration: 400 / speed,
-                    ease: 'Power2'
-                });
-                if (w.labelText) w.labelText.setVisible(true);
-            }
-        }
-        if (cleanedUp) {
-            updateInfo(`ย้อนระดับ (Backtrack): ดึงนักรบระดับลึกกลับทั้งหมด`, 0x95a5a6);
-            await sleep(400 / speed);
-        }
-        // --- End Auto-Cleanup ---
+            // Edge label โชว์ว่า Include (+X)
+            const id = tree.addNode(parentId, idx, currentSum, `+${warrior.power}`);
 
-        if (step.action === 'consider') {
-            updateInfo(`กำลังพิจารณานักรบที่ ${idx + 1} (พลัง: ${warrior.power})`, 0x3498db);
-
-            // Flash glow
-            if (warrior.sprite) {
-                scene.tweens.add({
-                    targets: warrior.sprite,
-                    alpha: 0.5,
-                    duration: 150 / speed,
-                    yoyo: true,
-                    repeat: 1
-                });
-            }
-            await sleep(baseWait * 0.5);
-
-        } else if (step.action === 'include') {
-            updateInfo(`เลือกนักรบที่ ${idx + 1} เข้าร่วม (ซ้อนขึ้นตาชั่ง)`, 0x2ecc71);
-
-            side1Contents.push(warrior);
-            currentSum += warrior.power;
-
-            if (currentSum > targetSum) {
-                currentSumText.setColor('#e74c3c'); // Red if exceeded
+            if (currentSum === targetSum) {
+                tree.setState(id, 'solved');
+                statusText.setText(`✅ ผลรวมพอดีเป๊ะ! (Sum = ${currentSum})`).setColor('#00FF88');
+            } else if (currentSum > targetSum) {
+                tree.setState(id, 'dead');
+                statusText.setText(`❌ ผลรวมเกิน! (${currentSum} > ${targetSum})`).setColor('#FF4444');
             } else {
-                currentSumText.setColor('#ffd700'); // Gold otherwise
-            }
-            currentSumText.setText(`Sum: ${currentSum} / ${targetSum}`);
-
-            // Animate to side1
-            const offset = (side1Contents.length - 1) * -30; // Stack slightly upwards
-            scene.tweens.add({
-                targets: [warrior.sprite, warrior.powerText],
-                x: side1.x,
-                y: side1.y + offset,
-                scaleX: 1.0,
-                scaleY: 1.0,
-                duration: 400 / speed,
-                ease: 'Power2'
-            });
-
-            // Hide normal label
-            if (warrior.labelText) warrior.labelText.setVisible(false);
-
-            await sleep(baseWait);
-
-        } else if (step.action === 'exclude') {
-            const s1Index = side1Contents.indexOf(warrior);
-
-            if (s1Index !== -1) {
-                // It was on the scale, so we are backtracking from 'include' to try 'exclude'
-                updateInfo(`ถอนกำลัง! เอานักรบที่ ${idx + 1} ออกจากตาชั่ง`, 0xe67e22);
-                side1Contents.splice(s1Index, 1);
-                currentSum -= warrior.power;
-                currentSumText.setText(currentSum > 0 ? `Sum: ${currentSum} / ${targetSum}` : '');
-
-                // Add brief delay to let user see it's being removed
-                await sleep(200 / speed);
+                tree.setState(id, 'active');
+                statusText.setText(`หยิบชิ้น ${idx + 1} (Sum = ${currentSum})`).setColor('#00FF88');
             }
 
-            updateInfo(`กิ่งชอยส์ 2: ข้าม (Exclude) นักรบที่ ${idx + 1}`, 0xe74c3c);
+            path.push(id);
 
-            // Animate to original position but faded (Discarded for this branch)
-            scene.tweens.add({
-                targets: [warrior.sprite, warrior.powerText],
-                x: warrior.originalX,
-                y: warrior.originalY,
-                scaleX: 1.0,
-                scaleY: 1.0,
-                alpha: 0.3,
-                duration: 400 / speed,
-                ease: 'Power2'
-            });
+            tree.relayout();
+            tree.redraw();
+            await sleep(baseDelay * 0.6);
+        }
+        else if (step.action === 'exclude') {
+            const idx = step.index;
+            const parentId = path[path.length - 1];
 
-            if (warrior.labelText) warrior.labelText.setVisible(true);
+            const parentSum = parentId !== null ? tree.nodes[parentId].amount : 0;
+            currentSum = parentSum;
 
-            await sleep(baseWait);
-
-        } else if (step.action === 'reset') {
-            updateInfo(`ถอยกิ่ง (Reset): คืนค่านักรบที่ ${idx + 1} ให้สว่างพร้อมเลือกใหม่`, 0x95a5a6);
-
-            const s1Index = side1Contents.indexOf(warrior);
-            if (s1Index !== -1) {
-                side1Contents.splice(s1Index, 1);
-                currentSum -= warrior.power;
-                currentSumText.setText(currentSum > 0 ? `Sum: ${currentSum} / ${targetSum}` : '');
+            // Flash highlight over the setup warrior (skipped)
+            const warrior = warriors[idx];
+            if (warrior && warrior.sprite) {
+                const flash = scene.add.rectangle(warrior.sprite.x, warrior.sprite.y, 60, 60, 0x00FFFF, 0.6).setAlpha(0.3).setDepth(12); // Slightly dimmer for skip
+                scene.tweens.add({ targets: flash, alpha: 0, duration: 400 / animationController.speed, onComplete: () => flash.destroy() });
             }
 
-            scene.tweens.add({
-                targets: [warrior.sprite, warrior.powerText],
-                x: warrior.originalX,
-                y: warrior.originalY,
-                scaleX: 1.5,
-                scaleY: 1.5,
-                alpha: 1.0,
-                duration: 400 / speed,
-                ease: 'Power2'
-            });
+            // Edge label = Exclude / Skip
+            const id = tree.addNode(parentId, -1, currentSum, `Skip`); // -1 = ไม่ได้ใช้นักรบตัวไหนเลย
 
-            if (warrior.labelText) warrior.labelText.setVisible(true);
-            await sleep(baseWait * 0.5);
+            tree.setState(id, 'active');
+            statusText.setText(`⏭️ ข้ามชิ้น ${idx + 1} (Sum = ${currentSum})`).setColor('#FFA500');
+
+            path.push(id);
+
+            tree.relayout();
+            tree.redraw();
+            await sleep(baseDelay * 0.6);
+        }
+        else if (step.action === 'reset' || step.action === 'backtrack') {
+            const deadId = path.pop();
+
+            if (deadId !== undefined && tree.nodes[deadId]?.state !== 'solved') {
+                tree.setState(deadId, 'dead');
+                tree.redraw();
+            }
+
+            // Restore currentSum from parent
+            if (path.length > 0) {
+                const parentId = path[path.length - 1];
+                currentSum = tree.nodes[parentId].amount;
+            }
+
+            statusText.setText('↩ Backtrack (ย้อนกลับ)').setColor('#FF9944');
+            await sleep(baseDelay * 0.4);
+        }
+        else if (step.action === 'consider') {
+            const idx = step.index;
+            const warrior = warriors[idx];
+            statusText.setText(`พิจารณาชิ้นที่ ${idx + 1}` + (warrior ? ` (Power: ${warrior.power})` : '')).setColor('#3498db');
+            await sleep(baseDelay * 0.4);
         }
     }
 
-    if (options.result) {
-        updateInfo("พบคำตอบ! ผลรวมตรงเป้าหมาย", 0x2ecc71);
-    } else {
-        updateInfo("จบการค้นหา: ไม่พบเซตที่ผลรวมตรงเป้าหมาย", 0xe74c3c);
+    // Highlight solved path (หาคำตอบแรกที่พบ)
+    let foundSolution = false;
+    let successfulPathIndices = [];
+
+    for (const n of tree.nodes) {
+        if (n.amount === targetSum) {
+            foundSolution = true;
+            let cur = n.id;
+            while (cur !== null) {
+                tree.setState(cur, 'solved');
+                // เก็บ index ของนักรบที่ถูกเลือกลงใน successfulPathIndices
+                if (tree.nodes[cur].coinIdx >= 0) {
+                    successfulPathIndices.push(tree.nodes[cur].coinIdx);
+                }
+                cur = tree.nodes[cur].parentId;
+            }
+            successfulPathIndices.reverse();
+            break; // เอาแค่ชุดแรกที่เจอ
+        }
     }
 
-    await sleep(2000);
+    tree.relayout();
+    tree.redraw();
+
+    if (foundSolution) {
+        statusText.setText(`✅ สำเร็จ! พบผลรวมตรงตามเป้าหมาย (Sum = ${targetSum})`).setColor('#00FF88');
+        await sleep(baseDelay);
+
+        // ให้ Tree จางหายไปเพื่อให้เห็นฉากกระโดดชัดเจน (ตามแผน ไม่จางก็ได้ แต่เคืองตา อาจจะจางแค่ 0.1 หรือปล่อยไว้)
+        // เพื่อให้ตรงตามที่ผู้ใช้ร้องขอล่าสุด "tree ไม่ต้องจางหาย" => ไม่สั่ง alpha: 0
+
+        // นำตัวละครที่เป็นชุดคำตอบบินมาตรงกลางจอ
+        await sleep(500);
+        const centerY = canvasH / 2 + 70;
+        const spacing = 180;
+        const startHeroX = (canvasW / 2) - ((successfulPathIndices.length * spacing) / 2) + (spacing / 2);
+
+        for (let idx = 0; idx < successfulPathIndices.length; idx++) {
+            const warriorIdx = successfulPathIndices[idx];
+            const w = warriors[warriorIdx];
+            if (!w || !w.sprite) continue;
+
+            const px = startHeroX + (idx * spacing);
+
+            scene.tweens.add({
+                targets: w.sprite,
+                x: px,
+                y: centerY,
+                scale: 2.0, // ขยายขนาดตอนบินมาโชว์ตัว
+                duration: 800 / animationController.speed,
+                ease: 'Back.easeOut',
+                onComplete: () => {
+                    scene.tweens.add({
+                        targets: w.sprite,
+                        y: '-=20',
+                        yoyo: true,
+                        repeat: -1,
+                        duration: 350
+                    });
+                }
+            });
+
+            if (w.powerText) {
+                scene.tweens.add({
+                    targets: w.powerText,
+                    x: px,
+                    y: centerY - 60,
+                    scale: 1.5,
+                    duration: 800 / animationController.speed,
+                    ease: 'Back.easeOut'
+                });
+            }
+            if (w.labelText) w.labelText.setVisible(false);
+
+            await sleep(200);
+        }
+
+        await sleep(baseDelay * 1.5);
+    } else {
+        statusText.setText(`❌ ไม่พบคำตอบที่ทำผลรวมได้ ${targetSum}`).setColor('#FF4444');
+        await sleep(baseDelay * 2.0);
+    }
 }
