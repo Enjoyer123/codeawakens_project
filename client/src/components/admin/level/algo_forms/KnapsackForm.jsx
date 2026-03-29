@@ -25,6 +25,10 @@ const KnapsackForm = ({ data, onChange }) => {
     };
 
     const addItem = () => {
+        if (items.length >= 8) {
+            alert('เพิ่มสมบัติได้สูงสุด 8 ชิ้น เพื่อป้องกันปัญหาประสิทธิภาพของบราวเซอร์');
+            return;
+        }
         const spacing = 150;
         const startX = 150;
         const newId = items.length > 0 ? Math.max(...items.map(i => i.id || 0)) + 1 : 1;
@@ -45,9 +49,15 @@ const KnapsackForm = ({ data, onChange }) => {
                 <Input
                     type="number"
                     min="1"
+                    max="500"
                     value={data?.capacity ?? ''}
-                    onChange={(e) => updateField('capacity', parseInt(e.target.value) || null)}
-                    placeholder="เช่น 50"
+                    onChange={(e) => {
+                        let val = parseInt(e.target.value);
+                        if (!val && val !== 0) return updateField('capacity', null);
+                        if (val > 500) val = 500;
+                        updateField('capacity', val);
+                    }}
+                    placeholder="สูงสุด 500"
                     className="mt-1"
                 />
             </div>

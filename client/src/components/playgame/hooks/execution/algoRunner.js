@@ -15,6 +15,7 @@ import { resetGameExecutionState } from '@/gameutils/shared/execution/executionR
 import { handleLevelCompletion } from '@/gameutils/shared/execution/levelCompletionHandler';
 import { saveUserProgress } from '@/services/profileService';
 import { mapRuntimeErrorToMessage } from './codeValidator';
+import { animationController } from '@/gameutils/algo/playback/AnimationController';
 
 /**
  * Run the Algo execution path.
@@ -43,6 +44,9 @@ export async function runAlgoPath(code, {
     } = setters;
 
     await new Promise(r => setTimeout(r, 300));
+
+    // Reset animation controller (clear any pause state from previous run)
+    animationController.reset();
 
     // Phase 1: Execute pure logic (no visuals)
     const { result, trace, error } = await executeAlgoCode(code, currentLevel);
@@ -109,7 +113,8 @@ export async function runAlgoPath(code, {
         }
 
         if (scene && trace.length > 0) {
-
+            console.log('📌 [algoRunner] Algorithm evaluated. Trace generated with length:', trace.length);
+            console.log('📌 [algoRunner] Now starting visual playback step-by-step...');
 
             await resetGameExecutionState({
                 setPlayerHp,
@@ -119,6 +124,8 @@ export async function runAlgoPath(code, {
             });
 
             try {
+                // Default to Step Mode (Pause initially) before playing animation
+                animationController.pause();
                 await playAlgoAnimation(scene, algoType, trace, { result });
             } catch (animError) {
                 console.warn('⚠️ [Algo Animation] Interrupted:', animError.message);
@@ -127,6 +134,11 @@ export async function runAlgoPath(code, {
     }
 
     // Phase 5: Handle level completion (victory modal / failure state)
+    // ถ้า animation ถูก abort (ออกจากด่านกลางคัน) → ข้ามส่วนนี้ทั้งหมด
+    if (animationController.isAborted) {
+        console.log('🚫 [algoRunner] Animation was aborted (level exited). Skipping level completion.');
+        return;
+    }
     await handleLevelCompletion({
         currentLevel,
         testCaseResult,

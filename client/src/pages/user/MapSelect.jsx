@@ -170,6 +170,11 @@ const MapSelect = () => {
                               {unplayedCount} New
                             </span>
                           )}
+                          {category.levels?.some(l => l.required_for_post_test) && (
+                            <span className="bg-amber-500/90 text-white text-[8px] md:text-[9px] font-bold px-1.5 py-0.5 rounded-sm shadow-sm flex items-center gap-0.5" title="หมวดหมู่นี้มีด่านสำคัญสำหรับ Post-test">
+                              <span className="text-[10px]">⭐</span> Post-Test
+                            </span>
+                          )}
                           {count > 0 && (
                             <span className="bg-[#7048e8]/80 text-white text-[8px] md:text-[10px] font-bold px-1.5 py-0.5 rounded-sm group-hover:bg-[#7048e8]">
                               {count}

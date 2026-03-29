@@ -9,6 +9,7 @@
 
 import Phaser from 'phaser';
 import { updateWeaponPosition } from '../../combat/weaponEffects';
+import { animationController, createTraceBuffer } from './AnimationController';
 
 /**
  * เล่น DFS/BFS Animation จาก trace array (Router Function)
@@ -26,11 +27,10 @@ export async function playGraphAnimation(scene, trace, options = {}) {
 // Display Mode 1: แบบดั้งเดิม (วาดเส้นสำรวจบนกราฟ + Magic Circle)
 // ============================================================================
 async function playDfsBfsDisplay(scene, trace, options = {}) {
-    const { speed = 1.0 } = options;
-    const baseDelay = 3000 / speed; // ให้ช้าลง ให้คนดูทัน
+    const baseDelay = 3000; // ให้ช้าลง ให้คนดูทัน
 
-    if (!scene || !trace || trace.length === 0) {
-        console.warn('⚠️ [graphPlayback] No scene or trace');
+    if (!scene || !trace) {
+        console.warn('⚠️ [graphPlayback] No scene or trace found');
         return;
     }
 
@@ -42,11 +42,14 @@ async function playDfsBfsDisplay(scene, trace, options = {}) {
     const deadEndGraphics = scene.add.graphics().setDepth(2.2);       // เส้นตาย (เทา)
     const answerGraphics = scene.add.graphics().setDepth(3);          // เส้นคำตอบ (ฟ้า)
 
+    const statusText = scene.add.text(scene.scale.width / 2, 50, 'เริ่มการสำรวจกราฟ...', {
+        fontSize: '24px', color: '#FFFF00', fontStyle: 'bold', stroke: '#000', strokeThickness: 4
+    }).setOrigin(0.5).setDepth(100);
+
     let currentPath = [];  // เส้นทางที่กำลังสำรวจอยู่
 
 
-    for (let i = 0; i < trace.length; i++) {
-        const step = trace[i];
+    for await (const step of createTraceBuffer(trace)) {
 
         switch (step.action) {
             case 'show_path': {
@@ -62,11 +65,15 @@ async function playDfsBfsDisplay(scene, trace, options = {}) {
                     const backtrackTo = findCommonPrefixLength(prevPath, newPath);
 
                     if (backtrackTo < backtrackFrom) {
+                        statusText.setText(`เจอทางตัน! ถอยกลับ (Backtrack) จากโหนด ${prevPath[prevPath.length - 1]}`).setColor('#FF4444');
                         // เจอจุดย้อน ทิ้งรอยเส้นสีแดง (Dead end, เปลี่ยนจากสีเทาเพื่อความชัดเจน)
                         drawPath(deadEndGraphics, scene, prevPath.slice(Math.max(0, backtrackTo - 1)), 0xff4444, 0.8, 5);
                         await sleep(baseDelay * 0.4);
                     }
                 }
+
+                const tipNode = currentPath[currentPath.length - 1];
+                statusText.setText(`กำลังเดินไปที่โหนด ${tipNode} (เส้นทาง: ${currentPath.join(' → ')})`).setColor('#FFFF00');
 
                 // วาดเส้นสำรวจปัจจุบัน (สีเหลือง)
                 explorationGraphics.clear();
@@ -75,7 +82,6 @@ async function playDfsBfsDisplay(scene, trace, options = {}) {
                 }
 
                 // Highlight โหนดที่กำลังยืนอยู่ (ปลายทางของ path)
-                const tipNode = currentPath[currentPath.length - 1];
                 clearScanningHighlights(scene);
                 highlightNode(scene, tipNode, 0x00ff00, 700);
                 markNodeAsVisited(scene, tipNode);
@@ -86,6 +92,8 @@ async function playDfsBfsDisplay(scene, trace, options = {}) {
 
             case 'visit': {
                 const tipNode = step.node;
+                
+                statusText.setText(`มองหาทางไปต่อจากโหนด ${tipNode}...`).setColor('#00FFFF');
 
                 // แสดง neighbors (flash สั้นๆ)
                 if (step.neighbors && step.neighbors.length > 0) {
@@ -105,19 +113,21 @@ async function playDfsBfsDisplay(scene, trace, options = {}) {
             }
 
             case 'move_along_path': {
+                statusText.setText(`เดินตามเส้นทางคำตอบไปยังเป้าหมาย!`).setColor('#00FF88');
                 clearScanningHighlights(scene);
                 explorationGraphics.clear();
                 deadEndGraphics.clear(); // ลบเส้นตายตอนจบ
 
                 if (step.path && step.path.length >= 2) {
+                    statusText.setText(`เส้นทาง: ${step.path.join(' → ')}`).setColor('#00FF88');
                     // Flash คำตอบ — เส้นสีฟ้าสว่าง
                     drawPath(answerGraphics, scene, step.path, 0x00ffff, 1.0, 8);
 
                     // Pulse effect
-                    await pulseAnswerPath(scene, answerGraphics, step.path, speed);
+                    await pulseAnswerPath(scene, answerGraphics, step.path);
 
                     // เดินตัวละครตามเส้นทาง
-                    await playMoveAlongPath(scene, step.path, speed);
+                    await playMoveAlongPath(scene, step.path);
                 }
                 break;
             }
@@ -130,6 +140,7 @@ async function playDfsBfsDisplay(scene, trace, options = {}) {
     // Cleanup temp graphics
     explorationGraphics.destroy();
     deadEndGraphics.destroy();
+    statusText.destroy();
 
 }
 
@@ -212,9 +223,9 @@ function drawEdge(graphics, scene, fromId, toId, color, alpha, lineWidth) {
 }
 
 /** Pulse effect สำหรับ answer path */
-async function pulseAnswerPath(scene, graphics, path, speed) {
+async function pulseAnswerPath(scene, graphics, path) {
     const pulseCount = 3;
-    const pulseDuration = 300 / speed;
+    const pulseDuration = 300 / animationController.speed;
 
     for (let p = 0; p < pulseCount; p++) {
         graphics.clear();
@@ -227,17 +238,17 @@ async function pulseAnswerPath(scene, graphics, path, speed) {
     // Final solid
     graphics.clear();
     drawPath(graphics, scene, path, 0x00ffff, 1.0, 6);
-    await sleep(200 / speed);
+    await sleep(200);
 }
 
 /** เดินตัวละครตามเส้นทาง */
-async function playMoveAlongPath(scene, path, speed = 1.0) {
+async function playMoveAlongPath(scene, path) {
     if (!scene || !path || path.length < 2) return;
 
     const hero = scene.hero || scene.player;
     if (!hero) return;
 
-    const moveDuration = 350 / speed;
+    const moveDuration = 350 / animationController.speed;
 
     for (let i = 0; i < path.length; i++) {
         const nodeId = path[i];
@@ -265,7 +276,7 @@ async function playMoveAlongPath(scene, path, speed = 1.0) {
         });
 
         markNodeAsVisited(scene, nodeId);
-        await sleep(80 / speed);
+        await sleep(80);
     }
 }
 
@@ -373,5 +384,5 @@ function markNodeAsVisited(scene, nodeId) {
 }
 
 function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, Math.max(0, ms)));
+    return animationController.sleep(Math.max(0, ms));
 }

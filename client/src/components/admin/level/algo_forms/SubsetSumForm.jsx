@@ -30,6 +30,10 @@ const SubsetSumForm = ({ data, onChange }) => {
     };
 
     const addWarrior = () => {
+        if (warriorsDisplay.length >= 8) {
+            alert('เพิ่มนักรบได้สูงสุด 8 ตัว เพื่อป้องกันปัญหาประสิทธิภาพของบราวเซอร์');
+            return;
+        }
         const spacing = 150;
         const startX = 150;
         const newId = warriorsDisplay.length > 0 ? Math.max(...warriorsDisplay.map(i => i.id || 0)) + 1 : 1;
@@ -51,9 +55,15 @@ const SubsetSumForm = ({ data, onChange }) => {
                 <Input
                     type="number"
                     min="1"
+                    max="1000"
                     value={data?.target_sum ?? ''}
-                    onChange={(e) => updateTargetSum(parseInt(e.target.value) || null)}
-                    placeholder="เช่น 15"
+                    onChange={(e) => {
+                        let val = parseInt(e.target.value);
+                        if (!val && val !== 0) return updateTargetSum(null);
+                        if (val > 1000) val = 1000;
+                        updateTargetSum(val);
+                    }}
+                    placeholder="สูงสุด 1000"
                     className="mt-1"
                 />
             </div>

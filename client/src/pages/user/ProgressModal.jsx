@@ -75,7 +75,7 @@ const RewardSlots = ({ rewards }) => (
 
 // ─── Main Component ────────────────────────────────────────────
 
-const ProgressModal = ({ isOpen, onClose, gameResult, levelData, blocklyXml, textCodeContent, finalScore, hp_remaining, getToken, userBigO }) => {
+const ProgressModal = ({ isOpen, onClose, onReplay, gameResult, levelData, blocklyXml, textCodeContent, finalScore, hp_remaining, getToken, userBigO }) => {
   const navigate = useNavigate();
   const isVictory = gameResult === 'victory';
 
@@ -227,7 +227,7 @@ const ProgressModal = ({ isOpen, onClose, gameResult, levelData, blocklyXml, tex
 
             {/* Footer buttons */}
             <div className="flex justify-center gap-4 shrink-0 pb-12 items-end">
-              <PixelButton label="AGAIN" onClick={() => window.location.reload()} />
+              <PixelButton label="AGAIN" onClick={onReplay ? onReplay : () => window.location.reload()} />
               <PixelButton label="HOME" onClick={() => navigate('/user/mapselect')} />
             </div>
 

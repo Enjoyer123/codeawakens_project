@@ -2,6 +2,7 @@
  * coinChangePlaybackDp.js
  * เลน Animation แบบ DP (Spreadsheet Array 1D / Top-Down)
  */
+import { animationController, createTraceBuffer } from './AnimationController';
 
 export async function playCoinChangeDpAnimation(scene, trace, options = {}) {
     // เปลยนไปใช Top-Down ไดถาเพม options.topDown
@@ -15,10 +16,9 @@ export async function playCoinChangeDpAnimation(scene, trace, options = {}) {
  * ตอนจบ ค่อยเรียกตัวละครที่ถูกต้องออกมาแสดงผล
  */
 export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
-    const { speed = 1.0 } = options;
-    const baseDelay = 100 / speed;
+    const baseDelay = 100;
 
-    if (!scene || !scene.coinChange || !trace || trace.length === 0) {
+    if (!scene || !scene.coinChange || !trace) {
         console.warn('⚠️ [coinChangePlayback] No scene.coinChange or trace');
         return;
     }
@@ -32,18 +32,35 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
 
     const warriors = scene.coinChange.warriors || [];
     const targetAmount = scene.levelData?.algo_data?.payload?.monster_power || 0;
-    const sleep = (ms) => new Promise(res => setTimeout(res, ms));
+    const sleep = (ms) => animationController.sleep(ms);
+
+    const canvasW = scene.scale.width || 1200;
+    const canvasH = scene.scale.height || 920;
+    const centerX = canvasW / 2;
+    const centerY = canvasH / 2;
+
+    const cellW = 55, cellH = 50, cols = 12;
+
+    // คำนวณความกว้าง/สูงของตารางจริงๆ ที่ต้องวาด
+    const displayCols = Math.min(targetAmount + 1, cols);
+    const tableWidth = displayCols * cellW;
+    const displayRows = Math.ceil((targetAmount + 1) / cols);
+    const tableHeight = displayRows * cellH;
+
+    // Center Dynamic (x, y)
+    const paddingX = centerX - (tableWidth / 2) + (cellW / 2);
+    const startY = centerY - (tableHeight / 2) + 40; // ดันลงมานิดนึงเพื่อให้พอดีขอบจอบน
 
     let statusText, detailText;
     try {
         statusText = scene.add.text(
-            400, 750,
+            centerX, startY - 90,
             'สร้างกระดาน DP Spreadsheet (1D Array)',
             { fontSize: '24px', color: '#FFFF00', fontStyle: 'bold', stroke: '#000', strokeThickness: 4, align: 'center' }
         ).setOrigin(0.5).setDepth(20);
 
         detailText = scene.add.text(
-            400, 780,
+            centerX, startY - 50,
             'เตรียมตาราง dp[amount]...',
             { fontSize: '18px', color: '#FFFFFF', fontStyle: 'bold', stroke: '#000', strokeThickness: 3, align: 'center' }
         ).setOrigin(0.5).setDepth(20);
@@ -52,52 +69,7 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
         return;
     }
 
-    // ==========================================
-    // UI: DP Table Array (Spreadsheet)
-    // ==========================================
-    // ออกแบบให้เป็นช่อง 4เหลี่ยมติดๆ กัน เหมือนตาราง Excel 1 แถวยาวๆ (เลี้ยวโค้งได้ถ้าเกิน)
-    const cols = 12;
-    const cellW = 55;
-    const cellH = 50;
-    const paddingX = 400 - ((Math.min(targetAmount + 1, cols) * cellW) / 2) + (cellW / 2);
-    const startY = 340; // ย้ายลงมาตรงกลางจอ ไม่ให้ทับจุดด้านบน
-
-    const cells = [];
-
-    // สร้างตาราง
-    for (let i = 0; i <= targetAmount; i++) {
-        const r = Math.floor(i / cols);
-        const c = i % cols;
-        const cx = paddingX + (c * cellW);
-        const cy = startY + (r * (cellH + 40)); // เว้นที่ให้ลูกศรโยง
-
-        // พื้นหลังช่อง
-        const bg = scene.add.rectangle(cx, cy, cellW, cellH, 0x111111, 0.9)
-            .setStrokeStyle(2, 0x555555).setDepth(10);
-
-        // ตัวเลข Index กำกับบนหัว (โชว์จำนวนเลือด Amount)
-        scene.add.text(cx, cy - (cellH / 2) - 10, i.toString(), {
-            fontSize: '14px', color: '#ffffff', fontStyle: 'bold'
-        }).setOrigin(0.5).setDepth(11);
-
-        // ค่าในช่องเริ่มต้นที่ ∞ ยกเว้นช่อง 0
-        const textVal = scene.add.text(cx, cy, i === 0 ? '0' : '∞', {
-            fontSize: i === 0 ? '24px' : '30px', color: i === 0 ? '#00FF00' : '#FFFFFF', fontStyle: 'bold', stroke: '#000000', strokeThickness: 4
-        }).setOrigin(0.5).setDepth(11);
-
-        cells.push({ bg, text: textVal, cx, cy, minCoins: i === 0 ? 0 : 999999, combo: [] });
-    }
-
-    // Pointer สำหรับชี้ Amount ปัจจุบัน (Outer Loop)
-    const pointerDest = scene.add.rectangle(0, 0, cellW + 4, cellH + 4, 0x000000, 0)
-        .setStrokeStyle(4, 0xFFFF00).setDepth(15).setVisible(false);
-
-    // Pointer สำหรับชี้ข้อมูลเก่าที่คำนวณแล้ว (Inner Loop)
-    const pointerSrc = scene.add.rectangle(0, 0, cellW, cellH, 0x000000, 0)
-        .setStrokeStyle(3, 0x00FFFF).setDepth(14).setVisible(false);
-
-    // เส้นลูกศร (Graphics)
-    const lineGraphics = scene.add.graphics({ lineStyle: { width: 3, color: 0x00FFFF, alpha: 0.8 } }).setDepth(13);
+    const { cells, pointerDest, pointerSrc, lineGraphics } = create1DDpTable(scene, targetAmount, cols, paddingX, startY, cellW, cellH);
 
     let currentAmount = 0;
 
@@ -109,9 +81,8 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
     };
 
     // 2. ลุยรัน Trace เติมตาราง
-    for (let i = 0; i < trace.length; i++) {
+    for await (const step of createTraceBuffer(trace)) {
         if (!scene || !scene.scene || !scene.scene.isActive(scene.scene.key)) break;
-        const step = trace[i];
 
         if (step.action === 'memo_hit') { // ถือเป็นสัญญาณเริ่ม Outer Loop สำหรับ Amount นีั
             currentAmount = step.amount;
@@ -133,7 +104,7 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
 
             // Flash on warrior sprite UI
             const flash = scene.add.rectangle(w.x, w.y, 60, 60, 0x00FFFF, 0.6).setDepth(12);
-            scene.tweens.add({ targets: flash, alpha: 0, duration: 400 / speed, onComplete: () => flash.destroy() });
+            scene.tweens.add({ targets: flash, alpha: 0, duration: 400 / animationController.speed, onComplete: () => flash.destroy() });
 
             const prevAmount = currentAmount - w.power;
 
@@ -150,33 +121,7 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
 
                 // วาดเส้นโค้งเชื่อมโยงช่อง (โยงขึ้นข้างบนเพื่อไม่เกะกะข้อความล่าง)
                 lineGraphics.clear();
-
-                const startX = pointerDest.x;
-                const startY = pointerDest.y - (cellH / 2);
-                const endX = prevCell.cx;
-                const endY = prevCell.cy - (cellH / 2);
-
-                // วาดเส้นโค้งผ่าน Control Point
-                const ctrlX = (startX + endX) / 2;
-                const ctrlY = Math.min(startY, endY) - 40;
-
-                const curve = new Phaser.Curves.QuadraticBezier(
-                    new Phaser.Math.Vector2(startX, startY),
-                    new Phaser.Math.Vector2(ctrlX, ctrlY),
-                    new Phaser.Math.Vector2(endX, endY)
-                );
-
-                curve.draw(lineGraphics);
-
-                // ปลายลูกศร
-                const angle = Phaser.Math.Angle.Between(ctrlX, ctrlY, endX, endY);
-                const arrowLength = 10;
-                lineGraphics.beginPath();
-                lineGraphics.moveTo(endX, endY);
-                lineGraphics.lineTo(endX - arrowLength * Math.cos(angle - Math.PI / 6), endY - arrowLength * Math.sin(angle - Math.PI / 6));
-                lineGraphics.moveTo(endX, endY);
-                lineGraphics.lineTo(endX - arrowLength * Math.cos(angle + Math.PI / 6), endY - arrowLength * Math.sin(angle + Math.PI / 6));
-                lineGraphics.strokePath();
+                drawCurvedArrow(scene, lineGraphics, pointerDest.x, pointerDest.y, prevCell.cx, prevCell.cy, cellH);
 
             } else {
                 pointerSrc.setVisible(false);
@@ -205,8 +150,8 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
 
                 // Flash สีเขียวเด้ง
                 c.bg.setStrokeStyle(3, 0x00FF00);
-                scene.tweens.add({ targets: c.bg, scaleX: 1.15, scaleY: 1.15, yoyo: true, duration: 300 / speed });
-                scene.tweens.add({ targets: c.text, scale: 1.5, yoyo: true, duration: 300 / speed });
+                scene.tweens.add({ targets: c.bg, scaleX: 1.15, scaleY: 1.15, yoyo: true, duration: 300 / animationController.speed });
+                scene.tweens.add({ targets: c.text, scale: 1.5, yoyo: true, duration: 300 / animationController.speed });
 
                 await sleep(baseDelay * 1.2);
 
@@ -227,39 +172,100 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
         statusText.setColor('#00FF00');
         detailText.setText('ตรวจพบคำตอบที่ดีที่สุดจากตาราง!');
         finalCell.bg.setStrokeStyle(4, 0x00FF00);
-        scene.tweens.add({ targets: finalCell.bg, scaleX: 1.2, scaleY: 1.2, yoyo: true, repeat: -1, duration: 600 / speed });
+        scene.tweens.add({ targets: finalCell.bg, scaleX: 1.2, scaleY: 1.2, yoyo: true, repeat: -1, duration: 600 / animationController.speed });
 
-        await sleep(baseDelay * 1.5);
+        // --- NEW: Visual Traceback (แกะรอยกลับ 1D Array) ---
+        statusText.setText('กำลังแกะรอย (Traceback) บนตารางหาว่าใช้นักรบหน่วยใดบ้าง...');
+        detailText.setText('');
+        await sleep(baseDelay);
 
-        // Spawn ตัวละครมาเข้าแถดกลางจอ เรียงหน้ากระดานไปโจมตีบอส
+        let currAmt = targetAmount;
+        const finalCoins = [];
+
+        // Pointer สีเขียวสำหรับเดินถอยหลัง
+        const tbPointer = scene.add.rectangle(0, 0, cellW + 4, cellH + 4, 0x000000, 0)
+            .setStrokeStyle(4, 0x00FF00).setDepth(20).setVisible(true);
+        tbPointer.setPosition(cells[currAmt].cx, cells[currAmt].cy);
+
+        while (currAmt > 0) {
+            const currentCell = cells[currAmt];
+            currentCell.bg.setFillStyle(0x006600, 0.8); // ทาสีเขียวทับช่อง
+
+            let chosenCoin = 0;
+            let nextAmt = 0;
+
+            // ค้นหานักรบที่ทำให้สมการตารางเป็นจริง (dp[curr] == dp[curr - coin] + 1)
+            for (let i = 0; i < warriors.length; i++) {
+                const w = warriors[i];
+                const prev = currAmt - w.power;
+                if (prev >= 0) {
+                    // ถ้าค่าของช่องปัจจุบัน เกิดจาก (ค่าของช่องก่อนหน้า + 1)
+                    if (cells[currAmt].minCoins === cells[prev].minCoins + 1) {
+                        chosenCoin = w.power;
+                        nextAmt = prev;
+                        break; // เจอแล้วหยุดหา!
+                    }
+                }
+            }
+
+            if (chosenCoin > 0) {
+                finalCoins.push(chosenCoin);
+                detailText.setText(`dp[${currAmt}] เกิดจากการหยิบกำลังพล [${chosenCoin}] แล้วย้อนไปดูคำตอบของ dp[${nextAmt}]`);
+
+                // วาดลูกศรโค้งถอยหลัง
+                lineGraphics.clear();
+                drawCurvedArrow(scene, lineGraphics, tbPointer.x, tbPointer.y, cells[nextAmt].cx, cells[nextAmt].cy, cellH, 50, 12);
+
+                await sleep(baseDelay * 2.0); // อ่านข้อความให้ทัน
+
+                currAmt = nextAmt;
+                tbPointer.setPosition(cells[currAmt].cx, cells[currAmt].cy); // กระโดดย้อนดื้อๆ เลย
+                scene.tweens.add({ targets: tbPointer, scaleX: 1.2, scaleY: 1.2, yoyo: true, duration: 150 });
+                await sleep(baseDelay * 0.5);
+            } else {
+                break; // ป้องกัน infinite loop กรณีคำนวณพลาด
+            }
+        }
+
+        cells[0].bg.setFillStyle(0x006600, 0.8);
+        tbPointer.setVisible(false);
+        lineGraphics.clear();
+
+        statusText.setText('ระดมกำลังพลปฏิบัติการ!');
+        detailText.setText('');
+        await sleep(baseDelay);
+
+        const totalCoins = finalCoins.length;
+        const spacing = 180;
+        const startHeroX = centerX - ((totalCoins * spacing) / 2) + (spacing / 2);
         const centerSpawnY = startY + (Math.ceil((targetAmount + 1) / cols) * (cellH + 40)) + 60;
-        const totalCoins = finalCell.combo.length;
-        const spacing = 50;
-        const startHeroX = 400 - ((totalCoins * spacing) / 2) + (spacing / 2);
 
-        statusText.setText('ระดมกำลังพลเพื่อปฏิบัติการ');
-
-        for (let idx = 0; idx < finalCell.combo.length; idx++) {
-            const coinPower = finalCell.combo[idx];
+        for (let idx = 0; idx < finalCoins.length; idx++) {
+            const coinPower = finalCoins[idx];
             const origSprite = getWarriorOriginalSprite(coinPower);
             if (origSprite) {
                 const px = startHeroX + (idx * spacing);
                 const py = centerSpawnY;
 
-                // สร้างร่างเงาและให้ซูมเข้าที่ — ขนาดใหญ่ขึ้นเป็น 80x80
-                const ghost = scene.add.sprite(finalCell.cx, finalCell.cy, origSprite.texture.key)
+                // หานักรบฝั่งซ้าย (ตัวออริจินัลในตาราง Setup) เพื่อดึงพิกัด (w.x, w.y)
+                const originalSetupWarrior = warriors.find(war => war.power === Number(coinPower));
+                const spawnX = originalSetupWarrior ? originalSetupWarrior.x : finalCell.cx;
+                const spawnY = originalSetupWarrior ? originalSetupWarrior.y : finalCell.cy;
+
+                // สร้างร่างเงาเริ่มจากตำแหน่งฝั่งซ้ายเลย
+                const ghost = scene.add.sprite(spawnX, spawnY, origSprite.texture.key)
                     .setDisplaySize(80, 80).setDepth(30).setAlpha(0);
                 if (origSprite.frame && origSprite.frame.name) ghost.setFrame(origSprite.frame.name);
 
-                // ตัวเลขพลัง — อยู่เหนือตัวละคร
-                const powerLabel = scene.add.text(px, py - 55, coinPower.toString(), {
-                    fontSize: '22px', color: '#FFD700', fontStyle: 'bold', stroke: '#000', strokeThickness: 5
+                // ตัวเลขพลัง — เริ่มจากเป้าหมายที่เดียวกัน (spawnY + 45) เพื่อความต่อเนื่อง
+                const powerLabel = scene.add.text(spawnX, spawnY + 45, `ATK: ${coinPower}`, {
+                    fontSize: '20px', color: '#ffffff', fontStyle: 'bold', stroke: '#000000', strokeThickness: 4
                 }).setOrigin(0.5).setDepth(31).setAlpha(0);
 
                 scene.tweens.add({
                     targets: ghost,
                     alpha: 1, x: px, y: py,
-                    duration: 800 / speed,
+                    duration: 800 / animationController.speed,
                     ease: 'Power2',
                     onComplete: () => {
                         // โดดขย่มฉลองชัยชนะ (ตัวละครเท่านั้น)
@@ -270,15 +276,15 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
                     }
                 });
 
-                // ตัวเลข fade in แยกต่างหาก ตำแหน่งคงที่เหนือตัวละคร
+                // ตัวเลข fade in พร้อมกัน แล้วขยับไปอยู่แถวเดียวกับผี (+45) ให้เหมือน Subset Sum
                 scene.tweens.add({
                     targets: powerLabel,
-                    alpha: 1,
-                    duration: 500 / speed,
-                    delay: 400 / speed
+                    alpha: 1, x: px, y: py + 45,
+                    duration: 800 / animationController.speed,
+                    ease: 'Power2'
                 });
 
-                await sleep(150 / speed); // หน่วงนิดนึงให้ออกมาทีละตัว
+                await sleep(150); // หน่วงนิดนึงให้ออกมาทีละตัว
             }
         }
 
@@ -290,173 +296,65 @@ export async function playDpBottomUpSpreadsheetDisplay(scene, trace, options) {
 
 }
 
-/**
- * Display Mode 3: แบบตาราง DP Memoization (Array)
- * แสดงตาราง อาเรย์ `memo[0...W]` และกระบวนการเติมค่าลงตาราง (Top-Down)
- */
-// async function playDpTopDownDisplay(scene, trace, options) {
-//     const { speed = 1.0 } = options;
-//     const baseDelay = 1000 / speed;
+// ============================================================================
+// Local Helper Functions
+// ==========================================
 
-//     if (!scene || !scene.coinChange || !trace || trace.length === 0) {
-//         console.warn('⚠️ [coinChangePlayback] No scene.coinChange or trace');
-//         return;
-//     }
+function create1DDpTable(scene, targetAmount, cols, paddingX, startY, cellW, cellH) {
+    const cells = [];
 
+    for (let i = 0; i <= targetAmount; i++) {
+        const r = Math.floor(i / cols);
+        const c = i % cols;
+        const cx = paddingX + (c * cellW);
+        const cy = startY + (r * (cellH + 40));
 
-//     const warriors = scene.coinChange.warriors;
-//     const targetAmount = scene.levelData?.coin_change_data?.monster_power || 32;
-//     const sleep = (ms) => new Promise(res => setTimeout(res, ms));
+        const bg = scene.add.rectangle(cx, cy, cellW, cellH, 0x111111, 0.9)
+            .setStrokeStyle(2, 0x555555).setDepth(10);
 
-//     const statusText = scene.add.text(
-//         400, 30,
-//         'เริ่มสร้างตาราง Memoization (Top-Down)',
-//         { fontSize: '24px', color: '#FFFF00', fontStyle: 'bold', stroke: '#000', strokeThickness: 4, align: 'center' }
-//     ).setOrigin(0.5).setDepth(20);
+        scene.add.text(cx, cy - (cellH / 2) - 10, i.toString(), {
+            fontSize: '14px', color: '#ffffff', fontStyle: 'bold'
+        }).setOrigin(0.5).setDepth(11);
 
-//     // ==========================================
-//     // UI: DP Table (Array 0 ถึง targetAmount)
-//     // ==========================================
-//     const cols = 16;
-//     const cellW = 45;
-//     const cellH = 45;
-//     const paddingX = 400 - ((Math.min(targetAmount + 1, cols) * cellW) / 2) + (cellW / 2);
-//     const startY = 120;
+        const textVal = scene.add.text(cx, cy, i === 0 ? '0' : '∞', {
+            fontSize: i === 0 ? '24px' : '30px', color: i === 0 ? '#00FF00' : '#FFFFFF', fontStyle: 'bold', stroke: '#000000', strokeThickness: 4
+        }).setOrigin(0.5).setDepth(11);
 
-//     const cells = [];
+        cells.push({ bg, text: textVal, cx, cy, minCoins: i === 0 ? 0 : 999999, combo: [] });
+    }
 
-//     // สร้างตาราง
-//     for (let i = 0; i <= targetAmount; i++) {
-//         const r = Math.floor(i / cols);
-//         const c = i % cols;
-//         const cx = paddingX + (c * cellW);
-//         const cy = startY + (r * (cellH + 30));
+    const pointerDest = scene.add.rectangle(0, 0, cellW + 4, cellH + 4, 0x000000, 0)
+        .setStrokeStyle(4, 0xFFFF00).setDepth(15).setVisible(false);
 
-//         const bg = scene.add.rectangle(cx, cy, cellW - 4, cellH - 4, 0x222222, 0.8)
-//             .setStrokeStyle(2, 0x555555).setDepth(10);
+    const pointerSrc = scene.add.rectangle(0, 0, cellW, cellH, 0x000000, 0)
+        .setStrokeStyle(3, 0x00FFFF).setDepth(14).setVisible(false);
 
-//         scene.add.text(cx, cy - (cellH / 2) - 12, i.toString(), {
-//             fontSize: '14px', color: '#CCCCCC', fontStyle: 'bold'
-//         }).setOrigin(0.5).setDepth(11);
+    const lineGraphics = scene.add.graphics({ lineStyle: { width: 3, color: 0x00FFFF, alpha: 0.8 } }).setDepth(13);
 
-//         const text = scene.add.text(cx, cy, '-', {
-//             fontSize: '18px', color: '#FFFFFF', fontStyle: 'bold'
-//         }).setOrigin(0.5).setDepth(11);
+    return { cells, pointerDest, pointerSrc, lineGraphics };
+}
 
-//         cells.push({ bg, text, cx, cy, state: 'empty' });
-//     }
+function drawCurvedArrow(scene, lineGraphics, ptrX, ptrY, destX, destY, cellH, curveHeight = 40, arrowLength = 10) {
+    const startX = ptrX;
+    const startY = ptrY - (cellH / 2);
+    const endX = destX;
+    const endY = destY - (cellH / 2);
 
-//     // สร้างกล่องไฮไลต์ตัววิ่ง (Pointer ว่ากำลังพิจารณา amount ไหนอยู่)
-//     const pointer = scene.add.rectangle(0, 0, cellW, cellH, 0x000000, 0)
-//         .setStrokeStyle(4, 0x00FFFF).setDepth(15).setVisible(false);
+    const ctrlX = (startX + endX) / 2;
+    const ctrlY = Math.min(startY, endY) - curveHeight;
 
-//     let currentAmount = targetAmount;
-//     let callStack = [targetAmount];
+    const curve = new Phaser.Curves.QuadraticBezier(
+        new Phaser.Math.Vector2(startX, startY),
+        new Phaser.Math.Vector2(ctrlX, ctrlY),
+        new Phaser.Math.Vector2(endX, endY)
+    );
+    curve.draw(lineGraphics);
 
-//     for (let i = 0; i < trace.length; i++) {
-//         const step = trace[i];
-
-//         switch (step.action) {
-//             case 'consider_coin': {
-//                 const idx = step.coin;
-//                 if (idx >= 0 && idx < warriors.length) {
-//                     const w = warriors[idx];
-//                     statusText.setText(`💡 พิจารณาเหรียญ [พลัง ${w.power}] สำหรับเลือด ${currentAmount}`);
-//                     statusText.setColor('#FFFF00');
-
-//                     const flash = scene.add.rectangle(w.x, w.y, 60, 60, 0xFFA500, 0.6).setDepth(12);
-//                     scene.tweens.add({ targets: flash, alpha: 0, duration: 400 / speed, onComplete: () => flash.destroy() });
-
-//                     const nextAmount = currentAmount - w.power;
-//                     if (nextAmount >= 0) {
-//                         const targetCell = cells[nextAmount];
-//                         const line = scene.add.line(0, 0, pointer.x, pointer.y, targetCell.cx, targetCell.cy, 0xFFA500, 0.5).setOrigin(0, 0).setDepth(9);
-//                         scene.tweens.add({ targets: line, alpha: 0, duration: 600 / speed, onComplete: () => line.destroy() });
-//                     } else {
-//                         statusText.setText(`💡 พิจารณาเหรียญ [พลัง ${w.power}] -> เกินหลอดเลือด ข้าม!`);
-//                         statusText.setColor('#FF5555');
-//                     }
-//                 }
-//                 await sleep(baseDelay * 0.6);
-//                 break;
-//             }
-
-//             case 'select_coin': {
-//                 const idx = step.coin;
-//                 if (idx < 0 || idx >= warriors.length) break;
-//                 const w = warriors[idx];
-//                 const nextAmount = currentAmount - w.power;
-
-//                 if (nextAmount >= 0) {
-//                     statusText.setText(`⚔️ หยิบลองเหรียญ [พลัง ${w.power}] -> เลือดเหลือ ${nextAmount}`);
-//                     statusText.setColor('#00FFFF');
-
-//                     callStack.push(nextAmount);
-//                     currentAmount = nextAmount;
-//                     const c = cells[currentAmount];
-
-//                     pointer.setVisible(true);
-//                     scene.tweens.add({ targets: pointer, x: c.cx, y: c.cy, duration: 400 / speed, ease: 'Power2' });
-//                 }
-
-//                 await sleep(baseDelay);
-//                 break;
-//             }
-
-//             case 'remove_coin': {
-//                 if (callStack.length > 1) {
-//                     callStack.pop();
-//                     currentAmount = callStack[callStack.length - 1];
-//                     const c = cells[currentAmount];
-
-//                     statusText.setText(`🔙 กลับมาที่เลือด ${currentAmount} เพื่อลองเหรียญถัดไป...`);
-//                     statusText.setColor('#FFA500');
-
-//                     if (c) {
-//                         scene.tweens.add({ targets: pointer, x: c.cx, y: c.cy, duration: 400 / speed, ease: 'Power2' });
-//                     }
-//                 }
-
-//                 await sleep(baseDelay * 0.8);
-//                 break;
-//             }
-
-//             case 'memo_hit': {
-//                 const amount = step.amount;
-//                 statusText.setText(`🌟 [Memo Hit] เลือด ${amount} เคยคำนวณแล้ว ข้ามเลย!`);
-//                 statusText.setColor('#FFD700');
-
-//                 if (amount >= 0 && amount <= targetAmount) {
-//                     const c = cells[amount];
-//                     c.bg.setStrokeStyle(4, 0xFFD700);
-//                     scene.tweens.add({ targets: c.bg, scaleX: 1.2, scaleY: 1.2, yoyo: true, duration: 400 / speed });
-
-//                     const hitText = scene.add.text(c.cx, c.cy, 'HIT!', { fontSize: '16px', color: '#FFD700', fontStyle: 'bold' }).setOrigin(0.5).setDepth(25);
-//                     scene.tweens.add({ targets: hitText, y: c.cy - 30, alpha: 0, duration: 800 / speed, onComplete: () => hitText.destroy() });
-//                 }
-
-//                 await sleep(baseDelay * 1.5);
-//                 break;
-//             }
-
-//             case 'coin_decision': {
-//                 statusText.setText(`📝 สรุปค่า Memo[${currentAmount}] ลงตาราง`);
-//                 statusText.setColor('#00FF00');
-
-//                 if (currentAmount >= 0 && currentAmount <= targetAmount) {
-//                     const c = cells[currentAmount];
-//                     c.bg.setFillStyle(0x006600, 0.9);
-//                     c.bg.setStrokeStyle(2, 0x00FF00);
-//                     c.text.setText('✓');
-//                     c.text.setColor('#00FF00');
-//                 }
-//                 await sleep(baseDelay);
-//                 break;
-//             }
-//         }
-//     }
-
-//     pointer.setVisible(false);
-//     statusText.setText('✅ เติมตาราง Memoization สำเร็จทุกช่อง!');
-//     statusText.setColor('#00FFFF');
-// }
+    const angle = Phaser.Math.Angle.Between(ctrlX, ctrlY, endX, endY);
+    lineGraphics.beginPath();
+    lineGraphics.moveTo(endX, endY);
+    lineGraphics.lineTo(endX - arrowLength * Math.cos(angle - Math.PI / 6), endY - arrowLength * Math.sin(angle - Math.PI / 6));
+    lineGraphics.moveTo(endX, endY);
+    lineGraphics.lineTo(endX - arrowLength * Math.cos(angle + Math.PI / 6), endY - arrowLength * Math.sin(angle + Math.PI / 6));
+    lineGraphics.strokePath();
+}

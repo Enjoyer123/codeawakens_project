@@ -5,24 +5,141 @@
  * วาด grid, เล่น animation, แสดง solution boards — ทุกอย่างอยู่ใน function เดียว
  * ถ้าอยากเพิ่มแบบใหม่ (เช่น tree) ก็สร้าง function ใหม่แล้วมาสลับตรง router
  */
+import { animationController, createTraceBuffer } from './AnimationController';
+import { createTreeRenderer } from './TreeRenderer';
 
 /**
  * Router: เรียก Display Mode ที่ต้องการ (แค่นี้เท่านั้น ไม่ทำอะไรเพิ่ม)
  */
 export async function playNQueenAnimation(scene, trace, options = {}) {
     // สลับ Display Mode ตรงนี้:
-    return playClassicDisplay(scene, trace, options);
-    // return playAbcDisplay(scene, trace, options);
+    return playTreeDisplay(scene, trace, options);
 }
+
+// ============================================================================
+// Display Mode 2: Tree Display (Reingold-Tilford)
+// ============================================================================
+async function playTreeDisplay(scene, trace, options) {
+    const baseDelay = 800;
+
+    if (!scene || !trace) {
+        console.warn('⚠️ [nqueenPlayback] No scene or trace');
+        return;
+    }
+
+    const n = scene.levelData?.algo_data?.payload?.n || options.n || 4;
+    const canvasW = scene.scale.width || 800;
+    const canvasH = scene.scale.height || 600;
+    const sleep = (ms) => animationController.sleep(ms);
+
+    // Status text (ย้ายไปอยู่มุมขวาล่างให้เหมือนด่านอื่นๆ)
+    const statusText = scene.add.text(1050, 420, 'เริ่มสร้าง Tree เครือข่ายการวาง...', {
+        fontSize: '20px', color: '#FFFF00', fontStyle: 'bold', stroke: '#000', strokeThickness: 4, align: 'center', wordWrap: { width: 220 }
+    }).setOrigin(0.5, 0).setDepth(20);
+
+    const tree = createTreeRenderer(scene, canvasW, canvasH);
+    tree.container.setY(30);
+    
+    // Root node: start with an empty board represented by amount=0 just to show root
+    const rootId = tree.addNode(null, -1, 0, 'Root');
+    tree.setState(rootId, 'active');
+    
+    // stack เก็บ node id เอาไว้ backtracking
+    const path = [rootId]; 
+    let currentQueensPlaced = 0;
+
+    tree.relayout();
+    tree.redraw();
+
+    for await (const step of createTraceBuffer(trace)) {
+        if (!scene?.scene?.isActive(scene.scene.key)) break;
+        
+        // nQueens trace events: consider, place, remove
+        if (step.action === 'consider') {
+            const r = step.row;
+            const c = step.col;
+            const isSafe = step.safe !== undefined ? step.safe : true;
+            statusText.setText(`กำลังพิจารณา (Row ${r}, Col ${c})`).setColor('#3498db');
+            
+            // Highlight the fact we are considering
+            await sleep(baseDelay * 0.4);
+        }
+        else if (step.action === 'place') {
+            const r = step.row;
+            const c = step.col;
+            const parentId = path[path.length - 1];
+            
+            const currentQueensPlaced = (parentId !== null && tree.nodes[parentId].amount !== undefined) 
+                ? tree.nodes[parentId].amount + 1 : 1;
+            
+            // Edge label โชว์ Row,Col
+            const id = tree.addNode(parentId, c, currentQueensPlaced, `(R${r},C${c})`);
+            
+            if (currentQueensPlaced === n) {
+                tree.setState(id, 'solved');
+                statusText.setText(`✅ วางครบทั้ง ${n} ตัว! พบคำตอบ`).setColor('#00FF88');
+            } else {
+                tree.setState(id, 'active');
+                statusText.setText(`วาง Queen ที่ (Row ${r}, Col ${c}) | รวม: ${currentQueensPlaced}/${n}`).setColor('#00FF88');
+            }
+
+            path.push(id);
+            
+            tree.relayout();
+            tree.redraw();
+            await sleep(baseDelay * 0.6);
+        }
+        else if (step.action === 'remove') {
+            const r = step.row;
+            const c = step.col;
+            const deadId = path.pop();
+            
+            if (deadId !== undefined && tree.nodes[deadId]?.state !== 'solved') {
+                tree.setState(deadId, 'dead');
+                tree.redraw();
+            }
+            
+            statusText.setText(`↩ หยิบ Queen ออกจาก (Row ${r}, Col ${c}) (Backtrack)`).setColor('#FF9944');
+            await sleep(baseDelay * 0.5);
+        }
+    }
+
+    // Highlight all solved paths
+    let foundSolution = false;
+    for (const node of tree.nodes) {
+        if (node.amount === n) {
+            foundSolution = true;
+            let cur = node.id;
+            while (cur !== null) {
+                tree.setState(cur, 'solved');
+                cur = tree.nodes[cur].parentId;
+            }
+        }
+    }
+
+    tree.relayout();
+    tree.redraw();
+    
+    if (foundSolution) {
+        statusText.setText(`✅ เสร็จแล้ว! ค้นพบรูปแบบการวางที่เป็นไปได้`).setColor('#00FF88');
+    } else {
+        statusText.setText(`❌ ไม่พบรูปแบบการวางที่ตารางขนาด ${n}x${n}`).setColor('#FF4444');
+    }
+
+    await sleep(baseDelay * 2.0);
+}
+
+
 
 // ============================================================================
 // Display Mode 1: Classic Display (self-contained 100%)
 // ============================================================================
+/*
 async function playClassicDisplay(scene, trace, options = {}) {
     const { speed = 1.0 } = options;
-    const baseDelay = 200 / speed;
+    const baseDelay = 200;
 
-    if (!scene || !trace || trace.length === 0) {
+    if (!scene || !trace) {
         console.warn('⚠️ [nqueenPlayback] No scene or trace');
         return;
     }
@@ -76,7 +193,7 @@ async function playClassicDisplay(scene, trace, options = {}) {
     }
 
     // ====== Helpers ======
-    const sleep = (ms) => new Promise(res => setTimeout(res, ms));
+    const sleep = (ms) => animationController.sleep(ms);
 
     const getCellCenter = (row, col) => ({
         cx: boardStartX - boardWidth / 2 + (col * cellSize) + cellSize / 2,
@@ -141,14 +258,14 @@ async function playClassicDisplay(scene, trace, options = {}) {
             case 'place': {
                 clearCellOverlay(r, c);
                 setCellOverlay(r, c, 0x00FF00, 0.8);
-                await sleep(150 / speed);
+                await sleep(150);
                 clearCellOverlay(r, c);
 
                 const { cx, cy } = getCellCenter(r, c);
                 const queen = scene.add.image(cx, cy, 'gun').setScale(0).setAlpha(0).setDepth(9);
                 scene.tweens.add({
                     targets: queen, alpha: 1, scaleX: 2.5, scaleY: 2.5,
-                    duration: 200 / speed, ease: 'Back.easeOut'
+                    duration: 200 / animationController.speed, ease: 'Back.easeOut'
                 });
                 queens.push({ row: r, col: c, graphics: queen });
                 await sleep(baseDelay);
@@ -160,7 +277,7 @@ async function playClassicDisplay(scene, trace, options = {}) {
                 if (qIdx !== -1) {
                     scene.tweens.add({
                         targets: queens[qIdx].graphics, alpha: 0, scale: 0,
-                        duration: 200 / speed, ease: 'Power2',
+                        duration: 200 / animationController.speed, ease: 'Power2',
                         onComplete: () => queens[qIdx]?.graphics?.destroy()
                     });
                     queens.splice(qIdx, 1);
@@ -207,3 +324,4 @@ async function playClassicDisplay(scene, trace, options = {}) {
         }
     }
 }
+*/

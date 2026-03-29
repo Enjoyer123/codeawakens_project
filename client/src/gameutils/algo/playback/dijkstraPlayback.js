@@ -1,5 +1,6 @@
-﻿import Phaser from 'phaser';
+import Phaser from 'phaser';
 import { updateWeaponPosition } from '../../combat/weaponEffects';
+import { animationController, createTraceBuffer } from './AnimationController';
 
 /**
  * dijkstraPlayback.js — Dijkstra's Algorithm Animation Playback
@@ -20,11 +21,10 @@ export async function playDijkstraAnimation(scene, trace, options = {}) {
 // Display Mode 1: Classic Display (self-contained)
 // ============================================================================
 async function playClassicDisplay(scene, trace, options = {}) {
-    const { speed = 1.0 } = options;
-    const baseDelay = 700 / speed;
-    const sleep = ms => new Promise(r => setTimeout(r, Math.max(0, ms)));
+    const baseDelay = 700;
+    const sleep = ms => animationController.sleep(Math.max(0, ms));
 
-    if (!scene || !trace || trace.length === 0) {
+    if (!scene || !trace) {
         console.warn('⚠️ [dijkstraPlayback] No scene or trace');
         return;
     }
@@ -54,9 +54,8 @@ async function playClassicDisplay(scene, trace, options = {}) {
     }).setOrigin(0.5).setDepth(20);
 
     // -------------------------------------------------------------------------
-    for (let i = 0; i < trace.length; i++) {
+    for await (const step of createTraceBuffer(trace)) {
         if (!scene || !scene.scene || !scene.scene.isActive(scene.scene.key)) break;
-        const step = trace[i];
 
         switch (step.action) {
 
@@ -69,7 +68,7 @@ async function playClassicDisplay(scene, trace, options = {}) {
                 const pos = getNodePos(scene, node);
                 if (!pos) break;
 
-                lightNode(scene, node, 0xff8800, 500 / speed);
+                lightNode(scene, node, 0xff8800, 500 / animationController.speed);
                 statusText.setText(`สำรวจโหนด ${node}...`);
 
                 if (neighbors && neighbors.length > 0) {
@@ -96,7 +95,7 @@ async function playClassicDisplay(scene, trace, options = {}) {
                 if (!pos) break;
 
                 statusText.setText(`เยือนโหนด ${node}  (dist = ${dist})`);
-                lightNode(scene, node, 0x00ff88, 600 / speed);
+                lightNode(scene, node, 0x00ff88, 600 / animationController.speed);
 
                 if (distTexts[node]) {
                     distTexts[node].setText(String(dist));
@@ -151,10 +150,10 @@ async function playClassicDisplay(scene, trace, options = {}) {
                     for (let p = 0; p < 3; p++) {
                         answerGraphics.clear();
                         drawPath(answerGraphics, scene, step.path, 0x00ffff, 1.0, 8);
-                        await sleep(200 / speed);
+                        await sleep(200);
                         answerGraphics.clear();
                         drawPath(answerGraphics, scene, step.path, 0x00ffff, 0.4, 4);
-                        await sleep(200 / speed);
+                        await sleep(200);
                     }
                     drawPath(answerGraphics, scene, step.path, 0x00ffff, 1.0, 6);
 
@@ -162,7 +161,7 @@ async function playClassicDisplay(scene, trace, options = {}) {
                         if (distTexts[nid]) distTexts[nid].setColor('#2ecc71');
                     });
 
-                    await playMoveAlongPath(scene, step.path, speed);
+                    await playMoveAlongPath(scene, step.path);
                 }
                 break;
             }
@@ -224,12 +223,12 @@ function lightNode(scene, nodeId, color, duration) {
     });
 }
 
-async function playMoveAlongPath(scene, path, speed = 1.0) {
+async function playMoveAlongPath(scene, path) {
     if (!scene || !path || path.length < 2) return;
     const hero = scene.hero || scene.player;
     if (!hero) return;
 
-    const moveDuration = 350 / speed;
+    const moveDuration = 350 / animationController.speed;
     for (const nodeId of path) {
         const pos = getNodePos(scene, nodeId);
         if (!pos) continue;
@@ -243,6 +242,6 @@ async function playMoveAlongPath(scene, path, speed = 1.0) {
                 onComplete: () => { hero.currentNodeId = nodeId; resolve(); }
             });
         });
-        await new Promise(r => setTimeout(r, 80 / speed));
+        await new Promise(r => setTimeout(r, 80 / animationController.speed));
     }
 }

@@ -15,7 +15,6 @@ const GameControls = ({
     isPreview,
     isAdmin
 }) => {
-
     const isRunDisabled =
         gameState === "running" ||
         !blocklyLoaded ||
@@ -42,6 +41,7 @@ const GameControls = ({
                         </>
                     )}
                 </button>
+
 
                 {(isPreview || isAdmin) && onLoadXml && (
                     <button

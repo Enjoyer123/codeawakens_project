@@ -54,27 +54,37 @@ const knapsackExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
                   </block>
                 </value>
                 <statement name="DO0">
-                  <block type="procedures_return">
-                    <value name="VALUE">
-                      <block type="procedures_callreturn">
-                        <mutation name="knapsack">
-                          <arg name="w"></arg><arg name="v"></arg><arg name="i"></arg><arg name="j"></arg>
-                        </mutation>
-                        <value name="ARG0"><block type="variables_get"><field name="VAR">w</field></block></value>
-                        <value name="ARG1"><block type="variables_get"><field name="VAR">v</field></block></value>
-                        <value name="ARG2">
-                          <block type="math_arithmetic">
-                            <field name="OP">MINUS</field>
-                            <value name="A"><block type="variables_get"><field name="VAR">i</field></block></value>
-                            <value name="B"><block type="math_number"><field name="NUM">1</field></block></value>
+                  <block type="knapsack_skip_item">
+                    <value name="ITEM_INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
+                    <next>
+                      <block type="variables_set">
+                        <field name="VAR">res_overweight</field>
+                        <value name="VALUE">
+                          <block type="procedures_callreturn">
+                            <mutation name="knapsack"><arg name="w"></arg><arg name="v"></arg><arg name="i"></arg><arg name="j"></arg></mutation>
+                            <value name="ARG0"><block type="variables_get"><field name="VAR">w</field></block></value>
+                            <value name="ARG1"><block type="variables_get"><field name="VAR">v</field></block></value>
+                            <value name="ARG2"><block type="math_arithmetic"><field name="OP">MINUS</field><value name="A"><block type="variables_get"><field name="VAR">i</field></block></value><value name="B"><block type="math_number"><field name="NUM">1</field></block></value></block></value>
+                            <value name="ARG3"><block type="variables_get"><field name="VAR">j</field></block></value>
                           </block>
                         </value>
-                        <value name="ARG3"><block type="variables_get"><field name="VAR">j</field></block></value>
+                        <next>
+                          <block type="knapsack_remove_item">
+                            <next>
+                              <block type="procedures_return">
+                                <value name="VALUE"><block type="variables_get"><field name="VAR">res_overweight</field></block></value>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
                       </block>
-                    </value>
+                    </next>
                   </block>
                 </statement>
                 <next>
+                  <block type="knapsack_skip_item">
+                    <value name="ITEM_INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
+                    <next>
                   <block type="variables_set">
                     <field name="VAR">without_item</field>
                     <value name="VALUE">
@@ -95,10 +105,12 @@ const knapsackExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
                       </block>
                     </value>
                     <next>
-                      <block type="knapsack_pick_item">
-                        <value name="ITEM_INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
+                      <block type="knapsack_remove_item">
                         <next>
-                          <block type="variables_set">
+                          <block type="knapsack_pick_item">
+                            <value name="ITEM_INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
+                            <next>
+                              <block type="variables_set">
                             <field name="VAR">with_item</field>
                             <value name="VALUE">
                               <block type="math_arithmetic">
@@ -163,6 +175,8 @@ const knapsackExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
                           </block>
                         </next>
                       </block>
+                    </next>
+                  </block>
                     </next>
                   </block>
                 </next>

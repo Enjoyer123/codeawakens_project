@@ -8,10 +8,17 @@ const NQueenForm = ({ data, onChange }) => {
                 <Input
                     type="number"
                     min="4"
-                    max="12"
+                    max="10"
                     value={data?.n ?? ''}
-                    onChange={(e) => onChange({ ...data, n: parseInt(e.target.value) || null })}
-                    placeholder="เช่น 4, 8"
+                    onChange={(e) => {
+                        let val = parseInt(e.target.value);
+                        if (!val && val !== 0) return onChange({ ...data, n: null });
+                        // Clamp value from 4 to 10
+                        if (val > 10) val = 10;
+                        if (val < 4) val = 4;
+                        onChange({ ...data, n: val });
+                    }}
+                    placeholder="เช่น 4, 8 (สูงสุด 10)"
                     className="mt-1"
                 />
                 <p className="text-[10px] text-gray-400 mt-1">

@@ -40,6 +40,19 @@ export function defineKnapsackVisualBlocks() {
     },
   };
 
+  // Skip an item (don't pick, exclude from this branch)
+  Blockly.Blocks["knapsack_skip_item"] = {
+    init: function () {
+      this.appendValueInput("ITEM_INDEX")
+        .setCheck("Number")
+        .appendField("Skip item (ไม่เลือก)");
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setColour(0);
+      this.setTooltip("ข้ามสิ่งของชิ้นนี้ (ไม่หยิบ - บันทึก Track)");
+    },
+  };
+
   // DP Update Block
   Blockly.Blocks["knapsack_dp_update"] = {
     init: function () {

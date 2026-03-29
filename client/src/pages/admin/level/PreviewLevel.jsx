@@ -106,7 +106,7 @@ const PreviewLevel = () => {
   }
 
   return (
-    <div className="h-full w-full overflow-hidden relative">
+    <div className="flex-1 w-full overflow-hidden relative" style={{ height: 'calc(100vh - 64px)' }}>
       <GameCore
         levelId={levelId}
         isPreview={true}

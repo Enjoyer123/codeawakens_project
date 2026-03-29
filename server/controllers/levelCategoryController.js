@@ -29,6 +29,7 @@ exports.getAllLevelCategories = async (req, res) => {
             is_unlocked: true,
             required_level_id: true,
             required_skill_level: true,
+            required_for_post_test: true,
             coordinates: true, // Included coordinates
           },
         },
@@ -157,6 +158,7 @@ exports.getLevelCategoryById = async (req, res) => {
             is_unlocked: true,
             required_level_id: true,
             required_skill_level: true,
+            required_for_post_test: true,
             coordinates: true, // Included coordinates
           },
           orderBy: {

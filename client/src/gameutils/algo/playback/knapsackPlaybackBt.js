@@ -1,176 +1,213 @@
-// Knapsack Backtracking Animation Playback
+import { animationController, createTraceBuffer } from './AnimationController';
+import { createTreeRenderer } from './TreeRenderer';
 
 export async function playKnapsackBacktrackAnimation(scene, trace, options = {}) {
     // สลับ Display Mode ตรงนี้:
-    return playClassicDisplay(scene, trace, options);
+    return playTreeDisplay(scene, trace, options);
 }
 
 // ============================================================================
-// Display Mode 1: Classic Display (self-contained)
+// Display Mode 2: Tree Display (Reingold-Tilford)
 // ============================================================================
-async function playClassicDisplay(scene, trace, options = {}) {
-    if (!scene.knapsack || !scene.knapsack.items || !scene.knapsack.bag) return;
-
-    const { speed = 1.0 } = options;
-    const baseWait = 800 / speed;
+async function playTreeDisplay(scene, trace, options) {
+    const baseDelay = 800;
+    if (!scene || !scene.knapsack || !trace) return;
 
     const items = scene.knapsack.items;
-    const bagX = scene.knapsack.bag.x;
-    const bagY = scene.knapsack.bag.y;
+    const canvasW = scene.scale.width || 800;
+    const canvasH = scene.scale.height || 600;
+    const sleep = (ms) => animationController.sleep(ms);
 
-    // Maintain state for where the items in the bag are
-    const bagContents = [];
+    // Status text (ย้ายไปอยู่มุมขวาล่างใต้กระเป๋า เหมือน Coin Change)
+    const statusText = scene.add.text(1050, 420, 'เริ่มสร้าง Tree...', {
+        fontSize: '20px', color: '#FFFF00', fontStyle: 'bold', stroke: '#000', strokeThickness: 4, align: 'center', wordWrap: { width: 220 }
+    }).setOrigin(0.5, 0).setDepth(20);
 
-    // Text to show current value of bag
-    const currentBagText = scene.add.text(bagX, bagY + 80, '', {
-        fontSize: '24px',
-        color: '#ffd700',
-        fontStyle: 'bold',
-        stroke: '#000000',
-        strokeThickness: 5
-    }).setOrigin(0.5).setDepth(20);
+    const tree = createTreeRenderer(scene, canvasW, canvasH);
+    tree.container.setY(30);
 
-    let currentValue = 0;
+    // Root node (weight remaining = bag.maxWeight)
+    // สำหรับ Knapsack ค่า amount จะใช้โชว์อะไร? สมมติโชว์มูลค่าสะสม (Value)
+    const rootId = tree.addNode(null, -1, 0);
+    tree.nodes[rootId].weight = 0;
+    tree.setState(rootId, 'active');
 
-    // Track best combination during the trace to show at the end
-    let maxFoundSoFar = -1;
-    let bestCombinationIndices = [];
+    // stack เก็บ node id เอาไว้ backtracking แบบ Push/Pop ธรรมดา
+    const path = [rootId];
 
-    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    const maxWeight = scene.knapsack?.bag?.maxWeight || scene.levelData?.algo_data?.payload?.capacity || 0;
 
-    // Draw event text box
-    let infoGraphics = scene.add.graphics().setDepth(15);
-    let infoText = scene.add.text(400, 650, '', { fontSize: '20px', color: '#fff' }).setOrigin(0.5).setDepth(16);
+    tree.relayout();
+    tree.redraw();
 
-    const updateInfo = (text, color = 0x000000) => {
-        infoGraphics.clear();
-        infoGraphics.fillStyle(color, 0.7);
-        infoText.setText(text);
-    };
+    for await (const step of createTraceBuffer(trace)) {
+        if (!scene?.scene?.isActive(scene.scene.key)) break;
 
-    updateInfo("เริ่มทำการค้นหาแบบ Backtracking", 0x333333);
-    await sleep(baseWait);
-
-    for (let step of trace) {
-        if (!scene || !scene.scene || !scene.scene.isActive(scene.scene.key)) break;
-
-        if (step.action === 'consider') {
+        if (step.action === 'pick') {
             const idx = step.index;
-            if (idx >= 0 && idx < items.length) {
-                const item = items[idx];
-                updateInfo(`กำลังพิจารณาสมบัติชิ้นที่ ${idx + 1} (${item.weight}kg, $${item.price})`, 0x3498db);
+            const parentId = path[path.length - 1];
+            const item = items[idx];
 
-                // Flash glow
-                if (item.sprite) {
+            const parentWeight = parentId !== null && tree.nodes[parentId].weight !== undefined ? tree.nodes[parentId].weight : 0;
+            const parentValue = parentId !== null ? tree.nodes[parentId].amount : 0;
+
+            const currentWeight = Number(parentWeight) + Number(item.weight);
+            const currentValue = Number(parentValue) + Number(item.price);
+
+            // Flash highlight over the setup item
+            if (item && item.sprite) {
+                const flash = scene.add.rectangle(item.sprite.x, item.sprite.y, 60, 60, 0x00FFFF, 0.6).setDepth(12);
+                scene.tweens.add({ targets: flash, alpha: 0, duration: 400 / animationController.speed, onComplete: () => flash.destroy() });
+            }
+
+            // Edge label โชว์น้ำหนัก (-xg) หรือโชว์ว่า 'Pick'
+            // Node label โชว์ Value ($X)
+            const id = tree.addNode(parentId, idx, currentValue, `+$${item.price}`);
+            tree.nodes[id].weight = currentWeight;
+
+            if (currentWeight > maxWeight) {
+                tree.setState(id, 'dead');
+                statusText.setText(`❌ น้ำหนักเกิน! หยิบชิ้น ${idx + 1} ไม่ได้ (${currentWeight}/${maxWeight}kg)`).setColor('#FF4444');
+            } else {
+                tree.setState(id, 'active');
+                statusText.setText(`✅ หยิบชิ้น ${idx + 1} ($${item.price}, ${item.weight}kg)\nค่ารวม $${currentValue}`).setColor('#00FF88');
+            }
+
+            path.push(id);
+
+            tree.relayout();
+            tree.redraw();
+            await sleep(baseDelay * 0.6);
+        }
+        else if (step.action === 'skip') {
+            const idx = step.index;
+            const parentId = path[path.length - 1];
+
+            const parentWeight = parentId !== null && tree.nodes[parentId].weight !== undefined ? tree.nodes[parentId].weight : 0;
+            const parentValue = parentId !== null ? tree.nodes[parentId].amount : 0;
+
+            const currentWeight = parentWeight;
+            const currentValue = parentValue;
+
+            // Flash highlight over the setup item (skipped)
+            const item = items[idx];
+            if (item && item.sprite) {
+                const flash = scene.add.rectangle(item.sprite.x, item.sprite.y, 60, 60, 0x00FFFF, 0.6).setAlpha(0.3).setDepth(12); // Dimmer for skip
+                scene.tweens.add({ targets: flash, alpha: 0, duration: 400 / animationController.speed, onComplete: () => flash.destroy() });
+            }
+
+            // Edge label = Skip
+            const id = tree.addNode(parentId, -1, currentValue, `Skip`); // -1 เพราะไม่ได้เลือก item ไหนเลย
+            tree.nodes[id].weight = currentWeight;
+
+            tree.setState(id, 'active');
+            statusText.setText(`⏭️ ข้ามชิ้น ${idx + 1}\nค่ารวม $${currentValue}`).setColor('#FFA500');
+
+            path.push(id);
+
+            tree.relayout();
+            tree.redraw();
+            await sleep(baseDelay * 0.6);
+        }
+        else if (step.action === 'remove') {
+            const deadId = path.pop();
+            if (deadId !== undefined && tree.nodes[deadId]?.state !== 'solved') {
+                tree.setState(deadId, 'dead');
+                tree.redraw();
+            }
+
+            statusText.setText('↩ Backtrack').setColor('#FF9944');
+            await sleep(baseDelay * 0.4);
+        }
+        else if (step.action === 'consider') {
+            const idx = step.index;
+            const item = items[idx];
+            statusText.setText(`พิจารณาชิ้นที่ ${idx + 1}` + (item ? `\n($${item.price}, ${item.weight}kg)` : "")).setColor('#3498db');
+            await sleep(baseDelay * 0.4);
+        }
+    }
+
+    // หายอดที่ดีที่สุดมาไฮไลต์
+    let bestNodeId = -1;
+    let maxVal = -1;
+    for (let i = 0; i < tree.nodes.length; i++) {
+        const node = tree.nodes[i];
+        if (node.weight <= maxWeight) {
+            if (node.amount > maxVal) {
+                maxVal = node.amount;
+                bestNodeId = i;
+            }
+        }
+    }
+
+    let successfulPathIndices = [];
+    if (bestNodeId !== -1 && maxVal > 0) {
+        let cur = bestNodeId;
+        while (cur !== null) {
+            tree.setState(cur, 'solved');
+            // เก็บ index ของไอเทมที่ถูกเลือกลงใน successfulPathIndices
+            if (tree.nodes[cur].coinIdx >= 0) {
+                successfulPathIndices.push(tree.nodes[cur].coinIdx);
+            }
+            cur = tree.nodes[cur].parentId;
+        }
+        successfulPathIndices.reverse();
+    }
+
+    tree.relayout();
+    tree.redraw();
+
+    if (maxVal > 0) {
+        statusText.setText(`✅ เสร็จแล้ว! ค่าสูงสุดที่เป็นไปได้: $${maxVal}`).setColor('#00FF88');
+        await sleep(baseDelay);
+
+        // นำไอเทมที่เป็นชุดคำตอบบินเข้าไปสะสมในกระเป๋า
+        await sleep(500);
+
+        const bagX = scene.knapsack?.bag?.x || 1050;
+        const bagY = scene.knapsack?.bag?.y || 300;
+
+        for (let idx = 0; idx < successfulPathIndices.length; idx++) {
+            const itemIdx = successfulPathIndices[idx];
+            const itemObj = items[itemIdx];
+            if (!itemObj || !itemObj.sprite) continue;
+
+            const targetY = bagY - (idx * 25) - 30; // วางซ้อนกันแนวตั้งในกระเป๋า
+
+            scene.tweens.add({
+                targets: itemObj.sprite,
+                x: bagX,
+                y: targetY,
+                scale: 0.9, // ย่อขนาดลงนิดนึงตอนเข้ากระเป๋า
+                duration: 600 / animationController.speed,
+                ease: 'Back.easeIn',
+                onComplete: () => {
+                    // สร้างข้อความลอยขึ้นมาแสดงมูลค่าตอนที่ไอเทมลงกระเป๋า
+                    const floatText = scene.add.text(bagX, targetY - 30, `+$${itemObj.price}`, {
+                        fontSize: '26px', color: '#00FF88', fontStyle: 'bold', stroke: '#000', strokeThickness: 5
+                    }).setOrigin(0.5).setDepth(30);
+
                     scene.tweens.add({
-                        targets: item.sprite,
-                        alpha: 0.5,
-                        duration: 150 / speed,
-                        yoyo: true,
-                        repeat: 1
+                        targets: floatText,
+                        y: targetY - 80,
+                        alpha: 0,
+                        duration: 1000,
+                        ease: 'Power1',
+                        onComplete: () => floatText.destroy()
                     });
                 }
-                await sleep(baseWait * 0.5);
-            }
+            });
 
-        } else if (step.action === 'pick') {
-            const idx = step.index;
-            if (idx >= 0 && idx < items.length) {
-                const item = items[idx];
-                updateInfo(`หยิบสมบัติชิ้นที่ ${idx + 1} ใส่กระเป๋า`, 0x2ecc71);
+            // ซ่อนข้อความและเอฟเฟกต์เดิมตอนบิน
+            if (itemObj.labelText) itemObj.labelText.setVisible(false);
+            if (itemObj.glowEffect) itemObj.glowEffect.setVisible(false);
 
-                bagContents.push(item);
-                currentValue += item.price;
-                currentBagText.setText(`Value: $${currentValue}`);
-
-                // --- NEW: Track the best sequence if we found a new max ---
-                if (currentValue >= maxFoundSoFar) {
-                    maxFoundSoFar = currentValue;
-                    bestCombinationIndices = bagContents.map(i => items.indexOf(i));
-                }
-
-                // Animate to bag
-                const offset = (bagContents.length - 1) * -20; // Stack slightly upwards
-                scene.tweens.add({
-                    targets: item.sprite,
-                    x: bagX,
-                    y: bagY + offset,
-                    scaleX: 0.8,
-                    scaleY: 0.8,
-                    duration: 400 / speed,
-                    ease: 'Power2'
-                });
-
-                // Hide label
-                if (item.labelText) item.labelText.setVisible(false);
-
-                await sleep(baseWait);
-            }
-
-        } else if (step.action === 'remove') {
-            if (bagContents.length > 0) {
-                const item = bagContents.pop();
-                updateInfo(`เอาสมบัติชิ้นที่ ${items.indexOf(item) + 1} ออก (Backtrack)`, 0xe74c3c);
-
-                currentValue -= item.price;
-                currentBagText.setText(currentValue > 0 ? `Value: $${currentValue}` : '');
-
-                // Animate back
-                scene.tweens.add({
-                    targets: item.sprite,
-                    x: item.x, // original x
-                    y: item.y, // original y
-                    scaleX: 1.3,
-                    scaleY: 1.3,
-                    duration: 400 / speed,
-                    ease: 'Power2'
-                });
-
-                if (item.labelText) item.labelText.setVisible(true);
-
-                await sleep(baseWait);
-            }
+            await sleep(500);
         }
+
+        await sleep(baseDelay * 1.5);
+    } else {
+        statusText.setText(`❌ หยิบอะไรไม่ได้เลย`).setColor('#FF4444');
+        await sleep(baseDelay * 2.0);
     }
-
-    updateInfo("จบการค้นหา Backtracking", 0x333333);
-
-    // --- NEW: Draw final optimal items into the bag ---
-    if (bestCombinationIndices.length > 0) {
-        updateInfo("นำผลลัพธ์ที่ดีที่สุดใส่กระเป๋า", 0x27ae60);
-        let finalValue = 0;
-        for (let i = 0; i < bestCombinationIndices.length; i++) {
-            const item = items[bestCombinationIndices[i]];
-            finalValue += item.price;
-            currentBagText.setText(`Value: $${finalValue}`);
-
-            const offset = i * -20;
-            if (item.sprite) {
-                scene.tweens.add({
-                    targets: item.sprite,
-                    x: bagX,
-                    y: bagY + offset,
-                    scaleX: 0.8,
-                    scaleY: 0.8,
-                    duration: 500 / speed,
-                    ease: 'Power2'
-                });
-            }
-            if (item.labelText) item.labelText.setVisible(false);
-            await sleep(400 / speed);
-        }
-    }
-
-    if (options.result !== undefined) {
-        scene.add.text(400, 300, `Max Value: $${options.result}`, {
-            fontSize: '48px',
-            color: '#2ecc71',
-            fontStyle: 'bold',
-            stroke: '#000',
-            strokeThickness: 8
-        }).setOrigin(0.5).setDepth(30);
-    }
-
-    await sleep(2000);
 }
-

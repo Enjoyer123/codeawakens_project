@@ -12,19 +12,19 @@ export function setupCoinChange(scene) {
 
     scene.coinChange = { monster: null, warriors: [], selectedBox: null };
 
-    // Setup Warriors
-    const warriorStartX = 150, warriorY = 150, warriorSpacing = 150;
+    // Setup Warriors (ชิดขอบซ้าย เรียงลงมาแนวตั้ง)
+    const startX = 90, startY = 280, spacingY = 120;
     warriors.forEach((power, index) => {
-        const warriorX = warriorStartX + (index * warriorSpacing);
-        const spriteY = warriorY + 60;
+        const warriorX = startX;
+        const spriteY = startY + (index * spacingY);
         const spriteKeys = ['bot_slime1', 'org1', 'org2', 'org3'];
         const safeIndex = index % spriteKeys.length;
 
         const characterSprite = scene.add.image(warriorX, spriteY, spriteKeys[safeIndex]).setScale(1.6).setDepth(8);
 
-        const powerText = scene.add.text(warriorX, warriorY, power.toString(), {
-            fontSize: '24px', color: '#ffffff', fontStyle: 'bold', stroke: '#000000', strokeThickness: 4
-        }).setOrigin(0.5).setDepth(9);
+        const powerText = scene.add.text(warriorX, spriteY + 45, `ATK: ${power}`, {
+            fontSize: '20px', color: '#ffffff', fontStyle: 'bold', stroke: '#000000', strokeThickness: 4
+        }).setOrigin(0.5, 0.5).setDepth(9);
 
         scene.coinChange.warriors.push({
             power, index, number: index + 1,
@@ -33,12 +33,12 @@ export function setupCoinChange(scene) {
         });
     });
 
-    // Setup Monster
-    const monsterX = 900, monsterY = 150;
+    // Setup Monster (ชิดขอบขวา)
+    const monsterX = 1050, monsterY = 300;
     const monsterSprite = scene.add.image(monsterX, monsterY + 60, 'bot_humen1').setScale(2.2).setDepth(7);
 
-    const monsterPowerText = scene.add.text(monsterX, monsterY, monsterPower.toString(), {
-        fontSize: '24px', color: '#ffffff', fontStyle: 'bold', stroke: '#000000', strokeThickness: 4
+    const monsterPowerText = scene.add.text(monsterX, monsterY, `HP: ${monsterPower}`, {
+        fontSize: '24px', color: '#ff5555', fontStyle: 'bold', stroke: '#000000', strokeThickness: 4
     }).setOrigin(0.5).setDepth(8);
 
     scene.coinChange.monster = {

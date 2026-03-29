@@ -1,10 +1,11 @@
-﻿/**
+/**
  * kruskalPlayback.js — Kruskal's Algorithm Animation Playback
  *
  * Trace Events handled:
  *   { action: 'kruskal_visit',    from, to, weight }  ← from kruskal_visit block
  *   { action: 'kruskal_add_edge', from, to, weight }  ← from kruskal_add_edge block
  */
+import { animationController, createTraceBuffer } from './AnimationController';
 
 export async function playKruskalAnimation(scene, trace, options = {}) {
     // สลับ Display Mode ตรงนี้:
@@ -15,12 +16,11 @@ export async function playKruskalAnimation(scene, trace, options = {}) {
 // Display Mode 1: Classic Display (self-contained)
 // ============================================================================
 async function playClassicDisplay(scene, trace, options = {}) {
-    const { speed = 1.0 } = options;
-    const baseDelay = 700 / speed;
-    const sleep = ms => new Promise(r => setTimeout(r, Math.max(0, ms)));
+    const baseDelay = 700;
+    const sleep = ms => animationController.sleep(Math.max(0, ms));
 
-    if (!scene || !trace || trace.length === 0) {
-        console.warn('⚠️ [kruskalPlayback] No scene or trace');
+    if (!scene || !trace) {
+        console.warn('⚠️ [kruskalPlayback] No scene or trace found');
         return;
     }
 
@@ -40,9 +40,8 @@ async function playClassicDisplay(scene, trace, options = {}) {
     }).setOrigin(0.5).setDepth(20);
 
     // -------------------------------------------------------------------------
-    for (let i = 0; i < trace.length; i++) {
+    for await (const step of createTraceBuffer(trace)) {
         if (!scene || !scene.scene || !scene.scene.isActive(scene.scene.key)) break;
-        const step = trace[i];
 
         switch (step.action) {
 
@@ -82,8 +81,8 @@ async function playClassicDisplay(scene, trace, options = {}) {
                 statusText.setText(`เลือกเส้นเชื่อม ${from} ↔ ${to} เข้าสู่ MST (น้ำหนัก = ${weight})`);
 
                 // Highlight the nodes connected
-                lightNode(scene, from, 0x00ff88, 1000 / speed);
-                lightNode(scene, to, 0x00ff88, 1000 / speed);
+                lightNode(scene, from, 0x00ff88, 1000 / animationController.speed);
+                lightNode(scene, to, 0x00ff88, 1000 / animationController.speed);
 
                 // Draw solid green line to represent MST edge
                 mstEdges.push({ from, to, weight });
