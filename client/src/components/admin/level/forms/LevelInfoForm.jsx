@@ -90,20 +90,6 @@ const LevelInfoForm = ({ formData, categories, prerequisiteLevels, isEditing, le
           />
         </div>
 
-        <div>
-          <label className="text-sm font-medium">Difficulty</label>
-          <select
-            value={formData.difficulty}
-            onChange={(e) => handleChange('difficulty', e.target.value)}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-          >
-            <option value="easy">Easy</option>
-            <option value="medium">Medium</option>
-            <option value="hard">Hard</option>
-            <option value="expert">Expert</option>
-          </select>
-        </div>
-
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="text-sm font-medium">Map Require</label>

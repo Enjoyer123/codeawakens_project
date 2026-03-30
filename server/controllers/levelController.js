@@ -79,8 +79,9 @@ exports.getAllCategories = async (req, res) => {
   try {
     const categories = await prisma.levelCategory.findMany({
       orderBy: {
-        category_name: true,
-        item_enable: true,
+        category_name: 'asc',
+      },
+      include: {
         category_items: {
           select: {
             item_type: true,
@@ -308,7 +309,6 @@ exports.createLevel = async (req, res) => {
       category_id,
       level_name,
       description,
-      difficulty,
       is_unlocked,
       required_level_id,
       textcode,
@@ -346,7 +346,6 @@ exports.createLevel = async (req, res) => {
     const missingFields = [];
     if (!category_id || category_id === '') missingFields.push('category_id');
     if (!level_name || level_name.trim() === '') missingFields.push('level_name');
-    if (!difficulty || difficulty.trim() === '') missingFields.push('difficulty');
     if (!background_image || background_image.trim() === '') missingFields.push('background_image');
 
     if (missingFields.length > 0) {
@@ -401,7 +400,6 @@ exports.createLevel = async (req, res) => {
         category_id: parseInt(category_id),
         level_name,
         description: description || null,
-        difficulty,
         is_unlocked: is_unlocked === true || is_unlocked === 'true',
         required_level_id: required_level_id ? parseInt(required_level_id) : null,
         required_skill_level: required_skill_level || 'Zone_A',
@@ -484,7 +482,6 @@ exports.updateLevel = async (req, res) => {
       category_id,
       level_name,
       description,
-      difficulty,
       is_unlocked,
       required_level_id,
       textcode,
@@ -539,7 +536,6 @@ exports.updateLevel = async (req, res) => {
     }
     if (level_name !== undefined) updateData.level_name = level_name;
     if (description !== undefined) updateData.description = description;
-    if (difficulty !== undefined) updateData.difficulty = difficulty;
     if (is_unlocked !== undefined) updateData.is_unlocked = is_unlocked === true || is_unlocked === 'true';
     if (required_level_id !== undefined) {
       if (required_level_id === null || required_level_id === '') {

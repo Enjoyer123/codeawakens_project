@@ -93,7 +93,6 @@ export const useLevelData = (levelId) => {
                 category_id: level.category_id?.toString() || '',
                 level_name: level.level_name,
                 description: level.description || '',
-                difficulty: level.difficulty, // Assuming this exists on level object
                 is_unlocked: level.is_unlocked,
                 required_level_id: level.required_level_id ? level.required_level_id.toString() : '',
                 required_skill_level: level.required_skill_level || null,

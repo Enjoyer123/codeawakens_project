@@ -19,7 +19,7 @@ const LevelCategoryFormDialog = ({
   open,
   onOpenChange,
   editingLevelCategory,
-  maxOrder = 0,
+
 }) => {
   // Mutations
   const { mutateAsync: createCategoryAsync } = useCreateLevelCategory();
@@ -73,7 +73,7 @@ const LevelCategoryFormDialog = ({
         });
       }
     }
-  }, [open, editingLevelCategory, maxOrder]);
+  }, [open, editingLevelCategory]);
   // Parse item from formData
   const getSelectedItems = () => {
     if (!formData.item) return [];
