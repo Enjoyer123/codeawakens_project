@@ -67,7 +67,57 @@ exports.getBlockById = async (req, res) => {
   }
 };
 
-// Create block function removed as it is no longer allowed
+// Create block
+exports.createBlock = async (req, res) => {
+  try {
+    const {
+      block_key,
+      block_name,
+      description,
+      category,
+      is_available,
+      syntax_example,
+      block_image,
+    } = req.body;
+
+    if (!block_key || !block_name || !category) {
+      return res.status(400).json({
+        message: "Missing required fields: block_key, block_name, category"
+      });
+    }
+
+    const trimmedBlockKey = block_key.trim();
+    
+    // Check if block_key already exists
+    const existingBlock = await prisma.block.findUnique({
+      where: { block_key: trimmedBlockKey },
+    });
+
+    if (existingBlock) {
+      return res.status(409).json({ message: "A block with this block_key already exists." });
+    }
+
+    const block = await prisma.block.create({
+      data: {
+        block_key: trimmedBlockKey,
+        block_name: block_name.trim(),
+        description: description ? description.trim() : null,
+        category,
+        is_available: is_available === true || is_available === 'true' || is_available === undefined,
+        syntax_example: syntax_example ? syntax_example.trim() : null,
+        block_image: block_image || null,
+      },
+    });
+
+    res.status(201).json({
+      message: "Block created successfully",
+      block,
+    });
+  } catch (error) {
+    console.error("Error creating block:", error);
+    res.status(500).json({ message: "Error creating block", error: error.message });
+  }
+};
 
 // Update block
 exports.updateBlock = async (req, res) => {

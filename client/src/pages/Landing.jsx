@@ -11,19 +11,19 @@ const Landing = () => {
   const features = [
     {
       title: "PLACING BLOCK",
-      desc: "user can place block to create a algorithm for the player to follow",
+      desc: "ผู้เล่นสามารถต่อบล็อกคำสั่งแบบลากวาง เพื่อสร้างอัลกอริทึมให้ตัวละครทำงานตามที่ออกแบบไว้",
       img: "/feature/feature1.png",
 
     },
     {
       title: "PLAYING",
-      desc: "user can play the game by following the algorithm created by the player",
+      desc: "สนุกไปกับการเล่นเกมเพื่อไขปริศนา ด้วยการประยุกต์ใช้อัลกอริทึมที่คุณเขียนขึ้นเอง",
       img: "/screenshot/screenshot3.png",
 
     },
     {
       title: "PATTERN CHECKING",
-      desc: "if the pattern is correct, the player will get effects",
+      desc: "ระบบตรวจคำตอบอัจฉริยะ หากรูปแบบอัลกอริทึมเขียนถูกต้อง ผู้เล่นจะผ่านด่านและได้รับเอฟเฟกต์",
       img: "/feature/feature3.png",
 
     }
@@ -86,7 +86,7 @@ const Landing = () => {
             </h2>
             <div className="w-32 h-4 bg-white shadow-[4px_4px_0px_rgba(0,0,0,0.2)]"></div>
             <p className="text-xl md:text-2xl font-bold leading-relaxed text-purple-100">
-              Placing Block to create a Algorithm for the player to follow
+              ลากวางบล็อกเพื่อสร้างอัลกอริทึมให้ตัวละครทำงานตามที่คุณเขียน!
             </p>
 
           </div>
@@ -194,7 +194,7 @@ const Landing = () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-20 bg-[#0a0511] border-t-8 border-[#a855f7]/20 relative">
+      <footer id="contact" className="py-20 bg-[#0a0511] border-t-8 border-[#a855f7]/20 relative">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-12">
           <div className="text-center md:text-left">
             <p className="pixel-font text-[10px] text-purple-100/30">

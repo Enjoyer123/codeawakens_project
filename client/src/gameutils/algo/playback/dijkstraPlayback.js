@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { updateWeaponPosition } from '../../combat/weaponEffects';
 import { animationController, createTraceBuffer } from './AnimationController';
+import { playSound } from '../../sound/soundManager';
 
 /**
  * dijkstraPlayback.js — Dijkstra's Algorithm Animation Playback
@@ -48,7 +49,7 @@ async function playClassicDisplay(scene, trace, options = {}) {
     }
 
     // Status text
-    const statusText = scene.add.text(400, 20, 'Dijkstra: เริ่มต้น...', {
+    const statusText = scene.add.text(scene.scale.width / 2, 870, 'ค้นหาเส้นทาง (Dijkstra)...', {
         fontSize: '20px', color: '#FFFF00', fontStyle: 'bold',
         stroke: '#000000', strokeThickness: 4
     }).setOrigin(0.5).setDepth(20);
@@ -69,6 +70,7 @@ async function playClassicDisplay(scene, trace, options = {}) {
                 if (!pos) break;
 
                 lightNode(scene, node, 0xff8800, 500 / animationController.speed);
+                playSound('run');
                 statusText.setText(`สำรวจโหนด ${node}...`);
 
                 if (neighbors && neighbors.length > 0) {
@@ -94,8 +96,9 @@ async function playClassicDisplay(scene, trace, options = {}) {
                 const pos = getNodePos(scene, node);
                 if (!pos) break;
 
-                statusText.setText(`เยือนโหนด ${node}  (dist = ${dist})`);
+                statusText.setText(`พิจารณาโหนด ${node}  (dist = ${dist})`);
                 lightNode(scene, node, 0x00ff88, 600 / animationController.speed);
+                playSound('run');
 
                 if (distTexts[node]) {
                     distTexts[node].setText(String(dist));
@@ -116,7 +119,8 @@ async function playClassicDisplay(scene, trace, options = {}) {
                 const posB = getNodePos(scene, to);
                 if (!posA || !posB) break;
 
-                statusText.setText(`Relax ${from} → ${to}  ระยะใหม่: ${newDist}`);
+                statusText.setText(`พบเส้นทางสั้นกว่าไปยัง ${to}  ระยะใหม่: ${newDist}`);
+                playSound('paper');
 
                 edgeGraphics.lineStyle(5, 0xffdd00, 1.0);
                 edgeGraphics.lineBetween(posA.x, posA.y, posB.x, posB.y);
@@ -144,7 +148,8 @@ async function playClassicDisplay(scene, trace, options = {}) {
                 edgeGraphics.clear();
 
                 if (step.path && step.path.length >= 2) {
-                    statusText.setText(`เส้นทางสั้นสุด: ${step.path.join(' → ')}`);
+                    statusText.setText(`เส้นทางที่สั้นที่สุด: ${step.path.join(' → ')}`).setColor('#00FF00');
+                    playSound('paper');
                     drawPath(answerGraphics, scene, step.path, 0x00ffff, 1.0, 8);
 
                     for (let p = 0; p < 3; p++) {
@@ -172,7 +177,7 @@ async function playClassicDisplay(scene, trace, options = {}) {
     }
 
     edgeGraphics.destroy();
-    statusText.setText('Dijkstra เสร็จสิ้น!');
+    statusText.setText('ค้นหาเส้นทางเสร็จสิ้น');
 }
 
 // =============================================================================

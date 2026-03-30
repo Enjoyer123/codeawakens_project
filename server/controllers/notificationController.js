@@ -285,14 +285,12 @@ exports.markAsRead = async (req, res) => {
                 }
             },
             update: {
-                is_read: true,
-                read_at: new Date()
+                is_read: true
             },
             create: {
                 notification_id: parseInt(notificationId),
                 user_id: user.user_id,
-                is_read: true,
-                read_at: new Date()
+                is_read: true
             }
         });
 

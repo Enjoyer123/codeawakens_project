@@ -59,10 +59,8 @@ const BlockManagement = () => {
   }, [handlePageChange]);
 
   const handleOpenBlockDialog = useCallback((block = null) => {
-    if (block) {
-      setEditingBlock(block);
-      setBlockDialogOpen(true);
-    }
+    setEditingBlock(block);
+    setBlockDialogOpen(true);
   }, []);
 
   const handleCloseBlockDialog = useCallback(() => {
@@ -105,7 +103,8 @@ const BlockManagement = () => {
         <AdminPageHeader
           title="Block Management"
           subtitle="จัดการบล็อก"
-        // Removed onAddClick and addButtonText to disable adding blocks
+          onAddClick={() => handleOpenBlockDialog()}
+          addButtonText="เพิ่มบล็อก"
         />
 
         <SearchInput

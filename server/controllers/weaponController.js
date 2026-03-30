@@ -18,7 +18,6 @@ exports.getAllWeapons = async (req, res) => {
         OR: [
           { weapon_name: { contains: searchLower, mode: 'insensitive' } },
           { weapon_key: { contains: searchLower, mode: 'insensitive' } },
-          { description: { contains: searchLower, mode: 'insensitive' } },
         ],
       };
     }
@@ -92,7 +91,7 @@ exports.getWeaponById = async (req, res) => {
 // Create new weapon
 exports.createWeapon = async (req, res) => {
   try {
-    const { weapon_key, weapon_name, description, combat_power, weapon_type } = req.body;
+    const { weapon_key, weapon_name, combat_power, weapon_type } = req.body;
 
     if (!weapon_key || !weapon_name || !weapon_type) {
       return res.status(400).json({ message: "Missing required fields: weapon_key, weapon_name, weapon_type" });
@@ -111,7 +110,6 @@ exports.createWeapon = async (req, res) => {
       data: {
         weapon_key,
         weapon_name,
-        description: description || null,
         combat_power: parseInt(combat_power) || 0,
         weapon_type,
       },
@@ -134,7 +132,7 @@ exports.createWeapon = async (req, res) => {
 exports.updateWeapon = async (req, res) => {
   try {
     const { weaponId } = req.params;
-    const { weapon_key, weapon_name, description, combat_power, weapon_type } = req.body;
+    const { weapon_key, weapon_name, combat_power, weapon_type } = req.body;
 
     const existingWeapon = await prisma.weapon.findUnique({
       where: { weapon_id: parseInt(weaponId) },
@@ -205,7 +203,6 @@ exports.updateWeapon = async (req, res) => {
     const updateData = {};
     if (weapon_key) updateData.weapon_key = weapon_key;
     if (weapon_name) updateData.weapon_name = weapon_name;
-    if (description !== undefined) updateData.description = description;
     if (combat_power !== undefined) updateData.combat_power = parseInt(combat_power);
     if (weapon_type) updateData.weapon_type = weapon_type;
 

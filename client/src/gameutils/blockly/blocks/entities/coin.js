@@ -12,7 +12,7 @@ export function defineCoinBlocks() {
     },
   };
 
-  Blockly.Blocks["have_coin"] = {
+  Blockly.Blocks["has_coin"] = {
     init: function () {
       this.appendDummyInput().appendField("Has Coin");
       this.setOutput(true, "Boolean");
@@ -20,9 +20,6 @@ export function defineCoinBlocks() {
       this.setTooltip("ตรวจสอบว่ามีเหรียญอยู่ใน node เดียวกับตัวละครหรือไม่");
     },
   };
-
-  // Alias for database consistency
-  Blockly.Blocks["has_coin"] = Blockly.Blocks["have_coin"];
 
   Blockly.Blocks["swap_coins"] = {
     init: function () {

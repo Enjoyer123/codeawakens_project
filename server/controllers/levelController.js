@@ -79,13 +79,7 @@ exports.getAllCategories = async (req, res) => {
   try {
     const categories = await prisma.levelCategory.findMany({
       orderBy: {
-        difficulty_order: 'asc',
-      },
-      select: {
-        category_id: true,
         category_name: true,
-        description: true,
-        difficulty_order: true,
         item_enable: true,
         category_items: {
           select: {
@@ -425,9 +419,8 @@ exports.createLevel = async (req, res) => {
         starter_xml: starter_xml || null,
         created_by: user.user_id,
         level_blocks: block_ids && block_ids.length > 0 ? {
-          create: block_ids.map((blockId, index) => ({
+          create: block_ids.map((blockId) => ({
             block_id: parseInt(blockId),
-            order_sequence: index + 1,
           })),
         } : undefined,
         level_victory_conditions: victory_condition_ids && victory_condition_ids.length > 0 ? {
@@ -598,10 +591,9 @@ exports.updateLevel = async (req, res) => {
         // Create new level blocks
         if (block_ids && block_ids.length > 0) {
           await tx.levelBlock.createMany({
-            data: block_ids.map((blockId, index) => ({
+            data: block_ids.map((blockId) => ({
               level_id: parseInt(levelId),
               block_id: parseInt(blockId),
-              order_sequence: index + 1,
             })),
           });
         }

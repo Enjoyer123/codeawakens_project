@@ -49,7 +49,7 @@ const CATEGORY_CONFIG = {
     style: "math_category",
     blocks: [
       "math_number", "math_arithmetic", "math_on_list", "math_single",
-      "var_math", "get_var_value", "text"
+      "var_math", "get_var_value", "text", "math_min"
     ]
   },
 
@@ -114,7 +114,7 @@ const CATEGORY_CONFIG = {
       "prim_visit", "prim_relax",
       "kruskal_visit", "kruskal_add_edge",
       // Knapsack
-      "knapsack_pick_item", "knapsack_remove_item", "knapsack_consider_item", "knapsack_dp_update",
+      "knapsack_pick_item", "knapsack_remove_item", "knapsack_consider_item", "knapsack_dp_update", "knapsack_skip_item",
       // Subset Sum
       "subset_sum_consider", "subset_sum_include", "subset_sum_exclude", "subset_sum_reset", "subset_sum_dp_update",
       // Coin Change

@@ -9,7 +9,6 @@ async function main() {
         { type: 'reach_goal', description: 'ไปถึง Node เป้าหมาย', check: 'goalReached' },
         { type: 'coins_sorted', description: 'เรียงเหรียญจากน้อยไปมาก', check: 'coinsSorted' },
         { type: 'all_people_rescued', description: 'ช่วยคนทั้งหมด', check: 'allPeopleRescued' },
-        { type: 'treasure_collected', description: 'เก็บสมบัติสำเร็จ', check: 'treasureCollected' },
         { type: 'back_to_start', description: 'กลับมาที่จุดเริ่มต้น', check: 'backToStart' },
         { type: 'function_return_test', description: 'ตรวจสอบ return value ของ function กับ test cases', check: 'functionReturnTest' }
     ];
@@ -36,7 +35,7 @@ async function main() {
     // 2. Blocks
     const blocks = [
         // Movement
-        { block_key: 'move_forward', block_name: 'move_forward', description: 'เดินไปข้างหน้า', category: 'movement'},
+        { block_key: 'move_forward', block_name: 'move_forward', description: 'เดินไปข้างหน้า', category: 'movement' },
         { block_key: 'turn_left', block_name: 'turn_left', description: 'เลี้ยวซ้าย', category: 'movement' },
         { block_key: 'turn_right', block_name: 'turn_right', description: 'เลี้ยวขวา', category: 'movement' },
         { block_key: 'hit', block_name: 'hit', description: 'โจมตีศัตรู', category: 'movement' },
@@ -80,9 +79,9 @@ async function main() {
         { block_key: 'math_arithmetic', block_name: 'math_arithmetic', description: 'การคำนวณ (+, -, *, /)', category: 'operators' },
         { block_key: 'math_on_list', block_name: 'math_on_list', description: 'การคำนวณบน list', category: 'operators' },
         { block_key: 'math_single', block_name: 'math_single', description: 'คณิตศาสตร์ (sqrt, abs)', category: 'operators' },
+        { block_key: 'math_min', block_name: 'math_min', description: 'คณิตศาสตร์ (min)', category: 'operators' },
         { block_key: 'var_math', block_name: 'var_math', description: 'คำนวณกับตัวแปร', category: 'operators' },
         { block_key: 'get_var_value', block_name: 'get_var_value', description: 'ดึงค่าตัวแปร (legacy)', category: 'operators' },
-        { block_key: 'text', block_name: 'text', description: 'ข้อความ', category: 'operators' },
         { block_key: 'lists_create_empty', block_name: 'lists_create_empty', description: 'สร้าง list ว่าง', category: 'operators' },
         { block_key: 'lists_create_with', block_name: 'lists_create_with', description: 'สร้าง list พร้อมไอเท็ม', category: 'operators' },
         { block_key: 'lists_length', block_name: 'lists_length', description: 'ความยาวของ list', category: 'operators' },
@@ -134,6 +133,7 @@ async function main() {
         { block_key: 'kruskal_visit', block_name: 'kruskal_visit', description: 'Kruskal: พิจารณาเส้นทาง', category: 'visuals' },
         { block_key: 'kruskal_add_edge', block_name: 'kruskal_add_edge', description: 'Kruskal: เลือกเส้นเข้าต้นไม้', category: 'visuals' },
         { block_key: 'knapsack_pick_item', block_name: 'knapsack_pick_item', description: 'Knapsack: ยกไอเท็ม', category: 'visuals' },
+        { block_key: 'knapsack_skip_item', block_name: 'knapsack_skip_item', description: 'Knapsack: ข้ามไอเท็ม (ไม่เลือก)', category: 'visuals' },
         { block_key: 'knapsack_remove_item', block_name: 'knapsack_remove_item', description: 'Knapsack: วางไอเท็ม', category: 'visuals' },
         { block_key: 'knapsack_consider_item', block_name: 'knapsack_consider_item', description: 'Knapsack: พิจารณาไอเท็ม', category: 'visuals' },
         { block_key: 'knapsack_dp_update', block_name: 'knapsack_dp_update', description: 'Knapsack: อัปเดตตาราง', category: 'visuals' },

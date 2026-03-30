@@ -16,7 +16,7 @@ import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { getImageUrl } from '@/utils/imageUtils';
 
 // TanStack hooks for mutations (since BlockFormDialog handles save now)
-import { useUpdateBlock, useUploadBlockImage } from '@/services/hooks/useBlocks';
+import { useCreateBlock, useUpdateBlock, useUploadBlockImage } from '@/services/hooks/useBlocks';
 
 const blockCategories = [
   { value: 'movement', label: 'Movement' },
@@ -35,6 +35,7 @@ const BlockFormDialog = ({
 }) => {
   // Mutations
   const { mutateAsync: updateBlockAsync } = useUpdateBlock();
+  const { mutateAsync: createBlockAsync } = useCreateBlock();
   const { mutateAsync: uploadImageAsync } = useUploadBlockImage();
 
   // Internal Form State
@@ -152,7 +153,14 @@ const BlockFormDialog = ({
         
         onOpenChange(false);
       } else {
-        setError('Create block is not allowed');
+        let imagePath = formData.block_image; 
+        if (selectedImage) {
+          const uploadResult = await uploadImageAsync(selectedImage);
+          imagePath = uploadResult.path;
+        }
+
+        await createBlockAsync({ ...cleanedData, block_image: imagePath });
+        onOpenChange(false);
       }
     } catch (err) {
       console.error(err);

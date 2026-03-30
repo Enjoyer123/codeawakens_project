@@ -64,7 +64,7 @@ const GameControls = ({
                 )}
 
                 <button
-                    onClick={onHistoryClick}
+                    onClick={() => { playSound('paper'); onHistoryClick(); }}
                     className="bg-[#2e1065] hover:bg-[#4c1d95] text-purple-200 py-2 rounded-lg font-semibold shadow transition active:scale-95 flex items-center justify-center gap-1"
                     title="History"
                 >

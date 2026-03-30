@@ -229,6 +229,7 @@ const LevelCreateEdit = () => {
                       edgeWeight={edgeWeight}
                       onEdgeWeightChange={setEdgeWeight}
                       onFormDataChange={setFormData}
+                      showAlert={showAlert}
                     />
                   </div>
                 </TabsContent>

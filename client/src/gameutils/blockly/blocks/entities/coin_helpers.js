@@ -71,7 +71,7 @@ export async function collectCoin() {
     await new Promise((resolve) => setTimeout(resolve, 300));
 }
 
-export function haveCoin() {
+export function hasCoin() {
     const currentState = getCurrentGameState();
     if (currentState.isGameOver) return false;
 

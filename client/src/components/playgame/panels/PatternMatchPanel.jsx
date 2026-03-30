@@ -96,14 +96,14 @@ const PatternMatchPanel = ({ patternData, currentLevel, currentWeaponData }) => 
       <div className="flex items-stretch h-full">
         {/* Left: Progress Bar & Stats (50%) */}
         <div className="w-1/2 flex flex-col items-center justify-center gap-1.5 pr-3 border-r border-purple-500/30">
-          
+
           {idealPattern && (
             <div className="flex flex-col items-center gap-2 w-full max-w-[140px]">
-              
+
               {/* SYNCHRONIZATION Bar */}
               <div className="w-full relative">
                 <div className="text-[10px] text-yellow-300 drop-shadow-sm mb-1 font-bold tracking-widest text-center">
-                  SYNCHRONIZATION
+                  WEAPON SYNC
                 </div>
                 <div className="w-full bg-black/50 rounded-full h-2 overflow-hidden border border-gray-700/50">
                   <div
@@ -116,7 +116,7 @@ const PatternMatchPanel = ({ patternData, currentLevel, currentWeaponData }) => 
               {/* RESONANCE Bar */}
               <div className="w-full relative mt-1">
                 <div className="text-[10px] text-blue-300 drop-shadow-sm mb-1 font-bold tracking-widest text-center">
-                  RESONANCE
+                  CODE MATCH
                 </div>
                 <div className="w-full bg-black/50 rounded-full h-2 overflow-hidden border border-gray-700/50">
                   <div
@@ -125,7 +125,7 @@ const PatternMatchPanel = ({ patternData, currentLevel, currentWeaponData }) => 
                   />
                 </div>
               </div>
-              
+
             </div>
           )}
         </div>
@@ -136,7 +136,7 @@ const PatternMatchPanel = ({ patternData, currentLevel, currentWeaponData }) => 
             <div className="flex flex-col items-center gap-3 w-full">
               <div className="flex flex-col items-center relative group cursor-pointer" onClick={() => setShowHelp(true)}>
                 <div className="text-[10px] text-gray-400 drop-shadow-sm mb-0.5 font-bold tracking-widest flex items-center gap-1">
-                  SYSTEM CORE <span className="text-blue-400 text-[10px] opacity-80 hover:opacity-100">[?]</span>
+                  CODE PATTERN <span className="text-blue-400 text-[10px] opacity-80 hover:opacity-100">[?]</span>
                 </div>
                 <span className="text-[13px] text-[#4ade80] drop-shadow-md truncate font-black uppercase tracking-wider text-center">
                   ACTIVE
@@ -147,7 +147,7 @@ const PatternMatchPanel = ({ patternData, currentLevel, currentWeaponData }) => 
               {patternData.threePartsMatch && (
                 <div className="flex flex-col items-center gap-1.5 w-full">
                   <span className="text-[10px] text-purple-300 drop-shadow-sm w-full text-center font-bold tracking-widest">
-                    CORE NODES
+                    KEY STEPS
                   </span>
                   <div className="flex gap-2 w-full h-2 px-1">
                     {[1, 2, 3].map((part) => {

@@ -23,9 +23,7 @@ const LevelTable = ({
           <tr>
             <th className={tableHeaderClassName}>Level</th>
             <th className={tableHeaderClassName}>Topic</th>
-            <th className={tableHeaderClassName}>Difficulty</th>
             <th className={tableHeaderClassName}>Status</th>
-            <th className={tableHeaderClassName}>Creator</th>
             <th className={tableHeaderClassName}>Actions</th>
           </tr>
         </thead>
@@ -37,11 +35,6 @@ const LevelTable = ({
                   <div className="text-sm font-medium text-gray-900">
                     {level.level_name}
                   </div>
-                  {level.description && (
-                    <div className="text-sm text-gray-500">
-                      {level.description}
-                    </div>
-                  )}
                 </div>
               </td>
               <td className={tableCellClassName}>
@@ -52,9 +45,6 @@ const LevelTable = ({
                 )}
               </td>
               <td className={tableCellClassName}>
-                <Badge variant="secondary">{level.difficulty}</Badge>
-              </td>
-              <td className={tableCellClassName}>
                 <div className="flex flex-col gap-1">
                   <Badge variant={level.is_unlocked ? 'default' : 'secondary'}>
                     {level.is_unlocked ? 'Unlocked' : 'Locked'}
@@ -62,10 +52,10 @@ const LevelTable = ({
                   <Badge variant={level.textcode ? 'default' : 'outline'}>
                     {level.textcode ? 'Text Code' : 'Blockly'}
                   </Badge>
+                  <Badge variant={level.required_for_post_test ? 'default' : 'outline'}>
+                    {level.required_for_post_test ? 'Required' : 'Optional'}
+                  </Badge>
                 </div>
-              </td>
-              <td className={tableCellClassName}>
-                {level.creator?.username || 'ไม่ระบุ'}
               </td>
               <td className={actionsCellClassName}>
                 <div className="flex items-center gap-2 flex-wrap">

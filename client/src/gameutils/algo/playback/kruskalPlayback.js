@@ -6,6 +6,7 @@
  *   { action: 'kruskal_add_edge', from, to, weight }  ← from kruskal_add_edge block
  */
 import { animationController, createTraceBuffer } from './AnimationController';
+import { playSound } from '../../sound/soundManager';
 
 export async function playKruskalAnimation(scene, trace, options = {}) {
     // สลับ Display Mode ตรงนี้:
@@ -34,8 +35,8 @@ async function playClassicDisplay(scene, trace, options = {}) {
     let totalMstWeight = 0;
 
     // Status text
-    const statusText = scene.add.text(400, 20, 'Kruskal: เริ่มสร้าง MST...', {
-        fontSize: '20px', color: '#00ff88', fontStyle: 'bold',
+    const statusText = scene.add.text(scene.scale.width / 2, 870, 'เริ่มสร้าง Minimum Spanning Tree...', {
+        fontSize: '20px', color: '#FFFF00', fontStyle: 'bold',
         stroke: '#000000', strokeThickness: 4
     }).setOrigin(0.5).setDepth(20);
 
@@ -55,9 +56,9 @@ async function playClassicDisplay(scene, trace, options = {}) {
                 const posB = getNodePos(scene, to);
                 if (!posA || !posB) break;
 
-                statusText.setText(`กำลังพิจารณาเส้นเชื่อม ${from} → ${to} (น้ำหนัก = ${weight})`);
+                statusText.setText(`พิจารณาเส้นเชื่อม ${from} → ${to} (น้ำหนัก = ${weight})`);
+                playSound('run');
 
-                // Flash yellow for potential edge evaluation
                 edgeGraphics.lineStyle(5, 0xffdd00, 1.0);
                 edgeGraphics.lineBetween(posA.x, posA.y, posB.x, posB.y);
 
@@ -78,9 +79,9 @@ async function playClassicDisplay(scene, trace, options = {}) {
                 const posB = getNodePos(scene, to);
                 if (!posA || !posB) break;
 
-                statusText.setText(`เลือกเส้นเชื่อม ${from} ↔ ${to} เข้าสู่ MST (น้ำหนัก = ${weight})`);
+                statusText.setText(`เพิ่มเส้นเชื่อม ${from} ↔ ${to} เข้าสู่ MST (น้ำหนัก = ${weight})`);
 
-                // Highlight the nodes connected
+                playSound('paper');
                 lightNode(scene, from, 0x00ff88, 1000 / animationController.speed);
                 lightNode(scene, to, 0x00ff88, 1000 / animationController.speed);
 
@@ -100,7 +101,7 @@ async function playClassicDisplay(scene, trace, options = {}) {
 
     // Finished
     const finalWeight = options.result !== undefined ? options.result : totalMstWeight;
-    statusText.setText(`สร้าง Minimum Spanning Tree สำเร็จ!\nน้ำหนักรวม (Weight) = ${finalWeight}`);
+    statusText.setText(`สร้าง Minimum Spanning Tree เสร็จสิ้น\nน้ำหนักรวม: ${finalWeight}`).setColor('#00FF00');
     await sleep(4000);
     statusText.destroy();
 }

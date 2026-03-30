@@ -23,6 +23,9 @@ const queryClient = new QueryClient({
       // Suppress common errors for guest users (public access)
       if (error?.response?.status === 401) return;
       if (error?.message === 'No authentication token available') return;
+      
+      // Suppress "Required levels not completed" toast as it's handled by specific components
+      if (error?.response?.status === 403 && (error?.message === 'Required levels not completed' || error?.response?.data?.message === 'Required levels not completed')) return;
 
       console.error('Global Query Error:', error);
       const message = formatErrorMessage(error, 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้');
@@ -35,6 +38,9 @@ const queryClient = new QueryClient({
       // Suppress common errors for guest users
       if (error?.response?.status === 401) return;
       if (error?.message === 'No authentication token available') return;
+
+      // Suppress "Required levels not completed" toast
+      if (error?.response?.status === 403 && (error?.message === 'Required levels not completed' || error?.response?.data?.message === 'Required levels not completed')) return;
 
       console.error('Global Mutation Error:', error);
       const message = formatErrorMessage(error, 'การทำรายการล้มเหลว');

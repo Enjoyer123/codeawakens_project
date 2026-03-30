@@ -64,7 +64,7 @@ export function playCombatSequence(scene, isWin, onComplete) {
         }
     }
 
-    // Hide coins/people/treasures/obstacles
+    // Hide coins/people/obstacles
     if (scene.coins) scene.coins.forEach(c => c.setVisible(false));
 
 

@@ -2,7 +2,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2 } from 'lucide-react';
 
-const CoinChangeForm = ({ data, onChange }) => {
+const CoinChangeForm = ({ data, onChange, showAlert }) => {
     const warriors = data?.warriors || [];
 
     const updateField = (field, value) => onChange({ ...data, [field]: value });
@@ -19,7 +19,8 @@ const CoinChangeForm = ({ data, onChange }) => {
 
     const addWarrior = () => {
         if (warriors.length >= 7) {
-            alert('เพิ่มเหรียญ (Warriors) ได้สูงสุด 7 ชนิด');
+            if (showAlert) showAlert('คำเตือน', 'เพิ่มเหรียญ (Warriors) ได้สูงสุด 7 ชนิด');
+            else alert('เพิ่มเหรียญ (Warriors) ได้สูงสุด 7 ชนิด');
             return;
         }
         updateField('warriors', [...warriors, null]);

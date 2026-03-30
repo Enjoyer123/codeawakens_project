@@ -1,5 +1,6 @@
 import { animationController, createTraceBuffer } from './AnimationController';
 import { createTreeRenderer } from './TreeRenderer';
+import { playSound } from '../../sound/soundManager';
 
 export async function playKnapsackBacktrackAnimation(scene, trace, options = {}) {
     // สลับ Display Mode ตรงนี้:
@@ -19,7 +20,11 @@ async function playTreeDisplay(scene, trace, options) {
     const sleep = (ms) => animationController.sleep(ms);
 
     // Status text (ย้ายไปอยู่มุมขวาล่างใต้กระเป๋า เหมือน Coin Change)
-    const statusText = scene.add.text(1050, 420, 'เริ่มสร้าง Tree...', {
+    const statusText = scene.add.text(1050, 300, 'เริ่มสำรวจทางเลือก...', {
+        fontSize: '20px', color: '#FFFF00', fontStyle: 'bold', stroke: '#000', strokeThickness: 4, align: 'center', wordWrap: { width: 220 }
+    }).setOrigin(0.5, 0).setDepth(20);
+
+    const subText = scene.add.text(1050, 500, 'มูลค่า $0', {
         fontSize: '20px', color: '#FFFF00', fontStyle: 'bold', stroke: '#000', strokeThickness: 4, align: 'center', wordWrap: { width: 220 }
     }).setOrigin(0.5, 0).setDepth(20);
 
@@ -67,16 +72,18 @@ async function playTreeDisplay(scene, trace, options) {
 
             if (currentWeight > maxWeight) {
                 tree.setState(id, 'dead');
-                statusText.setText(`❌ น้ำหนักเกิน! หยิบชิ้น ${idx + 1} ไม่ได้ (${currentWeight}/${maxWeight}kg)`).setColor('#FF4444');
+                statusText.setText(`น้ำหนักเกิน แบกชิ้นที่ ${idx + 1} ไม่ได้ (${currentWeight}/${maxWeight}kg)`).setColor('#FF4444');
             } else {
                 tree.setState(id, 'active');
-                statusText.setText(`✅ หยิบชิ้น ${idx + 1} ($${item.price}, ${item.weight}kg)\nค่ารวม $${currentValue}`).setColor('#00FF88');
+                statusText.setText(`เลือกชิ้นที่ ${idx + 1} ($${item.price}, ${item.weight}kg)`);
+                subText.setText(`มูลค่า $${currentValue}`);
             }
 
             path.push(id);
 
             tree.relayout();
             tree.redraw();
+            playSound('run');
             await sleep(baseDelay * 0.6);
         }
         else if (step.action === 'skip') {
@@ -101,12 +108,14 @@ async function playTreeDisplay(scene, trace, options) {
             tree.nodes[id].weight = currentWeight;
 
             tree.setState(id, 'active');
-            statusText.setText(`⏭️ ข้ามชิ้น ${idx + 1}\nค่ารวม $${currentValue}`).setColor('#FFA500');
+            statusText.setText(`ไม่เลือกชิ้นที่ ${idx + 1}`);
+            subText.setText(`มูลค่า $${currentValue}`);
 
             path.push(id);
 
             tree.relayout();
             tree.redraw();
+            playSound('run');
             await sleep(baseDelay * 0.6);
         }
         else if (step.action === 'remove') {
@@ -116,13 +125,13 @@ async function playTreeDisplay(scene, trace, options) {
                 tree.redraw();
             }
 
-            statusText.setText('↩ Backtrack').setColor('#FF9944');
+            statusText.setText('ย้อนกลับไปทางเลือกก่อนหน้า');
             await sleep(baseDelay * 0.4);
         }
         else if (step.action === 'consider') {
             const idx = step.index;
             const item = items[idx];
-            statusText.setText(`พิจารณาชิ้นที่ ${idx + 1}` + (item ? `\n($${item.price}, ${item.weight}kg)` : "")).setColor('#3498db');
+            statusText.setText(`พิจารณาชิ้นที่ ${idx + 1}` + (item ? `\n($${item.price}, ${item.weight}kg)` : ""));
             await sleep(baseDelay * 0.4);
         }
     }
@@ -158,7 +167,8 @@ async function playTreeDisplay(scene, trace, options) {
     tree.redraw();
 
     if (maxVal > 0) {
-        statusText.setText(`✅ เสร็จแล้ว! ค่าสูงสุดที่เป็นไปได้: $${maxVal}`).setColor('#00FF88');
+        statusText.setText(`ค้นหาเสร็จสิ้น ค่าสูงสุดที่ได้คือ`).setColor('#00FF88');
+        subText.setText(`มูลค่า $${maxVal}`).setColor('#00FF88');
         await sleep(baseDelay);
 
         // นำไอเทมที่เป็นชุดคำตอบบินเข้าไปสะสมในกระเป๋า
@@ -181,6 +191,7 @@ async function playTreeDisplay(scene, trace, options) {
                 scale: 0.9, // ย่อขนาดลงนิดนึงตอนเข้ากระเป๋า
                 duration: 600 / animationController.speed,
                 ease: 'Back.easeIn',
+                onStart: () => playSound('paper'),
                 onComplete: () => {
                     // สร้างข้อความลอยขึ้นมาแสดงมูลค่าตอนที่ไอเทมลงกระเป๋า
                     const floatText = scene.add.text(bagX, targetY - 30, `+$${itemObj.price}`, {
@@ -207,7 +218,7 @@ async function playTreeDisplay(scene, trace, options) {
 
         await sleep(baseDelay * 1.5);
     } else {
-        statusText.setText(`❌ หยิบอะไรไม่ได้เลย`).setColor('#FF4444');
+        statusText.setText(`ไม่ได้เลือกของเข้ากระเป๋า`).setColor('#FF4444');
         await sleep(baseDelay * 2.0);
     }
 }

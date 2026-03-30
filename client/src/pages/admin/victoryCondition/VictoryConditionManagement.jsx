@@ -60,7 +60,7 @@ const VictoryConditionManagement = () => {
     handlePageChange(1);
   }, [handlePageChange]);
 
-  const handleOpenVictoryConditionDialog = useCallback((victoryCondition) => {
+  const handleOpenVictoryConditionDialog = useCallback((victoryCondition = null) => {
     setEditingVictoryCondition(victoryCondition);
     setVictoryConditionDialogOpen(true);
   }, []);
@@ -109,6 +109,8 @@ const VictoryConditionManagement = () => {
         <AdminPageHeader
           title="Victory Condition Management"
           subtitle="จัดการเงื่อนไขชัยชนะ"
+          onAddClick={() => handleOpenVictoryConditionDialog()}
+          addButtonText="เพิ่มเงื่อนไขชัยชนะ"
         />
 
         <SearchInput

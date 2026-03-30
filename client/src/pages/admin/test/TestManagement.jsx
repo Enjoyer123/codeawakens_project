@@ -85,7 +85,7 @@ const TestManagement = () => {
                     title="Test Management"
                     subtitle="Manage Pre-Test and Post-Test Questions"
                     onAddClick={() => handleOpenDialog()}
-                    addButtonText="Add Question"
+                    addButtonText="เพิ่มโจทย์ทดสอบ"
                 />
 
                 <Tabs defaultValue="PreTest" value={activeTab} onValueChange={setActiveTab} className="mt-6">

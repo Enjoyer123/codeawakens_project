@@ -36,11 +36,10 @@ const GameArea = ({
   return (
     <div className="flex flex-col h-full overflow-hidden relative">
       {/* Phaser Game - Main container */}
-      <div className="flex-1 w-full relative flex items-end justify-center overflow-hidden bg-[#0f111a] min-h-0 border-b border-purple-500/20 shadow-[0_-5px_20px_rgba(0,0,0,0.5)]">
+      <div className="flex-1 w-full relative overflow-hidden bg-[#0f111a] min-h-0 border-b border-purple-500/20 shadow-[0_-5px_20px_rgba(0,0,0,0.5)]">
         <div
           ref={gameRef}
           className="w-full h-full"
-          style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
         />
 
         {/* Floating Guide / Hint / Blocks on Phaser Canvas (Top Right) */}
@@ -58,7 +57,7 @@ const GameArea = ({
       {/* Sleek Symmetrical Bottom Bar */}
       <div className="flex-shrink-0 bg-[#0f0a2a]/95 backdrop-blur-xl border-t border-purple-500/30 shadow-[0_-10px_30px_rgba(0,0,0,0.8)] z-30 font-sans">
         <div className="grid grid-cols-3 items-stretch p-3 lg:p-4 text-purple-100 gap-4">
-          
+
           {/* LEFT: Status (HP / Weapon) */}
           <div className="flex w-full h-full">
             {currentLevel && (

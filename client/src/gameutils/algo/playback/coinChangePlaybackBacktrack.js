@@ -4,6 +4,7 @@
  */
 import { animationController, createTraceBuffer } from './AnimationController';
 import { createTreeRenderer } from './TreeRenderer';
+import { playSound } from '../../sound/soundManager';
 
 export async function playCoinChangeBacktrackAnimation(scene, trace, options = {}) {
     return playTreeDisplay(scene, trace, options);
@@ -20,7 +21,7 @@ async function playTreeDisplay(scene, trace, options) {
     const canvasH = scene.scale.height || 600;
 
     // Status text (ย้ายไปอยู่ใต้บอสด้านขวา ตามที่ขอ)
-    const statusText = scene.add.text(1050, 420, 'เริ่มสร้าง Tree...', {
+    const statusText = scene.add.text(1050, 420, 'เริ่มสำรวจทางเลือก...', {
         fontSize: '20px', color: '#FFFF00', fontStyle: 'bold', stroke: '#000', strokeThickness: 4, align: 'center', wordWrap: { width: 220 }
     }).setOrigin(0.5, 0).setDepth(20);
 
@@ -63,7 +64,7 @@ async function playTreeDisplay(scene, trace, options) {
             // กำหนดสถานะ
             if (newAmt === 0) {
                 tree.setState(id, 'solved');
-                statusText.setText(`✅ ครบ! ใช้ ${power} → 0`).setColor('#00FF88');
+                statusText.setText(`ผลรวมพอดี ใช้ ${power}`)
 
                 // ตรวจสอบว่านี่คือชุดคำตอบที่สั้นที่สุดหรือไม่
                 if (!bestSolution || currentCoins.length < bestSolution.length) {
@@ -71,15 +72,16 @@ async function playTreeDisplay(scene, trace, options) {
                 }
             } else if (newAmt < 0) {
                 tree.setState(id, 'dead');
-                statusText.setText(`❌ เกิน (${newAmt})`).setColor('#FF4444');
+                statusText.setText(`เกินเป้าหมาย`)
             } else {
                 tree.setState(id, 'active');
-                statusText.setText(`⚔️ ใช้ ${power} → เหลือ ${newAmt}`).setColor('#FFFF00');
+                statusText.setText(`เลือก ${power} (ขาดอีก ${newAmt})`)
             }
 
             path.push(id);
             tree.relayout();
             tree.redraw();
+            playSound('run');
             await sleep(baseDelay * 0.6);
         }
 
@@ -91,7 +93,7 @@ async function playTreeDisplay(scene, trace, options) {
                 tree.setState(deadId, 'dead');
                 tree.redraw();
             }
-            statusText.setText('↩ Backtrack').setColor('#FF9944');
+            statusText.setText('ย้อนกลับไปทางเลือกก่อนหน้า')
             await sleep(baseDelay * 0.4);
         }
     }
@@ -101,7 +103,7 @@ async function playTreeDisplay(scene, trace, options) {
     tree.redraw();
 
     if (bestSolution && bestSolution.length > 0) {
-        statusText.setText(`✅ เสร็จสิ้น! คำตอบที่ดีที่สุดใช้ ${bestSolution.length} เหรียญ`).setColor('#00FF88');
+        statusText.setText(`ค้นหาเสร็จสิ้น (ใช้น้อยสุด ${bestSolution.length} เหรียญ)`).setColor('#00FF88');
         await sleep(baseDelay);
 
         // ทำให้ Tree จางหายไปเพื่อให้จุดโฟกัสกลับมาที่ตัวละคร
@@ -127,24 +129,44 @@ async function playTreeDisplay(scene, trace, options) {
         for (let idx = 0; idx < bestSolution.length; idx++) {
             const warriorIdx = bestSolution[idx];
             const w = warriors[warriorIdx];
-            if (!w) continue;
+            if (!w || !w.powerSquare) continue;
 
             const px = startHeroX + (idx * spacing);
-            const tex = w.powerSquare?.texture?.key || 'bot_slime1';
+            const py = centerY;
+            const tex = w.powerSquare.texture.key;
 
-            // ดึงตัวละครเดิมจาก setup มา animate ย้ายมาตรงกลางแทนที่จะสร้าง clone ตัวใหม่
+            // ดึงพิกัดจากตัวออริจินัลฝั่งซ้าย
+            const spawnX = w.x;
+            const spawnY = w.y;
+
+            // สร้างร่างเงา (Clone) เริ่มจากตำแหน่งฝั่งซ้าย
+            const ghost = scene.add.sprite(spawnX, spawnY, tex)
+                .setDisplaySize(80, 80).setDepth(30).setAlpha(0);
+
+            if (w.powerSquare.frame && w.powerSquare.frame.name) {
+                ghost.setFrame(w.powerSquare.frame.name);
+            }
+
+            // ตัวเลขพลัง — เริ่มจากเป้าหมายที่เดียวกัน 
+            const powerLabel = scene.add.text(spawnX, spawnY + 45, `ATK: ${w.power}`, {
+                fontSize: '20px', color: '#ffffff', fontStyle: 'bold', stroke: '#000000', strokeThickness: 4
+            }).setOrigin(0.5).setDepth(31).setAlpha(0);
+
+            // Animate ร่าง Clone ไปตรงกลาง
             scene.tweens.add({
-                targets: w.powerSquare,
+                targets: ghost,
                 x: px,
-                y: centerY,
-                scale: 2.0, // ให้ใหญ่ขึ้นนิดนึงตอนมาโชว์ตัว
+                y: py,
+                alpha: 1,
+                scale: 1.5,
                 duration: 800 / animationController.speed,
                 ease: 'Back.easeOut',
+                onStart: () => playSound('paper'),
                 onComplete: () => {
                     // โดดฉลอง
                     scene.tweens.add({
-                        targets: w.powerSquare,
-                        y: '-=20',
+                        targets: ghost,
+                        y: '-=15',
                         yoyo: true,
                         repeat: -1,
                         duration: 350
@@ -154,9 +176,10 @@ async function playTreeDisplay(scene, trace, options) {
 
             // เลื่อนป้ายพลังตามมาด้วย
             scene.tweens.add({
-                targets: w.powerText,
+                targets: powerLabel,
                 x: px,
-                y: centerY - 60,
+                y: py + 45,
+                alpha: 1,
                 duration: 800 / animationController.speed,
                 ease: 'Back.easeOut'
             });
@@ -166,7 +189,7 @@ async function playTreeDisplay(scene, trace, options) {
 
         await sleep(baseDelay * 1.5);
     } else {
-        statusText.setText('❌ สิ้นสุดการค้นหา ไม่พบวิธีการใดที่สำเร็จ').setColor('#FF5555');
+        statusText.setText('ค้นหาเสร็จสิ้น ไม่พบวิธีการที่พอดี').setColor('#FF5555');
         await sleep(baseDelay * 2.0);
     }
 }

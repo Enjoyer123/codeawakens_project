@@ -2,7 +2,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2 } from 'lucide-react';
 
-const KnapsackForm = ({ data, onChange }) => {
+const KnapsackForm = ({ data, onChange, showAlert }) => {
     const items = data?.items || [];
     
     // Helper updates
@@ -26,7 +26,8 @@ const KnapsackForm = ({ data, onChange }) => {
 
     const addItem = () => {
         if (items.length >= 8) {
-            alert('เพิ่มสมบัติได้สูงสุด 8 ชิ้น เพื่อป้องกันปัญหาประสิทธิภาพของบราวเซอร์');
+            if (showAlert) showAlert('คำเตือน', 'เพิ่มสมบัติได้สูงสุด 8 ชิ้น เพื่อป้องกันปัญหาประสิทธิภาพของบราวเซอร์');
+            else alert('เพิ่มสมบัติได้สูงสุด 8 ชิ้น เพื่อป้องกันปัญหาประสิทธิภาพของบราวเซอร์');
             return;
         }
         const spacing = 150;

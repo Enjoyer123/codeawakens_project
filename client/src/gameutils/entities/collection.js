@@ -1,60 +1,8 @@
-﻿// Phaser collection and interaction functions
+// Phaser collection and interaction functions
 import Phaser from "phaser";
 import { updateGoalUI } from '../setup/uiManager';
 
 
-// Function to update treasure display
-export function updateTreasureDisplay(scene) {
-  if (!scene.treasures || !scene.levelData || !scene.levelData.treasures) return;
-
-  scene.treasures.forEach((treasure) => {
-    const nodeId = treasure.getData('nodeId');
-    const treasureData = scene.levelData.treasures.find(t => t.nodeId === nodeId);
-    const collected = treasureData ? treasureData.collected : false;
-
-    if (collected) {
-      // Hide treasure when collected
-      treasure.setVisible(false);
-      if (treasure.nameLabel) {
-        treasure.nameLabel.setVisible(false);
-      }
-      if (treasure.glowEffect) {
-        treasure.glowEffect.setVisible(false);
-      }
-    } else {
-      // Show treasure when not collected
-      treasure.setVisible(true);
-      if (treasure.nameLabel) {
-        treasure.nameLabel.setVisible(true);
-      }
-      if (treasure.glowEffect) {
-        treasure.glowEffect.setVisible(true);
-      }
-    }
-  });
-}
-
-// Function to visually collect treasure (direct update)
-export function collectTreasureVisual(scene, nodeId) {
-  if (!scene.treasures) return;
-
-  const treasure = scene.treasures.find(t => t.getData('nodeId') === nodeId);
-  if (treasure) {
-    treasure.setVisible(false);
-    if (treasure.nameLabel) treasure.nameLabel.setVisible(false);
-    if (treasure.glowEffect) treasure.glowEffect.setVisible(false);
-
-    // Play collection effect similar to coins
-    showCoinCollectionEffect(scene, treasure.x, treasure.y, 100); // Assume 100 points for treasure for visual effect
-
-    // Update Phaser UI
-    if (treasureData) treasureData.collected = true;
-    const collectedCount = scene.levelData.treasures.filter(t => t.collected).length;
-    updateGoalUI(scene, 'treasures', collectedCount);
-  } else {
-    console.warn(`⚠️ Visual update: Treasure at node ${nodeId} not found in scene`);
-  }
-}
 
 
 // Function to visually rescue person (direct update)

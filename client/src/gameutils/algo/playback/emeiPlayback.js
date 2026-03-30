@@ -9,6 +9,7 @@
  */
 // All visual methods are now internal to playback.
 import { animationController, createTraceBuffer } from './AnimationController';
+import { playSound } from '../../sound/soundManager';
 
 export async function playEmeiAnimation(scene, trace, options = {}) {
     // สลับ Display Mode ตรงนี้:
@@ -27,6 +28,11 @@ async function playClassicDisplay(scene, trace, options = {}) {
         return;
     }
 
+    // Status text for step-by-step explanation
+    const statusText = scene.add.text(scene.cameras.main.width / 2, 870, 'เริ่มเตรียมความพร้อม...', {
+        fontSize: '24px', color: '#FFFF00', fontStyle: 'bold',
+        stroke: '#000000', strokeThickness: 4
+    }).setOrigin(0.5).setDepth(20);
 
     // Pre-scan: find the correct emei_path event
     // Prefer the event where path ends at goalEnd (the actual goal node)
@@ -49,20 +55,25 @@ async function playClassicDisplay(scene, trace, options = {}) {
 
     // Persistent graphics for the final path highlight
     const pathGraphics = scene.add.graphics().setDepth(100);
+    let currentStepIdx = 0;
 
     for await (const step of createTraceBuffer(trace)) {
+        const i = currentStepIdx++;
         if (!scene || !scene.scene || !scene.scene.isActive(scene.scene.key)) break;
 
         switch (step.action) {
             case 'emei_peak': {
+                statusText.setText(`พิจารณายอดเขา ${step.node}...`);
+                playSound('run');
                 await highlightPeak(scene, step.node);
                 await sleep(baseDelay * 0.3);
                 break;
             }
 
             case 'emei_cable': {
-                // Flash: draw a temporary edge between u and v
-                await flashEdge(scene, step.u, step.v, 0x00ffff, speed);
+                statusText.setText(`ตรวจสอบเส้นทางเคเบิล ${step.u} ↔ ${step.v}...`);
+                playSound('paper');
+                await flashEdge(scene, step.u, step.v, 0x00ffff);
                 await sleep(baseDelay * 0.3);
                 break;
             }
@@ -75,6 +86,10 @@ async function playClassicDisplay(scene, trace, options = {}) {
 
                 if (!path || path.length < 2) break;
 
+                statusText.setText(`พบเส้นทาง\nเตรียมขนย้าย...`);
+                statusText.setColor('#00FF00');
+                playSound('paper');
+
                 // Draw each edge of the path sequentially with cable car animation
                 for (let j = 0; j < path.length - 1; j++) {
                     const u = path[j];
@@ -82,7 +97,7 @@ async function playClassicDisplay(scene, trace, options = {}) {
                     // Draw persistent cyan line
                     drawEdgeLine(pathGraphics, scene, u, v, 0x00ffff, 8);
                     // Animate cable car
-                    await animateCableCar(scene, u, v, speed);
+                    await animateCableCar(scene, u, v);
                     await sleep(baseDelay * 0.2);
                 }
                 break;
@@ -94,9 +109,20 @@ async function playClassicDisplay(scene, trace, options = {}) {
     if (options && options.result && Array.isArray(options.result) && options.result.length >= 2) {
         const bottleneck = options.result[0];
         const rounds = options.result[1];
+        statusText.setText('คำนวณการขนย้ายเสร็จสิ้น');
+        statusText.setColor('#ffd700');
         showEmeiFinalResult(scene, bottleneck, rounds);
         await sleep(3000);
     }
+
+    // Clean up status text after some time
+    scene.tweens.add({
+        targets: statusText,
+        alpha: 0,
+        delay: 2000,
+        duration: 1000,
+        onComplete: () => statusText.destroy()
+    });
 }
 
 // ============================================================================

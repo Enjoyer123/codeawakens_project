@@ -17,11 +17,7 @@ import FormTextarea from '@/components/admin/formFields/FormTextarea';
 import { useCreateReward, useUpdateReward } from '@/services/hooks/useRewards';
 
 const rewardTypes = [
-  { value: 'weapon', label: 'Weapon' },
-  { value: 'block', label: 'Block' },
-  { value: 'badge', label: 'Badge' },
-  { value: 'experience', label: 'Experience' },
-  { value: 'coin', label: 'Coin' },
+  { value: 'badge', label: 'Badge' }
 ];
 
 const RewardFormDialog = ({
@@ -78,7 +74,7 @@ const RewardFormDialog = ({
     setError(null);
     try {
       setSaving(true);
-      
+
       const payload = {
         ...formData,
         level_id: parseInt(formData.level_id),
