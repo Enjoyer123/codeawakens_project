@@ -173,7 +173,6 @@ const LevelCategoryManagement = () => {
           open={levelCategoryDialogOpen}
           onOpenChange={handleCloseLevelCategoryDialog}
           editingLevelCategory={editingLevelCategory}
-          maxOrder={allCategories.length > 0 ? Math.max(...allCategories.map(c => c.difficulty_order)) : 0}
         />
 
         <LevelCategoryImageDialog

@@ -14,7 +14,7 @@ import { playSound } from '../../sound/soundManager';
  */
 export async function playNQueenAnimation(scene, trace, options = {}) {
     // สลับ Display Mode ตรงนี้:
-    return playTreeDisplay(scene, trace, options);
+    return playClassicDisplay(scene, trace, options);
 }
 
 // ============================================================================
@@ -136,7 +136,7 @@ async function playTreeDisplay(scene, trace, options) {
 // ============================================================================
 // Display Mode 1: Classic Display (self-contained 100%)
 // ============================================================================
-/*
+
 async function playClassicDisplay(scene, trace, options = {}) {
     const { speed = 1.0 } = options;
     const baseDelay = 200;
@@ -269,6 +269,7 @@ async function playClassicDisplay(scene, trace, options = {}) {
                     targets: queen, alpha: 1, scaleX: 2.5, scaleY: 2.5,
                     duration: 200 / animationController.speed, ease: 'Back.easeOut'
                 });
+                playSound('run');
                 queens.push({ row: r, col: c, graphics: queen });
                 await sleep(baseDelay);
                 break;
@@ -326,4 +327,4 @@ async function playClassicDisplay(scene, trace, options = {}) {
         }
     }
 }
-*/
+

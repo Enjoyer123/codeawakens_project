@@ -251,7 +251,7 @@ async function playMoveAlongPath(scene, path) {
     const hero = scene.hero || scene.player;
     if (!hero) return;
 
-    const moveDuration = 350 / animationController.speed;
+    const moveDuration = 1000 / animationController.speed;
 
     for (let i = 0; i < path.length; i++) {
         const nodeId = path[i];

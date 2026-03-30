@@ -150,7 +150,7 @@ const LevelCreateEdit = () => {
         {/* Editor Header */}
         <AdminPageHeader
           title={isEditing ? 'Level Editor' : 'New Level Project'}
-          subtitle={isEditing ? `ID: ${levelId} • ${formData.difficulty}` : 'UNSAVED DRAFT'}
+          subtitle={isEditing ? `ID: ${levelId}` : 'UNSAVED DRAFT'}
           backPath="/admin/levels"
           rightContent={
             <div className="flex items-center gap-3">
