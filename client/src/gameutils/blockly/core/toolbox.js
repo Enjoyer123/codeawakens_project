@@ -39,8 +39,7 @@ const CATEGORY_CONFIG = {
     blocks: [
       "controls_repeat_ext", "controls_whileUntil", "controls_for",
       "controls_forEach", "controls_flow_statements",
-      "for_loop_dynamic", "for_each_in_list",
-      "for_each_coin", "for_each_person"
+      "for_each_in_list"
     ]
   },
 

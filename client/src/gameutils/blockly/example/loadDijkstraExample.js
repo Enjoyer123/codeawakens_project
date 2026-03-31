@@ -337,11 +337,7 @@ const dijkstraExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
         <value name="ARG2"><block type="variables_get"><field name="VAR">goal</field></block></value>
       </block>
     </value>
-    <next>
-      <block type="move_along_path" id="move_path">
-        <value name="PATH"><block type="variables_get"><field name="VAR">result</field></block></value>
-      </block>
-    </next>
+
   </block>
 
 </xml>`;

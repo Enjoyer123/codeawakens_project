@@ -56,18 +56,5 @@ export function definePersonBlocks() {
       this.setTooltip("ตรวจสอบว่าช่วยคนทั้งหมดแล้วหรือไม่");
     },
   };
-
-  Blockly.Blocks["for_each_person"] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField("For Each Person");
-      this.appendStatementInput("DO")
-        .appendField("Do");
-      this.setPreviousStatement(true, null);
-      this.setNextStatement(true, null);
-      this.setColour(120);
-      this.setTooltip("วนลูปสำหรับแต่ละคนที่ต้องช่วย");
-    },
-  };
 }
 

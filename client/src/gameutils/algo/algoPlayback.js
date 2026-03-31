@@ -20,6 +20,7 @@ import { playEmeiAnimation } from './playback/emeiPlayback.js';
 
 
 
+
 // ─── ตรวจประเภทด่าน (DP / Greedy / Backtrack) ───
 function isDpLevel(scene) {
     const ld = scene.levelData || {};

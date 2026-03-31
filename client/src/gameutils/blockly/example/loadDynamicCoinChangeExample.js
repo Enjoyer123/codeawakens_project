@@ -28,10 +28,11 @@ const dynamicCoinChangeExampleXml = `<xml xmlns="https://developers.google.com/b
             </value>
             <next>
               <!-- Loop to initialize dp array with 999999 and combo with empty array -->
-              <block type="for_loop_dynamic" id="init_loop">
+              <block type="controls_for" id="init_loop">
                 <field name="VAR">i</field>
                 <value name="FROM"><block type="math_number"><field name="NUM">0</field></block></value>
                 <value name="TO"><block type="variables_get"><field name="VAR">amount</field></block></value>
+                <value name="BY"><block type="math_number"><field name="NUM">1</field></block></value>
                 <statement name="DO">
                    <block type="lists_add_item">
                      <value name="LIST"><block type="variables_get"><field name="VAR">dp</field></block></value>
@@ -54,10 +55,11 @@ const dynamicCoinChangeExampleXml = `<xml xmlns="https://developers.google.com/b
                     <value name="TO"><block type="math_number"><field name="NUM">0</field></block></value>
                     <next>
                       <!-- Outer Loop: for curr_amount = 1 to amount -->
-                      <block type="for_loop_dynamic" id="outer_loop">
+                      <block type="controls_for" id="outer_loop">
                         <field name="VAR">curr_amount</field>
                         <value name="FROM"><block type="math_number"><field name="NUM">1</field></block></value>
                         <value name="TO"><block type="variables_get"><field name="VAR">amount</field></block></value>
+                        <value name="BY"><block type="math_number"><field name="NUM">1</field></block></value>
                         <statement name="DO">
                           <!-- Emit outer loop trace -->
                           <block type="coin_change_memo_hit">

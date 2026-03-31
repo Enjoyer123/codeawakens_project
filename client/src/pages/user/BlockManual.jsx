@@ -17,13 +17,10 @@ const VERIFIED_SYNTAX = {
     "move_to_node": "await moveToNode(nodeId);",
     "move_along_path": "await moveAlongPath(path);",
 
-    // Loops
-    "for_each_person": "for (let i = 0; i < 10; i++) { }",
-    "for_each_coin": "for (let i = 0; i < coins.length; i++) { }",
-    "repeat": "for (let i = 0; i < times; i++) { }",
+
     "for_index": "for (let i = from; i <= to; i++) { }",
     "while_loop": "while (condition) { }",
-    "for_loop_dynamic": "for (let i = from; i <= to; i++) { }",
+
     "for_each_in_list": "for (let item of list) { }",
 
     // Lists & Data

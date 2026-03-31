@@ -34,6 +34,7 @@ import { usePatternAnalysis } from './hooks/usePatternAnalysis';
 import { useTextCodeValidation } from './hooks/useTextCodeValidation';
 import { useGuideSystem } from '../../hooks/useGuideSystem';
 import { useHintSystem } from '../../hooks/useHintSystem';
+import { usePseudocodeSync } from './hooks/usePseudocodeSync';
 
 import { EXAMPLE_LOADERS } from './constants/exampleLoaders';
 import ExecutionErrorModal from './modals/ExecutionErrorModal';
@@ -351,7 +352,7 @@ const GameCore = ({
       setShowBigOQuiz(true);
       return;
     }
-    
+
     // Prevent overlapping animations by cleanly restarting if already executed
     if (isCompleted || isGameOver || testCaseResult) {
       handleReplayGame();
@@ -389,6 +390,8 @@ const GameCore = ({
   const { showGuide, guides, closeGuide, openGuide, hasGuides } = useGuideSystem(currentLevel);
 
   const { showHint, hints, closeHint, openHint, hasHints } = useHintSystem(currentLevel);
+
+  const { selectedBlockType } = usePseudocodeSync({ blocklyLoaded, workspaceRef });
 
   if ((!levelData && isLevelLoading) || isWeaponsLoading) {
     return <PageLoader message="Loading level..." />;
@@ -470,6 +473,8 @@ const GameCore = ({
                 isPreview={isPreview}
                 isAdmin={isAdmin}
                 starterTextCode={starterTextCode}
+                patternData={patternData}
+                selectedBlockType={selectedBlockType}
               />
             </div>
           </div>

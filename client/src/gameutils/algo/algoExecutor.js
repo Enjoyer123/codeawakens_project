@@ -13,6 +13,7 @@ import { injectKnapsackStubs } from './contexts/knapsackContext';
 import { injectSubsetSumStubs } from './contexts/subsetSumContext';
 import { injectCoinChangeStubs } from './contexts/coinChangeContext';
 import { injectEmeiMountainStubs } from './contexts/emeiMountainContext';
+
 import { detectAlgoType } from '../shared/levelType';
 
 const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
@@ -28,11 +29,11 @@ function buildAlgoContext(levelData, trace, code = "") {
     // 2. Inject algorithm-specific stubs based on detected type (avoid unnecessary setup)
     const algoType = detectAlgoType(levelData);
     switch (algoType) {
-        case 'NQUEEN':      injectNQueenStubs(context, levelData, trace); break;
-        case 'KNAPSACK':    injectKnapsackStubs(context, levelData, trace); break;
-        case 'SUBSETSUM':   injectSubsetSumStubs(context, levelData, trace); break;
-        case 'COINCHANGE':  injectCoinChangeStubs(context, levelData, trace); break;
-        case 'EMEI':        injectEmeiMountainStubs(context, levelData, trace, code); break;
+        case 'NQUEEN': injectNQueenStubs(context, levelData, trace); break;
+        case 'KNAPSACK': injectKnapsackStubs(context, levelData, trace); break;
+        case 'SUBSETSUM': injectSubsetSumStubs(context, levelData, trace); break;
+        case 'COINCHANGE': injectCoinChangeStubs(context, levelData, trace); break;
+        case 'EMEI': injectEmeiMountainStubs(context, levelData, trace, code); break;
         // DFS/BFS/DIJKSTRA/PRIM/KRUSKAL use graphContext only — no extra stubs needed
     }
 
@@ -51,14 +52,12 @@ export async function executeAlgoCode(code, levelData, timeoutMs = 5000) {
 
     try {
         const context = buildAlgoContext(levelData, trace, code);
-
         // Inject step counter + return capture
         const guardedCode = `
             let __stepCount = 0;
             const __maxSteps = 50000;
             function __guard() { if (++__stepCount > __maxSteps) throw new Error('Too many executions (infinite loop?)'); }
         ` + code + `\n try { return result; } catch(e) { return undefined; }`;
-
         const argNames = Object.keys(context);
         const argValues = argNames.map(k => context[k]);
 

@@ -93,20 +93,6 @@ export function defineCoinBlocks() {
     },
   };
 
-  Blockly.Blocks["for_each_coin"] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField("For Each Coin")
-        .appendField(new Blockly.FieldVariable("coin"), "VAR");
-      this.appendStatementInput("DO")
-        .setCheck(null)
-        .appendField("Do");
-      this.setPreviousStatement(true, null);
-      this.setNextStatement(true, null);
-      this.setColour(120);
-      this.setTooltip("วนลูปผ่านเหรียญที่เก็บมาทั้งหมด");
 
-    }
-  };
 }
 

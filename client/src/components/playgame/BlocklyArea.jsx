@@ -8,6 +8,7 @@ import CodeEditorTab from './editor/CodeEditorTab';
 import TestResultsTab from './editor/TestResultsTab';
 import GameControls from './controls/GameControls';
 import HistoryModal from './modals/HistoryModal';
+import PseudocodePanel from './panels/PseudocodePanel';
 import { playSound } from '../../gameutils/sound/soundManager';
 
 const BlocklyArea = ({
@@ -27,7 +28,9 @@ const BlocklyArea = ({
   onLoadXml,
   isPreview,
   isAdmin,
-  starterTextCode
+  starterTextCode,
+  patternData,
+  selectedBlockType
 }) => {
   const [activeTab, setActiveTab] = useState("blocks");
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -72,6 +75,34 @@ const BlocklyArea = ({
     }
   };
 
+  const idealPattern = React.useMemo(() => {
+    const all = [...(currentLevel?.goodPatterns || []), ...(currentLevel?.patterns || [])];
+    return all.find(p => p.pattern_type_id === 1) || all.find(p => p.pattern_type_id === 2) || all[0];
+  }, [currentLevel]);
+
+  const displayPattern = patternData?.bestPattern || idealPattern;
+
+  const hasPseudocode = React.useMemo(() => {
+    let hintsArray = displayPattern?.hints;
+    if (typeof hintsArray === 'string') {
+      try { hintsArray = JSON.parse(hintsArray); } catch (e) { hintsArray = []; }
+    }
+    const hasCode = Array.isArray(hintsArray) && hintsArray.some(h =>
+      Array.isArray(h.pseudocode) ? h.pseudocode.length > 0 : (typeof h.pseudocode === 'string' && h.pseudocode.trim() !== '')
+    );
+
+    // DEBUG LOG
+    console.log('[DEBUG BlocklyArea]', {
+      levelName: currentLevel?.level_name,
+      hasBestPattern: !!patternData?.bestPattern,
+      idealPatternId: idealPattern?.pattern_id,
+      hintsArray,
+      hasPseudocode: hasCode
+    });
+
+    return hasCode;
+  }, [displayPattern, currentLevel, patternData]);
+
   return (
     <div className="flex flex-col h-full bg-transparent">
       {/* Tabs Header */}
@@ -107,11 +138,24 @@ const BlocklyArea = ({
         </div>
 
         {/* Tab Contents Container */}
-        <div className="flex-1 relative bg-transparent overflow-hidden">
-          <BlocklyWorkspaceTab
-            blocklyRef={blocklyRef}
-            activeTab={activeTab}
-          />
+        <div className="flex-1 relative bg-transparent overflow-hidden flex flex-col">
+          {activeTab === 'blocks' && hasPseudocode && (
+            <div className="h-[30%] min-h-[150px] shrink-0">
+              <PseudocodePanel
+                pattern={displayPattern}
+                matchedSteps={patternData?.threePartsMatch?.matchedParts || 0}
+                selectedBlockType={selectedBlockType}
+                currentLevel={currentLevel}
+              />
+            </div>
+          )}
+
+          <div className="flex-1 relative">
+            <BlocklyWorkspaceTab
+              blocklyRef={blocklyRef}
+              activeTab={activeTab}
+            />
+          </div>
 
           {currentLevel?.textcode && (
             <CodeEditorTab

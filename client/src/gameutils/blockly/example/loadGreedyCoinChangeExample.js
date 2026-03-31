@@ -80,7 +80,7 @@ const greedyCoinChangeExampleXml = `<xml xmlns="https://developers.google.com/bl
                                 <value name="VALUE"><block type="math_number" id="ccg_bestValue0"><field name="NUM">0</field></block></value>
                                 <next>
                                   <!-- for i=index..n-1 -->
-                                  <block type="for_loop_dynamic" id="ccg_for_i">
+                                  <block type="controls_for" id="ccg_for_i">
                                     <field name="VAR">i</field>
                                     <value name="FROM"><block type="variables_get" id="ccg_index_get_from"><field name="VAR">index</field></block></value>
                                     <value name="TO">
@@ -90,6 +90,7 @@ const greedyCoinChangeExampleXml = `<xml xmlns="https://developers.google.com/bl
                                         <value name="B"><block type="math_number" id="ccg_one_m1"><field name="NUM">1</field></block></value>
                                       </block>
                                     </value>
+                                    <value name="BY"><block type="math_number"><field name="NUM">1</field></block></value>
                                     <statement name="DO">
                                       <!-- coin = coins[i] -->
                                       <block type="variables_set" id="ccg_set_coin">

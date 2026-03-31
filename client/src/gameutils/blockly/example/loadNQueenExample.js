@@ -23,7 +23,7 @@ const nQueenExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml"
               <block type="lists_create_with" id="solution_list"><mutation items="0"></mutation></block>
             </value>
             <next>
-              <block type="for_loop_dynamic" id="build_solution_loop">
+              <block type="controls_for" id="build_solution_loop">
                 <field name="VAR">i</field>
                 <value name="FROM"><block type="math_number"><field name="NUM">0</field></block></value>
                 <value name="TO">
@@ -33,8 +33,9 @@ const nQueenExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml"
                     <value name="B"><block type="math_number"><field name="NUM">1</field></block></value>
                   </block>
                 </value>
+                <value name="BY"><block type="math_number"><field name="NUM">1</field></block></value>
                 <statement name="DO">
-                  <block type="for_loop_dynamic" id="find_queen_loop">
+                  <block type="controls_for" id="find_queen_loop">
                     <field name="VAR">j</field>
                     <value name="FROM"><block type="math_number"><field name="NUM">0</field></block></value>
                     <value name="TO">
@@ -44,6 +45,7 @@ const nQueenExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml"
                         <value name="B"><block type="math_number"><field name="NUM">1</field></block></value>
                       </block>
                     </value>
+                    <value name="BY"><block type="math_number"><field name="NUM">1</field></block></value>
                     <statement name="DO">
                       <block type="controls_if" id="check_queen">
                         <value name="IF0">
@@ -91,7 +93,7 @@ const nQueenExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml"
           </block>
         </statement>
         <statement name="ELSE">
-          <block type="for_loop_dynamic" id="for_col_loop">
+          <block type="controls_for" id="for_col_loop">
             <field name="VAR">col</field>
             <value name="FROM"><block type="math_number"><field name="NUM">0</field></block></value>
             <value name="TO">
@@ -101,6 +103,7 @@ const nQueenExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml"
                 <value name="B"><block type="math_number"><field name="NUM">1</field></block></value>
               </block>
             </value>
+            <value name="BY"><block type="math_number"><field name="NUM">1</field></block></value>
             <statement name="DO">
               <block type="controls_if" id="if_safe">
                 <value name="IF0">

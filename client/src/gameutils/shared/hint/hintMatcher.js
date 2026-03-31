@@ -56,30 +56,31 @@ function extractBlockData(block, type, info) {
 // ─── Workspace → Block Analysis ─────────────────────────────────
 
 /**
- * วิเคราะห์ workspace → block array ที่เรียงตาม tree structure
- * ใช้ Blockly API จริง (ไม่ต้องแกะ XML ด้วยมือ)
- * แต่ละ block มี treeId เพื่อระบุว่าอยู่กลุ่มไหนที่ต่อกัน
- *
- * Output format เหมือนเดิมทุกประการ:
- * { index, type, treeId, varName?, procedureName?, fields?, hasStatement, hasValue, hasNext }
+ * วิเคราะห์ workspace → block array ที่เรียงตาม DFS tree structure
+ * Output: { index, id, type, treeId, depth, varName?, procedureName?, fields?, hasStatement, hasValue, hasNext }
+ * Export เพื่อให้ usePseudocodeSync ใช้หา DFS index ของบล็อกที่ถูกคลิก
  */
-function analyzeWorkspace(workspace) {
-  console.log("🧩 [Block extraction] วิเคราะห์ workspace:", workspace);
+export function analyzeWorkspace(workspace) {
   if (!workspace) return [];
 
   const analysis = [];
   let blockIndex = 0;
 
-  function traverseBlock(block, treeId, depth = 0) {
+  function traverseBlock(block, treeId, depth = 0, ancestorChain = []) {
     if (!block) return;
     const type = block.type;
     if (!type) return;
 
+    const currentChain = [...ancestorChain, type];
+    const ancestorStr = currentChain.join('|');
+
     const info = {
       index: blockIndex++,
+      id: block.id,     // สำหรับค้นหาบล็อกที่ถูกคลิก
       type,
       treeId,
       depth,
+      ancestorStr,
       hasStatement: false,
       hasValue: false,
       hasNext: false
@@ -98,22 +99,25 @@ function analyzeWorkspace(workspace) {
         const child = input.connection?.targetBlock();
         if (child) {
           info.hasValue = true;
-          traverseBlock(child, treeId, depth + 1);
+          // ส่ง currentChain ต่อลงไปให้ child
+          traverseBlock(child, treeId, depth + 1, currentChain);
         }
       } else if (input.type === INPUT_STATEMENT) {
         const child = input.connection?.targetBlock();
         if (child) {
           info.hasStatement = true;
-          traverseBlock(child, treeId, depth + 1);
+          // ส่ง currentChain ต่อลงไปให้ child
+          traverseBlock(child, treeId, depth + 1, currentChain);
         }
       }
     }
 
     // Next block in the stack (same depth — siblings)
+    // Sibling มี ancestor chain เหมือนกับตัวเอง (ไม่นับตัวเองเป็น ancestor ของ sibling)
     const nextBlock = block.getNextBlock();
     if (nextBlock) {
       info.hasNext = true;
-      traverseBlock(nextBlock, treeId, depth);
+      traverseBlock(nextBlock, treeId, depth, ancestorChain);
     }
   }
 
@@ -125,7 +129,19 @@ function analyzeWorkspace(workspace) {
     traverseBlock(topBlock, currentTreeId++);
   }
 
-  console.log("🧩 [Block extraction] กางบล็อกออกมา 1D (ดู depth/treeId):", analysis);
+  const typeCounts = {};
+  const varCounts = {};
+  analysis.forEach(b => {
+    b.typeOcc = typeCounts[b.type] || 0;
+    typeCounts[b.type] = b.typeOcc + 1;
+    if (b.varName) {
+      const vk = b.type + '::' + b.varName;
+      b.varOcc = varCounts[vk] || 0;
+      varCounts[vk] = b.varOcc + 1;
+    }
+  });
+
+  console.log("🧩 [Block extraction] DFS Analysis:", analysis.map(b => `[${b.index}] ${b.type}${b.varName ? '(' + b.varName + ')' : ''} (t-occ:${b.typeOcc})`));
   return analysis;
 }
 
@@ -313,14 +329,14 @@ function calculateMatchResult(bestPattern, bestSteps, bestMatchedBlocks, bestTot
   // Collect effects (cumulative: ทุก step ที่ผ่าน)
   const effects = bestPattern.hints?.slice(0, matchedSteps).map(h => h.effect).filter(Boolean) || [];
 
-  return { 
-    bestPattern, 
-    matchedSteps, 
-    percentage, 
-    isComplete, 
-    effects, 
-    matchedBlocks: bestMatchedBlocks, 
-    totalBlocks: bestTotalBlocks 
+  return {
+    bestPattern,
+    matchedSteps,
+    percentage,
+    isComplete,
+    effects,
+    matchedBlocks: bestMatchedBlocks,
+    totalBlocks: bestTotalBlocks
   };
 }
 

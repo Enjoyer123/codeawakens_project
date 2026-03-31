@@ -26,10 +26,11 @@ export const dynamicSubsetSumExampleXml = `<xml xmlns="https://developers.google
             <value name="VALUE"><block type="lists_create_empty"></block></value>
             <next>
               <!-- for i = 0 to n -->
-              <block type="for_loop_dynamic" id="dp_loop_i_init">
+              <block type="controls_for" id="dp_loop_i_init">
                 <field name="VAR">i</field>
                 <value name="FROM"><block type="math_number"><field name="NUM">0</field></block></value>
                 <value name="TO"><block type="variables_get"><field name="VAR">n</field></block></value>
+                <value name="BY"><block type="math_number"><field name="NUM">1</field></block></value>
                 <statement name="DO">
                   <!-- row = [] -->
                   <block type="variables_set" id="dp_set_row">
@@ -37,10 +38,11 @@ export const dynamicSubsetSumExampleXml = `<xml xmlns="https://developers.google
                     <value name="VALUE"><block type="lists_create_empty"></block></value>
                     <next>
                       <!-- for j = 0 to target_sum -->
-                      <block type="for_loop_dynamic" id="dp_loop_j_init">
+                      <block type="controls_for" id="dp_loop_j_init">
                         <field name="VAR">j</field>
                         <value name="FROM"><block type="math_number"><field name="NUM">0</field></block></value>
                         <value name="TO"><block type="variables_get"><field name="VAR">target_sum</field></block></value>
+                        <value name="BY"><block type="math_number"><field name="NUM">1</field></block></value>
                         <statement name="DO">
                           <!-- row.push(FALSE) -->
                           <block type="lists_add_item">
@@ -76,10 +78,11 @@ export const dynamicSubsetSumExampleXml = `<xml xmlns="https://developers.google
                 </statement>
                 <next>
                   <!-- MAIN DP LOOP: for i = 1 to n -->
-                  <block type="for_loop_dynamic" id="dp_loop_i_main">
+                  <block type="controls_for" id="dp_loop_i_main">
                     <field name="VAR">i</field>
                     <value name="FROM"><block type="math_number"><field name="NUM">1</field></block></value>
                     <value name="TO"><block type="variables_get"><field name="VAR">n</field></block></value>
+                    <value name="BY"><block type="math_number"><field name="NUM">1</field></block></value>
                     <statement name="DO">
                       <!-- val = arr[i - 1] -->
                       <block type="variables_set" id="dp_set_val">
@@ -98,10 +101,11 @@ export const dynamicSubsetSumExampleXml = `<xml xmlns="https://developers.google
                         </value>
                         <next>
                           <!-- for j = 1 to target_sum -->
-                          <block type="for_loop_dynamic" id="dp_loop_j_main">
+                          <block type="controls_for" id="dp_loop_j_main">
                             <field name="VAR">j</field>
                             <value name="FROM"><block type="math_number"><field name="NUM">1</field></block></value>
                             <value name="TO"><block type="variables_get"><field name="VAR">target_sum</field></block></value>
+                            <value name="BY"><block type="math_number"><field name="NUM">1</field></block></value>
                             <statement name="DO">
                               <!-- if val > j -->
                               <block type="controls_if"><mutation else="1"></mutation>

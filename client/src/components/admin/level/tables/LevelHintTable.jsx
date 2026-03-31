@@ -30,11 +30,6 @@ const LevelHintTable = ({ hints, onEdit, onDelete, onManageImages }) => {
                   <div className="text-sm font-medium text-gray-900">
                     {hint.title}
                   </div>
-                  {hint.description && (
-                    <div className="text-sm text-gray-500">
-                      {hint.description}
-                    </div>
-                  )}
                 </div>
               </td>
               <td className={tableCellClassName}>{hint.display_order}</td>
