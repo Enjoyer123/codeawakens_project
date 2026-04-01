@@ -41,17 +41,7 @@ export function defineEntityGenerators() {
         return [`isSorted('${order}')`, javascriptGenerator.ORDER_FUNCTION_CALL];
     };
 
-    javascriptGenerator.forBlock["for_each_coin"] = function (block) {
-        const variable = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), 'VARIABLE');
-        const branch = javascriptGenerator.statementToCode(block, 'DO');
-        return `
-    const coins = getPlayerCoins();
-    for (let coinIndex = 0; coinIndex < coins.length; coinIndex++) {
-        const ${variable} = coins[coinIndex];
-        ${branch}
-    }
-    `;
-    };
+
 
     // Person rescue generators
     javascriptGenerator.forBlock["rescue_person_at_node"] = function (block) {
@@ -76,10 +66,5 @@ export function defineEntityGenerators() {
 
     javascriptGenerator.forBlock["all_people_rescued"] = function (block) {
         return [`allPeopleRescued()`, javascriptGenerator.ORDER_FUNCTION_CALL];
-    };
-
-    javascriptGenerator.forBlock["for_each_person"] = function (block) {
-        const statements = javascriptGenerator.statementToCode(block, 'DO');
-        return `for (let i = 0; i < 10; i++) {\n${statements}\n}\n`;
     };
 }

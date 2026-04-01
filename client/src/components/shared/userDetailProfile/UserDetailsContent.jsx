@@ -143,17 +143,17 @@ const UserDetailsContent = ({ userId, allowEdit = false, onUpdateSuccess, initia
           </div>
 
           {/* Minimal Detail View in Right Column */}
-          <div className="flex-[0.4] rounded-lg p-2 flex flex-col">
+          <div className="flex-[0.4] rounded-lg p-2 flex flex-col overflow-hidden">
             {!hoveredContent ? (
               <div className="flex-1 flex items-center justify-center text-xs text-[#8B4513]/50 italic text-center px-4">
                 Hover item to view
               </div>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-start animate-in fade-in duration-200 w-full pt-2">
+              <div className="flex-1 flex flex-col items-center justify-start animate-in fade-in duration-200 w-full pt-2 overflow-hidden">
 
                 {/* 1. Image (Larger & Proportional) */}
                 <div
-                  className="w-24 h-24 p-2 flex items-center justify-center shrink-0 relative"
+                  className="w-20 h-20 p-2 flex items-center justify-center shrink-0 relative"
                 >
                   {(() => {
                     // Safety check: ensure we have reward data
@@ -169,14 +169,18 @@ const UserDetailsContent = ({ userId, allowEdit = false, onUpdateSuccess, initia
                   })()}
                 </div>
 
-                {/* 2. Name */}
-                <h4 className="font-bold text-black text-xl uppercase text-center leading-tight px-1">
-                  {hoveredContent.data.reward ? hoveredContent.data.reward.reward_name : (hoveredContent.data.reward_name || "")}
-                </h4>
 
-                {/* 3. Description */}
-                <div className="text-[20px] text-white leading-relaxed text-center opacity-80 px-2 w-full break-words">
-                  {hoveredContent.data.reward ? hoveredContent.data.reward.description : (hoveredContent.data.description || "No description.")}
+
+                <div className="flex-1 w-full overflow-y-auto profile-custom-scrollbar mt-1 px-2 pb-1 text-center">
+                  {/* Name */}
+                  <h4 className="font-bold text-black text-lg uppercase leading-tight w-full break-all mb-2">
+                    {hoveredContent.data.reward ? hoveredContent.data.reward.reward_name : (hoveredContent.data.reward_name || "")}
+                  </h4>
+                  
+                  {/* Description */}
+                  <div className="text-[14px] text-white leading-snug opacity-80 w-full break-all py-1">
+                    {hoveredContent.data.reward ? hoveredContent.data.reward.description : (hoveredContent.data.description || "No description.")}
+                  </div>
                 </div>
               </div>
 

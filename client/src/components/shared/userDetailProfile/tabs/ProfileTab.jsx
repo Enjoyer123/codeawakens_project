@@ -85,7 +85,7 @@ const ProfileTab = ({
             <div className="text-center w-full space-y-3 px-2">
                 {/* Name */}
                 <div>
-                    <h3 className="text-lg font-black text-black uppercase font-sans ">
+                    <h3 className="text-lg font-black text-black uppercase font-sans break-all">
                         {displayName}
                     </h3>
                     <div className="flex justify-center gap-2 mt-1">
@@ -104,8 +104,8 @@ const ProfileTab = ({
                     </div>
 
                     {/* Skill Level */}
-                    <div className="bg-[#e5d6a1] p-2 rounded-lg border border-[#8B4513]/20 flex flex-col items-center gap-0.5 shadow-sm hover:shadow-md transition-all">
-                        <span className="text-lg font-bold text-[#5C4033]">{userDetails.user.skill_level || '-'}</span>
+                    <div className="bg-[#e5d6a1] p-2 rounded-lg border border-[#8B4513]/20 flex flex-col items-center gap-0.5 shadow-sm hover:shadow-md transition-all w-full overflow-hidden">
+                        <span className="text-lg font-bold text-[#5C4033] break-all w-full text-center">{userDetails.user.skill_level || '-'}</span>
                         <span className="text-[9px] font-bold text-[#8B4513]/70 uppercase tracking-widest">Global Rank</span>
                     </div>
 

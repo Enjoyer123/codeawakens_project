@@ -3,36 +3,54 @@ import * as Blockly from "blockly/core";
 import { javascriptGenerator } from "blockly/javascript";
 
 export function defineLoopGenerators() {
-    javascriptGenerator.forBlock["for_loop_dynamic"] = function (block) {
-        const variable = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), 'VARIABLE');
-        const from = javascriptGenerator.valueToCode(block, 'FROM', javascriptGenerator.ORDER_ATOMIC) || '0';
-        const to = javascriptGenerator.valueToCode(block, 'TO', javascriptGenerator.ORDER_ATOMIC) || '0';
-        const branch = javascriptGenerator.statementToCode(block, 'DO');
 
-        if (javascriptGenerator.isCleanMode) {
-            let innerTo = to.trim();
-            if (innerTo.startsWith('(') && innerTo.endsWith(')')) {
-                innerTo = innerTo.slice(1, -1).trim();
-            }
-            let condition = `${variable} <= ${to}`;
-            // Optimization: if "to" is "X - 1", use "i < X"
-            const match = innerTo.match(/^(.+)\s*-\s*1$/);
-            if (match) {
-                const operand = match[1].trim();
-                condition = `${variable} < ${operand}`;
-            }
-            let incCode = `${variable}++`;
-            return `for (let ${variable} = ${from}; ${condition}; ${incCode}) {\n${branch}}\n`;
+    javascriptGenerator.forBlock['controls_for'] = function(block) {
+        // We override controls_for to use 'let' instead of 'var' so recursive functions (e.g., NQueen) safely isolated their loop variables.
+        const variable0 = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.VARIABLE_CATEGORY_NAME);
+        const argument0 = javascriptGenerator.valueToCode(block, 'FROM', javascriptGenerator.ORDER_ASSIGNMENT) || '0';
+        const argument1 = javascriptGenerator.valueToCode(block, 'TO', javascriptGenerator.ORDER_ASSIGNMENT) || '0';
+        const increment = javascriptGenerator.valueToCode(block, 'BY', javascriptGenerator.ORDER_ASSIGNMENT) || '1';
+        let branch = javascriptGenerator.statementToCode(block, 'DO') || '';
+        branch = javascriptGenerator.addLoopTrap(branch, block);
+        
+        let yieldStr = '';
+        if (!javascriptGenerator.isCleanMode) {
+            yieldStr = `if (typeof globalThis !== 'undefined' && globalThis.__isVisualRun !== false) await new Promise(r => setTimeout(r, 0));\n`;
+            branch = yieldStr + branch;
         }
 
-        const normFrom = `((v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; })(${from})`;
-        const normTo = `((v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; })(${to})`;
-        return `
-    for (let ${variable} = ${normFrom}; ${variable} <= ${normTo}; ${variable}++) {
-        ${branch}
-    }
-    `;
+        let code = '';
+        const up = parseFloat(increment) >= 0;
+        
+        // Clean mode (simplistic)
+        if (javascriptGenerator.isCleanMode) {
+            let op = up ? '<=' : '>=';
+            let incCode = '';
+            if (increment === '1') incCode = `${variable0}++`;
+            else if (increment === '-1') incCode = `${variable0}--`;
+            else incCode = `${variable0} += ${increment}`;
+            
+            // Optimization for NQueen: if to is "N - 1"
+            let toStr = argument1;
+            let innerTo = toStr.trim();
+            if (innerTo.startsWith('(') && innerTo.endsWith(')')) innerTo = innerTo.slice(1, -1).trim();
+            if (increment === '1' && innerTo.match(/^(.+)\s*-\s*1$/)) {
+                op = '<';
+                toStr = innerTo.match(/^(.+)\s*-\s*1$/)[1].trim();
+            }
+            code = `for (let ${variable0} = ${argument0}; ${variable0} ${op} ${toStr}; ${incCode}) {\n${branch}}\n`;
+            return code;
+        }
+
+        // Standard execution mode (handles dynamic numbers properly)
+        code = `
+        for (let ${variable0} = Number(${argument0}); ${up ? `${variable0} <= Number(${argument1})` : `${variable0} >= Number(${argument1})`}; ${variable0} += Number(${increment})) {
+            ${branch}
+        }
+        `;
+        return code;
     };
+
 
     javascriptGenerator.forBlock["controls_forEach"] = function (block) {
         const variable = javascriptGenerator.nameDB_.getName(

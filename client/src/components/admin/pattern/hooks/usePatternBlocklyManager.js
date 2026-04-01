@@ -42,7 +42,9 @@ export const usePatternBlocklyManager = ({
                     xml: (hint.xmlCheck && hint.xmlCheck.trim())
                         ? hint.xmlCheck
                         : (patternData.starter_xml || '<xml xmlns="https://developers.google.com/blockly/xml"></xml>'),
-                    effect: hint.effect || ''
+                    effect: hint.effect || '',
+                    pseudocode: Array.isArray(hint.pseudocode) ? hint.pseudocode : 
+                                (typeof hint.pseudocode === 'string' && hint.pseudocode.trim() !== '' ? [{ text: hint.pseudocode, blockType: '' }] : [])
                 }));
                 setSteps(loadedSteps);
                 stepsRef.current = loadedSteps;
@@ -147,7 +149,7 @@ export const usePatternBlocklyManager = ({
             const xmlText = Blockly.Xml.domToText(xmlDom);
 
             const currentRef = [...stepsRef.current];
-            const stepData = currentRef[currentStepIndex] || { step: currentStepIndex, xml: '', effect: '' };
+            const stepData = currentRef[currentStepIndex] || { step: currentStepIndex, xml: '', effect: '', pseudocode: [] };
 
             currentRef[currentStepIndex] = { ...stepData, xml: xmlText, xmlCheck: xmlText };
             stepsRef.current = currentRef;
@@ -214,9 +216,19 @@ export const usePatternBlocklyManager = ({
     const updateStepEffect = (effect) => {
         const newSteps = [...steps];
         if (!newSteps[currentStepIndex]) {
-            newSteps[currentStepIndex] = { step: currentStepIndex, xml: '', effect: '' };
+            newSteps[currentStepIndex] = { step: currentStepIndex, xml: '', effect: '', pseudocode: [] };
         }
         newSteps[currentStepIndex] = { ...newSteps[currentStepIndex], effect: effect };
+        setSteps(newSteps);
+        stepsRef.current = newSteps;
+    };
+
+    const updateStepPseudocode = (pseudocodeLines) => {
+        const newSteps = [...steps];
+        if (!newSteps[currentStepIndex]) {
+            newSteps[currentStepIndex] = { step: currentStepIndex, xml: '', effect: '', pseudocode: [] };
+        }
+        newSteps[currentStepIndex] = { ...newSteps[currentStepIndex], pseudocode: pseudocodeLines };
         setSteps(newSteps);
         stepsRef.current = newSteps;
     };
@@ -242,6 +254,7 @@ export const usePatternBlocklyManager = ({
         handlePreviousStep,
         saveCurrentWorkspaceToRef,
         updateStepEffect,
+        updateStepPseudocode,
         getCurrentXml,
         workspaceRef,
         confirmDialog,

@@ -17,7 +17,6 @@ exports.getAllLevelHints = async (req, res) => {
       where = {
         OR: [
           { title: { contains: searchLower, mode: "insensitive" } },
-          { description: { contains: searchLower, mode: "insensitive" } },
         ],
       };
     }
@@ -104,7 +103,7 @@ exports.getHintsByLevelId = async (req, res) => {
 // Create new level hint
 exports.createLevelHint = async (req, res) => {
   try {
-    const { level_id, title, description, display_order, is_active } = req.body;
+    const { level_id, title, display_order, is_active } = req.body;
 
     if (!level_id || !title || !title.trim()) {
       return res.status(400).json({
@@ -125,8 +124,6 @@ exports.createLevelHint = async (req, res) => {
     const hintData = {
       level_id: parseInt(level_id),
       title: title.trim(),
-      description:
-        description && description.trim() ? description.trim() : null,
       display_order: display_order ? parseInt(display_order) : 0,
       is_active:
         is_active === true || is_active === "true" || is_active === undefined,
@@ -169,7 +166,7 @@ exports.createLevelHint = async (req, res) => {
 exports.updateLevelHint = async (req, res) => {
   try {
     const { hintId } = req.params;
-    const { level_id, title, description, display_order, is_active } = req.body;
+    const { level_id, title, display_order, is_active } = req.body;
 
     const existingHint = await prisma.levelHint.findUnique({
       where: { hint_id: parseInt(hintId) },
@@ -191,7 +188,6 @@ exports.updateLevelHint = async (req, res) => {
       updateData.level_id = parseInt(level_id);
     }
     if (title !== undefined) updateData.title = title;
-    if (description !== undefined) updateData.description = description;
     if (display_order !== undefined)
       updateData.display_order = parseInt(display_order);
     if (is_active !== undefined)
@@ -293,11 +289,11 @@ exports.uploadHintImage = async (req, res) => {
       hasFile: !!req.file,
       fileInfo: req.file
         ? {
-            filename: req.file.filename,
-            path: req.file.path,
-            size: req.file.size,
-            mimetype: req.file.mimetype,
-          }
+          filename: req.file.filename,
+          path: req.file.path,
+          size: req.file.size,
+          mimetype: req.file.mimetype,
+        }
         : null,
     });
 

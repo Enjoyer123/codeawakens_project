@@ -58,7 +58,8 @@ export const normalizePatternHints = (rawHints) => {
                 }
                 : {},
             xmlCheck: hint.xmlCheck,
-            effect: hint.effect // Ensure effect is conserved
+            effect: hint.effect, // Ensure effect is conserved
+            pseudocode: hint.pseudocode // Ensure pseudocode is conserved
         }));
     }
     if (typeof rawHints === 'object') {

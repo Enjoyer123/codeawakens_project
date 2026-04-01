@@ -24,10 +24,10 @@ import { Info } from 'lucide-react';
 import PageLoader from '@/components/shared/Loading/PageLoader';
 import ContentLoader from '@/components/shared/Loading/ContentLoader';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
+import PseudocodeEditor from '../../../components/admin/pattern/PseudocodeEditor';
 // Hooks
 import { useLevel } from '../../../services/hooks/useLevel';
 import { usePattern, usePatternTypes } from '../../../services/hooks/usePattern';
-// import { useWeapons } from '../../../services/hooks/useWeapons'; // Unused in this file now
 import { usePatternForm } from '../../../components/admin/pattern/hooks/usePatternForm';
 import { usePatternBlocklyManager } from '../../../components/admin/pattern/hooks/usePatternBlocklyManager';
 import { useSuppressBlocklyWarnings } from '@/components/admin/level/hooks/useSuppressBlocklyWarnings';
@@ -38,22 +38,16 @@ import { useAlertDialog } from '@/components/shared/dialog/useAlertDialog';
 const PatternCreateEdit = () => {
   const { levelId, patternId } = useParams();
   const navigate = useNavigate();
-  // IsEditMode is always true here effectively because we only come here after creating
   const isEditMode = !!patternId;
 
   useSuppressBlocklyWarnings();
 
-  // --- 1. Data Layer ---
   const { data: levelData, isLoading: isLevelLoading, error: levelError } = useLevel(levelId);
   const { data: patternData, isLoading: isPatternLoading, error: patternError } = usePattern(patternId);
 
-  // --- 2. View Mode ---
   const [isViewMode, setIsViewMode] = useState(false);
-
-  // --- 3. Alert Dialog ---
   const { alertDialog, showAlert } = useAlertDialog();
 
-  // --- 4. Blockly Manager Hook ---
   const blocklyManager = usePatternBlocklyManager({
     levelData,
     patternData,
@@ -61,9 +55,6 @@ const PatternCreateEdit = () => {
     showAlert
   });
 
-  // --- 5. Handlers ---
-  // Re-implement simplified save using hook later in imports
-  // For now let's use the patternForm hook just for save?
   const patternForm = usePatternForm({
     levelId,
     patternId,
@@ -78,13 +69,20 @@ const PatternCreateEdit = () => {
 
   const handleSaveLogic = () => {
     blocklyManager.saveCurrentWorkspaceToRef();
-    // User expects that saving at a specific step means "this is the end of the pattern".
-    // So we truncate any steps after the current one.
     const finalSteps = blocklyManager.stepsRef.current.slice(0, blocklyManager.currentStepIndex + 1);
-    const workspaceXml = blocklyManager.getCurrentXml();
-    patternForm.handleSave(finalSteps, workspaceXml);
-  };
 
+    // ✨ THE FIX: เคลียร์ Pseudocode ของ Part ก่อนหน้าออก ให้เหลือแค่ Part สุดท้ายที่เราถือว่าเป็นคำตอบ
+    const processedSteps = finalSteps.map((step, idx) => {
+      if (idx === finalSteps.length - 1) {
+        return step; // Part สุดท้าย (ที่กดบันทึก) ให้เก็บข้อมูลไว้ตามปกติ
+      } else {
+        return { ...step, pseudocode: [] }; // Part ก่อนหน้า ล้าง pseudocode ทิ้ง ป้องกันการโชว์ซ้ำซ้อน
+      }
+    });
+
+    const workspaceXml = blocklyManager.getCurrentXml();
+    patternForm.handleSave(processedSteps, workspaceXml);
+  };
 
   const handleCopyToBuffer = () => {
     const xmlText = blocklyManager.getCurrentXml();
@@ -142,7 +140,6 @@ const PatternCreateEdit = () => {
     input.click();
   };
 
-  // --- Render ---
   const isLoading = isLevelLoading || isPatternLoading;
   const errorObj = levelError || patternError || blocklyManager.blocklyInitError;
 
@@ -154,19 +151,13 @@ const PatternCreateEdit = () => {
       <div className="flex-none p-4 bg-white shadow-sm z-10">
         <AdminPageHeader
           title={`แก้ไข Logic: ${patternData?.pattern_name || 'Pattern'}`}
-          backPath={`/admin/levels`} // Optionally back to level list
+          backPath={`/admin/levels`}
           rightContent={
             <div className="flex gap-2">
-              <Button
-                variant={isViewMode ? "default" : "outline"}
-                onClick={() => setIsViewMode(!isViewMode)}
-              >
+              <Button variant={isViewMode ? "default" : "outline"} onClick={() => setIsViewMode(!isViewMode)}>
                 {isViewMode ? 'Edit Mode' : 'View Mode'}
               </Button>
-              <Button
-                onClick={handleSaveLogic}
-                disabled={patternForm.isSaving || isViewMode}
-              >
+              <Button onClick={handleSaveLogic} disabled={patternForm.isSaving || isViewMode}>
                 {patternForm.isSaving && <Loader size="sm" className="mr-2" />}
                 บันทึก Logic
               </Button>
@@ -188,15 +179,11 @@ const PatternCreateEdit = () => {
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Full Width Workspace */}
-        <div className="w-full flex flex-col relative bg-gray-100">
-          {/* Step Navigation */}
+      <div className="flex flex-1 overflow-hidden bg-gray-100">
+        <div className="flex-1 flex flex-col relative bg-white border-r border-gray-200">
           <div className="bg-white p-2 border-b flex justify-between items-center px-4">
             <div className="flex items-center gap-4">
               <span className="font-bold text-gray-700">Step {blocklyManager.currentStepIndex + 1} / 3</span>
-
-              {/* Visual Effect Selector - Only for Step 1 & 2 */}
               {blocklyManager.currentStepIndex < 2 && (
                 <div className="flex items-center gap-2 border-l pl-4">
                   <span className="text-sm text-gray-500">Effect:</span>
@@ -209,8 +196,6 @@ const PatternCreateEdit = () => {
                     </SelectTrigger>
                     <SelectContent className="z-[1000] max-h-[300px]">
                       <SelectItem value="none">-- No Effect --</SelectItem>
-
-                      {/* Step 1 (Index 0): Only Aura */}
                       {blocklyManager.currentStepIndex === 0 && (
                         <>
                           <SelectItem value="aura_1">
@@ -227,8 +212,6 @@ const PatternCreateEdit = () => {
                           </SelectItem>
                         </>
                       )}
-
-                      {/* Step 2 (Index 1): Only Circle */}
                       {blocklyManager.currentStepIndex === 1 && (
                         <>
                           <SelectItem value="circle_1">
@@ -250,68 +233,43 @@ const PatternCreateEdit = () => {
                 </div>
               )}
             </div>
-            <div className="space-x-2">
-              <Button variant="outline" size="sm" onClick={handleCopyToBuffer}>
-                Export XML
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleImportFromFile}>
-                Import XML
-              </Button>
-              <Button variant="outline" size="sm" onClick={blocklyManager.handlePreviousStep} disabled={blocklyManager.currentStepIndex === 0}>
-                ← Previous
-              </Button>
-              <Button variant="outline" size="sm" onClick={blocklyManager.handleNextStep} disabled={blocklyManager.currentStepIndex >= 2}>
-                Next Step →
-              </Button>
+            <div className="space-x-2 shrink-0">
+              <Button variant="outline" size="sm" onClick={handleCopyToBuffer}>Export XML</Button>
+              <Button variant="outline" size="sm" onClick={handleImportFromFile}>Import XML</Button>
+              <Button variant="outline" size="sm" onClick={blocklyManager.handlePreviousStep} disabled={blocklyManager.currentStepIndex === 0}>← Prev</Button>
+              <Button variant="outline" size="sm" onClick={blocklyManager.handleNextStep} disabled={blocklyManager.currentStepIndex >= 2}>Next →</Button>
             </div>
           </div>
 
-          {/* Blockly Container */}
           <div className="flex-1 relative">
             {!blocklyManager.blocklyLoaded && (
               <div className="absolute inset-0 z-20 bg-white/90">
-                <ContentLoader
-                  message="Loading Workspace..."
-                  height="h-full"
-                />
+                <ContentLoader message="Loading Workspace..." height="h-full" />
               </div>
             )}
             <div ref={blocklyManager.blocklyRefCallback} className="absolute inset-0" />
           </div>
         </div>
+
+        <div className="w-[450px] shrink-0 flex flex-col bg-gray-50 overflow-y-auto">
+          <div className="p-4 h-full">
+            <PseudocodeEditor
+              stepIndex={blocklyManager.currentStepIndex}
+              value={blocklyManager.steps[blocklyManager.currentStepIndex]?.pseudocode || []}
+              onChange={(newLines) => blocklyManager.updateStepPseudocode(newLines)}
+              workspaceRef={blocklyManager.workspaceRef}
+            />
+          </div>
+        </div>
       </div>
 
-      {/* Confirmation Dialog mapped to blocklyManager state */}
-      <Dialog
-        open={blocklyManager.confirmDialog?.isOpen}
-        onOpenChange={(isOpen) => {
-          if (!isOpen) {
-            blocklyManager.setConfirmDialog(prev => ({ ...prev, isOpen: false }));
-          }
-        }}
-      >
+      <Dialog open={blocklyManager.confirmDialog?.isOpen} onOpenChange={(isOpen) => { if (!isOpen) blocklyManager.setConfirmDialog(prev => ({ ...prev, isOpen: false })); }}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{blocklyManager.confirmDialog?.title}</DialogTitle>
-          </DialogHeader>
-          <DialogDescription className="whitespace-pre-wrap text-base text-gray-700 leading-relaxed mt-4">
-            {blocklyManager.confirmDialog?.message}
-          </DialogDescription>
+          <DialogHeader><DialogTitle>{blocklyManager.confirmDialog?.title}</DialogTitle></DialogHeader>
+          <DialogDescription className="whitespace-pre-wrap text-base text-gray-700 leading-relaxed mt-4">{blocklyManager.confirmDialog?.message}</DialogDescription>
           <DialogFooter className="mt-6">
-            <Button
-              variant="outline"
-              onClick={() => blocklyManager.setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
-            >
-              ยกเลิก
-            </Button>
-            <Button
-              className="bg-blue-600 hover:bg-blue-500 text-white font-bold tracking-wide"
-              onClick={() => {
-                if (blocklyManager.confirmDialog?.onConfirm) {
-                  blocklyManager.confirmDialog.onConfirm();
-                }
-              }}
-            >
+            <Button variant="outline" onClick={() => blocklyManager.setConfirmDialog(prev => ({ ...prev, isOpen: false }))}>ยกเลิก</Button>
+            <Button className="bg-blue-600 hover:bg-blue-500 text-white font-bold tracking-wide" onClick={() => { if (blocklyManager.confirmDialog?.onConfirm) blocklyManager.confirmDialog.onConfirm(); }}>
               ดำเนินการต่อ
             </Button>
           </DialogFooter>

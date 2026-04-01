@@ -69,10 +69,7 @@ async function main() {
         { block_key: 'controls_for', block_name: 'controls_for', description: 'ลูป for (นับค่า)', category: 'loops' },
         { block_key: 'controls_forEach', block_name: 'controls_forEach', description: 'ลูป for-each (วนใน list)', category: 'loops' },
         { block_key: 'controls_flow_statements', block_name: 'controls_flow_statements', description: 'คำสั่งควบคุมลูป (break/continue)', category: 'loops' },
-        { block_key: 'for_loop_dynamic', block_name: 'for_loop_dynamic', description: 'ลูป for แบบ dynamic', category: 'loops' },
         { block_key: 'for_each_in_list', block_name: 'for_each_in_list', description: 'ลูปสำหรับแต่ละไอเท็มใน list', category: 'loops' },
-        { block_key: 'for_each_coin', block_name: 'for_each_coin', description: 'ลูปสำหรับแต่ละเหรียญ', category: 'loops' },
-        { block_key: 'for_each_person', block_name: 'for_each_person', description: 'ลูปสำหรับแต่ละคน', category: 'loops' },
 
         // Operators
         { block_key: 'math_number', block_name: 'math_number', description: 'ตัวเลข', category: 'operators' },

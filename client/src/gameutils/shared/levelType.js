@@ -35,7 +35,7 @@ export function getAlgoPayload(level, algoType) {
  */
 export function isAlgoLevel(level) {
     if (!level) return false;
-    
+
     return !!level.algo_data || (level.test_cases && level.test_cases.length > 0);
 }
 
@@ -55,9 +55,10 @@ export function detectAlgoType(level) {
         if (funcName === 'DIJ' || funcName === 'DIJKSTRA') return 'DIJKSTRA';
         if (funcName === 'KRUS' || funcName === 'KRUSKAL') return 'KRUSKAL';
         if (funcName === 'MAXCAPACITY' || funcName === 'EMEI') return 'EMEI';
+
         return funcName; // e.g., 'DFS', 'BFS', 'PRIM'
     }
-    
+
     return 'UNKNOWN';
 }
 

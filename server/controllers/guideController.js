@@ -17,7 +17,6 @@ exports.getAllGuides = async (req, res) => {
       where = {
         OR: [
           { title: { contains: searchLower, mode: 'insensitive' } },
-          { description: { contains: searchLower, mode: 'insensitive' } },
         ],
       };
     }
@@ -75,7 +74,7 @@ exports.getAllGuides = async (req, res) => {
 exports.getGuidesByLevel = async (req, res) => {
   try {
     const { levelId } = req.params;
-    
+
     // Check if level exists
     const level = await prisma.level.findUnique({
       where: { level_id: parseInt(levelId) }
@@ -177,7 +176,6 @@ exports.createGuide = async (req, res) => {
     const {
       level_id,
       title,
-      description,
       display_order,
       is_active,
     } = req.body;
@@ -185,13 +183,12 @@ exports.createGuide = async (req, res) => {
     console.log("Create guide request:", {
       level_id,
       title,
-      description,
       display_order,
       is_active,
     });
 
     if (!level_id || !title || !title.trim()) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "Missing required fields: level_id, title",
         received: { level_id, title }
       });
@@ -209,7 +206,6 @@ exports.createGuide = async (req, res) => {
     const guideData = {
       level_id: parseInt(level_id),
       title: title.trim(),
-      description: description && description.trim() ? description.trim() : null,
       display_order: display_order ? parseInt(display_order) : 0,
       is_active: is_active === true || is_active === 'true' || is_active === undefined,
     };
@@ -245,7 +241,7 @@ exports.createGuide = async (req, res) => {
     console.error("Error stack:", error.stack);
     console.error("Error code:", error.code);
     console.error("Error meta:", error.meta);
-    
+
     // Provide more detailed error message
     let errorMessage = "Error creating guide";
     if (error.code === 'P2002') {
@@ -257,9 +253,9 @@ exports.createGuide = async (req, res) => {
     } else if (error.message) {
       errorMessage = error.message;
     }
-    
-    res.status(500).json({ 
-      message: errorMessage, 
+
+    res.status(500).json({
+      message: errorMessage,
       error: error.message,
       code: error.code,
       meta: error.meta
@@ -274,7 +270,6 @@ exports.updateGuide = async (req, res) => {
     const {
       level_id,
       title,
-      description,
       display_order,
       is_active,
     } = req.body;
@@ -299,7 +294,6 @@ exports.updateGuide = async (req, res) => {
       updateData.level_id = parseInt(level_id);
     }
     if (title !== undefined) updateData.title = title;
-    if (description !== undefined) updateData.description = description;
     if (display_order !== undefined) updateData.display_order = parseInt(display_order);
     if (is_active !== undefined) updateData.is_active = is_active === true || is_active === 'true';
 
@@ -363,7 +357,7 @@ exports.deleteGuide = async (req, res) => {
     // Delete guide_images first (required because of ON DELETE RESTRICT constraint)
     if (guide.guide_images && guide.guide_images.length > 0) {
       console.log(`Deleting ${guide.guide_images.length} guide images...`);
-      
+
       // Delete associated image files first
       for (const image of guide.guide_images) {
         const filePath = path.join(__dirname, "..", image.path_file);
@@ -403,7 +397,7 @@ exports.deleteGuide = async (req, res) => {
     console.error("Error stack:", error.stack);
     console.error("Error code:", error.code);
     console.error("Error meta:", error.meta);
-    
+
     // Provide more detailed error message
     let errorMessage = "Error deleting guide";
     if (error.code === 'P2003') {
@@ -413,9 +407,9 @@ exports.deleteGuide = async (req, res) => {
     } else if (error.message) {
       errorMessage = error.message;
     }
-    
-    res.status(500).json({ 
-      message: errorMessage, 
+
+    res.status(500).json({
+      message: errorMessage,
       error: error.message,
       code: error.code,
       meta: error.meta
@@ -486,7 +480,7 @@ exports.uploadGuideImage = async (req, res) => {
     console.error("Error stack:", error.stack);
     console.error("Error code:", error.code);
     console.error("Error meta:", error.meta);
-    
+
     // Delete uploaded file on error
     if (req.file && req.file.path) {
       try {
@@ -496,7 +490,7 @@ exports.uploadGuideImage = async (req, res) => {
         console.error("Error deleting file on error:", err);
       }
     }
-    
+
     // Provide more detailed error message
     let errorMessage = "Error uploading guide image";
     if (error.code === 'P2002') {
@@ -506,9 +500,9 @@ exports.uploadGuideImage = async (req, res) => {
     } else if (error.message) {
       errorMessage = error.message;
     }
-    
-    res.status(500).json({ 
-      message: errorMessage, 
+
+    res.status(500).json({
+      message: errorMessage,
       error: error.message,
       code: error.code,
       meta: error.meta

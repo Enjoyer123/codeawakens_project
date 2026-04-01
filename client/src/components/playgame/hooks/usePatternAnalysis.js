@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useMemo } from 'react';
+﻿import { useEffect, useRef, useCallback, useMemo } from 'react';
 import * as Blockly from "blockly/core";
 import { getWeaponData } from '../../../gameutils/entities/weaponUtils';
 import { displayPlayerWeapon } from '../../../gameutils/combat/weaponEffects';
@@ -119,7 +119,7 @@ export function usePatternAnalysis({
 
     // ─── Side Effects ───
     handlePatternNotifications(result, notifiedPatternsRef, lastCompletedPatternRef);
-    
+
     setPatternData({
       matchedBlocks: result.matchedBlocks,
       totalBlocks: result.totalBlocks,
@@ -163,7 +163,7 @@ export function usePatternAnalysis({
     };
 
     workspace.addChangeListener(onWorkspaceChange);
-    
+
     // Initial parse to sync UI when patterns load
     analyzePattern();
 

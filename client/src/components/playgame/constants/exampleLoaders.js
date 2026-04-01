@@ -169,14 +169,5 @@ export const EXAMPLE_LOADERS = [
         icon: '⛰️',
         className: 'bg-indigo-600/20 border-indigo-500/50 hover:bg-indigo-600/30 text-indigo-200',
         loader: (workspace) => loadEmeiMountainExample(workspace, 'dijkstra')
-    },
-    {
-        id: 'prim_emei',
-        label: 'Prim (Emei)',
-        title: 'โหลด Prim Max-Cap (ง้อไบ๊)',
-        description: 'Emei Mountain Variant',
-        icon: '⛰️',
-        className: 'bg-pink-600/20 border-pink-500/50 hover:bg-pink-600/30 text-pink-200',
-        loader: (workspace) => loadEmeiMountainExample(workspace, 'prim')
     }
 ];

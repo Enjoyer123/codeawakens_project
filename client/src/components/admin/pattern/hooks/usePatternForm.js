@@ -73,7 +73,8 @@ export const usePatternForm = ({
                 step: s.step,
                 trigger: "onXmlMatch",
                 xmlCheck: s.xml,
-                effect: s.effect || undefined
+                effect: s.effect || undefined,
+                pseudocode: s.pseudocode || []
             }))
         };
 

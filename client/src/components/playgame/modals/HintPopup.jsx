@@ -32,18 +32,7 @@ const HintPopup = ({ hints, isOpen, onClose }) => {
         }
     };
 
-    const hintImage = currentHint?.hint_images && currentHint.hint_images.length > 0
-        ? currentHint.hint_images[0]
-        : null;
-    const imageUrl = hintImage?.path_file
-        ? `${API_BASE_URL}${hintImage.path_file.startsWith('/') ? '' : '/'}${hintImage.path_file}`
-        : '/guide.png';
-
-    const handleImageClick = () => {
-        if (hintImage) {
-            window.open(imageUrl, '_blank');
-        }
-    };
+    const hasImages = currentHint?.hint_images && currentHint.hint_images.length > 0;
 
     return (
         <Dialog open={isOpen} onOpenChange={(isOpen) => !isOpen && onClose()}>
@@ -72,41 +61,60 @@ const HintPopup = ({ hints, isOpen, onClose }) => {
                         <button
                             onClick={handlePreviousHint}
                             disabled={isFirstHint}
-                            className={`absolute left-2 top-1/2 -translate-y-1/2 z-10 p-1 transition-transform hover:scale-110 ${isFirstHint ? 'opacity-0' : 'opacity-100'}`}
+                            className={`absolute left-2 top-1/2 -translate-y-1/2 z-20 p-1 transition-transform hover:scale-110 ${isFirstHint ? 'opacity-0' : 'opacity-100'}`}
                         >
                             <img src="/arrow.png" alt="prev" className="w-8 h-10 rotate-180" style={{ imageRendering: 'pixelated' }} />
                         </button>
 
                         {/* Main Layout Grid - Single Column now */}
-                        <div className="flex-1 min-h-0 flex justify-center items-stretch px-12 sm:px-16 pb-8 pt-2 w-full">
+                        <div className="flex-1 min-h-0 flex justify-center items-stretch pb-8 pt-2 w-full relative">
 
-                            {hintImage ? (
-                                <div
-                                    className="w-full h-full flex flex-col p-4 sm:p-6 relative transition-all duration-300"
+                            {hasImages ? (
+                                <div className="flex-1 relative w-full h-full overflow-y-auto flex flex-col items-center rounded shadow-inner"
                                     style={{
-                                        backgroundImage: "url('/guide-brown.png')",
-                                        backgroundSize: '100% 100%',
-                                        imageRendering: 'pixelated'
+                                        scrollbarWidth: 'thin',
+                                        scrollbarColor: '#8b5a2b rgba(0,0,0,0.3)'
                                     }}
                                 >
-                                    {/* Image Area - คลิกเพื่อเปิดในแท็บใหม่ */}
-                                    <div className="flex-1 relative w-full h-full overflow-hidden flex flex-col justify-center items-center rounded shadow-inner">
-                                        <img
-                                            src={imageUrl}
-                                            alt="Hint"
-                                            onClick={handleImageClick}
-                                            className="max-w-full max-h-full object-contain cursor-pointer transition-transform duration-500 hover:scale-[1.01]"
-                                            style={{ imageRendering: 'pixelated' }}
-                                            title="คลิกเพื่อดูรูปใหญ่ในแท็บใหม่"
-                                        />
+                                    <style>{`
+                                        .overflow-y-auto::-webkit-scrollbar {
+                                            width: 10px;
+                                        }
+                                        .overflow-y-auto::-webkit-scrollbar-track {
+                                            background: rgba(0,0,0,0.3);
+                                            border-radius: 5px;
+                                        }
+                                        .overflow-y-auto::-webkit-scrollbar-thumb {
+                                            background-color: #8b5a2b;
+                                            border-radius: 5px;
+                                            border: 2px solid rgba(0,0,0,0.3);
+                                        }
+                                    `}</style>
+                                    
+                                    {currentHint.hint_images.map((img, idx) => {
+                                        const url = img?.path_file
+                                            ? `${API_BASE_URL}${img.path_file.startsWith('/') ? '' : '/'}${img.path_file}`
+                                            : '/guide.png';
 
-                                        {/* Hint Counter Badge */}
-                                        {hints.length > 1 && (
-                                            <div className="absolute top-2 right-2 bg-black/80 backdrop-blur-sm border border-white/20 text-white text-[10px] sm:text-[12px] px-2 sm:px-3 py-1 font-mono rounded-full font-bold shadow-lg">
-                                                {currentHintIndex + 1} / {hints.length}
-                                            </div>
-                                        )}
-                                    </div>
+                                        return (
+                                            <img
+                                                key={img.hint_image_id || Math.random()}
+                                                src={url}
+                                                alt={`Hint ${idx + 1}`}
+                                                onClick={() => window.open(url, '_blank')}
+                                                className="w-full h-auto object-contain cursor-pointer transition-transform duration-500 hover:scale-[1.01] mb-2 last:mb-0"
+                                                style={{ imageRendering: 'pixelated' }}
+                                                title="คลิกเพื่อดูรูปใหญ่ในแท็บใหม่"
+                                            />
+                                        );
+                                    })}
+
+                                    {/* Hint Counter Badge */}
+                                    {hints.length > 1 && (
+                                        <div className="absolute right-6 bottom-4 bg-black/80 backdrop-blur-sm border border-white/20 text-white text-[10px] sm:text-[12px] px-2 sm:px-3 py-1 font-mono rounded-full font-bold shadow-lg z-50 pointer-events-none">
+                                            {currentHintIndex + 1} / {hints.length}
+                                        </div>
+                                    )}
                                 </div>
                             ) : (
                                 /* Fallback if no images - Text only centered */
@@ -136,6 +144,13 @@ const HintPopup = ({ hints, isOpen, onClose }) => {
                                             {currentHint.description || 'ไม่มีรายละเอียด'}
                                         </p>
                                     </div>
+                                    
+                                    {/* Hint Counter Badge */}
+                                    {hints.length > 1 && (
+                                        <div className="absolute right-6 bottom-4 bg-black/80 backdrop-blur-sm border border-white/20 text-white text-[10px] sm:text-[12px] px-2 sm:px-3 py-1 font-mono rounded-full font-bold shadow-lg z-50 pointer-events-none">
+                                            {currentHintIndex + 1} / {hints.length}
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -144,7 +159,7 @@ const HintPopup = ({ hints, isOpen, onClose }) => {
                         <button
                             onClick={handleNextHint}
                             disabled={isLastHint}
-                            className={`absolute right-2 top-1/2 -translate-y-1/2 z-10 p-1 transition-transform hover:scale-110 ${isLastHint ? 'opacity-0' : 'opacity-100'}`}
+                            className={`absolute right-2 top-1/2 -translate-y-1/2 z-20 p-1 transition-transform hover:scale-110 ${isLastHint ? 'opacity-0' : 'opacity-100'}`}
                         >
                             <img src="/arrow.png" alt="next" className="w-8 h-10" style={{ imageRendering: 'pixelated' }} />
                         </button>
