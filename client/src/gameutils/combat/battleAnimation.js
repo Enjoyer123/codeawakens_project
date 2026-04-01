@@ -290,9 +290,9 @@ function playVictorySequence(scene, player, monster, weaponRing, monsterDeathAni
             }
 
             // 4. Show Damage Text
-            const dmgText = scene.add.text(monster.x, monster.y - 60, '-100', {
+            const dmgText = scene.add.text(monster.x, monster.y - 100, '-100', {
                 fontSize: '48px',
-                color: '#ffcc00',
+                color: '#ff0000',
                 fontStyle: 'bold',
                 stroke: '#000000',
                 strokeThickness: 6

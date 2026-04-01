@@ -55,6 +55,7 @@ export function detectAlgoType(level) {
         if (funcName === 'DIJ' || funcName === 'DIJKSTRA') return 'DIJKSTRA';
         if (funcName === 'KRUS' || funcName === 'KRUSKAL') return 'KRUSKAL';
         if (funcName === 'MAXCAPACITY' || funcName === 'EMEI') return 'EMEI';
+        if (funcName === 'FIBONACCI' || funcName === 'FIBO') return 'FIBONACCI';
 
         return funcName; // e.g., 'DFS', 'BFS', 'PRIM'
     }

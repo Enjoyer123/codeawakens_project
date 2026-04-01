@@ -21,7 +21,7 @@ function calculateDamage(monsterDamage, weaponData) {
   }
 }
 
-export function startBattle(scene, monster, setPlayerHp, setIsGameOver, isPlayerAttack = false) {
+export function startBattle(scene, monster, setPlayerHp, setIsGameOver, isPlayerAttack) {
   return new Promise((resolve) => {
     // Check if monster is already defeated or currently in battle
     if (monster.data.defeated || monster.data.inBattle) {
@@ -122,53 +122,13 @@ export function startBattle(scene, monster, setPlayerHp, setIsGameOver, isPlayer
           });
         };
 
-        // --- Sequence function for Player Attack ---
-        const playerAttacks = () => {
-          return new Promise((pResolve) => {
-            // Player attacks monster - Always 100 damage (Monster dies in 1 hit)
-            const wType = weaponData?.weaponType || 'melee';
-            const wKey = weaponData?.weapon_key || weaponData?.weaponKey || 'stick';
-            const sfxKey = (wKey === 'stick')
-              ? 'hit'
-              : (wType === 'magic' ? 'weapon_magic' : 'weapon_melee');
-            playSound(sfxKey);
-            monster.data.hp = 0;
-            monster.data.defeated = true;
-
-            // Show damage text for monster
-            if (monster.sprite) {
-              showFloatingText(scene, monster.sprite.x, monster.sprite.y, '-100', '#ffcc00');
-            }
-
-            scene.tweens.add({
-              targets: monster.sprite,
-              tint: 0xff0000,
-              duration: 200,
-              yoyo: true,
-              onStart: () => {
-                scene.cameras.main.shake(200, 0.02);
-                scene.cameras.main.flash(100, 255, 255, 255); // Flash white on monster hit
-              },
-              onComplete: () => {
-                monster.sprite.setTint(0x333333);
-                monster.glow.setVisible(false);
-                cleanupMonsterUI(scene, monster);
-                pResolve();
-              }
-            });
-          });
-        };
-
         const finishBattle = (attackerFirst) => {
 
           monster.data.inBattle = false;
           resolve();
         };
 
-        if (isPlayerAttack) {
-          // Priority 1: Player hits monster immediately during code run
-          playerAttacks().then(() => finishBattle('player'));
-        } else {
+        if (!isPlayerAttack) {
           // Priority 2: Monster hits first if it caught player manually
           monsterAttacks().then(() => {
             finishBattle('monster');

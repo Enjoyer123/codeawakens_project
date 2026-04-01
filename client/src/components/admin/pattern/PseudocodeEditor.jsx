@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Wand2, Type } from 'lucide-react';
+import { Wand2, Type, MessageSquarePlus } from 'lucide-react';
 import { javascriptGenerator } from 'blockly/javascript';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -65,6 +65,11 @@ const buildDisplayMap = (getArg) => ({
   'subset_sum_exclude':   () => `exclude() // ข้ามค่านี้`,
   'subset_sum_reset':     () => `reset_selection() // รีเซ็ตการเลือก (backtrack)`,
   'subset_sum_dp_update': () => `dp_update(i=${getArg('INDEX')}, sum=${getArg('SUM')}, val=${getArg('VALUE')}) // อัปเดตตาราง DP`,
+
+  // --- Fibonacci ---
+  'fibo_call':      () => `fibo_call(n=${getArg('N')}) // เรียกใช้ fib(n)`,
+  'fibo_base_case': () => `fibo_base_case(val=${getArg('VALUE')}) // คืนค่า base case`,
+  'fibo_return':    () => `fibo_return(val=${getArg('VALUE')}) // backtrack คืนค่า`,
 });
 
 const PseudocodeEditor = ({ stepIndex, value = [], onChange, workspaceRef }) => {
@@ -77,14 +82,58 @@ const PseudocodeEditor = ({ stepIndex, value = [], onChange, workspaceRef }) => 
   // รวม Text จาก Array ให้เป็น String ก้อนเดียวสำหรับ Monaco
   const monacoValue = useMemo(() => lines.map(l => l.text).join('\n'), [lines]);
 
-  // เมื่อพิมพ์ใน Monaco แบ่งบรรทัดแล้วอัปเดต State (รักษา blockType เดิมไว้)
-  const handleEditorChange = useCallback((newCode) => {
-    const newLines = (newCode || '').split('\n').map((text, i) => ({
+  // เมื่อพิมพ์ใน Monaco แทรกลบหรือเว้นบรรทัด ให้เช็ค Event เพื่อเลื่อน Block Type ด้วยความฉลาด
+  const handleEditorChange = useCallback((newCode, event) => {
+    let newTypes = [...lines.map(l => l.blockType || '')];
+
+    if (event && event.changes) {
+      // Sort changes in reverse order (bottom to top) to avoid shifting indexes during splice
+      const sortedChanges = [...event.changes].sort((a, b) => b.range.startLineNumber - a.range.startLineNumber);
+
+      sortedChanges.forEach(change => {
+        const startIdx = change.range.startLineNumber - 1;
+        const endIdx = change.range.endLineNumber - 1;
+        const replacedCount = endIdx - startIdx + 1;
+        const insertedLines = change.text.split('\n');
+        const insertedCount = insertedLines.length;
+
+        const oldType = newTypes[startIdx] || '';
+        let typesToInsert = Array(insertedCount).fill('');
+
+        if (replacedCount === 1) {
+          // ถ้าใส่ Enter เข้ามาเฉยๆ 
+          if (insertedCount === 2 && change.text.trim() === '') {
+            if (change.range.startColumn === 1) {
+              // กด Enter หน้าสุด: บรรทัดบนกลายเป็นค่าว่าง, บรรทัดล่างสุดสืบทอดค่าเดิม
+              typesToInsert = ['', oldType];
+            } else {
+              // กด Enter กลางบรรทัดหรือหลังสุด: บรรทัดบนสืบทอดค่าเดิม, บรรทัดล่างกลายเป็นค่าว่าง
+              typesToInsert = [oldType, ''];
+            }
+          } else {
+            // พิมพ์ตัวอักษรธรรมดา, หรือแปะหลายบรรทัด ให้บรรทัดบนสุดถือครองค่าเดิม
+            typesToInsert[0] = oldType;
+          }
+        } else if (replacedCount > 1) {
+          // ถ้าครอบดำหลายบรรทัดแล้วลบ/พิมพ์ทับ
+          if (insertedCount > 0) {
+            typesToInsert[0] = oldType;
+          }
+        }
+
+        newTypes.splice(startIdx, replacedCount, ...typesToInsert);
+      });
+    }
+
+    // Mapping กับ newCode อีกรอบเพื่อความชัวร์เรื่อง sync จำนวนบรรทัดขั้นสุดท้าย
+    const newTextLines = (newCode || '').split('\n');
+    const newObjects = newTextLines.map((text, i) => ({
       text,
-      blockType: lines[i]?.blockType || '',
+      blockType: newTypes[i] || ''
     }));
-    setLines(newLines);
-    onChange(newLines);
+
+    setLines(newObjects);
+    onChange(newObjects);
   }, [lines, onChange]);
 
   // เมื่อแก้ Block Type ในช่องด้านล่าง — สร้าง object ใหม่แทน mutate โดยตรง
@@ -92,6 +141,13 @@ const PseudocodeEditor = ({ stepIndex, value = [], onChange, workspaceRef }) => 
     const newLines = lines.map((l, i) =>
       i === index ? { ...l, blockType: newType } : l
     );
+    setLines(newLines);
+    onChange(newLines);
+  }, [lines, onChange]);
+
+  // แทรกบรรทัด Comment เปล่าๆ แทรกไว้ด้านบนสุด (เพื่อไม่ให้ mapping ขยับพัง)
+  const handleAddComment = useCallback(() => {
+    const newLines = [{ text: '// พิมพ์คำอธิบาย...', blockType: '' }, ...lines];
     setLines(newLines);
     onChange(newLines);
   }, [lines, onChange]);
@@ -386,7 +442,7 @@ const PseudocodeEditor = ({ stepIndex, value = [], onChange, workspaceRef }) => 
   return (
     <div className="bg-white border rounded-xl shadow-sm flex flex-col h-full mt-4 mb-4">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b bg-gray-50/50 shrink-0">
+      <div className="flex flex-wrap items-center justify-between gap-4 p-4 border-b bg-gray-50/50 shrink-0">
         <div>
           <h3 className="font-bold text-gray-800 flex items-center gap-2">
             <span className="bg-blue-100 text-blue-600 p-1 rounded-md">
@@ -396,15 +452,28 @@ const PseudocodeEditor = ({ stepIndex, value = [], onChange, workspaceRef }) => 
           </h3>
           <p className="text-[11px] text-gray-500 mt-0.5">แก้โค้ดด้านบน แล้วใส่ Block Type ด้านล่าง</p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleAutoGenerate}
-          className="gap-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200 shadow-sm transition-all"
-        >
-          <Wand2 size={14} className="animate-pulse" />
-          Auto-Gen จาก Block
-        </Button>
+        
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleAddComment}
+            className="gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200 shadow-sm transition-all"
+            title="เพิ่มบรรทัด Comment ด้านบนสุด"
+          >
+            <MessageSquarePlus size={14} />
+            Add Comment
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleAutoGenerate}
+            className="gap-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200 shadow-sm transition-all"
+          >
+            <Wand2 size={14} className="animate-pulse" />
+            Auto-Gen จาก Block
+          </Button>
+        </div>
       </div>
 
       {/* Part 1: Monaco Code Editor */}

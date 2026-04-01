@@ -6,7 +6,7 @@
 const ALGO_NAMES = [
     'DFS', 'BFS', 'DIJ', 'PRIM', 'KRUSKAL',
     'KNAPSACK', 'SUBSETSUM', 'COINCHANGE',
-    'NQUEEN', 'SOLVE', 'MAXCAPACITY'
+    'NQUEEN', 'SOLVE', 'MAXCAPACITY', 'FIBONACCI'
 ];
 
 // Normalize aliases to canonical names
@@ -15,6 +15,7 @@ const ALIASES = {
     'COIN_CHANGE': 'COINCHANGE',
     'N_QUEEN': 'NQUEEN',
     'MAX_CAPACITY': 'MAXCAPACITY',
+    'FIBO': 'FIBONACCI',
 };
 
 /**

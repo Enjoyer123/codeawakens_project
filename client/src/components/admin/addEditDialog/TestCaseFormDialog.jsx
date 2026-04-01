@@ -233,6 +233,7 @@ const TestCaseFormDialog = ({ open, onOpenChange, editingTestCase, numericLevelI
                                 <optgroup label="Other Algorithms">
                                     <option value="SOLVE">SOLVE (N-Queen)</option>
                                     <option value="MAXCAPACITY">MAXCAPACITY (Max Flow)</option>
+                                    <option value="FIBONACCI">FIBONACCI (Fibonacci Backtrack)</option>
                                 </optgroup>
                             </select>
                         </div>

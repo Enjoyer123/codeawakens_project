@@ -70,6 +70,12 @@ export const ALGO_INPUT_CONFIG = {
             { key: 'tourists', label: 'Tourists Count', type: 'number', placeholder: '20' },
         ]
     },
+    // Fibonacci
+    FIBONACCI: {
+        label: 'Fibonacci', fields: [
+            { key: 'n', label: 'n (หาค่า Fibonacci ลำดับที่)', type: 'number', placeholder: '5', hint: 'e.g. 5 ๾ fib(5) = 5' },
+        ]
+    },
 };
 
 // =========================================================================

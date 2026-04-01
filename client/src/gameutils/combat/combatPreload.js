@@ -5,11 +5,28 @@ import { getWeaponsData } from '../entities/weaponUtils';
 export async function preloadAllWeaponEffects(scene) {
   if (!scene || !scene.load) return 0;
 
-  const weaponsCache = getWeaponsData();
-  const weaponsToPreload = weaponsCache ? Object.keys(weaponsCache) : ['stick'];
+  const weaponsToPreloadSet = new Set();
+  
+  // Extract only needed weapons from the current level
+  if (scene.levelData) {
+     if (scene.levelData.defaultWeaponKey) {
+        weaponsToPreloadSet.add(scene.levelData.defaultWeaponKey);
+     }
+     if (Array.isArray(scene.levelData.goodPatterns)) {
+        scene.levelData.goodPatterns.forEach(pattern => {
+           if (pattern.weaponKey) weaponsToPreloadSet.add(pattern.weaponKey);
+        });
+     }
+  }
+  
+  // Fallback to stick if no weapons found
+  if (weaponsToPreloadSet.size === 0) weaponsToPreloadSet.add('stick');
+
+  const weaponsToPreload = Array.from(weaponsToPreloadSet);
   
   const promises = weaponsToPreload.map(weapon => preloadWeaponEffectSafe(scene, weapon));
   const results = await Promise.all(promises);
+  
   return results.reduce((sum, count) => sum + count, 0);
 }
 
@@ -27,22 +44,21 @@ export async function preloadWeaponEffectSafe(scene, weaponKey, effectType = 'at
     }
   }
 
-  // 2. ตรวจสอบไฟล์แบบหลายเฟรม (รองรับสูงสุด 10 เฟรมก็พอสำหรับมอนสเตอร์ทั่วไป)
-  let consecutiveMisses = 0;
-  for (let i = 1; i <= 10; i++) {
+  // 2. ตรวจสอบไฟล์แบบหลายเฟรมพร้อมกัน (Parallel) ช่วยลดเวลาได้มาก
+  const frameIndices = Array.from({ length: 10 }, (_, i) => i + 1);
+  const parallelChecks = frameIndices.map(async (i) => {
     const frameKey = `${texturePrefix}-${i}`;
-    if (scene.textures.exists(frameKey)) continue;
+    if (scene.textures.exists(frameKey)) return null;
 
     const url = getImageUrl(`uploads/weapons_effect/${weaponKey}_${effectType}_${i}.png`);
-    if (await checkImageExistsSafe(url)) {
-      framesToLoad.push({ key: frameKey, url });
-      consecutiveMisses = 0;
-    } else {
-      consecutiveMisses++;
-      // ถ้าหาไม่เจอ 2 เฟรมติดกัน แปลว่าหมดชุดแอนิเมชันแล้ว ให้หยุดหา
-      if (consecutiveMisses >= 2) break; 
-    }
-  }
+    const exists = await checkImageExistsSafe(url);
+    return exists ? { key: frameKey, url: url } : null;
+  });
+
+  const checkResults = await Promise.all(parallelChecks);
+  
+  // 3. กรองเฉพาะเฟรมที่มีรูปอยู่จริง เติมลง framesToLoad (กรอง null ออก)
+  framesToLoad.push(...checkResults.filter(Boolean));
 
   if (framesToLoad.length === 0) return 0;
 

@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useCallback, useMemo } from 'react';
+import { useEffect, useRef, useCallback, useMemo } from 'react';
 import * as Blockly from "blockly/core";
 import { getWeaponData } from '../../../gameutils/entities/weaponUtils';
 import { displayPlayerWeapon } from '../../../gameutils/combat/weaponEffects';
@@ -158,7 +158,7 @@ export function usePatternAnalysis({
         event.type === Blockly.Events.BLOCK_CHANGE
       ) {
         if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-        debounceTimerRef.current = setTimeout(() => { analyzePattern(); }, 50);
+        debounceTimerRef.current = setTimeout(() => { analyzePattern(); }, 250);
       }
     };
 

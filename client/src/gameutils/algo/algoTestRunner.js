@@ -121,6 +121,8 @@ const FUNCTION_TO_ALGO_TYPE = {
     SUBSETSUM: 'SUBSETSUM',
     SOLVE: 'NQUEEN',
     MAXCAPACITY: 'EMEI',
+    FIBONACCI: 'FIBONACCI',
+    FIBO: 'FIBONACCI',
 };
 
 function buildTestLevelData(baseLevelData, inputParams, functionName) {

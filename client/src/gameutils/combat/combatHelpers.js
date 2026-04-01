@@ -11,8 +11,8 @@ export function getDirectionFromAngle(angle) {
 }
 
 export function showFloatingText(scene, x, y, text, color = '#ff0000') {
-  const damageText = scene.add.text(x, y - 20, text, {
-    fontSize: '24px', // Bigger font
+  const damageText = scene.add.text(x, y - 50, text, {
+    fontSize: '36px', // Bigger font
     fontStyle: 'bold',
     color: color,
     stroke: '#ffffff',

@@ -13,6 +13,7 @@ import { injectKnapsackStubs } from './contexts/knapsackContext';
 import { injectSubsetSumStubs } from './contexts/subsetSumContext';
 import { injectCoinChangeStubs } from './contexts/coinChangeContext';
 import { injectEmeiMountainStubs } from './contexts/emeiMountainContext';
+import { injectFiboStubs } from './contexts/fiboContext';
 
 import { detectAlgoType } from '../shared/levelType';
 
@@ -34,6 +35,7 @@ function buildAlgoContext(levelData, trace, code = "") {
         case 'SUBSETSUM': injectSubsetSumStubs(context, levelData, trace); break;
         case 'COINCHANGE': injectCoinChangeStubs(context, levelData, trace); break;
         case 'EMEI': injectEmeiMountainStubs(context, levelData, trace, code); break;
+        case 'FIBONACCI': injectFiboStubs(context, levelData, trace); break;
         // DFS/BFS/DIJKSTRA/PRIM/KRUSKAL use graphContext only — no extra stubs needed
     }
 
