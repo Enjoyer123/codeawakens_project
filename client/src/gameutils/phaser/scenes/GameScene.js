@@ -56,6 +56,8 @@ export class GameScene extends Phaser.Scene {
             this.load.nextFile(file, true);
         });
 
+        // Determine if Level uses Priority Queue (Dijkstra/Prim) to load those specific assets
+        // Actually, no specific assets needed, but we ensure basic map loads
         if (backgroundPath) {
             this.load.image('bg', backgroundPath);
         } else {
@@ -111,86 +113,12 @@ export class GameScene extends Phaser.Scene {
         this.load.image('board_bg', '/background.png');
         this.load.image('gun', '/object/gun.png');
 
-        // Load aura effects
-        for (let i = 1; i <= 8; i++) {
-            this.load.image(`aura_1_${i}`, `/aura/aura_1_${i}.png`);
-        }
-        // Load aura_2 (13 frames)
-        for (let i = 1; i <= 13; i++) {
-            this.load.image(`aura_2_${i}`, `/aura/aura_2_${i}.png`);
-        }
-        // Load circle_1 (7 frames)
-        for (let i = 1; i <= 7; i++) {
-            this.load.image(`circle_1_${i}`, `/aura/circle_1_${i}.png`);
-        }
-        // Load circle_2 (9 frames)
-        for (let i = 1; i <= 9; i++) {
-            this.load.image(`circle_2_${i}`, `/aura/circle_2_${i}.png`);
-        }
+        // Aura effects are now loaded dynamically in create() to prevent long black screen
+
     }
 
     create() {
-        // Create aura animation
-        if (this.textures.exists('aura_1_1')) {
-            this.anims.create({
-                key: 'aura_1',
-                frames: [
-                    { key: 'aura_1_1' },
-                    { key: 'aura_1_2' },
-                    { key: 'aura_1_3' },
-                    { key: 'aura_1_4' },
-                    { key: 'aura_1_5' },
-                    { key: 'aura_1_6' },
-                    { key: 'aura_1_7' },
-                    { key: 'aura_1_8' }
-                ],
-                frameRate: 8,
-                repeat: -1
-            });
-        }
-
-        // Create aura_2 animation
-        if (this.textures.exists('aura_2_1')) {
-            const frames = [];
-            for (let i = 1; i <= 13; i++) {
-                frames.push({ key: `aura_2_${i}` });
-            }
-            this.anims.create({
-                key: 'aura_2',
-                frames: frames,
-                frameRate: 12,
-                repeat: -1
-            });
-
-        }
-
-        // Create circle_1 animation
-        if (this.textures.exists('circle_1_1')) {
-            const frames = [];
-            for (let i = 1; i <= 7; i++) {
-                frames.push({ key: `circle_1_${i}` });
-            }
-            this.anims.create({
-                key: 'circle_1',
-                frames: frames,
-                frameRate: 10,
-                repeat: -1
-            });
-        }
-
-        // Create circle_2 animation
-        if (this.textures.exists('circle_2_1')) {
-            const frames = [];
-            for (let i = 1; i <= 9; i++) {
-                frames.push({ key: `circle_2_${i}` });
-            }
-            this.anims.create({
-                key: 'circle_2',
-                frames: frames,
-                frameRate: 10,
-                repeat: -1
-            });
-        }
+        // Aura animations will be created after dynamic loading finishes
 
         setCurrentScene(this);
         this.levelData = this.currentLevel;
@@ -206,40 +134,9 @@ export class GameScene extends Phaser.Scene {
         if (this.textures.exists('main_3')) createMain_3Anims(this.anims);
 
 
-        // Helper for safe setup (Cleaner Version)
-        const safeSetupGame = () => {
-            // เช็คว่าถ้า Scene ถูกปิดหรือทำลายทิ้งไประหว่างรอโหลด (เช่น ผู้เล่นกดออกด่านเร็ว)
-            // ให้ล้มเลิกการตั้งค่าทันที ไม่ต้องวนลูปให้เปลือง Memory
-            if (!this || !this.scene || !this.sys || !this.add || !this.sys.isActive() || !this.sys.displayList) {
-                console.warn('Scene was destroyed or inactive. Aborting setup.');
-                return;
-            }
-            this.setupGame();
-        };
-
-        // Initializing async loading for dynamic assets (Weapon Effects)
-        const initDynamicAssets = async () => {
-            if (this.load && this.load.list) {
-                try {
-                    await preloadAllWeaponEffects(this);
-                } catch (error) {
-                    console.error("Error preloading weapon effects:", error);
-                }
-            }
-            // หลัง await กลับมา เช็คอีกทีว่า Scene ยังอยู่ไหม
-            // (ผู้เล่นอาจกดออกด่านระหว่างรอโหลด)
-            if (!this || !this.scene || !this.sys || !this.add || !this.sys.isActive() || !this.sys.displayList) {
-                console.warn('Scene was destroyed during preload. Aborting setup.');
-                return;
-            }
-            safeSetupGame();
-        };
-
-        initDynamicAssets();
-
-    }
-
-    setupGame() {
+        // ==========================================
+        // 1. DRAW VISUALS IMMEDIATELY (ZERO DELAY)
+        // ==========================================
         try {
             drawLevel(this);
             drawPlayer(this);
@@ -258,46 +155,114 @@ export class GameScene extends Phaser.Scene {
                 setupCoinChange(this);
             }
 
-
-            // Setup new Goal UI for tracking items
             setupGoalUI(this);
+        } catch (error) {
+            console.error('Error in instant GameSetup:', error);
+        }
 
-            const currentState = getCurrentGameState();
-
-            // Display weapon — respect pattern-matched weapon if already set
-            if (this.levelData) {
-                const defaultWeaponKey = this.levelData.defaultWeaponKey || "stick";
-                const activeWeaponKey = currentState.weaponKey && currentState.patternTypeId
-                    ? currentState.weaponKey
-                    : defaultWeaponKey;
-                const activeWeaponData = getWeaponData(activeWeaponKey);
-
-                if (this.externalHandlers.setCurrentWeaponData) {
-                    this.externalHandlers.setCurrentWeaponData(activeWeaponData);
-                }
-
-                setCurrentGameState({
-                    weaponKey: activeWeaponKey,
-                    weaponData: activeWeaponData,
-                    activeEffects: currentState.activeEffects || [],
-                    patternTypeId: currentState.patternTypeId || 0
+        // ==========================================
+        // 2. LOAD WEAPON EFFECTS IN BACKGROUND
+        // ==========================================
+        // Helper to create aura anims once textures finish
+        const setupAuraAnims = () => {
+            if (this.textures.exists('aura_1_1') && !this.anims.exists('aura_1')) {
+                this.anims.create({
+                    key: 'aura_1',
+                    frames: Array.from({length: 8}, (_, i) => ({key: `aura_1_${i+1}`})),
+                    frameRate: 8, repeat: -1
                 });
+            }
+            if (this.textures.exists('aura_2_1') && !this.anims.exists('aura_2')) {
+                this.anims.create({
+                    key: 'aura_2',
+                    frames: Array.from({length: 13}, (_, i) => ({key: `aura_2_${i+1}`})),
+                    frameRate: 12, repeat: -1
+                });
+            }
+            if (this.textures.exists('circle_1_1') && !this.anims.exists('circle_1')) {
+                this.anims.create({
+                    key: 'circle_1',
+                    frames: Array.from({length: 7}, (_, i) => ({key: `circle_1_${i+1}`})),
+                    frameRate: 10, repeat: -1
+                });
+            }
+            if (this.textures.exists('circle_2_1') && !this.anims.exists('circle_2')) {
+                this.anims.create({
+                    key: 'circle_2',
+                    frames: Array.from({length: 9}, (_, i) => ({key: `circle_2_${i+1}`})),
+                    frameRate: 10, repeat: -1
+                });
+            }
+        };
 
-                // Clear renderedEffects to force a re-sync on the first update()
-                this.renderedEffects = [];
-
-                if (this && this.add && this.player) {
-                    try {
-                        displayPlayerWeapon(activeWeaponKey, this);
-                    } catch (error) {
-                        console.error("Error displaying weapon:", error);
+        // Initializing async loading for dynamic assets (Weapon Effects & Auras)
+        const initDynamicAssets = async () => {
+            if (this.load && this.load.list) {
+                try {
+                    // Start aura loading
+                    const aurasToLoad = [];
+                    for (let i = 1; i <= 8; i++) if (!this.textures.exists(`aura_1_${i}`)) aurasToLoad.push({ key:`aura_1_${i}`, src:`/aura/aura_1_${i}.png` });
+                    for (let i = 1; i <= 13; i++) if (!this.textures.exists(`aura_2_${i}`)) aurasToLoad.push({ key:`aura_2_${i}`, src:`/aura/aura_2_${i}.png` });
+                    for (let i = 1; i <= 7; i++) if (!this.textures.exists(`circle_1_${i}`)) aurasToLoad.push({ key:`circle_1_${i}`, src:`/aura/circle_1_${i}.png` });
+                    for (let i = 1; i <= 9; i++) if (!this.textures.exists(`circle_2_${i}`)) aurasToLoad.push({ key:`circle_2_${i}`, src:`/aura/circle_2_${i}.png` });
+                    
+                    if (aurasToLoad.length > 0) {
+                        await new Promise((resolve) => {
+                            aurasToLoad.forEach(f => this.load.image(f.key, f.src));
+                            this.load.once('complete', resolve);
+                            this.load.once('loaderror', resolve); 
+                            this.load.start();
+                        });
                     }
+
+                    setupAuraAnims();
+                    
+                    await preloadAllWeaponEffects(this);
+                } catch (error) {
+                    console.error("Error preloading dynamic assets:", error);
                 }
             }
 
-        } catch (error) {
-            console.error('Error in setupGame:', error);
-        }
+            // หลัง await กลับมา เช็คอีกทีว่า Scene ยังอยู่ไหม
+            if (!this || !this.scene || !this.sys || !this.add || !this.sys.isActive() || !this.sys.displayList) {
+                return;
+            }
+            
+            // ==========================================
+            // 3. APPLY LOADED WEAPONS TO PLAYER
+            // ==========================================
+            try {
+                const currentState = getCurrentGameState();
+                if (this.levelData) {
+                    const defaultWeaponKey = this.levelData.defaultWeaponKey || "stick";
+                    const activeWeaponKey = currentState.weaponKey && currentState.patternTypeId
+                        ? currentState.weaponKey
+                        : defaultWeaponKey;
+                    const activeWeaponData = getWeaponData(activeWeaponKey);
+
+                    if (this.externalHandlers.setCurrentWeaponData) {
+                        this.externalHandlers.setCurrentWeaponData(activeWeaponData);
+                    }
+
+                    setCurrentGameState({
+                        weaponKey: activeWeaponKey,
+                        weaponData: activeWeaponData,
+                        activeEffects: currentState.activeEffects || [],
+                        patternTypeId: currentState.patternTypeId || 0
+                    });
+
+                    this.renderedEffects = [];
+
+                    if (this && this.add && this.player) {
+                        displayPlayerWeapon(activeWeaponKey, this);
+                    }
+                }
+            } catch (error) {
+                console.error('Error applying weapon after load:', error);
+            }
+        };
+
+        initDynamicAssets();
     }
 
     update(time, delta) {

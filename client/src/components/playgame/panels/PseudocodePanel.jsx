@@ -3,61 +3,7 @@ import { buildPseudocodeLines, findPseudocodeLine } from '../../../gameutils/sha
 
 import Editor, { useMonaco } from '@monaco-editor/react';
 
-const getPseudoHeader = (currentLevel) => {
-  if (!currentLevel) return '';
-
-  const funcName = currentLevel.function_name?.toUpperCase()
-    || currentLevel.test_cases?.[0]?.function_name?.toUpperCase()
-    || currentLevel.level_test_cases?.[0]?.function_name?.toUpperCase()
-    || currentLevel.algo_data?.type?.toUpperCase()
-    || '';
-
-  let coreParams = '';
-
-  if (['DFS', 'BFS', 'DIJ', 'PRIM', 'KRUSKAL'].includes(funcName)) {
-    coreParams = ` * @param {Array} graph - โครงสร้างกราฟ (Adjacency List)
- * @param {Number} start - Node เริ่มต้น
- * @param {Number} goal - Node เป้าหมาย (ถ้ามี)
- * @param {Array} visited - ตัวแปรระบบ: รายการ Node ที่เคยแวะแล้ว`;
-  } else if (funcName === 'SOLVE' || funcName === 'NQUEEN') {
-    coreParams = ` * @param {Number} row - แถวปัจจุบันที่กำลังจะวางหมาก
- * @param {Array} board - ตัวแปรอ้างอิงระบบ: ตำแหน่งหมากควีน
- * @param {Number} n - ขนาดของกระดาน (NxN)`;
-  } else if (funcName === 'COINCHANGE') {
-    coreParams = ` * @param {Number} amount/monster_power - ยอดรวมหรือพลังชีวิตมอนสเตอร์
- * @param {Array} coins/warriors - รายการเหรียญหรือพลังนักรบแต่ละคน
- * @param {Number} index - (แบ็คแทร็ก) ตำแหน่งการค้นหาปัจจุบัน`;
-  } else if (funcName === 'SUBSETSUM') {
-    coreParams = ` * @param {Array} arr - รายการตัวเลขเป้าหมาย
- * @param {Number} target_sum - ผลรวมเป้าหมายที่ต้องการทอน/ตรวจสอบ
- * @param {Array} warriors - รายการอาร์เรย์ของนักรบ (ถ้าเล่นด่านต่อสู้)
- * @param {Number} n - จำนวนไอเทม/นักรบทั้งหมด`;
-  } else if (funcName === 'KNAPSACK') {
-    coreParams = ` * @param {Number} capacity - ความจุสูงสุด (เช่น น้ำหนักเป้)
- * @param {Array} weights - น้ำหนักของไอเทมแต่ละชิ้น
- * @param {Array} values - มูลค่าของไอเทมแต่ละชิ้น
- * @param {Number} n - จำนวนไอเทมทั้งหมด`;
-  } else if (funcName === 'MAXCAPACITY' || funcName === 'EMEI') {
-    coreParams = ` * @param {Number} tourists - จำนวนนักท่องเที่ยวทั้งหมด
- * @param {Number} start - Node เริ่มต้น (รถบัส)
- * @param {Number} end - Node สิ้นสุด (ยอดเขา)
- * @param {Array} edges - รายการเส้นทางเดินป่าเชื่อมต่อกัน
- * @param {Number} n - จำนวนจุดแวะพัก/โหนดทั้งหมด`;
-  } else {
-    coreParams = ` * @param {Object} input - ข้อมูล input ของด่าน
- * @param {Array} map - ตัวแปรอ้างอิงระบบ: แผนที่ (ถ้ามี)
- * @param {Array} warrior - ตัวแปรอ้างอิงระบบ: นักรบ (ถ้ามี)`;
-  }
-
-  return `/**
- * Function: ${funcName || 'Main'}
- * 
- * @param {*} primaryResult - ผลลัพธ์จากการรันระบบภาพเสมือน
- * @param {Array} testCases - Test Cases ของด่านจากแพลตฟอร์ม
- * @returns {Array} result - ผลลัพธ์ที่นำไปรันการแสดงผล
-${coreParams}
- */\n\n`;
-};
+// Removed hardcoded getPseudoHeader. The header is now defined by the admin in PseudocodeEditor.
 
 const PseudocodePanel = ({ pattern, matchedSteps = 0, selectedBlockType = null, currentLevel = null }) => {
   const monaco = useMonaco();
@@ -69,11 +15,9 @@ const PseudocodePanel = ({ pattern, matchedSteps = 0, selectedBlockType = null, 
     [pattern, matchedSteps]
   );
 
-  const headerText = useMemo(() => getPseudoHeader(currentLevel), [currentLevel]);
-
   const fullText = useMemo(() => {
-    return headerText + allLines.map(l => l.text).join('\n');
-  }, [headerText, allLines]);
+    return allLines.map(l => l.text).join('\n');
+  }, [allLines]);
 
   const highlight = useMemo(() => {
     if (!selectedBlockType || !allLines.length) return null;
@@ -96,9 +40,8 @@ const PseudocodePanel = ({ pattern, matchedSteps = 0, selectedBlockType = null, 
     let newDecorations = [];
 
     if (activeLineIndex >= 0) {
-      // Offset line number based on the dynamic header's line count
-      const headerLineCount = headerText.split('\n').length - 1;
-      const lineNum = activeLineIndex + 1 + headerLineCount; // Monaco is 1-indexed
+      // Offset line number based on array
+      const lineNum = activeLineIndex + 1; // Monaco is 1-indexed
 
       newDecorations = [
         {

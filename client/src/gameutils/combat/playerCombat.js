@@ -5,6 +5,7 @@ import { showMonsterDeathEffect } from './deathEffects';
 import { playSound } from '../sound/soundManager';
 import { getCurrentGameState } from '../shared/game/gameState';
 import { getWeaponData } from '../entities/weaponUtils';
+import { showFloatingText } from './combatHelpers';
 
 export function haveEnemy(player) {
     return findNearbyEnemy(player) !== null;
@@ -109,7 +110,6 @@ function updateEnemyHealthBar(enemySprite, currentHealth) {
 async function killEnemy(player, enemySprite) {
     playSound('enemy_defeat');
     enemySprite.setData('defeated', true);
-
     // Stop input/interaction on enemy
     if (enemySprite.body) enemySprite.body.checkCollision.none = true;
 
@@ -121,6 +121,9 @@ async function killEnemy(player, enemySprite) {
         const deathAnimKey = `${prefix}-death-${dir}`;
 
         if (player.scene.anims.exists(deathAnimKey)) {
+            if (enemySprite) {
+                showFloatingText(player.scene, enemySprite.x, enemySprite.y - 50, '-100', '#fbff00ff');
+            }
             enemySprite.anims.play(deathAnimKey, true);
             playedDeathAnim = true;
 

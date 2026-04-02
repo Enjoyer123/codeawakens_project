@@ -119,6 +119,8 @@ const CATEGORY_CONFIG = {
       // Coin Change
       "coin_change_add_warrior_to_selection", "coin_change_track_decision",
       "coin_change_remove_warrior", "coin_change_consider", "coin_change_memo_hit",
+      // Fibonacci
+      "fibo_call", "fibo_base_case", "fibo_return",
       // Emei Mountain
       "emei_highlight_peak", "emei_highlight_path", "emei_show_final_result",
       // DFS/BFS Visual

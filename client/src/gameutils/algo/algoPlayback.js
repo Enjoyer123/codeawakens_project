@@ -17,6 +17,7 @@ import { playPrimAnimation } from './playback/primPlayback.js';
 import { playKruskalAnimation } from './playback/kruskalPlayback.js';
 import { playGraphAnimation } from './playback/graphPlayback.js';
 import { playEmeiAnimation } from './playback/emeiPlayback.js';
+import { playFiboAnimation } from './playback/fiboPlayback.js';
 
 
 
@@ -77,6 +78,9 @@ export async function playAlgoAnimation(scene, algoType, trace, options = {}) {
 
         case 'EMEI':
             return playEmeiAnimation(scene, trace, { speed, result: options.result });
+
+        case 'FIBONACCI':
+            return playFiboAnimation(scene, trace, { speed, result: options.result });
 
         default:
             console.warn(`⚠️ [algoPlayback] No playback for type: ${algoType}`);

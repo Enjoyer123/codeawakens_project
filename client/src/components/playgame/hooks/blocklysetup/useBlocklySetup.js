@@ -51,13 +51,19 @@ export function useBlocklySetup({
       // 2. อัปเดตสถานะว่าพร้อมแล้ว (ให้ GameCore.jsx รู้)
       setBlocklyLoaded(true);
 
-      // 3. โหลด Starter XML
-      if (starter_xml && typeof starter_xml === 'string' && starter_xml.trim()) {
-        loadStarterXml(workspace, starter_xml, isTextCodeEnabled, onCodeGenerated);
-      }
-
-      // 4. เริ่มเกม Phaser
+      // 4. เริ่มเกม Phaser ทันทีเพื่อให้หน้าจอไม่มืดดำตอนกำลัง Parse XML ของ 3 ด่านหิน!
       initPhaserGame();
+
+      // 5. ปล่อยให้ Blockly โหลดบล็อก (ซึ่งกิน CPU มาก) หลังจาก Phaser เริ่มวาดจอโหลดไปแล้ว 50ms
+      if (starter_xml && typeof starter_xml === 'string' && starter_xml.trim()) {
+        setTimeout(() => {
+          try {
+            if (workspace) {
+               loadStarterXml(workspace, starter_xml, isTextCodeEnabled, onCodeGenerated);
+            }
+          } catch(e) {}
+        }, 50);
+      }
 
     } catch (error) {
       console.error("Error initializing workspace:", error);

@@ -20,6 +20,7 @@ import { defineSubsetSumGenerators } from '../algorithms/subset_sum/generators';
 import { defineCoinChangeGenerators } from '../algorithms/coin_change/generators';
 import { defineEmeiGenerators } from '../algorithms/emei_mountain/generators';
 import { defineNQueenGenerators } from '../algorithms/nqueen/generators';
+import { defineFiboGenerators } from "../algorithms/fibo/generators";
 import { defineMathGenerators } from '../blocks/math/generators';
 
 export const defineAllGenerators = () => {
@@ -40,7 +41,7 @@ export const defineAllGenerators = () => {
   defineKnapsackGenerators();
   defineSubsetSumGenerators();
   defineCoinChangeGenerators();
+  defineFiboGenerators();
   defineEmeiGenerators();
   defineNQueenGenerators();
 };
-

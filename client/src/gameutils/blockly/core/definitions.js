@@ -18,6 +18,7 @@ import { defineSubsetSumVisualBlocks } from '../algorithms/subset_sum/blocks';
 import { defineCoinChangeVisualBlocks } from '../algorithms/coin_change/blocks';
 import { defineEmeiVisualBlocks } from '../algorithms/emei_mountain/blocks';
 import { defineNQueenBlocks } from '../algorithms/nqueen/blocks';
+import { defineFiboVisualBlocks } from '../algorithms/fibo/blocks';
 
 
 export function defineAllBlocks() {
@@ -43,6 +44,5 @@ export function defineAllBlocks() {
   defineCoinChangeVisualBlocks();
   defineEmeiVisualBlocks();
   defineNQueenBlocks();
+  defineFiboVisualBlocks();
 }
-
-

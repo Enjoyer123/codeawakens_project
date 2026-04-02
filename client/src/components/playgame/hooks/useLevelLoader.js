@@ -156,7 +156,7 @@ export function useLevelInitializer({
   const initRef = useRef(null);
 
   useEffect(() => {
-    if (!levelData) return;
+    if (!levelData || initRef.current === levelData.level_id) return;
 
     const initializeLevel = async () => {
       try {

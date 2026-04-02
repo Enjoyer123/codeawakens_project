@@ -165,13 +165,12 @@ const ProgressModal = ({ isOpen, onClose, onReplay, gameResult, levelData, block
             {/* Scrollable body */}
             <div className="flex-1 overflow-y-auto pr-2">
               <div className="space-y-4">
-
                 {/* Stars */}
                 <div className="flex justify-center py-2">
                   <img
                     src={!isVictory ? '/star0.png' : `/star${stars}.png`}
                     alt="Rank Stars"
-                    className="h-20 sm:h-30 object-contain drop-shadow-md animate-bounce-slow"
+                    className="h-20 sm:h-30 object-contain drop-shadow-md"
                     style={{ imageRendering: 'pixelated' }}
                   />
                 </div>
