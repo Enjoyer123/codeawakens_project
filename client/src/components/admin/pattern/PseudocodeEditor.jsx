@@ -97,27 +97,31 @@ const PseudocodeEditor = ({ stepIndex, value = [], onChange, workspaceRef }) => 
         const insertedLines = change.text.split('\n');
         const insertedCount = insertedLines.length;
 
-        const oldType = newTypes[startIdx] || '';
+        const affectedTypes = newTypes.slice(startIdx, startIdx + replacedCount);
+        const firstNonEmptyType = affectedTypes.find(t => t !== '') || '';
         let typesToInsert = Array(insertedCount).fill('');
 
         if (replacedCount === 1) {
-          // ถ้าใส่ Enter เข้ามาเฉยๆ 
+          // --- 1. SINGLE LINE SPLIT OR TYPE (ENTER / TYPING) ---
           if (insertedCount === 2 && change.text.trim() === '') {
+            // Check if Enter at precisely the start of a non-empty line
             if (change.range.startColumn === 1) {
-              // กด Enter หน้าสุด: บรรทัดบนกลายเป็นค่าว่าง, บรรทัดล่างสุดสืบทอดค่าเดิม
-              typesToInsert = ['', oldType];
+              // Push down: The original line's type moves to the new line
+              typesToInsert = ['', firstNonEmptyType];
             } else {
-              // กด Enter กลางบรรทัดหรือหลังสุด: บรรทัดบนสืบทอดค่าเดิม, บรรทัดล่างกลายเป็นค่าว่าง
-              typesToInsert = [oldType, ''];
+              // Standard Enter: The first part keeps the type, new line is empty
+              typesToInsert = [firstNonEmptyType, ''];
             }
           } else {
-            // พิมพ์ตัวอักษรธรรมดา, หรือแปะหลายบรรทัด ให้บรรทัดบนสุดถือครองค่าเดิม
-            typesToInsert[0] = oldType;
+            // Typing characters or pasting: The base line holds the original type
+            typesToInsert[0] = firstNonEmptyType;
           }
-        } else if (replacedCount > 1) {
-          // ถ้าครอบดำหลายบรรทัดแล้วลบ/พิมพ์ทับ
+        } else {
+          // --- 2. MULTI-LINE MERGE OR REPLACE (BACKSPACE / DELETE / PASTE-OVER) ---
+          // When merging multiple lines (replacedCount > 1) into fewer lines, 
+          // we should attempt to keep the most relevant "type" (usually the first non-empty one)
           if (insertedCount > 0) {
-            typesToInsert[0] = oldType;
+            typesToInsert[0] = firstNonEmptyType;
           }
         }
 

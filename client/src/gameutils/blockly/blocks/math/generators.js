@@ -41,7 +41,7 @@ export function defineMathGenerators() {
             return [`${valueA} ${op} ${valueB}`, order];
         }
 
-        return [`(${valueA} ${op} ${valueB})`, javascriptGenerator.ORDER_ATOMIC];
+        return [`(Number(${valueA}) ${op} Number(${valueB}))`, javascriptGenerator.ORDER_ATOMIC];
     };
 
     javascriptGenerator.forBlock["math_single"] = function (block) {

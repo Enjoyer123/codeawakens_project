@@ -126,6 +126,8 @@ exports.getAllLevelCategories = async (req, res) => {
       };
     });
 
+    // const categoriesWithCountmorethanzero = categoriesWithCount.filter(category => category.level_count > 0 || isAdmin);
+
     res.json({
       levelCategories: categoriesWithCount,
     });
@@ -264,6 +266,8 @@ exports.getLevelCategoryById = async (req, res) => {
 exports.createLevelCategory = async (req, res) => {
   try {
     const {
+      category_name,
+      description,
       item_enable,
       item,
       block_key,

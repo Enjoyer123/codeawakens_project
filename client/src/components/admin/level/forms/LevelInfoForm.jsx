@@ -6,6 +6,7 @@ const ALGO_TYPES = [
   { type: 'COINCHANGE', label: 'Coin Change' },
   { type: 'SUBSETSUM', label: 'Subset Sum' },
   { type: 'NQUEEN', label: 'N-Queen' },
+  { type: 'FIBONACCI', label: 'Fibonacci' },
   { type: 'EMEI', label: 'Emei Mountain (ง้อไบ๊)' }
 ];
 
@@ -40,6 +41,9 @@ const ALGO_PAYLOAD_TEMPLATES = {
   },
   NQUEEN: {
     n: 4
+  },
+  FIBONACCI: {
+    n: 5
   }
 };
 
