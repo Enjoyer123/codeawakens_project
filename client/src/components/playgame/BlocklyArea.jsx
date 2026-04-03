@@ -139,22 +139,18 @@ const BlocklyArea = ({
 
         {/* Tab Contents Container */}
         <div className="flex-1 relative bg-transparent overflow-hidden flex flex-col">
-          {activeTab === 'blocks' && hasPseudocode && (
-            <div className="h-[30%] min-h-[150px] shrink-0">
-              <PseudocodePanel
-                pattern={displayPattern}
-                matchedSteps={patternData?.threePartsMatch?.matchedParts || 0}
-                selectedBlockType={selectedBlockType}
-                currentLevel={currentLevel}
-              />
-            </div>
-          )}
-
           <div className="flex-1 relative">
             <BlocklyWorkspaceTab
               blocklyRef={blocklyRef}
               activeTab={activeTab}
             />
+            {activeTab === 'blocks' && hasPseudocode && (
+              <PseudocodePanel
+                pattern={displayPattern}
+                matchedSteps={patternData?.threePartsMatch?.matchedParts || 0}
+                selectedBlockType={selectedBlockType}
+              />
+            )}
           </div>
 
           {currentLevel?.textcode && (

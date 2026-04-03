@@ -52,43 +52,36 @@ const PatternMatchPanel = ({ patternData, currentLevel, currentWeaponData }) => 
         setShowHelp(open);
         if (open) setCurrentImageIndex(0);
       }}>
-        <DialogContent className="max-w-4xl bg-transparent border-0 shadow-none p-0 flex justify-center items-center outline-none">
-          <div className="relative flex items-center justify-center">
-            <button
-              onClick={() => setShowHelp(false)}
-              className="absolute -top-4 -right-4 bg-white text-black rounded-full w-8 h-8 font-bold border-2 border-black z-50 hover:bg-gray-200 flex items-center justify-center shadow-lg"
-            >
-              X
-            </button>
-
+        <DialogContent className="max-w-4xl bg-[#18113c] border border-purple-900/50 rounded-lg p-0 outline-none">
+          <div className="relative flex items-center justify-center p-3">
             <button
               onClick={prevImage}
-              className="absolute -left-12 bg-white/80 text-black rounded-full w-10 h-10 font-bold border-2 border-black z-40 hover:bg-white flex items-center justify-center shadow-lg transition-transform hover:scale-110"
+              className="absolute left-2 w-10 h-10 rounded-full bg-black/50 text-white text-3xl font-light pb-1 flex items-center justify-center hover:bg-black/70"
             >
-              &lt;
+              ‹
             </button>
 
             <img
               src={helpImages[currentImageIndex]}
               alt={`Pattern Description ${currentImageIndex + 1}`}
-              className="max-h-[85vh] w-auto rounded-lg shadow-2xl border-4 border-white"
+              className="max-h-[80vh] w-auto rounded"
             />
 
             <button
               onClick={nextImage}
-              className="absolute -right-12 bg-white/80 text-black rounded-full w-10 h-10 font-bold border-2 border-black z-40 hover:bg-white flex items-center justify-center shadow-lg transition-transform hover:scale-110"
+              className="absolute right-2 w-10 h-10 rounded-full bg-black/50 text-white text-3xl font-light pb-1 flex items-center justify-center hover:bg-black/70"
             >
-              &gt;
+              ›
             </button>
+          </div>
 
-            <div className="absolute -bottom-8 flex gap-2">
-              {helpImages.map((_, idx) => (
-                <div
-                  key={idx}
-                  className={`w-3 h-3 rounded-full border border-white ${idx === currentImageIndex ? 'bg-white' : 'bg-transparent'}`}
-                />
-              ))}
-            </div>
+          <div className="flex justify-center gap-1.5 pb-3">
+            {helpImages.map((_, idx) => (
+              <div
+                key={idx}
+                className={`w-1.5 h-1.5 rounded-full ${idx === currentImageIndex ? 'bg-purple-400' : 'bg-purple-800'}`}
+              />
+            ))}
           </div>
         </DialogContent>
       </Dialog>
