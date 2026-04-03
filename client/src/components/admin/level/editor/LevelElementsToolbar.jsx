@@ -13,7 +13,7 @@ const LevelElementsToolbar = ({ currentMode, selectedNode, formData, onSetMode, 
 
   // --- Special Algorithm Mode Detection (ใช้ algo_data แทน legacy columns) ---
   const algoType = formData.algo_data?.type || null;
-  const PURE_ALGO_TYPES = ['KNAPSACK', 'COINCHANGE', 'SUBSETSUM', 'NQUEEN'];
+  const PURE_ALGO_TYPES = ['KNAPSACK', 'COINCHANGE', 'SUBSETSUM', 'NQUEEN', 'FIBONACCI'];
   const isPureAlgo = algoType && PURE_ALGO_TYPES.includes(algoType);
   const isGraphAlgo = algoType === 'EMEI';
 

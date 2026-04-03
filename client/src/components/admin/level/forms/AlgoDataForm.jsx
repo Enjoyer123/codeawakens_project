@@ -6,6 +6,7 @@ import CoinChangeForm from '../algo_forms/CoinChangeForm';
 import KnapsackForm from '../algo_forms/KnapsackForm';
 import SubsetSumForm from '../algo_forms/SubsetSumForm';
 import NQueenForm from '../algo_forms/NQueenForm';
+import FibonacciForm from '../algo_forms/FibonacciForm';
 import EmeiForm from '../algo_forms/EmeiForm';
 
 /**
@@ -70,6 +71,7 @@ const AlgoDataForm = ({ algoType, data, onChange, showAlert }) => {
         'KNAPSACK': <KnapsackForm data={data} onChange={onChange} showAlert={showAlert} />,
         'SUBSETSUM': <SubsetSumForm data={data} onChange={onChange} showAlert={showAlert} />,
         'NQUEEN': <NQueenForm data={data} onChange={onChange} showAlert={showAlert} />,
+        'FIBONACCI': <FibonacciForm data={data} onChange={onChange} showAlert={showAlert} />,
         'EMEI': <EmeiForm data={data} onChange={onChange} showAlert={showAlert} />
     };
 

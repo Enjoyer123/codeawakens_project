@@ -156,6 +156,30 @@ const AlgoPreview = ({ algoType, data, backgroundImageUrl }) => {
         );
     }
 
+    // --- Fibonacci Preview ---
+    if (algoType === 'FIBONACCI') {
+        const n = data?.n;
+        return (
+            <div className="w-full h-full relative rounded-lg overflow-hidden" style={bgStyle}>
+                <div className="absolute inset-0 bg-black/40" />
+                <div className="relative z-10 flex flex-col items-center justify-center h-full gap-8">
+                    <h3 className="text-white/60 text-sm font-bold uppercase tracking-widest">Fibonacci Preview</h3>
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="w-32 h-32 rounded-2xl bg-blue-500/20 border-2 border-blue-400/40 flex flex-col items-center justify-center backdrop-blur-sm shadow-2xl">
+                            <span className="text-5xl font-black text-white">{n ?? '?'}</span>
+                            <span className="text-xs font-bold text-blue-300 mt-1 uppercase tracking-tighter">Target N</span>
+                        </div>
+                        <p className="text-white/50 text-xs text-center max-w-[250px] leading-relaxed">
+                            คำนวณหาค่า Fibonacci ลำดับที่ <span className="text-white font-bold">{n ?? 'n'}</span>
+                            <br />
+                            <span className="text-[10px] italic font-light opacity-80">(เช่น F(5) = 5, F(6) = 8)</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     // Fallback
     return (
         <div className="w-full h-full flex items-center justify-center bg-gray-900 rounded-lg">

@@ -93,7 +93,7 @@ const LevelCreateEdit = () => {
   // Detect level type for canvas switching (ใช้ algo_data แทน legacy columns)
   const algoType = formData.algo_data?.type || null;
   //DEMO FIBO
-  const PURE_ALGO_TYPES = ['KNAPSACK', 'COINCHANGE', 'SUBSETSUM', 'NQUEEN'];
+  const PURE_ALGO_TYPES = ['KNAPSACK', 'COINCHANGE', 'SUBSETSUM', 'NQUEEN', 'FIBONACCI'];
   const isPureAlgo = algoType && PURE_ALGO_TYPES.includes(algoType);
   const isGraphAlgo = algoType === 'EMEI';
 

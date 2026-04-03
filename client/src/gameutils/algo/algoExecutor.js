@@ -57,7 +57,7 @@ export async function executeAlgoCode(code, levelData, timeoutMs = 5000) {
         // Inject step counter + return capture
         const guardedCode = `
             let __stepCount = 0;
-            const __maxSteps = 50000;
+            const __maxSteps = 5000;
             function __guard() { if (++__stepCount > __maxSteps) throw new Error('Too many executions (infinite loop?)'); }
         ` + code + `\n try { return result; } catch(e) { return undefined; }`;
         const argNames = Object.keys(context);
