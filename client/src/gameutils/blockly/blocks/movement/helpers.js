@@ -5,19 +5,19 @@ import {
 } from '../../../shared/game/gameState';
 import { moveToNode as phaserMoveToNode } from '../../../movement/playerMovement';
 
-export async function turnLeft() {
-    const currentState = getCurrentGameState();
-    if (currentState.goalReached || currentState.moveCount >= currentState.maxMoves || currentState.isGameOver) return;
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    setCurrentGameState({ direction: (currentState.direction + 3) % 4 });
-}
+// export async function turnLeft() {
+//     const currentState = getCurrentGameState();
+//     if (currentState.goalReached || currentState.moveCount >= currentState.maxMoves || currentState.isGameOver) return;
+//     await new Promise((resolve) => setTimeout(resolve, 300));
+//     setCurrentGameState({ direction: (currentState.direction + 3) % 4 });
+// }
 
-export async function turnRight() {
-    const currentState = getCurrentGameState();
-    if (currentState.goalReached || currentState.moveCount >= currentState.maxMoves || currentState.isGameOver) return;
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    setCurrentGameState({ direction: (currentState.direction + 1) % 4 });
-}
+// export async function turnRight() {
+//     const currentState = getCurrentGameState();
+//     if (currentState.goalReached || currentState.moveCount >= currentState.maxMoves || currentState.isGameOver) return;
+//     await new Promise((resolve) => setTimeout(resolve, 300));
+//     setCurrentGameState({ direction: (currentState.direction + 1) % 4 });
+// }
 
 // Move to node function
 export async function moveToNode(targetNodeId) {

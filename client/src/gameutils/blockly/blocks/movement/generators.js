@@ -22,6 +22,11 @@ export function defineMovementGenerators() {
         return "await hit();\n";
     };
 
+    javascriptGenerator.forBlock["cast_spell"] = function (block) {
+        if (javascriptGenerator.isCleanMode) return "castSpell();\n";
+        return "await castSpell();\n";
+    };
+
     javascriptGenerator.forBlock["move_to_node"] = function (block) {
         const nodeId = javascriptGenerator.valueToCode(block, 'NODE_ID', javascriptGenerator.ORDER_ATOMIC) || '0';
         if (javascriptGenerator.isCleanMode) return `moveToNode(${nodeId});\n`;
@@ -32,6 +37,12 @@ export function defineMovementGenerators() {
         const path = javascriptGenerator.valueToCode(block, 'PATH', javascriptGenerator.ORDER_NONE) || '[]';
         if (javascriptGenerator.isCleanMode) return `moveAlongPath(${path});\n`;
         return `await moveAlongPath(${path});\n`;
+    };
+
+    javascriptGenerator.forBlock["say"] = function (block) {
+        const text = block.getFieldValue("TEXT");
+        if (javascriptGenerator.isCleanMode) return `say("${text}");\n`;
+        return `await say("${text}");\n`;
     };
 
 }

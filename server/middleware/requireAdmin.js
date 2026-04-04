@@ -3,6 +3,10 @@ const prisma = new PrismaClient();
 
 const requireAdmin = async (req, res, next) => {
   try {
+
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized: No user found" });
+    }
     const clerkId = req.user.id;
 
     const user = await prisma.user.findUnique({

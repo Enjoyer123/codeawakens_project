@@ -9,7 +9,7 @@ import { ScrollText, ChevronUp } from 'lucide-react';
  */
 
 const PseudocodePanel = ({ pattern, matchedSteps = 0, selectedBlockType = null }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const highlightRef = useRef(null);
 
   // ─── Data ────────────────────────────────────────────────────────
@@ -51,10 +51,10 @@ const PseudocodePanel = ({ pattern, matchedSteps = 0, selectedBlockType = null }
       <div
         key={i}
         className={`w-2 h-2 rounded-full transition-all duration-300 ${state === 'done'
-            ? 'bg-emerald-400'
-            : state === 'active'
-              ? 'bg-yellow-400 animate-pulse'
-              : 'bg-purple-900 border border-purple-700/50'
+          ? 'bg-emerald-400'
+          : state === 'active'
+            ? 'bg-yellow-400 animate-pulse'
+            : 'bg-purple-900 border border-purple-700/50'
           }`}
       />
     );

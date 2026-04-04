@@ -16,7 +16,7 @@ export function buildGraphContext(levelData, trace) {
         all_nodes,
         start: startNode,
         goal: goalNode,
-        
+
         /* ==========================================
            2. NEIGHBOR & TRAVERSAL HELPERS (DFS / BFS)
            ========================================== */
@@ -53,7 +53,7 @@ export function buildGraphContext(levelData, trace) {
                     const u = edge.from !== undefined ? edge.from : (edge.u !== undefined ? edge.u : edge[0]);
                     const v = edge.to !== undefined ? edge.to : (edge.v !== undefined ? edge.v : edge[1]);
                     const weight = edge.weight ?? edge.value ?? edge.w ?? edge[2] ?? 1;
-                    
+
                     if (String(u) === nodeKey && v !== undefined) {
                         neighborsWithWeight.push([v, weight]);
                     } else if (String(v) === nodeKey && u !== undefined) {
@@ -74,7 +74,7 @@ export function buildGraphContext(levelData, trace) {
                     neighborIds.push(neighbor);
                 }
             }
-            
+
             trace.push({ action: 'visit', node: currentNode, neighbors: neighborIds });
             return neighborsWithWeight;
         },
@@ -85,7 +85,7 @@ export function buildGraphContext(levelData, trace) {
          */
         getAllEdges: (graph) => {
             const source = Array.isArray(graph) ? graph : (levelData.edges || []);
-            
+
             return source.map(edge => {
                 // กรณีที่เป็น Array เช่น [0, 1, 10]
                 if (Array.isArray(edge)) {
@@ -94,7 +94,7 @@ export function buildGraphContext(levelData, trace) {
                     const weight = Number(edge[2] ?? 1);
                     return [from, to, weight];
                 }
-                
+
                 // กรณีที่เป็น Object เช่น { from: 0, to: 1, weight: 10 }
                 const from = edge.from ?? edge.u;
                 const to = edge.to ?? edge.v;
@@ -177,7 +177,7 @@ export function buildGraphContext(levelData, trace) {
          */
         findMinIndex: async (list, ex) => {
             if (!Array.isArray(list) || list.length === 0) return -1;
-            
+
             let minIndex = -1;
             let minValue = Infinity;
 
@@ -187,7 +187,7 @@ export function buildGraphContext(levelData, trace) {
 
                 const item = list[i];
                 const value = Array.isArray(item) ? Number(item[0]) : Number(item);
-                
+
                 // ข้ามถ้าไม่ใช่ตัวเลข
                 if (isNaN(value)) continue;
 
@@ -204,7 +204,7 @@ export function buildGraphContext(levelData, trace) {
          */
         findMaxIndex: async (list, ex) => {
             if (!Array.isArray(list) || list.length === 0) return -1;
-            
+
             let maxIndex = -1;
             let maxValue = -Infinity;
 
@@ -214,7 +214,7 @@ export function buildGraphContext(levelData, trace) {
 
                 const item = list[i];
                 const value = Array.isArray(item) ? Number(item[0]) : Number(item);
-                
+
                 // ข้ามถ้าไม่ใช่ตัวเลข
                 if (isNaN(value)) continue;
 
@@ -232,9 +232,13 @@ export function buildGraphContext(levelData, trace) {
         listPush: (list, item) => { if (Array.isArray(list)) list.push(item); },
         listSet: (list, idx, val) => { if (Array.isArray(list)) list[idx] = val; },
         dictSet: (dict, key, val) => { if (dict && typeof dict === 'object') dict[key] = val; },
-        
+
         // Expose state getters for generated code if needed
         getCurrentGameState: () => ({ levelData, currentNodeId: 0 }),
+
+        say: (text) => {
+            trace.push({ action: 'say', text });
+        }
     };
 
     return context;
@@ -248,23 +252,23 @@ export function buildGraphContext(levelData, trace) {
  */
 function buildGraphMap(nodes, edges) {
     const map = {};
-    
+
     // ตั้งต้นให้ทุก Node มี Array ว่างๆ เตรียมเก็บเพื่อนบ้าน
     for (const node of nodes) {
         map[node.id] = [];
     }
-    
+
     // วนลูปเชื่อมเส้น (รองรับรูปแบบ Object แปลกๆ จาก DB)
     for (const edge of edges) {
         const from = edge.from ?? edge.u;
         const to = edge.to ?? edge.v;
         const weight = edge.weight ?? edge.value ?? edge.w ?? 1;
-        
+
         if (from !== undefined && to !== undefined) {
             // ป้องกัน undefined ถ้า database ข้อมูลหลุด
             if (!map[from]) map[from] = [];
             if (!map[to]) map[to] = [];
-            
+
             // ป้องกันเส้นเชื่อมซ้ำ
             const isAlreadyConnectedFrom = map[from].some(e => (Array.isArray(e) ? e[0] : e) === to);
             if (!isAlreadyConnectedFrom) {
@@ -277,6 +281,6 @@ function buildGraphMap(nodes, edges) {
             }
         }
     }
-    
+
     return map;
 }
