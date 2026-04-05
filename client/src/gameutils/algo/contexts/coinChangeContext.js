@@ -18,7 +18,14 @@ export function injectCoinChangeStubs(context, levelData, trace) {
     context.selection = [];  // mutable shared state สำหรับ real backtracking (push/pop)
 
     /* ==========================================
-       2. VISUAL STUBS (Trace Recorders)
+       2. NEW STANDARDIZED TRACE RECORDERS (BT)
+       ========================================== */
+    context.trackCoinDecision = (type, coinIndex) => {
+        trace.push({ action: type, index: coinIndex });
+    };
+
+    /* ==========================================
+       3. LEGACY STUBS (keep for old DP levels)
        ========================================== */
     context.addWarriorToSelectionVisual = async (warrior) => {
         trace.push({ action: 'select_coin', coin: warrior });
