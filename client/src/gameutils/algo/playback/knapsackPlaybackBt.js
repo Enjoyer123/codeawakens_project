@@ -118,13 +118,51 @@ async function playTreeDisplay(scene, trace, options) {
             playSound('run');
             await sleep(baseDelay * 0.6);
         }
+        else if (step.action === 'prune_skip') {
+            const idx = step.index;
+            const parentId = path[path.length - 1];
+
+            const parentWeight = parentId !== null && tree.nodes[parentId].weight !== undefined ? tree.nodes[parentId].weight : 0;
+            const parentValue = parentId !== null ? tree.nodes[parentId].amount : 0;
+
+            const currentWeight = parentWeight;
+            const currentValue = parentValue;
+
+            const item = items[idx];
+            if (item && item.sprite) {
+                const flash = scene.add.rectangle(item.sprite.x, item.sprite.y, 60, 60, 0xFF0000, 0.6).setAlpha(0.3).setDepth(12); // Red flash for prune
+                scene.tweens.add({ targets: flash, alpha: 0, duration: 400 / animationController.speed, onComplete: () => flash.destroy() });
+            }
+
+            // 1. วาดกิ่ง Pick ที่โดน Prune ทิ้ง (สีแดง มี ❌)
+            const pickValue = currentValue + (item ? item.price : 0);
+            const deadPickId = tree.addNode(parentId, idx, pickValue, `Pick (Pruned)`);
+            tree.setState(deadPickId, 'pruned');
+
+            // 2. วาดกิ่ง Skip ที่ค้นหาต่อ (กิ่งปกติ)
+            const skipId = tree.addNode(parentId, -1, currentValue, `Skip`);
+            tree.nodes[skipId].weight = currentWeight;
+            tree.setState(skipId, 'active');
+
+            statusText.setText(`หนักเกิน! ตัดกิ่ง Pick ทิ้ง ❌ และบังคับข้าม (ชิ้น ${idx + 1})`);
+            subText.setText(`มูลค่า $${currentValue}`);
+
+            path.push(skipId); // เดินหน้าต่อที่กิ่ง Skip
+
+            tree.relayout();
+            tree.redraw();
+            playSound('run');
+            await sleep(baseDelay * 0.8);
+        }
         else if (step.action === 'remove') {
+            // Knapsack iterate ย้อนกลับ (2→1→0) ต่างจาก subset sum (0→1→2)
+            // แต่ละ remove ตรงกับ 1 pick/skip → pop ทีละ 1 เสมอ
             const deadId = path.pop();
             if (deadId !== undefined && tree.nodes[deadId]?.state !== 'solved') {
                 tree.setState(deadId, 'dead');
-                tree.redraw();
             }
 
+            tree.redraw();
             statusText.setText('ย้อนกลับไปทางเลือกก่อนหน้า');
             await sleep(baseDelay * 0.4);
         }

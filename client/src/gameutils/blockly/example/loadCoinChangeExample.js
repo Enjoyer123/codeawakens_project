@@ -139,9 +139,6 @@ const coinChangeExampleXml = `<xml xmlns="https://developers.google.com/blockly/
                                 </next>
                               </block>
                             </next>
-                          </block>
-                        </statement>
-                        <next>
                           <!-- exclude = coinChange(amount, coins, index+1) -->
                           <block type="variables_set" id="cc_set_exclude_call">
                             <field name="VAR">exclude</field>
@@ -281,7 +278,7 @@ export function loadCoinChangeExampleBlocks(workspace) {
         Blockly.Xml.domToWorkspace(xmlDom, workspace);
 
         // Ensure variables exist
-        const variableNames = ['amount', 'coins', 'index', 'coin', 'include', 'exclude', 'monster_power', 'warriors', 'result'];
+        const variableNames = ['amount', 'coins', 'index', 'coin', 'include', 'exclude', 'monster_power', 'warriors', 'result', 'selection', 'minCoins'];
         variableNames.forEach(varName => {
           try {
             // Check if variable already exists

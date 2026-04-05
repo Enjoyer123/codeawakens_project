@@ -35,8 +35,56 @@ const knapsackExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
               </block>
             </value>
             <statement name="DO0">
-              <block type="procedures_return">
-                <value name="VALUE"><block type="math_number"><field name="NUM">0</field></block></value>
+              <!-- Snapshot bag if better: sumBag = SUM(bag), if sumBag > bestValue → clone -->
+              <block type="variables_set">
+                <field name="VAR">sumBag</field>
+                <value name="VALUE">
+                  <block type="math_on_list">
+                    <mutation op="SUM"></mutation>
+                    <field name="OP">SUM</field>
+                    <value name="LIST"><block type="variables_get"><field name="VAR">bag</field></block></value>
+                  </block>
+                </value>
+                <next>
+                  <block type="controls_if">
+                    <value name="IF0">
+                      <block type="logic_compare">
+                        <field name="OP">GT</field>
+                        <value name="A"><block type="variables_get"><field name="VAR">sumBag</field></block></value>
+                        <value name="B"><block type="variables_get"><field name="VAR">bestValue</field></block></value>
+                      </block>
+                    </value>
+                    <statement name="DO0">
+                      <block type="variables_set">
+                        <field name="VAR">bestValue</field>
+                        <value name="VALUE"><block type="variables_get"><field name="VAR">sumBag</field></block></value>
+                        <next>
+                          <block type="variables_set">
+                            <field name="VAR">bestBag</field>
+                            <value name="VALUE"><block type="lists_create_empty"></block></value>
+                            <next>
+                              <block type="controls_forEach">
+                                <field name="VAR">x</field>
+                                <value name="LIST"><block type="variables_get"><field name="VAR">bag</field></block></value>
+                                <statement name="DO">
+                                  <block type="lists_add_item">
+                                    <value name="LIST"><block type="variables_get"><field name="VAR">bestBag</field></block></value>
+                                    <value name="ITEM"><block type="variables_get"><field name="VAR">x</field></block></value>
+                                  </block>
+                                </statement>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </statement>
+                    <next>
+                      <block type="procedures_return">
+                        <value name="VALUE"><block type="math_number"><field name="NUM">0</field></block></value>
+                      </block>
+                    </next>
+                  </block>
+                </next>
               </block>
             </statement>
             <next>
@@ -54,7 +102,7 @@ const knapsackExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
                   </block>
                 </value>
                 <statement name="DO0">
-                  <block type="knapsack_skip_item">
+                  <block type="knapsack_prune_skip_item">
                     <value name="ITEM_INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
                     <next>
                       <block type="variables_set">
@@ -70,6 +118,7 @@ const knapsackExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
                         </value>
                         <next>
                           <block type="knapsack_remove_item">
+                            <value name="ITEM_INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
                             <next>
                               <block type="procedures_return">
                                 <value name="VALUE"><block type="variables_get"><field name="VAR">res_overweight</field></block></value>
@@ -106,7 +155,18 @@ const knapsackExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
                     </value>
                     <next>
                       <block type="knapsack_remove_item">
+                        <value name="ITEM_INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
                         <next>
+                          <!-- REAL BACKTRACK: push v[i] to bag -->
+                          <block type="lists_add_item">
+                            <value name="LIST"><block type="variables_get"><field name="VAR">bag</field></block></value>
+                            <value name="ITEM">
+                              <block type="lists_get_at_index">
+                                <value name="LIST"><block type="variables_get"><field name="VAR">v</field></block></value>
+                                <value name="INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
+                              </block>
+                            </value>
+                            <next>
                           <block type="knapsack_pick_item">
                             <value name="ITEM_INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
                             <next>
@@ -152,7 +212,12 @@ const knapsackExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
                               </block>
                             </value>
                             <next>
+                              <!-- REAL BACKTRACK: pop from bag -->
+                              <block type="lists_remove_last">
+                                <value name="LIST"><block type="variables_get"><field name="VAR">bag</field></block></value>
+                                <next>
                               <block type="knapsack_remove_item">
+                                <value name="ITEM_INDEX"><block type="variables_get"><field name="VAR">i</field></block></value>
                                 <next>
                                   <block type="procedures_return">
                                     <value name="VALUE">
@@ -171,6 +236,10 @@ const knapsackExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
                                   </block>
                                 </next>
                               </block>
+                                </next>
+                              </block>
+                            </next>
+                          </block>
                             </next>
                           </block>
                         </next>
@@ -188,13 +257,12 @@ const knapsackExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
     </statement>
   </block>
 
+  <!-- Main: _unused = knapsack(...) → result = bestBag -->
   <block type="variables_set" x="50" y="600">
-    <field name="VAR">result</field>
+    <field name="VAR">_unused</field>
     <value name="VALUE">
       <block type="procedures_callreturn">
-        <mutation name="knapsack">
-          <arg name="w"></arg><arg name="v"></arg><arg name="i"></arg><arg name="j"></arg>
-        </mutation>
+        <mutation name="knapsack"><arg name="w"></arg><arg name="v"></arg><arg name="i"></arg><arg name="j"></arg></mutation>
         <value name="ARG0"><block type="variables_get"><field name="VAR">weights</field></block></value>
         <value name="ARG1"><block type="variables_get"><field name="VAR">values</field></block></value>
         <value name="ARG2">
@@ -207,6 +275,14 @@ const knapsackExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
         <value name="ARG3"><block type="variables_get"><field name="VAR">capacity</field></block></value>
       </block>
     </value>
+    <next>
+      <block type="variables_set">
+        <field name="VAR">result</field>
+        <value name="VALUE">
+          <block type="variables_get"><field name="VAR">bestBag</field></block>
+        </value>
+      </block>
+    </next>
   </block>
 </xml>`;
 
@@ -512,7 +588,7 @@ export function loadKnapsackExampleBlocks(workspace, type = 'BACKTRACK') {
         const xmlDom = Blockly.utils.xml.textToDom(xmlToLoad);
         Blockly.Xml.domToWorkspace(xmlDom, workspace);
 
-        const varNames = ['w', 'v', 'i', 'j', 'weights', 'values', 'n', 'capacity', 'result', 'without_item', 'with_item', 'dp', 'r', 'c', 'rowArr', 'currRow', 'prevRow', 'wi', 'vi', 'dp_i1_w', 'dp_i1_w_wi'];
+        const varNames = ['w', 'v', 'i', 'j', 'weights', 'values', 'n', 'capacity', 'result', 'without_item', 'with_item', 'bag', 'bestValue', 'bestBag', 'sumBag', 'x', '_unused', 'res_overweight', 'dp', 'r', 'c', 'rowArr', 'currRow', 'prevRow', 'wi', 'vi', 'dp_i1_w', 'dp_i1_w_wi'];
         varNames.forEach(v => {
           if (workspace.getVariableMap()) {
             if (!workspace.getVariable(v)) workspace.createVariable(v);

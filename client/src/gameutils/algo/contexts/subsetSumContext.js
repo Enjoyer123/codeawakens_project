@@ -12,6 +12,7 @@ export function injectSubsetSumStubs(context, levelData, trace) {
        ========================================== */
     context.warriors = payload.warriors || [];
     context.target_sum = payload.target_sum || 0;
+    context.chosen = [];  // mutable shared state สำหรับ real backtracking (push/pop)
 
     /* ==========================================
        2. TRACE RECORDERS
@@ -25,6 +26,9 @@ export function injectSubsetSumStubs(context, levelData, trace) {
     };
     context.recordExclude = (index) => {
         trace.push({ action: 'exclude', index });
+    };
+    context.recordPruneExclude = (index) => {
+        trace.push({ action: 'prune_exclude', index });
     };
     context.recordReset = (index) => {
         trace.push({ action: 'reset', index });

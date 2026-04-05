@@ -15,6 +15,7 @@ export function injectCoinChangeStubs(context, levelData, trace) {
        ========================================== */
     context.monster_power = Math.round(Number(payload.monster_power ?? payload.amount ?? 0));
     context.warriors = (payload.warriors || payload.coins || []).map(w => Math.round(Number(w)));
+    context.selection = [];  // mutable shared state สำหรับ real backtracking (push/pop)
 
     /* ==========================================
        2. VISUAL STUBS (Trace Recorders)
