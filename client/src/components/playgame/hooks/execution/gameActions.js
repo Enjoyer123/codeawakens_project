@@ -106,8 +106,54 @@ export function createGameActions(setters, currentLevel, isPreview) {
         return true;
     };
 
+    const castSpell = async () => {
+        console.log("Cast Spell");
+    };
+
+    const say = async (text) => {
+        const scene = getCurrentGameState().currentScene;
+        if (!scene || !scene.player) return;
+
+        // // 1. ถ้าตัวละครมีข้อความเก่าค้างหัวอยู่ ให้ทำลายทิ้งก่อนจะได้ไม่ทับกัน
+        if (scene.player.speechBubble) {
+            scene.player.speechBubble.destroy();
+        }
+
+        // 2. สร้างข้อความใหม่
+        const bubble = scene.add.text(scene.player.x, scene.player.y - 90, text, {
+            fontSize: '60px', fill: '#ffffff', backgroundColor: '#ff0505ff', padding: { x: 5, y: 5 }
+        });
+        bubble.setDepth(100);
+        scene.player.speechBubble = bubble; // จำไว้ว่านี่คือกรอบข้อความปัจจุบัน
+
+        // 3. ใช้ Event Listener ผูกติดการขยับ! เพื่อให้ข้อความแกน X, Y วิ่งตาม Player ทุก Frame
+        const updateBubbleTracking = () => {
+            // ถ้ากรอบข้อความพังไปแล้ว ให้เลิกตาม
+            if (!bubble.active) {
+                scene.events.off('update', updateBubbleTracking);
+                return;
+            }
+            // อัปเดตตำแหน่งให้ตามหัวตัวละคร (จัดกึ่งกลางความกว้างของข้อความด้วย)
+            bubble.x = scene.player.x - (bubble.width / 2);
+            bubble.y = scene.player.y - 90;
+        };
+        scene.events.on('update', updateBubbleTracking);
+
+        // 4. ตั้งเวลาทำลายตัวเอง (สมมติให้อยู่ 3 วินาที)
+        // สังเกตว่าเราใช้ setTimeout ธรรมดา "โดยไม่ใส่ await" นำหน้า! 
+        // แปลว่าพอมันเสกตัวหนังสือปุ๊บ ฟังก์ชันจะจบและรันโค้ดบรรทัดต่อไป (เช่นเดิน) ทันที!
+        setTimeout(() => {
+            if (bubble.active) {
+                bubble.destroy();
+                scene.events.off('update', updateBubbleTracking);
+            }
+        }, 3000);
+    };
+
+
+
     return {
         moveForward, turnLeft, turnRight, hit,
-        foundMonster, nearPit, atGoal
+        foundMonster, nearPit, atGoal, castSpell, say
     };
 }

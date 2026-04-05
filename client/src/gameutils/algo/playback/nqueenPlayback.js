@@ -8,6 +8,7 @@
 import { animationController, createTraceBuffer } from './AnimationController';
 import { createTreeRenderer } from './TreeRenderer';
 import { playSound } from '../../sound/soundManager';
+import { createGameActions } from '../../../components/playgame/hooks/execution/gameActions'
 
 /**
  * Router: เรียก Display Mode ที่ต้องการ (แค่นี้เท่านั้น ไม่ทำอะไรเพิ่ม)
@@ -290,6 +291,15 @@ async function playClassicDisplay(scene, trace, options = {}) {
                 clearCellOverlay(r, c);
                 await sleep(baseDelay * 0.5);
                 break;
+            }
+            case 'say': {
+                // สร้างกล่องเครื่องมือจำลอง 
+                const actions = createGameActions({}, null, false);
+
+                // หยิบคำสั่ง say ออกมาใช้
+                actions.say(step.text);
+                break;
+
             }
 
             default:

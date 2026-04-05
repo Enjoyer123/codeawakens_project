@@ -9,7 +9,7 @@ const CATEGORY_CONFIG = {
     blocks: [
       "move_forward", "turn_left", "turn_right", "hit",
       "move_to_node", "move_along_path",
-      "nqueen_place", "nqueen_remove"
+      "nqueen_place", "nqueen_remove", "cast_spell", "say"
     ]
   },
 

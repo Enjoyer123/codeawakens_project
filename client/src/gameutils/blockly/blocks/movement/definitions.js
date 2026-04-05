@@ -42,6 +42,16 @@ export function defineMovementBlocks() {
     },
   };
 
+  Blockly.Blocks["cast_spell"] = {
+    init: function () {
+      this.appendDummyInput().appendField("Cast Spell");
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setStyle('hat_blocks'); // Red (Attack/HP)
+      this.setTooltip("ร่ายเวทมนตร์");
+    },
+  };
+
   Blockly.Blocks["move_to_node"] = {
     init: function () {
       this.appendValueInput("NODE_ID")
@@ -64,6 +74,16 @@ export function defineMovementBlocks() {
       this.setNextStatement(true, null);
       this.setStyle('loop_blocks');
       this.setTooltip("เดินตาม path ที่กำหนด (list of nodes)");
+    },
+  };
+
+  Blockly.Blocks["say"] = {
+    init: function () {
+      this.appendDummyInput().appendField("Say").appendField(new Blockly.FieldTextInput("Hello!"), "TEXT");
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setStyle('hat_blocks');
+      this.setTooltip("พูดข้อความ");
     },
   };
 

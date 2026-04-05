@@ -6,7 +6,7 @@
  * - เส้นจางเป็นเทา = ทางตัน (backtrack)
  * - เส้นสีฟ้า = คำตอบสุดท้าย
  */
-
+import { createGameActions } from '../../../components/playgame/hooks/execution/gameActions'
 import Phaser from 'phaser';
 import { updateWeaponPosition } from '../../combat/weaponEffects';
 import { animationController, createTraceBuffer } from './AnimationController';
@@ -53,6 +53,15 @@ async function playDfsBfsDisplay(scene, trace, options = {}) {
     for await (const step of createTraceBuffer(trace)) {
 
         switch (step.action) {
+            case 'say': {
+                // สร้างกล่องเครื่องมือจำลอง 
+                const actions = createGameActions({}, null, false);
+
+                // หยิบคำสั่ง say ออกมาใช้
+                actions.say(step.text);
+                break;
+
+            }
             case 'show_path': {
                 if (!step.path || step.path.length === 0) break;
 
