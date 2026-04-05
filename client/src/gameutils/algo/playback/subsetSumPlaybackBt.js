@@ -112,12 +112,42 @@ async function playTreeDisplay(scene, trace, options) {
             playSound('run');
             await sleep(baseDelay * 0.6);
         }
-        else if (step.action === 'reset' || step.action === 'backtrack') {
-            const deadId = path.pop();
+        else if (step.action === 'prune_exclude') {
+            const idx = step.index;
+            const parentId = path[path.length - 1];
+            
+            // Flash highlight like exclude but with Red
+            const warrior = warriors[idx];
+            if (warrior && warrior.sprite) {
+                const flash = scene.add.rectangle(warrior.sprite.x, warrior.sprite.y, 60, 60, 0xFF0000, 0.6).setAlpha(0.3).setDepth(12);
+                scene.tweens.add({ targets: flash, alpha: 0, duration: 400 / animationController.speed, onComplete: () => flash.destroy() });
+            }
 
-            if (deadId !== undefined && tree.nodes[deadId]?.state !== 'solved') {
-                tree.setState(deadId, 'dead');
-                tree.redraw();
+            // 1. วาดกิ่ง Include ที่โดน Prune ทิ้ง (ป้ายเป็นแค่ +power ธรรมดาเพื่อลดการทับซ้อน)
+            const includeSum = currentSum + (warrior ? warrior.power : 0);
+            const edgeText = warrior ? `+${warrior.power}` : '+0';
+            const deadIncludeId = tree.addNode(parentId, idx, includeSum, edgeText);
+            tree.setState(deadIncludeId, 'pruned');
+
+            // 2. ไม่ต้องวาดกิ่ง Exclude เพราะตัว Trace จะทำการยิงคำสั่ง 'exclude' ตามมาติดๆ อยู่แล้ว
+            // ทำให้ไม่เกิด Node ซ้ำซ้อน และ Path ไม่ขยับ (เพราะเราถือว่าตายใบนี้)
+
+            statusText.setText(`ผลรวมเกินเป้าหมาย! ตัดกิ่ง Include ทิ้ง ❌ และเตรียมข้ามชิ้น ${idx + 1}`);
+
+            tree.relayout();
+            tree.redraw();
+            playSound('run'); // or error
+            await sleep(baseDelay * 0.8);
+        }
+        else if (step.action === 'reset' || step.action === 'backtrack') {
+            // Pop จนถึง depth ที่ถูกต้อง เพื่อให้ exclude node เป็น sibling ของ include node
+            const targetDepth = step.index + 1;
+
+            while (path.length > targetDepth) {
+                const deadId = path.pop();
+                if (deadId !== undefined && tree.nodes[deadId]?.state !== 'solved') {
+                    tree.setState(deadId, 'dead');
+                }
             }
 
             // Restore currentSum from parent
@@ -126,7 +156,8 @@ async function playTreeDisplay(scene, trace, options) {
                 currentSum = tree.nodes[parentId].amount;
             }
 
-            statusText.setText('ย้อนกลับไปทางเลือกก่อนหน้า')
+            tree.redraw();
+            statusText.setText('ย้อนกลับไปทางเลือกก่อนหน้า');
             await sleep(baseDelay * 0.4);
         }
         else if (step.action === 'consider') {
@@ -221,3 +252,4 @@ async function playTreeDisplay(scene, trace, options) {
         await sleep(baseDelay * 2.0);
     }
 }
+

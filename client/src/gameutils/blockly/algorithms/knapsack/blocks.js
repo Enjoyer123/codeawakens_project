@@ -18,7 +18,8 @@ export function defineKnapsackVisualBlocks() {
   // Remove an item (take out of bag)
   Blockly.Blocks["knapsack_remove_item"] = {
     init: function () {
-      this.appendDummyInput()
+      this.appendValueInput("ITEM_INDEX")
+        .setCheck("Number")
         .appendField("Remove last item from bag");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
@@ -50,6 +51,19 @@ export function defineKnapsackVisualBlocks() {
       this.setNextStatement(true, null);
       this.setColour(0);
       this.setTooltip("ข้ามสิ่งของชิ้นนี้ (ไม่หยิบ - บันทึก Track)");
+    },
+  };
+
+  // Prune Pick & Skip (Overweight)
+  Blockly.Blocks["knapsack_prune_skip_item"] = {
+    init: function () {
+      this.appendValueInput("ITEM_INDEX")
+        .setCheck("Number")
+        .appendField("Prune 'Pick' & Skip");
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setColour(0);
+      this.setTooltip("น้ำหนักเกินจึงตัดกิ่ง Pick ทิ้ง (Prune) สร้างโหนด ❌ และทำงานกิ่ง Skip แทน");
     },
   };
 

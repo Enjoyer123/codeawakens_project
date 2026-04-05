@@ -50,6 +50,18 @@ export function defineSubsetSumVisualBlocks() {
     },
   };
 
+  Blockly.Blocks["subset_sum_prune_exclude"] = {
+    init: function () {
+      this.appendValueInput("WARRIOR_INDEX")
+        .setCheck("Number")
+        .appendField("Prune 'Include' & Exclude");
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setColour(260);
+      this.setTooltip("ผลรวมเกินจึงตัดกิ่ง Include ทิ้ง (Prune) สร้างโหนด ❌ และทำงานกิ่ง Exclude แทน");
+    },
+  };
+
   Blockly.Blocks["subset_sum_dp_update"] = {
     init: function () {
       this.appendValueInput("INDEX")

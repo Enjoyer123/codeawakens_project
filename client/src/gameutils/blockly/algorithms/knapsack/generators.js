@@ -7,7 +7,8 @@ export function defineKnapsackGenerators() {
     };
 
     javascriptGenerator.forBlock["knapsack_remove_item"] = function (block) {
-        return `trackKnapsackDecision('remove');\n`;
+        const itemIndex = javascriptGenerator.valueToCode(block, 'ITEM_INDEX', javascriptGenerator.ORDER_NONE) || '0';
+        return `trackKnapsackDecision('remove', ${itemIndex});\n`;
     };
 
     javascriptGenerator.forBlock["knapsack_consider_item"] = function (block) {
@@ -18,6 +19,11 @@ export function defineKnapsackGenerators() {
     javascriptGenerator.forBlock["knapsack_skip_item"] = function (block) {
         const itemIndex = javascriptGenerator.valueToCode(block, 'ITEM_INDEX', javascriptGenerator.ORDER_NONE) || '0';
         return `trackKnapsackDecision('skip', ${itemIndex});\n`;
+    };
+
+    javascriptGenerator.forBlock["knapsack_prune_skip_item"] = function (block) {
+        const itemIndex = javascriptGenerator.valueToCode(block, 'ITEM_INDEX', javascriptGenerator.ORDER_NONE) || '0';
+        return `trackKnapsackDecision('prune_skip', ${itemIndex});\n`;
     };
 
     javascriptGenerator.forBlock["knapsack_dp_update"] = function (block) {

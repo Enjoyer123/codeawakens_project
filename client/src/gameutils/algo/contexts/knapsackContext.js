@@ -17,6 +17,9 @@ export function injectKnapsackStubs(context, levelData, trace) {
     context.values = items.map(i => i.price);
     context.n = items.length;
     context.capacity = capacity;
+    context.bag = [];  // mutable shared state สำหรับ real backtracking (push/pop)
+    context.bestValue = 0;   // ค่าสูงสุดที่เจอ
+    context.bestBag = [];    // snapshot ของ bag ณ จุดที่ดีที่สุด
 
     /* ==========================================
        2. VISUAL STUBS (Trace Recorders)

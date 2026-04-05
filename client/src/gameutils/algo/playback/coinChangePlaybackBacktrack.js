@@ -1,6 +1,7 @@
 /**
  * coinChangePlaybackBacktrack.js
- * เลน Animation แบบ Backtracking (Stacking Bar / Tree)
+ * เล่น Animation แบบ Backtracking (Binary Decision Tree)
+ * Pattern เดียวกันกับ knapsackPlaybackBt.js / subsetSumPlaybackBt.js
  */
 import { animationController, createTraceBuffer } from './AnimationController';
 import { createTreeRenderer } from './TreeRenderer';
@@ -20,62 +21,64 @@ async function playTreeDisplay(scene, trace, options) {
     const canvasW = scene.scale.width || 800;
     const canvasH = scene.scale.height || 600;
 
-    // Status text (ย้ายไปอยู่ใต้บอสด้านขวา ตามที่ขอ)
+    // Status text
     const statusText = scene.add.text(1050, 420, 'เริ่มสำรวจทางเลือก...', {
         fontSize: '20px', color: '#FFFF00', fontStyle: 'bold', stroke: '#000', strokeThickness: 4, align: 'center', wordWrap: { width: 220 }
     }).setOrigin(0.5, 0).setDepth(20);
 
-    // สร้าง Tree + Root ให้อยู่ต่ำลงมานิดหน่อย
+    // สร้าง Tree + Root
     const tree = createTreeRenderer(scene, canvasW, canvasH);
-    tree.container.setY(30); // เลื่อนต้นไม้ทั้งก้อนลงมา 60 px
+    tree.container.setY(30);
 
+    // Root node → amount ที่ต้องทอน
     const rootId = tree.addNode(null, -1, targetAmount);
     tree.setState(rootId, 'active');
-    const path = [rootId];  // stack เก็บ active path
-    const currentCoins = []; // เก็บ coinIdx ที่เลือกใน path ปัจจุบัน
+    const path = [rootId];
+    const currentCoins = [];
     let bestSolution = null;
+    let bestSolutionNodeId = null;
 
     tree.relayout();
     tree.redraw();
 
-    // วน trace
     for await (const step of createTraceBuffer(trace)) {
         if (!scene?.scene?.isActive(scene.scene.key)) break;
 
-        if (step.action === 'select_coin') {
-            const coinIdx = step.coin;
+        if (step.action === 'pick') {
+            const idx = step.index;
             const parentId = path[path.length - 1];
             const parent = tree.nodes[parentId];
-            const power = warriors[coinIdx]?.power ?? 0;
+            const power = warriors[idx]?.power ?? 0;
             const newAmt = parent.amount - power;
 
-            // เพิ่ม node
-            const id = tree.addNode(parentId, coinIdx, newAmt, `-${power}`);
-
-            // Flash highlight over the setup warrior
-            const w = warriors[coinIdx];
-            if (w) {
+            // Flash highlight over the warrior
+            const w = warriors[idx];
+            if (w && w.sprite) {
+                const flash = scene.add.rectangle(w.sprite ? w.sprite.x : w.x, w.sprite ? w.sprite.y : w.y, 60, 60, 0x00FFFF, 0.6).setDepth(12);
+                scene.tweens.add({ targets: flash, alpha: 0, duration: 400 / animationController.speed, onComplete: () => flash.destroy() });
+            } else if (w) {
                 const flash = scene.add.rectangle(w.x, w.y, 60, 60, 0x00FFFF, 0.6).setDepth(12);
                 scene.tweens.add({ targets: flash, alpha: 0, duration: 400 / animationController.speed, onComplete: () => flash.destroy() });
             }
 
-            currentCoins.push(coinIdx);
+            const id = tree.addNode(parentId, idx, newAmt, `-${power}`);
+            tree.nodes[id].isPick = true; // Mark that this node picked a coin
 
-            // กำหนดสถานะ
+            currentCoins.push(idx);
+
             if (newAmt === 0) {
                 tree.setState(id, 'solved');
-                statusText.setText(`ผลรวมพอดี ใช้ ${power}`)
-
-                // ตรวจสอบว่านี่คือชุดคำตอบที่สั้นที่สุดหรือไม่
+                statusText.setText(`ผลรวมพอดี! ใช้ ${power}`);
                 if (!bestSolution || currentCoins.length < bestSolution.length) {
                     bestSolution = [...currentCoins];
+                    bestSolutionNodeId = id;
                 }
             } else if (newAmt < 0) {
                 tree.setState(id, 'dead');
-                statusText.setText(`เกินเป้าหมาย`)
+                statusText.setText(`เกินเป้าหมาย`);
             } else {
                 tree.setState(id, 'active');
-                statusText.setText(`เลือก ${power} (ขาดอีก ${newAmt})`)
+                statusText.setText(`เลือก ${power} (ขาดอีก ${newAmt})`);
             }
 
             path.push(id);
@@ -84,40 +87,120 @@ async function playTreeDisplay(scene, trace, options) {
             playSound('run');
             await sleep(baseDelay * 0.6);
         }
+        else if (step.action === 'skip') {
+            const idx = step.index;
+            const parentId = path[path.length - 1];
+            const parentAmt = parentId !== null ? tree.nodes[parentId].amount : targetAmount;
 
-        else if (step.action === 'remove_coin') {
-            const deadId = path.pop();
-            currentCoins.pop();
-
-            if (deadId !== undefined && tree.nodes[deadId].state !== 'solved') {
-                tree.setState(deadId, 'dead');
-                tree.redraw();
+            // Flash highlight (dimmer for skip)
+            const w = warriors[idx];
+            if (w && w.sprite) {
+                const flash = scene.add.rectangle(w.sprite.x, w.sprite.y, 60, 60, 0x00FFFF, 0.6).setAlpha(0.3).setDepth(12);
+                scene.tweens.add({ targets: flash, alpha: 0, duration: 400 / animationController.speed, onComplete: () => flash.destroy() });
+            } else if (w) {
+                const flash = scene.add.rectangle(w.x, w.y, 60, 60, 0x00FFFF, 0.6).setAlpha(0.3).setDepth(12);
+                scene.tweens.add({ targets: flash, alpha: 0, duration: 400 / animationController.speed, onComplete: () => flash.destroy() });
             }
-            statusText.setText('ย้อนกลับไปทางเลือกก่อนหน้า')
+
+            const id = tree.addNode(parentId, -1, parentAmt, `Skip`);
+            tree.nodes[id].isPick = false; // Mark that this node didn't pick anything
+            tree.setState(id, 'active');
+            statusText.setText(`ข้ามเหรียญชนิดที่ ${idx + 1}`);
+
+            path.push(id);
+            tree.relayout();
+            tree.redraw();
+            playSound('run');
+            await sleep(baseDelay * 0.6);
+        }
+        else if (step.action === 'prune_skip') {
+            const idx = step.index;
+            const parentId = path[path.length - 1];
+            const parentAmt = parentId !== null ? tree.nodes[parentId].amount : targetAmount;
+
+            // Flash highlight (red for prune)
+            const w = warriors[idx];
+            if (w && w.sprite) {
+                const flash = scene.add.rectangle(w.sprite.x, w.sprite.y, 60, 60, 0xFF0000, 0.6).setAlpha(0.3).setDepth(12);
+                scene.tweens.add({ targets: flash, alpha: 0, duration: 400 / animationController.speed, onComplete: () => flash.destroy() });
+            }
+
+            // วาดกิ่ง Pick ที่โดน Prune ทิ้ง
+            const power = warriors[idx]?.power ?? 0;
+            const prunedAmt = parentAmt - power;
+            const edgeText = `-${power}`;
+            const deadPickId = tree.addNode(parentId, idx, prunedAmt, edgeText);
+            tree.setState(deadPickId, 'pruned');
+
+            statusText.setText(`เหรียญใหญ่เกินไป! ตัดกิ่ง Pick ทิ้ง ❌ (ชิ้น ${idx + 1})`);
+
+            tree.relayout();
+            tree.redraw();
+            playSound('run');
+            await sleep(baseDelay * 0.8);
+        }
+        else if (step.action === 'remove') {
+            // Single pop — เหมอน knapsack pattern
+            const deadId = path.pop();
+            
+            // Only pop the coin if the branch we are backtracking from was a "pick" branch!
+            if (deadId !== undefined && tree.nodes[deadId].isPick) {
+                currentCoins.pop();
+            }
+
+            if (deadId !== undefined && tree.nodes[deadId]?.state !== 'solved') {
+                tree.setState(deadId, 'dead');
+            }
+
+            tree.redraw();
+            statusText.setText('ย้อนกลับไปทางเลือกก่อนหน้า');
+            await sleep(baseDelay * 0.4);
+        }
+        else if (step.action === 'consider') {
+            const idx = step.index;
+            const w = warriors[idx];
+            statusText.setText(`พิจารณาเหรียญชนิดที่ ${idx + 1}` + (w ? ` (Power: ${w.power})` : ''));
+            await sleep(baseDelay * 0.4);
+        }
+        // Legacy actions (for old saves/DP levels)
+        else if (step.action === 'select_coin') {
+            const coinIdx = step.coin;
+            const parentId = path[path.length - 1];
+            const parent = tree.nodes[parentId];
+            const power = warriors[coinIdx]?.power ?? 0;
+            const newAmt = parent.amount - power;
+            const id = tree.addNode(parentId, coinIdx, newAmt, `-${power}`);
+            currentCoins.push(coinIdx);
+            if (newAmt === 0) { tree.setState(id, 'solved'); if (!bestSolution || currentCoins.length < bestSolution.length) bestSolution = [...currentCoins]; }
+            else if (newAmt < 0) tree.setState(id, 'dead');
+            else tree.setState(id, 'active');
+            path.push(id);
+            tree.relayout(); tree.redraw(); playSound('run');
+            await sleep(baseDelay * 0.6);
+        }
+        else if (step.action === 'remove_coin') {
+            const deadId = path.pop(); currentCoins.pop();
+            if (deadId !== undefined && tree.nodes[deadId]?.state !== 'solved') { tree.setState(deadId, 'dead'); tree.redraw(); }
             await sleep(baseDelay * 0.4);
         }
     }
 
-    // จบกระบวนการวาด Tree
-    tree.relayout();
-    tree.redraw();
+    // Highlight the best path (เขียวทั้งเส้น)
+    if (bestSolutionNodeId !== null) {
+        let cur = bestSolutionNodeId;
+        while (cur !== null) {
+            tree.setState(cur, 'solved');
+            cur = tree.nodes[cur].parentId;
+        }
+        tree.relayout();
+        tree.redraw();
+    }
 
     if (bestSolution && bestSolution.length > 0) {
         statusText.setText(`ค้นหาเสร็จสิ้น (ใช้น้อยสุด ${bestSolution.length} เหรียญ)`).setColor('#00FF88');
         await sleep(baseDelay);
 
-        // ทำให้ Tree จางหายไปเพื่อให้จุดโฟกัสกลับมาที่ตัวละคร
-        if (tree.graphics) {
-            scene.tweens.add({
-                targets: tree.graphics,
-                alpha: 0,
-                duration: 800
-            });
-            Object.values(tree.nodes).forEach(node => {
-                const elements = [node.bg, node.bgStroke, node.text, node.edgeLabelBg, node.edgeText].filter(Boolean);
-                scene.tweens.add({ targets: elements, alpha: 0, duration: 800 });
-            });
-        }
+        // ไม่ทำให้ Tree จางหายไป เพื่อให้ผู้เล่นได้เห็น Tree ค้างไว้เหมือน Knapsack/SubsetSum
 
         await sleep(500);
 
@@ -135,11 +218,9 @@ async function playTreeDisplay(scene, trace, options) {
             const py = centerY;
             const tex = w.powerSquare.texture.key;
 
-            // ดึงพิกัดจากตัวออริจินัลฝั่งซ้าย
             const spawnX = w.x;
             const spawnY = w.y;
 
-            // สร้างร่างเงา (Clone) เริ่มจากตำแหน่งฝั่งซ้าย
             const ghost = scene.add.sprite(spawnX, spawnY, tex)
                 .setDisplaySize(80, 80).setDepth(30).setAlpha(0);
 
@@ -147,12 +228,10 @@ async function playTreeDisplay(scene, trace, options) {
                 ghost.setFrame(w.powerSquare.frame.name);
             }
 
-            // ตัวเลขพลัง — เริ่มจากเป้าหมายที่เดียวกัน 
             const powerLabel = scene.add.text(spawnX, spawnY + 45, `ATK: ${w.power}`, {
                 fontSize: '20px', color: '#ffffff', fontStyle: 'bold', stroke: '#000000', strokeThickness: 4
             }).setOrigin(0.5).setDepth(31).setAlpha(0);
 
-            // Animate ร่าง Clone ไปตรงกลาง
             scene.tweens.add({
                 targets: ghost,
                 x: px,
@@ -163,7 +242,6 @@ async function playTreeDisplay(scene, trace, options) {
                 ease: 'Back.easeOut',
                 onStart: () => playSound('paper'),
                 onComplete: () => {
-                    // โดดฉลอง
                     scene.tweens.add({
                         targets: ghost,
                         y: '-=15',
@@ -174,7 +252,6 @@ async function playTreeDisplay(scene, trace, options) {
                 }
             });
 
-            // เลื่อนป้ายพลังตามมาด้วย
             scene.tweens.add({
                 targets: powerLabel,
                 x: px,

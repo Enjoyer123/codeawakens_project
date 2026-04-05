@@ -21,6 +21,11 @@ export function defineSubsetSumGenerators() {
         return `recordReset(${index});\n`;
     };
 
+    javascriptGenerator.forBlock["subset_sum_prune_exclude"] = function (block) {
+        const index = javascriptGenerator.valueToCode(block, 'WARRIOR_INDEX', javascriptGenerator.ORDER_NONE) || '0';
+        return `recordPruneExclude(${index});\n`;
+    };
+
     javascriptGenerator.forBlock["subset_sum_dp_update"] = function (block) {
         const index = javascriptGenerator.valueToCode(block, 'INDEX', javascriptGenerator.ORDER_NONE) || '0';
         const sum = javascriptGenerator.valueToCode(block, 'SUM', javascriptGenerator.ORDER_NONE) || '0';

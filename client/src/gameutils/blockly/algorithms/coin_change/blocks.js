@@ -2,7 +2,72 @@
 import * as Blockly from "blockly/core";
 
 export function defineCoinChangeVisualBlocks() {
-  // Add warrior to selection box (copy and move it into the box)
+  // Consider a coin (flash highlight)
+  Blockly.Blocks["coin_change_consider"] = {
+    init: function () {
+      this.appendValueInput("COIN_INDEX")
+        .setCheck("Number")
+        .appendField("Consider coin");
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setColour(45);
+      this.setTooltip("แสดงว่ากำลังพิจารณาเหรียญตัวนี้");
+    },
+  };
+
+  // Pick a coin (include — use this coin)
+  Blockly.Blocks["coin_change_pick_coin"] = {
+    init: function () {
+      this.appendValueInput("COIN_INDEX")
+        .setCheck("Number")
+        .appendField("Pick coin (เลือกใช้)");
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setColour(260);
+      this.setTooltip("เลือกใช้เหรียญนี้ (บันทึก Track)");
+    },
+  };
+
+  // Skip a coin (exclude — don't use, move to next type)
+  Blockly.Blocks["coin_change_skip_coin"] = {
+    init: function () {
+      this.appendValueInput("COIN_INDEX")
+        .setCheck("Number")
+        .appendField("Skip coin (ข้ามไปใช้ชนิดถัดไป)");
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setColour(0);
+      this.setTooltip("ข้ามเหรียญชนิดนี้ ไปพิจารณาชนิดถัดไป (บันทึก Track)");
+    },
+  };
+
+  // Remove / Backtrack (undo last pick or skip)
+  Blockly.Blocks["coin_change_remove_coin"] = {
+    init: function () {
+      this.appendValueInput("COIN_INDEX")
+        .setCheck("Number")
+        .appendField("Remove last coin (ย้อนกลับ)");
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setColour(0);
+      this.setTooltip("ย้อนกลับจากทางเลือกล่าสุด (Backtrack)");
+    },
+  };
+
+  // Prune Pick & Skip (amount < coin → can't use this coin)
+  Blockly.Blocks["coin_change_prune_skip"] = {
+    init: function () {
+      this.appendValueInput("COIN_INDEX")
+        .setCheck("Number")
+        .appendField("Prune 'Pick' & Skip");
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setColour(0);
+      this.setTooltip("จำนวนเงินไม่พอใช้เหรียญนี้ ตัดกิ่ง Pick ทิ้ง (Prune) ❌ และบังคับข้าม");
+    },
+  };
+
+  // === Legacy blocks (keep for backward compat with old DP levels) ===
   Blockly.Blocks["coin_change_add_warrior_to_selection"] = {
     init: function () {
       this.appendValueInput("WARRIOR_INDEX")
@@ -11,11 +76,10 @@ export function defineCoinChangeVisualBlocks() {
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(260);
-      this.setTooltip("เพิ่มนักรบเข้าไปในกรอบเลือก (copy และขยับเข้าไป)");
+      this.setTooltip("เพิ่มนักรบเข้าไปในกรอบเลือก (Legacy)");
     },
   };
 
-  // Track decision for coin change algorithm
   Blockly.Blocks["coin_change_track_decision"] = {
     init: function () {
       this.appendValueInput("AMOUNT")
@@ -33,11 +97,10 @@ export function defineCoinChangeVisualBlocks() {
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(260);
-      this.setTooltip("ติดตามการตัดสินใจสำหรับอัลกอริทึมแลกเหรียญ");
+      this.setTooltip("ติดตามการตัดสินใจสำหรับอัลกอริทึมแลกเหรียญ (Legacy)");
     },
   };
 
-  // Remove warrior from selection (Backtrack visual)
   Blockly.Blocks["coin_change_remove_warrior"] = {
     init: function () {
       this.appendDummyInput()
@@ -45,24 +108,10 @@ export function defineCoinChangeVisualBlocks() {
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setColour(0);
-      this.setTooltip("ดึงนักรบตัวสุดท้ายออกจากกรอบเลือก (Backtrack)");
+      this.setTooltip("ดึงนักรบตัวสุดท้ายออกจากกรอบเลือก (Legacy)");
     },
   };
 
-  // Consider a coin visually (flash highlight)
-  Blockly.Blocks["coin_change_consider"] = {
-    init: function () {
-      this.appendValueInput("COIN_INDEX")
-        .setCheck("Number")
-        .appendField("Consider coin");
-      this.setPreviousStatement(true, null);
-      this.setNextStatement(true, null);
-      this.setColour(45);
-      this.setTooltip("แสดงว่ากำลังพิจารณาเหรียญตัวนี้");
-    },
-  };
-
-  // Memoization hit visual
   Blockly.Blocks["coin_change_memo_hit"] = {
     init: function () {
       this.appendValueInput("AMOUNT")
@@ -75,4 +124,3 @@ export function defineCoinChangeVisualBlocks() {
     }
   };
 }
-
