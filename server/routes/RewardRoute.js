@@ -1,10 +1,10 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const authCheck = require("../middleware/authCheck");
-const requireAdmin = require("../middleware/requireAdmin");
-const { uploadMiddleware } = require("../middleware/rewardUpload");
+import authCheck from "../middleware/authCheck.js";
+import requireAdmin from "../middleware/requireAdmin.js";
+import { uploadMiddleware } from "../middleware/rewardUpload.js";
 
-const {
+import {
   getAllRewards,
   getRewardById,
   createReward,
@@ -13,7 +13,7 @@ const {
   getLevelsForReward,
   uploadRewardFrame,
   deleteRewardFrame,
-} = require("../controllers/rewardController");
+} from "../controllers/rewardController.js";
 
 // Reward CRUD routes
 router.get("/rewards", authCheck, requireAdmin, getAllRewards);
@@ -33,5 +33,5 @@ router.post(
 );
 router.delete("/rewards/:rewardId/frames", authCheck, requireAdmin, deleteRewardFrame);
 
-module.exports = router;
+export default router;
 

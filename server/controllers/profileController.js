@@ -1,7 +1,7 @@
-const profileService = require("../services/profileService");
-const { cleanupTempFile } = require("../utils/fileHelper");
+import * as profileService from "../services/profileService.js";
+import { cleanupTempFile } from "../utils/fileHelper.js";
 
-exports.checkProfile = async (req, res) => {
+export const checkProfile = async (req, res) => {
   const clerkId = req.user.id;
   console.log(`[AUTH] User ${clerkId} checking profile.`);
   
@@ -16,7 +16,7 @@ exports.checkProfile = async (req, res) => {
   }
 };
 
-exports.updateUsername = async (req, res) => {
+export const updateUsername = async (req, res) => {
   const clerkId = req.user.id;
   const { username } = req.body;
   console.log(`[PROFILE] User ${clerkId} updating username to "${username}".`);
@@ -37,7 +37,7 @@ exports.updateUsername = async (req, res) => {
   }
 };
 
-exports.uploadProfileImage = async (req, res) => {
+export const uploadProfileImage = async (req, res) => {
   const clerkId = req.user.id;
   console.log(`[PROFILE] User ${clerkId} uploading profile image.`);
   
@@ -63,7 +63,7 @@ exports.uploadProfileImage = async (req, res) => {
   }
 };
 
-exports.deleteProfileImage = async (req, res) => {
+export const deleteProfileImage = async (req, res) => {
   const clerkId = req.user.id;
   console.log(`[PROFILE] User ${clerkId} deleting profile image.`);
   
@@ -83,7 +83,7 @@ exports.deleteProfileImage = async (req, res) => {
   }
 };
 
-exports.getUserByClerkId = async (req, res) => {
+export const getUserByClerkId = async (req, res) => {
   const clerkId = req.user.id;
   console.log(`[PROFILE] Fetching details/progress for User ${clerkId}.`);
   
@@ -100,7 +100,7 @@ exports.getUserByClerkId = async (req, res) => {
   }
 };
 
-exports.saveUserProgress = async (req, res) => {
+export const saveUserProgress = async (req, res) => {
   const clerkId = req.user.id;
   const { blockly_code, text_code, ...logBody } = req.body;
   console.log(`[GAME] User ${clerkId} saving progress. Data:`, JSON.stringify(logBody));
@@ -121,7 +121,7 @@ exports.saveUserProgress = async (req, res) => {
   }
 };
 
-exports.checkAndAwardRewards = async (req, res) => {
+export const checkAndAwardRewards = async (req, res) => {
   const clerkId = req.user.id;
   const { level_id, total_score } = req.body;
   console.log(`[GAME] Checking rewards for User ${clerkId} on Level ${level_id} (Score: ${total_score}).`);

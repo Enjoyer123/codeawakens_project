@@ -1,7 +1,7 @@
-const levelCategoryService = require("../services/levelCategoryService");
-const { cleanupTempFile } = require("../utils/fileHelper");
+import * as levelCategoryService from "../services/levelCategoryService.js";
+import { cleanupTempFile } from "../utils/fileHelper.js";
 
-exports.getAllLevelCategories = async (req, res) => {
+export const getAllLevelCategories = async (req, res) => {
   try {
     const clerkUserId = req.user ? req.user.id : null;
     const result = await levelCategoryService.getAllLevelCategories(clerkUserId);
@@ -15,7 +15,7 @@ exports.getAllLevelCategories = async (req, res) => {
   }
 };
 
-exports.getLevelCategoryById = async (req, res) => {
+export const getLevelCategoryById = async (req, res) => {
   try {
     const clerkUserId = req.user ? req.user.id : null;
     const categoryId = parseInt(req.params.categoryId);
@@ -30,7 +30,7 @@ exports.getLevelCategoryById = async (req, res) => {
   }
 };
 
-exports.createLevelCategory = async (req, res) => {
+export const createLevelCategory = async (req, res) => {
   try {
     const result = await levelCategoryService.createLevelCategory(req.body);
     
@@ -46,7 +46,7 @@ exports.createLevelCategory = async (req, res) => {
   }
 };
 
-exports.updateLevelCategory = async (req, res) => {
+export const updateLevelCategory = async (req, res) => {
   try {
     const categoryId = parseInt(req.params.categoryId);
     const result = await levelCategoryService.updateLevelCategory(categoryId, req.body);
@@ -63,7 +63,7 @@ exports.updateLevelCategory = async (req, res) => {
   }
 };
 
-exports.deleteLevelCategory = async (req, res) => {
+export const deleteLevelCategory = async (req, res) => {
   try {
     const categoryId = parseInt(req.params.categoryId);
     await levelCategoryService.deleteLevelCategory(categoryId);
@@ -79,7 +79,7 @@ exports.deleteLevelCategory = async (req, res) => {
   }
 };
 
-exports.updateLevelCategoryCoordinates = async (req, res) => {
+export const updateLevelCategoryCoordinates = async (req, res) => {
   try {
     const categoryId = parseInt(req.params.categoryId);
     const result = await levelCategoryService.updateLevelCategoryCoordinates(categoryId, req.body);
@@ -96,7 +96,7 @@ exports.updateLevelCategoryCoordinates = async (req, res) => {
   }
 };
 
-exports.uploadCategoryBackground = async (req, res) => {
+export const uploadCategoryBackground = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No image provided" });
@@ -118,7 +118,7 @@ exports.uploadCategoryBackground = async (req, res) => {
   }
 };
 
-exports.deleteCategoryBackground = async (req, res) => {
+export const deleteCategoryBackground = async (req, res) => {
   try {
     const categoryId = parseInt(req.params.categoryId);
     const result = await levelCategoryService.deleteCategoryBackground(categoryId);

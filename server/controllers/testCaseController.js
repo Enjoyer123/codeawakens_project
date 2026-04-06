@@ -1,6 +1,6 @@
-const testCaseService = require("../services/testCaseService");
+import * as testCaseService from "../services/testCaseService.js";
 
-exports.getTestCasesByLevel = async (req, res) => {
+export const getTestCasesByLevel = async (req, res) => {
   try {
     const levelId = parseInt(req.params.levelId);
     const result = await testCaseService.getTestCasesByLevel(levelId);
@@ -14,7 +14,7 @@ exports.getTestCasesByLevel = async (req, res) => {
   }
 };
 
-exports.createTestCase = async (req, res) => {
+export const createTestCase = async (req, res) => {
   try {
     const result = await testCaseService.createTestCase(req.body);
     
@@ -27,7 +27,7 @@ exports.createTestCase = async (req, res) => {
   }
 };
 
-exports.updateTestCase = async (req, res) => {
+export const updateTestCase = async (req, res) => {
   try {
     const testCaseId = parseInt(req.params.testCaseId);
     const result = await testCaseService.updateTestCase(testCaseId, req.body);
@@ -41,7 +41,7 @@ exports.updateTestCase = async (req, res) => {
   }
 };
 
-exports.deleteTestCase = async (req, res) => {
+export const deleteTestCase = async (req, res) => {
   try {
     const testCaseId = parseInt(req.params.testCaseId);
     await testCaseService.deleteTestCase(testCaseId);

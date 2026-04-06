@@ -1,7 +1,7 @@
-const testService = require("../services/testService");
-const { cleanupTempFile } = require("../utils/fileHelper");
+import * as testService from "../services/testService.js";
+import { cleanupTempFile } from "../utils/fileHelper.js";
 
-exports.getTestsByType = async (req, res) => {
+export const getTestsByType = async (req, res) => {
   try {
     const testType = req.params.type;
     const isEditMode = req.query.edit === "true";
@@ -16,7 +16,7 @@ exports.getTestsByType = async (req, res) => {
   }
 };
 
-exports.submitTest = async (req, res) => {
+export const submitTest = async (req, res) => {
   const clerkUserId = req.user.id;
   const answers = req.body;
   console.log(`[TEST] User ${clerkUserId} submitted test.`);
@@ -33,7 +33,7 @@ exports.submitTest = async (req, res) => {
   }
 };
 
-exports.getAllTests = async (req, res) => {
+export const getAllTests = async (req, res) => {
   try {
     const result = await testService.getAllTests();
     
@@ -46,7 +46,7 @@ exports.getAllTests = async (req, res) => {
   }
 };
 
-exports.createTest = async (req, res) => {
+export const createTest = async (req, res) => {
   try {
     const result = await testService.createTest(req.body);
     
@@ -62,7 +62,7 @@ exports.createTest = async (req, res) => {
   }
 };
 
-exports.updateTest = async (req, res) => {
+export const updateTest = async (req, res) => {
   try {
     const testId = parseInt(req.params.id);
     const result = await testService.updateTest(testId, req.body);
@@ -79,7 +79,7 @@ exports.updateTest = async (req, res) => {
   }
 };
 
-exports.deleteTest = async (req, res) => {
+export const deleteTest = async (req, res) => {
   try {
     const testId = parseInt(req.params.id);
     await testService.deleteTest(testId);
@@ -95,7 +95,7 @@ exports.deleteTest = async (req, res) => {
   }
 };
 
-exports.deleteTestChoice = async (req, res) => {
+export const deleteTestChoice = async (req, res) => {
   try {
     const choiceId = parseInt(req.params.id);
     await testService.deleteTestChoice(choiceId);
@@ -111,7 +111,7 @@ exports.deleteTestChoice = async (req, res) => {
   }
 };
 
-exports.uploadTestImage = async (req, res) => {
+export const uploadTestImage = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No image file provided" });
@@ -130,7 +130,7 @@ exports.uploadTestImage = async (req, res) => {
   }
 };
 
-exports.uploadChoiceImage = async (req, res) => {
+export const uploadChoiceImage = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No image file provided" });

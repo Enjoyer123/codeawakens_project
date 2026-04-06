@@ -1,8 +1,8 @@
-const weaponService = require("../services/weaponService");
-const { parsePagination } = require("../utils/pagination");
-const { cleanupTempFile } = require("../utils/fileHelper");
+import * as weaponService from "../services/weaponService.js";
+import { parsePagination } from "../utils/pagination.js";
+import { cleanupTempFile } from "../utils/fileHelper.js";
 
-exports.getAllWeapons = async (req, res) => {
+export const getAllWeapons = async (req, res) => {
   try {
     const paginationData = parsePagination(req.query);
     const result = await weaponService.getAllWeapons(paginationData);
@@ -16,7 +16,7 @@ exports.getAllWeapons = async (req, res) => {
   }
 };
 
-exports.getWeaponById = async (req, res) => {
+export const getWeaponById = async (req, res) => {
   try {
     const weaponId = parseInt(req.params.weaponId);
     const result = await weaponService.getWeaponById(weaponId);
@@ -30,7 +30,7 @@ exports.getWeaponById = async (req, res) => {
   }
 };
 
-exports.createWeapon = async (req, res) => {
+export const createWeapon = async (req, res) => {
   try {
     const result = await weaponService.createWeapon(req.body);
     
@@ -46,7 +46,7 @@ exports.createWeapon = async (req, res) => {
   }
 };
 
-exports.updateWeapon = async (req, res) => {
+export const updateWeapon = async (req, res) => {
   try {
     const weaponId = parseInt(req.params.weaponId);
     const result = await weaponService.updateWeapon(weaponId, req.body);
@@ -63,7 +63,7 @@ exports.updateWeapon = async (req, res) => {
   }
 };
 
-exports.deleteWeapon = async (req, res) => {
+export const deleteWeapon = async (req, res) => {
   try {
     const weaponId = parseInt(req.params.weaponId);
     await weaponService.deleteWeapon(weaponId);
@@ -79,7 +79,7 @@ exports.deleteWeapon = async (req, res) => {
   }
 };
 
-exports.addWeaponImage = async (req, res) => {
+export const addWeaponImage = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No image file provided." });
@@ -102,7 +102,7 @@ exports.addWeaponImage = async (req, res) => {
   }
 };
 
-exports.updateWeaponImage = async (req, res) => {
+export const updateWeaponImage = async (req, res) => {
   try {
     const imageId = parseInt(req.params.imageId);
     const isBase = req.body.is_base === "true";
@@ -121,7 +121,7 @@ exports.updateWeaponImage = async (req, res) => {
   }
 };
 
-exports.deleteWeaponImage = async (req, res) => {
+export const deleteWeaponImage = async (req, res) => {
   try {
     const imageId = parseInt(req.params.imageId);
     await weaponService.deleteWeaponImage(imageId);

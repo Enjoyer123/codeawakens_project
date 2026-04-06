@@ -1,6 +1,6 @@
-const victoryConditionService = require("../services/victoryConditionService");
+import * as victoryConditionService from "../services/victoryConditionService.js";
 
-exports.getAllVictoryConditions = async (req, res) => {
+export const getAllVictoryConditions = async (req, res) => {
   try {
     const levelId = req.query.levelId;
     const result = await victoryConditionService.getAllVictoryConditions(levelId);
@@ -14,7 +14,7 @@ exports.getAllVictoryConditions = async (req, res) => {
   }
 };
 
-exports.getVictoryConditionById = async (req, res) => {
+export const getVictoryConditionById = async (req, res) => {
   try {
     const conditionId = parseInt(req.params.victoryConditionId);
     const result = await victoryConditionService.getVictoryConditionById(conditionId);
@@ -28,7 +28,7 @@ exports.getVictoryConditionById = async (req, res) => {
   }
 };
 
-exports.createVictoryCondition = async (req, res) => {
+export const createVictoryCondition = async (req, res) => {
   try {
     const result = await victoryConditionService.createVictoryCondition(req.body);
     
@@ -44,7 +44,7 @@ exports.createVictoryCondition = async (req, res) => {
   }
 };
 
-exports.updateVictoryCondition = async (req, res) => {
+export const updateVictoryCondition = async (req, res) => {
   try {
     const conditionId = parseInt(req.params.victoryConditionId);
     const result = await victoryConditionService.updateVictoryCondition(conditionId, req.body);
@@ -61,7 +61,7 @@ exports.updateVictoryCondition = async (req, res) => {
   }
 };
 
-exports.deleteVictoryCondition = async (req, res) => {
+export const deleteVictoryCondition = async (req, res) => {
   try {
     const conditionId = parseInt(req.params.victoryConditionId);
     await victoryConditionService.deleteVictoryCondition(conditionId);

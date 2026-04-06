@@ -1,7 +1,7 @@
-const patternService = require("../services/patternService");
-const { parsePagination } = require("../utils/pagination");
+import * as patternService from "../services/patternService.js";
+import { parsePagination } from "../utils/pagination.js";
 
-exports.createPattern = async (req, res) => {
+export const createPattern = async (req, res) => {
   try {
     const result = await patternService.createPattern(req.body);
     
@@ -17,7 +17,7 @@ exports.createPattern = async (req, res) => {
   }
 };
 
-exports.getAllPatterns = async (req, res) => {
+export const getAllPatterns = async (req, res) => {
   try {
     const paginationData = parsePagination(req.query);
     const result = await patternService.getAllPatterns(paginationData, req.query.level_id);
@@ -31,7 +31,7 @@ exports.getAllPatterns = async (req, res) => {
   }
 };
 
-exports.getPatternById = async (req, res) => {
+export const getPatternById = async (req, res) => {
   try {
     const patternId = parseInt(req.params.patternId);
     const result = await patternService.getPatternById(patternId);
@@ -45,7 +45,7 @@ exports.getPatternById = async (req, res) => {
   }
 };
 
-exports.updatePattern = async (req, res) => {
+export const updatePattern = async (req, res) => {
   try {
     const patternId = parseInt(req.params.patternId);
     const result = await patternService.updatePattern(patternId, req.body);
@@ -62,7 +62,7 @@ exports.updatePattern = async (req, res) => {
   }
 };
 
-exports.deletePattern = async (req, res) => {
+export const deletePattern = async (req, res) => {
   try {
     const patternId = parseInt(req.params.patternId);
     await patternService.deletePattern(patternId);
@@ -78,7 +78,7 @@ exports.deletePattern = async (req, res) => {
   }
 };
 
-exports.getPatternTypes = async (req, res) => {
+export const getPatternTypes = async (req, res) => {
   try {
     const result = await patternService.getPatternTypes();
     
@@ -91,7 +91,7 @@ exports.getPatternTypes = async (req, res) => {
   }
 };
 
-exports.unlockPattern = async (req, res) => {
+export const unlockPattern = async (req, res) => {
   try {
     const patternId = parseInt(req.params.patternId);
     const result = await patternService.unlockPattern(patternId);

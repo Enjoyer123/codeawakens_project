@@ -1,7 +1,7 @@
-const notificationService = require("../services/notificationService");
-const { parsePagination } = require("../utils/pagination");
+import * as notificationService from "../services/notificationService.js";
+import { parsePagination } from "../utils/pagination.js";
 
-exports.getAllNotifications = async (req, res) => {
+export const getAllNotifications = async (req, res) => {
   try {
     const paginationData = parsePagination(req.query);
     const result = await notificationService.getAllNotifications(paginationData);
@@ -15,7 +15,7 @@ exports.getAllNotifications = async (req, res) => {
   }
 };
 
-exports.getNotificationById = async (req, res) => {
+export const getNotificationById = async (req, res) => {
   try {
     const notificationId = parseInt(req.params.notificationId);
     const result = await notificationService.getNotificationById(notificationId);
@@ -29,7 +29,7 @@ exports.getNotificationById = async (req, res) => {
   }
 };
 
-exports.createNotification = async (req, res) => {
+export const createNotification = async (req, res) => {
   try {
     const result = await notificationService.createNotification(req.body);
     
@@ -45,7 +45,7 @@ exports.createNotification = async (req, res) => {
   }
 };
 
-exports.updateNotification = async (req, res) => {
+export const updateNotification = async (req, res) => {
   try {
     const notificationId = parseInt(req.params.notificationId);
     const result = await notificationService.updateNotification(notificationId, req.body);
@@ -62,7 +62,7 @@ exports.updateNotification = async (req, res) => {
   }
 };
 
-exports.deleteNotification = async (req, res) => {
+export const deleteNotification = async (req, res) => {
   try {
     const notificationId = parseInt(req.params.notificationId);
     await notificationService.deleteNotification(notificationId);
@@ -78,7 +78,7 @@ exports.deleteNotification = async (req, res) => {
   }
 };
 
-exports.getUserNotifications = async (req, res) => {
+export const getUserNotifications = async (req, res) => {
   const clerkUserId = req.user.id;
   console.log(`[NOTIFICATION] User ${clerkUserId} viewing notifications.`);
   
@@ -95,7 +95,7 @@ exports.getUserNotifications = async (req, res) => {
   }
 };
 
-exports.markAsRead = async (req, res) => {
+export const markAsRead = async (req, res) => {
   const clerkUserId = req.user.id;
   
   try {

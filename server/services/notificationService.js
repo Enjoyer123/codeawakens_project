@@ -1,7 +1,7 @@
-const prisma = require("../models/prisma");
-const { buildPaginationResponse } = require("../utils/pagination");
+import prisma from "../models/prisma.js";
+import { buildPaginationResponse } from "../utils/pagination.js";
 
-async function getAllNotifications({ page, limit, search, skip }) {
+export const getAllNotifications = async ({ page, limit, search, skip }) => {
   let where = {};
   if (search.trim()) {
     const s = search.toLowerCase();
@@ -15,7 +15,7 @@ async function getAllNotifications({ page, limit, search, skip }) {
   return { notifications, pagination: buildPaginationResponse(page, limit, total) };
 }
 
-async function getNotificationById(notificationId) {
+export const getNotificationById = async (notificationId) => {
   const notification = await prisma.notification.findUnique({
     where: { notification_id: notificationId },
     include: { creator: { select: { username: true, email: true } } },
@@ -24,7 +24,7 @@ async function getNotificationById(notificationId) {
   return notification;
 }
 
-async function createNotification(data, clerkId) {
+export const createNotification = async (data, clerkId) => {
   if (!data.title) { const err = new Error("Title is required"); err.status = 400; throw err; }
   const user = await prisma.user.findUnique({ where: { clerk_user_id: clerkId }, select: { user_id: true } });
   if (!user) { const err = new Error("User not found"); err.status = 404; throw err; }
@@ -34,7 +34,7 @@ async function createNotification(data, clerkId) {
   });
 }
 
-async function updateNotification(notificationId, data) {
+export const updateNotification = async (notificationId, data) => {
   const existing = await prisma.notification.findUnique({ where: { notification_id: notificationId } });
   if (!existing) { const err = new Error("Notification not found"); err.status = 404; throw err; }
 
@@ -44,14 +44,14 @@ async function updateNotification(notificationId, data) {
   });
 }
 
-async function deleteNotification(notificationId) {
+export const deleteNotification = async (notificationId) => {
   const notification = await prisma.notification.findUnique({ where: { notification_id: notificationId } });
   if (!notification) { const err = new Error("Notification not found"); err.status = 404; throw err; }
   await prisma.userNotification.deleteMany({ where: { notification_id: notificationId } });
   await prisma.notification.delete({ where: { notification_id: notificationId } });
 }
 
-async function getUserNotifications(clerkId) {
+export const getUserNotifications = async (clerkId) => {
   const user = await prisma.user.findUnique({ where: { clerk_user_id: clerkId }, select: { user_id: true } });
   if (!user) return { notifications: [], unreadCount: 0 };
 
@@ -70,7 +70,7 @@ async function getUserNotifications(clerkId) {
   return { notifications, unreadCount: notifications.filter((n) => !n.is_read).length };
 }
 
-async function markAsRead(clerkId, notificationId) {
+export const markAsRead = async (clerkId, notificationId) => {
   const user = await prisma.user.findUnique({ where: { clerk_user_id: clerkId }, select: { user_id: true } });
   if (!user) { const err = new Error("User not found"); err.status = 404; throw err; }
 
@@ -81,4 +81,4 @@ async function markAsRead(clerkId, notificationId) {
   });
 }
 
-module.exports = { getAllNotifications, getNotificationById, createNotification, updateNotification, deleteNotification, getUserNotifications, markAsRead };
+

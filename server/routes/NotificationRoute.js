@@ -1,9 +1,9 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const authCheck = require("../middleware/authCheck");
-const requireAdmin = require("../middleware/requireAdmin");
+import authCheck from "../middleware/authCheck.js";
+import requireAdmin from "../middleware/requireAdmin.js";
 
-const {
+import {
     getAllNotifications,
     getNotificationById,
     createNotification,
@@ -11,7 +11,7 @@ const {
     deleteNotification,
     getUserNotifications,
     markAsRead,
-} = require("../controllers/notificationController");
+} from "../controllers/notificationController.js";
 
 // Notification CRUD routes (Admin)
 router.get("/notifications", authCheck, requireAdmin, getAllNotifications);
@@ -24,4 +24,4 @@ router.delete("/notifications/:notificationId", authCheck, requireAdmin, deleteN
 router.get("/user/notifications", authCheck, getUserNotifications);
 router.put("/user/notifications/:notificationId/read", authCheck, markAsRead);
 
-module.exports = router;
+export default router;

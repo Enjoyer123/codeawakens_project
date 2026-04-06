@@ -1,7 +1,7 @@
-const prisma = require("../models/prisma");
-const { buildPaginationResponse } = require("../utils/pagination");
+import prisma from "../models/prisma.js";
+import { buildPaginationResponse } from "../utils/pagination.js";
 
-async function getAllVictoryConditions({ page, limit, search, skip }) {
+export const getAllVictoryConditions = async ({ page, limit, search, skip }) => {
   let where = {};
   if (search.trim()) {
     const s = search.toLowerCase();
@@ -12,13 +12,13 @@ async function getAllVictoryConditions({ page, limit, search, skip }) {
   return { victoryConditions, pagination: { total, totalPages: Math.ceil(total / limit), page, limit } };
 }
 
-async function getVictoryConditionById(vcId) {
+export const getVictoryConditionById = async (vcId) => {
   const vc = await prisma.victoryCondition.findUnique({ where: { victory_condition_id: vcId } });
   if (!vc) { const err = new Error("Victory condition not found"); err.status = 404; throw err; }
   return vc;
 }
 
-async function createVictoryCondition(data) {
+export const createVictoryCondition = async (data) => {
   const { type, description, check, is_available } = data;
   if (!type || !description || !check) { const err = new Error("Missing required fields: type, description, check"); err.status = 400; throw err; }
   const trimmedType = type.trim();
@@ -30,7 +30,7 @@ async function createVictoryCondition(data) {
   });
 }
 
-async function updateVictoryCondition(vcId, data) {
+export const updateVictoryCondition = async (vcId, data) => {
   const { type, description, check, is_available } = data;
   if (!type || !description || !check) { const err = new Error("Missing required fields: type, description, check"); err.status = 400; throw err; }
 
@@ -51,7 +51,7 @@ async function updateVictoryCondition(vcId, data) {
   });
 }
 
-async function deleteVictoryCondition(vcId) {
+export const deleteVictoryCondition = async (vcId) => {
   const vc = await prisma.victoryCondition.findUnique({
     where: { victory_condition_id: vcId },
     include: { level_victory_conditions: true },
@@ -67,4 +67,4 @@ async function deleteVictoryCondition(vcId) {
   await prisma.victoryCondition.delete({ where: { victory_condition_id: vcId } });
 }
 
-module.exports = { getAllVictoryConditions, getVictoryConditionById, createVictoryCondition, updateVictoryCondition, deleteVictoryCondition };
+

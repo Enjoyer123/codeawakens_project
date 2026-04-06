@@ -1,10 +1,10 @@
-const prisma = require("../models/prisma");
+import prisma from "../models/prisma.js";
 
-async function getTestCasesByLevel(levelId) {
+export const getTestCasesByLevel = async (levelId) => {
   return prisma.levelTestCase.findMany({ where: { level_id: levelId }, orderBy: { display_order: "asc" } });
 }
 
-async function createTestCase(data) {
+export const createTestCase = async (data) => {
   const { level_id, test_case_name, is_primary, function_name, input_params, expected_output, comparison_type, display_order } = data;
   if (!level_id || !test_case_name || !function_name || expected_output === undefined) {
     const err = new Error("Missing required fields: level_id, test_case_name, function_name, expected_output"); err.status = 400; throw err;
@@ -14,7 +14,7 @@ async function createTestCase(data) {
   });
 }
 
-async function updateTestCase(testCaseId, data) {
+export const updateTestCase = async (testCaseId, data) => {
   const { test_case_name, is_primary, function_name, input_params, expected_output, comparison_type, display_order } = data;
   return prisma.levelTestCase.update({
     where: { test_case_id: testCaseId },
@@ -30,8 +30,8 @@ async function updateTestCase(testCaseId, data) {
   });
 }
 
-async function deleteTestCase(testCaseId) {
+export const deleteTestCase = async (testCaseId) => {
   await prisma.levelTestCase.delete({ where: { test_case_id: testCaseId } });
 }
 
-module.exports = { getTestCasesByLevel, createTestCase, updateTestCase, deleteTestCase };
+

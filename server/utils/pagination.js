@@ -4,7 +4,7 @@
  * @param {number} [defaultLimit=10] - default items per page
  * @returns {{ page: number, limit: number, search: string, skip: number }}
  */
-function parsePagination(query, defaultLimit = 10) {
+export const parsePagination = (query, defaultLimit = 10) => {
   const page = parseInt(query.page) || 1;
   const limit = parseInt(query.limit) || defaultLimit;
   const search = query.search || "";
@@ -19,7 +19,7 @@ function parsePagination(query, defaultLimit = 10) {
  * @param {number} total - total items count
  * @returns {{ page: number, limit: number, total: number, totalPages: number, hasNextPage: boolean, hasPrevPage: boolean }}
  */
-function buildPaginationResponse(page, limit, total) {
+export const buildPaginationResponse = (page, limit, total) => {
   const totalPages = Math.ceil(total / limit);
   return {
     page,
@@ -31,4 +31,4 @@ function buildPaginationResponse(page, limit, total) {
   };
 }
 
-module.exports = { parsePagination, buildPaginationResponse };
+

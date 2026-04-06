@@ -1,6 +1,6 @@
-const prisma = require("../models/prisma");
+import prisma from "../models/prisma.js";
 
-function shuffleArray(array) {
+export const shuffleArray = (array) => {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [array[i], array[j]] = [array[j], array[i]];
@@ -8,7 +8,7 @@ function shuffleArray(array) {
   return array;
 }
 
-async function getTestsByType(type, clerkUserId) {
+export const getTestsByType = async (type, clerkUserId) => {
   let testType;
   if (type === "pre") testType = "PreTest";
   else if (type === "post") testType = "PostTest";
@@ -94,7 +94,7 @@ async function getTestsByType(type, clerkUserId) {
   return shuffleArray(processedTests);
 }
 
-async function submitTest(type, answers, clerkId) {
+export const submitTest = async (type, answers, clerkId) => {
   let testType;
   if (type === "pre") testType = "PreTest";
   else if (type === "post") testType = "PostTest";
@@ -218,7 +218,7 @@ async function submitTest(type, answers, clerkId) {
 
 // ── Admin Functions ──
 
-async function getAllTests(typeFilter) {
+export const getAllTests = async (typeFilter) => {
   const where = {};
   if (typeFilter === "pre") where.test_type = "PreTest";
   else if (typeFilter === "post") where.test_type = "PostTest";
@@ -229,7 +229,7 @@ async function getAllTests(typeFilter) {
   });
 }
 
-async function createTest(data) {
+export const createTest = async (data) => {
   const { test_type, question, description, test_image, choices, part } = data;
   if (!test_type || !question || !choices || !Array.isArray(choices)) {
     const err = new Error("Missing required fields");
@@ -255,7 +255,7 @@ async function createTest(data) {
   });
 }
 
-async function updateTest(testId, data) {
+export const updateTest = async (testId, data) => {
   const {
     test_type,
     question,
@@ -310,20 +310,12 @@ async function updateTest(testId, data) {
   });
 }
 
-async function deleteTest(testId) {
+export const deleteTest = async (testId) => {
   await prisma.test.delete({ where: { test_id: testId } });
 }
 
-async function deleteTestChoice(choiceId) {
+export const deleteTestChoice = async (choiceId) => {
   await prisma.testChoice.delete({ where: { test_choice_id: choiceId } });
 }
 
-module.exports = {
-  getTestsByType,
-  submitTest,
-  getAllTests,
-  createTest,
-  updateTest,
-  deleteTest,
-  deleteTestChoice,
-};
+

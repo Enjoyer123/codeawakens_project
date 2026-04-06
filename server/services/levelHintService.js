@@ -1,10 +1,10 @@
-const prisma = require("../models/prisma");
-const { buildPaginationResponse } = require("../utils/pagination");
-const { safeDeleteFile, moveFile } = require("../utils/fileHelper");
-const path = require("path");
-const fs = require("fs");
+import prisma from "../models/prisma.js";
+import { buildPaginationResponse } from "../utils/pagination.js";
+import { safeDeleteFile, moveFile } from "../utils/fileHelper.js";
+import path from "path";
+import fs from "fs";
 
-async function getAllLevelHints({ page, limit, search, skip }) {
+export const getAllLevelHints = async ({ page, limit, search, skip }) => {
   let where = {};
   if (search.trim()) {
     where = { OR: [{ title: { contains: search.toLowerCase(), mode: "insensitive" } }] };
@@ -19,7 +19,7 @@ async function getAllLevelHints({ page, limit, search, skip }) {
   return { hints, pagination: buildPaginationResponse(page, limit, total) };
 }
 
-async function getHintsByLevelId(levelId) {
+export const getHintsByLevelId = async (levelId) => {
   return prisma.levelHint.findMany({
     where: { level_id: levelId },
     include: { hint_images: { orderBy: { hint_image_id: "asc" } } },
@@ -27,7 +27,7 @@ async function getHintsByLevelId(levelId) {
   });
 }
 
-async function createLevelHint(data) {
+export const createLevelHint = async (data) => {
   const { level_id, title, display_order, is_active } = data;
   if (!level_id || !title || !title.trim()) { const err = new Error("Missing required fields: level_id, title"); err.status = 400; throw err; }
   const level = await prisma.level.findUnique({ where: { level_id: parseInt(level_id) } });
@@ -39,7 +39,7 @@ async function createLevelHint(data) {
   });
 }
 
-async function updateLevelHint(hintId, data) {
+export const updateLevelHint = async (hintId, data) => {
   const existing = await prisma.levelHint.findUnique({ where: { hint_id: hintId } });
   if (!existing) { const err = new Error("Level hint not found"); err.status = 404; throw err; }
 
@@ -59,7 +59,7 @@ async function updateLevelHint(hintId, data) {
   });
 }
 
-async function deleteLevelHint(hintId) {
+export const deleteLevelHint = async (hintId) => {
   const hint = await prisma.levelHint.findUnique({ where: { hint_id: hintId }, include: { hint_images: true } });
   if (!hint) { const err = new Error("Level hint not found"); err.status = 404; throw err; }
 
@@ -70,7 +70,7 @@ async function deleteLevelHint(hintId) {
   await prisma.levelHint.delete({ where: { hint_id: hintId } });
 }
 
-async function uploadHintImage(hintId, file) {
+export const uploadHintImage = async (hintId, file) => {
   const hint = await prisma.levelHint.findUnique({ where: { hint_id: hintId } });
   if (!hint) { const err = new Error("Level hint not found"); err.status = 404; throw err; }
 
@@ -78,7 +78,7 @@ async function uploadHintImage(hintId, file) {
   return prisma.levelHintImage.create({ data: { hint_id: hintId, path_file: pathFile } });
 }
 
-async function deleteHintImage(imageId) {
+export const deleteHintImage = async (imageId) => {
   const hintImage = await prisma.levelHintImage.findUnique({ where: { hint_image_id: imageId } });
   if (!hintImage) { const err = new Error("Level hint image not found"); err.status = 404; throw err; }
 
@@ -86,4 +86,4 @@ async function deleteHintImage(imageId) {
   await prisma.levelHintImage.delete({ where: { hint_image_id: imageId } });
 }
 
-module.exports = { getAllLevelHints, getHintsByLevelId, createLevelHint, updateLevelHint, deleteLevelHint, uploadHintImage, deleteHintImage };
+

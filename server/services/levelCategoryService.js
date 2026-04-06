@@ -1,12 +1,17 @@
-const prisma = require("../models/prisma");
-const { safeDeleteFile, moveFile } = require("../utils/fileHelper");
-const { calculateLockState, getCompletedLevelIds, resolveUser } = require("./levelService");
-const path = require("path");
-const fs = require("fs");
+import prisma from "../models/prisma.js";
+import { safeDeleteFile, moveFile } from "../utils/fileHelper.js";
+import { calculateLockState, getCompletedLevelIds, resolveUser } from "./levelService.js";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
 
 // ── Service Functions ──
 
-async function getAllLevelCategories(search, clerkUserId) {
+export const getAllLevelCategories = async (search, clerkUserId) => {
   let where = {};
   if (search && search.trim()) {
     const searchLower = search.toLowerCase();
@@ -60,7 +65,7 @@ async function getAllLevelCategories(search, clerkUserId) {
   return { levelCategories: categoriesWithCount };
 }
 
-async function getLevelCategoryById(categoryId, clerkUserId) {
+export const getLevelCategoryById = async (categoryId, clerkUserId) => {
   const levelCategory = await prisma.levelCategory.findUnique({
     where: { category_id: categoryId },
     include: {
@@ -104,7 +109,7 @@ async function getLevelCategoryById(categoryId, clerkUserId) {
   return { levelCategory: { ...levelCategory, levels: processedLevels } };
 }
 
-async function createLevelCategory(data) {
+export const createLevelCategory = async (data) => {
   if (!data.category_name || !data.description) {
     const err = new Error("Missing required fields: category_name, description");
     err.status = 400;
@@ -139,7 +144,7 @@ async function createLevelCategory(data) {
   return levelCategory;
 }
 
-async function updateLevelCategory(categoryId, data) {
+export const updateLevelCategory = async (categoryId, data) => {
   if (!data.category_name || !data.description) {
     const err = new Error("Missing required fields: category_name, description");
     err.status = 400;
@@ -187,7 +192,7 @@ async function updateLevelCategory(categoryId, data) {
   return levelCategory;
 }
 
-async function deleteLevelCategory(categoryId) {
+export const deleteLevelCategory = async (categoryId) => {
   const levelCategory = await prisma.levelCategory.findUnique({
     where: { category_id: categoryId },
     include: { levels: true },
@@ -214,7 +219,7 @@ async function deleteLevelCategory(categoryId) {
   await prisma.levelCategory.delete({ where: { category_id: categoryId } });
 }
 
-async function uploadCategoryBackground(categoryId, file) {
+export const uploadCategoryBackground = async (categoryId, file) => {
   const levelCategory = await prisma.levelCategory.findUnique({
     where: { category_id: categoryId },
   });
@@ -248,7 +253,7 @@ async function uploadCategoryBackground(categoryId, file) {
   return updated;
 }
 
-async function deleteCategoryBackground(categoryId) {
+export const deleteCategoryBackground = async (categoryId) => {
   const levelCategory = await prisma.levelCategory.findUnique({
     where: { category_id: categoryId },
   });
@@ -269,7 +274,7 @@ async function deleteCategoryBackground(categoryId) {
   return updated;
 }
 
-async function updateLevelCategoryCoordinates(categoryId, coordinates) {
+export const updateLevelCategoryCoordinates = async (categoryId, coordinates) => {
   const levelCategory = await prisma.levelCategory.findUnique({
     where: { category_id: categoryId },
   });
@@ -286,13 +291,4 @@ async function updateLevelCategoryCoordinates(categoryId, coordinates) {
   return updated;
 }
 
-module.exports = {
-  getAllLevelCategories,
-  getLevelCategoryById,
-  createLevelCategory,
-  updateLevelCategory,
-  deleteLevelCategory,
-  uploadCategoryBackground,
-  deleteCategoryBackground,
-  updateLevelCategoryCoordinates,
-};
+

@@ -1,10 +1,10 @@
-const prisma = require("../models/prisma");
-const { safeDeleteFile } = require("../utils/fileHelper");
-const { uploadDir } = require("../middleware/upload");
-const path = require("path");
-const fs = require("fs");
+import prisma from "../models/prisma.js";
+import { safeDeleteFile } from "../utils/fileHelper.js";
+import { uploadDir } from "../middleware/upload.js";
+import path from "path";
+import fs from "fs";
 
-async function checkProfile(clerkUser) {
+export const checkProfile = async (clerkUser) => {
   const clerkId = clerkUser.id;
   const firstName = clerkUser.firstName || "";
   const lastName = clerkUser.lastName || "";
@@ -61,7 +61,7 @@ async function checkProfile(clerkUser) {
   };
 }
 
-async function updateUsername(clerkId, username) {
+export const updateUsername = async (clerkId, username) => {
   if (!username || username.trim().length < 3) {
     const err = new Error("Username must be at least 3 characters");
     err.status = 400;
@@ -84,7 +84,7 @@ async function updateUsername(clerkId, username) {
   }
 }
 
-async function uploadProfileImage(clerkId, file) {
+export const uploadProfileImage = async (clerkId, file) => {
   const currentUser = await prisma.user.findUnique({
     where: { clerk_user_id: clerkId },
     select: { profile_image: true },
@@ -109,7 +109,7 @@ async function uploadProfileImage(clerkId, file) {
   return { imageUrl, user: updatedUser };
 }
 
-async function deleteProfileImage(clerkUser) {
+export const deleteProfileImage = async (clerkUser) => {
   const clerkId = clerkUser.id;
   const currentUser = await prisma.user.findUnique({
     where: { clerk_user_id: clerkId },
@@ -140,7 +140,7 @@ async function deleteProfileImage(clerkUser) {
   return updatedUser.profile_image;
 }
 
-async function getUserByClerkId(clerkId) {
+export const getUserByClerkId = async (clerkId) => {
   const user = await prisma.user.findUnique({
     where: { clerk_user_id: clerkId },
     select: {
@@ -171,7 +171,7 @@ async function getUserByClerkId(clerkId) {
   return { user, user_progress: userProgress, user_reward: userRewards };
 }
 
-async function saveUserProgress(clerkId, body) {
+export const saveUserProgress = async (clerkId, body) => {
   const {
     level_id, status, attempts_count, blockly_code, text_code,
     best_score, pattern_bonus_score, is_correct, stars_earned,
@@ -287,7 +287,7 @@ async function saveUserProgress(clerkId, body) {
   return savedProgress;
 }
 
-async function checkAndAwardRewards(clerkId, levelId, totalScore) {
+export const checkAndAwardRewards = async (clerkId, levelId, totalScore) => {
   if (!levelId || totalScore === undefined) {
     const err = new Error("level_id and total_score are required");
     err.status = 400;
@@ -343,12 +343,4 @@ async function checkAndAwardRewards(clerkId, levelId, totalScore) {
   return { awardedRewards, totalAwarded: awardedRewards.length };
 }
 
-module.exports = {
-  checkProfile,
-  updateUsername,
-  uploadProfileImage,
-  deleteProfileImage,
-  getUserByClerkId,
-  saveUserProgress,
-  checkAndAwardRewards,
-};
+

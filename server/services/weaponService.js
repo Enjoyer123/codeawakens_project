@@ -1,10 +1,15 @@
-const prisma = require("../models/prisma");
-const { parsePagination, buildPaginationResponse } = require("../utils/pagination");
-const { safeDeleteFile, moveFile } = require("../utils/fileHelper");
-const path = require("path");
-const fs = require("fs");
+import prisma from "../models/prisma.js";
+import { parsePagination, buildPaginationResponse } from "../utils/pagination.js";
+import { safeDeleteFile, moveFile } from "../utils/fileHelper.js";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-async function getAllWeapons({ page, limit, search, skip }) {
+
+
+export const getAllWeapons = async ({ page, limit, search, skip }) => {
   let where = {};
   if (search.trim()) {
     const searchLower = search.toLowerCase();
@@ -28,7 +33,7 @@ async function getAllWeapons({ page, limit, search, skip }) {
   return { weapons, pagination: buildPaginationResponse(page, limit, total) };
 }
 
-async function getWeaponById(weaponId) {
+export const getWeaponById = async (weaponId) => {
   const weapon = await prisma.weapon.findUnique({
     where: { weapon_id: weaponId },
     include: { weapon_images: { orderBy: [{ type_animation: "asc" }, { frame: "asc" }] } },
@@ -37,7 +42,7 @@ async function getWeaponById(weaponId) {
   return weapon;
 }
 
-async function createWeapon(data) {
+export const createWeapon = async (data) => {
   const { weapon_key, weapon_name, combat_power, weapon_type } = data;
   if (!weapon_key || !weapon_name || !weapon_type) {
     const err = new Error("Missing required fields: weapon_key, weapon_name, weapon_type");
@@ -53,7 +58,7 @@ async function createWeapon(data) {
   });
 }
 
-async function updateWeapon(weaponId, data) {
+export const updateWeapon = async (weaponId, data) => {
   const { weapon_key, weapon_name, combat_power, weapon_type } = data;
   const existing = await prisma.weapon.findUnique({ where: { weapon_id: weaponId } });
   if (!existing) { const err = new Error("Weapon not found"); err.status = 404; throw err; }
@@ -94,7 +99,7 @@ async function updateWeapon(weaponId, data) {
   });
 }
 
-async function deleteWeapon(weaponId) {
+export const deleteWeapon = async (weaponId) => {
   const weapon = await prisma.weapon.findUnique({
     where: { weapon_id: weaponId },
     include: { weapon_images: true },
@@ -108,7 +113,7 @@ async function deleteWeapon(weaponId) {
   await prisma.weapon.delete({ where: { weapon_id: weaponId } });
 }
 
-async function addWeaponImage(weaponId, file, data) {
+export const addWeaponImage = async (weaponId, file, data) => {
   const { type_file, type_animation, frame } = data;
   if (!type_file || !type_animation || !frame) {
     const err = new Error("Missing required fields: type_file, type_animation, frame");
@@ -155,7 +160,7 @@ async function addWeaponImage(weaponId, file, data) {
   });
 }
 
-async function deleteWeaponImage(imageId) {
+export const deleteWeaponImage = async (imageId) => {
   const weaponImage = await prisma.weapon_Image.findUnique({ where: { file_id: imageId } });
   if (!weaponImage) { const err = new Error("Weapon image not found"); err.status = 404; throw err; }
 
@@ -163,7 +168,7 @@ async function deleteWeaponImage(imageId) {
   await prisma.weapon_Image.delete({ where: { file_id: imageId } });
 }
 
-async function updateWeaponImage(imageId, file, data) {
+export const updateWeaponImage = async (imageId, file, data) => {
   const { type_file, type_animation, frame } = data;
   const existingImage = await prisma.weapon_Image.findUnique({
     where: { file_id: imageId },
@@ -211,7 +216,4 @@ async function updateWeaponImage(imageId, file, data) {
   return prisma.weapon_Image.update({ where: { file_id: imageId }, data: updateData });
 }
 
-module.exports = {
-  getAllWeapons, getWeaponById, createWeapon, updateWeapon, deleteWeapon,
-  addWeaponImage, deleteWeaponImage, updateWeaponImage,
-};
+

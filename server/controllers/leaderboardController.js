@@ -1,6 +1,6 @@
-const leaderboardService = require("../services/leaderboardService");
+import * as leaderboardService from "../services/leaderboardService.js";
 
-exports.getLeaderboard = async (req, res) => {
+export const getLeaderboard = async (req, res) => {
   try {
     const clerkId = req.user ? req.user.id : "anonymous";
     console.log(`[LEADERBOARD] User ${clerkId} viewing leaderboard.`);

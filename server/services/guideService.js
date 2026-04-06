@@ -1,8 +1,8 @@
-const prisma = require("../models/prisma");
-const { buildPaginationResponse } = require("../utils/pagination");
-const { safeDeleteFile } = require("../utils/fileHelper");
+import prisma from "../models/prisma.js";
+import { buildPaginationResponse } from "../utils/pagination.js";
+import { safeDeleteFile } from "../utils/fileHelper.js";
 
-async function getAllGuides({ page, limit, search, skip }) {
+export const getAllGuides = async ({ page, limit, search, skip }) => {
   let where = {};
   if (search.trim()) {
     where = { OR: [{ title: { contains: search.toLowerCase(), mode: "insensitive" } }] };
@@ -23,7 +23,7 @@ async function getAllGuides({ page, limit, search, skip }) {
   return { guides, pagination: buildPaginationResponse(page, limit, total) };
 }
 
-async function getGuidesByLevel(levelId) {
+export const getGuidesByLevel = async (levelId) => {
   const level = await prisma.level.findUnique({ where: { level_id: levelId } });
   if (!level) { const err = new Error("Level not found"); err.status = 404; throw err; }
 
@@ -34,7 +34,7 @@ async function getGuidesByLevel(levelId) {
   });
 }
 
-async function getGuideById(guideId) {
+export const getGuideById = async (guideId) => {
   const guide = await prisma.guide.findUnique({
     where: { guide_id: guideId },
     include: {
@@ -46,7 +46,7 @@ async function getGuideById(guideId) {
   return guide;
 }
 
-async function createGuide(data) {
+export const createGuide = async (data) => {
   const { level_id, title, display_order, is_active } = data;
   if (!level_id || !title || !title.trim()) {
     const err = new Error("Missing required fields: level_id, title"); err.status = 400; throw err;
@@ -69,7 +69,7 @@ async function createGuide(data) {
   });
 }
 
-async function updateGuide(guideId, data) {
+export const updateGuide = async (guideId, data) => {
   const existing = await prisma.guide.findUnique({ where: { guide_id: guideId } });
   if (!existing) { const err = new Error("Guide not found"); err.status = 404; throw err; }
 
@@ -93,7 +93,7 @@ async function updateGuide(guideId, data) {
   });
 }
 
-async function deleteGuide(guideId) {
+export const deleteGuide = async (guideId) => {
   const guide = await prisma.guide.findUnique({
     where: { guide_id: guideId },
     include: { guide_images: true },
@@ -107,7 +107,7 @@ async function deleteGuide(guideId) {
   await prisma.guide.delete({ where: { guide_id: guideId } });
 }
 
-async function uploadGuideImage(guideId, file) {
+export const uploadGuideImage = async (guideId, file) => {
   const guide = await prisma.guide.findUnique({ where: { guide_id: guideId } });
   if (!guide) { const err = new Error("Guide not found"); err.status = 404; throw err; }
 
@@ -115,7 +115,7 @@ async function uploadGuideImage(guideId, file) {
   return prisma.guide_Image.create({ data: { guide_id: guideId, path_file: pathFile } });
 }
 
-async function deleteGuideImage(imageId) {
+export const deleteGuideImage = async (imageId) => {
   const guideImage = await prisma.guide_Image.findUnique({ where: { guide_file_id: imageId } });
   if (!guideImage) { const err = new Error("Guide image not found"); err.status = 404; throw err; }
 
@@ -123,7 +123,4 @@ async function deleteGuideImage(imageId) {
   await prisma.guide_Image.delete({ where: { guide_file_id: imageId } });
 }
 
-module.exports = {
-  getAllGuides, getGuidesByLevel, getGuideById, createGuide, updateGuide,
-  deleteGuide, uploadGuideImage, deleteGuideImage,
-};
+

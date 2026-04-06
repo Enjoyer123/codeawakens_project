@@ -1,6 +1,6 @@
-const dashboardService = require("../services/dashboardService");
+import * as dashboardService from "../services/dashboardService.js";
 
-exports.getDashboardStats = async (req, res) => {
+export const getDashboardStats = async (req, res) => {
   try {
     const adminClerkId = req.user ? req.user.id : "unknown";
     console.log(`[ADMIN] Admin ${adminClerkId} viewing dashboard stats.`);
@@ -16,7 +16,7 @@ exports.getDashboardStats = async (req, res) => {
   }
 };
 
-exports.getLevelStats = async (req, res) => {
+export const getLevelStats = async (req, res) => {
   try {
     const adminClerkId = req.user ? req.user.id : "unknown";
     console.log(`[ADMIN] Admin ${adminClerkId} viewing level statistics.`);
@@ -32,7 +32,7 @@ exports.getLevelStats = async (req, res) => {
   }
 };
 
-exports.getUserStats = async (req, res) => {
+export const getUserStats = async (req, res) => {
   try {
     const adminClerkId = req.user ? req.user.id : "unknown";
     console.log(`[ADMIN] Admin ${adminClerkId} viewing user statistics.`);
@@ -48,7 +48,7 @@ exports.getUserStats = async (req, res) => {
   }
 };
 
-exports.getTestStats = async (req, res) => {
+export const getTestStats = async (req, res) => {
   try {
     const adminClerkId = req.user ? req.user.id : "unknown";
     console.log(`[ADMIN] Admin ${adminClerkId} viewing test statistics.`);

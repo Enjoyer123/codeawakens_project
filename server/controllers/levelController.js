@@ -1,8 +1,8 @@
-const levelService = require("../services/levelService");
-const { cleanupTempFile } = require("../utils/fileHelper");
-const { parsePagination } = require("../utils/pagination");
+import * as levelService from "../services/levelService.js";
+import { cleanupTempFile } from "../utils/fileHelper.js";
+import { parsePagination } from "../utils/pagination.js";
 
-exports.getAllLevels = async (req, res) => {
+export const getAllLevels = async (req, res) => {
   try {
     const clerkUserId = req.user ? req.user.id : null;
     const paginationData = parsePagination(req.query);
@@ -17,7 +17,7 @@ exports.getAllLevels = async (req, res) => {
   }
 };
 
-exports.getLevelsForDropdown = async (req, res) => {
+export const getLevelsForDropdown = async (req, res) => {
   try {
     const result = await levelService.getLevelsForDropdown();
     
@@ -30,7 +30,7 @@ exports.getLevelsForDropdown = async (req, res) => {
   }
 };
 
-exports.getLevelById = async (req, res) => {
+export const getLevelById = async (req, res) => {
   try {
     const clerkUserId = req.user ? req.user.id : null;
     const levelId = parseInt(req.params.levelId);
@@ -45,7 +45,7 @@ exports.getLevelById = async (req, res) => {
   }
 };
 
-exports.createLevel = async (req, res) => {
+export const createLevel = async (req, res) => {
   try {
     const result = await levelService.createLevel(req.body);
     
@@ -61,7 +61,7 @@ exports.createLevel = async (req, res) => {
   }
 };
 
-exports.updateLevel = async (req, res) => {
+export const updateLevel = async (req, res) => {
   try {
     const levelId = parseInt(req.params.levelId);
     const result = await levelService.updateLevel(levelId, req.body);
@@ -78,7 +78,7 @@ exports.updateLevel = async (req, res) => {
   }
 };
 
-exports.deleteLevel = async (req, res) => {
+export const deleteLevel = async (req, res) => {
   try {
     const levelId = parseInt(req.params.levelId);
     await levelService.deleteLevel(levelId);
@@ -94,7 +94,7 @@ exports.deleteLevel = async (req, res) => {
   }
 };
 
-exports.uploadLevelBackgroundImage = async (req, res) => {
+export const uploadLevelBackgroundImage = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
@@ -116,7 +116,7 @@ exports.uploadLevelBackgroundImage = async (req, res) => {
   }
 };
 
-exports.deleteLevelBackgroundImage = async (req, res) => {
+export const deleteLevelBackgroundImage = async (req, res) => {
   try {
     const levelId = parseInt(req.params.levelId);
     const result = await levelService.deleteLevelBackgroundImage(levelId);
@@ -133,7 +133,7 @@ exports.deleteLevelBackgroundImage = async (req, res) => {
   }
 };
 
-exports.getAllCategories = async (req, res) => {
+export const getAllCategories = async (req, res) => {
   try {
     const result = await levelService.getAllCategories();
     res.status(200).json(result);
@@ -145,7 +145,7 @@ exports.getAllCategories = async (req, res) => {
   }
 };
 
-exports.getLevelsForPrerequisite = async (req, res) => {
+export const getLevelsForPrerequisite = async (req, res) => {
   try {
     const result = await levelService.getLevelsForDropdown();
     res.status(200).json(result);
@@ -157,7 +157,7 @@ exports.getLevelsForPrerequisite = async (req, res) => {
   }
 };
 
-exports.unlockLevel = async (req, res) => {
+export const unlockLevel = async (req, res) => {
   try {
     const levelId = parseInt(req.params.levelId);
     await levelService.unlockLevel(levelId);
@@ -172,7 +172,7 @@ exports.unlockLevel = async (req, res) => {
   }
 };
 
-exports.updateLevelCoordinates = async (req, res) => {
+export const updateLevelCoordinates = async (req, res) => {
   try {
     const levelId = parseInt(req.params.levelId);
     const result = await levelService.updateLevelCoordinates(levelId, req.body.coordinates);

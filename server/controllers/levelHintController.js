@@ -1,8 +1,8 @@
-const levelHintService = require("../services/levelHintService");
-const { parsePagination } = require("../utils/pagination");
-const { cleanupTempFile } = require("../utils/fileHelper");
+import * as levelHintService from "../services/levelHintService.js";
+import { parsePagination } from "../utils/pagination.js";
+import { cleanupTempFile } from "../utils/fileHelper.js";
 
-exports.getAllLevelHints = async (req, res) => {
+export const getAllLevelHints = async (req, res) => {
   try {
     const paginationData = parsePagination(req.query);
     const result = await levelHintService.getAllLevelHints(paginationData);
@@ -16,7 +16,7 @@ exports.getAllLevelHints = async (req, res) => {
   }
 };
 
-exports.getHintsByLevelId = async (req, res) => {
+export const getHintsByLevelId = async (req, res) => {
   try {
     const levelId = parseInt(req.params.levelId);
     const result = await levelHintService.getHintsByLevelId(levelId);
@@ -30,7 +30,7 @@ exports.getHintsByLevelId = async (req, res) => {
   }
 };
 
-exports.createLevelHint = async (req, res) => {
+export const createLevelHint = async (req, res) => {
   try {
     const result = await levelHintService.createLevelHint(req.body);
     
@@ -46,7 +46,7 @@ exports.createLevelHint = async (req, res) => {
   }
 };
 
-exports.updateLevelHint = async (req, res) => {
+export const updateLevelHint = async (req, res) => {
   try {
     const hintId = parseInt(req.params.hintId);
     const result = await levelHintService.updateLevelHint(hintId, req.body);
@@ -63,7 +63,7 @@ exports.updateLevelHint = async (req, res) => {
   }
 };
 
-exports.deleteLevelHint = async (req, res) => {
+export const deleteLevelHint = async (req, res) => {
   try {
     const hintId = parseInt(req.params.hintId);
     await levelHintService.deleteLevelHint(hintId);
@@ -79,7 +79,7 @@ exports.deleteLevelHint = async (req, res) => {
   }
 };
 
-exports.uploadHintImage = async (req, res) => {
+export const uploadHintImage = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
@@ -101,7 +101,7 @@ exports.uploadHintImage = async (req, res) => {
   }
 };
 
-exports.deleteHintImage = async (req, res) => {
+export const deleteHintImage = async (req, res) => {
   try {
     const imageId = parseInt(req.params.imageId);
     await levelHintService.deleteHintImage(imageId);

@@ -1,7 +1,7 @@
-const blockService = require("../services/blockService");
-const { parsePagination } = require("../utils/pagination");
+import * as blockService from "../services/blockService.js";
+import { parsePagination } from "../utils/pagination.js";
 
-exports.getAllBlocks = async (req, res) => {
+export const getAllBlocks = async (req, res) => {
   try {
     const paginationData = parsePagination(req.query);
     const result = await blockService.getAllBlocks(paginationData);
@@ -15,7 +15,7 @@ exports.getAllBlocks = async (req, res) => {
   }
 };
 
-exports.getBlockById = async (req, res) => {
+export const getBlockById = async (req, res) => {
   try {
     const blockId = parseInt(req.params.blockId);
     const result = await blockService.getBlockById(blockId);
@@ -29,7 +29,7 @@ exports.getBlockById = async (req, res) => {
   }
 };
 
-exports.createBlock = async (req, res) => {
+export const createBlock = async (req, res) => {
   try {
     const result = await blockService.createBlock(req.body);
     
@@ -45,7 +45,7 @@ exports.createBlock = async (req, res) => {
   }
 };
 
-exports.updateBlock = async (req, res) => {
+export const updateBlock = async (req, res) => {
   try {
     const blockId = parseInt(req.params.blockId);
     const result = await blockService.updateBlock(blockId, req.body);
@@ -62,7 +62,7 @@ exports.updateBlock = async (req, res) => {
   }
 };
 
-exports.deleteBlock = async (req, res) => {
+export const deleteBlock = async (req, res) => {
   try {
     const blockId = parseInt(req.params.blockId);
     await blockService.deleteBlock(blockId);
@@ -78,7 +78,7 @@ exports.deleteBlock = async (req, res) => {
   }
 };
 
-exports.uploadBlockImage = async (req, res) => {
+export const uploadBlockImage = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });

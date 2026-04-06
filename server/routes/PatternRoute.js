@@ -1,9 +1,9 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const authCheck = require("../middleware/authCheck");
-const requireAdmin = require("../middleware/requireAdmin");
+import authCheck from "../middleware/authCheck.js";
+import requireAdmin from "../middleware/requireAdmin.js";
 
-const {
+import {
   createPattern,
   getAllPatterns,
   getPatternById,
@@ -11,7 +11,7 @@ const {
   deletePattern,
   getPatternTypes,
   unlockPattern,
-} = require("../controllers/patternController");
+} from "../controllers/patternController.js";
 
 // Pattern CRUD routes
 router.get("/patterns", authCheck, getAllPatterns);
@@ -22,5 +22,5 @@ router.put("/patterns/:patternId", authCheck, requireAdmin, updatePattern);
 router.put("/patterns/:patternId/unlock", authCheck, requireAdmin, unlockPattern);
 router.delete("/patterns/:patternId", authCheck, requireAdmin, deletePattern);
 
-module.exports = router;
+export default router;
 

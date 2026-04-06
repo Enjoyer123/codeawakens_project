@@ -1,9 +1,9 @@
-const rewardService = require("../services/rewardService");
-const levelService = require("../services/levelService");
-const { parsePagination } = require("../utils/pagination");
-const { cleanupTempFile } = require("../utils/fileHelper");
+import * as rewardService from "../services/rewardService.js";
+import * as levelService from "../services/levelService.js";
+import { parsePagination } from "../utils/pagination.js";
+import { cleanupTempFile } from "../utils/fileHelper.js";
 
-exports.getAllRewards = async (req, res) => {
+export const getAllRewards = async (req, res) => {
   try {
     const paginationData = parsePagination(req.query);
     const result = await rewardService.getAllRewards(paginationData);
@@ -17,7 +17,7 @@ exports.getAllRewards = async (req, res) => {
   }
 };
 
-exports.getLevelsForReward = async (req, res) => {
+export const getLevelsForReward = async (req, res) => {
   try {
     const result = await levelService.getLevelsForDropdown();
     
@@ -30,7 +30,7 @@ exports.getLevelsForReward = async (req, res) => {
   }
 };
 
-exports.getRewardById = async (req, res) => {
+export const getRewardById = async (req, res) => {
   try {
     const rewardId = parseInt(req.params.rewardId);
     const result = await rewardService.getRewardById(rewardId);
@@ -44,7 +44,7 @@ exports.getRewardById = async (req, res) => {
   }
 };
 
-exports.createReward = async (req, res) => {
+export const createReward = async (req, res) => {
   try {
     const result = await rewardService.createReward(req.body);
     
@@ -60,7 +60,7 @@ exports.createReward = async (req, res) => {
   }
 };
 
-exports.updateReward = async (req, res) => {
+export const updateReward = async (req, res) => {
   try {
     const rewardId = parseInt(req.params.rewardId);
     const result = await rewardService.updateReward(rewardId, req.body);
@@ -77,7 +77,7 @@ exports.updateReward = async (req, res) => {
   }
 };
 
-exports.deleteReward = async (req, res) => {
+export const deleteReward = async (req, res) => {
   try {
     const rewardId = parseInt(req.params.rewardId);
     await rewardService.deleteReward(rewardId);
@@ -93,7 +93,7 @@ exports.deleteReward = async (req, res) => {
   }
 };
 
-exports.uploadRewardFrame = async (req, res) => {
+export const uploadRewardFrame = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No image provided" });
@@ -115,7 +115,7 @@ exports.uploadRewardFrame = async (req, res) => {
   }
 };
 
-exports.deleteRewardFrame = async (req, res) => {
+export const deleteRewardFrame = async (req, res) => {
   try {
     const rewardId = parseInt(req.params.rewardId);
     const result = await rewardService.deleteRewardFrame(rewardId);

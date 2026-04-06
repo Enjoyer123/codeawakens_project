@@ -1,9 +1,9 @@
-const guideService = require("../services/guideService");
-const levelService = require("../services/levelService");
-const { parsePagination } = require("../utils/pagination");
-const { cleanupTempFile } = require("../utils/fileHelper");
+import * as guideService from "../services/guideService.js";
+import * as levelService from "../services/levelService.js";
+import { parsePagination } from "../utils/pagination.js";
+import { cleanupTempFile } from "../utils/fileHelper.js";
 
-exports.getAllGuides = async (req, res) => {
+export const getAllGuides = async (req, res) => {
   try {
     const paginationData = parsePagination(req.query);
     const result = await guideService.getAllGuides(paginationData);
@@ -17,7 +17,7 @@ exports.getAllGuides = async (req, res) => {
   }
 };
 
-exports.getGuidesByLevel = async (req, res) => {
+export const getGuidesByLevel = async (req, res) => {
   try {
     const levelId = parseInt(req.params.levelId);
     const result = await guideService.getGuidesByLevel(levelId);
@@ -31,7 +31,7 @@ exports.getGuidesByLevel = async (req, res) => {
   }
 };
 
-exports.getLevelsForGuide = async (req, res) => {
+export const getLevelsForGuide = async (req, res) => {
   try {
     const result = await levelService.getLevelsForDropdown();
     
@@ -44,7 +44,7 @@ exports.getLevelsForGuide = async (req, res) => {
   }
 };
 
-exports.getGuideById = async (req, res) => {
+export const getGuideById = async (req, res) => {
   try {
     const guideId = parseInt(req.params.guideId);
     const result = await guideService.getGuideById(guideId);
@@ -58,7 +58,7 @@ exports.getGuideById = async (req, res) => {
   }
 };
 
-exports.createGuide = async (req, res) => {
+export const createGuide = async (req, res) => {
   try {
     const result = await guideService.createGuide(req.body);
     
@@ -74,7 +74,7 @@ exports.createGuide = async (req, res) => {
   }
 };
 
-exports.updateGuide = async (req, res) => {
+export const updateGuide = async (req, res) => {
   try {
     const guideId = parseInt(req.params.guideId);
     const result = await guideService.updateGuide(guideId, req.body);
@@ -91,7 +91,7 @@ exports.updateGuide = async (req, res) => {
   }
 };
 
-exports.deleteGuide = async (req, res) => {
+export const deleteGuide = async (req, res) => {
   try {
     const guideId = parseInt(req.params.guideId);
     await guideService.deleteGuide(guideId);
@@ -107,7 +107,7 @@ exports.deleteGuide = async (req, res) => {
   }
 };
 
-exports.uploadGuideImage = async (req, res) => {
+export const uploadGuideImage = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
@@ -129,7 +129,7 @@ exports.uploadGuideImage = async (req, res) => {
   }
 };
 
-exports.deleteGuideImage = async (req, res) => {
+export const deleteGuideImage = async (req, res) => {
   try {
     const imageId = parseInt(req.params.imageId);
     await guideService.deleteGuideImage(imageId);

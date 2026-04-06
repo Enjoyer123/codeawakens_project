@@ -1,10 +1,10 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const authCheck = require("../middleware/authCheck");
-const requireAdmin = require("../middleware/requireAdmin");
-const { uploadMiddleware } = require("../middleware/levelHintUpload");
+import authCheck from "../middleware/authCheck.js";
+import requireAdmin from "../middleware/requireAdmin.js";
+import { uploadMiddleware } from "../middleware/levelHintUpload.js";
 
-const {
+import {
   getAllLevelHints,
   getHintsByLevelId,
   createLevelHint,
@@ -12,7 +12,7 @@ const {
   deleteLevelHint,
   uploadHintImage,
   deleteHintImage,
-} = require("../controllers/levelHintController");
+} from "../controllers/levelHintController.js";
 
 // Admin CRUD for level hints
 router.get("/level-hints", authCheck, requireAdmin, getAllLevelHints);
@@ -41,6 +41,6 @@ router.delete(
   deleteHintImage
 );
 
-module.exports = router;
+export default router;
 
 

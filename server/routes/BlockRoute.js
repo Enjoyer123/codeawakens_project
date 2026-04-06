@@ -1,17 +1,17 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const authCheck = require("../middleware/authCheck");
-const requireAdmin = require("../middleware/requireAdmin");
+import authCheck from "../middleware/authCheck.js";
+import requireAdmin from "../middleware/requireAdmin.js";
 
-const {
+import {
   getAllBlocks,
   getBlockById,
   updateBlock,
   deleteBlock,
   createBlock,
   uploadBlockImage,
-} = require("../controllers/blockController");
-const { blockUploadMiddleware } = require("../middleware/blockUpload");
+} from "../controllers/blockController.js";
+import { blockUploadMiddleware } from "../middleware/blockUpload.js";
 
 // Public route for viewing blocks (user-facing)
 router.get("/blocks/public", authCheck, getAllBlocks);
@@ -24,5 +24,5 @@ router.put("/blocks/:blockId", authCheck, requireAdmin, updateBlock);
 router.delete("/blocks/:blockId", authCheck, requireAdmin, deleteBlock);
 router.post("/blocks/upload-image", authCheck, requireAdmin, blockUploadMiddleware.single("image"), uploadBlockImage);
 
-module.exports = router;
+export default router;
 

@@ -1,7 +1,7 @@
-const prisma = require("../models/prisma");
-const { buildPaginationResponse } = require("../utils/pagination");
+import prisma from "../models/prisma.js";
+import { buildPaginationResponse } from "../utils/pagination.js";
 
-async function getAllUsers({ page, limit, search, skip }) {
+export const getAllUsers = async ({ page, limit, search, skip }) => {
   let where = {};
   if (search.trim()) {
     const s = search.toLowerCase();
@@ -16,7 +16,7 @@ async function getAllUsers({ page, limit, search, skip }) {
   return { users, pagination: buildPaginationResponse(page, limit, total) };
 }
 
-async function updateUserRole(userId, role, adminClerkId) {
+export const updateUserRole = async (userId, role, adminClerkId) => {
   if (!role || !["user", "admin"].includes(role)) { const err = new Error("Invalid role. Must be 'user' or 'admin'"); err.status = 400; throw err; }
   const targetUser = await prisma.user.findUnique({ where: { user_id: userId } });
   if (!targetUser) { const err = new Error("User not found"); err.status = 404; throw err; }
@@ -29,7 +29,7 @@ async function updateUserRole(userId, role, adminClerkId) {
   });
 }
 
-async function getUserDetails(userId) {
+export const getUserDetails = async (userId) => {
   const user = await prisma.user.findUnique({
     where: { user_id: userId },
     select: { user_id: true, clerk_user_id: true, username: true, email: true, first_name: true, last_name: true, profile_image: true, role: true, is_active: true, created_at: true, updated_at: true, pre_score: true, post_score: true, skill_level: true },
@@ -42,14 +42,14 @@ async function getUserDetails(userId) {
   return { user, user_progress: userProgress, user_reward: userRewards };
 }
 
-async function deleteUser(userId, adminClerkId) {
+export const deleteUser = async (userId, adminClerkId) => {
   const targetUser = await prisma.user.findUnique({ where: { user_id: userId } });
   if (!targetUser) { const err = new Error("User not found"); err.status = 404; throw err; }
   if (targetUser.clerk_user_id === adminClerkId) { const err = new Error("Cannot delete your own account"); err.status = 400; throw err; }
   await prisma.user.delete({ where: { user_id: userId } });
 }
 
-async function resetUserTestScore(userId, type) {
+export const resetUserTestScore = async (userId, type) => {
   if (!["pre", "post"].includes(type)) { const err = new Error("Invalid test type. Use 'pre' or 'post'."); err.status = 400; throw err; }
 
   const updateData = {};
@@ -63,7 +63,7 @@ async function resetUserTestScore(userId, type) {
   });
 }
 
-async function getUserTestHistory(userId) {
+export const getUserTestHistory = async (userId) => {
   const userTests = await prisma.userTest.findMany({
     where: { user_id: userId },
     include: { test: { include: { choices: true } }, choice: true },
@@ -82,4 +82,4 @@ async function getUserTestHistory(userId) {
   });
 }
 
-module.exports = { getAllUsers, updateUserRole, getUserDetails, deleteUser, resetUserTestScore, getUserTestHistory };
+

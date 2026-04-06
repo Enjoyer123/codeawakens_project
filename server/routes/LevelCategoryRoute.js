@@ -1,11 +1,11 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const authCheck = require("../middleware/authCheck");
-const requireAdmin = require("../middleware/requireAdmin");
+import authCheck from "../middleware/authCheck.js";
+import requireAdmin from "../middleware/requireAdmin.js";
 
-const { uploadMiddleware } = require("../middleware/rewardUpload");
+import { uploadMiddleware } from "../middleware/rewardUpload.js";
 
-const {
+import {
   getAllLevelCategories,
   getLevelCategoryById,
   createLevelCategory,
@@ -14,7 +14,7 @@ const {
   uploadCategoryBackground,
   deleteCategoryBackground,
   updateLevelCategoryCoordinates, // Added this import
-} = require("../controllers/levelCategoryController");
+} from "../controllers/levelCategoryController.js";
 
 // Level Category CRUD routes
 router.get("/level-categories", authCheck, getAllLevelCategories);
@@ -36,5 +36,5 @@ router.post(
 );
 router.delete("/level-categories/:categoryId/background", authCheck, requireAdmin, deleteCategoryBackground);
 
-module.exports = router;
+export default router;
 

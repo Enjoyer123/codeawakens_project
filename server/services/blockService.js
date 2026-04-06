@@ -1,7 +1,7 @@
-const prisma = require("../models/prisma");
-const { buildPaginationResponse } = require("../utils/pagination");
+import prisma from "../models/prisma.js";
+import { buildPaginationResponse } from "../utils/pagination.js";
 
-async function getAllBlocks({ page, limit, search, skip }) {
+export const getAllBlocks = async ({ page, limit, search, skip }) => {
   let where = {};
   if (search.trim()) {
     const s = search.toLowerCase();
@@ -22,7 +22,7 @@ async function getAllBlocks({ page, limit, search, skip }) {
   return { blocks, pagination: buildPaginationResponse(page, limit, total) };
 }
 
-async function getBlockById(blockId) {
+export const getBlockById = async (blockId) => {
   const block = await prisma.block.findUnique({ where: { block_id: blockId } });
   if (!block) {
     const err = new Error("Block not found");
@@ -32,7 +32,7 @@ async function getBlockById(blockId) {
   return block;
 }
 
-async function createBlock(data) {
+export const createBlock = async (data) => {
   const { block_key, block_name, block_type, description, is_available } = data;
   if (!block_key || !block_name) {
     const err = new Error("Missing required fields: block_key, block_name");
@@ -61,7 +61,7 @@ async function createBlock(data) {
   });
 }
 
-async function updateBlock(blockId, data) {
+export const updateBlock = async (blockId, data) => {
   const existing = await prisma.block.findUnique({
     where: { block_id: blockId },
   });
@@ -97,7 +97,7 @@ async function updateBlock(blockId, data) {
   });
 }
 
-async function deleteBlock(blockId) {
+export const deleteBlock = async (blockId) => {
   const block = await prisma.block.findUnique({
     where: { block_id: blockId },
     include: { level_blocks: true },
@@ -117,10 +117,4 @@ async function deleteBlock(blockId) {
   await prisma.block.delete({ where: { block_id: blockId } });
 }
 
-module.exports = {
-  getAllBlocks,
-  getBlockById,
-  createBlock,
-  updateBlock,
-  deleteBlock,
-};
+

@@ -1,9 +1,9 @@
-const prisma = require("../models/prisma");
-const { buildPaginationResponse } = require("../utils/pagination");
+import prisma from "../models/prisma.js";
+import { buildPaginationResponse } from "../utils/pagination.js";
 
 // ── Utility Functions ──
 
-function countBlocksFromXml(xmlPattern) {
+export const countBlocksFromXml = (xmlPattern) => {
   if (!xmlPattern || typeof xmlPattern !== "string") return 0;
   try {
     const matches = xmlPattern.match(/<block\b/gi);
@@ -14,7 +14,7 @@ function countBlocksFromXml(xmlPattern) {
   }
 }
 
-function extractBlockKeysFromXml(xmlPattern) {
+export const extractBlockKeysFromXml = (xmlPattern) => {
   if (!xmlPattern || typeof xmlPattern !== "string") return [];
   try {
     const blockTypeRegex = /type=["']([^"']+)["']/g;
@@ -31,7 +31,7 @@ function extractBlockKeysFromXml(xmlPattern) {
   }
 }
 
-function getRequiredBlocksFromCategory(category) {
+export const getRequiredBlocksFromCategory = (category) => {
   if (!category || !category.block_key) return null;
   const blockKey = category.block_key;
   let blocks = [];
@@ -52,7 +52,7 @@ function getRequiredBlocksFromCategory(category) {
   return validBlocks.length > 0 ? validBlocks : null;
 }
 
-async function evaluatePatternType(levelId, xmlPattern, blockKeywords = null) {
+export const evaluatePatternType = async (levelId, xmlPattern, blockKeywords = null) => {
   try {
     const level = await prisma.level.findUnique({
       where: { level_id: parseInt(levelId) },
@@ -92,7 +92,7 @@ async function evaluatePatternType(levelId, xmlPattern, blockKeywords = null) {
 
 // ── Service Functions ──
 
-async function createPattern(data) {
+export const createPattern = async (data) => {
   const { level_id, pattern_type_id, weapon_id, pattern_name, description, xmlpattern, hints, block_keywords, bigO } = data;
   if (!level_id || !pattern_name) {
     const err = new Error("Missing required fields: level_id, pattern_name"); err.status = 400; throw err;
@@ -129,7 +129,7 @@ async function createPattern(data) {
   });
 }
 
-async function getAllPatterns({ page, limit, skip }, levelId) {
+export const getAllPatterns = async ({ page, limit, skip }, levelId) => {
   let where = {};
   if (levelId) where.level_id = parseInt(levelId);
 
@@ -147,7 +147,7 @@ async function getAllPatterns({ page, limit, skip }, levelId) {
   return { patterns, pagination: buildPaginationResponse(page, limit, total) };
 }
 
-async function getPatternById(patternId) {
+export const getPatternById = async (patternId) => {
   const pattern = await prisma.pattern.findUnique({
     where: { pattern_id: patternId },
     include: { level: true, pattern_type: true, weapon: true },
@@ -156,7 +156,7 @@ async function getPatternById(patternId) {
   return pattern;
 }
 
-async function updatePattern(patternId, data) {
+export const updatePattern = async (patternId, data) => {
   const { pattern_type_id, weapon_id, pattern_name, description, xmlpattern, hints, is_available, bigO } = data;
   const existing = await prisma.pattern.findUnique({ where: { pattern_id: patternId } });
   if (!existing) { const err = new Error("Pattern not found"); err.status = 404; throw err; }
@@ -185,25 +185,20 @@ async function updatePattern(patternId, data) {
   });
 }
 
-async function deletePattern(patternId) {
+export const deletePattern = async (patternId) => {
   const pattern = await prisma.pattern.findUnique({ where: { pattern_id: patternId } });
   if (!pattern) { const err = new Error("Pattern not found"); err.status = 404; throw err; }
   await prisma.pattern.delete({ where: { pattern_id: patternId } });
 }
 
-async function getPatternTypes() {
+export const getPatternTypes = async () => {
   return prisma.patternType.findMany({ orderBy: { pattern_type_id: "asc" } });
 }
 
-async function unlockPattern(patternId) {
+export const unlockPattern = async (patternId) => {
   const pattern = await prisma.pattern.findUnique({ where: { pattern_id: patternId } });
   if (!pattern) { const err = new Error("Pattern not found"); err.status = 404; throw err; }
   return prisma.pattern.update({ where: { pattern_id: patternId }, data: { is_available: true } });
 }
 
-module.exports = {
-  createPattern, getAllPatterns, getPatternById, updatePattern, deletePattern,
-  getPatternTypes, unlockPattern,
-  // Export utilities for potential reuse
-  evaluatePatternType, countBlocksFromXml, extractBlockKeysFromXml,
-};
+

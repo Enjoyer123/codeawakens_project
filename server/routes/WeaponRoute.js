@@ -1,10 +1,10 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const authCheck = require("../middleware/authCheck");
-const requireAdmin = require("../middleware/requireAdmin");
-const { uploadMiddleware } = require("../middleware/weaponUpload");
+import authCheck from "../middleware/authCheck.js";
+import requireAdmin from "../middleware/requireAdmin.js";
+import { uploadMiddleware } from "../middleware/weaponUpload.js";
 
-const {
+import {
   getAllWeapons,
   getWeaponById,
   createWeapon,
@@ -13,7 +13,7 @@ const {
   addWeaponImage,
   updateWeaponImage,
   deleteWeaponImage,
-} = require("../controllers/weaponController");
+} from "../controllers/weaponController.js";
 
 // Weapon CRUD routes
 router.get("/weapons", authCheck, requireAdmin, getAllWeapons);
@@ -39,5 +39,5 @@ router.put(
 );
 router.delete("/weapons/images/:imageId", authCheck, requireAdmin, deleteWeaponImage);
 
-module.exports = router;
+export default router;
 

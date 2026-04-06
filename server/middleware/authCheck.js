@@ -1,4 +1,4 @@
-const { clerkClient } = require("@clerk/express");
+import { clerkClient } from "@clerk/express";
 
 const authCheck = async (req, res, next) => {
   try {
@@ -16,4 +16,4 @@ const authCheck = async (req, res, next) => {
   }
 }
 
-module.exports = authCheck;
+export default authCheck;

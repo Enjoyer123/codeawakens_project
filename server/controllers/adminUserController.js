@@ -1,7 +1,7 @@
-const adminUserService = require("../services/adminUserService");
-const { parsePagination } = require("../utils/pagination");
+import * as adminUserService from "../services/adminUserService.js";
+import { parsePagination } from "../utils/pagination.js";
 
-exports.getAllUsers = async (req, res) => {
+export const getAllUsers = async (req, res) => {
   try {
     const paginationData = parsePagination(req.query, 5);
     const result = await adminUserService.getAllUsers(paginationData);
@@ -15,7 +15,7 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
-exports.updateUserRole = async (req, res) => {
+export const updateUserRole = async (req, res) => {
   const adminClerkId = req.user.id;
   const userId = parseInt(req.params.userId);
   const role = req.body.role;
@@ -38,7 +38,7 @@ exports.updateUserRole = async (req, res) => {
   }
 };
 
-exports.getUserDetails = async (req, res) => {
+export const getUserDetails = async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
     const result = await adminUserService.getUserDetails(userId);
@@ -52,7 +52,7 @@ exports.getUserDetails = async (req, res) => {
   }
 };
 
-exports.deleteUser = async (req, res) => {
+export const deleteUser = async (req, res) => {
   const adminClerkId = req.user.id;
   const userId = parseInt(req.params.userId);
   
@@ -73,7 +73,7 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-exports.resetUserTestScore = async (req, res) => {
+export const resetUserTestScore = async (req, res) => {
   const adminClerkId = req.user.id;
   const userId = parseInt(req.params.userId);
   const testType = req.body.type;
@@ -95,7 +95,7 @@ exports.resetUserTestScore = async (req, res) => {
   }
 };
 
-exports.getUserTestHistory = async (req, res) => {
+export const getUserTestHistory = async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
     const result = await adminUserService.getUserTestHistory(userId);

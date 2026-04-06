@@ -1,15 +1,15 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const authCheck = require("../middleware/authCheck");
-const requireAdmin = require("../middleware/requireAdmin");
+import authCheck from "../middleware/authCheck.js";
+import requireAdmin from "../middleware/requireAdmin.js";
 
-const {
+import {
   getAllVictoryConditions,
   getVictoryConditionById,
   updateVictoryCondition,
   deleteVictoryCondition,
   createVictoryCondition,
-} = require("../controllers/victoryConditionController");
+} from "../controllers/victoryConditionController.js";
 
 // Victory Condition CRUD routes
 router.get("/victory-conditions", authCheck, requireAdmin, getAllVictoryConditions);
@@ -19,5 +19,5 @@ router.post("/victory-conditions", authCheck, requireAdmin, createVictoryConditi
 router.put("/victory-conditions/:victoryConditionId", authCheck, requireAdmin, updateVictoryCondition);
 router.delete("/victory-conditions/:victoryConditionId", authCheck, requireAdmin, deleteVictoryCondition);
 
-module.exports = router;
+export default router;
 

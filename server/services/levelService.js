@@ -1,9 +1,9 @@
-const prisma = require("../models/prisma");
-const { parsePagination, buildPaginationResponse } = require("../utils/pagination");
+import prisma from "../models/prisma.js";
+import { parsePagination, buildPaginationResponse } from "../utils/pagination.js";
 
 // ── Shared Helpers ──
 
-function parseJsonField(field) {
+export const parseJsonField = (field) => {
   if (field === undefined) return undefined;
   if (field === null || field === "") return null;
   if (typeof field === "string") {
@@ -16,7 +16,7 @@ function parseJsonField(field) {
  * Calculate lock state for a level given user context.
  * Shared by levelService and levelCategoryService.
  */
-function calculateLockState(level, user, completedLevelIds) {
+export const calculateLockState = (level, user, completedLevelIds) => {
   const isPublished = level.is_unlocked;
 
   // Admin bypass
@@ -59,7 +59,7 @@ function calculateLockState(level, user, completedLevelIds) {
 /**
  * Get completed level IDs for a user (for unlock calculations)
  */
-async function getCompletedLevelIds(userId) {
+export const getCompletedLevelIds = async (userId) => {
   const progress = await prisma.userProgress.findMany({
     where: {
       user_id: userId,
@@ -73,7 +73,7 @@ async function getCompletedLevelIds(userId) {
 /**
  * Resolve user from clerkUserId (returns null if not found or not logged in)
  */
-async function resolveUser(clerkUserId) {
+export const resolveUser = async (clerkUserId) => {
   if (!clerkUserId) return null;
   return prisma.user.findUnique({
     where: { clerk_user_id: clerkUserId },
@@ -112,7 +112,7 @@ const LEVEL_WITH_RELATIONS_INCLUDE = {
 
 // ── Service Functions ──
 
-async function getAllLevels({ page, limit, search, skip }) {
+export const getAllLevels = async ({ page, limit, search, skip }) => {
   let where = {};
   if (search.trim()) {
     const searchLower = search.toLowerCase();
@@ -136,7 +136,7 @@ async function getAllLevels({ page, limit, search, skip }) {
   return { levels, pagination: buildPaginationResponse(page, limit, total) };
 }
 
-async function getLevelById(levelId, clerkUserId) {
+export const getLevelById = async (levelId, clerkUserId) => {
   const level = await prisma.level.findUnique({
     where: { level_id: levelId },
     include: LEVEL_DETAIL_INCLUDE,
@@ -180,7 +180,7 @@ async function getLevelById(levelId, clerkUserId) {
   return { ...level, is_unlocked: isPublished, is_locked: isLocked };
 }
 
-async function createLevel(data, clerkUserId) {
+export const createLevel = async (data, clerkUserId) => {
   if (!clerkUserId) {
     const err = new Error("User not authenticated");
     err.status = 401;
@@ -265,7 +265,7 @@ async function createLevel(data, clerkUserId) {
   return level;
 }
 
-async function updateLevel(levelId, data) {
+export const updateLevel = async (levelId, data) => {
   const existingLevel = await prisma.level.findUnique({
     where: { level_id: levelId },
   });
@@ -360,7 +360,7 @@ async function updateLevel(levelId, data) {
   return level;
 }
 
-async function deleteLevel(levelId) {
+export const deleteLevel = async (levelId) => {
   const level = await prisma.level.findUnique({ where: { level_id: levelId } });
   if (!level) {
     const err = new Error("Level not found");
@@ -370,7 +370,7 @@ async function deleteLevel(levelId) {
   await prisma.level.delete({ where: { level_id: levelId } });
 }
 
-async function unlockLevel(levelId) {
+export const unlockLevel = async (levelId) => {
   const level = await prisma.level.findUnique({ where: { level_id: levelId } });
   if (!level) {
     const err = new Error("Level not found");
@@ -383,7 +383,7 @@ async function unlockLevel(levelId) {
   });
 }
 
-async function updateLevelCoordinates(levelId, coordinates) {
+export const updateLevelCoordinates = async (levelId, coordinates) => {
   const level = await prisma.level.findUnique({ where: { level_id: levelId } });
   if (!level) {
     const err = new Error("Level not found");
@@ -397,7 +397,7 @@ async function updateLevelCoordinates(levelId, coordinates) {
   return updated;
 }
 
-async function getAllCategories() {
+export const getAllCategories = async () => {
   const categories = await prisma.levelCategory.findMany({
     orderBy: { category_name: "asc" },
     include: {
@@ -411,7 +411,7 @@ async function getAllCategories() {
   }));
 }
 
-async function getLevelsForDropdown() {
+export const getLevelsForDropdown = async () => {
   return prisma.level.findMany({
     select: {
       level_id: true,
@@ -422,19 +422,4 @@ async function getLevelsForDropdown() {
   });
 }
 
-module.exports = {
-  getAllLevels,
-  getLevelById,
-  createLevel,
-  updateLevel,
-  deleteLevel,
-  unlockLevel,
-  updateLevelCoordinates,
-  getAllCategories,
-  getLevelsForDropdown,
-  // Shared helpers for other services
-  calculateLockState,
-  getCompletedLevelIds,
-  resolveUser,
-  parseJsonField,
-};
+

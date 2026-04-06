@@ -1,6 +1,6 @@
-const prisma = require("../models/prisma");
+import prisma from "../models/prisma.js";
 
-async function getLeaderboard() {
+export const getLeaderboard = async () => {
   const users = await prisma.user.findMany({
     where: { role: "user", is_active: true },
     select: { user_id: true, username: true, first_name: true, last_name: true, profile_image: true, user_progress: { select: { stars_earned: true } } },
@@ -21,4 +21,4 @@ async function getLeaderboard() {
   return leaderboard;
 }
 
-module.exports = { getLeaderboard };
+
