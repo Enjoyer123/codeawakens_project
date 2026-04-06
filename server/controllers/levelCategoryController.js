@@ -4,7 +4,8 @@ import { cleanupTempFile } from "../utils/fileHelper.js";
 export const getAllLevelCategories = async (req, res) => {
   try {
     const clerkUserId = req.user ? req.user.id : null;
-    const result = await levelCategoryService.getAllLevelCategories(clerkUserId);
+    const search = req.query.search || "";
+    const result = await levelCategoryService.getAllLevelCategories(search, clerkUserId);
     
     res.status(200).json(result);
   } catch (error) {

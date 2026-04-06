@@ -1,4 +1,4 @@
-import prisma from "../models/prisma.js";
+import * as blockRepo from "../models/blockModel.js";
 import { buildPaginationResponse } from "../utils/pagination.js";
 
 export const getAllBlocks = async ({ page, limit, search, skip }) => {
@@ -12,18 +12,13 @@ export const getAllBlocks = async ({ page, limit, search, skip }) => {
       ],
     };
   }
-  const total = await prisma.block.count({ where });
-  const blocks = await prisma.block.findMany({
-    where,
-    orderBy: { created_at: "desc" },
-    skip,
-    take: limit,
-  });
+  const total = await blockRepo.countBlocks(where);
+  const blocks = await blockRepo.findManyBlocks(where, skip, limit);
   return { blocks, pagination: buildPaginationResponse(page, limit, total) };
 }
 
 export const getBlockById = async (blockId) => {
-  const block = await prisma.block.findUnique({ where: { block_id: blockId } });
+  const block = await blockRepo.findBlockById(blockId);
   if (!block) {
     const err = new Error("Block not found");
     err.status = 404;
@@ -39,7 +34,7 @@ export const createBlock = async (data) => {
     err.status = 400;
     throw err;
   }
-  const existing = await prisma.block.findUnique({ where: { block_key } });
+  const existing = await blockRepo.findBlockByKey(block_key);
   if (existing) {
     const err = new Error(
       `Block key "${block_key}" already exists. Each block must have a unique key.`,
@@ -47,8 +42,7 @@ export const createBlock = async (data) => {
     err.status = 409;
     throw err;
   }
-  return prisma.block.create({
-    data: {
+  return blockRepo.createBlock({ 
       block_key,
       block_name,
       block_type: block_type || "general",
@@ -57,51 +51,11 @@ export const createBlock = async (data) => {
         is_available === true ||
         is_available === "true" ||
         is_available === undefined,
-    },
-  });
+     });
 }
 
 export const updateBlock = async (blockId, data) => {
-  const existing = await prisma.block.findUnique({
-    where: { block_id: blockId },
-  });
-  if (!existing) {
-    const err = new Error("Block not found");
-    err.status = 404;
-    throw err;
-  }
-
-  if (data.block_key && data.block_key !== existing.block_key) {
-    const keyExists = await prisma.block.findFirst({
-      where: { block_key: data.block_key, block_id: { not: blockId } },
-    });
-    if (keyExists) {
-      const err = new Error(`Block key "${data.block_key}" already exists.`);
-      err.status = 409;
-      throw err;
-    }
-  }
-
-  const updateData = {};
-  if (data.block_key !== undefined) updateData.block_key = data.block_key;
-  if (data.block_name !== undefined) updateData.block_name = data.block_name;
-  if (data.block_type !== undefined) updateData.block_type = data.block_type;
-  if (data.description !== undefined) updateData.description = data.description;
-  if (data.is_available !== undefined)
-    updateData.is_available =
-      data.is_available === true || data.is_available === "true";
-
-  return prisma.block.update({
-    where: { block_id: blockId },
-    data: updateData,
-  });
-}
-
-export const deleteBlock = async (blockId) => {
-  const block = await prisma.block.findUnique({
-    where: { block_id: blockId },
-    include: { level_blocks: true },
-  });
+  const existing = await blockRepo.findBlockForDeletion(blockId);
   if (!block) {
     const err = new Error("Block not found");
     err.status = 404;
@@ -114,7 +68,7 @@ export const deleteBlock = async (blockId) => {
     err.status = 400;
     throw err;
   }
-  await prisma.block.delete({ where: { block_id: blockId } });
+  await blockRepo.deleteBlock(blockId);
 }
 
 

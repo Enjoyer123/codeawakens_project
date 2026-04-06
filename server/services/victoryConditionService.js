@@ -1,4 +1,4 @@
-import prisma from "../models/prisma.js";
+import * as vcRepo from "../models/victoryConditionModel.js";
 import { buildPaginationResponse } from "../utils/pagination.js";
 
 export const getAllVictoryConditions = async ({ page, limit, search, skip }) => {
@@ -7,13 +7,13 @@ export const getAllVictoryConditions = async ({ page, limit, search, skip }) => 
     const s = search.toLowerCase();
     where = { OR: [{ type: { contains: s, mode: "insensitive" } }, { description: { contains: s, mode: "insensitive" } }, { check: { contains: s, mode: "insensitive" } }] };
   }
-  const total = await prisma.victoryCondition.count({ where });
-  const victoryConditions = await prisma.victoryCondition.findMany({ where, orderBy: { created_at: "desc" }, skip, take: limit });
+  const total = await vcRepo.countVictoryConditions(where);
+  const victoryConditions = await vcRepo.findManyVictoryConditions(where, skip, limit);
   return { victoryConditions, pagination: { total, totalPages: Math.ceil(total / limit), page, limit } };
 }
 
 export const getVictoryConditionById = async (vcId) => {
-  const vc = await prisma.victoryCondition.findUnique({ where: { victory_condition_id: vcId } });
+  const vc = await vcRepo.findVictoryConditionById(vcId);
   if (!vc) { const err = new Error("Victory condition not found"); err.status = 404; throw err; }
   return vc;
 }
@@ -22,40 +22,30 @@ export const createVictoryCondition = async (data) => {
   const { type, description, check, is_available } = data;
   if (!type || !description || !check) { const err = new Error("Missing required fields: type, description, check"); err.status = 400; throw err; }
   const trimmedType = type.trim();
-  const existing = await prisma.victoryCondition.findFirst({ where: { type: { equals: trimmedType, mode: "insensitive" } } });
+  const existing = await vcRepo.findVictoryConditionByType(trimmedType);
   if (existing) { const err = new Error(`A victory condition with this type "${trimmedType}" already exists.`); err.status = 409; throw err; }
 
-  return prisma.victoryCondition.create({
-    data: { type: trimmedType, description: description.trim(), check: check.trim(), is_available: is_available === true || is_available === "true" || is_available === undefined },
-  });
+  return vcRepo.createVictoryCondition({  type: trimmedType, description: description.trim(), check: check.trim(), is_available: is_available === true || is_available === "true" || is_available === undefined  });
 }
 
 export const updateVictoryCondition = async (vcId, data) => {
   const { type, description, check, is_available } = data;
   if (!type || !description || !check) { const err = new Error("Missing required fields: type, description, check"); err.status = 400; throw err; }
 
-  const existing = await prisma.victoryCondition.findUnique({ where: { victory_condition_id: vcId } });
+  const existing = await vcRepo.findVictoryConditionById(vcId);
   if (!existing) { const err = new Error("Victory condition not found"); err.status = 404; throw err; }
 
   const trimmedType = type.trim();
   if (trimmedType !== existing.type) {
-    const duplicate = await prisma.victoryCondition.findFirst({
-      where: { type: { equals: trimmedType, mode: "insensitive" }, victory_condition_id: { not: vcId } },
-    });
+    const duplicate = await vcRepo.findVictoryConditionByTypeExceptId(trimmedType, vcId);
     if (duplicate) { const err = new Error(`A victory condition with this type "${trimmedType}" already exists.`); err.status = 409; throw err; }
   }
 
-  return prisma.victoryCondition.update({
-    where: { victory_condition_id: vcId },
-    data: { type: trimmedType, description: description.trim(), check: check.trim(), is_available: is_available === true || is_available === "true" },
-  });
+  return vcRepo.updateVictoryCondition(vcId, {  type: trimmedType, description: description.trim(), check: check.trim(), is_available: is_available === true || is_available === "true"  });
 }
 
 export const deleteVictoryCondition = async (vcId) => {
-  const vc = await prisma.victoryCondition.findUnique({
-    where: { victory_condition_id: vcId },
-    include: { level_victory_conditions: true },
-  });
+  const vc = await vcRepo.findVictoryConditionForDeletion(vcId);
   if (!vc) { const err = new Error("Victory condition not found"); err.status = 404; throw err; }
 
   if (vc.level_victory_conditions && vc.level_victory_conditions.length > 0) {
@@ -64,7 +54,7 @@ export const deleteVictoryCondition = async (vcId) => {
     err.status = 400; throw err;
   }
 
-  await prisma.victoryCondition.delete({ where: { victory_condition_id: vcId } });
+  await vcRepo.deleteVictoryCondition(vcId);
 }
 
 

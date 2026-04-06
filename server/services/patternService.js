@@ -1,4 +1,4 @@
-import prisma from "../models/prisma.js";
+import * as patternRepo from "../models/patternModel.js";
 import { buildPaginationResponse } from "../utils/pagination.js";
 
 // ── Utility Functions ──
@@ -54,10 +54,7 @@ export const getRequiredBlocksFromCategory = (category) => {
 
 export const evaluatePatternType = async (levelId, xmlPattern, blockKeywords = null) => {
   try {
-    const level = await prisma.level.findUnique({
-      where: { level_id: parseInt(levelId) },
-      include: { category: true, level_blocks: { include: { block: true } } },
-    });
+    const level = await patternRepo.findLevelWithCategory(parseInt(levelId));
     if (!level) throw new Error("Level not found");
 
     const category = level.category;
@@ -98,7 +95,7 @@ export const createPattern = async (data) => {
     const err = new Error("Missing required fields: level_id, pattern_name"); err.status = 400; throw err;
   }
 
-  const level = await prisma.level.findUnique({ where: { level_id: parseInt(level_id) }, include: { category: true } });
+  const level = await patternRepo.findLevelWithCategory(parseInt(level_id));
   if (!level) { const err = new Error("Level not found"); err.status = 404; throw err; }
 
   let evaluatedPatternTypeId = pattern_type_id;
@@ -109,23 +106,20 @@ export const createPattern = async (data) => {
     const err = new Error("Missing required field: pattern_type_id (or provide xmlpattern for auto-evaluation)"); err.status = 400; throw err;
   }
 
-  const patternType = await prisma.patternType.findUnique({ where: { pattern_type_id: parseInt(evaluatedPatternTypeId) } });
+  const patternType = await patternRepo.findPatternTypeById(parseInt(evaluatedPatternTypeId));
   if (!patternType) { const err = new Error("Pattern type not found"); err.status = 404; throw err; }
 
   if (weapon_id) {
-    const weapon = await prisma.weapon.findUnique({ where: { weapon_id: parseInt(weapon_id) } });
+    const weapon = await patternRepo.findWeaponById(parseInt(weapon_id));
     if (!weapon) { const err = new Error("Weapon not found"); err.status = 404; throw err; }
   }
 
-  return prisma.pattern.create({
-    data: {
-      level_id: parseInt(level_id), pattern_type_id: parseInt(evaluatedPatternTypeId),
-      weapon_id: weapon_id ? parseInt(weapon_id) : null, pattern_name,
-      description: description || null, xmlpattern: xmlpattern || null,
-      hints: hints ? JSON.parse(JSON.stringify(hints)) : null,
-      count: countBlocksFromXml(xmlpattern) || 0, bigO: bigO || null, is_available: false,
-    },
-    include: { level: true, pattern_type: true, weapon: true },
+  return patternRepo.createPattern({
+    level_id: parseInt(level_id), pattern_type_id: parseInt(evaluatedPatternTypeId),
+    weapon_id: weapon_id ? parseInt(weapon_id) : null, pattern_name,
+    description: description || null, xmlpattern: xmlpattern || null,
+    hints: hints ? JSON.parse(JSON.stringify(hints)) : null,
+    count: countBlocksFromXml(xmlpattern) || 0, bigO: bigO || null, is_available: false,
   });
 }
 
@@ -133,32 +127,20 @@ export const getAllPatterns = async ({ page, limit, skip }, levelId) => {
   let where = {};
   if (levelId) where.level_id = parseInt(levelId);
 
-  const total = await prisma.pattern.count({ where });
-  const patterns = await prisma.pattern.findMany({
-    where,
-    include: {
-      level: { select: { level_id: true, level_name: true } },
-      pattern_type: true,
-      weapon: { select: { weapon_id: true, weapon_name: true, weapon_key: true } },
-    },
-    orderBy: { created_at: "desc" },
-    skip, take: limit,
-  });
+  const total = await patternRepo.countPatterns(where);
+  const patterns = await patternRepo.findManyPatterns(where, skip, limit);
   return { patterns, pagination: buildPaginationResponse(page, limit, total) };
 }
 
 export const getPatternById = async (patternId) => {
-  const pattern = await prisma.pattern.findUnique({
-    where: { pattern_id: patternId },
-    include: { level: true, pattern_type: true, weapon: true },
-  });
+  const pattern = await patternRepo.findPatternById(patternId);
   if (!pattern) { const err = new Error("Pattern not found"); err.status = 404; throw err; }
   return pattern;
 }
 
 export const updatePattern = async (patternId, data) => {
   const { pattern_type_id, weapon_id, pattern_name, description, xmlpattern, hints, is_available, bigO } = data;
-  const existing = await prisma.pattern.findUnique({ where: { pattern_id: patternId } });
+  const existing = await patternRepo.findPatternById(patternId);
   if (!existing) { const err = new Error("Pattern not found"); err.status = 404; throw err; }
 
   let evaluatedPatternTypeId = pattern_type_id;
@@ -179,26 +161,21 @@ export const updatePattern = async (patternId, data) => {
   if (is_available !== undefined) updateData.is_available = is_available;
   if (bigO !== undefined) updateData.bigO = bigO || null;
 
-  return prisma.pattern.update({
-    where: { pattern_id: patternId }, data: updateData,
-    include: { level: true, pattern_type: true, weapon: true },
-  });
+  return patternRepo.updatePattern(patternId, updateData);
 }
 
 export const deletePattern = async (patternId) => {
-  const pattern = await prisma.pattern.findUnique({ where: { pattern_id: patternId } });
+  const pattern = await patternRepo.findPatternById(patternId);
   if (!pattern) { const err = new Error("Pattern not found"); err.status = 404; throw err; }
-  await prisma.pattern.delete({ where: { pattern_id: patternId } });
+  await patternRepo.deletePattern(patternId);
 }
 
 export const getPatternTypes = async () => {
-  return prisma.patternType.findMany({ orderBy: { pattern_type_id: "asc" } });
+  return patternRepo.findManyPatternTypes();
 }
 
 export const unlockPattern = async (patternId) => {
-  const pattern = await prisma.pattern.findUnique({ where: { pattern_id: patternId } });
+  const pattern = await patternRepo.findPatternById(patternId);
   if (!pattern) { const err = new Error("Pattern not found"); err.status = 404; throw err; }
-  return prisma.pattern.update({ where: { pattern_id: patternId }, data: { is_available: true } });
+  return patternRepo.updatePatternAvailability(patternId, true);
 }
-
-

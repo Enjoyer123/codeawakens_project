@@ -1,13 +1,11 @@
-import prisma from "../models/prisma.js";
-import { parsePagination, buildPaginationResponse } from "../utils/pagination.js";
+import * as weaponRepo from "../models/weaponModel.js";
+import { buildPaginationResponse } from "../utils/pagination.js";
 import { safeDeleteFile, moveFile } from "../utils/fileHelper.js";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-
 
 export const getAllWeapons = async ({ page, limit, search, skip }) => {
   let where = {};
@@ -21,23 +19,14 @@ export const getAllWeapons = async ({ page, limit, search, skip }) => {
     };
   }
 
-  const total = await prisma.weapon.count({ where });
-  const weapons = await prisma.weapon.findMany({
-    where,
-    include: { weapon_images: { orderBy: [{ type_animation: "asc" }, { frame: "asc" }] } },
-    orderBy: { created_at: "desc" },
-    skip,
-    take: limit,
-  });
+  const total = await weaponRepo.countWeapons(where);
+  const weapons = await weaponRepo.findManyWeapons(where, skip, limit);
 
   return { weapons, pagination: buildPaginationResponse(page, limit, total) };
 }
 
 export const getWeaponById = async (weaponId) => {
-  const weapon = await prisma.weapon.findUnique({
-    where: { weapon_id: weaponId },
-    include: { weapon_images: { orderBy: [{ type_animation: "asc" }, { frame: "asc" }] } },
-  });
+  const weapon = await weaponRepo.findWeaponById(weaponId);
   if (!weapon) { const err = new Error("Weapon not found"); err.status = 404; throw err; }
   return weapon;
 }
@@ -49,27 +38,26 @@ export const createWeapon = async (data) => {
     err.status = 400; throw err;
   }
 
-  const existing = await prisma.weapon.findUnique({ where: { weapon_key } });
+  const existing = await weaponRepo.findWeaponByKey(weapon_key);
   if (existing) { const err = new Error("Weapon key already exists"); err.status = 400; throw err; }
 
-  return prisma.weapon.create({
-    data: { weapon_key, weapon_name, combat_power: parseInt(combat_power) || 0, weapon_type },
-    include: { weapon_images: true },
+  return weaponRepo.createWeapon({
+    weapon_key, weapon_name, combat_power: parseInt(combat_power) || 0, weapon_type
   });
 }
 
 export const updateWeapon = async (weaponId, data) => {
   const { weapon_key, weapon_name, combat_power, weapon_type } = data;
-  const existing = await prisma.weapon.findUnique({ where: { weapon_id: weaponId } });
+  const existing = await weaponRepo.findWeaponById(weaponId);
   if (!existing) { const err = new Error("Weapon not found"); err.status = 404; throw err; }
 
   const weaponKeyChanged = weapon_key && weapon_key !== existing.weapon_key;
   if (weaponKeyChanged) {
-    const keyExists = await prisma.weapon.findUnique({ where: { weapon_key } });
+    const keyExists = await weaponRepo.findWeaponByKey(weapon_key);
     if (keyExists) { const err = new Error("Weapon key already exists"); err.status = 400; throw err; }
 
     // Rename all image files
-    const existingImages = await prisma.weapon_Image.findMany({ where: { weapon_id: weaponId } });
+    const existingImages = await weaponRepo.findWeaponImagesByWeaponId(weaponId);
     for (const image of existingImages) {
       const oldFilePath = path.join(__dirname, "..", image.path_file);
       const fileExtension = path.extname(image.path_file) || ".png";
@@ -82,7 +70,7 @@ export const updateWeapon = async (weaponId, data) => {
       if (fs.existsSync(oldFilePath)) {
         try { fs.renameSync(oldFilePath, newFilePath); } catch (e) { console.error(`Error renaming ${oldFilePath}:`, e); }
       }
-      await prisma.weapon_Image.update({ where: { file_id: image.file_id }, data: { path_file: newPath } });
+      await weaponRepo.updateWeaponImagePath(image.file_id, newPath);
     }
   }
 
@@ -92,25 +80,18 @@ export const updateWeapon = async (weaponId, data) => {
   if (combat_power !== undefined) updateData.combat_power = parseInt(combat_power);
   if (weapon_type) updateData.weapon_type = weapon_type;
 
-  return prisma.weapon.update({
-    where: { weapon_id: weaponId },
-    data: updateData,
-    include: { weapon_images: { orderBy: [{ type_animation: "asc" }, { frame: "asc" }] } },
-  });
+  return weaponRepo.updateWeapon(weaponId, updateData);
 }
 
 export const deleteWeapon = async (weaponId) => {
-  const weapon = await prisma.weapon.findUnique({
-    where: { weapon_id: weaponId },
-    include: { weapon_images: true },
-  });
+  const weapon = await weaponRepo.findWeaponById(weaponId);
   if (!weapon) { const err = new Error("Weapon not found"); err.status = 404; throw err; }
 
   for (const image of weapon.weapon_images) {
     safeDeleteFile(image.path_file);
   }
 
-  await prisma.weapon.delete({ where: { weapon_id: weaponId } });
+  await weaponRepo.deleteWeapon(weaponId);
 }
 
 export const addWeaponImage = async (weaponId, file, data) => {
@@ -120,17 +101,15 @@ export const addWeaponImage = async (weaponId, file, data) => {
     err.status = 400; throw err;
   }
 
-  const weapon = await prisma.weapon.findUnique({ where: { weapon_id: weaponId } });
+  const weapon = await weaponRepo.findWeaponById(weaponId);
   if (!weapon) { const err = new Error("Weapon not found"); err.status = 404; throw err; }
 
   // Delete existing weapon-type images if type_animation is 'weapon'
   if (type_animation === "weapon") {
-    const existingWeaponImages = await prisma.weapon_Image.findMany({
-      where: { weapon_id: weaponId, type_animation: "weapon" },
-    });
+    const existingWeaponImages = await weaponRepo.findWeaponImagesByTypeAnimation(weaponId, "weapon");
     for (const img of existingWeaponImages) {
       safeDeleteFile(img.path_file);
-      await prisma.weapon_Image.delete({ where: { file_id: img.file_id } });
+      await weaponRepo.deleteWeaponImage(img.file_id);
     }
   }
 
@@ -147,33 +126,28 @@ export const addWeaponImage = async (weaponId, file, data) => {
   const pathFile = `/uploads/${typeAnimDir}/${newFilename}`;
 
   // Check for duplicate
-  const existingImage = await prisma.weapon_Image.findFirst({
-    where: { weapon_id: weaponId, type_file, type_animation, frame: parseInt(frame) },
-  });
+  const existingImage = await weaponRepo.findWeaponImageMatch(weaponId, type_file, type_animation, parseInt(frame));
   if (existingImage) {
     const err = new Error("เฟรมนี้มีรูปภาพอยู่แล้ว กรุณาลบรูปเดิมออกก่อนหากต้องการอัปโหลดใหม่");
     err.status = 400; throw err;
   }
 
-  return prisma.weapon_Image.create({
-    data: { weapon_id: weaponId, path_file: pathFile, type_file, type_animation, frame: parseInt(frame) },
+  return weaponRepo.createWeaponImage({
+    weapon_id: weaponId, path_file: pathFile, type_file, type_animation, frame: parseInt(frame)
   });
 }
 
 export const deleteWeaponImage = async (imageId) => {
-  const weaponImage = await prisma.weapon_Image.findUnique({ where: { file_id: imageId } });
+  const weaponImage = await weaponRepo.findWeaponImageById(imageId);
   if (!weaponImage) { const err = new Error("Weapon image not found"); err.status = 404; throw err; }
 
   safeDeleteFile(weaponImage.path_file);
-  await prisma.weapon_Image.delete({ where: { file_id: imageId } });
+  await weaponRepo.deleteWeaponImage(imageId);
 }
 
 export const updateWeaponImage = async (imageId, file, data) => {
   const { type_file, type_animation, frame } = data;
-  const existingImage = await prisma.weapon_Image.findUnique({
-    where: { file_id: imageId },
-    include: { weapon: true },
-  });
+  const existingImage = await weaponRepo.findWeaponImageByIdWithWeapon(imageId);
   if (!existingImage) { const err = new Error("Weapon image not found"); err.status = 404; throw err; }
 
   const weapon = existingImage.weapon;
@@ -213,7 +187,5 @@ export const updateWeaponImage = async (imageId, file, data) => {
   if (frame) updateData.frame = parseInt(frame);
   if (newPath) updateData.path_file = newPath;
 
-  return prisma.weapon_Image.update({ where: { file_id: imageId }, data: updateData });
+  return weaponRepo.updateWeaponImageFull(imageId, updateData);
 }
-
-

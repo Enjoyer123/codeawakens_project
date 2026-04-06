@@ -1,4 +1,4 @@
-import prisma from "../models/prisma.js";
+import * as categoryRepo from "../models/levelCategoryModel.js";
 import { safeDeleteFile, moveFile } from "../utils/fileHelper.js";
 import { calculateLockState, getCompletedLevelIds, resolveUser } from "./levelService.js";
 import path from "path";
@@ -23,19 +23,7 @@ export const getAllLevelCategories = async (search, clerkUserId) => {
     };
   }
 
-  const levelCategories = await prisma.levelCategory.findMany({
-    where,
-    include: {
-      levels: {
-        select: {
-          level_id: true, level_name: true, is_unlocked: true,
-          required_level_id: true, required_skill_level: true,
-          required_for_post_test: true, coordinates: true,
-        },
-      },
-      category_items: { orderBy: { display_order: "asc" } },
-    },
-  });
+  const levelCategories = await categoryRepo.findManyCategories(where);
 
   const user = await resolveUser(clerkUserId);
   let completedLevelIds = new Set();
@@ -66,22 +54,7 @@ export const getAllLevelCategories = async (search, clerkUserId) => {
 }
 
 export const getLevelCategoryById = async (categoryId, clerkUserId) => {
-  const levelCategory = await prisma.levelCategory.findUnique({
-    where: { category_id: categoryId },
-    include: {
-      levels: {
-        select: {
-          level_id: true, level_name: true, description: true,
-          goal_node_id: true, category_id: true, start_node_id: true,
-          is_unlocked: true, required_level_id: true,
-          required_skill_level: true, required_for_post_test: true,
-          coordinates: true,
-        },
-        orderBy: { level_id: "asc" },
-      },
-      category_items: { orderBy: { display_order: "asc" } },
-    },
-  });
+  const levelCategory = await categoryRepo.findCategoryByIdWithLevels(categoryId);
 
   if (!levelCategory) {
     const err = new Error("Level category not found");
@@ -128,8 +101,8 @@ export const createLevelCategory = async (data) => {
     }
   }
 
-  const levelCategory = await prisma.levelCategory.create({
-    data: {
+  const levelCategory = await categoryRepo.createCategory({
+      
       category_name: data.category_name.trim(),
       description: data.description.trim(),
       item_enable: data.item_enable === true || data.item_enable === "true",
@@ -137,9 +110,8 @@ export const createLevelCategory = async (data) => {
       background_image: data.background_image || null,
       coordinates: data.coordinates ? JSON.parse(JSON.stringify(data.coordinates)) : null,
       category_items: categoryItemsData.length > 0 ? { create: categoryItemsData } : undefined,
-    },
-    include: { category_items: true },
-  });
+    
+    });
 
   return levelCategory;
 }
@@ -151,9 +123,7 @@ export const updateLevelCategory = async (categoryId, data) => {
     throw err;
   }
 
-  const existing = await prisma.levelCategory.findUnique({
-    where: { category_id: categoryId },
-  });
+  const existing = await categoryRepo.findCategoryById(categoryId);
   if (!existing) {
     const err = new Error("Level category not found");
     err.status = 404;
@@ -161,7 +131,7 @@ export const updateLevelCategory = async (categoryId, data) => {
   }
 
   // Delete existing items first
-  await prisma.levelCategoryItem.deleteMany({ where: { category_id: categoryId } });
+  await categoryRepo.deleteCategoryItems(categoryId);
 
   const categoryItemsData = [];
   if (data.item_enable === true || data.item_enable === "true") {
@@ -175,9 +145,8 @@ export const updateLevelCategory = async (categoryId, data) => {
     }
   }
 
-  const levelCategory = await prisma.levelCategory.update({
-    where: { category_id: categoryId },
-    data: {
+  const levelCategory = await categoryRepo.updateCategory(categoryId, {
+      
       category_name: data.category_name.trim(),
       description: data.description.trim(),
       item_enable: data.item_enable === true || data.item_enable === "true",
@@ -185,18 +154,14 @@ export const updateLevelCategory = async (categoryId, data) => {
       background_image: data.background_image !== undefined ? data.background_image : undefined,
       coordinates: data.coordinates !== undefined ? JSON.parse(JSON.stringify(data.coordinates)) : undefined,
       category_items: categoryItemsData.length > 0 ? { create: categoryItemsData } : undefined,
-    },
-    include: { category_items: true },
-  });
+    
+    });
 
   return levelCategory;
 }
 
 export const deleteLevelCategory = async (categoryId) => {
-  const levelCategory = await prisma.levelCategory.findUnique({
-    where: { category_id: categoryId },
-    include: { levels: true },
-  });
+  const levelCategory = await categoryRepo.findCategoryForDeletion(categoryId);
 
   if (!levelCategory) {
     const err = new Error("Level category not found");
@@ -216,13 +181,11 @@ export const deleteLevelCategory = async (categoryId) => {
     safeDeleteFile(levelCategory.background_image);
   }
 
-  await prisma.levelCategory.delete({ where: { category_id: categoryId } });
+  await categoryRepo.deleteCategory(categoryId);
 }
 
 export const uploadCategoryBackground = async (categoryId, file) => {
-  const levelCategory = await prisma.levelCategory.findUnique({
-    where: { category_id: categoryId },
-  });
+  const levelCategory = await categoryRepo.findCategoryById(categoryId);
 
   if (!levelCategory) {
     const err = new Error("Level category not found");
@@ -245,18 +208,13 @@ export const uploadCategoryBackground = async (categoryId, file) => {
     safeDeleteFile(levelCategory.background_image);
   }
 
-  const updated = await prisma.levelCategory.update({
-    where: { category_id: categoryId },
-    data: { background_image: pathFile },
-  });
+  const updated = await categoryRepo.updateCategoryPartial(categoryId, { background_image: pathFile });
 
   return updated;
 }
 
 export const deleteCategoryBackground = async (categoryId) => {
-  const levelCategory = await prisma.levelCategory.findUnique({
-    where: { category_id: categoryId },
-  });
+  const levelCategory = await categoryRepo.findCategoryById(categoryId);
   if (!levelCategory) {
     const err = new Error("Level category not found");
     err.status = 404;
@@ -267,27 +225,19 @@ export const deleteCategoryBackground = async (categoryId) => {
     safeDeleteFile(levelCategory.background_image);
   }
 
-  const updated = await prisma.levelCategory.update({
-    where: { category_id: categoryId },
-    data: { background_image: null },
-  });
+  const updated = await categoryRepo.updateCategoryPartial(categoryId, { background_image: null });
   return updated;
 }
 
 export const updateLevelCategoryCoordinates = async (categoryId, coordinates) => {
-  const levelCategory = await prisma.levelCategory.findUnique({
-    where: { category_id: categoryId },
-  });
+  const levelCategory = await categoryRepo.findCategoryById(categoryId);
   if (!levelCategory) {
     const err = new Error("Level category not found");
     err.status = 404;
     throw err;
   }
 
-  const updated = await prisma.levelCategory.update({
-    where: { category_id: categoryId },
-    data: { coordinates },
-  });
+  const updated = await categoryRepo.updateCategoryPartial(categoryId, { coordinates });
   return updated;
 }
 

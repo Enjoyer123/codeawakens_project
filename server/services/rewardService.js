@@ -1,4 +1,4 @@
-import prisma from "../models/prisma.js";
+import * as rewardRepo from "../models/rewardModel.js";
 import { buildPaginationResponse } from "../utils/pagination.js";
 import { safeDeleteFile, moveFile } from "../utils/fileHelper.js";
 import path from "path";
@@ -17,16 +17,13 @@ export const getAllRewards = async ({ page, limit, search, skip }) => {
     const s = search.toLowerCase();
     where = { OR: [{ reward_name: { contains: s, mode: "insensitive" } }, { description: { contains: s, mode: "insensitive" } }] };
   }
-  const total = await prisma.reward.count({ where });
-  const rewards = await prisma.reward.findMany({
-    where, include: { level: { select: LEVEL_SELECT } },
-    orderBy: { reward_id: "desc" }, skip, take: limit,
-  });
+  const total = await rewardRepo.countRewards(where);
+  const rewards = await rewardRepo.findManyRewards(where, skip, limit);
   return { rewards, pagination: buildPaginationResponse(page, limit, total) };
 }
 
 export const getRewardById = async (rewardId) => {
-  const reward = await prisma.reward.findUnique({ where: { reward_id: rewardId }, include: { level: { select: LEVEL_SELECT } } });
+  const reward = await rewardRepo.findRewardById(rewardId);
   if (!reward) { const err = new Error("Reward not found"); err.status = 404; throw err; }
   return reward;
 }
@@ -36,24 +33,21 @@ export const createReward = async (data) => {
   if (!level_id || !reward_type || !reward_name || required_score === undefined) {
     const err = new Error("Missing required fields: level_id, reward_type, reward_name, required_score"); err.status = 400; throw err;
   }
-  const level = await prisma.level.findUnique({ where: { level_id: parseInt(level_id) } });
+  const level = await rewardRepo.findLevelById(parseInt(level_id));
   if (!level) { const err = new Error("Level not found"); err.status = 400; throw err; }
   const validTypes = ["weapon", "block", "badge", "experience", "coin"];
   if (!validTypes.includes(reward_type)) { const err = new Error("Invalid reward_type"); err.status = 400; throw err; }
 
-  return prisma.reward.create({
-    data: { level_id: parseInt(level_id), reward_type, reward_name, description: description || null, required_score: parseInt(required_score), frame1: frame1 || null },
-    include: { level: { select: LEVEL_SELECT } },
-  });
+  return rewardRepo.createReward({  level_id: parseInt(level_id), reward_type, reward_name, description: description || null, required_score: parseInt(required_score), frame1: frame1 || null  });
 }
 
 export const updateReward = async (rewardId, data) => {
-  const existing = await prisma.reward.findUnique({ where: { reward_id: rewardId } });
+  const existing = await rewardRepo.findSimpleRewardById(rewardId);
   if (!existing) { const err = new Error("Reward not found"); err.status = 404; throw err; }
 
   const updateData = {};
   if (data.level_id !== undefined) {
-    const level = await prisma.level.findUnique({ where: { level_id: parseInt(data.level_id) } });
+    const level = await rewardRepo.findLevelById(parseInt(data.level_id));
     if (!level) { const err = new Error("Level not found"); err.status = 400; throw err; }
     updateData.level_id = parseInt(data.level_id);
   }
@@ -67,19 +61,19 @@ export const updateReward = async (rewardId, data) => {
   if (data.required_score !== undefined) updateData.required_score = parseInt(data.required_score);
   if (data.frame1 !== undefined) updateData.frame1 = data.frame1 || null;
 
-  return prisma.reward.update({ where: { reward_id: rewardId }, data: updateData, include: { level: { select: LEVEL_SELECT } } });
+  return rewardRepo.updateReward(rewardId, updateData);
 }
 
 export const deleteReward = async (rewardId) => {
-  const reward = await prisma.reward.findUnique({ where: { reward_id: rewardId } });
+  const reward = await rewardRepo.findSimpleRewardById(rewardId);
   if (!reward) { const err = new Error("Reward not found"); err.status = 404; throw err; }
   if (reward.frame1) safeDeleteFile(reward.frame1);
-  await prisma.reward.delete({ where: { reward_id: rewardId } });
+  await rewardRepo.deleteReward(rewardId);
 }
 
 export const uploadRewardFrame = async (rewardId, file, frameNumber) => {
   if (!frameNumber || frameNumber !== "1") { const err = new Error("Invalid frame_number. Must be 1"); err.status = 400; throw err; }
-  const reward = await prisma.reward.findUnique({ where: { reward_id: rewardId } });
+  const reward = await rewardRepo.findSimpleRewardById(rewardId);
   if (!reward) { const err = new Error("Reward not found"); err.status = 404; throw err; }
 
   const ext = path.extname(file.originalname);
@@ -93,26 +87,18 @@ export const uploadRewardFrame = async (rewardId, file, frameNumber) => {
 
   if (reward[frameField]) safeDeleteFile(reward[frameField]);
 
-  return prisma.reward.update({
-    where: { reward_id: rewardId },
-    data: { [frameField]: pathFile },
-    include: { level: { select: LEVEL_SELECT } },
-  });
+  return rewardRepo.updateReward(rewardId, { [frameField]: pathFile });
 }
 
 export const deleteRewardFrame = async (rewardId, frameNumber) => {
   if (!frameNumber || frameNumber !== "1") { const err = new Error("Invalid frame_number. Must be 1"); err.status = 400; throw err; }
-  const reward = await prisma.reward.findUnique({ where: { reward_id: rewardId } });
+  const reward = await rewardRepo.findSimpleRewardById(rewardId);
   if (!reward) { const err = new Error("Reward not found"); err.status = 404; throw err; }
   const frameField = `frame${frameNumber}`;
   if (!reward[frameField]) { const err = new Error("Frame image not found"); err.status = 404; throw err; }
 
   safeDeleteFile(reward[frameField]);
-  return prisma.reward.update({
-    where: { reward_id: rewardId },
-    data: { [frameField]: null },
-    include: { level: { select: LEVEL_SELECT } },
-  });
+  return rewardRepo.updateReward(rewardId, { [frameField]: null });
 }
 
 

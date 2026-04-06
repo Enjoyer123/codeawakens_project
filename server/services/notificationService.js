@@ -1,4 +1,4 @@
-import prisma from "../models/prisma.js";
+import * as notifRepo from "../models/notificationModel.js";
 import { buildPaginationResponse } from "../utils/pagination.js";
 
 export const getAllNotifications = async ({ page, limit, search, skip }) => {
@@ -7,60 +7,45 @@ export const getAllNotifications = async ({ page, limit, search, skip }) => {
     const s = search.toLowerCase();
     where = { OR: [{ title: { contains: s, mode: "insensitive" } }, { message: { contains: s, mode: "insensitive" } }] };
   }
-  const total = await prisma.notification.count({ where });
-  const notifications = await prisma.notification.findMany({
-    where, orderBy: { created_at: "desc" }, skip, take: limit,
-    include: { creator: { select: { username: true, email: true } }, _count: { select: { user_notifications: true } } },
-  });
+  const total = await notifRepo.countNotifications(where);
+  const notifications = await notifRepo.findManyNotifications(where, skip, limit);
   return { notifications, pagination: buildPaginationResponse(page, limit, total) };
 }
 
 export const getNotificationById = async (notificationId) => {
-  const notification = await prisma.notification.findUnique({
-    where: { notification_id: notificationId },
-    include: { creator: { select: { username: true, email: true } } },
-  });
+  const notification = await notifRepo.findNotificationById(notificationId);
   if (!notification) { const err = new Error("Notification not found"); err.status = 404; throw err; }
   return notification;
 }
 
 export const createNotification = async (data, clerkId) => {
   if (!data.title) { const err = new Error("Title is required"); err.status = 400; throw err; }
-  const user = await prisma.user.findUnique({ where: { clerk_user_id: clerkId }, select: { user_id: true } });
+  const user = await notifRepo.findUserByClerkId(clerkId);
   if (!user) { const err = new Error("User not found"); err.status = 404; throw err; }
 
-  return prisma.notification.create({
-    data: { title: data.title, message: data.message, is_active: data.is_active ?? true, expires_at: data.expires_at ? new Date(data.expires_at) : null, created_by: user.user_id },
-  });
+  return notifRepo.createNotification({  title: data.title, message: data.message, is_active: data.is_active ?? true, expires_at: data.expires_at ? new Date(data.expires_at) : null, created_by: user.user_id  });
 }
 
 export const updateNotification = async (notificationId, data) => {
-  const existing = await prisma.notification.findUnique({ where: { notification_id: notificationId } });
+  const existing = await notifRepo.findSimpleNotificationById(notificationId);
   if (!existing) { const err = new Error("Notification not found"); err.status = 404; throw err; }
 
-  return prisma.notification.update({
-    where: { notification_id: notificationId },
-    data: { title: data.title, message: data.message, is_active: data.is_active, expires_at: data.expires_at ? new Date(data.expires_at) : null },
-  });
+  return notifRepo.updateNotification(notificationId, {  title: data.title, message: data.message, is_active: data.is_active, expires_at: data.expires_at ? new Date(data.expires_at) : null  });
 }
 
 export const deleteNotification = async (notificationId) => {
-  const notification = await prisma.notification.findUnique({ where: { notification_id: notificationId } });
+  const notification = await notifRepo.findSimpleNotificationById(notificationId);
   if (!notification) { const err = new Error("Notification not found"); err.status = 404; throw err; }
-  await prisma.userNotification.deleteMany({ where: { notification_id: notificationId } });
-  await prisma.notification.delete({ where: { notification_id: notificationId } });
+  await notifRepo.deleteUserNotifications(notificationId);
+  await notifRepo.deleteNotification(notificationId);
 }
 
 export const getUserNotifications = async (clerkId) => {
-  const user = await prisma.user.findUnique({ where: { clerk_user_id: clerkId }, select: { user_id: true } });
+  const user = await notifRepo.findUserByClerkId(clerkId);
   if (!user) return { notifications: [], unreadCount: 0 };
 
   const now = new Date();
-  const activeNotifications = await prisma.notification.findMany({
-    where: { is_active: true, OR: [{ expires_at: null }, { expires_at: { gt: now } }] },
-    orderBy: { created_at: "desc" },
-    include: { user_notifications: { where: { user_id: user.user_id }, select: { is_read: true } } },
-  });
+  const activeNotifications = await notifRepo.findActiveNotifications(user.user_id, now);
 
   const notifications = activeNotifications.map((n) => {
     const userNotification = n.user_notifications[0];
@@ -71,14 +56,10 @@ export const getUserNotifications = async (clerkId) => {
 }
 
 export const markAsRead = async (clerkId, notificationId) => {
-  const user = await prisma.user.findUnique({ where: { clerk_user_id: clerkId }, select: { user_id: true } });
+  const user = await notifRepo.findUserByClerkId(clerkId);
   if (!user) { const err = new Error("User not found"); err.status = 404; throw err; }
 
-  await prisma.userNotification.upsert({
-    where: { notification_id_user_id: { notification_id: notificationId, user_id: user.user_id } },
-    update: { is_read: true },
-    create: { notification_id: notificationId, user_id: user.user_id, is_read: true },
-  });
+  await notifRepo.upsertUserNotification(notificationId, user.user_id);
 }
 
 

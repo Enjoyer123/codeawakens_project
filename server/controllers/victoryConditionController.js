@@ -1,9 +1,10 @@
 import * as victoryConditionService from "../services/victoryConditionService.js";
+import { parsePagination } from "../utils/pagination.js";
 
 export const getAllVictoryConditions = async (req, res) => {
   try {
-    const levelId = req.query.levelId;
-    const result = await victoryConditionService.getAllVictoryConditions(levelId);
+    const { page, limit, search, skip } = parsePagination(req.query);
+    const result = await victoryConditionService.getAllVictoryConditions({ page, limit, search, skip });
     
     res.status(200).json(result);
   } catch (error) {

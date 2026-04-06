@@ -1,4 +1,4 @@
-import prisma from "../models/prisma.js";
+import * as profileRepo from "../models/profileModel.js";
 import { safeDeleteFile } from "../utils/fileHelper.js";
 import { uploadDir } from "../middleware/upload.js";
 import path from "path";
@@ -12,22 +12,18 @@ export const checkProfile = async (clerkUser) => {
   const profileImageUrl = clerkUser.imageUrl || "";
   const username = clerkUser.username || email?.split("@")[0] || `user_${clerkId.slice(0, 8)}`;
 
-  let userInDb = await prisma.user.findUnique({
-    where: { clerk_user_id: clerkId },
-  });
+  let userInDb = await profileRepo.findUserByClerkId(clerkId);
 
   if (!userInDb) {
     console.log(`[AUTH] Creating new user for ${clerkId} (${username}).`);
-    userInDb = await prisma.user.create({
-      data: {
-        clerk_user_id: clerkId,
-        username,
-        email,
-        first_name: firstName || null,
-        last_name: lastName || null,
-        profile_image: profileImageUrl || null,
-        role: "user",
-      },
+    userInDb = await profileRepo.createUser({
+      clerk_user_id: clerkId,
+      username,
+      email,
+      first_name: firstName || null,
+      last_name: lastName || null,
+      profile_image: profileImageUrl || null,
+      role: "user",
     });
   } else {
     const updateData = {};
@@ -38,10 +34,7 @@ export const checkProfile = async (clerkUser) => {
       }
     }
     if (Object.keys(updateData).length > 0) {
-      userInDb = await prisma.user.update({
-        where: { clerk_user_id: clerkId },
-        data: updateData,
-      });
+      userInDb = await profileRepo.updateUserByClerkId(clerkId, updateData);
     }
   }
 
@@ -64,31 +57,22 @@ export const checkProfile = async (clerkUser) => {
 export const updateUsername = async (clerkId, username) => {
   if (!username || username.trim().length < 3) {
     const err = new Error("Username must be at least 3 characters");
-    err.status = 400;
-    throw err;
+    err.status = 400; throw err;
   }
 
   try {
-    const updatedUser = await prisma.user.update({
-      where: { clerk_user_id: clerkId },
-      data: { username: username.trim() },
-    });
+    const updatedUser = await profileRepo.updateUserByClerkId(clerkId, { username: username.trim() });
     return updatedUser;
   } catch (error) {
     if (error.code === "P2025") {
-      const err = new Error("User not found");
-      err.status = 404;
-      throw err;
+      const err = new Error("User not found"); err.status = 404; throw err;
     }
     throw error;
   }
 }
 
 export const uploadProfileImage = async (clerkId, file) => {
-  const currentUser = await prisma.user.findUnique({
-    where: { clerk_user_id: clerkId },
-    select: { profile_image: true },
-  });
+  const currentUser = await profileRepo.findUserByClerkIdProfileImage(clerkId);
 
   // Delete old custom image
   if (
@@ -101,25 +85,17 @@ export const uploadProfileImage = async (clerkId, file) => {
   }
 
   const imageUrl = `/uploads/userprofile/${file.filename}`;
-  const updatedUser = await prisma.user.update({
-    where: { clerk_user_id: clerkId },
-    data: { profile_image: imageUrl },
-  });
+  const updatedUser = await profileRepo.updateUserByClerkId(clerkId, { profile_image: imageUrl });
 
   return { imageUrl, user: updatedUser };
 }
 
 export const deleteProfileImage = async (clerkUser) => {
   const clerkId = clerkUser.id;
-  const currentUser = await prisma.user.findUnique({
-    where: { clerk_user_id: clerkId },
-    select: { profile_image: true },
-  });
+  const currentUser = await profileRepo.findUserByClerkIdProfileImage(clerkId);
 
   if (!currentUser) {
-    const err = new Error("User not found");
-    err.status = 404;
-    throw err;
+    const err = new Error("User not found"); err.status = 404; throw err;
   }
 
   if (
@@ -132,41 +108,20 @@ export const deleteProfileImage = async (clerkUser) => {
   }
 
   const clerkImage = clerkUser.imageUrl;
-  const updatedUser = await prisma.user.update({
-    where: { clerk_user_id: clerkId },
-    data: { profile_image: clerkImage },
-  });
+  const updatedUser = await profileRepo.updateUserByClerkId(clerkId, { profile_image: clerkImage });
 
   return updatedUser.profile_image;
 }
 
 export const getUserByClerkId = async (clerkId) => {
-  const user = await prisma.user.findUnique({
-    where: { clerk_user_id: clerkId },
-    select: {
-      user_id: true, clerk_user_id: true, username: true, email: true,
-      first_name: true, last_name: true, profile_image: true, role: true,
-      is_active: true, created_at: true, updated_at: true,
-      pre_score: true, post_score: true, skill_level: true,
-    },
-  });
+  const user = await profileRepo.findUserByClerkIdDetailed(clerkId);
 
   if (!user) {
-    const err = new Error("User not found");
-    err.status = 404;
-    throw err;
+    const err = new Error("User not found"); err.status = 404; throw err;
   }
 
-  const userProgress = await prisma.userProgress.findMany({
-    where: { user_id: user.user_id },
-    orderBy: { completed_at: "desc" },
-  });
-
-  const userRewards = await prisma.userReward.findMany({
-    where: { user_id: user.user_id },
-    include: { reward: true },
-    orderBy: { earned_at: "desc" },
-  });
+  const userProgress = await profileRepo.findUserProgressByUserId(user.user_id);
+  const userRewards = await profileRepo.findUserRewardsByUserId(user.user_id);
 
   return { user, user_progress: userProgress, user_reward: userRewards };
 }
@@ -179,24 +134,15 @@ export const saveUserProgress = async (clerkId, body) => {
   } = body;
 
   if (!level_id) {
-    const err = new Error("level_id is required");
-    err.status = 400;
-    throw err;
+    const err = new Error("level_id is required"); err.status = 400; throw err;
   }
 
-  const user = await prisma.user.findUnique({
-    where: { clerk_user_id: clerkId },
-    select: { user_id: true },
-  });
+  const user = await profileRepo.findUserByClerkIdMinimal(clerkId);
   if (!user) {
-    const err = new Error("User not found");
-    err.status = 404;
-    throw err;
+    const err = new Error("User not found"); err.status = 404; throw err;
   }
 
-  const existingProgress = await prisma.userProgress.findUnique({
-    where: { user_id_level_id: { user_id: user.user_id, level_id: parseInt(level_id) } },
-  });
+  const existingProgress = await profileRepo.findUserProgressForLevel(user.user_id, parseInt(level_id));
 
   const now = new Date();
   const newStatus = status || (is_correct ? "completed" : "in_progress");
@@ -258,29 +204,24 @@ export const saveUserProgress = async (clerkId, body) => {
       updateData.completed_at = existingProgress.completed_at;
     }
 
-    savedProgress = await prisma.userProgress.update({
-      where: { progress_id: existingProgress.progress_id },
-      data: updateData,
-    });
+    savedProgress = await profileRepo.updateUserProgress(existingProgress.progress_id, updateData);
   } else {
-    savedProgress = await prisma.userProgress.create({
-      data: {
-        user_id: user.user_id,
-        level_id: parseInt(level_id),
-        status: newStatus,
-        attempts_count: attempts_count || 1,
-        blockly_code: blockly_code || null,
-        text_code: text_code || null,
-        best_score: newBestScore,
-        pattern_bonus_score: pattern_bonus_score || 0,
-        is_correct: is_correct || false,
-        stars_earned: stars_earned || 0,
-        first_attempt: now,
-        last_attempt: now,
-        completed_at: is_correct ? now : null,
-        hp_remaining: hp_remaining !== undefined ? hp_remaining : null,
-        user_big_o: user_big_o || null,
-      },
+    savedProgress = await profileRepo.createUserProgress({
+      user_id: user.user_id,
+      level_id: parseInt(level_id),
+      status: newStatus,
+      attempts_count: attempts_count || 1,
+      blockly_code: blockly_code || null,
+      text_code: text_code || null,
+      best_score: newBestScore,
+      pattern_bonus_score: pattern_bonus_score || 0,
+      is_correct: is_correct || false,
+      stars_earned: stars_earned || 0,
+      first_attempt: now,
+      last_attempt: now,
+      completed_at: is_correct ? now : null,
+      hp_remaining: hp_remaining !== undefined ? hp_remaining : null,
+      user_big_o: user_big_o || null,
     });
   }
 
@@ -289,33 +230,21 @@ export const saveUserProgress = async (clerkId, body) => {
 
 export const checkAndAwardRewards = async (clerkId, levelId, totalScore) => {
   if (!levelId || totalScore === undefined) {
-    const err = new Error("level_id and total_score are required");
-    err.status = 400;
-    throw err;
+    const err = new Error("level_id and total_score are required"); err.status = 400; throw err;
   }
 
-  const user = await prisma.user.findUnique({
-    where: { clerk_user_id: clerkId },
-    select: { user_id: true },
-  });
+  const user = await profileRepo.findUserByClerkIdMinimal(clerkId);
   if (!user) {
-    const err = new Error("User not found");
-    err.status = 404;
-    throw err;
+    const err = new Error("User not found"); err.status = 404; throw err;
   }
 
-  const rewards = await prisma.reward.findMany({
-    where: { level_id: parseInt(levelId) },
-  });
+  const rewards = await profileRepo.findRewardsForLevel(parseInt(levelId));
 
   if (rewards.length === 0) {
     return { awardedRewards: [], totalAwarded: 0 };
   }
 
-  const existingUserRewards = await prisma.userReward.findMany({
-    where: { user_id: user.user_id, level_id: parseInt(levelId) },
-    select: { reward_id: true },
-  });
+  const existingUserRewards = await profileRepo.findUserRewardsForLevel(user.user_id, parseInt(levelId));
   const earnedRewardIds = new Set(existingUserRewards.map((ur) => ur.reward_id));
 
   const eligibleRewards = rewards.filter(
@@ -325,15 +254,7 @@ export const checkAndAwardRewards = async (clerkId, levelId, totalScore) => {
   const awardedRewards = [];
   for (const reward of eligibleRewards) {
     try {
-      const userReward = await prisma.userReward.create({
-        data: {
-          user_id: user.user_id,
-          reward_id: reward.reward_id,
-          level_id: parseInt(levelId),
-          earned_at: new Date(),
-        },
-        include: { reward: true },
-      });
+      const userReward = await profileRepo.createUserReward(user.user_id, reward.reward_id, parseInt(levelId));
       awardedRewards.push(userReward);
     } catch (error) {
       console.error(`[ERROR] Failed to award reward ${reward.reward_id}:`, error.message);
@@ -342,5 +263,3 @@ export const checkAndAwardRewards = async (clerkId, levelId, totalScore) => {
 
   return { awardedRewards, totalAwarded: awardedRewards.length };
 }
-
-
