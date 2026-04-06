@@ -2,47 +2,114 @@ const notificationService = require("../services/notificationService");
 const { parsePagination } = require("../utils/pagination");
 
 exports.getAllNotifications = async (req, res) => {
-  try { res.json(await notificationService.getAllNotifications(parsePagination(req.query))); }
-  catch (e) { res.status(e.status || 500).json({ message: e.message || "Error fetching notifications" }); }
-};
-exports.getNotificationById = async (req, res) => {
-  try { const notification = await notificationService.getNotificationById(parseInt(req.params.notificationId)); res.json({ notification }); }
-  catch (e) { res.status(e.status || 500).json({ message: e.message || "Error fetching notification" }); }
-};
-exports.createNotification = async (req, res) => {
-  const clerkId = req.user.id;
-  console.log(`[ADMIN] Admin ${clerkId} creating notification "${req.body.title}".`);
   try {
-    const notification = await notificationService.createNotification(req.body, clerkId);
-    console.log(`[ADMIN] Success: Notification ${notification.notification_id} created by Admin ${clerkId}.`);
-    res.status(201).json({ message: "Notification created successfully", notification });
-  } catch (e) { res.status(e.status || 500).json({ message: e.message || "Error creating notification" }); }
+    const paginationData = parsePagination(req.query);
+    const result = await notificationService.getAllNotifications(paginationData);
+    
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching notifications:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error fetching notifications",
+    });
+  }
 };
+
+exports.getNotificationById = async (req, res) => {
+  try {
+    const notificationId = parseInt(req.params.notificationId);
+    const result = await notificationService.getNotificationById(notificationId);
+    
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching notification:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error fetching notification",
+    });
+  }
+};
+
+exports.createNotification = async (req, res) => {
+  try {
+    const result = await notificationService.createNotification(req.body);
+    
+    res.status(201).json({
+      message: "Notification created successfully",
+      notification: result,
+    });
+  } catch (error) {
+    console.error("Error creating notification:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error creating notification",
+    });
+  }
+};
+
 exports.updateNotification = async (req, res) => {
   try {
-    const notification = await notificationService.updateNotification(parseInt(req.params.notificationId), req.body);
-    res.json({ message: "Notification updated successfully", notification });
-  } catch (e) { res.status(e.status || 500).json({ message: e.message || "Error updating notification" }); }
+    const notificationId = parseInt(req.params.notificationId);
+    const result = await notificationService.updateNotification(notificationId, req.body);
+    
+    res.status(200).json({
+      message: "Notification updated successfully",
+      notification: result,
+    });
+  } catch (error) {
+    console.error("Error updating notification:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error updating notification",
+    });
+  }
 };
+
 exports.deleteNotification = async (req, res) => {
-  const clerkId = req.user.id;
-  const { notificationId } = req.params;
-  console.log(`[ADMIN] Admin ${clerkId} deleting notification ${notificationId}.`);
   try {
-    await notificationService.deleteNotification(parseInt(notificationId));
-    console.log(`[ADMIN] Success: Notification ${notificationId} deleted by Admin ${clerkId}.`);
-    res.json({ message: "Notification deleted successfully" });
-  } catch (e) { res.status(e.status || 500).json({ message: e.message || "Error deleting notification" }); }
+    const notificationId = parseInt(req.params.notificationId);
+    await notificationService.deleteNotification(notificationId);
+    
+    res.status(200).json({
+      message: "Notification deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting notification:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error deleting notification",
+    });
+  }
 };
+
 exports.getUserNotifications = async (req, res) => {
-  const clerkId = req.user.id;
-  console.log(`[NOTIFICATION] User ${clerkId} viewing notifications.`);
-  try { res.json(await notificationService.getUserNotifications(clerkId)); }
-  catch (e) { res.status(e.status || 500).json({ message: e.message || "Error fetching user notifications" }); }
+  const clerkUserId = req.user.id;
+  console.log(`[NOTIFICATION] User ${clerkUserId} viewing notifications.`);
+  
+  try {
+    const paginationData = parsePagination(req.query);
+    const result = await notificationService.getUserNotifications(clerkUserId, paginationData, req.query);
+    
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching user notifications:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error fetching user notifications",
+    });
+  }
 };
+
 exports.markAsRead = async (req, res) => {
-  const clerkId = req.user.id;
-  console.log(`[NOTIFICATION] User ${clerkId} marking notification ${req.params.notificationId} as read.`);
-  try { await notificationService.markAsRead(clerkId, parseInt(req.params.notificationId)); res.json({ success: true }); }
-  catch (e) { res.status(e.status || 500).json({ message: e.message || "Error marking notification as read" }); }
+  const clerkUserId = req.user.id;
+  
+  try {
+    const notificationId = parseInt(req.params.notificationId);
+    const result = await notificationService.markAsRead(notificationId, clerkUserId);
+    
+    res.status(200).json({
+      message: "Notification marked as read successfully",
+      status: result,
+    });
+  } catch (error) {
+    console.error("Error marking notification as read:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error marking notification as read",
+    });
+  }
 };

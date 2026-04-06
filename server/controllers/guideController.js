@@ -4,41 +4,143 @@ const { parsePagination } = require("../utils/pagination");
 const { cleanupTempFile } = require("../utils/fileHelper");
 
 exports.getAllGuides = async (req, res) => {
-  try { res.json(await guideService.getAllGuides(parsePagination(req.query))); }
-  catch (e) { console.error("Error fetching guides:", e.message); res.status(e.status || 500).json({ message: e.message || "Error fetching guides" }); }
+  try {
+    const paginationData = parsePagination(req.query);
+    const result = await guideService.getAllGuides(paginationData);
+    
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching guides:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error fetching guides",
+    });
+  }
 };
+
 exports.getGuidesByLevel = async (req, res) => {
-  try { res.json(await guideService.getGuidesByLevel(parseInt(req.params.levelId))); }
-  catch (e) { console.error("Error fetching guides by level:", e.message); res.status(e.status || 500).json({ message: e.message || "Error fetching guides by level" }); }
+  try {
+    const levelId = parseInt(req.params.levelId);
+    const result = await guideService.getGuidesByLevel(levelId);
+    
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching guides by level:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error fetching guides by level",
+    });
+  }
 };
+
 exports.getLevelsForGuide = async (req, res) => {
-  try { res.json(await levelService.getLevelsForDropdown()); }
-  catch (e) { console.error("Error fetching levels:", e.message); res.status(e.status || 500).json({ message: e.message || "Error fetching levels" }); }
+  try {
+    const result = await levelService.getLevelsForDropdown();
+    
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching levels for dropdown:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error fetching levels",
+    });
+  }
 };
+
 exports.getGuideById = async (req, res) => {
-  try { res.json(await guideService.getGuideById(parseInt(req.params.guideId))); }
-  catch (e) { console.error("Error fetching guide:", e.message); res.status(e.status || 500).json({ message: e.message || "Error fetching guide" }); }
+  try {
+    const guideId = parseInt(req.params.guideId);
+    const result = await guideService.getGuideById(guideId);
+    
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching guide:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error fetching guide",
+    });
+  }
 };
+
 exports.createGuide = async (req, res) => {
-  try { const guide = await guideService.createGuide(req.body); res.status(201).json({ message: "Guide created successfully", guide }); }
-  catch (e) { console.error("Error creating guide:", e.message); res.status(e.status || 500).json({ message: e.message || "Error creating guide" }); }
+  try {
+    const result = await guideService.createGuide(req.body);
+    
+    res.status(201).json({
+      message: "Guide created successfully",
+      guide: result,
+    });
+  } catch (error) {
+    console.error("Error creating guide:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error creating guide",
+    });
+  }
 };
+
 exports.updateGuide = async (req, res) => {
-  try { const guide = await guideService.updateGuide(parseInt(req.params.guideId), req.body); res.json({ message: "Guide updated successfully", guide }); }
-  catch (e) { console.error("Error updating guide:", e.message); res.status(e.status || 500).json({ message: e.message || "Error updating guide" }); }
+  try {
+    const guideId = parseInt(req.params.guideId);
+    const result = await guideService.updateGuide(guideId, req.body);
+    
+    res.status(200).json({
+      message: "Guide updated successfully",
+      guide: result,
+    });
+  } catch (error) {
+    console.error("Error updating guide:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error updating guide",
+    });
+  }
 };
+
 exports.deleteGuide = async (req, res) => {
-  try { await guideService.deleteGuide(parseInt(req.params.guideId)); res.json({ message: "Guide deleted successfully" }); }
-  catch (e) { console.error("Error deleting guide:", e.message); res.status(e.status || 500).json({ message: e.message || "Error deleting guide" }); }
+  try {
+    const guideId = parseInt(req.params.guideId);
+    await guideService.deleteGuide(guideId);
+    
+    res.status(200).json({
+      message: "Guide deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting guide:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error deleting guide",
+    });
+  }
 };
+
 exports.uploadGuideImage = async (req, res) => {
   try {
-    if (!req.file) return res.status(400).json({ message: "No file uploaded" });
-    const guideImage = await guideService.uploadGuideImage(parseInt(req.params.guideId), req.file);
-    res.status(201).json({ message: "Guide image uploaded successfully", guideImage });
-  } catch (e) { console.error("Error uploading guide image:", e.message); cleanupTempFile(req.file); res.status(e.status || 500).json({ message: e.message || "Error uploading guide image" }); }
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+    
+    const guideId = parseInt(req.params.guideId);
+    const result = await guideService.uploadGuideImage(guideId, req.file);
+    
+    res.status(201).json({
+      message: "Guide image uploaded successfully",
+      guideImage: result,
+    });
+  } catch (error) {
+    console.error("Error uploading guide image:", error.message);
+    cleanupTempFile(req.file);
+    res.status(error.status || 500).json({
+      message: error.message || "Error uploading guide image",
+    });
+  }
 };
+
 exports.deleteGuideImage = async (req, res) => {
-  try { await guideService.deleteGuideImage(parseInt(req.params.imageId)); res.json({ message: "Guide image deleted successfully" }); }
-  catch (e) { console.error("Error deleting guide image:", e.message); res.status(e.status || 500).json({ message: e.message || "Error deleting guide image" }); }
+  try {
+    const imageId = parseInt(req.params.imageId);
+    await guideService.deleteGuideImage(imageId);
+    
+    res.status(200).json({
+      message: "Guide image deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting guide image:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error deleting guide image",
+    });
+  }
 };

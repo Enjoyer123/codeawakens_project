@@ -1,18 +1,58 @@
 const testCaseService = require("../services/testCaseService");
 
 exports.getTestCasesByLevel = async (req, res) => {
-  try { res.json(await testCaseService.getTestCasesByLevel(parseInt(req.params.levelId))); }
-  catch (e) { res.status(e.status || 500).json({ message: e.message || "Error fetching test cases" }); }
+  try {
+    const levelId = parseInt(req.params.levelId);
+    const result = await testCaseService.getTestCasesByLevel(levelId);
+    
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching test cases:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error fetching test cases",
+    });
+  }
 };
+
 exports.createTestCase = async (req, res) => {
-  try { const tc = await testCaseService.createTestCase(req.body); res.status(201).json(tc); }
-  catch (e) { res.status(e.status || 500).json({ message: e.message || "Error creating test case" }); }
+  try {
+    const result = await testCaseService.createTestCase(req.body);
+    
+    res.status(201).json(result);
+  } catch (error) {
+    console.error("Error creating test case:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error creating test case",
+    });
+  }
 };
+
 exports.updateTestCase = async (req, res) => {
-  try { const tc = await testCaseService.updateTestCase(parseInt(req.params.testCaseId), req.body); res.json(tc); }
-  catch (e) { res.status(e.status || 500).json({ message: e.message || "Error updating test case" }); }
+  try {
+    const testCaseId = parseInt(req.params.testCaseId);
+    const result = await testCaseService.updateTestCase(testCaseId, req.body);
+    
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error updating test case:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error updating test case",
+    });
+  }
 };
+
 exports.deleteTestCase = async (req, res) => {
-  try { await testCaseService.deleteTestCase(parseInt(req.params.testCaseId)); res.json({ message: "Test case deleted successfully" }); }
-  catch (e) { res.status(e.status || 500).json({ message: e.message || "Error deleting test case" }); }
+  try {
+    const testCaseId = parseInt(req.params.testCaseId);
+    await testCaseService.deleteTestCase(testCaseId);
+    
+    res.status(200).json({
+      message: "Test case deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting test case:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error deleting test case",
+    });
+  }
 };

@@ -1,136 +1,189 @@
 const levelService = require("../services/levelService");
+const { cleanupTempFile } = require("../utils/fileHelper");
 const { parsePagination } = require("../utils/pagination");
 
 exports.getAllLevels = async (req, res) => {
   try {
-    const pagination = parsePagination(req.query);
-    const result = await levelService.getAllLevels(pagination);
-    res.json(result);
+    const clerkUserId = req.user ? req.user.id : null;
+    const paginationData = parsePagination(req.query);
+    const result = await levelService.getAllLevels(paginationData, req.query, clerkUserId);
+    
+    res.status(200).json(result);
   } catch (error) {
-    console.error("[ERROR] Failed to fetch levels:", error.message);
-    res.status(error.status || 500).json({ message: error.message || "Error fetching levels" });
+    console.error("Error fetching levels:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error fetching levels",
+    });
+  }
+};
+
+exports.getLevelsForDropdown = async (req, res) => {
+  try {
+    const result = await levelService.getLevelsForDropdown();
+    
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching generic levels:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error fetching generic levels",
+    });
+  }
+};
+
+exports.getLevelById = async (req, res) => {
+  try {
+    const clerkUserId = req.user ? req.user.id : null;
+    const levelId = parseInt(req.params.levelId);
+    const result = await levelService.getLevelById(levelId, req.query.admin, clerkUserId);
+    
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching level details:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error fetching level details",
+    });
+  }
+};
+
+exports.createLevel = async (req, res) => {
+  try {
+    const result = await levelService.createLevel(req.body);
+    
+    res.status(201).json({
+      message: "Level created successfully",
+      level: result,
+    });
+  } catch (error) {
+    console.error("Error creating level:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error creating level",
+    });
+  }
+};
+
+exports.updateLevel = async (req, res) => {
+  try {
+    const levelId = parseInt(req.params.levelId);
+    const result = await levelService.updateLevel(levelId, req.body);
+    
+    res.status(200).json({
+      message: "Level updated successfully",
+      level: result,
+    });
+  } catch (error) {
+    console.error("Error updating level:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error updating level",
+    });
+  }
+};
+
+exports.deleteLevel = async (req, res) => {
+  try {
+    const levelId = parseInt(req.params.levelId);
+    await levelService.deleteLevel(levelId);
+    
+    res.status(200).json({
+      message: "Level deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting level:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error deleting level",
+    });
+  }
+};
+
+exports.uploadLevelBackgroundImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+    
+    const levelId = parseInt(req.params.levelId);
+    const result = await levelService.uploadLevelBackgroundImage(levelId, req.file);
+    
+    res.status(200).json({
+      message: "Background image uploaded successfully",
+      level: result,
+    });
+  } catch (error) {
+    console.error("Error uploading background image:", error.message);
+    cleanupTempFile(req.file);
+    res.status(error.status || 500).json({
+      message: error.message || "Error uploading file",
+    });
+  }
+};
+
+exports.deleteLevelBackgroundImage = async (req, res) => {
+  try {
+    const levelId = parseInt(req.params.levelId);
+    const result = await levelService.deleteLevelBackgroundImage(levelId);
+    
+    res.status(200).json({
+      message: "Background image deleted successfully",
+      level: result,
+    });
+  } catch (error) {
+    console.error("Error deleting background image:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error deleting background image",
+    });
   }
 };
 
 exports.getAllCategories = async (req, res) => {
   try {
-    const categories = await levelService.getAllCategories();
-    res.json(categories);
+    const result = await levelService.getAllCategories();
+    res.status(200).json(result);
   } catch (error) {
-    console.error("[ERROR] Failed to fetch categories:", error.message);
-    res.status(error.status || 500).json({ message: error.message || "Error fetching categories" });
+    console.error("Error fetching categories:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error fetching categories",
+    });
   }
 };
 
 exports.getLevelsForPrerequisite = async (req, res) => {
   try {
-    const levels = await levelService.getLevelsForDropdown();
-    res.json(levels);
+    const result = await levelService.getLevelsForDropdown();
+    res.status(200).json(result);
   } catch (error) {
-    console.error("[ERROR] Failed to fetch levels for prerequisite:", error.message);
-    res.status(error.status || 500).json({ message: error.message || "Error fetching levels" });
-  }
-};
-
-exports.getLevelById = async (req, res) => {
-  const { levelId } = req.params;
-  const clerkUserId = req.user?.id;
-  if (clerkUserId) {
-    console.log(`[GAME] User ${clerkUserId} viewing Level ${levelId}.`);
-  }
-
-  try {
-    const result = await levelService.getLevelById(parseInt(levelId), clerkUserId);
-    res.json(result);
-  } catch (error) {
-    console.error(`[ERROR] Failed to fetch Level ${levelId}:`, error.message);
-    res.status(error.status || 500).json({ message: error.message || "Error fetching level" });
-  }
-};
-
-exports.createLevel = async (req, res) => {
-  const clerkUserId = req.user?.id;
-  console.log(`[ADMIN] User ${clerkUserId} creating new level.`);
-
-  try {
-    const level = await levelService.createLevel(req.body, clerkUserId);
-    console.log(`[ADMIN] Success: Created Level ${level.level_id} ("${level.level_name}") by User ${clerkUserId}.`);
-    res.status(201).json({ message: "Level created successfully", level });
-  } catch (error) {
-    console.error(`[ERROR] Failed to create level by User ${clerkUserId}:`, error.message);
-    res.status(error.status || 500).json({ message: error.message || "Error creating level" });
-  }
-};
-
-exports.updateLevel = async (req, res) => {
-  const { levelId } = req.params;
-  const clerkUserId = req.user?.id;
-  console.log(`[ADMIN] User ${clerkUserId} updating Level ${levelId}.`);
-
-  try {
-    const level = await levelService.updateLevel(parseInt(levelId), req.body);
-    console.log(`[ADMIN] Success: Updated Level ${levelId} by User ${clerkUserId}.`);
-    res.json({ message: "Level updated successfully", level });
-  } catch (error) {
-    console.error(`[ERROR] Failed to update Level ${levelId} by User ${clerkUserId}:`, error.message);
-    res.status(error.status || 500).json({ message: error.message || "Error updating level" });
-  }
-};
-
-exports.deleteLevel = async (req, res) => {
-  const { levelId } = req.params;
-  const clerkUserId = req.user?.id;
-  console.log(`[ADMIN] User ${clerkUserId} deleting Level ${levelId}.`);
-
-  try {
-    await levelService.deleteLevel(parseInt(levelId));
-    console.log(`[ADMIN] Success: Deleted Level ${levelId} by User ${clerkUserId}.`);
-    res.json({ message: "Level deleted successfully" });
-  } catch (error) {
-    console.error(`[ERROR] Failed to delete Level ${levelId} by User ${clerkUserId}:`, error.message);
-    res.status(error.status || 500).json({ message: error.message || "Error deleting level" });
+    console.error("Error fetching prerequisites:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error fetching prerequisites",
+    });
   }
 };
 
 exports.unlockLevel = async (req, res) => {
-  const { levelId } = req.params;
-  console.log(`[ADMIN] Unlocking Level ${levelId}.`);
-
   try {
-    await levelService.unlockLevel(parseInt(levelId));
-    console.log(`[ADMIN] Success: Level ${levelId} unlocked.`);
-    res.json({ message: "Level unlocked successfully" });
+    const levelId = parseInt(req.params.levelId);
+    await levelService.unlockLevel(levelId);
+    res.status(200).json({
+      message: "Level unlocked successfully",
+    });
   } catch (error) {
-    console.error(`[ERROR] Failed to unlock Level ${levelId}:`, error.message);
-    res.status(error.status || 500).json({ message: error.message || "Error unlocking level" });
+    console.error("Error unlocking level:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error unlocking level",
+    });
   }
 };
 
 exports.updateLevelCoordinates = async (req, res) => {
-  const { levelId } = req.params;
-
   try {
-    const level = await levelService.updateLevelCoordinates(parseInt(levelId), req.body.coordinates);
-    res.json({ message: "Level coordinates updated successfully", level });
+    const levelId = parseInt(req.params.levelId);
+    const result = await levelService.updateLevelCoordinates(levelId, req.body.coordinates);
+    res.status(200).json({
+      message: "Level coordinates updated successfully",
+      level: result,
+    });
   } catch (error) {
-    console.error(`[ERROR] Failed to update coordinates for Level ${levelId}:`, error.message);
-    res.status(error.status || 500).json({ message: error.message || "Error updating level coordinates" });
-  }
-};
-
-exports.uploadLevelBackgroundImage = async (req, res) => {
-  const clerkUserId = req.user?.id;
-  console.log(`[ADMIN] User ${clerkUserId} uploading level background.`);
-
-  try {
-    if (!req.file) {
-      return res.status(400).json({ message: "No image file provided" });
-    }
-    const imagePath = `/uploads/levels/${req.file.filename}`;
-    console.log(`[ADMIN] Success: Level background uploaded by User ${clerkUserId} at ${imagePath}.`);
-    res.json({ message: "Level background image uploaded successfully", imageUrl: imagePath });
-  } catch (error) {
-    console.error(`[ERROR] Failed to upload level background by User ${clerkUserId}:`, error.message);
-    res.status(500).json({ message: "Failed to upload level background image" });
+    console.error("Error updating coordinates:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error updating coordinates",
+    });
   }
 };

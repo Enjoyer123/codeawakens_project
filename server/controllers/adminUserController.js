@@ -3,94 +3,108 @@ const { parsePagination } = require("../utils/pagination");
 
 exports.getAllUsers = async (req, res) => {
   try {
-    res.json(await adminUserService.getAllUsers(parsePagination(req.query, 5)));
-  } catch (e) {
-    res
-      .status(e.status || 500)
-      .json({ message: e.message || "Error fetching users" });
+    const paginationData = parsePagination(req.query, 5);
+    const result = await adminUserService.getAllUsers(paginationData);
+    
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching users:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error fetching users",
+    });
   }
 };
+
 exports.updateUserRole = async (req, res) => {
-  const { userId } = req.params;
   const adminClerkId = req.user.id;
-  console.log(
-    `[ADMIN] Admin ${adminClerkId} updating role for User ${userId} to "${req.body.role}".`,
-  );
+  const userId = parseInt(req.params.userId);
+  const role = req.body.role;
+  
+  console.log(`[ADMIN] Admin ${adminClerkId} updating role for User ${userId} to "${role}".`);
+  
   try {
-    const user = await adminUserService.updateUserRole(
-      parseInt(userId),
-      req.body.role,
-      adminClerkId,
-    );
-    console.log(
-      `[ADMIN] Success: User ${userId} role changed to "${req.body.role}" by Admin ${adminClerkId}.`,
-    );
-    res.json({ message: "User role updated successfully", user });
-  } catch (e) {
-    res
-      .status(e.status || 500)
-      .json({ message: e.message || "Error updating user role" });
+    const result = await adminUserService.updateUserRole(userId, role, adminClerkId);
+    
+    console.log(`[ADMIN] Success: User ${userId} role changed to "${role}" by Admin ${adminClerkId}.`);
+    res.status(200).json({
+      message: "User role updated successfully",
+      user: result,
+    });
+  } catch (error) {
+    console.error("Error updating user role:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error updating user role",
+    });
   }
 };
+
 exports.getUserDetails = async (req, res) => {
   try {
-    res.json(
-      await adminUserService.getUserDetails(parseInt(req.params.userId)),
-    );
-  } catch (e) {
-    res
-      .status(e.status || 500)
-      .json({ message: e.message || "Error fetching user details" });
-  }
-};
-exports.deleteUser = async (req, res) => {
-  const { userId } = req.params;
-  const adminClerkId = req.user.id;
-  console.log(
-    `[ADMIN] Admin ${adminClerkId} attempting to delete User ${userId}.`,
-  );
-  try {
-    await adminUserService.deleteUser(parseInt(userId), adminClerkId);
-    console.log(
-      `[ADMIN] Success: User ${userId} deleted by Admin ${adminClerkId}.`,
-    );
-    res.json({ message: "User deleted successfully" });
-  } catch (e) {
-    res
-      .status(e.status || 500)
-      .json({ message: e.message || "Error deleting user" });
-  }
-};
-exports.resetUserTestScore = async (req, res) => {
-  const { userId } = req.params;
-  const adminClerkId = req.user.id;
-  console.log(
-    `[ADMIN] Admin ${adminClerkId} resetting ${req.body.type}-test score for User ${userId}.`,
-  );
-  try {
-    await adminUserService.resetUserTestScore(parseInt(userId), req.body.type);
-    console.log(
-      `[ADMIN] Success: Reset ${req.body.type}-test score for User ${userId} by Admin ${adminClerkId}.`,
-    );
-    res.json({
-      message: `Reset ${req.body.type}-test score and history successfully`,
+    const userId = parseInt(req.params.userId);
+    const result = await adminUserService.getUserDetails(userId);
+    
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching user details:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error fetching user details",
     });
-  } catch (e) {
-    console.error("Error resetting score:", e.message);
-    res
-      .status(e.status || 500)
-      .json({ message: e.message || "Error resetting score" });
   }
 };
+
+exports.deleteUser = async (req, res) => {
+  const adminClerkId = req.user.id;
+  const userId = parseInt(req.params.userId);
+  
+  console.log(`[ADMIN] Admin ${adminClerkId} attempting to delete User ${userId}.`);
+  
+  try {
+    await adminUserService.deleteUser(userId, adminClerkId);
+    
+    console.log(`[ADMIN] Success: User ${userId} deleted by Admin ${adminClerkId}.`);
+    res.status(200).json({
+      message: "User deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting user:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error deleting user",
+    });
+  }
+};
+
+exports.resetUserTestScore = async (req, res) => {
+  const adminClerkId = req.user.id;
+  const userId = parseInt(req.params.userId);
+  const testType = req.body.type;
+  
+  console.log(`[ADMIN] Admin ${adminClerkId} resetting ${testType}-test score for User ${userId}.`);
+  
+  try {
+    await adminUserService.resetUserTestScore(userId, testType);
+    
+    console.log(`[ADMIN] Success: Reset ${testType}-test score for User ${userId} by Admin ${adminClerkId}.`);
+    res.status(200).json({
+      message: `Reset ${testType}-test score and history successfully`,
+    });
+  } catch (error) {
+    console.error("Error resetting score:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error resetting score",
+    });
+  }
+};
+
 exports.getUserTestHistory = async (req, res) => {
   try {
-    res.json(
-      await adminUserService.getUserTestHistory(parseInt(req.params.userId)),
-    );
-  } catch (e) {
-    console.error("Error fetching test history:", e.message);
-    res
-      .status(e.status || 500)
-      .json({ message: e.message || "Error fetching test history" });
+    const userId = parseInt(req.params.userId);
+    const result = await adminUserService.getUserTestHistory(userId);
+    
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching test history:", error.message);
+    res.status(error.status || 500).json({
+      message: error.message || "Error fetching test history",
+    });
   }
 };
