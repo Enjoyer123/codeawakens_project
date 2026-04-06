@@ -1,10 +1,10 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const authCheck = require("../middleware/authCheck");
-const requireAdmin = require("../middleware/requireAdmin");
-const { uploadMiddleware } = require("../middleware/guideUpload");
+import authCheck from "../middleware/authCheck.js";
+import requireAdmin from "../middleware/requireAdmin.js";
+import { uploadMiddleware } from "../middleware/guideUpload.js";
 
-const {
+import {
   getAllGuides,
   getGuideById,
   createGuide,
@@ -14,7 +14,7 @@ const {
   uploadGuideImage,
   deleteGuideImage,
   getGuidesByLevel,
-} = require("../controllers/guideController");
+} from "../controllers/guideController.js";
 
 // Guide CRUD routes
 router.get("/guides", authCheck, requireAdmin, getAllGuides);
@@ -35,5 +35,5 @@ router.post(
 );
 router.delete("/guides/images/:imageId", authCheck, requireAdmin, deleteGuideImage);
 
-module.exports = router;
+export default router;
 

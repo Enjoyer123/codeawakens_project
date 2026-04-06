@@ -1,27 +1,35 @@
-const express = require("express");
-const cors = require("cors");
-require("dotenv").config();
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+dotenv.config();
 const app = express();
 const port = process.env.PORT || 4000;
-const profileRouter = require("./routes/ProfileRoute");
-const adminUsersRouter = require("./routes/AdminUserRoute");
-const weaponRouter = require("./routes/WeaponRoute");
-const levelRouter = require("./routes/LevelRoute");
-const rewardRouter = require("./routes/RewardRoute");
-const guideRouter = require("./routes/GuideRoute");
-const levelHintRouter = require("./routes/LevelHintRoute");
-const blockRouter = require("./routes/BlockRoute");
-const victoryConditionRouter = require("./routes/VictoryConditionRoute");
-const levelCategoryRouter = require("./routes/LevelCategoryRoute");
-const patternRouter = require("./routes/PatternRoute");
-const testCaseRouter = require("./routes/testCaseRoutes");
-const testRouter = require("./routes/testRoutes");
-const notificationRouter = require("./routes/NotificationRoute");
-const dashboardRouter = require("./routes/dashboardRoutes");
-const leaderboardRouter = require("./routes/leaderboardRoutes");
-const path = require("path");
-const { clerkMiddleware } = require("@clerk/express");
-const morgan = require("morgan");
+import profileRouter from "./routes/ProfileRoute.js";
+import adminUsersRouter from "./routes/AdminUserRoute.js";
+import weaponRouter from "./routes/WeaponRoute.js";
+import levelRouter from "./routes/LevelRoute.js";
+import rewardRouter from "./routes/RewardRoute.js";
+import guideRouter from "./routes/GuideRoute.js";
+import levelHintRouter from "./routes/LevelHintRoute.js";
+import blockRouter from "./routes/BlockRoute.js";
+import victoryConditionRouter from "./routes/VictoryConditionRoute.js";
+import levelCategoryRouter from "./routes/LevelCategoryRoute.js";
+import patternRouter from "./routes/PatternRoute.js";
+import testCaseRouter from "./routes/testCaseRoutes.js";
+import testRouter from "./routes/testRoutes.js";
+import notificationRouter from "./routes/NotificationRoute.js";
+import dashboardRouter from "./routes/dashboardRoutes.js";
+import leaderboardRouter from "./routes/leaderboardRoutes.js";
+import path from "path";
+import { clerkMiddleware } from "@clerk/express";
+import morgan from "morgan";
+
+
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
 
 app.use(
   cors({
@@ -30,7 +38,7 @@ app.use(
 );
 
 // Morgan HTTP request logging for UAT evidence
-app.use(morgan("combined"));
+// app.use(morgan("combined"));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));

@@ -8,7 +8,7 @@ import {
     getUserByClerkId,
     saveUserProgress,
     checkAndAwardRewards
-} from '../profileService';
+} from '../api/profileService';
 
 // Check User Profile (Check if exists)
 export const useCheckUserProfile = () => {

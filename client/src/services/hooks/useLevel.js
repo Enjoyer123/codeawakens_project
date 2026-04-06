@@ -9,7 +9,7 @@ import {
     uploadLevelBackgroundImage,
     fetchLevelsForPrerequisite,
     fetchAllCategories
-} from '../levelService';
+} from '../api/levelService';
 
 // Fetch single level
 export const useLevel = (levelId) => {

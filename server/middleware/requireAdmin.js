@@ -1,5 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+import prisma from "../models/prisma.js";
 
 const requireAdmin = async (req, res, next) => {
   try {
@@ -24,4 +23,4 @@ const requireAdmin = async (req, res, next) => {
   }
 };
 
-module.exports = requireAdmin;
+export default requireAdmin;

@@ -8,7 +8,7 @@ import {
     deleteNotification,
     fetchUserNotifications,
     markNotificationAsRead
-} from '../notificationService';
+} from '../api/notificationService';
 
 // Admin: Fetch all notifications
 export const useNotifications = (page = 1, limit = 10, search = '') => {

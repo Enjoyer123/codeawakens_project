@@ -1,11 +1,11 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const authCheck = require("../middleware/authCheck");
-const requireAdmin = require("../middleware/requireAdmin");
-const { uploadMiddleware } = require("../middleware/levelUpload");
-const { uploadLevelBackgroundImage } = require("../controllers/levelController");
+import authCheck from "../middleware/authCheck.js";
+import requireAdmin from "../middleware/requireAdmin.js";
+import { uploadMiddleware } from "../middleware/levelUpload.js";
+import { uploadLevelBackgroundImage } from "../controllers/levelController.js";
 
-const {
+import {
   getAllLevels,
   getLevelById,
   createLevel,
@@ -15,7 +15,7 @@ const {
   getLevelsForPrerequisite,
   unlockLevel,
   updateLevelCoordinates,
-} = require("../controllers/levelController");
+} from "../controllers/levelController.js";
 
 // Level CRUD routes
 router.get("/levels", authCheck, getAllLevels);
@@ -31,4 +31,4 @@ router.put("/levels/:levelId", authCheck, requireAdmin, updateLevel);
 router.put("/levels/:levelId/unlock", authCheck, requireAdmin, unlockLevel);
 router.delete("/levels/:levelId", authCheck, requireAdmin, deleteLevel);
 
-module.exports = router;
+export default router;

@@ -1,7 +1,7 @@
 import { useAuth } from '@clerk/clerk-react';
 import { Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { fetchUserProfile } from '../../services/profileService';
+import { fetchUserProfile } from '../../services/api/profileService';
 import PageLoader from "./Loading/PageLoader";
 import useUserStore from '../../store/useUserStore';
 

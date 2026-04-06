@@ -9,10 +9,8 @@ import {
     unlockPattern,
     unlockLevel
 
-} from '../patternService';
+} from '../api/patternService';
 import { useAuth } from '@clerk/clerk-react';
-
-import { API_BASE_URL } from '../../config/apiConfig';
 
 // Hook for fetching all patterns (optionally filtered by levelId)
 export const usePatterns = (levelId = null) => {
@@ -36,20 +34,8 @@ export const usePatternTypes = () => {
 
     return useQuery({
         queryKey: ['patternTypes'],
-        queryFn: async () => {
-            const token = await getToken();
-            const response = await fetch(`${API_BASE_URL}/patterns/types`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            if (!response.ok) {
-                return []; // Fail gracefully
-            }
-            return await response.json();
-        },
+        queryFn: () => fetchPatternTypes(getToken),
+        enabled: !!getToken,
         staleTime: 1000 * 60 * 60, // 1 hour (types rarely change)
     });
 };

@@ -1,9 +1,9 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const authCheck = require("../middleware/authCheck");
-const requireAdmin = require("../middleware/requireAdmin");
+import authCheck from "../middleware/authCheck.js";
+import requireAdmin from "../middleware/requireAdmin.js";
 
-const {
+import {
   getAllUsers,
   updateUserRole,
   getUserDetails,
@@ -11,7 +11,7 @@ const {
   deleteUser,
   resetUserTestScore,
   getUserTestHistory
-} = require("../controllers/adminUserController");
+} from "../controllers/adminUserController.js";
 
 router.get("/users", authCheck, requireAdmin, getAllUsers);
 router.get("/users/:userId/details", authCheck, requireAdmin, getUserDetails);
@@ -20,4 +20,4 @@ router.delete("/users/:userId", authCheck, requireAdmin, deleteUser);
 router.post("/users/:userId/reset-test", authCheck, requireAdmin, resetUserTestScore);
 router.get("/users/:userId/tests", authCheck, requireAdmin, getUserTestHistory);
 
-module.exports = router;
+export default router;

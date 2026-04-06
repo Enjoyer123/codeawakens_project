@@ -1,117 +1,58 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+import * as dashboardService from "../services/dashboardService.js";
+import { sendSuccess, sendError } from "../utils/responseHelper.js";
 
-exports.getDashboardStats = async (req, res) => {
-    try {
-        const adminClerkId = req.user?.id || 'unknown';
-        console.log(`[ADMIN] Admin ${adminClerkId} viewing dashboard stats.`);
-        const totalUsers = await prisma.user.count({
-            where: { role: 'user' }
-        });
-
-        const totalLevels = await prisma.level.count();
-
-        res.json({
-            totalUsers,
-            totalLevels,
-        });
-    } catch (error) {
-        console.error("Error fetching dashboard stats:", error);
-        res.status(500).json({ message: "Internal server error" });
-    }
+export const getDashboardStats = async (req, res) => {
+  try {
+    const adminClerkId = req.user ? req.user.id : "unknown";
+    console.log(`[ADMIN] Admin ${adminClerkId} viewing dashboard stats.`);
+    
+    const result = await dashboardService.getDashboardStats();
+    
+    sendSuccess(res, result, "Dashboard stats fetched successfully");
+  } catch (error) {
+    console.error("Error fetching dashboard stats:", error.message);
+    sendError(res, error.message || "Internal server error fetching dashboard statistics", error.status || 500);
+  }
 };
 
-exports.getLevelStats = async (req, res) => {
-    try {
-        const adminClerkId = req.user?.id || 'unknown';
-        console.log(`[ADMIN] Admin ${adminClerkId} viewing level statistics.`);
-        const levels = await prisma.level.groupBy({
-            by: ['category_id'],
-            _count: {
-                level_id: true,
-            },
-            orderBy: {
-                _count: {
-                    level_id: 'desc'
-                }
-            }
-        });
-
-        // Need to fetch category names
-        const enrichedStats = await Promise.all(levels.map(async (item) => {
-            const category = await prisma.levelCategory.findUnique({
-                where: { category_id: item.category_id },
-                select: { category_name: true }
-            });
-            return {
-                name: category ? category.category_name : 'Unknown',
-                value: item._count.level_id
-            };
-        }));
-
-        res.json(enrichedStats);
-    } catch (error) {
-        console.error("Error fetching level stats:", error);
-        res.status(500).json({ message: "Internal server error" });
-    }
+export const getLevelStats = async (req, res) => {
+  try {
+    const adminClerkId = req.user ? req.user.id : "unknown";
+    console.log(`[ADMIN] Admin ${adminClerkId} viewing level statistics.`);
+    
+    const result = await dashboardService.getLevelStats();
+    
+    sendSuccess(res, result, "Level stats fetched successfully");
+  } catch (error) {
+    console.error("Error fetching level stats:", error.message);
+    sendError(res, error.message || "Internal server error fetching level statistics", error.status || 500);
+  }
 };
 
-exports.getUserStats = async (req, res) => {
-    try {
-        const adminClerkId = req.user?.id || 'unknown';
-        console.log(`[ADMIN] Admin ${adminClerkId} viewing user statistics.`);
-        // Skill Level Distribution
-        const skillDistribution = await prisma.user.groupBy({
-            by: ['skill_level'],
-            _count: {
-                user_id: true
-            },
-            where: {
-                role: 'user',
-                skill_level: {
-                    not: null
-                }
-            }
-        });
-
-        const formattedSkillStats = skillDistribution.map(item => ({
-            name: item.skill_level || 'Unranked',
-            value: item._count.user_id
-        }));
-
-        res.json({
-            skillDistribution: formattedSkillStats
-        });
-    } catch (error) {
-        console.error("Error fetching user stats:", error);
-        res.status(500).json({ message: "Internal server error" });
-    }
+export const getUserStats = async (req, res) => {
+  try {
+    const adminClerkId = req.user ? req.user.id : "unknown";
+    console.log(`[ADMIN] Admin ${adminClerkId} viewing user statistics.`);
+    
+    const result = await dashboardService.getUserStats();
+    
+    sendSuccess(res, result, "User stats fetched successfully");
+  } catch (error) {
+    console.error("Error fetching user stats:", error.message);
+    sendError(res, error.message || "Internal server error fetching user statistics", error.status || 500);
+  }
 };
 
-exports.getTestStats = async (req, res) => {
-    try {
-        const adminClerkId = req.user?.id || 'unknown';
-        console.log(`[ADMIN] Admin ${adminClerkId} viewing test statistics.`);
-        const avgScores = await prisma.user.aggregate({
-            _avg: {
-                pre_score: true,
-                post_score: true
-            },
-            where: {
-                role: 'user',
-                pre_score: { not: null },
-            }
-        });
-
-        res.json([
-            {
-                name: 'Average Scores',
-                pre_test: Math.round(avgScores._avg.pre_score || 0),
-                post_test: Math.round(avgScores._avg.post_score || 0)
-            }
-        ]);
-    } catch (error) {
-        console.error("Error fetching test stats:", error);
-        res.status(500).json({ message: "Internal server error" });
-    }
+export const getTestStats = async (req, res) => {
+  try {
+    const adminClerkId = req.user ? req.user.id : "unknown";
+    console.log(`[ADMIN] Admin ${adminClerkId} viewing test statistics.`);
+    
+    const result = await dashboardService.getTestStats();
+    
+    sendSuccess(res, result, "Test stats fetched successfully");
+  } catch (error) {
+    console.error("Error fetching test stats:", error.message);
+    sendError(res, error.message || "Internal server error fetching test statistics", error.status || 500);
+  }
 };

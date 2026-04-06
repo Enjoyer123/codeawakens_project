@@ -1,782 +1,148 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+import * as levelService from "../services/levelService.js";
+import { cleanupTempFile } from "../utils/fileHelper.js";
+import { parsePagination } from "../utils/pagination.js";
+import { sendSuccess, sendError } from "../utils/responseHelper.js";
 
-// Get all levels with pagination
-exports.getAllLevels = async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const search = req.query.search || '';
-  // console.log(`[LEVEL] Fetching levels list. Page: ${page}, Limit: ${limit}, Search: "${search}"`); // Verbose, keeping commented or minimal
-
+export const getAllLevels = async (req, res) => {
   try {
-    const skip = (page - 1) * limit;
-
-    let where = {};
-    if (search.trim()) {
-      const searchLower = search.toLowerCase();
-      where = {
-        OR: [
-          { level_name: { contains: searchLower, mode: 'insensitive' } },
-          { description: { contains: searchLower, mode: 'insensitive' } },
-        ],
-      };
-    }
-
-    const total = await prisma.level.count({ where });
-
-    const levels = await prisma.level.findMany({
-      where,
-      include: {
-        category: {
-          select: {
-            category_id: true,
-            category_name: true,
-          },
-        },
-        creator: {
-          select: {
-            user_id: true,
-            username: true,
-            email: true,
-          },
-        },
-        required_level: {
-          select: {
-            level_id: true,
-            level_name: true,
-          },
-        },
-      },
-      orderBy: {
-        created_at: "desc",
-      },
-      skip,
-      take: limit,
-    });
-
-    const totalPages = Math.ceil(total / limit);
-
-    res.json({
-      levels,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPrevPage: page > 1,
-      },
-    });
+    const clerkUserId = req.user ? req.user.id : null;
+    const paginationData = parsePagination(req.query);
+    const result = await levelService.getAllLevels(paginationData, req.query, clerkUserId);
+    
+    sendSuccess(res, result, "Levels fetched successfully");
   } catch (error) {
-    console.error("[ERROR] Failed to fetch levels:", error.message);
-    res.status(500).json({ message: "Error fetching levels", error: error.message });
+    console.error("Error fetching levels:", error.message);
+    sendError(res, error.message || "Error fetching levels", error.status || 500);
   }
 };
 
-// Get all categories for dropdown
-exports.getAllCategories = async (req, res) => {
-  console.log("[LEVEL] Fetching all categories for dropdown.");
+export const getLevelsForDropdown = async (req, res) => {
   try {
-    const categories = await prisma.levelCategory.findMany({
-      orderBy: {
-        category_name: 'asc',
-      },
-      include: {
-        category_items: {
-          select: {
-            item_type: true,
-          },
-          orderBy: {
-            display_order: 'asc',
-          },
-        },
-      },
-    });
-
-    // Transform category_items to item array for backward compatibility
-    const categoriesWithItem = categories.map(category => ({
-      ...category,
-      item: category.category_items?.map(ci => ci.item_type) || null,
-    }));
-
-    res.json(categoriesWithItem);
+    const result = await levelService.getLevelsForDropdown();
+    
+    sendSuccess(res, result, "Levels fetched successfully");
   } catch (error) {
-    console.error("[ERROR] Failed to fetch categories:", error.message);
-    res.status(500).json({ message: "Error fetching categories", error: error.message });
+    console.error("Error fetching generic levels:", error.message);
+    sendError(res, error.message || "Error fetching generic levels", error.status || 500);
   }
 };
 
-// Get all levels for prerequisite dropdown
-exports.getLevelsForPrerequisite = async (req, res) => {
-  console.log("[LEVEL] Fetching levels for prerequisite dropdown.");
+export const getLevelById = async (req, res) => {
   try {
-    const levels = await prisma.level.findMany({
-      select: {
-        level_id: true,
-        level_name: true,
-        category: {
-          select: {
-            category_name: true,
-          },
-        },
-      },
-      orderBy: {
-        level_name: 'asc',
-      },
-    });
-
-    res.json(levels);
+    const clerkUserId = req.user ? req.user.id : null;
+    const levelId = parseInt(req.params.levelId);
+    const result = await levelService.getLevelById(levelId, req.query.admin, clerkUserId);
+    
+    sendSuccess(res, result, "Level fetched successfully");
   } catch (error) {
-    console.error("[ERROR] Failed to fetch levels for prerequisite:", error.message);
-    res.status(500).json({ message: "Error fetching levels", error: error.message });
+    console.error("Error fetching level details:", error.message);
+    sendError(res, error.message || "Error fetching level details", error.status || 500);
   }
 };
 
-// Get single level by ID
-exports.getLevelById = async (req, res) => {
-  const { levelId } = req.params;
-  const clerkUserId = req.user?.id;
-  if (clerkUserId) {
-    console.log(`[GAME] User ${clerkUserId} viewing Level ${levelId}.`);
-  }
-
+export const createLevel = async (req, res) => {
   try {
-    const level = await prisma.level.findUnique({
-      where: { level_id: parseInt(levelId) },
-      include: {
-        category: {
-          include: {
-            category_items: {
-              orderBy: {
-                display_order: 'asc',
-              },
-            },
-          },
-        },
-        creator: {
-          select: {
-            user_id: true,
-            username: true,
-            email: true,
-          },
-        },
-        required_level: {
-          select: {
-            level_id: true,
-            level_name: true,
-          },
-        },
-        level_blocks: {
-          include: {
-            block: true,
-          },
-        },
-        level_victory_conditions: {
-          include: {
-            victory_condition: true,
-          },
-        },
-        patterns: {
-          include: {
-            weapon: true,
-            pattern_type: true,
-          },
-        },
-        guides: {
-          include: {
-            guide_images: true,
-          },
-          orderBy: {
-            display_order: 'asc',
-          },
-        },
-        hints: {
-          include: {
-            hint_images: true,
-          },
-          orderBy: {
-            display_order: 'asc',
-          },
-        },
-        level_test_cases: {
-          orderBy: {
-            display_order: 'asc',
-          },
-        },
-      },
-    });
-
-    if (!level) {
-      console.warn(`[GAME] Warning: Level ${levelId} not found.`);
-      return res.status(404).json({ message: "Level not found" });
-    }
-
-    // Calculate dynamic lock state
-    let isPublished = level.is_unlocked;
-    let isLocked = false;
-
-    if (clerkUserId) {
-      const user = await prisma.user.findUnique({
-        where: { clerk_user_id: clerkUserId },
-        select: { user_id: true, skill_level: true, role: true }
-      });
-
-      if (user) {
-        const isAdmin = user.role === 'admin';
-
-        // Security check: If level is not published, only admin can see it
-        if (!isPublished && !isAdmin) {
-          console.warn(`[GAME] Access Denied: User ${clerkUserId} tried to access unpublished Level ${levelId}.`);
-          return res.status(403).json({ message: "This level is not published yet." });
-        }
-
-        // Admin bypass for locking
-        if (isAdmin) {
-          isLocked = false;
-        } else {
-          // Define unlocking criteria
-          const unlockConditions = [];
-
-          // Condition 1: Prerequisite Level
-          if (level.required_level_id) {
-            const progress = await prisma.userProgress.findUnique({
-              where: {
-                user_id_level_id: {
-                  user_id: user.user_id,
-                  level_id: level.required_level_id,
-                },
-              },
-            });
-            const isPrereqMet = (progress && (progress.status === 'completed' || progress.is_correct));
-            unlockConditions.push(isPrereqMet);
-          }
-
-          // Condition 2: Skill Level
-          if (level.required_skill_level) {
-            let isSkillMet = false;
-            if (user.skill_level) {
-              const skillRank = {
-                'Zone_A': 1,
-                'Zone_B': 2,
-                'Zone_C': 3
-              };
-              const userRank = skillRank[user.skill_level] || 0;
-              const requiredRank = skillRank[level.required_skill_level] || 0;
-              isSkillMet = userRank >= requiredRank;
-            }
-            unlockConditions.push(isSkillMet);
-          }
-
-          // Final Lock Decision
-          // If NO requirements (unlockConditions empty), it is UNLOCKED.
-          // If HAS requirements, it is UNLOCKED if AT LEAST ONE condition is met (OR logic).
-          if (unlockConditions.length > 0) {
-            const anyConditionMet = unlockConditions.some(met => met === true);
-            isLocked = !anyConditionMet;
-          } else {
-            isLocked = false;
-          }
-        }
-      }
-    } else {
-      // Not logged in
-      if (!isPublished) {
-        return res.status(403).json({ message: "This level is not published yet." });
-      }
-      if (level.required_skill_level) {
-        isLocked = true;
-      }
-    }
-
-    res.json({
-      ...level,
-      is_unlocked: isPublished,
-      is_locked: isLocked
-    });
+    const clerkUserId = req.user ? req.user.id : null;
+    const result = await levelService.createLevel(req.body, clerkUserId);
+    
+    sendSuccess(res, { level: result }, "Level created successfully", 201);
   } catch (error) {
-    console.error(`[ERROR] Failed to fetch Level ${levelId}:`, error.message);
-    res.status(500).json({ message: "Error fetching level", error: error.message });
+    console.error("Error creating level:", error.message);
+    sendError(res, error.message || "Error creating level", error.status || 500);
   }
 };
 
-// Create new level
-exports.createLevel = async (req, res) => {
-  const clerkUserId = req.user?.id;
-  console.log(`[ADMIN] User ${clerkUserId} creating new level.`);
-
+export const updateLevel = async (req, res) => {
   try {
-    const {
-      category_id,
-      level_name,
-      description,
-      is_unlocked,
-      required_level_id,
-      textcode,
-      background_image,
-      start_node_id,
-      goal_node_id,
-      nodes,
-      edges,
-      map_entities,
-      algo_data,
-      starter_xml,
-      block_ids,
-      victory_condition_ids,
-      required_skill_level,
-      required_for_post_test,
-      character,
-      coordinates,
-    } = req.body;
-
-    // Get user from request (set by authCheck middleware)
-    if (!clerkUserId) {
-      return res.status(401).json({ message: "User not authenticated" });
-    }
-
-    // Find user by clerk_user_id
-    const user = await prisma.user.findUnique({
-      where: { clerk_user_id: clerkUserId },
-    });
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Validate required fields
-    const missingFields = [];
-    if (!category_id || category_id === '') missingFields.push('category_id');
-    if (!level_name || level_name.trim() === '') missingFields.push('level_name');
-    if (!background_image || background_image.trim() === '') missingFields.push('background_image');
-
-    if (missingFields.length > 0) {
-      console.warn(`[ADMIN] Create Level Failed: Missing fields [${missingFields.join(', ')}] by User ${clerkUserId}.`);
-      return res.status(400).json({
-        message: `Missing required fields: ${missingFields.join(', ')}`
-      });
-    }
-
-    // Validate category exists
-    const category = await prisma.levelCategory.findUnique({
-      where: { category_id: parseInt(category_id) },
-    });
-
-    if (!category) {
-      return res.status(400).json({ message: "Category not found" });
-    }
-
-    // Validate required_level_id if provided
-    if (required_level_id) {
-      const requiredLevel = await prisma.level.findUnique({
-        where: { level_id: parseInt(required_level_id) },
-      });
-
-      if (!requiredLevel) {
-        return res.status(400).json({ message: "Required level not found" });
-      }
-    }
-
-    // Parse JSON fields if they are strings
-    const parseJsonField = (field) => {
-      if (!field) return null;
-      if (typeof field === 'string') {
-        try {
-          return JSON.parse(field);
-        } catch (e) {
-          return null;
-        }
-      }
-      return field;
-    };
-
-    // Sequence reset logic removed for production deployment
-
-
-
-
-
-
-    const level = await prisma.level.create({
-      data: {
-        category_id: parseInt(category_id),
-        level_name,
-        description: description || null,
-        is_unlocked: is_unlocked === true || is_unlocked === 'true',
-        required_level_id: required_level_id ? parseInt(required_level_id) : null,
-        required_skill_level: required_skill_level || 'Zone_A',
-        required_for_post_test: required_for_post_test === true || required_for_post_test === 'true',
-        textcode: textcode === true || textcode === 'true',
-        background_image,
-        start_node_id: start_node_id !== null && start_node_id !== undefined ? parseInt(start_node_id) : null,
-        goal_node_id: goal_node_id !== null && goal_node_id !== undefined ? parseInt(goal_node_id) : null,
-        character: character || null,
-        coordinates: parseJsonField(coordinates), // Parse and save coordinates
-        nodes: parseJsonField(nodes),
-        edges: parseJsonField(edges),
-        map_entities: parseJsonField(map_entities),
-        algo_data: parseJsonField(algo_data),
-        starter_xml: starter_xml || null,
-        created_by: user.user_id,
-        level_blocks: block_ids && block_ids.length > 0 ? {
-          create: block_ids.map((blockId) => ({
-            block_id: parseInt(blockId),
-          })),
-        } : undefined,
-        level_victory_conditions: victory_condition_ids && victory_condition_ids.length > 0 ? {
-          create: victory_condition_ids.map(vcId => ({
-            victory_condition_id: parseInt(vcId),
-          })),
-        } : undefined,
-      },
-      include: {
-        category: {
-          select: {
-            category_id: true,
-            category_name: true,
-          },
-        },
-        creator: {
-          select: {
-            user_id: true,
-            username: true,
-            email: true,
-          },
-        },
-        required_level: {
-          select: {
-            level_id: true,
-            level_name: true,
-          },
-        },
-        level_blocks: {
-          include: {
-            block: true,
-          },
-        },
-        level_victory_conditions: {
-          include: {
-            victory_condition: true,
-          },
-        },
-      },
-    });
-
-    console.log(`[ADMIN] Success: Created Level ${level.level_id} ("${level.level_name}") by User ${clerkUserId}.`);
-    res.status(201).json({
-      message: "Level created successfully",
-      level,
-    });
+    const levelId = parseInt(req.params.levelId);
+    const result = await levelService.updateLevel(levelId, req.body);
+    
+    sendSuccess(res, { level: result }, "Level updated successfully");
   } catch (error) {
-    console.error(`[ERROR] Failed to create level by User ${clerkUserId}:`, error.message);
-    res.status(500).json({ message: "Error creating level", error: error.message });
+    console.error("Error updating level:", error.message);
+    sendError(res, error.message || "Error updating level", error.status || 500);
   }
 };
 
-// Update level
-exports.updateLevel = async (req, res) => {
-  const { levelId } = req.params;
-  const clerkUserId = req.user?.id;
-  console.log(`[ADMIN] User ${clerkUserId} updating Level ${levelId}.`);
-
+export const deleteLevel = async (req, res) => {
   try {
-    const {
-      category_id,
-      level_name,
-      description,
-      is_unlocked,
-      required_level_id,
-      textcode,
-      background_image,
-      start_node_id,
-      goal_node_id,
-      nodes,
-      edges,
-      map_entities,
-      algo_data,
-      starter_xml,
-      block_ids,
-      victory_condition_ids,
-      required_skill_level,
-      required_for_post_test,
-      character,
-      coordinates,
-    } = req.body;
-
-    const existingLevel = await prisma.level.findUnique({
-      where: { level_id: parseInt(levelId) },
-    });
-
-    if (!existingLevel) {
-      return res.status(404).json({ message: "Level not found" });
-    }
-
-    // Parse JSON fields if they are strings
-    const parseJsonField = (field) => {
-      if (field === undefined) return undefined;
-      if (field === null || field === '') return null;
-      if (typeof field === 'string') {
-        try {
-          return JSON.parse(field);
-        } catch (e) {
-          return null;
-        }
-      }
-      return field;
-    };
-
-    const updateData = {};
-    if (category_id !== undefined) {
-      // Validate category exists
-      const category = await prisma.levelCategory.findUnique({
-        where: { category_id: parseInt(category_id) },
-      });
-      if (!category) {
-        return res.status(400).json({ message: "Category not found" });
-      }
-      updateData.category_id = parseInt(category_id);
-    }
-    if (level_name !== undefined) updateData.level_name = level_name;
-    if (description !== undefined) updateData.description = description;
-    if (is_unlocked !== undefined) updateData.is_unlocked = is_unlocked === true || is_unlocked === 'true';
-    if (required_level_id !== undefined) {
-      if (required_level_id === null || required_level_id === '') {
-        updateData.required_level_id = null;
-      } else {
-        // Validate required_level_id
-        const requiredLevel = await prisma.level.findUnique({
-          where: { level_id: parseInt(required_level_id) },
-        });
-        if (!requiredLevel) {
-          return res.status(400).json({ message: "Required level not found" });
-        }
-        updateData.required_level_id = parseInt(required_level_id);
-      }
-    }
-    if (required_skill_level !== undefined) {
-      updateData.required_skill_level = required_skill_level || null;
-    }
-    if (required_for_post_test !== undefined) {
-      updateData.required_for_post_test = required_for_post_test === true || required_for_post_test === 'true';
-    }
-    if (textcode !== undefined) updateData.textcode = textcode === true || textcode === 'true';
-    if (background_image !== undefined) updateData.background_image = background_image;
-    if (start_node_id !== undefined) updateData.start_node_id = start_node_id !== null ? parseInt(start_node_id) : null;
-    if (goal_node_id !== undefined) updateData.goal_node_id = goal_node_id !== null ? parseInt(goal_node_id) : null;
-    if (character !== undefined) updateData.character = character;
-    if (coordinates !== undefined) updateData.coordinates = parseJsonField(coordinates); // Update coordinates
-    if (nodes !== undefined) updateData.nodes = parseJsonField(nodes);
-    if (edges !== undefined) updateData.edges = parseJsonField(edges);
-    if (map_entities !== undefined) updateData.map_entities = parseJsonField(map_entities);
-    if (algo_data !== undefined) updateData.algo_data = parseJsonField(algo_data);
-    if (starter_xml !== undefined) updateData.starter_xml = starter_xml || null;
-
-    // Use transaction to update level and relationships
-    const level = await prisma.$transaction(async (tx) => {
-      // Update level
-      const updatedLevel = await tx.level.update({
-        where: { level_id: parseInt(levelId) },
-        data: updateData,
-      });
-
-      // Update level blocks if provided
-      if (block_ids !== undefined) {
-        // Delete existing level blocks
-        await tx.levelBlock.deleteMany({
-          where: { level_id: parseInt(levelId) },
-        });
-
-        // Create new level blocks
-        if (block_ids && block_ids.length > 0) {
-          await tx.levelBlock.createMany({
-            data: block_ids.map((blockId) => ({
-              level_id: parseInt(levelId),
-              block_id: parseInt(blockId),
-            })),
-          });
-        }
-      }
-
-      // Update level victory conditions if provided
-      if (victory_condition_ids !== undefined) {
-        // Delete existing level victory conditions
-        await tx.levelVictoryCondition.deleteMany({
-          where: { level_id: parseInt(levelId) },
-        });
-
-        // Create new level victory conditions
-        if (victory_condition_ids && victory_condition_ids.length > 0) {
-          await tx.levelVictoryCondition.createMany({
-            data: victory_condition_ids.map(vcId => ({
-              level_id: parseInt(levelId),
-              victory_condition_id: parseInt(vcId),
-            })),
-          });
-        }
-      }
-
-      // Return updated level with relations
-      return await tx.level.findUnique({
-        where: { level_id: parseInt(levelId) },
-        include: {
-          category: {
-            select: {
-              category_id: true,
-              category_name: true,
-            },
-          },
-          creator: {
-            select: {
-              user_id: true,
-              username: true,
-              email: true,
-            },
-          },
-          required_level: {
-            select: {
-              level_id: true,
-              level_name: true,
-            },
-          },
-          level_blocks: {
-            include: {
-              block: true,
-            },
-          },
-          level_victory_conditions: {
-            include: {
-              victory_condition: true,
-            },
-          },
-        },
-      });
-    });
-
-    console.log(`[ADMIN] Success: Updated Level ${levelId} by User ${clerkUserId}.`);
-    res.json({
-      message: "Level updated successfully",
-      level,
-    });
+    const levelId = parseInt(req.params.levelId);
+    await levelService.deleteLevel(levelId);
+    
+    sendSuccess(res, null, "Level deleted successfully");
   } catch (error) {
-    console.error(`[ERROR] Failed to update Level ${levelId} by User ${clerkUserId}:`, error.message);
-    res.status(500).json({ message: "Error updating level", error: error.message });
+    console.error("Error deleting level:", error.message);
+    sendError(res, error.message || "Error deleting level", error.status || 500);
   }
 };
 
-// Delete level
-exports.deleteLevel = async (req, res) => {
-  const { levelId } = req.params;
-  const clerkUserId = req.user?.id;
-  console.log(`[ADMIN] User ${clerkUserId} deleting Level ${levelId}.`);
-
-  try {
-    const level = await prisma.level.findUnique({
-      where: { level_id: parseInt(levelId) },
-    });
-
-    if (!level) {
-      console.warn(`[ADMIN] Warning: Level ${levelId} not found for deletion.`);
-      return res.status(404).json({ message: "Level not found" });
-    }
-
-    await prisma.level.delete({
-      where: { level_id: parseInt(levelId) },
-    });
-
-    console.log(`[ADMIN] Success: Deleted Level ${levelId} by User ${clerkUserId}.`);
-    res.json({
-      message: "Level deleted successfully",
-    });
-  } catch (error) {
-    console.error(`[ERROR] Failed to delete Level ${levelId} by User ${clerkUserId}:`, error.message);
-    res.status(500).json({ message: "Error deleting level", error: error.message });
-  }
-};
-
-// Upload level background image
-// Unlock level (set is_unlocked to true)
-exports.unlockLevel = async (req, res) => {
-  const { levelId } = req.params;
-  console.log(`[ADMIN] Unlocking Level ${levelId}.`);
-
-  try {
-    const level = await prisma.level.findUnique({
-      where: { level_id: parseInt(levelId) },
-    });
-
-    if (!level) {
-      return res.status(404).json({ message: "Level not found" });
-    }
-
-    const updatedLevel = await prisma.level.update({
-      where: { level_id: parseInt(levelId) },
-      data: {
-        is_unlocked: true,
-      },
-    });
-
-    console.log(`[ADMIN] Success: Level ${levelId} unlocked.`);
-    res.json({
-      message: "Level unlocked successfully",
-    });
-  } catch (error) {
-    console.error(`[ERROR] Failed to unlock Level ${levelId}:`, error.message);
-    res.status(500).json({
-      message: "Error unlocking level",
-      error: error.message
-    });
-  }
-};
-
-// Update only level coordinates
-exports.updateLevelCoordinates = async (req, res) => {
-  const { levelId } = req.params;
-  // console.log(`[ADMIN] Updating coordinates for Level ${levelId}.`); // Verbose
-
-  try {
-    const { coordinates } = req.body;
-
-    const level = await prisma.level.findUnique({
-      where: { level_id: parseInt(levelId) },
-    });
-
-    if (!level) {
-      return res.status(404).json({ message: "Level not found" });
-    }
-
-    const updatedLevel = await prisma.level.update({
-      where: { level_id: parseInt(levelId) },
-      data: {
-        coordinates: coordinates, // Expecting JSON object or null
-      },
-    });
-
-    res.json({
-      message: "Level coordinates updated successfully",
-      level: updatedLevel,
-    });
-  } catch (error) {
-    console.error(`[ERROR] Failed to update coordinates for Level ${levelId}:`, error.message);
-    res.status(500).json({ message: "Error updating level coordinates", error: error.message });
-  }
-};
-
-exports.uploadLevelBackgroundImage = async (req, res) => {
-  const clerkUserId = req.user?.id;
-  console.log(`[ADMIN] User ${clerkUserId} uploading level background.`);
-
+export const uploadLevelBackgroundImage = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ message: "No image file provided" });
+      return sendError(res, "No file uploaded", 400);
     }
-
-    const imagePath = `/uploads/levels/${req.file.filename}`;
-
-    console.log(`[ADMIN] Success: Level background uploaded by User ${clerkUserId} at ${imagePath}.`);
-    res.json({
-      message: "Level background image uploaded successfully",
-      imageUrl: imagePath,
-    });
+    
+    // Create the image URL relative path that frontend needs
+    const imageUrl = `/uploads/levels/${req.file.filename}`;
+    
+    sendSuccess(res, { imageUrl }, "Background image uploaded successfully");
   } catch (error) {
-    console.error(`[ERROR] Failed to upload level background by User ${clerkUserId}:`, error.message);
-    res.status(500).json({ message: "Failed to upload level background image", error: error.message });
+    console.error("Error uploading background image:", error.message);
+    cleanupTempFile(req.file);
+    sendError(res, error.message || "Error uploading file", error.status || 500);
+  }
+};
+
+export const deleteLevelBackgroundImage = async (req, res) => {
+  try {
+    const levelId = parseInt(req.params.levelId);
+    const result = await levelService.deleteLevelBackgroundImage(levelId);
+    
+    sendSuccess(res, { level: result }, "Background image deleted successfully");
+  } catch (error) {
+    console.error("Error deleting background image:", error.message);
+    sendError(res, error.message || "Error deleting background image", error.status || 500);
+  }
+};
+
+export const getAllCategories = async (req, res) => {
+  try {
+    const result = await levelService.getAllCategories();
+    sendSuccess(res, result, "Categories fetched successfully");
+  } catch (error) {
+    console.error("Error fetching categories:", error.message);
+    sendError(res, error.message || "Error fetching categories", error.status || 500);
+  }
+};
+
+export const getLevelsForPrerequisite = async (req, res) => {
+  try {
+    const result = await levelService.getLevelsForDropdown();
+    sendSuccess(res, result, "Prerequisite levels fetched successfully");
+  } catch (error) {
+    console.error("Error fetching prerequisites:", error.message);
+    sendError(res, error.message || "Error fetching prerequisites", error.status || 500);
+  }
+};
+
+export const unlockLevel = async (req, res) => {
+  try {
+    const levelId = parseInt(req.params.levelId);
+    await levelService.unlockLevel(levelId);
+    sendSuccess(res, null, "Level unlocked successfully");
+  } catch (error) {
+    console.error("Error unlocking level:", error.message);
+    sendError(res, error.message || "Error unlocking level", error.status || 500);
+  }
+};
+
+export const updateLevelCoordinates = async (req, res) => {
+  try {
+    const levelId = parseInt(req.params.levelId);
+    const result = await levelService.updateLevelCoordinates(levelId, req.body.coordinates);
+    sendSuccess(res, { level: result }, "Level coordinates updated successfully");
+  } catch (error) {
+    console.error("Error updating coordinates:", error.message);
+    sendError(res, error.message || "Error updating coordinates", error.status || 500);
   }
 };

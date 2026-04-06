@@ -10,7 +10,7 @@ import {
     deleteTestChoice,
     uploadTestImage,
     uploadChoiceImage
-} from '../testService';
+} from '../api/testService';
 
 // --- Admin Hooks ---
 

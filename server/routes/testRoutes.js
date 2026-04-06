@@ -1,7 +1,7 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const authCheck = require("../middleware/authCheck");
-const {
+import authCheck from "../middleware/authCheck.js";
+import {
   getTestsByType,
   submitTest,
   getAllTests,
@@ -11,10 +11,10 @@ const {
   deleteTestChoice,
   uploadTestImage,
   uploadChoiceImage
-} = require("../controllers/testController");
-const { uploadMiddleware } = require("../middleware/testUpload");
-const { choiceUploadMiddleware } = require("../middleware/testChoiceUpload");
-const requireAdmin = require("../middleware/requireAdmin");
+} from "../controllers/testController.js";
+import { uploadMiddleware } from "../middleware/testUpload.js";
+import { choiceUploadMiddleware } from "../middleware/testChoiceUpload.js";
+import requireAdmin from "../middleware/requireAdmin.js";
 
 // Public/User routes
 router.get("/tests/:type", authCheck, getTestsByType);
@@ -30,4 +30,4 @@ router.delete("/tests/choices/:id", authCheck, requireAdmin, deleteTestChoice);
 router.post("/tests/upload-image", authCheck, requireAdmin, uploadMiddleware.single("image"), uploadTestImage);
 router.post("/tests/upload-choice-image", authCheck, requireAdmin, choiceUploadMiddleware.single("image"), uploadChoiceImage);
 
-module.exports = router;
+export default router;

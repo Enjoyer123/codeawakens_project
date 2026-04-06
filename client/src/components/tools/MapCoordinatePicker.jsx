@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@clerk/clerk-react';
-import { fetchAllLevelCategories, updateLevelCategoryCoordinates } from '../../services/levelCategoryService';
-import { updateLevelCoordinates } from '../../services/levelService';
+import { fetchAllLevelCategories, updateLevelCategoryCoordinates } from '../../services/api/levelCategoryService';
+import { updateLevelCoordinates } from '../../services/api/levelService';
 import { toast } from 'sonner';
 import AlertDialog from '@/components/shared/dialog/AlertDialog';
 import { useAlertDialog } from '@/components/shared/dialog/useAlertDialog';

@@ -1,9 +1,9 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const authCheck = require("../middleware/authCheck");
-const { uploadMiddleware } = require("../middleware/upload");
+import authCheck from "../middleware/authCheck.js";
+import { uploadMiddleware } from "../middleware/upload.js";
 
-const {
+import {
   checkProfile,
   updateUsername,
   uploadProfileImage,
@@ -11,7 +11,7 @@ const {
   getUserByClerkId,
   saveUserProgress,
   checkAndAwardRewards
-} = require("../controllers/profileController");
+} from "../controllers/profileController.js";
 
 router.get("/profile/check-profile", authCheck, checkProfile);
 router.get("/profile/user", authCheck, getUserByClerkId);
@@ -21,4 +21,4 @@ router.delete("/profile/image", authCheck, deleteProfileImage);
 router.post("/profile/progress", authCheck, saveUserProgress);
 router.post("/profile/rewards/check", authCheck, checkAndAwardRewards);
 
-module.exports = router;
+export default router;

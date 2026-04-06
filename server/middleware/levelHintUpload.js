@@ -1,6 +1,12 @@
-const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
 
 // Create upload directory for level hints
 const hintsDir = path.join(__dirname, "..", "uploads", "level_hints");
@@ -66,9 +72,9 @@ const uploadMiddleware = multer({
   },
 });
 
-module.exports = {
+export { 
   uploadMiddleware,
   hintsDir,
-};
+ };
 
 

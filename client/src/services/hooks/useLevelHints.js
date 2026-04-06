@@ -7,7 +7,7 @@ import {
     deleteLevelHint,
     uploadHintImage,
     deleteHintImage
-} from '../levelHintService';
+} from '../api/levelHintService';
 
 // Fetch hints by level
 export const useLevelHints = (levelId) => {

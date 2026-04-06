@@ -8,7 +8,7 @@ import {
     deleteBlock,
     getBlockById,
     uploadBlockImage
-} from '../blockService';
+} from '../api/blockService';
 
 // Fetch public blocks (for non-admin users)
 export const usePublicBlocks = (page = 1, limit = 10, search = '') => {

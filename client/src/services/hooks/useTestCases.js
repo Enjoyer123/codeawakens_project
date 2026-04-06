@@ -5,7 +5,7 @@ import {
     createTestCase,
     updateTestCase,
     deleteTestCase
-} from '../testCaseService';
+} from '../api/testCaseService';
 
 // Fetch test cases by level
 export const useTestCasesByLevel = (levelId) => {
