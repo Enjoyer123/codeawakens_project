@@ -7,7 +7,8 @@ export const fetchDashboardStats = async (getToken) => {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!response.ok) throw new Error('Failed to fetch dashboard stats');
-        return await response.json();
+        const json = await response.json();
+        return json.data;
     } catch (error) {
         console.error(error);
         return null;
@@ -21,7 +22,8 @@ export const fetchLevelStats = async (getToken) => {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!response.ok) throw new Error('Failed to fetch level stats');
-        return await response.json();
+        const json = await response.json();
+        return json.data;
     } catch (error) {
         console.error(error);
         return [];
@@ -35,7 +37,8 @@ export const fetchUserStats = async (getToken) => {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!response.ok) throw new Error('Failed to fetch user stats');
-        return await response.json();
+        const json = await response.json();
+        return json.data;
     } catch (error) {
         console.error(error);
         return { skillDistribution: [] };
@@ -49,7 +52,8 @@ export const fetchTestStats = async (getToken) => {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!response.ok) throw new Error('Failed to fetch test stats');
-        return await response.json();
+        const json = await response.json();
+        return json.data;
     } catch (error) {
         console.error(error);
         return [];

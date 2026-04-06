@@ -1,5 +1,6 @@
 import * as levelCategoryService from "../services/levelCategoryService.js";
 import { cleanupTempFile } from "../utils/fileHelper.js";
+import { sendSuccess, sendError } from "../utils/responseHelper.js";
 
 export const getAllLevelCategories = async (req, res) => {
   try {
@@ -7,12 +8,10 @@ export const getAllLevelCategories = async (req, res) => {
     const search = req.query.search || "";
     const result = await levelCategoryService.getAllLevelCategories(search, clerkUserId);
     
-    res.status(200).json(result);
+    sendSuccess(res, result, "Level categories fetched successfully");
   } catch (error) {
     console.error("Error fetching level categories:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error fetching level categories",
-    });
+    sendError(res, error.message || "Error fetching level categories", error.status || 500);
   }
 };
 
@@ -22,12 +21,10 @@ export const getLevelCategoryById = async (req, res) => {
     const categoryId = parseInt(req.params.categoryId);
     const result = await levelCategoryService.getLevelCategoryById(categoryId, clerkUserId);
     
-    res.status(200).json(result);
+    sendSuccess(res, result, "Level category fetched successfully");
   } catch (error) {
     console.error("Error fetching level category by ID:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error fetching level category",
-    });
+    sendError(res, error.message || "Error fetching level category", error.status || 500);
   }
 };
 
@@ -35,15 +32,10 @@ export const createLevelCategory = async (req, res) => {
   try {
     const result = await levelCategoryService.createLevelCategory(req.body);
     
-    res.status(201).json({
-      message: "Level category created successfully",
-      category: result,
-    });
+    sendSuccess(res, { category: result }, "Level category created successfully", 201);
   } catch (error) {
     console.error("Error creating level category:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error creating level category",
-    });
+    sendError(res, error.message || "Error creating level category", error.status || 500);
   }
 };
 
@@ -52,15 +44,10 @@ export const updateLevelCategory = async (req, res) => {
     const categoryId = parseInt(req.params.categoryId);
     const result = await levelCategoryService.updateLevelCategory(categoryId, req.body);
     
-    res.status(200).json({
-      message: "Level category updated successfully",
-      category: result,
-    });
+    sendSuccess(res, { category: result }, "Level category updated successfully");
   } catch (error) {
     console.error("Error updating level category:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error updating level category",
-    });
+    sendError(res, error.message || "Error updating level category", error.status || 500);
   }
 };
 
@@ -69,14 +56,10 @@ export const deleteLevelCategory = async (req, res) => {
     const categoryId = parseInt(req.params.categoryId);
     await levelCategoryService.deleteLevelCategory(categoryId);
     
-    res.status(200).json({
-      message: "Level category deleted successfully",
-    });
+    sendSuccess(res, null, "Level category deleted successfully");
   } catch (error) {
     console.error("Error deleting level category:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error deleting level category",
-    });
+    sendError(res, error.message || "Error deleting level category", error.status || 500);
   }
 };
 
@@ -85,37 +68,27 @@ export const updateLevelCategoryCoordinates = async (req, res) => {
     const categoryId = parseInt(req.params.categoryId);
     const result = await levelCategoryService.updateLevelCategoryCoordinates(categoryId, req.body);
     
-    res.status(200).json({
-      message: "Category coordinates updated successfully",
-      category: result,
-    });
+    sendSuccess(res, { category: result }, "Category coordinates updated successfully");
   } catch (error) {
     console.error("Error updating category coordinates:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error updating coordinates",
-    });
+    sendError(res, error.message || "Error updating coordinates", error.status || 500);
   }
 };
 
 export const uploadCategoryBackground = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ message: "No image provided" });
+      return sendError(res, "No image provided", 400);
     }
     
     const categoryId = parseInt(req.params.categoryId);
     const result = await levelCategoryService.uploadCategoryBackground(categoryId, req.file);
     
-    res.status(200).json({
-      message: "Background image uploaded successfully",
-      category: result,
-    });
+    sendSuccess(res, { category: result }, "Background image uploaded successfully");
   } catch (error) {
     console.error("Error uploading category background:", error.message);
     cleanupTempFile(req.file);
-    res.status(error.status || 500).json({
-      message: error.message || "Error uploading category background",
-    });
+    sendError(res, error.message || "Error uploading category background", error.status || 500);
   }
 };
 
@@ -124,14 +97,9 @@ export const deleteCategoryBackground = async (req, res) => {
     const categoryId = parseInt(req.params.categoryId);
     const result = await levelCategoryService.deleteCategoryBackground(categoryId);
     
-    res.status(200).json({
-      message: "Background image deleted successfully",
-      category: result,
-    });
+    sendSuccess(res, { category: result }, "Background image deleted successfully");
   } catch (error) {
     console.error("Error deleting category background:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error deleting category background",
-    });
+    sendError(res, error.message || "Error deleting category background", error.status || 500);
   }
 };

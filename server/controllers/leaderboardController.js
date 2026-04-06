@@ -1,4 +1,5 @@
 import * as leaderboardService from "../services/leaderboardService.js";
+import { sendSuccess, sendError } from "../utils/responseHelper.js";
 
 export const getLeaderboard = async (req, res) => {
   try {
@@ -7,11 +8,9 @@ export const getLeaderboard = async (req, res) => {
     
     const result = await leaderboardService.getLeaderboard();
     
-    res.status(200).json(result);
+    sendSuccess(res, result, "Leaderboard fetched successfully");
   } catch (error) {
     console.error("Error fetching leaderboard:", error.message);
-    res.status(500).json({ 
-      error: "Failed to fetch leaderboard",
-    });
+    sendError(res, error.message || "Failed to fetch leaderboard", error.status || 500);
   }
 };

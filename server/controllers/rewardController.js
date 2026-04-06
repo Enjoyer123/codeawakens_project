@@ -2,18 +2,17 @@ import * as rewardService from "../services/rewardService.js";
 import * as levelService from "../services/levelService.js";
 import { parsePagination } from "../utils/pagination.js";
 import { cleanupTempFile } from "../utils/fileHelper.js";
+import { sendSuccess, sendError } from "../utils/responseHelper.js";
 
 export const getAllRewards = async (req, res) => {
   try {
     const paginationData = parsePagination(req.query);
     const result = await rewardService.getAllRewards(paginationData);
     
-    res.status(200).json(result);
+    sendSuccess(res, result, "Rewards fetched successfully");
   } catch (error) {
     console.error("Error fetching rewards:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error fetching rewards",
-    });
+    sendError(res, error.message || "Error fetching rewards", error.status || 500);
   }
 };
 
@@ -21,12 +20,10 @@ export const getLevelsForReward = async (req, res) => {
   try {
     const result = await levelService.getLevelsForDropdown();
     
-    res.status(200).json(result);
+    sendSuccess(res, result, "Levels fetched successfully");
   } catch (error) {
     console.error("Error fetching levels for dropdown:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error fetching levels for dropdown",
-    });
+    sendError(res, error.message || "Error fetching levels for dropdown", error.status || 500);
   }
 };
 
@@ -35,12 +32,10 @@ export const getRewardById = async (req, res) => {
     const rewardId = parseInt(req.params.rewardId);
     const result = await rewardService.getRewardById(rewardId);
     
-    res.status(200).json(result);
+    sendSuccess(res, result, "Reward fetched successfully");
   } catch (error) {
     console.error("Error fetching reward:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error fetching reward",
-    });
+    sendError(res, error.message || "Error fetching reward", error.status || 500);
   }
 };
 
@@ -48,15 +43,10 @@ export const createReward = async (req, res) => {
   try {
     const result = await rewardService.createReward(req.body);
     
-    res.status(201).json({
-      message: "Reward created successfully",
-      reward: result,
-    });
+    sendSuccess(res, { reward: result }, "Reward created successfully", 201);
   } catch (error) {
     console.error("Error creating reward:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error creating reward",
-    });
+    sendError(res, error.message || "Error creating reward", error.status || 500);
   }
 };
 
@@ -65,15 +55,10 @@ export const updateReward = async (req, res) => {
     const rewardId = parseInt(req.params.rewardId);
     const result = await rewardService.updateReward(rewardId, req.body);
     
-    res.status(200).json({
-      message: "Reward updated successfully",
-      reward: result,
-    });
+    sendSuccess(res, { reward: result }, "Reward updated successfully");
   } catch (error) {
     console.error("Error updating reward:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error updating reward",
-    });
+    sendError(res, error.message || "Error updating reward", error.status || 500);
   }
 };
 
@@ -82,36 +67,27 @@ export const deleteReward = async (req, res) => {
     const rewardId = parseInt(req.params.rewardId);
     await rewardService.deleteReward(rewardId);
     
-    res.status(200).json({
-      message: "Reward deleted successfully",
-    });
+    sendSuccess(res, null, "Reward deleted successfully");
   } catch (error) {
     console.error("Error deleting reward:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error deleting reward",
-    });
+    sendError(res, error.message || "Error deleting reward", error.status || 500);
   }
 };
 
 export const uploadRewardFrame = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ message: "No image provided" });
+      return sendError(res, "No image provided", 400);
     }
     
     const rewardId = parseInt(req.params.rewardId);
     const result = await rewardService.uploadRewardFrame(rewardId, req.file);
     
-    res.status(200).json({
-      message: "Reward frame image uploaded successfully",
-      reward: result,
-    });
+    sendSuccess(res, { reward: result }, "Reward frame image uploaded successfully");
   } catch (error) {
     console.error("Error uploading reward frame:", error.message);
     cleanupTempFile(req.file);
-    res.status(error.status || 500).json({
-      message: error.message || "Error uploading reward frame image",
-    });
+    sendError(res, error.message || "Error uploading reward frame image", error.status || 500);
   }
 };
 
@@ -120,14 +96,9 @@ export const deleteRewardFrame = async (req, res) => {
     const rewardId = parseInt(req.params.rewardId);
     const result = await rewardService.deleteRewardFrame(rewardId);
     
-    res.status(200).json({
-      message: "Reward frame image deleted successfully",
-      reward: result,
-    });
+    sendSuccess(res, { reward: result }, "Reward frame image deleted successfully");
   } catch (error) {
     console.error("Error deleting reward frame:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error deleting reward frame image",
-    });
+    sendError(res, error.message || "Error deleting reward frame image", error.status || 500);
   }
 };

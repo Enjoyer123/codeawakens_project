@@ -20,7 +20,8 @@ export const fetchTestsByType = async (getToken, type) => {
       throw error;
     }
 
-    return await response.json();
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -43,7 +44,8 @@ export const submitTest = async (getToken, type, answers) => {
       throw new Error(error.message || 'Failed to submit test');
     }
 
-    return await response.json();
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -65,10 +67,10 @@ export const fetchAllTests = async (getToken, type = '') => {
       },
     });
 
-    console.log("as", response);
 
     if (!response.ok) throw new Error('Failed to fetch tests');
-    return await response.json();
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -90,7 +92,8 @@ export const createTest = async (getToken, testData) => {
       const err = await response.json();
       throw new Error(err.message || 'Failed to create test');
     }
-    return await response.json();
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -112,7 +115,8 @@ export const updateTest = async (getToken, id, testData) => {
       const err = await response.json();
       throw new Error(err.message || 'Failed to update test');
     }
-    return await response.json();
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -130,7 +134,8 @@ export const deleteTest = async (getToken, id) => {
     });
 
     if (!response.ok) throw new Error('Failed to delete test');
-    return await response.json();
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -148,7 +153,8 @@ export const deleteTestChoice = async (getToken, id) => {
     });
 
     if (!response.ok) throw new Error('Failed to delete choice');
-    return await response.json();
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -173,7 +179,8 @@ export const uploadTestImage = async (getToken, file) => {
       const err = await response.json();
       throw new Error(err.message || 'Failed to upload image');
     }
-    return await response.json();
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -197,7 +204,8 @@ export const uploadChoiceImage = async (getToken, file) => {
       const err = await response.json();
       throw new Error(err.message || 'Failed to upload choice image');
     }
-    return await response.json();
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }

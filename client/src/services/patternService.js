@@ -25,8 +25,8 @@ export const fetchAllPatterns = async (getToken, page = 1, limit = 100, levelId 
       throw new Error(errorData.message || 'Failed to fetch patterns');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error fetching patterns:', error);
     throw error;
@@ -49,8 +49,8 @@ export const fetchPatternById = async (getToken, patternId) => {
       throw new Error(errorData.message || 'Failed to fetch pattern');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error fetching pattern:', error);
     throw error;
@@ -82,8 +82,8 @@ export const createPattern = async (getToken, patternData) => {
       throw new Error(errorMessage);
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error creating pattern:', error);
     throw error;
@@ -108,8 +108,8 @@ export const updatePattern = async (getToken, patternId, patternData) => {
       throw new Error(errorData.message || 'Failed to update pattern');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error updating pattern:', error);
     throw error;
@@ -133,8 +133,8 @@ export const deletePattern = async (getToken, patternId) => {
       throw new Error(errorData.message || 'Failed to delete pattern');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error deleting pattern:', error);
     throw error;
@@ -157,8 +157,8 @@ export const fetchPatternTypes = async (getToken) => {
       throw new Error(errorData.message || 'Failed to fetch pattern types');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error fetching pattern types:', error);
     throw error;
@@ -182,8 +182,8 @@ export const unlockPattern = async (patternId, getToken) => {
       throw new Error(errorData.message || 'Failed to unlock pattern');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error unlocking pattern:', error);
     throw error;
@@ -207,8 +207,8 @@ export const unlockLevel = async (levelId, getToken) => {
       throw new Error(errorData.message || 'Failed to unlock level');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error unlocking level:', error);
     throw error;

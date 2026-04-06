@@ -33,7 +33,8 @@ const AuthCallback = () => {
               throw new Error('Failed to check profile');
             }
 
-            const data = await response.json();
+            const json = await response.json();
+            const data = json.data;
             setRole(data.role);
 
             if (data.loggedIn) {

@@ -16,7 +16,8 @@ export const fetchTestCasesByLevel = async (getToken, levelId) => {
       throw new Error(errorData.message || 'Failed to fetch test cases');
     }
 
-    return await response.json();
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -40,7 +41,8 @@ export const createTestCase = async (getToken, data) => {
       throw new Error(errorData.message || 'Failed to create test case');
     }
 
-    return await response.json();
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Create test case error:', error);
     throw error;
@@ -65,7 +67,8 @@ export const updateTestCase = async (getToken, testCaseId, data) => {
       throw new Error(errorData.message || 'Failed to update test case');
     }
 
-    return await response.json();
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Update test case error:', error);
     throw error;
@@ -89,7 +92,8 @@ export const deleteTestCase = async (getToken, testCaseId) => {
       throw new Error(errorData.message || 'Failed to delete test case');
     }
 
-    return await response.json();
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }

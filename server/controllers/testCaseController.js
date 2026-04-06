@@ -1,16 +1,15 @@
 import * as testCaseService from "../services/testCaseService.js";
+import { sendSuccess, sendError } from "../utils/responseHelper.js";
 
 export const getTestCasesByLevel = async (req, res) => {
   try {
     const levelId = parseInt(req.params.levelId);
     const result = await testCaseService.getTestCasesByLevel(levelId);
     
-    res.status(200).json(result);
+    sendSuccess(res, result, "Test cases fetched successfully");
   } catch (error) {
     console.error("Error fetching test cases:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error fetching test cases",
-    });
+    sendError(res, error.message || "Error fetching test cases", error.status || 500);
   }
 };
 
@@ -18,12 +17,10 @@ export const createTestCase = async (req, res) => {
   try {
     const result = await testCaseService.createTestCase(req.body);
     
-    res.status(201).json(result);
+    sendSuccess(res, { testCase: result }, "Test case created successfully", 201);
   } catch (error) {
     console.error("Error creating test case:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error creating test case",
-    });
+    sendError(res, error.message || "Error creating test case", error.status || 500);
   }
 };
 
@@ -32,12 +29,10 @@ export const updateTestCase = async (req, res) => {
     const testCaseId = parseInt(req.params.testCaseId);
     const result = await testCaseService.updateTestCase(testCaseId, req.body);
     
-    res.status(200).json(result);
+    sendSuccess(res, { testCase: result }, "Test case updated successfully");
   } catch (error) {
     console.error("Error updating test case:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error updating test case",
-    });
+    sendError(res, error.message || "Error updating test case", error.status || 500);
   }
 };
 
@@ -46,13 +41,9 @@ export const deleteTestCase = async (req, res) => {
     const testCaseId = parseInt(req.params.testCaseId);
     await testCaseService.deleteTestCase(testCaseId);
     
-    res.status(200).json({
-      message: "Test case deleted successfully",
-    });
+    sendSuccess(res, null, "Test case deleted successfully");
   } catch (error) {
     console.error("Error deleting test case:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error deleting test case",
-    });
+    sendError(res, error.message || "Error deleting test case", error.status || 500);
   }
 };

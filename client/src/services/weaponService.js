@@ -25,8 +25,8 @@ export const fetchAllWeapons = async (getToken, page = 1, limit = 10, search = '
       throw new Error(errorData.message || 'Failed to fetch weapons');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -52,8 +52,8 @@ export const fetchWeaponById = async (getToken, weaponId) => {
       throw new Error(errorData.message || 'Failed to fetch weapon');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -81,8 +81,8 @@ export const createWeapon = async (getToken, weaponData) => {
       throw new Error(errorData.message || 'Failed to create weapon');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -110,8 +110,8 @@ export const updateWeapon = async (getToken, weaponId, weaponData) => {
       throw new Error(errorData.message || 'Failed to update weapon');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -138,8 +138,8 @@ export const deleteWeapon = async (getToken, weaponId) => {
       throw new Error(errorData.message || 'Failed to delete weapon');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -159,16 +159,6 @@ export const addWeaponImage = async (getToken, weaponId, imageFile, imageData) =
     formData.append('type_animation', imageData.type_animation);
     formData.append('frame', imageData.frame.toString());
     formData.append('weapon_key', imageData.weapon_key);
-
-    console.log('Uploading image:', {
-      weaponId,
-      type_file: imageData.type_file,
-      type_animation: imageData.type_animation,
-      frame: imageData.frame,
-      weapon_key: imageData.weapon_key,
-      fileName: imageFile.name,
-      fileSize: imageFile.size
-    });
 
     const response = await fetch(`${API_BASE_URL}/weapons/${weaponId}/images`, {
       method: 'POST',
@@ -190,9 +180,8 @@ export const addWeaponImage = async (getToken, weaponId, imageFile, imageData) =
       throw new Error(errorData.message || `Failed to add weapon image (${response.status})`);
     }
 
-    const data = await response.json();
-    console.log('Image uploaded successfully:', data);
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error in addWeaponImage:', error);
     throw error;
@@ -221,16 +210,6 @@ export const updateWeaponImage = async (getToken, imageId, imageFile, imageData)
       formData.append('frame', imageData.frame.toString());
     }
 
-    console.log('Updating image:', {
-      imageId,
-      type_file: imageData.type_file,
-      type_animation: imageData.type_animation,
-      frame: imageData.frame,
-      hasFile: !!imageFile,
-      fileName: imageFile?.name,
-      fileSize: imageFile?.size
-    });
-
     const response = await fetch(`${API_BASE_URL}/weapons/images/${imageId}`, {
       method: 'PUT',
       headers: {
@@ -251,9 +230,8 @@ export const updateWeaponImage = async (getToken, imageId, imageFile, imageData)
       throw new Error(errorData.message || `Failed to update weapon image (${response.status})`);
     }
 
-    const data = await response.json();
-    console.log('Image updated successfully:', data);
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error in updateWeaponImage:', error);
     throw error;
@@ -281,8 +259,8 @@ export const deleteWeaponImage = async (getToken, imageId) => {
       throw new Error(errorData.message || 'Failed to delete weapon image');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }

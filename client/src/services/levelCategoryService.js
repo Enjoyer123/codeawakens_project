@@ -22,9 +22,8 @@ export const fetchAllLevelCategories = async (getToken, search = '') => {
       throw new Error(errorData.message || 'Failed to fetch level categories');
     }
 
-    const data = await response.json();
-    console.log('🔍 [fetchAllLevelCategories] data:', data);
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error fetching level categories:', error);
     throw error;
@@ -49,8 +48,8 @@ export const createLevelCategory = async (getToken, levelCategoryData) => {
       throw new Error(errorData.message || 'Failed to create level category');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error creating level category:', error);
     throw error;
@@ -75,8 +74,8 @@ export const updateLevelCategory = async (getToken, categoryId, levelCategoryDat
       throw new Error(errorData.message || 'Failed to update level category');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error updating level category:', error);
     throw error;
@@ -101,8 +100,8 @@ export const updateLevelCategoryCoordinates = async (getToken, categoryId, coord
       throw new Error(errorData.message || 'Failed to update coordinates');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error updating coordinates:', error);
     throw error;
@@ -129,8 +128,8 @@ export const deleteLevelCategory = async (getToken, categoryId) => {
       throw error;
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error deleting level category:', error);
     throw error;
@@ -153,8 +152,8 @@ export const getLevelCategoryById = async (getToken, categoryId) => {
       throw new Error(errorData.message || 'Failed to fetch level category');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error fetching level category:', error);
     throw error;
@@ -182,8 +181,8 @@ export const uploadCategoryBackground = async (getToken, categoryId, imageFile) 
       throw new Error(errorData.message || 'Failed to upload background');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error uploading background:', error);
     throw error;
@@ -207,8 +206,8 @@ export const deleteCategoryBackground = async (getToken, categoryId) => {
       throw new Error(errorData.message || 'Failed to delete background');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error deleting background:', error);
     throw error;

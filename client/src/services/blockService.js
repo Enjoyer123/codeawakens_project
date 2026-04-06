@@ -25,8 +25,8 @@ export const fetchPublicBlocks = async (getToken, page = 1, limit = 10, search =
       throw new Error(errorData.message || 'Failed to fetch blocks');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error fetching blocks:', error);
     throw error;
@@ -58,8 +58,8 @@ export const fetchAllBlocks = async (getToken, page = 1, limit = 10, search = ''
       throw new Error(errorData.message || 'Failed to fetch blocks');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error fetching blocks:', error);
     throw error;
@@ -84,8 +84,8 @@ export const createBlock = async (getToken, blockData) => {
       throw new Error(errorData.message || 'Failed to create block');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error creating block:', error);
     throw error;
@@ -110,8 +110,8 @@ export const updateBlock = async (getToken, blockId, blockData) => {
       throw new Error(errorData.message || 'Failed to update block');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error updating block:', error);
     throw error;
@@ -138,8 +138,8 @@ export const deleteBlock = async (getToken, blockId) => {
       throw error;
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error deleting block:', error);
     throw error;
@@ -162,8 +162,8 @@ export const getBlockById = async (getToken, blockId) => {
       throw new Error(errorData.message || 'Failed to fetch block');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error fetching block:', error);
     throw error;
@@ -188,7 +188,8 @@ export const uploadBlockImage = async (getToken, file) => {
       const err = await response.json();
       throw new Error(err.message || 'Failed to upload block image');
     }
-    return await response.json();
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }

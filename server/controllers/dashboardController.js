@@ -1,4 +1,5 @@
 import * as dashboardService from "../services/dashboardService.js";
+import { sendSuccess, sendError } from "../utils/responseHelper.js";
 
 export const getDashboardStats = async (req, res) => {
   try {
@@ -7,12 +8,10 @@ export const getDashboardStats = async (req, res) => {
     
     const result = await dashboardService.getDashboardStats();
     
-    res.status(200).json(result);
+    sendSuccess(res, result, "Dashboard stats fetched successfully");
   } catch (error) {
     console.error("Error fetching dashboard stats:", error.message);
-    res.status(500).json({
-      message: "Internal server error fetching dashboard statistics",
-    });
+    sendError(res, error.message || "Internal server error fetching dashboard statistics", error.status || 500);
   }
 };
 
@@ -23,12 +22,10 @@ export const getLevelStats = async (req, res) => {
     
     const result = await dashboardService.getLevelStats();
     
-    res.status(200).json(result);
+    sendSuccess(res, result, "Level stats fetched successfully");
   } catch (error) {
     console.error("Error fetching level stats:", error.message);
-    res.status(500).json({
-      message: "Internal server error fetching level statistics",
-    });
+    sendError(res, error.message || "Internal server error fetching level statistics", error.status || 500);
   }
 };
 
@@ -39,12 +36,10 @@ export const getUserStats = async (req, res) => {
     
     const result = await dashboardService.getUserStats();
     
-    res.status(200).json(result);
+    sendSuccess(res, result, "User stats fetched successfully");
   } catch (error) {
     console.error("Error fetching user stats:", error.message);
-    res.status(500).json({
-      message: "Internal server error fetching user statistics",
-    });
+    sendError(res, error.message || "Internal server error fetching user statistics", error.status || 500);
   }
 };
 
@@ -55,11 +50,9 @@ export const getTestStats = async (req, res) => {
     
     const result = await dashboardService.getTestStats();
     
-    res.status(200).json(result);
+    sendSuccess(res, result, "Test stats fetched successfully");
   } catch (error) {
     console.error("Error fetching test stats:", error.message);
-    res.status(500).json({
-      message: "Internal server error fetching test statistics",
-    });
+    sendError(res, error.message || "Internal server error fetching test statistics", error.status || 500);
   }
 };

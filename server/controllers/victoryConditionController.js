@@ -1,17 +1,16 @@
 import * as victoryConditionService from "../services/victoryConditionService.js";
 import { parsePagination } from "../utils/pagination.js";
+import { sendSuccess, sendError } from "../utils/responseHelper.js";
 
 export const getAllVictoryConditions = async (req, res) => {
   try {
     const { page, limit, search, skip } = parsePagination(req.query);
     const result = await victoryConditionService.getAllVictoryConditions({ page, limit, search, skip });
     
-    res.status(200).json(result);
+    sendSuccess(res, result, "Victory conditions fetched successfully");
   } catch (error) {
     console.error("Error fetching victory conditions:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error fetching victory conditions",
-    });
+    sendError(res, error.message || "Error fetching victory conditions", error.status || 500);
   }
 };
 
@@ -20,12 +19,10 @@ export const getVictoryConditionById = async (req, res) => {
     const conditionId = parseInt(req.params.victoryConditionId);
     const result = await victoryConditionService.getVictoryConditionById(conditionId);
     
-    res.status(200).json(result);
+    sendSuccess(res, result, "Victory condition fetched successfully");
   } catch (error) {
     console.error("Error fetching victory condition:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error fetching victory condition",
-    });
+    sendError(res, error.message || "Error fetching victory condition", error.status || 500);
   }
 };
 
@@ -33,15 +30,10 @@ export const createVictoryCondition = async (req, res) => {
   try {
     const result = await victoryConditionService.createVictoryCondition(req.body);
     
-    res.status(201).json({
-      message: "Victory condition created successfully",
-      victoryCondition: result,
-    });
+    sendSuccess(res, { victoryCondition: result }, "Victory condition created successfully", 201);
   } catch (error) {
     console.error("Error creating victory condition:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error creating victory condition",
-    });
+    sendError(res, error.message || "Error creating victory condition", error.status || 500);
   }
 };
 
@@ -50,15 +42,10 @@ export const updateVictoryCondition = async (req, res) => {
     const conditionId = parseInt(req.params.victoryConditionId);
     const result = await victoryConditionService.updateVictoryCondition(conditionId, req.body);
     
-    res.status(200).json({
-      message: "Victory condition updated successfully",
-      victoryCondition: result,
-    });
+    sendSuccess(res, { victoryCondition: result }, "Victory condition updated successfully");
   } catch (error) {
     console.error("Error updating victory condition:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error updating victory condition",
-    });
+    sendError(res, error.message || "Error updating victory condition", error.status || 500);
   }
 };
 
@@ -67,13 +54,9 @@ export const deleteVictoryCondition = async (req, res) => {
     const conditionId = parseInt(req.params.victoryConditionId);
     await victoryConditionService.deleteVictoryCondition(conditionId);
     
-    res.status(200).json({
-      message: "Victory condition deleted successfully",
-    });
+    sendSuccess(res, null, "Victory condition deleted successfully");
   } catch (error) {
     console.error("Error deleting victory condition:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error deleting victory condition",
-    });
+    sendError(res, error.message || "Error deleting victory condition", error.status || 500);
   }
 };

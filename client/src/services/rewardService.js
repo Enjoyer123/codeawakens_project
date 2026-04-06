@@ -25,8 +25,8 @@ export const fetchAllRewards = async (getToken, page = 1, limit = 10, search = '
       throw new Error(errorData.message || 'Failed to fetch rewards');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -52,8 +52,8 @@ export const fetchLevelsForReward = async (getToken) => {
       throw new Error(errorData.message || 'Failed to fetch levels');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -79,8 +79,8 @@ export const fetchRewardById = async (getToken, rewardId) => {
       throw new Error(errorData.message || 'Failed to fetch reward');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -108,8 +108,8 @@ export const createReward = async (getToken, rewardData) => {
       throw new Error(errorData.message || 'Failed to create reward');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -137,8 +137,8 @@ export const updateReward = async (getToken, rewardId, rewardData) => {
       throw new Error(errorData.message || 'Failed to update reward');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -165,8 +165,8 @@ export const deleteReward = async (getToken, rewardId) => {
       throw new Error(errorData.message || 'Failed to delete reward');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -198,8 +198,8 @@ export const uploadRewardFrame = async (getToken, rewardId, imageFile, frameNumb
       throw new Error(errorData.message || 'Failed to upload reward frame');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -227,8 +227,8 @@ export const deleteRewardFrame = async (getToken, rewardId, frameNumber) => {
       throw new Error(errorData.message || 'Failed to delete reward frame');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }

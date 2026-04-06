@@ -25,8 +25,8 @@ export const fetchAllVictoryConditions = async (getToken, page = 1, limit = 10, 
       throw new Error(errorData.message || 'Failed to fetch victory conditions');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error fetching victory conditions:', error);
     throw error;
@@ -51,8 +51,8 @@ export const createVictoryCondition = async (getToken, victoryConditionData) => 
       throw new Error(errorData.message || 'Failed to create victory condition');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error creating victory condition:', error);
     throw error;
@@ -77,8 +77,8 @@ export const updateVictoryCondition = async (getToken, victoryConditionId, victo
       throw new Error(errorData.message || 'Failed to update victory condition');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error updating victory condition:', error);
     throw error;
@@ -105,8 +105,8 @@ export const deleteVictoryCondition = async (getToken, victoryConditionId) => {
       throw error;
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error deleting victory condition:', error);
     throw error;
@@ -129,8 +129,8 @@ export const getVictoryConditionById = async (getToken, victoryConditionId) => {
       throw new Error(errorData.message || 'Failed to fetch victory condition');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error fetching victory condition:', error);
     throw error;

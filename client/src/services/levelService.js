@@ -25,8 +25,8 @@ export const fetchAllLevels = async (getToken, page = 1, limit = 10, search = ''
       throw new Error(errorData.message || 'Failed to fetch levels');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -52,8 +52,8 @@ export const fetchAllCategories = async (getToken) => {
       throw new Error(errorData.message || 'Failed to fetch categories');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -79,8 +79,8 @@ export const fetchLevelsForPrerequisite = async (getToken) => {
       throw new Error(errorData.message || 'Failed to fetch levels');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -106,8 +106,8 @@ export const fetchLevelById = async (getToken, levelId) => {
       throw new Error(errorData.message || 'Failed to fetch level');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -135,8 +135,8 @@ export const createLevel = async (getToken, levelData) => {
       throw new Error(errorData.message || 'Failed to create level');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -164,8 +164,8 @@ export const updateLevel = async (getToken, levelId, levelData) => {
       throw new Error(errorData.message || 'Failed to update level');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -193,8 +193,8 @@ export const updateLevelCoordinates = async (getToken, levelId, coordinates) => 
       throw new Error(errorData.message || 'Failed to update level coordinates');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -221,8 +221,8 @@ export const deleteLevel = async (getToken, levelId) => {
       throw new Error(errorData.message || 'Failed to delete level');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -252,8 +252,8 @@ export const uploadLevelBackgroundImage = async (getToken, imageFile) => {
       throw new Error(errorData.message || 'Failed to upload background image');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }

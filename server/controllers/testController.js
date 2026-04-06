@@ -1,5 +1,6 @@
 import * as testService from "../services/testService.js";
 import { cleanupTempFile } from "../utils/fileHelper.js";
+import { sendSuccess, sendError } from "../utils/responseHelper.js";
 
 export const getTestsByType = async (req, res) => {
   try {
@@ -7,12 +8,10 @@ export const getTestsByType = async (req, res) => {
     const isEditMode = req.query.edit === "true";
     const result = await testService.getTestsByType(testType, isEditMode);
     
-    res.status(200).json(result);
+    sendSuccess(res, result, "Tests fetched successfully");
   } catch (error) {
     console.error("Error fetching tests:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error fetching tests",
-    });
+    sendError(res, error.message || "Error fetching tests", error.status || 500);
   }
 };
 
@@ -24,12 +23,10 @@ export const submitTest = async (req, res) => {
   try {
     const result = await testService.submitTest(clerkUserId, answers);
     
-    res.status(200).json(result);
+    sendSuccess(res, result, "Test submitted successfully");
   } catch (error) {
     console.error("Error evaluating test:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error evaluating test",
-    });
+    sendError(res, error.message || "Error evaluating test", error.status || 500);
   }
 };
 
@@ -37,12 +34,10 @@ export const getAllTests = async (req, res) => {
   try {
     const result = await testService.getAllTests();
     
-    res.status(200).json(result);
+    sendSuccess(res, result, "Tests fetched successfully");
   } catch (error) {
     console.error("Error fetching tests:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error fetching tests",
-    });
+    sendError(res, error.message || "Error fetching tests", error.status || 500);
   }
 };
 
@@ -50,15 +45,10 @@ export const createTest = async (req, res) => {
   try {
     const result = await testService.createTest(req.body);
     
-    res.status(201).json({
-      message: "Test created successfully",
-      test: result,
-    });
+    sendSuccess(res, { test: result }, "Test created successfully", 201);
   } catch (error) {
     console.error("Error creating test:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error creating test",
-    });
+    sendError(res, error.message || "Error creating test", error.status || 500);
   }
 };
 
@@ -67,15 +57,10 @@ export const updateTest = async (req, res) => {
     const testId = parseInt(req.params.id);
     const result = await testService.updateTest(testId, req.body);
     
-    res.status(200).json({
-      message: "Test updated successfully",
-      test: result,
-    });
+    sendSuccess(res, { test: result }, "Test updated successfully");
   } catch (error) {
     console.error("Error updating test:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error updating test",
-    });
+    sendError(res, error.message || "Error updating test", error.status || 500);
   }
 };
 
@@ -84,14 +69,10 @@ export const deleteTest = async (req, res) => {
     const testId = parseInt(req.params.id);
     await testService.deleteTest(testId);
     
-    res.status(200).json({
-      message: "Test deleted successfully",
-    });
+    sendSuccess(res, null, "Test deleted successfully");
   } catch (error) {
     console.error("Error deleting test:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error deleting test",
-    });
+    sendError(res, error.message || "Error deleting test", error.status || 500);
   }
 };
 
@@ -100,51 +81,37 @@ export const deleteTestChoice = async (req, res) => {
     const choiceId = parseInt(req.params.id);
     await testService.deleteTestChoice(choiceId);
     
-    res.status(200).json({
-      message: "Choice deleted successfully",
-    });
+    sendSuccess(res, null, "Choice deleted successfully");
   } catch (error) {
     console.error("Error deleting choice:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error deleting choice",
-    });
+    sendError(res, error.message || "Error deleting choice", error.status || 500);
   }
 };
 
 export const uploadTestImage = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ message: "No image file provided" });
+      return sendError(res, "No image file provided", 400);
     }
     
     const filePath = `/uploads/tests/${req.file.filename}`;
-    res.status(200).json({
-      message: "Test image uploaded successfully",
-      path: filePath,
-    });
+    sendSuccess(res, { path: filePath }, "Test image uploaded successfully");
   } catch (error) {
     console.error("Error uploading test image:", error.message);
-    res.status(500).json({
-      message: "Upload failed",
-    });
+    sendError(res, "Upload failed", 500);
   }
 };
 
 export const uploadChoiceImage = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ message: "No image file provided" });
+      return sendError(res, "No image file provided", 400);
     }
     
     const filePath = `/uploads/test_choices/${req.file.filename}`;
-    res.status(200).json({
-      message: "Choice image uploaded successfully",
-      path: filePath,
-    });
+    sendSuccess(res, { path: filePath }, "Choice image uploaded successfully");
   } catch (error) {
     console.error("Error uploading choice image:", error.message);
-    res.status(500).json({
-      message: "Upload failed",
-    });
+    sendError(res, "Upload failed", 500);
   }
 };

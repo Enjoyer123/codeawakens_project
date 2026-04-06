@@ -19,8 +19,8 @@ export const fetchUserProfile = async (getToken) => {
       throw new Error(errorData.message || 'Failed to fetch user profile');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -47,8 +47,8 @@ export const updateUsername = async (getToken, username) => {
       throw new Error(errorData.message || 'Failed to update username');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -77,8 +77,8 @@ export const uploadProfileImage = async (getToken, file) => {
       throw new Error(errorData.message || 'Failed to upload profile image');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -104,8 +104,8 @@ export const deleteProfileImage = async (getToken) => {
       throw new Error(errorData.message || 'Failed to delete profile image');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -130,8 +130,8 @@ export const getUserByClerkId = async (getToken) => {
       throw new Error(errorData.message || 'Failed to fetch user details');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -158,8 +158,8 @@ export const saveUserProgress = async (getToken, progressData) => {
       throw new Error(errorData.message || 'Failed to save user progress');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -189,8 +189,8 @@ export const checkAndAwardRewards = async (getToken, levelId, totalScore) => {
       throw new Error(errorData.message || 'Failed to check and award rewards');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }

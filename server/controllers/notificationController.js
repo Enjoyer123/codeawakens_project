@@ -1,17 +1,16 @@
 import * as notificationService from "../services/notificationService.js";
 import { parsePagination } from "../utils/pagination.js";
+import { sendSuccess, sendError } from "../utils/responseHelper.js";
 
 export const getAllNotifications = async (req, res) => {
   try {
     const paginationData = parsePagination(req.query);
     const result = await notificationService.getAllNotifications(paginationData);
     
-    res.status(200).json(result);
+    sendSuccess(res, result, "Notifications fetched successfully");
   } catch (error) {
     console.error("Error fetching notifications:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error fetching notifications",
-    });
+    sendError(res, error.message || "Error fetching notifications", error.status || 500);
   }
 };
 
@@ -20,12 +19,10 @@ export const getNotificationById = async (req, res) => {
     const notificationId = parseInt(req.params.notificationId);
     const result = await notificationService.getNotificationById(notificationId);
     
-    res.status(200).json(result);
+    sendSuccess(res, result, "Notification fetched successfully");
   } catch (error) {
     console.error("Error fetching notification:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error fetching notification",
-    });
+    sendError(res, error.message || "Error fetching notification", error.status || 500);
   }
 };
 
@@ -33,15 +30,10 @@ export const createNotification = async (req, res) => {
   try {
     const result = await notificationService.createNotification(req.body);
     
-    res.status(201).json({
-      message: "Notification created successfully",
-      notification: result,
-    });
+    sendSuccess(res, { notification: result }, "Notification created successfully", 201);
   } catch (error) {
     console.error("Error creating notification:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error creating notification",
-    });
+    sendError(res, error.message || "Error creating notification", error.status || 500);
   }
 };
 
@@ -50,15 +42,10 @@ export const updateNotification = async (req, res) => {
     const notificationId = parseInt(req.params.notificationId);
     const result = await notificationService.updateNotification(notificationId, req.body);
     
-    res.status(200).json({
-      message: "Notification updated successfully",
-      notification: result,
-    });
+    sendSuccess(res, { notification: result }, "Notification updated successfully");
   } catch (error) {
     console.error("Error updating notification:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error updating notification",
-    });
+    sendError(res, error.message || "Error updating notification", error.status || 500);
   }
 };
 
@@ -67,14 +54,10 @@ export const deleteNotification = async (req, res) => {
     const notificationId = parseInt(req.params.notificationId);
     await notificationService.deleteNotification(notificationId);
     
-    res.status(200).json({
-      message: "Notification deleted successfully",
-    });
+    sendSuccess(res, null, "Notification deleted successfully");
   } catch (error) {
     console.error("Error deleting notification:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error deleting notification",
-    });
+    sendError(res, error.message || "Error deleting notification", error.status || 500);
   }
 };
 
@@ -86,12 +69,10 @@ export const getUserNotifications = async (req, res) => {
     const paginationData = parsePagination(req.query);
     const result = await notificationService.getUserNotifications(clerkUserId, paginationData, req.query);
     
-    res.status(200).json(result);
+    sendSuccess(res, result, "User notifications fetched successfully");
   } catch (error) {
     console.error("Error fetching user notifications:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error fetching user notifications",
-    });
+    sendError(res, error.message || "Error fetching user notifications", error.status || 500);
   }
 };
 
@@ -102,14 +83,9 @@ export const markAsRead = async (req, res) => {
     const notificationId = parseInt(req.params.notificationId);
     const result = await notificationService.markAsRead(notificationId, clerkUserId);
     
-    res.status(200).json({
-      message: "Notification marked as read successfully",
-      status: result,
-    });
+    sendSuccess(res, { status: result }, "Notification marked as read successfully");
   } catch (error) {
     console.error("Error marking notification as read:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error marking notification as read",
-    });
+    sendError(res, error.message || "Error marking notification as read", error.status || 500);
   }
 };

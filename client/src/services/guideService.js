@@ -25,8 +25,8 @@ export const fetchAllGuides = async (getToken, page = 1, limit = 10, search = ''
       throw new Error(errorData.message || 'Failed to fetch guides');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -48,7 +48,8 @@ export const fetchGuidesByLevel = async (getToken, levelId) => {
       throw new Error(errorData.message || 'Failed to fetch guides');
     }
 
-    return await response.json();
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -74,8 +75,8 @@ export const fetchLevelsForGuide = async (getToken) => {
       throw new Error(errorData.message || 'Failed to fetch levels');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -101,8 +102,8 @@ export const fetchGuideById = async (getToken, guideId) => {
       throw new Error(errorData.message || 'Failed to fetch guide');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -115,8 +116,6 @@ export const createGuide = async (getToken, guideData) => {
     if (!token) {
       throw new Error('No authentication token available');
     }
-
-    console.log('Creating guide with data:', guideData);
 
     const response = await fetch(`${API_BASE_URL}/guides`, {
       method: 'POST',
@@ -139,9 +138,8 @@ export const createGuide = async (getToken, guideData) => {
       throw new Error(errorData.message || `Failed to create guide (${response.status})`);
     }
 
-    const data = await response.json();
-    console.log('Guide created successfully:', data);
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error in createGuide:', error);
     throw error;
@@ -170,8 +168,8 @@ export const updateGuide = async (getToken, guideId, guideData) => {
       throw new Error(errorData.message || 'Failed to update guide');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -198,8 +196,8 @@ export const deleteGuide = async (getToken, guideId) => {
       throw new Error(errorData.message || 'Failed to delete guide');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -215,13 +213,6 @@ export const uploadGuideImage = async (getToken, guideId, imageFile) => {
 
     const formData = new FormData();
     formData.append('image', imageFile);
-
-    console.log('Uploading guide image:', {
-      guideId,
-      fileName: imageFile.name,
-      fileSize: imageFile.size,
-      fileType: imageFile.type
-    });
 
     const response = await fetch(`${API_BASE_URL}/guides/${guideId}/images`, {
       method: 'POST',
@@ -243,9 +234,8 @@ export const uploadGuideImage = async (getToken, guideId, imageFile) => {
       throw new Error(errorData.message || `Failed to upload guide image (${response.status})`);
     }
 
-    const data = await response.json();
-    console.log('Guide image uploaded successfully:', data);
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     console.error('Error in uploadGuideImage:', error);
     throw error;
@@ -273,8 +263,8 @@ export const deleteGuideImage = async (getToken, imageId) => {
       throw new Error(errorData.message || 'Failed to delete guide image');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }

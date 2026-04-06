@@ -26,8 +26,8 @@ export const fetchAllUsers = async (getToken, page = 1, limit = 5, search = '') 
       throw new Error(errorData.message || 'Failed to fetch users');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -54,8 +54,8 @@ export const updateUserRole = async (getToken, userId, role) => {
       throw new Error(errorData.message || 'Failed to update user role');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -80,8 +80,8 @@ export const getUserDetails = async (getToken, userId) => {
       throw new Error(errorData.message || 'Failed to fetch user details');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -107,8 +107,8 @@ export const deleteUser = async (getToken, userId) => {
       throw new Error(errorData.message || 'Failed to delete user');
     }
 
-    const data = await response.json();
-    return data;
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -134,7 +134,8 @@ export const resetUserTestScore = async (getToken, userId, type) => {
       throw new Error(errorData.message || 'Failed to reset score');
     }
 
-    return await response.json();
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }
@@ -157,7 +158,8 @@ export const fetchUserTestHistory = async (getToken, userId) => {
       throw new Error(errorData.message || 'Failed to fetch history');
     }
 
-    return await response.json();
+    const json = await response.json();
+    return json.data;
   } catch (error) {
     throw error;
   }

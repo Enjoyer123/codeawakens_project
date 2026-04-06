@@ -1,19 +1,15 @@
 import * as patternService from "../services/patternService.js";
 import { parsePagination } from "../utils/pagination.js";
+import { sendSuccess, sendError } from "../utils/responseHelper.js";
 
 export const createPattern = async (req, res) => {
   try {
     const result = await patternService.createPattern(req.body);
     
-    res.status(201).json({
-      message: "Pattern created successfully",
-      pattern: result,
-    });
+    sendSuccess(res, { pattern: result }, "Pattern created successfully", 201);
   } catch (error) {
     console.error("Error creating pattern:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error creating pattern",
-    });
+    sendError(res, error.message || "Error creating pattern", error.status || 500);
   }
 };
 
@@ -22,12 +18,10 @@ export const getAllPatterns = async (req, res) => {
     const paginationData = parsePagination(req.query);
     const result = await patternService.getAllPatterns(paginationData, req.query.level_id);
     
-    res.status(200).json(result);
+    sendSuccess(res, result, "Patterns fetched successfully");
   } catch (error) {
     console.error("Error fetching patterns:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error fetching patterns",
-    });
+    sendError(res, error.message || "Error fetching patterns", error.status || 500);
   }
 };
 
@@ -36,12 +30,10 @@ export const getPatternById = async (req, res) => {
     const patternId = parseInt(req.params.patternId);
     const result = await patternService.getPatternById(patternId);
     
-    res.status(200).json(result);
+    sendSuccess(res, result, "Pattern fetched successfully");
   } catch (error) {
     console.error("Error fetching pattern:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error fetching pattern",
-    });
+    sendError(res, error.message || "Error fetching pattern", error.status || 500);
   }
 };
 
@@ -50,15 +42,10 @@ export const updatePattern = async (req, res) => {
     const patternId = parseInt(req.params.patternId);
     const result = await patternService.updatePattern(patternId, req.body);
     
-    res.status(200).json({
-      message: "Pattern updated successfully",
-      pattern: result,
-    });
+    sendSuccess(res, { pattern: result }, "Pattern updated successfully");
   } catch (error) {
     console.error("Error updating pattern:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error updating pattern",
-    });
+    sendError(res, error.message || "Error updating pattern", error.status || 500);
   }
 };
 
@@ -67,14 +54,10 @@ export const deletePattern = async (req, res) => {
     const patternId = parseInt(req.params.patternId);
     await patternService.deletePattern(patternId);
     
-    res.status(200).json({
-      message: "Pattern deleted successfully",
-    });
+    sendSuccess(res, null, "Pattern deleted successfully");
   } catch (error) {
     console.error("Error deleting pattern:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error deleting pattern",
-    });
+    sendError(res, error.message || "Error deleting pattern", error.status || 500);
   }
 };
 
@@ -82,12 +65,10 @@ export const getPatternTypes = async (req, res) => {
   try {
     const result = await patternService.getPatternTypes();
     
-    res.status(200).json(result);
+    sendSuccess(res, result, "Pattern types fetched successfully");
   } catch (error) {
     console.error("Error fetching pattern types:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error fetching pattern types",
-    });
+    sendError(res, error.message || "Error fetching pattern types", error.status || 500);
   }
 };
 
@@ -96,14 +77,9 @@ export const unlockPattern = async (req, res) => {
     const patternId = parseInt(req.params.patternId);
     const result = await patternService.unlockPattern(patternId);
     
-    res.status(200).json({
-      message: "Pattern unlocked successfully",
-      pattern: result,
-    });
+    sendSuccess(res, { pattern: result }, "Pattern unlocked successfully");
   } catch (error) {
     console.error("Error unlocking pattern:", error.message);
-    res.status(error.status || 500).json({
-      message: error.message || "Error unlocking pattern",
-    });
+    sendError(res, error.message || "Error unlocking pattern", error.status || 500);
   }
 };
