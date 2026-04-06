@@ -35,10 +35,10 @@ export const createReward = async (data) => {
   }
   const level = await rewardRepo.findLevelById(parseInt(level_id));
   if (!level) { const err = new Error("Level not found"); err.status = 400; throw err; }
-  const validTypes = ["weapon", "block", "badge", "experience", "coin"];
+  const validTypes = ["badge"];
   if (!validTypes.includes(reward_type)) { const err = new Error("Invalid reward_type"); err.status = 400; throw err; }
 
-  return rewardRepo.createReward({  level_id: parseInt(level_id), reward_type, reward_name, description: description || null, required_score: parseInt(required_score), frame1: frame1 || null  });
+  return rewardRepo.createReward({ level_id: parseInt(level_id), reward_type, reward_name, description: description || null, required_score: parseInt(required_score), frame1: frame1 || null });
 }
 
 export const updateReward = async (rewardId, data) => {
@@ -52,7 +52,7 @@ export const updateReward = async (rewardId, data) => {
     updateData.level_id = parseInt(data.level_id);
   }
   if (data.reward_type !== undefined) {
-    const validTypes = ["weapon", "block", "badge", "experience", "coin"];
+    const validTypes = ["badge"];
     if (!validTypes.includes(data.reward_type)) { const err = new Error("Invalid reward_type"); err.status = 400; throw err; }
     updateData.reward_type = data.reward_type;
   }
@@ -71,7 +71,7 @@ export const deleteReward = async (rewardId) => {
   await rewardRepo.deleteReward(rewardId);
 }
 
-export const uploadRewardFrame = async (rewardId, file, frameNumber) => {
+export const uploadRewardFrame = async (rewardId, file, frameNumber = "1") => {
   if (!frameNumber || frameNumber !== "1") { const err = new Error("Invalid frame_number. Must be 1"); err.status = 400; throw err; }
   const reward = await rewardRepo.findSimpleRewardById(rewardId);
   if (!reward) { const err = new Error("Reward not found"); err.status = 404; throw err; }
@@ -90,7 +90,7 @@ export const uploadRewardFrame = async (rewardId, file, frameNumber) => {
   return rewardRepo.updateReward(rewardId, { [frameField]: pathFile });
 }
 
-export const deleteRewardFrame = async (rewardId, frameNumber) => {
+export const deleteRewardFrame = async (rewardId, frameNumber = "1") => {
   if (!frameNumber || frameNumber !== "1") { const err = new Error("Invalid frame_number. Must be 1"); err.status = 400; throw err; }
   const reward = await rewardRepo.findSimpleRewardById(rewardId);
   if (!reward) { const err = new Error("Reward not found"); err.status = 404; throw err; }
