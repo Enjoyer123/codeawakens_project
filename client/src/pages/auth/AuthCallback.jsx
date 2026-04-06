@@ -2,10 +2,9 @@ import { useAuth } from "@clerk/clerk-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import useUserStore from '../../store/useUserStore';
+import { fetchUserProfile } from '../../services/api/profileService';
 
 import PageLoader from '../../components/shared/Loading/PageLoader';
-
-import { API_BASE_URL } from '../../config/apiConfig';
 
 const AuthCallback = () => {
   const { isSignedIn, isLoaded, getToken } = useAuth();
@@ -18,23 +17,7 @@ const AuthCallback = () => {
       if (isLoaded) {
         if (isSignedIn) {
           try {
-            const token = await getToken();
-            const response = await fetch(
-              `${API_BASE_URL}/profile/check-profile`,
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  'Content-Type': 'application/json',
-                },
-              }
-            );
-
-            if (!response.ok) {
-              throw new Error('Failed to check profile');
-            }
-
-            const json = await response.json();
-            const data = json.data;
+            const data = await fetchUserProfile(getToken);
             setRole(data.role);
 
             if (data.loggedIn) {

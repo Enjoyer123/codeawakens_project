@@ -9,7 +9,7 @@ import {
     unlockPattern,
     unlockLevel
 
-} from '../patternService';
+} from '../api/patternService';
 import { useAuth } from '@clerk/clerk-react';
 
 // Hook for fetching all patterns (optionally filtered by levelId)

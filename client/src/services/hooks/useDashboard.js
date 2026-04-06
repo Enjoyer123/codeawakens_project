@@ -5,7 +5,7 @@ import {
     fetchLevelStats,
     fetchUserStats,
     fetchTestStats
-} from '../dashboardService';
+} from '../api/dashboardService';
 
 // Dashboard Overview Stats
 export const useDashboardStats = () => {

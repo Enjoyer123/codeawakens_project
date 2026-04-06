@@ -283,3 +283,22 @@ export const getAllCategories = async () => {
 }
 
 export const getLevelsForDropdown = async () => levelRepo.findLevelsForDropdown();
+
+export const uploadLevelBackgroundImage = async (levelId, file) => {
+  const level = await levelRepo.findLevelById(levelId);
+  if (!level) {
+    const err = new Error("Level not found"); err.status = 404; throw err;
+  }
+
+  const fileUrl = `/uploads/levels/${file.filename}`;
+  return levelRepo.updateLevelSimple(levelId, { background_image: fileUrl });
+};
+
+export const deleteLevelBackgroundImage = async (levelId) => {
+  const level = await levelRepo.findLevelById(levelId);
+  if (!level) {
+    const err = new Error("Level not found"); err.status = 404; throw err;
+  }
+  
+  return levelRepo.updateLevelSimple(levelId, { background_image: "" });
+};

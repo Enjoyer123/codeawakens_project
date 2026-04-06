@@ -8,7 +8,7 @@ import {
     getLevelCategoryById,
     uploadCategoryBackground,
     deleteCategoryBackground
-} from '../levelCategoryService';
+} from '../api/levelCategoryService';
 
 // Fetch all level categories
 export const useLevelCategories = (search = '') => {

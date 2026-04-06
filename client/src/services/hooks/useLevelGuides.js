@@ -7,7 +7,7 @@ import {
     deleteGuide,
     uploadGuideImage,
     deleteGuideImage
-} from '../guideService';
+} from '../api/guideService';
 
 // Fetch guides by level
 export const useLevelGuides = (levelId) => {

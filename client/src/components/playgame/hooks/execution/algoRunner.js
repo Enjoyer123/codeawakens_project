@@ -13,7 +13,7 @@ import { detectAlgoType } from '@/gameutils/shared/levelType';
 import { calculateLevelScore } from '@/gameutils/shared/execution/executionScoring';
 import { resetGameExecutionState } from '@/gameutils/shared/execution/executionReset';
 import { handleLevelCompletion } from '@/gameutils/shared/execution/levelCompletionHandler';
-import { saveUserProgress } from '@/services/profileService';
+import { saveUserProgress } from '@/services/api/profileService';
 import { mapRuntimeErrorToMessage } from './codeValidator';
 import { animationController } from '@/gameutils/algo/playback/AnimationController';
 

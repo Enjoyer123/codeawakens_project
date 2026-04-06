@@ -42,7 +42,8 @@ export const getLevelById = async (req, res) => {
 
 export const createLevel = async (req, res) => {
   try {
-    const result = await levelService.createLevel(req.body);
+    const clerkUserId = req.user ? req.user.id : null;
+    const result = await levelService.createLevel(req.body, clerkUserId);
     
     sendSuccess(res, { level: result }, "Level created successfully", 201);
   } catch (error) {
@@ -81,10 +82,10 @@ export const uploadLevelBackgroundImage = async (req, res) => {
       return sendError(res, "No file uploaded", 400);
     }
     
-    const levelId = parseInt(req.params.levelId);
-    const result = await levelService.uploadLevelBackgroundImage(levelId, req.file);
+    // Create the image URL relative path that frontend needs
+    const imageUrl = `/uploads/levels/${req.file.filename}`;
     
-    sendSuccess(res, { level: result }, "Background image uploaded successfully");
+    sendSuccess(res, { imageUrl }, "Background image uploaded successfully");
   } catch (error) {
     console.error("Error uploading background image:", error.message);
     cleanupTempFile(req.file);

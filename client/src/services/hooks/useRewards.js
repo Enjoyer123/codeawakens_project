@@ -9,7 +9,7 @@ import {
     deleteReward,
     uploadRewardFrame,
     deleteRewardFrame
-} from '../rewardService';
+} from '../api/rewardService';
 
 // Fetch all rewards
 export const useRewards = (page = 1, limit = 10, search = '') => {

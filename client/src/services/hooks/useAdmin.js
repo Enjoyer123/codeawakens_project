@@ -7,7 +7,7 @@ import {
     resetUserTestScore,
     fetchUserTestHistory,
     getUserDetails
-} from '../adminService';
+} from '../api/adminService';
 
 // Fetch all users
 export const useUsers = (page = 1, limit = 5, search = '') => {

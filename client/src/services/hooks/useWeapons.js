@@ -9,7 +9,7 @@ import {
     addWeaponImage,
     updateWeaponImage,
     deleteWeaponImage
-} from '../weaponService';
+} from '../api/weaponService';
 
 // Fetch all weapons
 export const useWeapons = (page = 1, limit = 10, search = '') => {

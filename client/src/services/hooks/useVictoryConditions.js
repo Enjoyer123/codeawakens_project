@@ -6,7 +6,7 @@ import {
     createVictoryCondition,
     updateVictoryCondition,
     deleteVictoryCondition
-} from '../victoryConditionService';
+} from '../api/victoryConditionService';
 
 // Fetch all victory conditions
 export const useVictoryConditions = (page = 1, limit = 10, search = '') => {
