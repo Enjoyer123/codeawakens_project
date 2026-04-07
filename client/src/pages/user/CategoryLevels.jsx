@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useAuth } from '@clerk/clerk-react';
 import useUserStore from '../../store/useUserStore';
 import { playSound, playBGM, stopBGM } from '../../gameutils/sound/soundManager';
 
@@ -14,13 +13,13 @@ import PageLoader from '../../components/shared/Loading/PageLoader';
 
 
 const CategoryLevels = () => {
-  const { getToken } = useAuth();
   const { role } = useUserStore();
   const navigate = useNavigate();
   const { categoryId } = useParams();
   const [reloadKey, setReloadKey] = useState(0);
   const [showDevTool, setShowDevTool] = useState(false);
   const [hoveredLevelId, setHoveredLevelId] = useState(null);
+  const [isListView, setIsListView] = useState(false)
 
   const {
     data: categoryRes,
@@ -47,10 +46,10 @@ const CategoryLevels = () => {
     const isLocked = lvl.is_locked || !lvl.is_unlocked;
     // Skip locked/draft levels
     if (isLocked) return false;
-    
+
     // Check if user has passed this level
     const progress = userProgress.find(p => String(p.level_id) === String(lvl.level_id));
-    
+
     // If NO progress exists, or status is NOT 'completed', it means they haven't finished it
     return !progress || progress.status !== 'completed';
   });
@@ -120,7 +119,6 @@ const CategoryLevels = () => {
 
   return (
     <div className="min-h-screen w-full bg-gray-900 relative overflow-hidden flex flex-col justify-center lg:h-screen lg:w-full lg:block">
-
       {/* Dev Tool Button */}
       {/* Dev Tool Button - Admin Only */}
       {role === 'admin' && (
@@ -133,136 +131,232 @@ const CategoryLevels = () => {
       )}
 
 
-      {console.log(categoryInfo)}
+      {/* <button
+        onClick={() => setIsListView(!isListView)}
+        className="fixed top-4 right-4 z-50 bg-red-600 text-white px-4 py-2 rounded shadow-lg font-bold hover:bg-red-700 transition"
+      >
+        {isListView ? 'Map View' : 'List View'}
+      </button> */}
+
       {/* Map Container */}
-      <div className="relative w-full max-w-5xl mx-auto shadow-2xl lg:shadow-none lg:max-w-none lg:mx-0 lg:w-full lg:h-full">
-        <img
-          src={categoryInfo?.background_image ? getImageUrl(categoryInfo.background_image) : "/Mapdefault.png"}
-          alt="Level Map"
-          className="w-full h-auto object-contain lg:w-full lg:h-full lg:object-fill block pixelated"
-        />
 
-        {/* SVG Connecting Path Lines */}
-        <svg className="absolute inset-0 w-full h-full pointer-events-none z-0 hover:z-0">
-          {levels.map((level, i) => {
-            const nextLevel = levels[i + 1];
-            if (!level.coordinates || !nextLevel || !nextLevel.coordinates) return null;
-            
-            const isNextLocked = nextLevel.is_locked || !nextLevel.is_unlocked;
-            const strokeColor = isNextLocked ? "rgba(156, 163, 175, 0.4)" : "rgba(112, 72, 232, 0.9)";
-            
+      {!isListView ? (
+        <div className="relative w-full max-w-5xl mx-auto shadow-2xl lg:shadow-none lg:max-w-none lg:mx-0 lg:w-full lg:h-full">
+          <img
+            src={categoryInfo?.background_image ? getImageUrl(categoryInfo.background_image) : "/Mapdefault.png"}
+            alt="Level Map"
+            className="w-full h-auto object-contain lg:w-full lg:h-full lg:object-fill block pixelated"
+          />
+
+          {/* SVG Connecting Path Lines */}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none z-0 hover:z-0">
+            {levels.map((level, i) => {
+              const nextLevel = levels[i + 1];
+              if (!level.coordinates || !nextLevel || !nextLevel.coordinates) return null;
+
+              const isNextLocked = nextLevel.is_locked || !nextLevel.is_unlocked;
+              const strokeColor = isNextLocked ? "rgba(156, 163, 175, 0.4)" : "rgba(112, 72, 232, 0.9)";
+
+              return (
+                <line
+                  key={`line-${level.level_id}`}
+                  x1={`${level.coordinates.left}%`}
+                  y1={`${level.coordinates.top}%`}
+                  x2={`${nextLevel.coordinates.left}%`}
+                  y2={`${nextLevel.coordinates.top}%`}
+                  stroke={strokeColor}
+                  strokeWidth="4"
+                  strokeDasharray={isNextLocked ? "8, 8" : "12, 12"}
+                  strokeLinecap="round"
+                  className={`transition-all duration-1000 ${!isNextLocked ? 'animate-pulse' : ''}`}
+                  style={!isNextLocked ? { filter: 'drop-shadow(0 0 6px rgba(112,72,232,0.8))' } : {}}
+                />
+              );
+            })}
+          </svg>
+
+          {/* Bouncing Avatar has been replaced by Star UI Indicators */}
+
+          {/* Level Nodes */}
+          {levels.map((level) => {
+            // Use coordinates from DB
+            const position = level.coordinates;
+            // Level is locked if user hasn't unlocked it yet OR if it's a DRAFT (is_unlocked === false)
+            const isLocked = level.is_locked || !level.is_unlocked;
+
+            // Calculate stars
+            const progress = userProgress.find(p => String(p.level_id) === String(level.level_id));
+            const isCompleted = progress && progress.status === 'completed';
+            const starsEarned = isCompleted ? (progress.stars_earned || 0) : 0;
+
+            if (!position) return null;
+
+            const isHovered = hoveredLevelId === level.level_id;
+
             return (
-              <line
-                key={`line-${level.level_id}`}
-                x1={`${level.coordinates.left}%`}
-                y1={`${level.coordinates.top}%`}
-                x2={`${nextLevel.coordinates.left}%`}
-                y2={`${nextLevel.coordinates.top}%`}
-                stroke={strokeColor}
-                strokeWidth="4"
-                strokeDasharray={isNextLocked ? "8, 8" : "12, 12"}
-                strokeLinecap="round"
-                className={`transition-all duration-1000 ${!isNextLocked ? 'animate-pulse' : ''}`}
-                style={!isNextLocked ? { filter: 'drop-shadow(0 0 6px rgba(112,72,232,0.8))' } : {}}
-              />
-            );
-          })}
-        </svg>
-
-        {/* Bouncing Avatar has been replaced by Star UI Indicators */}
-
-        {/* Level Nodes */}
-        {levels.map((level) => {
-          // Use coordinates from DB
-          const position = level.coordinates;
-          // Level is locked if user hasn't unlocked it yet OR if it's a DRAFT (is_unlocked === false)
-          const isLocked = level.is_locked || !level.is_unlocked;
-
-          // Calculate stars
-          const progress = userProgress.find(p => String(p.level_id) === String(level.level_id));
-          const isCompleted = progress && progress.status === 'completed';
-          const starsEarned = isCompleted ? (progress.stars_earned || 0) : 0;
-
-          if (!position) return null;
-
-          const isHovered = hoveredLevelId === level.level_id;
-
-          return (
-            <div
-              key={level.level_id}
-              onClick={() => !isLocked && handleLevelSelect(level.level_id)}
-              onMouseEnter={() => setHoveredLevelId(level.level_id)}
-              onMouseLeave={() => setHoveredLevelId(null)}
-              className={`absolute transform -translate-x-1/2 -translate-y-1/2 z-10 
+              <div
+                key={level.level_id}
+                onClick={() => !isLocked && handleLevelSelect(level.level_id)}
+                onMouseEnter={() => setHoveredLevelId(level.level_id)}
+                onMouseLeave={() => setHoveredLevelId(null)}
+                className={`absolute transform -translate-x-1/2 -translate-y-1/2 z-10 
                   ${isLocked ? 'cursor-not-allowed contrast-75 grayscale-[0.6]' : 'cursor-pointer group'}`}
-              style={{ left: `${position.left}%`, top: `${position.top}%` }}
-            >
-              {/* Node Container (Interactive Dot with Label) */}
-              <div className="relative flex flex-col items-center justify-center transition-all duration-300">
+                style={{ left: `${position.left}%`, top: `${position.top}%` }}
+              >
+                {/* Node Container (Interactive Dot with Label) */}
+                <div className="relative flex flex-col items-center justify-center transition-all duration-300">
 
-                {/* Expanding Info Pill (Label Above) */}
-                <div className={`mb-1.5 transition-all duration-200 ease-out z-20 ${isHovered ? 'scale-110' : 'scale-100'}`}>
-                  <div className={`
+                  {/* Expanding Info Pill (Label Above) */}
+                  <div className={`mb-1.5 transition-all duration-200 ease-out z-20 ${isHovered ? 'scale-110' : 'scale-100'}`}>
+                    <div className={`
                     px-2 py-0.5 border shadow-[0_2px_8px_rgba(0,0,0,0.5)] rounded flex items-center gap-1.5 whitespace-nowrap
                     ${isLocked
-                      ? 'bg-gray-800/90 border-gray-600/60 shadow-none'
-                      : 'bg-[#0f111a]/90 border-[#7048e8]/60 group-hover:border-[#7048e8] group-hover:shadow-[0_0_12px_rgba(112,72,232,0.4)] group-hover:bg-[#0f111a]'
-                    }
+                        ? 'bg-gray-800/90 border-gray-600/60 shadow-none'
+                        : 'bg-[#0f111a]/90 border-[#7048e8]/60 group-hover:border-[#7048e8] group-hover:shadow-[0_0_12px_rgba(112,72,232,0.4)] group-hover:bg-[#0f111a]'
+                      }
                   `}>
-                    {!level.is_unlocked && (
-                      <span className="bg-red-600 text-white text-[8px] md:text-[9px] font-bold px-1 py-0.5 rounded-sm">
+                      {!level.is_unlocked && (
+                        <span className="bg-red-600 text-white text-[8px] md:text-[9px] font-bold px-1 py-0.5 rounded-sm">
+                          DRAFT
+                        </span>
+                      )}
+
+                      {level.required_for_post_test && (
+                        <span className="bg-amber-500/90 text-white text-[8px] md:text-[9px] font-bold px-1 py-0.5 rounded-sm shadow-sm flex items-center gap-0.5" title="จำเป็นต้องผ่านด่านนี้เพื่อทำ Post-test">
+                          <span className="text-[10px]">⭐</span> Post-Test
+                        </span>
+                      )}
+
+                      <span className={`font-bold text-[9px] md:text-xs tracking-wide ${isLocked ? 'text-gray-400' : 'text-[#e0e7ff]'}`}>
+                        {level.title || level.level_name}
+                      </span>
+
+                      {isLocked && (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* The actual Dot on the map */}
+                  <div className={`
+                  w-3 h-3 md:w-4 md:h-4 rounded-full border border-white/40 z-10 transition-transform
+                  ${isLocked
+                      ? 'bg-gray-600 shadow-none'
+                      : 'bg-[#7048e8] shadow-[0_0_8px_rgba(112,72,232,0.6)] animate-pulse group-hover:animate-none group-hover:scale-110'
+                    }
+                `} />
+
+                  {/* Subtle Glow under the dot (Only if unlocked) */}
+                  {!isLocked && (
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 bg-[#7048e8]/10 rounded-full blur-md -z-1" />
+                  )}
+
+                  {/* 3-Star Rating Indicator (Below the dot) */}
+                  {!isLocked && (
+                    <div className="absolute top-full mt-2 flex gap-1 justify-center items-center z-20 pointer-events-none transition-transform group-hover:scale-110">
+                      {[1, 2, 3].map((starNum) => {
+                        const isEarned = starNum <= starsEarned;
+                        return (
+                          <svg
+                            key={starNum}
+                            xmlns="http://www.w3.org/2000/svg"
+                            className={`w-4 h-4 md:w-5 md:h-5 drop-shadow-md transition-colors ${isEarned
+                              ? 'text-yellow-400 fill-yellow-400'
+                              : 'text-gray-500/60 fill-gray-800/80'
+                              }`}
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                          </svg>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Locked Tooltip */}
+                {isLocked && isHovered && (
+                  <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 w-max max-w-[200px] z-50">
+                    <div className="bg-black/90 text-white text-xs md:text-sm px-3 py-1.5 rounded-lg shadow-xl border border-white/20 text-center">
+                      {(() => {
+                        // Condition 1: Admin Locked (is_unlocked = false) -> Future Update
+                        if (level.is_unlocked === false) {
+                          return "รอการอัพเดทในอนาคต";
+                        }
+
+                        // Condition 2: Prerequisite Locked -> Must Pass ...
+                        const reqId = level.require_level_id || level.required_level_id;
+                        if (reqId) {
+                          const reqLevel = levels.find(l => l.level_id === reqId || l.level_id == reqId);
+                          const reqName = reqLevel ? (reqLevel.title || reqLevel.level_name) : `Level ${reqId}`;
+                          return `ต้องผ่านด่าน "${reqName}" ก่อน`;
+                        }
+
+                        // Fallback
+                        return "รอการอัพเดทในอนาคต";
+                      })()}
+                      {/* Little triangle arrow */}
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-black/90"></div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div
+
+          className="w-full h-full flex flex-col items-center justify-center bg-white p-10">
+          {levels.map((level, i) => {
+            const isLocked = level.is_locked || !level.is_unlocked;
+            const progress = userProgress.find(p => String(p.level_id) === String(level.level_id));
+            const isCompleted = progress && progress.status === 'completed';
+            const starsEarned = isCompleted ? (progress.stars_earned || 0) : 0;
+            return (
+              <div
+                onClick={() => !isLocked && handleLevelSelect(level.level_id)}
+                onMouseEnter={() => setHoveredLevelId(level.level_id)}
+                onMouseLeave={() => setHoveredLevelId(null)}
+                key={level.level_id}
+                className={`p-4 w-full max-w-md h-20 flex items-center mb-2 justify-between border border-gray-300 rounded-lg hover:scale-105 cursor-pointer
+                   ${isLocked
+                    ? 'bg-red-200 border-gray-600/60'
+                    : 'border border-gray-300'
+                  }`}
+              >
+                <div className="flex items-start justify-start flex-col gap-2">
+                  <div className="flex items-start justify-start flex-row gap-2 ">
+                    {level.required_for_post_test && (
+                      <span className="text-[10px] bg-amber-500/90 text-white px-1 py-0.5 rounded-sm shadow-sm flex gap-0.5 inline-block">⭐ Posttest</span>
+                    )}
+                    {isLocked && (
+                      <span className="text-[10px] bg-red-600 text-white px-1 py-0.5 rounded-sm shadow-sm flex gap-0.5 inline-block">
                         DRAFT
                       </span>
                     )}
-
-                    {level.required_for_post_test && (
-                      <span className="bg-amber-500/90 text-white text-[8px] md:text-[9px] font-bold px-1 py-0.5 rounded-sm shadow-sm flex items-center gap-0.5" title="จำเป็นต้องผ่านด่านนี้เพื่อทำ Post-test">
-                        <span className="text-[10px]">⭐</span> Post-Test
-                      </span>
-                    )}
-
-                    <span className={`font-bold text-[9px] md:text-xs tracking-wide ${isLocked ? 'text-gray-400' : 'text-[#e0e7ff]'}`}>
-                      {level.title || level.level_name}
-                    </span>
-
-                    {isLocked && (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                      </svg>
-                    )}
                   </div>
+                  {level.level_name}
                 </div>
 
-                {/* The actual Dot on the map */}
-                <div className={`
-                  w-3 h-3 md:w-4 md:h-4 rounded-full border border-white/40 z-10 transition-transform
-                  ${isLocked
-                    ? 'bg-gray-600 shadow-none'
-                    : 'bg-[#7048e8] shadow-[0_0_8px_rgba(112,72,232,0.6)] animate-pulse group-hover:animate-none group-hover:scale-110'
-                  }
-                `} />
-
-                {/* Subtle Glow under the dot (Only if unlocked) */}
                 {!isLocked && (
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 bg-[#7048e8]/10 rounded-full blur-md -z-1" />
-                )}
-
-                {/* 3-Star Rating Indicator (Below the dot) */}
-                {!isLocked && (
-                  <div className="absolute top-full mt-2 flex gap-1 justify-center items-center z-20 pointer-events-none transition-transform group-hover:scale-110">
+                  <div className="mt-2 flex gap-1 justify-center items-center z-20 pointer-events-none transition-transform group-hover:scale-110">
                     {[1, 2, 3].map((starNum) => {
                       const isEarned = starNum <= starsEarned;
                       return (
-                        <svg 
-                          key={starNum} 
-                          xmlns="http://www.w3.org/2000/svg" 
-                          className={`w-4 h-4 md:w-5 md:h-5 drop-shadow-md transition-colors ${
-                            isEarned 
-                              ? 'text-yellow-400 fill-yellow-400' 
-                              : 'text-gray-500/60 fill-gray-800/80'
-                          }`} 
-                          viewBox="0 0 24 24" 
-                          stroke="currentColor" 
+                        <svg
+                          key={starNum}
+                          xmlns="http://www.w3.org/2000/svg"
+                          className={`w-4 h-4 md:w-5 md:h-5 drop-shadow-md transition-colors ${isEarned
+                            ? 'text-yellow-400 fill-yellow-400'
+                            : 'text-gray-500/60 fill-gray-800/80'
+                            }`}
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
                           strokeWidth="1.5"
                         >
                           <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
@@ -271,60 +365,64 @@ const CategoryLevels = () => {
                     })}
                   </div>
                 )}
+
+
+                {isLocked && (
+                  <div className="w-max max-w-[200px] z-50">
+                    <div className="">
+                      {(() => {
+                        // Condition 1: Admin Locked (is_unlocked = false) -> Future Update
+                        if (level.is_unlocked === false) {
+                          return "รอการอัพเดทในอนาคต";
+                        }
+
+                        // Condition 2: Prerequisite Locked -> Must Pass ...
+                        const reqId = level.require_level_id || level.required_level_id;
+                        if (reqId) {
+                          const reqLevel = levels.find(l => l.level_id === reqId || l.level_id == reqId);
+                          const reqName = reqLevel ? (reqLevel.title || reqLevel.level_name) : `Level ${reqId}`;
+                          return `ต้องผ่านด่าน "${reqName}" ก่อน`;
+                        }
+
+                        // Fallback
+                        return "รอการอัพเดทในอนาคต";
+                      })()}
+                    </div>
+                  </div>
+                )}
+
               </div>
 
-              {/* Locked Tooltip */}
-              {isLocked && isHovered && (
-                <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 w-max max-w-[200px] z-50">
-                  <div className="bg-black/90 text-white text-xs md:text-sm px-3 py-1.5 rounded-lg shadow-xl border border-white/20 text-center">
-                    {(() => {
-                      // Condition 1: Admin Locked (is_unlocked = false) -> Future Update
-                      if (level.is_unlocked === false) {
-                        return "รอการอัพเดทในอนาคต";
-                      }
+            )
+          })}
+        </div >
 
-                      // Condition 2: Prerequisite Locked -> Must Pass ...
-                      const reqId = level.require_level_id || level.required_level_id;
-                      if (reqId) {
-                        const reqLevel = levels.find(l => l.level_id === reqId || l.level_id == reqId);
-                        const reqName = reqLevel ? (reqLevel.title || reqLevel.level_name) : `Level ${reqId}`;
-                        return `ต้องผ่านด่าน "${reqName}" ก่อน`;
-                      }
+      )}
 
-                      // Fallback
-                      return "รอการอัพเดทในอนาคต";
-                    })()}
-                    {/* Little triangle arrow */}
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-black/90"></div>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
 
       {/* Fallback for levels without positions */}
-      {levels.some(l => !l.coordinates) && (
-        <div className="absolute bottom-16 left-0 right-0 p-4 flex justify-center pointer-events-none">
-          <div className="bg-white/90 backdrop-blur-md p-4 rounded-xl shadow-xl pointer-events-auto max-w-2xl w-full">
-            <h3 className="text-sm font-bold text-gray-500 mb-2 uppercase">Unplaced Levels ({categoryInfo.category_name})</h3>
-            <div className="flex flex-wrap gap-2">
-              {levels.filter(l => !l.coordinates).map(level => (
-                <button
-                  key={level.level_id}
-                  onClick={() => handleLevelSelect(level.level_id)}
-                  className="bg-white border border-gray-200 px-3 py-1.5 rounded-lg shadow-sm text-sm hover:bg-gray-50 flex items-center gap-2"
-                >
-                  <span className={`w-2 h-2 rounded-full ${level.is_unlocked ? 'bg-green-500' : 'bg-gray-300'}`}></span>
-                  {level.title || level.level_name}
-                </button>
-              ))}
+      {
+        levels.some(l => !l.coordinates) && (
+          <div className="absolute bottom-16 left-0 right-0 p-4 flex justify-center pointer-events-none">
+            <div className="bg-white/90 backdrop-blur-md p-4 rounded-xl shadow-xl pointer-events-auto max-w-2xl w-full">
+              <h3 className="text-sm font-bold text-gray-500 mb-2 uppercase">Unplaced Levels ({categoryInfo.category_name})</h3>
+              <div className="flex flex-wrap gap-2">
+                {levels.filter(l => !l.coordinates).map(level => (
+                  <button
+                    key={level.level_id}
+                    onClick={() => handleLevelSelect(level.level_id)}
+                    className="bg-white border border-gray-200 px-3 py-1.5 rounded-lg shadow-sm text-sm hover:bg-gray-50 flex items-center gap-2"
+                  >
+                    <span className={`w-2 h-2 rounded-full ${level.is_unlocked ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+                    {level.title || level.level_name}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 };
 

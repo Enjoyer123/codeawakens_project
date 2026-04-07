@@ -12,7 +12,7 @@ import { setupCoinChange } from '../../algo/setup/coinChangeSetup';
 
 import { setupGoalUI } from '../../setup/uiManager';
 import { updateMonsters } from '../../combat/enemyMovement';
-import { detectAlgoType } from '../../shared/levelType';
+import { detectAlgoType, isAlgoLevel } from '../../shared/levelType';
 // Removed Legacy Anims
 import { createVampire_1Anims } from '../../../anims/Vampire_1Anims';
 import { createMain_1Anims } from '../../../anims/Main_1Anims';
@@ -80,9 +80,9 @@ export class GameScene extends Phaser.Scene {
         // ─── Monster Sprites (Load only what we need) ───
         const monsters = this.currentLevel?.map_entities?.filter(e => e.entity_type === 'MONSTER') || [];
         const monsterTypes = new Set(monsters.map(m => m.type || 'vampire_1'));
-        // If there's no node and no start_node but it's an old legacy map, it might spawn cinematic monster. Let's add vampire_1 just in case, but usually we just load what's in map_entities.
-        if (monsters.length === 0 && (!this.currentLevel?.nodes || this.currentLevel.nodes.length === 0)) {
-            monsterTypes.add('vampire_1'); // Fallback for cinematic
+        // If there's no node and no start_node but it's an old legacy map (NOT algo), it might spawn cinematic monster.
+        if (monsters.length === 0 && !isAlgoLevel(this.currentLevel) && (!this.currentLevel?.nodes || this.currentLevel.nodes.length === 0)) {
+            monsterTypes.add('vampire_1'); // Fallback for cinematic (legacy only)
         }
 
         if (monsterTypes.has('vampire_1')) {
