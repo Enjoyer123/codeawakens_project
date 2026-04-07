@@ -19,7 +19,6 @@ const VictoryConditionTable = ({ victoryConditions, onEdit, onDelete }) => {
             </th>
             <th className={tableHeaderClassName}>Type</th>
             <th className={tableHeaderClassName}>Description</th>
-            <th className={tableHeaderClassName}>Check</th>
             <th className={tableHeaderClassName}>Available</th>
             <th className={tableHeaderClassName}>Actions</th>
           </tr>
@@ -38,9 +37,6 @@ const VictoryConditionTable = ({ victoryConditions, onEdit, onDelete }) => {
               </td>
               <td className="px-6 py-4 text-sm text-gray-900">
                 {victoryCondition.description}
-              </td>
-              <td className={`${tableCellClassName} text-gray-500`}>
-                {victoryCondition.check}
               </td>
               <td className={tableCellClassName}>
                 <Badge

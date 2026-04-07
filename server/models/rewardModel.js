@@ -1,6 +1,6 @@
 import prisma from "./prisma.js";
 
-const LEVEL_SELECT = { level_id: true, level_name: true, category: { select: { category_name: true } } };
+const LEVEL_SELECT = { level_id: true, level_name: true, category: { select: { category_name: true, testcase_enable: true, pseudocode_enable: true } } };
 
 export const countRewards = async (where) => prisma.reward.count({ where });
 export const findManyRewards = async (where, skip, limit) => prisma.reward.findMany({ where, include: { level: { select: LEVEL_SELECT } }, orderBy: { reward_id: "desc" }, skip, take: limit });

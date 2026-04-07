@@ -33,7 +33,6 @@ import { useLevelInitializer } from './hooks/useLevelLoader';
 import { usePatternAnalysis } from './hooks/usePatternAnalysis';
 import { useTextCodeValidation } from './hooks/useTextCodeValidation';
 import { useGuideSystem } from '../../hooks/useGuideSystem';
-import { useHintSystem } from '../../hooks/useHintSystem';
 import { usePseudocodeSync } from './hooks/usePseudocodeSync';
 
 import { EXAMPLE_LOADERS } from './constants/exampleLoaders';
@@ -271,8 +270,13 @@ const GameCore = ({
     // ถ้ายกเลิกเลือก (จาก Pattern กลับมา "เล่นเฉยๆ") → โหลด starter XML ของด่านใหม่
     else if (prev) {
       try {
-        if (currentLevel?.starter_xml) {
-          loadStarterXml(workspaceRef.current, currentLevel.starter_xml, currentLevel.floating_xml, currentLevel?.textcode || false, handleInitialCodeGenerated);
+        const isHard = currentLevel?.dificulty === 'hard';
+        const isMedium = currentLevel?.dificulty === 'medium';
+        const sXml = isHard ? null : currentLevel?.starter_xml;
+        const fXml = (isMedium || isHard) ? null : currentLevel?.floating_xml;
+
+        if (sXml) {
+          loadStarterXml(workspaceRef.current, sXml, fXml, currentLevel?.textcode || false, handleInitialCodeGenerated);
         } else {
           Blockly.Events.disable();
           workspaceRef.current.clear();
@@ -373,6 +377,13 @@ const GameCore = ({
     }
   }, [userBigO, showBigOQuiz]);
 
+  // Determine if we should load starter/floating XML based on difficulty
+  const isHardMode = currentLevel?.dificulty === 'hard';
+  const isMediumMode = currentLevel?.dificulty === 'medium';
+  
+  const starterXmlToLoad = isHardMode ? null : (currentLevel?.starter_xml || null);
+  const floatingXmlToLoad = (isMediumMode || isHardMode) ? null : (currentLevel?.floating_xml || null);
+
   // Initialize Blockly
   const { initBlocklyAndPhaser } = useBlocklySetup({
     blocklyRef,
@@ -380,8 +391,8 @@ const GameCore = ({
     enabledBlocks,
     setBlocklyLoaded,
     initPhaserGame,
-    starter_xml: currentLevel?.starter_xml || null,
-    floating_xml: currentLevel?.floating_xml || null,
+    starter_xml: starterXmlToLoad,
+    floating_xml: floatingXmlToLoad,
     blocklyLoaded,
     isTextCodeEnabled: currentLevel?.textcode || false,
     onCodeGenerated: handleInitialCodeGenerated
@@ -389,8 +400,6 @@ const GameCore = ({
 
   // Guide system
   const { showGuide, guides, closeGuide, openGuide, hasGuides } = useGuideSystem(currentLevel);
-
-  const { showHint, hints, closeHint, openHint, hasHints } = useHintSystem(currentLevel);
 
   const { selectedBlockType } = usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData });
 
@@ -438,11 +447,6 @@ const GameCore = ({
             playerHpState={playerHpState}
             currentWeaponData={currentWeaponData}
             patternData={patternData}
-            hintOpen={showHint}
-            onToggleHint={closeHint}
-            levelHints={hints}
-            hasHints={hasHints}
-            onOpenHint={openHint}
             onUserBigOChange={handleBigOSelect}
             showBigOQuiz={showBigOQuiz}
             onCloseBigOQuiz={() => setShowBigOQuiz(false)}

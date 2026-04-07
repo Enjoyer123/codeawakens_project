@@ -7,6 +7,8 @@ import { useLevel, usePrerequisiteLevels, useLevelCategoryOptions } from '../../
 import { useBlocks } from '../../../../services/hooks/useBlocks';
 import { useVictoryConditions } from '../../../../services/hooks/useVictoryConditions';
 
+const EMPTY_ARRAY = [];
+
 export const useLevelData = (levelId) => {
     // 1. Fetch Master Data
     const {
@@ -54,10 +56,10 @@ export const useLevelData = (levelId) => {
     const error = errorCategories?.message || errorPrerequisites?.message || errorBlocks?.message || errorVictory?.message || errorLevel?.message || null;
 
     // Derived Data
-    const categories = categoriesData || [];
-    const prerequisiteLevels = prerequisiteData || [];
-    const allBlocks = blocksData?.blocks || [];
-    const allVictoryConditions = victoryData?.victoryConditions || [];
+    const categories = categoriesData || EMPTY_ARRAY;
+    const prerequisiteLevels = prerequisiteData || EMPTY_ARRAY;
+    const allBlocks = blocksData?.blocks || EMPTY_ARRAY;
+    const allVictoryConditions = victoryData?.victoryConditions || EMPTY_ARRAY;
 
     // Process Level Data
     const { initialLevelData, initialSelectedCategory, initialBackgroundImageUrl } = useMemo(() => {
@@ -111,6 +113,7 @@ export const useLevelData = (levelId) => {
                 // Mapped selections
                 selectedBlocks: level.level_blocks?.map(lb => lb.block_id) || [],
                 selectedVictoryConditions: level.level_victory_conditions?.map(lvc => lvc.victory_condition_id) || [],
+                dificulty: level.dificulty || 'easy',
             };
 
             let selectedCategory = null;

@@ -98,12 +98,34 @@ export const createPattern = async (data) => {
   const level = await patternRepo.findLevelWithCategory(parseInt(level_id));
   if (!level) { const err = new Error("Level not found"); err.status = 404; throw err; }
 
+  const category = level.category;
+  const isPseudocodeEnabled = category?.pseudocode_enable === true;
+
+  // Rule 1: If pseudocode_enable is true, allow only 1 pattern per level
+  if (isPseudocodeEnabled) {
+    const existingPatternsCount = await patternRepo.countPatterns({ level_id: parseInt(level_id) });
+    if (existingPatternsCount >= 1) {
+      const err = new Error("This level category only allows one pattern (pseudocode enabled).");
+      err.status = 400;
+      throw err;
+    }
+  }
+
+  // Rule 2: If pseudocode_enable is false, ensure xmlpattern is not provided or just clear it
+  // The user says "สร้าง pseudo ไม่ได้" (cannot create pseudo)
+  let finalXmlPattern = xmlpattern;
+  if (!isPseudocodeEnabled && xmlpattern) {
+    // Optionally we can block it or just clear it. Let's clear it to be safe.
+    finalXmlPattern = null;
+  }
+
   let evaluatedPatternTypeId = pattern_type_id;
-  if (!pattern_type_id && xmlpattern) {
-    evaluatedPatternTypeId = await evaluatePatternType(level_id, xmlpattern, block_keywords);
+  if (!pattern_type_id && finalXmlPattern) {
+    evaluatedPatternTypeId = await evaluatePatternType(level_id, finalXmlPattern, block_keywords);
     console.log(`✅ Auto-evaluated pattern_type_id: ${evaluatedPatternTypeId}`);
   } else if (!pattern_type_id) {
-    const err = new Error("Missing required field: pattern_type_id (or provide xmlpattern for auto-evaluation)"); err.status = 400; throw err;
+    // If no xmlpattern, we might need a default pattern type (e.g. 1)
+    evaluatedPatternTypeId = 1; 
   }
 
   const patternType = await patternRepo.findPatternTypeById(parseInt(evaluatedPatternTypeId));
@@ -117,9 +139,9 @@ export const createPattern = async (data) => {
   return patternRepo.createPattern({
     level_id: parseInt(level_id), pattern_type_id: parseInt(evaluatedPatternTypeId),
     weapon_id: weapon_id ? parseInt(weapon_id) : null, pattern_name,
-    description: description || null, xmlpattern: xmlpattern || null,
+    description: description || null, xmlpattern: finalXmlPattern || null,
     hints: hints ? JSON.parse(JSON.stringify(hints)) : null,
-    count: countBlocksFromXml(xmlpattern) || 0, bigO: bigO || null, is_available: false,
+    count: countBlocksFromXml(finalXmlPattern) || 0, bigO: bigO || null, is_available: false,
   });
 }
 

@@ -1,10 +1,66 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ALGO_INPUT_CONFIG, buildEmptyFields, paramsToFields, fieldsToParams } from '@/components/admin/utils/testCaseUtils';
 import { useCreateTestCase, useUpdateTestCase } from '../../../services/hooks/useTestCases';
+
+// Sub-Component: Dynamic Array Input (for Knapsack, Warriors, Coins)
+function DynamicArrayInput({ itemsString, onChange, type, itemLabel = "Value" }) {
+    let items = [];
+    try { items = JSON.parse(itemsString); if (!Array.isArray(items)) items = []; } catch { items = []; }
+
+    const updateItem = (index, val) => {
+        const newItems = [...items];
+        newItems[index] = type === 'knapsack' ? { ...newItems[index], ...val } : val;
+        onChange(JSON.stringify(newItems));
+    };
+
+    const addItem = () => onChange(JSON.stringify([...items, type === 'knapsack' ? { weight: 1, price: 1, name: '' } : 1]));
+    const removeItem = (idx) => onChange(JSON.stringify(items.filter((_, i) => i !== idx)));
+    
+    return (
+        <div className="space-y-2 mt-1">
+            {items.map((item, i) => (
+                <div key={i} className="flex items-center gap-2 bg-white p-2 border border-gray-200 rounded shadow-sm">
+                    <span className="text-xs text-gray-400 w-4 font-mono">#{i + 1}</span>
+                    {type === 'knapsack' ? (
+                        <div className="flex-1 grid grid-cols-3 gap-2">
+                            {['weight', 'price', 'name'].map((f) => (
+                                <div key={f}>
+                                    <label className="text-[10px] text-gray-500 block mb-1 capitalize">{f === 'price' ? 'Value/Price' : f}</label>
+                                    <input
+                                        type={f === 'name' ? 'text' : 'number'}
+                                        min={f === 'name' ? undefined : '0'}
+                                        className="w-full border border-gray-300 rounded px-2 py-1 text-sm outline-none focus:border-blue-400"
+                                        value={item[f] ?? ''}
+                                        onChange={(e) => updateItem(i, { [f]: f === 'name' ? e.target.value : (parseInt(e.target.value) || 0) })}
+                                        placeholder={f === 'name' ? 'ชื่อ' : '0'}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <input
+                            type="number"
+                            className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm outline-none focus:border-blue-400"
+                            value={item ?? ''}
+                            onChange={(e) => updateItem(i, parseInt(e.target.value) || 0)}
+                            placeholder={`ระบุ ${itemLabel}`}
+                        />
+                    )}
+                    <button type="button" onClick={() => removeItem(i)} className={`p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors ${type === 'knapsack' ? 'mt-4' : ''}`}>
+                        <Trash2 className="h-4 w-4" />
+                    </button>
+                </div>
+            ))}
+            <button type="button" onClick={addItem} className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1.5 rounded border border-blue-200 w-max mt-2 transition-colors">
+                <Plus className="h-3 w-3" /> เพิ่ม {type === 'knapsack' ? 'ไอเทม' : itemLabel.replace(/\(.*?\)/g, "").trim()}
+            </button>
+        </div>
+    );
+}
 
 // Sub-Component: ฟิลด์ Input ตาม Algorithm type
 function AlgoInputFields({ functionName, inputFields, onChange }) {
@@ -28,7 +84,14 @@ function AlgoInputFields({ functionName, inputFields, onChange }) {
                         {field.label}
                         {field.hint && <span className="text-xs text-gray-400 ml-2">({field.hint})</span>}
                     </label>
-                    {field.type === 'json_array' ? (
+                    {field.type === 'knapsack_items' || field.type === 'number_array' ? (
+                        <DynamicArrayInput
+                            itemsString={inputFields[field.key] ?? '[]'}
+                            onChange={(newValue) => onChange(field.key, newValue)}
+                            type={field.type === 'knapsack_items' ? 'knapsack' : 'number'}
+                            itemLabel={field.label}
+                        />
+                    ) : field.type === 'json_array' ? (
                         <textarea
                             className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm font-mono h-[80px]"
                             value={inputFields[field.key] ?? ''}

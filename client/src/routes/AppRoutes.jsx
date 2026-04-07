@@ -3,7 +3,6 @@ import ProtectedRoute from "../components/shared/ProtectedRoute";
 import AuthCallback from "../pages/auth/AuthCallback";
 import LandingPage from "../pages/Landing";
 import UserProfile from "../pages/user/UserProfile";
-import Leaderboard from "../pages/user/Leaderboard";
 import BlockManual from "../pages/user/BlockManual";
 import MapSelect from "../pages/user/MapSelect";
 import CategoryLevels from "../pages/user/CategoryLevels";
@@ -14,7 +13,6 @@ import UserManagement from "../pages/admin/user/UserManagement";
 import WeaponManagement from "../pages/admin/weapon/WeaponManagement";
 import LevelManagement from "../pages/admin/level/LevelManagement";
 import LevelCreateEdit from "../pages/admin/level/LevelCreateEdit";
-import LevelHintManagement from "../pages/admin/level/LevelHintManagement";
 import PatternCreateEdit from "../pages/admin/pattern/PatternCreateEdit";
 import StarterCreateEdit from "../pages/admin/level/StarterCreateEdit";
 import PreviewLevel from "../pages/admin/level/PreviewLevel";
@@ -46,7 +44,6 @@ const AppRoutes = () => {
         }
       >
         <Route path="user/profile" element={<UserProfile />} />
-        <Route path="user/leaderboard" element={<Leaderboard />} />
         <Route path="user/block-manual" element={<BlockManual />} />
 
         <Route path="user/mapselect" element={<MapSelect />} />
@@ -73,7 +70,6 @@ const AppRoutes = () => {
         <Route path="admin/levels" element={<LevelManagement />} />
         <Route path="admin/levels/create" element={<LevelCreateEdit />} />
         <Route path="admin/levels/:levelId/edit" element={<LevelCreateEdit />} />
-        <Route path="admin/levels/:levelId/hints" element={<LevelHintManagement />} />
         <Route path="admin/levels/:levelId/guides" element={<LevelGuideManagement />} />
         <Route path="admin/levels/:levelId/test-cases" element={<TestCaseManagement />} />
         <Route path="admin/tests" element={<TestManagement />} />

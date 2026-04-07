@@ -71,10 +71,6 @@ const NavbarWrapper = (props) => {
         path: '/user/block-manual'
       },
       {
-        label: 'Leaderboard',
-        path: '/user/leaderboard'
-      },
-      {
         label: 'Profile',
         path: '/user/profile'
       },
@@ -103,10 +99,6 @@ const NavbarWrapper = (props) => {
       {
         label: 'Block Manual',
         path: '/user/block-manual'
-      },
-      {
-        label: 'Leaderboard',
-        path: '/user/leaderboard'
       },
       {
         label: 'Profile',

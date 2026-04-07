@@ -33,6 +33,7 @@ export const useLevelForm = ({
         selectedBlocks: [],
         selectedVictoryConditions: [],
         algo_data: null,
+        dificulty: 'easy',
     });
 
     const [backgroundImage, setBackgroundImage] = useState(null);
@@ -165,6 +166,7 @@ export const useLevelForm = ({
                 edges: formData.edges.length > 0 ? JSON.stringify(formData.edges) : null,
                 map_entities: formData.map_entities.length > 0 ? JSON.stringify(formData.map_entities) : null,
                 algo_data: formData.algo_data ? JSON.stringify(formData.algo_data) : null,
+                dificulty: formData.dificulty || 'easy',
                 block_ids: formData.selectedBlocks,
                 victory_condition_ids: formData.selectedVictoryConditions,
             };

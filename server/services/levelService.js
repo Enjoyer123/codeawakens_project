@@ -69,7 +69,7 @@ export const getCompletedLevelIds = async (userId) => levelRepo.findCompletedLev
 // ── Includes ──
 
 const LEVEL_LIST_INCLUDE = {
-  category: { select: { category_id: true, category_name: true } },
+  category: { select: { category_id: true, category_name: true, testcase_enable: true, pseudocode_enable: true } },
   creator: { select: { user_id: true, username: true, email: true } },
   required_level: { select: { level_id: true, level_name: true } },
   _count: { select: { patterns: true } },
@@ -86,7 +86,6 @@ const LEVEL_DETAIL_INCLUDE = {
   level_victory_conditions: { include: { victory_condition: true } },
   patterns: { include: { weapon: true, pattern_type: true } },
   guides: { include: { guide_images: true }, orderBy: { display_order: "asc" } },
-  hints: { include: { hint_images: true }, orderBy: { display_order: "asc" } },
   level_test_cases: { orderBy: { display_order: "asc" } },
 };
 
@@ -202,6 +201,7 @@ export const createLevel = async (data, clerkUserId) => {
     edges: parseJsonField(data.edges),
     map_entities: parseJsonField(data.map_entities),
     algo_data: parseJsonField(data.algo_data),
+    dificulty: data.dificulty || null,
     starter_xml: data.starter_xml || null,
     floating_xml: data.floating_xml || null,
     created_by: user.user_id,
@@ -237,6 +237,7 @@ export const updateLevel = async (levelId, data) => {
   const updateData = {};
   if (data.category_id !== undefined) updateData.category_id = parseInt(data.category_id);
   if (data.level_name !== undefined) updateData.level_name = data.level_name;
+  if (data.dificulty !== undefined) updateData.dificulty = data.dificulty || null;
   if (data.description !== undefined) updateData.description = data.description;
   if (data.is_unlocked !== undefined) updateData.is_unlocked = data.is_unlocked === true || data.is_unlocked === "true";
   if (data.required_level_id !== undefined) {
@@ -302,6 +303,6 @@ export const deleteLevelBackgroundImage = async (levelId) => {
   if (!level) {
     const err = new Error("Level not found"); err.status = 404; throw err;
   }
-  
+
   return levelRepo.updateLevelSimple(levelId, { background_image: "" });
 };

@@ -31,7 +31,6 @@ const extractVictoryConditions = (levelResponse) =>
       level_victory_condition_id: vc.level_victory_condition_id,
       type: vc.victory_condition?.type,
       description: vc.victory_condition?.description,
-      check: vc.victory_condition?.check
     }))
     .filter((vc) => vc.type);
 

@@ -126,7 +126,11 @@ const LevelManagement = () => {
                 levels={levels}
                 onDelete={handleDeleteClick}
                 onViewPatterns={(level) => {
-                  setSelectedLevelForPatterns({ id: level.level_id, name: level.level_name });
+                  setSelectedLevelForPatterns({
+                    id: level.level_id,
+                    name: level.level_name,
+                    category: level.category
+                  });
                   setPatternListDialogOpen(true);
                 }}
                 onNavigate={navigate}
@@ -159,6 +163,7 @@ const LevelManagement = () => {
           onOpenChange={setPatternListDialogOpen}
           levelId={selectedLevelForPatterns.id}
           levelName={selectedLevelForPatterns.name}
+          category={selectedLevelForPatterns.category}
         />
       )}
     </div>

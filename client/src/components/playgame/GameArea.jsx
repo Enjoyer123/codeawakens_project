@@ -3,11 +3,9 @@ import React from 'react';
 // UI Components
 import StatusPanel from './panels/StatusPanel';
 import BlockCountPanel from './panels/BlockCountPanel';
-import HintButton from './panels/HintButton';
 import GuideButton from './panels/GuideButton';
 import PatternMatchPanel from './panels/PatternMatchPanel';
 import BigOQuizModal from './panels/BigOQuizModal';
-import HintPopup from './modals/HintPopup';
 import PlaybackOverlay from './controls/PlaybackOverlay';
 import { isAlgoLevel } from '../../gameutils/shared/levelType';
 
@@ -17,12 +15,6 @@ const GameArea = ({
   playerHpState,
   currentWeaponData,
   patternData,
-  hintOpen,
-  levelHints,
-  hasHints,
-  onOpenHint,
-
-  onToggleHint,
   onUserBigOChange,
   showBigOQuiz,
   onCloseBigOQuiz,
@@ -48,7 +40,6 @@ const GameArea = ({
             <BlockCountPanel patternData={patternData} />
             <div className="flex gap-2">
               <GuideButton onOpenGuide={onOpenGuide} disabled={!hasGuides} />
-              <HintButton onOpenHint={onOpenHint} disabled={!hasHints} />
             </div>
           </div>
         </div>
@@ -88,11 +79,6 @@ const GameArea = ({
         </div>
       </div>
 
-      <HintPopup
-        hints={levelHints}
-        isOpen={hintOpen && levelHints && levelHints.length > 0}
-        onClose={onToggleHint}
-      />
 
       <BigOQuizModal
         isOpen={showBigOQuiz}
