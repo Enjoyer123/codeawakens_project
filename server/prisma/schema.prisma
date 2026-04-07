@@ -120,6 +120,7 @@ model Level {
   map_entities             Json?
   algo_data                Json? // Unified algorithm data: { type: "NQUEEN"|"KNAPSACK"|"COINCHANGE"|"SUBSETSUM"|"EMEI", payload: {...} }
   starter_xml              String? // Blockly XML สำหรับ starter blocks (โหลดให้ผู้เล่นทุกคน)
+  floating_xml             String? // Blockly XML สำหรับ floating hint blocks (แยกจาก starter)
   created_at               DateTime                @default(now())
   updated_at               DateTime                @updatedAt
   created_by               Int

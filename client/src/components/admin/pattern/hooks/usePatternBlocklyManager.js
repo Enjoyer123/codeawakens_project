@@ -41,7 +41,7 @@ export const usePatternBlocklyManager = ({
                     step: index,
                     xml: (hint.xmlCheck && hint.xmlCheck.trim())
                         ? hint.xmlCheck
-                        : (patternData.starter_xml || '<xml xmlns="https://developers.google.com/blockly/xml"></xml>'),
+                        : '<xml xmlns="https://developers.google.com/blockly/xml"></xml>',
                     effect: hint.effect || '',
                     pseudocode: Array.isArray(hint.pseudocode) ? hint.pseudocode : 
                                 (typeof hint.pseudocode === 'string' && hint.pseudocode.trim() !== '' ? [{ text: hint.pseudocode, blockType: '' }] : [])
@@ -111,7 +111,7 @@ export const usePatternBlocklyManager = ({
         }
 
         if (!xmlToLoad) {
-            xmlToLoad = levelData.starter_xml;
+            xmlToLoad = '<xml xmlns="https://developers.google.com/blockly/xml"></xml>';
         }
 
         setGlobalXmlLoading(true);

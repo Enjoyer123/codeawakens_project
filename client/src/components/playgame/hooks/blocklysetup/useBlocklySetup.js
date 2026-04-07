@@ -19,6 +19,7 @@ export function useBlocklySetup({
   setBlocklyLoaded,            // State บอกว่าโหลดเสร็จหรือยัง
   initPhaserGame,              // ฟังก์ชันเริ่มเกม Phaser
   starter_xml = null,          // โค้ดเริ่มต้น (XML String)
+  floating_xml = null,         // Floating hint blocks (XML String)
   blocklyLoaded = false,       // สถานะปัจจุบัน
   isTextCodeEnabled = false,   // โหมดพิมพ์โค้ดเอง?
   onCodeGenerated = null       // Callback เมื่อโค้ดเปลี่ยน
@@ -59,7 +60,7 @@ export function useBlocklySetup({
         setTimeout(() => {
           try {
             if (workspace) {
-               loadStarterXml(workspace, starter_xml, isTextCodeEnabled, onCodeGenerated);
+               loadStarterXml(workspace, starter_xml, floating_xml, isTextCodeEnabled, onCodeGenerated);
             }
           } catch(e) {}
         }, 50);
