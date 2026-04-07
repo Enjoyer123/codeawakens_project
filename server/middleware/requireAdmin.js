@@ -1,11 +1,20 @@
 import prisma from "../models/prisma.js";
+import { sendError } from "../utils/responseHelper.js";
 
 const requireAdmin = async (req, res, next) => {
   try {
 
     if (!req.user) {
-      return res.status(401).json({ message: "Unauthorized: No user found" });
+      return sendError(res, "Unauthorized: No user found", 401);
     }
+    
+    // --- BYPASS สำหรับ DEV (ใช้ทดสอบใน Postman/Swagger) ---
+    if (process.env.NODE_ENV !== 'production' && req.user.publicMetadata && req.user.publicMetadata.role === 'admin') {
+      console.log('[DEV BYPASS] Admin check bypassed!');
+      return next();
+    }
+    // ----------------------------------------------------
+
     const clerkId = req.user.id;
 
     const user = await prisma.user.findUnique({
@@ -13,13 +22,13 @@ const requireAdmin = async (req, res, next) => {
     });
 
     if (!user || user.role !== "admin") {
-      return res.status(403).json({ message: "Forbidden: Admin access required" });
+      return sendError(res, "Forbidden: Admin access required", 403);
     }
 
     req.currentUser = user;
     next();
   } catch (error) {
-    res.status(500).json({ message: "Error checking admin status" });
+    return sendError(res, "Error checking admin status", 500);
   }
 };
 

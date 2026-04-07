@@ -115,7 +115,7 @@ const ProgressModal = ({ isOpen, onClose, onReplay, gameResult, levelData, block
       onSuccess: () => {
         console.log('✅ Save success');
         if (!isVictory) return;
-        rewardMutation.mutate({ levelId, totalScore }, {
+        rewardMutation.mutate({ levelId }, {
           onSuccess: (data) => {
             if (data?.awardedRewards?.length > 0) setAwardedRewards(data.awardedRewards);
           },

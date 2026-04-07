@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 dotenv.config();
+import { sendError } from "./utils/responseHelper.js";
 const app = express();
 const port = process.env.PORT || 4000;
 import profileRouter from "./routes/ProfileRoute.js";
@@ -20,9 +21,19 @@ import testRouter from "./routes/testRoutes.js";
 import notificationRouter from "./routes/NotificationRoute.js";
 import dashboardRouter from "./routes/dashboardRoutes.js";
 import leaderboardRouter from "./routes/leaderboardRoutes.js";
+import { setupSwagger } from "./swagger.js";
+
+// ====== MIDDLEWARE ======
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 import path from "path";
 import { clerkMiddleware } from "@clerk/express";
 import morgan from "morgan";
+app.use(morgan('dev'));
+
+// ====== API DOCS ======
+setupSwagger(app);
 
 
 import { fileURLToPath } from "url";
@@ -72,16 +83,26 @@ app.get("/", (req, res) => {
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   if (err.code === "LIMIT_FILE_SIZE") {
-    return res.status(400).json({ message: "ไฟล์มีขนาดใหญ่เกินกว่าที่กำหนด" });
+    return sendError(res, "ไฟล์มีขนาดใหญ่เกินกว่าที่กำหนด", 400);
   }
   if (err.code === "LIMIT_UNEXPECTED_FILE") {
-    return res.status(400).json({ message: "ชื่อ field ของไฟล์ไม่ถูกต้อง" });
+    return sendError(res, "ชื่อ field ของไฟล์ไม่ถูกต้อง", 400);
   }
   if (err.message && err.message.includes("Invalid file type")) {
-    return res.status(400).json({ message: "ประเภทไฟล์ไม่ถูกต้อง อนุญาตเฉพาะไฟล์รูปภาพ (JPEG, PNG, GIF, WebP)" });
+    return sendError(res, "ประเภทไฟล์ไม่ถูกต้อง อนุญาตเฉพาะไฟล์รูปภาพ (JPEG, PNG, GIF, WebP)", 400);
   }
-  console.error("Unhandled error:", err);
-  res.status(err.status || 500).json({ message: err.message || "เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์" });
+  
+  if (err.message === "Only images are allowed") {
+    return sendError(res, "ประเภทไฟล์ไม่ถูกต้อง อนุญาตเฉพาะไฟล์รูปภาพ (JPEG, PNG, GIF, WebP)", 400);
+  }
+
+  return sendError(res, err.message || "เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์", err.status || 500);
 });
 
-app.listen(port);
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+  });
+}
+
+export default app;

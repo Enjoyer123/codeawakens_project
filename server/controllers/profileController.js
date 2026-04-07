@@ -102,11 +102,11 @@ export const saveUserProgress = async (req, res) => {
 
 export const checkAndAwardRewards = async (req, res) => {
   const clerkId = req.user.id;
-  const { level_id, total_score } = req.body;
-  console.log(`[GAME] Checking rewards for User ${clerkId} on Level ${level_id} (Score: ${total_score}).`);
+  const { level_id } = req.body;
+  console.log(`[GAME] Checking rewards for User ${clerkId} on Level ${level_id}.`);
   
   try {
-    const result = await profileService.checkAndAwardRewards(clerkId, level_id, total_score);
+    const result = await profileService.checkAndAwardRewards(clerkId, level_id);
     
     console.log(`[GAME] Success: Awarded ${result.totalAwarded} new rewards to User ${clerkId}.`);
     sendSuccess(res, result, "Rewards checked and awarded successfully");
