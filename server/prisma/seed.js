@@ -1,7 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-export const main = async () => {
+async function main() {
     console.log('🌱 Start seeding...');
 
     // 1. Victory Conditions
@@ -134,16 +134,22 @@ export const main = async () => {
         { block_key: 'knapsack_remove_item', block_name: 'knapsack_remove_item', description: 'Knapsack: วางไอเท็ม', category: 'visuals' },
         { block_key: 'knapsack_consider_item', block_name: 'knapsack_consider_item', description: 'Knapsack: พิจารณาไอเท็ม', category: 'visuals' },
         { block_key: 'knapsack_dp_update', block_name: 'knapsack_dp_update', description: 'Knapsack: อัปเดตตาราง', category: 'visuals' },
+        { block_key: 'knapsack_prune_skip_item', block_name: 'knapsack_prune_skip_item', description: 'Knapsack: ตัดกิ่งไอเท็ม (Pruning)', category: 'visuals' },
         { block_key: 'subset_sum_consider', block_name: 'subset_sum_consider', description: 'Subset Sum: พิจารณา', category: 'visuals' },
         { block_key: 'subset_sum_include', block_name: 'subset_sum_include', description: 'Subset Sum: รวมลงสัพเซ็ต', category: 'visuals' },
         { block_key: 'subset_sum_exclude', block_name: 'subset_sum_exclude', description: 'Subset Sum: ไม่รวม', category: 'visuals' },
         { block_key: 'subset_sum_reset', block_name: 'subset_sum_reset', description: 'Subset Sum: ยกเลิก/รีเซ็ต', category: 'visuals' },
         { block_key: 'subset_sum_dp_update', block_name: 'subset_sum_dp_update', description: 'Subset Sum: อัปเดต DP', category: 'visuals' },
+        { block_key: 'subset_sum_prune_exclude', block_name: 'subset_sum_prune_exclude', description: 'Subset Sum: ตัดกิ่ง (Prune Exclude)', category: 'visuals' },
         { block_key: 'coin_change_add_warrior_to_selection', block_name: 'coin_change_add_warrior_to_selection', description: 'Coin Change: เพิ่มตัว', category: 'visuals' },
         { block_key: 'coin_change_track_decision', block_name: 'coin_change_track_decision', description: 'Coin Change: บันทึกข้อมูล DP', category: 'visuals' },
         { block_key: 'coin_change_remove_warrior', block_name: 'coin_change_remove_warrior', description: 'Coin Change: เอาตัวออก', category: 'visuals' },
         { block_key: 'coin_change_consider', block_name: 'coin_change_consider', description: 'Coin Change: พิจารณา', category: 'visuals' },
         { block_key: 'coin_change_memo_hit', block_name: 'coin_change_memo_hit', description: 'Coin Change: เจอค่า Memo', category: 'visuals' },
+        { block_key: 'coin_change_pick_coin', block_name: 'coin_change_pick_coin', description: 'Coin Change: เลือกเหรียญ', category: 'visuals' },
+        { block_key: 'coin_change_skip_coin', block_name: 'coin_change_skip_coin', description: 'Coin Change: ข้ามเหรียญ', category: 'visuals' },
+        { block_key: 'coin_change_remove_coin', block_name: 'coin_change_remove_coin', description: 'Coin Change: เอาเหรียญออก', category: 'visuals' },
+        { block_key: 'coin_change_prune_skip', block_name: 'coin_change_prune_skip', description: 'Coin Change: ตัดกิ่งเหรียญ (Pruning)', category: 'visuals' },
         { block_key: 'emei_highlight_peak', block_name: 'emei_highlight_peak', description: 'Emei: ส่องยอดเขา', category: 'visuals' },
         { block_key: 'emei_highlight_path', block_name: 'emei_highlight_path', description: 'Emei: ส่องเส้นทางผ่าน', category: 'visuals' },
         { block_key: 'emei_show_final_result', block_name: 'emei_show_final_result', description: 'Emei: แสดงผลทางที่ง่ายสุด', category: 'visuals' },

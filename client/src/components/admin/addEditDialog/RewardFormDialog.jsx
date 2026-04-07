@@ -33,7 +33,7 @@ const RewardFormDialog = ({
   // Internal Form State
   const [formData, setFormData] = useState({
     level_id: '',
-    reward_type: 'weapon',
+    reward_type: 'badge',
     reward_name: '',
     description: '',
     required_score: 0,
@@ -57,7 +57,7 @@ const RewardFormDialog = ({
       } else {
         setFormData({
           level_id: '',
-          reward_type: 'weapon',
+          reward_type: 'badge',
           reward_name: '',
           description: '',
           required_score: 0,

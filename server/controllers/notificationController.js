@@ -28,7 +28,7 @@ export const getNotificationById = async (req, res) => {
 
 export const createNotification = async (req, res) => {
   try {
-    const result = await notificationService.createNotification(req.body);
+    const result = await notificationService.createNotification(req.body, req.user.id);
     
     sendSuccess(res, { notification: result }, "Notification created successfully", 201);
   } catch (error) {
@@ -81,7 +81,7 @@ export const markAsRead = async (req, res) => {
   
   try {
     const notificationId = parseInt(req.params.notificationId);
-    const result = await notificationService.markAsRead(notificationId, clerkUserId);
+    const result = await notificationService.markAsRead(clerkUserId, notificationId);
     
     sendSuccess(res, { status: result }, "Notification marked as read successfully");
   } catch (error) {

@@ -7,7 +7,7 @@ export const getAllWeapons = async (req, res) => {
   try {
     const paginationData = parsePagination(req.query);
     const result = await weaponService.getAllWeapons(paginationData);
-    
+
     sendSuccess(res, result, "Weapons fetched successfully");
   } catch (error) {
     console.error("Error fetching weapons:", error.message);
@@ -19,7 +19,7 @@ export const getWeaponById = async (req, res) => {
   try {
     const weaponId = parseInt(req.params.weaponId);
     const result = await weaponService.getWeaponById(weaponId);
-    
+
     sendSuccess(res, result, "Weapon fetched successfully");
   } catch (error) {
     console.error("Error fetching weapon:", error.message);
@@ -30,7 +30,7 @@ export const getWeaponById = async (req, res) => {
 export const createWeapon = async (req, res) => {
   try {
     const result = await weaponService.createWeapon(req.body);
-    
+
     sendSuccess(res, { weapon: result }, "Weapon created successfully", 201);
   } catch (error) {
     console.error("Error creating weapon:", error.message);
@@ -42,7 +42,7 @@ export const updateWeapon = async (req, res) => {
   try {
     const weaponId = parseInt(req.params.weaponId);
     const result = await weaponService.updateWeapon(weaponId, req.body);
-    
+
     sendSuccess(res, { weapon: result }, "Weapon updated successfully");
   } catch (error) {
     console.error("Error updating weapon:", error.message);
@@ -54,7 +54,7 @@ export const deleteWeapon = async (req, res) => {
   try {
     const weaponId = parseInt(req.params.weaponId);
     await weaponService.deleteWeapon(weaponId);
-    
+
     sendSuccess(res, null, "Weapon deleted successfully");
   } catch (error) {
     console.error("Error deleting weapon:", error.message);
@@ -67,11 +67,10 @@ export const addWeaponImage = async (req, res) => {
     if (!req.file) {
       return sendError(res, "No image file provided.", 400);
     }
-    
+
     const weaponId = parseInt(req.params.weaponId);
-    const isBase = req.body.is_base === "true";
-    const result = await weaponService.addWeaponImage(weaponId, req.file, isBase);
-    
+    const result = await weaponService.addWeaponImage(weaponId, req.file, req.body);
+
     sendSuccess(res, { weaponImage: result }, "Image added successfully", 201);
   } catch (error) {
     console.error("Error adding weapon image:", error.message);
@@ -83,9 +82,8 @@ export const addWeaponImage = async (req, res) => {
 export const updateWeaponImage = async (req, res) => {
   try {
     const imageId = parseInt(req.params.imageId);
-    const isBase = req.body.is_base === "true";
-    const result = await weaponService.updateWeaponImage(imageId, req.file, isBase);
-    
+    const result = await weaponService.updateWeaponImage(imageId, req.file, req.body);
+
     sendSuccess(res, { weaponImage: result }, "Image updated successfully");
   } catch (error) {
     console.error("Error updating weapon image:", error.message);
@@ -98,7 +96,7 @@ export const deleteWeaponImage = async (req, res) => {
   try {
     const imageId = parseInt(req.params.imageId);
     await weaponService.deleteWeaponImage(imageId);
-    
+
     sendSuccess(res, null, "Weapon image deleted successfully");
   } catch (error) {
     console.error("Error deleting weapon image:", error.message);

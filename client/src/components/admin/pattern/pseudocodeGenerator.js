@@ -44,21 +44,28 @@ const buildDisplayMap = (getArg) => ({
   'knapsack_pick_item':     () => `pick_item(i=${getArg('ITEM_INDEX')}) // เลือกใส่ไอเทมนี้`,
   'knapsack_skip_item':     () => `skip_item(i=${getArg('ITEM_INDEX')}) // ข้ามไอเทมนี้`,
   'knapsack_remove_item':   () => `remove_item() // ถอดไอเทม (backtrack)`,
+  'knapsack_prune_skip_item': () => `knapsack_pruning(i=${getArg('ITEM_INDEX')}) // ตัดกิ่ง: ข้ามไอเท็มที่เหลือ`,
   'knapsack_dp_update':     () => `dp_update(i=${getArg('ITEM_INDEX')}, w=${getArg('CAPACITY')}, val=${getArg('VALUE')}) // อัปเดตค่า DP table`,
 
   // --- Coin Change ---
-  'coin_change_consider':                 () => `consider_warrior(${getArg('WARRIOR')}) // พิจารณานักรบ/เหรียญนี้`,
-  'coin_change_add_warrior_to_selection': () => `select_warrior(${getArg('WARRIOR')}) // เลือกใช้นักรบ/เหรียญนี้`,
+  'coin_change_consider':      () => `consider_coin(i=${getArg('COIN_INDEX')}) // พิจารณาเหรียญนี้`,
+  'coin_change_pick_coin':     () => `pick_coin(i=${getArg('COIN_INDEX')}) // เลือกใช้เหรียญนี้`,
+  'coin_change_skip_coin':     () => `skip_coin(i=${getArg('COIN_INDEX')}) // ข้ามเหรียญนี้`,
+  'coin_change_remove_coin':   () => `remove_coin() // ถอนเหรียญ (backtrack)`,
+  'coin_change_prune_skip':    () => `coin_change_pruning(i=${getArg('COIN_INDEX')}) // ตัดกิ่ง: ข้ามเหรียญที่เหลือ`,
+  'coin_change_track_decision': () => `track_decision(amount=${getArg('AMOUNT')}, coin=${getArg('INCLUDE')}) // อัปเดตการตัดสินใจ DP`,
+  'coin_change_memo_hit':       () => `memo_hit(amount=${getArg('AMOUNT')}) // พบค่าจาก cache แล้ว`,
+  // Legacy Coin Change
+  'coin_change_add_warrior_to_selection': () => `select_warrior(${getArg('WARRIOR_INDEX')}) // เลือกใช้นักรบ/เหรียญนี้`,
   'coin_change_remove_warrior':           () => `deselect_warrior() // ถอดนักรบ (backtrack)`,
-  'coin_change_track_decision':           () => `track_decision(amount=${getArg('AMOUNT')}, coin=${getArg('INCLUDE')}) // อัปเดตการตัดสินใจ DP`,
-  'coin_change_memo_hit':                 () => `memo_hit(amount=${getArg('AMOUNT')}) // พบค่าจาก cache แล้ว`,
 
   // --- Subset Sum ---
-  'subset_sum_consider':  () => `consider(i=${getArg('INDEX')}, val=${getArg('VALUE')}) // พิจารณาตัวเลขในตำแหน่งนี้`,
-  'subset_sum_include':   () => `include(sum=${getArg('SUM')}) // รวมค่านี้เข้าชุด`,
-  'subset_sum_exclude':   () => `exclude() // ข้ามค่านี้`,
-  'subset_sum_reset':     () => `reset_selection() // รีเซ็ตการเลือก (backtrack)`,
-  'subset_sum_dp_update': () => `dp_update(i=${getArg('INDEX')}, sum=${getArg('SUM')}, val=${getArg('VALUE')}) // อัปเดตตาราง DP`,
+  'subset_sum_consider':      () => `consider(i=${getArg('WARRIOR_INDEX')}) // พิจารณาตัวเลขตำแหน่งนี้`,
+  'subset_sum_include':       () => `include(i=${getArg('WARRIOR_INDEX')}) // เลือกตัวเลขนี้`,
+  'subset_sum_exclude':       () => `exclude(i=${getArg('WARRIOR_INDEX')}) // ข้ามตัวเลขนี้`,
+  'subset_sum_reset':         () => `reset_selection(i=${getArg('WARRIOR_INDEX')}) // รีเซ็ตการเลือก (backtrack)`,
+  'subset_sum_prune_exclude': () => `subset_sum_pruning(i=${getArg('WARRIOR_INDEX')}) // ตัดกิ่ง: ไม่เลือกตัวเลขนี้`,
+  'subset_sum_dp_update':     () => `dp_update(i=${getArg('INDEX')}, sum=${getArg('SUM')}, val=${getArg('VALUE')}) // อัปเดตตาราง DP`,
 
   // --- Fibonacci ---
   'fibo_call':      () => `fibo_call(n=${getArg('N')}) // เรียกใช้ fib(n)`,

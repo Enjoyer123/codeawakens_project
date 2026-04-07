@@ -95,11 +95,14 @@ export const deleteWeapon = async (weaponId) => {
 }
 
 export const addWeaponImage = async (weaponId, file, data) => {
-  const { type_file, type_animation, frame } = data;
-  if (!type_file || !type_animation || !frame) {
-    const err = new Error("Missing required fields: type_file, type_animation, frame");
+  const { type_animation, frame } = data;
+  if (!type_animation || !frame) {
+    const err = new Error("Missing required fields: type_animation, frame");
     err.status = 400; throw err;
   }
+
+  // กำหนดประเภทไฟล์อัตโนมัติ: weapon -> idle, effect -> attack
+  const type_file = type_animation === "weapon" ? "idle" : "attack";
 
   const weapon = await weaponRepo.findWeaponById(weaponId);
   if (!weapon) { const err = new Error("Weapon not found"); err.status = 404; throw err; }
@@ -146,13 +149,13 @@ export const deleteWeaponImage = async (imageId) => {
 }
 
 export const updateWeaponImage = async (imageId, file, data) => {
-  const { type_file, type_animation, frame } = data;
+  const { type_animation, frame } = data;
   const existingImage = await weaponRepo.findWeaponImageByIdWithWeapon(imageId);
   if (!existingImage) { const err = new Error("Weapon image not found"); err.status = 404; throw err; }
 
   const weapon = existingImage.weapon;
-  const finalTypeFile = type_file || existingImage.type_file;
   const finalTypeAnimation = type_animation || existingImage.type_animation;
+  const finalTypeFile = finalTypeAnimation === "weapon" ? "idle" : "attack";
   const finalFrame = frame || existingImage.frame;
   const typeAnimDir = finalTypeAnimation === "effect" ? "weapons_effect" : "weapons";
   const targetDir = path.join(__dirname, "..", "uploads", typeAnimDir);
