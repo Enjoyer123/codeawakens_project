@@ -97,7 +97,7 @@ export const useCheckRewards = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ levelId, totalScore }) => checkAndAwardRewards(getToken, levelId, totalScore),
+        mutationFn: ({ levelId }) => checkAndAwardRewards(getToken, levelId),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['userProfile'] }); // Rewards might appear in profile
         },

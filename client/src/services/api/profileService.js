@@ -50,11 +50,10 @@ export const saveUserProgress = async (getToken, progressData) => {
   }
 };
 
-export const checkAndAwardRewards = async (getToken, levelId, totalScore) => {
+export const checkAndAwardRewards = async (getToken, levelId) => {
   try {
     return await apiClient.post(getToken, "/profile/rewards/check", {
       level_id: levelId,
-      total_score: totalScore,
     });
   } catch (error) {
     throw error;
