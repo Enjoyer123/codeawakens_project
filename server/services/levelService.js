@@ -72,6 +72,7 @@ const LEVEL_LIST_INCLUDE = {
   category: { select: { category_id: true, category_name: true } },
   creator: { select: { user_id: true, username: true, email: true } },
   required_level: { select: { level_id: true, level_name: true } },
+  _count: { select: { patterns: true } },
 };
 
 const LEVEL_DETAIL_INCLUDE = {
@@ -202,6 +203,7 @@ export const createLevel = async (data, clerkUserId) => {
     map_entities: parseJsonField(data.map_entities),
     algo_data: parseJsonField(data.algo_data),
     starter_xml: data.starter_xml || null,
+    floating_xml: data.floating_xml || null,
     created_by: user.user_id,
     level_blocks:
       data.block_ids && data.block_ids.length > 0
@@ -253,6 +255,7 @@ export const updateLevel = async (levelId, data) => {
   if (data.map_entities !== undefined) updateData.map_entities = parseJsonField(data.map_entities);
   if (data.algo_data !== undefined) updateData.algo_data = parseJsonField(data.algo_data);
   if (data.starter_xml !== undefined) updateData.starter_xml = data.starter_xml || null;
+  if (data.floating_xml !== undefined) updateData.floating_xml = data.floating_xml || null;
 
   return levelRepo.updateLevelTransaction(levelId, updateData, data.block_ids, data.victory_condition_ids, LEVEL_WITH_RELATIONS_INCLUDE);
 }

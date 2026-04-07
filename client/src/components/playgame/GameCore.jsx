@@ -272,7 +272,7 @@ const GameCore = ({
     else if (prev) {
       try {
         if (currentLevel?.starter_xml) {
-          loadStarterXml(workspaceRef.current, currentLevel.starter_xml, currentLevel?.textcode || false, handleInitialCodeGenerated);
+          loadStarterXml(workspaceRef.current, currentLevel.starter_xml, currentLevel.floating_xml, currentLevel?.textcode || false, handleInitialCodeGenerated);
         } else {
           Blockly.Events.disable();
           workspaceRef.current.clear();
@@ -381,6 +381,7 @@ const GameCore = ({
     setBlocklyLoaded,
     initPhaserGame,
     starter_xml: currentLevel?.starter_xml || null,
+    floating_xml: currentLevel?.floating_xml || null,
     blocklyLoaded,
     isTextCodeEnabled: currentLevel?.textcode || false,
     onCodeGenerated: handleInitialCodeGenerated
@@ -391,7 +392,7 @@ const GameCore = ({
 
   const { showHint, hints, closeHint, openHint, hasHints } = useHintSystem(currentLevel);
 
-  const { selectedBlockType } = usePseudocodeSync({ blocklyLoaded, workspaceRef });
+  const { selectedBlockType } = usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData });
 
   if ((!levelData && isLevelLoading) || isWeaponsLoading) {
     return <PageLoader message="Loading level..." />;

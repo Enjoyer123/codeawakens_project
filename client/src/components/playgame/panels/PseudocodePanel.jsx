@@ -18,10 +18,20 @@ const PseudocodePanel = ({ pattern, matchedSteps = 0, selectedBlockType = null }
     [pattern, matchedSteps]
   );
 
+  // ดึง target analysis จาก hint สุดท้ายเพื่อใช้ diff กับ workspace (สำหรับ floating blocks)
+  const targetAnalysis = useMemo(() => {
+    if (!pattern?.hints?.length) return null;
+    const lastHint = pattern.hints[pattern.hints.length - 1];
+    return lastHint?._cachedAnalysis || null;
+  }, [pattern]);
+
   const highlight = useMemo(() => {
     if (!selectedBlockType || !allLines.length) return null;
-    return findPseudocodeLine(selectedBlockType, allLines);
-  }, [selectedBlockType, allLines]);
+    const context = selectedBlockType.isFloating && targetAnalysis
+      ? { targetAnalysis }
+      : null;
+    return findPseudocodeLine(selectedBlockType, allLines, context);
+  }, [selectedBlockType, allLines, targetAnalysis]);
 
   const activeLineIndex = useMemo(() => {
     if (!highlight) return -1;
