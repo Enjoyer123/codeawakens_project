@@ -67,7 +67,10 @@ export function usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData }) 
 
         // ─── ตรวจว่าเป็น floating block หรือไม่ ────────────────
         // ใช้ marked IDs จาก xmlLoader — 100% แม่นยำ
-        const isFloating = workspace._floatingBlockIds?.has(newId) || false;
+        const isPanelFloating = workspace._floatingBlockIds?.has(newId) || false;
+        // ถือว่าบล็อกที่หัวขาด (ไม่มี parent) และไม่ใช่ฟังก์ชันเมน เป็นชิ้นส่วนลอย (รอต่อ) ด้วย!
+        const isDetached = found.parentId === undefined && found.type !== 'procedures_defreturn' && found.type !== 'procedures_defnoreturn';
+        const isFloating = isPanelFloating || isDetached;
         let floatingOcc = 0;
         let mainTreeBlocks = undefined;
 
@@ -75,41 +78,61 @@ export function usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData }) 
         clearHighlight();
 
         if (isFloating) {
-          // นับลำดับของ floating block ที่ type + varName เดียวกัน
-          const floatingIds = workspace._floatingBlockIds;
-          const floatingBlocks = analysis.filter(b => floatingIds.has(b.id));
+          // นับลำดับของ floating block ที่ type + varName เดียวกัน โดยรวมพวกที่ลอยๆ บนกระดานด้วย
+          const floatingBlocks = analysis.filter(b => 
+             workspace._floatingBlockIds?.has(b.id) || 
+             (b.parentId === undefined && b.type !== 'procedures_defreturn' && b.type !== 'procedures_defnoreturn')
+          );
           const sameKind = floatingBlocks.filter(b =>
             b.type === found.type &&
             (found.varName ? b.varName === found.varName : !b.varName)
           );
           floatingOcc = sameKind.findIndex(b => b.id === found.id);
           if (floatingOcc < 0) floatingOcc = 0;
-          mainTreeBlocks = analysis.filter(b => !floatingIds.has(b.id));
+          
+          // mainTree: ตัดบล็อกลอยฝั่งขวาออก และ "ตัดบล็อกที่ถูกคลิกและลูกๆ" ออกไป เพื่อให้ Diff มองเห็นเป็นช่องว่างจริงๆ!
+          mainTreeBlocks = analysis.filter(b => !workspace._floatingBlockIds?.has(b.id) && b.treeId !== found.treeId);
+        } else {
+          mainTreeBlocks = analysis;
+        }
 
-          // ─── Highlight parent block บน workspace ──────────────
-          const cachedPattern = patternDataRef.current?.bestPattern;
-          const targetAnalysis = cachedPattern?.hints?.[cachedPattern.hints.length - 1]?._cachedAnalysis;
+        // ─── Highlight parent block บน workspace (COMMENTS OUT PER USER REQUEST) ─────────
+        /*
+        const cachedPattern = patternDataRef.current?.bestPattern;
+        const targetAnalysis = cachedPattern?.hints?.[cachedPattern.hints.length - 1]?._cachedAnalysis;
 
-          if (targetAnalysis) {
-            const hintBlockId = findFloatingHintBlockId(
-              targetAnalysis, mainTreeBlocks,
-              found.type, found.varName, floatingOcc
-            );
+        let hintBlockId = null;
 
-            if (hintBlockId) {
-              const hintBlock = workspace.getBlockById(hintBlockId);
-              if (hintBlock) {
-                const svg = hintBlock.getSvgRoot();
-                const pathEl = svg?.querySelector('.blocklyPath');
-                if (pathEl) {
-                  pathEl.style.filter = 'drop-shadow(0 0 6px #4ade80) drop-shadow(0 0 14px #22c55e)';
-                  pathEl.style.transition = 'filter 0.3s ease';
-                  highlightedSvgRef.current = pathEl;
-                }
-              }
-            }
+        if (targetAnalysis) {
+          // 1. EXACT ID MATCH: ถ้าเป็นบล็อกที่ดึงออกมาจากโครงสร้างเดิม อาศัย parentId จากเฉลยได้ทันที 100% แม่นยำ
+          const originalId = found.data || found.id;
+          const exactMatch = targetAnalysis.find(t => t.id === originalId);
+          if (exactMatch && exactMatch.parentId) {
+            hintBlockId = exactMatch.parentId;
+          } 
+          // 2. FALLBACK: ถ้าตั้งใจหลุด (Floating แท้ๆ) หรือลอยเคว้ง (ไม่มี parent) ให้ใช้ Diff หาช่องว่าง
+          else if (isFloating || (found.parentId === undefined && found.type !== 'procedures_defreturn' && found.type !== 'procedures_defnoreturn')) {
+             if (!mainTreeBlocks) mainTreeBlocks = analysis.filter(b => !workspace._floatingBlockIds?.has(b.id));
+             hintBlockId = findFloatingHintBlockId(
+               targetAnalysis, mainTreeBlocks,
+               found.type, found.varName, floatingOcc
+             );
           }
         }
+
+        if (hintBlockId) {
+          const hintParentBlock = workspace.getBlockById(hintBlockId);
+          if (hintParentBlock) {
+             const svg = hintParentBlock.getSvgRoot();
+             const pathEl = svg?.querySelector('.blocklyPath');
+             if (pathEl) {
+               pathEl.style.filter = 'drop-shadow(0 0 6px #4ade80) drop-shadow(0 0 14px #22c55e)';
+               pathEl.style.transition = 'filter 0.3s ease';
+               highlightedSvgRef.current = pathEl;
+             }
+          }
+        }
+        */
 
         setSelectedBlockType({
           blockIndexes,
@@ -122,6 +145,7 @@ export function usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData }) 
           isFloating,
           floatingOcc,
           mainTreeBlocks,
+          id: found.id,
         });
       } catch (e) {
         // ignore

@@ -98,6 +98,7 @@ export async function runAlgoPath(code, {
                 text_code: currentLevel?.textcode ? (textCode || '') : null,
                 best_score: scoreData.totalScore ?? 60,
                 pattern_bonus_score: scoreData.pattern_bonus_score || 0,
+                pattern_type_id: scoring.patternId || 0, // NEW API CONTRACT
                 is_correct: true,
                 stars_earned: scoreData.stars ?? 3,
                 hp_remaining: execState.playerHp ?? 100,

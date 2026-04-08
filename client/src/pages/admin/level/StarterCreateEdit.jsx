@@ -191,6 +191,10 @@ const StarterCreateEdit = () => {
         // สร้าง block ใหม่ใน floating workspace (เฉพาะตัวเดี่ยว ไม่เอาลูก)
         const newBlock = floatingWs.newBlock(sourceBlock.type);
         intentionallyCreated.add(newBlock.id);
+        
+        // 🚨 ทริคสำคัญ: แอบจด "ID ต้นฉบับจาก Pattern" ลงไปในตัวแปร data ของ block!
+        // ตัวแปร data นี้จะถูก Save ลง Database ไปกับ XML อัตโนมัติด้วย
+        newBlock.data = sourceBlock.id;
 
         // Copy mutation / extra state (สำคัญมากสำหรับ function call, if/else)
         if (sourceBlock.mutationToDom && newBlock.domToMutation) {

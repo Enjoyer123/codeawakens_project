@@ -104,6 +104,7 @@ const ProgressModal = ({ isOpen, onClose, onReplay, gameResult, levelData, block
       text_code: levelData?.textcode ? textCodeContent : null,
       best_score: totalScore,
       pattern_bonus_score: patternBonus,
+      pattern_type_id: finalScore?.patternTypeId || 0,
       is_correct: isVictory,
       stars_earned: stars,
       hp_remaining: hp_remaining ?? 0,

@@ -133,6 +133,10 @@ export function startBattle(scene, monster, setPlayerHp, setIsGameOver, isPlayer
           monsterAttacks().then(() => {
             finishBattle('monster');
           });
+        } else {
+          // If it IS a player attack, the battle interaction finishes here
+          // and the actual attack logic handles the rest. We must resolve.
+          finishBattle('player');
         }
       },
     });

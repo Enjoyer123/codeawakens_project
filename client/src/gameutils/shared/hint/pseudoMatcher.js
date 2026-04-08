@@ -140,8 +140,24 @@ export function findPseudocodeLine(selectedData, allLines, context = null) {
     const varOcc = isString ? undefined : selectedData.varOcc;
     const ancestorStr = isString ? undefined : selectedData.ancestorStr;
 
+    // ─── ABSOLUTE MATCH: Exact Block ID ──────────────────────────
+    // ถ้า block ใน workspace ปัจจุบัน มี ID ตรงกับ block ในเฉลย (Pattern) 
+    // หรือถ้าเป็นก้อนที่ถูก Auto-Fill เราก็แอบยัด ID เดิมไว้ใน block.data แล้ว!
+    const exactId = isString ? undefined : (selectedData.data || selectedData.id);
+    if (exactId && context?.targetAnalysis) {
+        const exactMatch = context.targetAnalysis.find(t => t.id === exactId);
+        if (exactMatch) {
+            for (const line of allLines) {
+                if (line.patternBlocks?.some(b => b.index === exactMatch.index)) {
+                    console.log("🎯 EXACT ID MATCH:", type, exactId);
+                    return line;
+                }
+            }
+        }
+    }
+
     // ─── FLOATING BLOCK HANDLING ────────────────────────────────
-    // ถ้า block เป็น floating (ไม่ได้ต่อกับ main tree) → ใช้ diff เพื่อหาว่าต้องไปต่อตรงไหน
+    // ถ้า block เป็น floating (อยู่ในกระดานขวา) → ใช้ diff เพื่อหาว่าต้องไปต่อตรงไหน
     if (!isString && selectedData.isFloating && context?.targetAnalysis) {
         const missingSlots = findMissingSlots(context.targetAnalysis, selectedData.mainTreeBlocks);
         const sameKindMissing = missingSlots.filter(s =>
@@ -170,26 +186,46 @@ export function findPseudocodeLine(selectedData, allLines, context = null) {
         console.log("❌ ไม่เจอจับคู่ หรือว่าชี้ตกไปที่ Logic เดิม");
     }
 
-    // PRIMARY: Structural Suffix Matching — ใช้ tree path เพื่อหา line ที่ใกล้เคียงโครงสร้างมากที่สุด
+    // PRIMARY: Structural Sequence Matching — ใช้ LCS (Longest Common Subsequence) ยืดหยุ่นกรณีผู้เล่นข้ามบล็อกตรงกลาง
     if (ancestorStr) {
         const userParts = ancestorStr.split('|').reverse();
         let bestMatch = null;
-        let maxSuffixLength = -1;
+        let maxScore = -1;
 
         for (const line of allLines) {
             if (!line.patternBlocks?.length) continue;
             for (const b of line.patternBlocks.filter(b => b.type === type && (!varName || b.varName === varName))) {
                 if (!b.ancestorStr) continue;
                 const targetParts = b.ancestorStr.split('|').reverse();
-                let matchLen = 0;
+                
+                // คำนวณ Longest Common Subsequence (โครงสร้างครอบครัวที่ตรงกันโดยรวม)
+                const dp = Array(targetParts.length + 1).fill(0).map(() => Array(userParts.length + 1).fill(0));
+                for (let i = 1; i <= targetParts.length; i++) {
+                    for (let j = 1; j <= userParts.length; j++) {
+                        if (targetParts[i - 1] === userParts[j - 1]) {
+                            dp[i][j] = dp[i - 1][j - 1] + 1;
+                        } else {
+                            dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+                        }
+                    }
+                }
+                const lcsLen = dp[targetParts.length][userParts.length];
+
+                // คำนวณ Consecutive Match (โบนัสถ้าแม่พิมพ์ติดกันโดยตรง)
+                let consecutiveMatchLen = 0;
                 for (let i = 0; i < Math.min(targetParts.length, userParts.length); i++) {
                     if (targetParts[i] !== userParts[i]) break;
-                    matchLen++;
+                    consecutiveMatchLen++;
                 }
-                if (matchLen > maxSuffixLength) {
-                    maxSuffixLength = matchLen;
+
+                // ให้ค่าน้ำหนักภาพรวมโครงสร้าง (LCS) มากกว่า แต่บวกโบนัส Consecutive
+                const score = (lcsLen * 10) + consecutiveMatchLen;
+
+                if (score > maxScore) {
+                    maxScore = score;
                     bestMatch = line;
-                } else if (matchLen === maxSuffixLength && maxSuffixLength > 0) {
+                } else if (score === maxScore && maxScore > 0) {
+                    // หากคะแนนผูกพันครอบครัวเท่ากัน ให้งัดลำดับ occurrence มาตัดสิน
                     if (varName ? b.varOcc === varOcc : b.typeOcc === typeOcc) bestMatch = line;
                 }
             }
@@ -315,6 +351,19 @@ export function buildPseudocodeLines(cachedPattern, matchedSteps) {
     if (lastLineWithBlocks && targetAnalysis.length > 0) {
         lastLineWithBlocks.patternBlocks = targetAnalysis.slice(lastLineWithBlocks._analysisPointer);
     }
+
+    // --- DEBUG LOGGING ---
+    console.groupCollapsed("=== 🧠 Pseudocode Line Pattern Blocks Mapping ===");
+    result.forEach(line => {
+        if (line.blockType) {
+            console.log(`Line ${line.lineIndex + 1}: [${line.blockType}] ${line.text}`);
+            line.patternBlocks?.forEach(b => {
+                console.log(`   -> [${b.index}] Type:${b.type} Var:${b.varName || 'N/A'}`);
+            });
+        }
+    });
+    console.groupEnd();
+    // ---------------------
 
     return result;
 }

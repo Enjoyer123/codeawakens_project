@@ -150,18 +150,9 @@ function loadFloatingBlocks(workspace, floating_xml, starterBlockIds) {
             minX += shiftX;
         }
 
-        // คำนวณ right edge ของทุก main block (เพื่อไม่ให้เส้นตัดบล็อกที่กว้าง เช่น coinChange)
-        let maxRightEdge = minX;
-        for (const block of workspace.getTopBlocks(false)) {
-            const xy = block.getRelativeToSurfaceXY();
-            const hw = block.getHeightWidth();
-            maxRightEdge = Math.max(maxRightEdge, xy.x + hw.width);
-        }
-
-        // วาง floating blocks ให้อยู่ฝั่งซ้ายของ minX เดิม (before shift area)
-        // เส้นแบ่งอยู่ระหว่าง floating กับ main: ใช้ minX - 25 (กันvาง buffer จาก floating zone)
-        // แต่ต้องไม่ตัดบล็อก main → ใช้ max(minX, maxRightEdge) + 25
-        const dividerX = Math.max(minX, maxRightEdge) + 25;
+        // วาง floating blocks ให้อยู่ฝั่งซ้าย
+        // เส้นแบ่งอยู่ระหว่าง floating กับ main: ใช้ minX - 50 (เว้นระยะจากฝั่ง main blocks)
+        const dividerX = minX - 50;
 
         // Parse floating XML
         const floatingDom = Blockly.utils.xml.textToDom(floating_xml);
@@ -198,7 +189,7 @@ function loadFloatingBlocks(workspace, floating_xml, starterBlockIds) {
                     // วางตำแหน่งเฉพาะ top-level block
                     if (!block.getParent()) {
                         block.moveBy(50 - block.getRelativeToSurfaceXY().x,
-                                     currentY - block.getRelativeToSurfaceXY().y);
+                            currentY - block.getRelativeToSurfaceXY().y);
                         currentY += block.getHeightWidth().height + 30;
                     }
 
@@ -237,7 +228,7 @@ function addFloatingDivider(workspace, lineX, labelY) {
         line.setAttribute('x2', String(lineX));
         line.setAttribute('y1', '-9999');
         line.setAttribute('y2', '9999');
-        line.setAttribute('stroke', '#818cf8');
+        line.setAttribute('stroke', '#740191ff');
         line.setAttribute('stroke-width', '1.5');
         line.setAttribute('stroke-dasharray', '8 5');
         line.setAttribute('opacity', '0.5');
@@ -245,13 +236,13 @@ function addFloatingDivider(workspace, lineX, labelY) {
 
         // Label
         const text = document.createElementNS(ns, 'text');
-        text.setAttribute('x', String(lineX - 180));
-        text.setAttribute('y', String(labelY - 10)); // ไว้ข้างบนสุด
-        text.setAttribute('fill', '#a5b4fc');
-        text.setAttribute('font-size', '11');
+        text.setAttribute('x', String(lineX - 260));
+        text.setAttribute('y', String(labelY - 60)); // ไว้ข้างบนสุด
+        text.setAttribute('fill', '#740191ff');
+        text.setAttribute('font-size', '18');
         text.setAttribute('font-family', 'sans-serif');
         text.setAttribute('opacity', '0.6');
-        text.textContent = '🧩 ลากบล็อกด้านซ้ายไปต่อด้านขวา';
+        text.textContent = 'ลากบล็อกด้านซ้ายไปต่อด้านขวา';
         group.appendChild(text);
 
         const blockCanvas = workspace.svgBlockCanvas_;

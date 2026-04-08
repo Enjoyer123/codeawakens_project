@@ -45,6 +45,6 @@ export function calculateFinalScore(isGameOver, patternTypeId, userBigO = null, 
   else if (totalScore > 60) stars = 2;
   else if (totalScore >= 1) stars = 1;
 
-  return { totalScore, stars, pattern_bonus_score, bigOPenalty };
+  return { totalScore, stars, pattern_bonus_score, bigOPenalty, patternTypeId };
 }
 

@@ -81,6 +81,8 @@ export function analyzeWorkspace(workspace) {
       treeId,
       depth,
       ancestorStr,
+      parentId: block.getParent()?.id,
+      data: block.data,
       hasStatement: false,
       hasValue: false,
       hasNext: false

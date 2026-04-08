@@ -1,4 +1,4 @@
-import { History, Play, Bug, FolderOpen, Loader2 } from 'lucide-react';
+import { History, Play, Bug, FolderOpen, Loader2, Sparkles } from 'lucide-react';
 import { playSound } from '../../../gameutils/sound/soundManager';
 
 const GameControls = ({
@@ -11,10 +11,12 @@ const GameControls = ({
     currentLevel,
     onHistoryClick,
     onLoadXml,
+    onAutoInject,
     onShowDebugCode,
     isPreview,
     isAdmin
 }) => {
+    const isAlgoLevel = !!currentLevel?.algo_data;
     const isRunDisabled =
         gameState === "running" ||
         !blocklyLoaded ||
@@ -42,6 +44,15 @@ const GameControls = ({
                     )}
                 </button>
 
+                {isAlgoLevel && onAutoInject && (
+                    <button
+                        onClick={onAutoInject}
+                        className="col-span-1 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white py-2 rounded-lg font-bold shadow-lg transform transition active:scale-95 flex items-center justify-center gap-1 text-sm select-none"
+                        title="Load Algorithm Example Code"
+                    >
+                        <Sparkles size={16} /> Load Example
+                    </button>
+                )}
 
                 {(isPreview || isAdmin) && onLoadXml && (
                     <button

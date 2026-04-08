@@ -26,6 +26,7 @@ const BlocklyArea = ({
   userProgress,
   allLevels,
   onLoadXml,
+  onAutoInject,
   isPreview,
   isAdmin,
   starterTextCode,
@@ -180,6 +181,7 @@ const BlocklyArea = ({
         currentLevel={currentLevel}
         onHistoryClick={() => setHistoryOpen(true)}
         onLoadXml={onLoadXml}
+        onAutoInject={onAutoInject}
         onShowDebugCode={handleShowDebugCode}
         isPreview={isPreview}
         isAdmin={isAdmin}

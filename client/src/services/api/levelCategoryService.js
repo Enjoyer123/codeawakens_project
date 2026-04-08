@@ -14,7 +14,7 @@ export const fetchAllLevelCategories = async (getToken, search = '') => {
 
 export const createLevelCategory = async (getToken, levelCategoryData) => {
   try {
-    return await apiClient.post(getToken, '/level-categories', levelCategoryData);
+    return await apiClient.post(getToken, '/level-categories', levelCategoryData, { returnFullResponse: true });
   } catch (error) {
     console.error('Error creating level category:', error);
     throw error;
@@ -23,7 +23,7 @@ export const createLevelCategory = async (getToken, levelCategoryData) => {
 
 export const updateLevelCategory = async (getToken, categoryId, levelCategoryData) => {
   try {
-    return await apiClient.put(getToken, `/level-categories/${categoryId}`, levelCategoryData);
+    return await apiClient.put(getToken, `/level-categories/${categoryId}`, levelCategoryData, { returnFullResponse: true });
   } catch (error) {
     console.error('Error updating level category:', error);
     throw error;
