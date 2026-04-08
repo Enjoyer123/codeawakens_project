@@ -27,9 +27,7 @@ const PseudocodePanel = ({ pattern, matchedSteps = 0, selectedBlockType = null }
 
   const highlight = useMemo(() => {
     if (!selectedBlockType || !allLines.length) return null;
-    const context = selectedBlockType.isFloating && targetAnalysis
-      ? { targetAnalysis }
-      : null;
+    const context = targetAnalysis ? { targetAnalysis } : null;
     return findPseudocodeLine(selectedBlockType, allLines, context);
   }, [selectedBlockType, allLines, targetAnalysis]);
 

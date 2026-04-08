@@ -8,7 +8,7 @@ export const getAllLevelCategories = async (req, res) => {
     const search = req.query.search || "";
     const result = await levelCategoryService.getAllLevelCategories(search, clerkUserId);
     
-    sendSuccess(res, result, "Level categories fetched successfully");
+    sendSuccess(res, result, "ดึงข้อมูลหัวข้อสำเร็จ");
   } catch (error) {
     console.error("Error fetching level categories:", error.message);
     sendError(res, error.message || "Error fetching level categories", error.status || 500);
@@ -21,7 +21,7 @@ export const getLevelCategoryById = async (req, res) => {
     const categoryId = parseInt(req.params.categoryId);
     const result = await levelCategoryService.getLevelCategoryById(categoryId, clerkUserId);
     
-    sendSuccess(res, result, "Level category fetched successfully");
+    sendSuccess(res, result, "ดึงข้อมูลหัวข้อสำเร็จ");
   } catch (error) {
     console.error("Error fetching level category by ID:", error.message);
     sendError(res, error.message || "Error fetching level category", error.status || 500);
@@ -32,7 +32,7 @@ export const createLevelCategory = async (req, res) => {
   try {
     const result = await levelCategoryService.createLevelCategory(req.body);
     
-    sendSuccess(res, { category: result }, "Level category created successfully", 201);
+    sendSuccess(res, { category: result }, "เพิ่มหัวข้อสำเร็จ", 201);
   } catch (error) {
     console.error("Error creating level category:", error.message);
     sendError(res, error.message || "Error creating level category", error.status || 500);
@@ -44,7 +44,7 @@ export const updateLevelCategory = async (req, res) => {
     const categoryId = parseInt(req.params.categoryId);
     const result = await levelCategoryService.updateLevelCategory(categoryId, req.body);
     
-    sendSuccess(res, { category: result }, "Level category updated successfully");
+    sendSuccess(res, { category: result }, "อัปเดตหัวข้อสำเร็จ");
   } catch (error) {
     console.error("Error updating level category:", error.message);
     sendError(res, error.message || "Error updating level category", error.status || 500);
@@ -56,7 +56,7 @@ export const deleteLevelCategory = async (req, res) => {
     const categoryId = parseInt(req.params.categoryId);
     await levelCategoryService.deleteLevelCategory(categoryId);
     
-    sendSuccess(res, null, "Level category deleted successfully");
+    sendSuccess(res, null, "ลบหัวข้อสำเร็จ");
   } catch (error) {
     console.error("Error deleting level category:", error.message);
     sendError(res, error.message || "Error deleting level category", error.status || 500);
@@ -68,7 +68,7 @@ export const updateLevelCategoryCoordinates = async (req, res) => {
     const categoryId = parseInt(req.params.categoryId);
     const result = await levelCategoryService.updateLevelCategoryCoordinates(categoryId, req.body);
     
-    sendSuccess(res, { category: result }, "Category coordinates updated successfully");
+    sendSuccess(res, { category: result }, "อัปเดตพิกัดสำเร็จ");
   } catch (error) {
     console.error("Error updating category coordinates:", error.message);
     sendError(res, error.message || "Error updating coordinates", error.status || 500);
@@ -84,7 +84,7 @@ export const uploadCategoryBackground = async (req, res) => {
     const categoryId = parseInt(req.params.categoryId);
     const result = await levelCategoryService.uploadCategoryBackground(categoryId, req.file);
     
-    sendSuccess(res, { category: result }, "Background image uploaded successfully");
+    sendSuccess(res, { category: result }, "อัปโหลดรูปพื้นหลังสำเร็จ");
   } catch (error) {
     console.error("Error uploading category background:", error.message);
     cleanupTempFile(req.file);
@@ -97,7 +97,7 @@ export const deleteCategoryBackground = async (req, res) => {
     const categoryId = parseInt(req.params.categoryId);
     const result = await levelCategoryService.deleteCategoryBackground(categoryId);
     
-    sendSuccess(res, { category: result }, "Background image deleted successfully");
+    sendSuccess(res, { category: result }, "ลบรูปพื้นหลังสำเร็จ");
   } catch (error) {
     console.error("Error deleting category background:", error.message);
     sendError(res, error.message || "Error deleting category background", error.status || 500);

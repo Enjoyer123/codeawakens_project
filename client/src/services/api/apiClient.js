@@ -24,35 +24,38 @@ const fetchWithClient = async (getToken, endpoint, options = {}) => {
   }
 
   const json = await response.json();
+  if (options.returnFullResponse) {
+    return json;
+  }
   return json.data;
 };
 
 const apiClient = {
-  get: (getToken, endpoint) => fetchWithClient(getToken, endpoint, { method: 'GET' }),
+  get: (getToken, endpoint, config = {}) => fetchWithClient(getToken, endpoint, { method: 'GET', ...config }),
 
-  post: (getToken, endpoint, data) => {
+  post: (getToken, endpoint, data, config = {}) => {
     // If data is undefined/null, don't set body. If it's FormData pass as is, otherwise stringify.
     let body = undefined;
     if (data !== undefined && data !== null) {
       body = data instanceof FormData ? data : JSON.stringify(data);
     }
-    return fetchWithClient(getToken, endpoint, { method: 'POST', body });
+    return fetchWithClient(getToken, endpoint, { method: 'POST', body, ...config });
   },
 
-  put: (getToken, endpoint, data) => {
+  put: (getToken, endpoint, data, config = {}) => {
     let body = undefined;
     if (data !== undefined && data !== null) {
       body = data instanceof FormData ? data : JSON.stringify(data);
     }
-    return fetchWithClient(getToken, endpoint, { method: 'PUT', body });
+    return fetchWithClient(getToken, endpoint, { method: 'PUT', body, ...config });
   },
 
-  delete: (getToken, endpoint, data) => {
+  delete: (getToken, endpoint, data, config = {}) => {
     let body = undefined;
     if (data !== undefined && data !== null) {
       body = data instanceof FormData ? data : JSON.stringify(data);
     }
-    return fetchWithClient(getToken, endpoint, { method: 'DELETE', body });
+    return fetchWithClient(getToken, endpoint, { method: 'DELETE', body, ...config });
   },
 };
 

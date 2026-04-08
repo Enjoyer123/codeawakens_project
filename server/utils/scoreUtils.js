@@ -3,19 +3,20 @@
  * Copied from Frontend to ensure Server acts as Source of Truth
  */
 
-export function calculateFinalScore(isGameOver, pattern_bonus_score, userBigO = null, targetBigO = null) {
+export function calculateFinalScore(isGameOver, patternTypeId, userBigO = null, targetBigO = null) {
   if (isGameOver) {
-    return { totalScore: 0, stars: 0, pattern_bonus_score: 0, bigOPenalty: 0 };
+    return { totalScore: 0, stars: 0, pattern_bonus_score: 0, bigOPenalty: 0, patternTypeId };
   }
 
   const baseScore = 60;
-  
-  // We trust the pattern_bonus_score passed from the frontend for now, 
-  // since verifying Blockly code patterns server-side is extremely complex.
-  // Validate it falls into allowed buckets
-  let parsedPatternBonus = parseInt(pattern_bonus_score) || 0;
-  if (![0, 20, 40].includes(parsedPatternBonus)) {
-    parsedPatternBonus = 0; // fallback to 0 if manipulated
+  let parsedPatternBonus = 0;
+
+  // Pattern Tier Bonus (Same logic as frontend)
+  let parsedPatternTypeId = parseInt(patternTypeId) || 0;
+  if (parsedPatternTypeId === 1) {
+    parsedPatternBonus = 40; // Good
+  } else if (parsedPatternTypeId === 2) {
+    parsedPatternBonus = 20; // Medium
   }
 
   // Big O Logic: Subtract 20 if wrong when required

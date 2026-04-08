@@ -282,6 +282,7 @@ const coinChangeExampleXml = `<xml xmlns="https://developers.google.com/blockly/
   </block>
 </xml>`;
 
+
 /**
  * Load Coin Change example blocks into Blockly workspace
  * @param {Blockly.Workspace} workspace - The Blockly workspace to load blocks into

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { playBGM, stopBGM } from '../../gameutils/sound/soundManager';
+import { playBGM, stopBGM, playSound } from '../../gameutils/sound/soundManager';
 import { removeStarterListener, loadStarterXml } from './hooks/blocklysetup/xmlLoader';
+import { detectAlgoType } from '../../gameutils/shared/levelType';
 import { useParams } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import useUserStore from '../../store/useUserStore';
@@ -377,6 +378,28 @@ const GameCore = ({
     }
   }, [userBigO, showBigOQuiz]);
 
+  const handleAutoInjectExample = () => {
+    if (!workspaceRef.current) return;
+    
+    const isHard = currentLevel?.dificulty === 'hard';
+    const isMedium = currentLevel?.dificulty === 'medium';
+    
+    const sXml = isHard ? null : currentLevel?.starter_xml;
+    const fXml = (isMedium || isHard) ? null : currentLevel?.floating_xml;
+
+    removeStarterListener(workspaceRef.current);
+    Blockly.Events.disable();
+    workspaceRef.current.clear();
+    Blockly.Events.enable();
+
+    if (sXml) {
+        loadStarterXml(workspaceRef.current, sXml, fXml, currentLevel?.textcode || false, handleInitialCodeGenerated);
+    }
+    
+    // Show a brief notification or sound
+    playSound('powerup');
+  };
+
   // Determine if we should load starter/floating XML based on difficulty
   const isHardMode = currentLevel?.dificulty === 'hard';
   const isMediumMode = currentLevel?.dificulty === 'medium';
@@ -475,6 +498,7 @@ const GameCore = ({
                 userProgress={userProgress}
                 allLevels={allLevelsData}
                 onLoadXml={() => setShowLoadXmlModal(true)}
+                onAutoInject={handleAutoInjectExample}
                 isPreview={isPreview}
                 isAdmin={isAdmin}
                 starterTextCode={starterTextCode}

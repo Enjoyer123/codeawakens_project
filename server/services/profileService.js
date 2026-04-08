@@ -157,6 +157,7 @@ export const saveUserProgress = async (clerkId, body) => {
     text_code,
     best_score,
     pattern_bonus_score,
+    pattern_type_id,
     is_correct,
     stars_earned,
     hp_remaining,
@@ -195,7 +196,7 @@ export const saveUserProgress = async (clerkId, body) => {
   const targetBigO = level.expected_big_o || null;
   const calculated = calculateFinalScore(
     isGameOver,
-    pattern_bonus_score || 0,
+    pattern_type_id || 0,
     user_big_o || null,
     targetBigO,
   );

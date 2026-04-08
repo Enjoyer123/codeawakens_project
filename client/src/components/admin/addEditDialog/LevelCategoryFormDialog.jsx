@@ -146,7 +146,7 @@ const LevelCategoryFormDialog = ({
 
     try {
       setSaving(true);
-      
+
       // Handle block_key - support both comma-separated and JSON format
       let blockKeyValue = null;
       if (formData.block_key && formData.block_key.trim()) {
@@ -187,14 +187,14 @@ const LevelCategoryFormDialog = ({
       };
 
       if (editingLevelCategory) {
-        await updateCategoryAsync({
+        const res = await updateCategoryAsync({
           categoryId: editingLevelCategory.category_id,
           data: payload
         });
-        toast.success('อัปเดตหัวข้อสำเร็จ');
+        toast.success(res?.message || 'อัปเดตหัวข้อสำเร็จ');
       } else {
-        await createCategoryAsync(payload);
-        toast.success('เพิ่มหัวข้อสำเร็จ');
+        const res = await createCategoryAsync(payload);
+        toast.success(res?.message || 'เพิ่มหัวข้อสำเร็จ');
       }
       onOpenChange(false);
     } catch (err) {
