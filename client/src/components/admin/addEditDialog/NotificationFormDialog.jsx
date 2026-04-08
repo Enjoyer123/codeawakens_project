@@ -78,14 +78,14 @@ const NotificationFormDialog = ({
         try {
             setSaving(true);
             if (editingNotification) {
-                await updateNotificationAsync({
+                const res = await updateNotificationAsync({
                     notificationId: editingNotification.notification_id,
                     notificationData: formData
                 });
-                toast.success('อัปเดตแจ้งเตือนสำเร็จ');
+        toast.success(res?.message || 'อัปเดตแจ้งเตือนสำเร็จ');
             } else {
-                await createNotificationAsync(formData);
-                toast.success('สร้างแจ้งเตือนสำเร็จ');
+                const res = await createNotificationAsync(formData);
+        toast.success(res?.message || 'สร้างแจ้งเตือนสำเร็จ');
             }
             onOpenChange(false);
         } catch (err) {

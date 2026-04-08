@@ -89,6 +89,75 @@ export const loadStarterXml = (workspace, starter_xml, floating_xml, isTextCodeE
                     workspace.undo(false);
                 }
             }
+
+            // ─── Floating Block Connection Tracking ───────────────────────
+            // เมื่อบล็อกลอยถูก "เสียบ" เข้าช่อง (มี newParentId) → ลบออกจาก _floatingBlockIds
+            // ทำให้ findMissingSlots รู้ว่าช่องนั้นเต็มแล้ว และอัพเดตไฮไลต์ถูกต้อง
+            if (event.type === Blockly.Events.BLOCK_MOVE) {
+                const movedBlock = workspace.getBlockById(event.blockId);
+                if (!movedBlock) return;
+
+                const wasFloating = workspace._floatingBlockIds?.has(event.blockId);
+                const nowHasParent = !!movedBlock.getParent();
+
+                if (wasFloating && nowHasParent) {
+                    // บล็อกลอยนี้ถูกเสียบแล้ว → ลบออก (ทั้งตัวเองและลูกๆ)
+                    const removeFromFloating = (block) => {
+                        workspace._floatingBlockIds.delete(block.id);
+                        for (const child of block.getChildren(false)) {
+                            removeFromFloating(child);
+                        }
+                    };
+                    removeFromFloating(movedBlock);
+
+                    // 🚫 ป้องกัน Floating-to-Floating: ถ้า root ของ tree ที่ได้ยังเป็น floating block
+                    // → แสดงว่าเสียบกับบล็อกลอยอื่น ไม่ได้เสียบกับโครงสร้างหลัก → ดึงออกคืน
+                    let rootBlock = movedBlock;
+                    while (rootBlock.getParent()) rootBlock = rootBlock.getParent();
+
+                    if (workspace._floatingBlockIds.has(rootBlock.id)) {
+                        // Revert: ดึง block ออกและวางคืนตำแหน่งเดิม
+                        setTimeout(() => {
+                            try {
+                                Blockly.Events.disable();
+                                movedBlock.unplug(false);
+                                // คืน _floatingBlockIds สำหรับตัวเองและลูก
+                                const restoreFloating = (block) => {
+                                    if (allStarterIds.has(block.id)) {
+                                        workspace._floatingBlockIds.add(block.id);
+                                    }
+                                    for (const child of block.getChildren(false)) {
+                                        restoreFloating(child);
+                                    }
+                                };
+                                restoreFloating(movedBlock);
+                                // วาง block กลับไปที่พิกัดเดิม (ถ้ามี)
+                                if (event.oldCoordinate) {
+                                    movedBlock.moveTo(event.oldCoordinate);
+                                }
+                            } finally {
+                                Blockly.Events.enable();
+                            }
+                        }, 0);
+                    }
+                }
+
+                // ถ้าบล็อกถูกแยกออกจาก parent (ดึงกลับมาลอย) → ใส่กลับเข้า _floatingBlockIds
+                // เฉพาะกรณีที่ ID นั้นเคยอยู่ใน allStarterIds เท่านั้น (ป้องกัน block ใหม่ที่ผู้เล่นดึงมา)
+                const wasConnected = event.oldParentId != null;
+                const nowTopLevel = !movedBlock.getParent();
+                if (wasConnected && nowTopLevel && allStarterIds.has(event.blockId)) {
+                    const addBackToFloating = (block) => {
+                        if (allStarterIds.has(block.id)) {
+                            workspace._floatingBlockIds.add(block.id);
+                        }
+                        for (const child of block.getChildren(false)) {
+                            addBackToFloating(child);
+                        }
+                    };
+                    addBackToFloating(movedBlock);
+                }
+            }
         };
 
         workspace.addChangeListener(starterListener);

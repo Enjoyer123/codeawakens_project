@@ -66,10 +66,11 @@ export function usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData }) 
         }
 
         // ─── ตรวจว่าเป็น floating block หรือไม่ ────────────────
-        // ใช้ marked IDs จาก xmlLoader — 100% แม่นยำ
-        const isPanelFloating = workspace._floatingBlockIds?.has(newId) || false;
-        // ถือว่าบล็อกที่หัวขาด (ไม่มี parent) และไม่ใช่ฟังก์ชันเมน เป็นชิ้นส่วนลอย (รอต่อ) ด้วย!
-        const isDetached = found.parentId === undefined && found.type !== 'procedures_defreturn' && found.type !== 'procedures_defnoreturn';
+        // บล็อกจะ "floating" จริงๆ ต่อเมื่อไม่มี parentId (เป็น top-level block)
+        // ถ้ามี parentId แสดงว่าถูกต่อกับ block อื่นแล้ว แม้ _floatingBlockIds จะยังจำ ID นั้นอยู่
+        const isActuallyTopLevel = found.parentId === undefined;
+        const isPanelFloating = isActuallyTopLevel && (workspace._floatingBlockIds?.has(newId) || false);
+        const isDetached = isActuallyTopLevel && found.type !== 'procedures_defreturn' && found.type !== 'procedures_defnoreturn';
         const isFloating = isPanelFloating || isDetached;
         let floatingOcc = 0;
         let mainTreeBlocks = undefined;
@@ -86,7 +87,14 @@ export function usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData }) 
           const sameKind = floatingBlocks.filter(b =>
             b.type === found.type &&
             (found.varName ? b.varName === found.varName : !b.varName)
-          );
+          ).sort((a, b) => {
+            // เรียงตาม Y position บน workspace เพื่อให้ลำดับ stable
+            // (บล็อกที่อยู่บน = match กับ missing slot แรก ตามลำดับโค้ดจากบนลงล่าง)
+            // ถ้าเพิ่ม/ลบ floating block อื่นๆ ลำดับของบล็อกที่มีอยู่จะไม่เปลี่ยน
+            const aY = workspace.getBlockById(a.id)?.getRelativeToSurfaceXY()?.y ?? 0;
+            const bY = workspace.getBlockById(b.id)?.getRelativeToSurfaceXY()?.y ?? 0;
+            return aY - bY;
+          });
           floatingOcc = sameKind.findIndex(b => b.id === found.id);
           if (floatingOcc < 0) floatingOcc = 0;
           

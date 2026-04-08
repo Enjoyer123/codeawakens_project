@@ -22,7 +22,8 @@ export function useBlocklySetup({
   floating_xml = null,         // Floating hint blocks (XML String)
   blocklyLoaded = false,       // สถานะปัจจุบัน
   isTextCodeEnabled = false,   // โหมดพิมพ์โค้ดเอง?
-  onCodeGenerated = null       // Callback เมื่อโค้ดเปลี่ยน
+  onCodeGenerated = null,      // Callback เมื่อโค้ดเปลี่ยน
+  dificulty = 'medium'         // ระดับความยาก (ถ้า easy จะซ่อน toolbox)
 }) {
 
   // ดึง initBlockly จาก Shared Hook (autoInject = false เพื่อให้เราคุมจังหวะโหลดเอง)
@@ -32,6 +33,7 @@ export function useBlocklySetup({
     enabledBlocks,
     readOnly: false,
     autoInject: false,
+    hideToolbox: dificulty === 'easy', // ซ่อนกล่องเครื่องมือถ้าระดับง่าย
   });
 
   // ============================================================================

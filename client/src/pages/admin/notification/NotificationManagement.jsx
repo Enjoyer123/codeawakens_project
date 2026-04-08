@@ -78,10 +78,10 @@ const NotificationManagement = () => {
         if (!itemToDelete) return;
 
         try {
-            await deleteNotificationAsync(itemToDelete.notification_id);
+            const res = await deleteNotificationAsync(itemToDelete.notification_id);
             setDeleteDialogOpen(false);
             setItemToDelete(null);
-            toast.success('ลบแจ้งเตือนสำเร็จ');
+            toast.success(res?.message || 'ลบแจ้งเตือนสำเร็จ');
         } catch (err) {
             console.error(err);
         }
@@ -99,14 +99,14 @@ const NotificationManagement = () => {
     const handleSend = async (notification) => {
         try {
             // "Send" essentially means setting active to true
-            await updateNotificationAsync({
+            const res = await updateNotificationAsync({
                 notificationId: notification.notification_id,
                 notificationData: {
                     ...notification,
                     is_active: true
                 }
             });
-            toast.success('ส่งแจ้งเตือนสำเร็จ');
+            toast.success(res?.message || 'ส่งแจ้งเตือนสำเร็จ');
         } catch (err) {
             console.error("Failed to send notification:", err);
         }

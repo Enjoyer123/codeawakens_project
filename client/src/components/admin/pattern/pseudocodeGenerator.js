@@ -232,6 +232,15 @@ const parseCodeChain = (block, indent, workspace) => {
         const stackChild = getChild(current, 'STACK');
         if (stackChild) result = result.concat(parseCodeChain(stackChild, indent + 1, workspace));
 
+        // Handle RETURN slot: only emit `return ...` if a block is actually connected
+        if (type === 'procedures_defreturn') {
+          const returnBlock = current.getInputTargetBlock('RETURN');
+          if (returnBlock) {
+            const retVal = getCodeValue(returnBlock);
+            result.push({ text: `${'    '.repeat(indent + 1)}return ${retVal}`, blockType: returnBlock.type });
+          }
+        }
+
         result.push({ text: `${pfx}end procedure`, blockType: '' });
         current = getNextSibling(current);
         continue;

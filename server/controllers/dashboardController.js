@@ -8,7 +8,7 @@ export const getDashboardStats = async (req, res) => {
     
     const result = await dashboardService.getDashboardStats();
     
-    sendSuccess(res, result, "Dashboard stats fetched successfully");
+    sendSuccess(res, result, "Dashboard stats ดึงข้อมูลสำเร็จ");
   } catch (error) {
     console.error("Error fetching dashboard stats:", error.message);
     sendError(res, error.message || "Internal server error fetching dashboard statistics", error.status || 500);
@@ -22,7 +22,7 @@ export const getLevelStats = async (req, res) => {
     
     const result = await dashboardService.getLevelStats();
     
-    sendSuccess(res, result, "Level stats fetched successfully");
+    sendSuccess(res, result, "Level stats ดึงข้อมูลสำเร็จ");
   } catch (error) {
     console.error("Error fetching level stats:", error.message);
     sendError(res, error.message || "Internal server error fetching level statistics", error.status || 500);
@@ -36,7 +36,7 @@ export const getUserStats = async (req, res) => {
     
     const result = await dashboardService.getUserStats();
     
-    sendSuccess(res, result, "User stats fetched successfully");
+    sendSuccess(res, result, "User stats ดึงข้อมูลสำเร็จ");
   } catch (error) {
     console.error("Error fetching user stats:", error.message);
     sendError(res, error.message || "Internal server error fetching user statistics", error.status || 500);
@@ -50,7 +50,7 @@ export const getTestStats = async (req, res) => {
     
     const result = await dashboardService.getTestStats();
     
-    sendSuccess(res, result, "Test stats fetched successfully");
+    sendSuccess(res, result, "Test stats ดึงข้อมูลสำเร็จ");
   } catch (error) {
     console.error("Error fetching test stats:", error.message);
     sendError(res, error.message || "Internal server error fetching test statistics", error.status || 500);

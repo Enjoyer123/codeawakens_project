@@ -418,7 +418,8 @@ const GameCore = ({
     floating_xml: floatingXmlToLoad,
     blocklyLoaded,
     isTextCodeEnabled: currentLevel?.textcode || false,
-    onCodeGenerated: handleInitialCodeGenerated
+    onCodeGenerated: handleInitialCodeGenerated,
+    dificulty: currentLevel?.dificulty || 'easy'
   });
 
   // Guide system

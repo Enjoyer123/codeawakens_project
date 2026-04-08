@@ -172,11 +172,11 @@ export const useLevelForm = ({
             };
 
             if (isEditing) {
-                await updateLevelMutation.mutateAsync({ levelId, levelData });
-                toast.success('บันทึกข้อมูลด่านสำเร็จ');
+                const res = await updateLevelMutation.mutateAsync({ levelId, levelData });
+        toast.success(res?.message || 'บันทึกข้อมูลด่านสำเร็จ');
             } else {
-                await createLevelMutation.mutateAsync(levelData);
-                toast.success('สร้างด่านสำเร็จ');
+                const res = await createLevelMutation.mutateAsync(levelData);
+        toast.success(res?.message || 'สร้างด่านสำเร็จ');
             }
 
             navigate('/admin/levels');

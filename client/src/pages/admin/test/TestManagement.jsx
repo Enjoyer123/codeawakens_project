@@ -69,10 +69,10 @@ const TestManagement = () => {
     const handleDeleteConfirm = async () => {
         if (!testToDelete) return;
         try {
-            await deleteTestMutation.mutateAsync(testToDelete.test_id);
+            const res = await deleteTestMutation.mutateAsync(testToDelete.test_id);
             setDeleteDialogOpen(false);
             setTestToDelete(null);
-            toast.success('ลบแบบทดสอบสำเร็จ');
+            toast.success(res?.message || 'ลบแบบทดสอบสำเร็จ');
         } catch (err) {
             console.error(err);
         }

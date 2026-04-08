@@ -62,8 +62,8 @@ const TestCaseManagement = () => {
     const handleDeleteConfirm = useCallback(async () => {
         if (!testCaseToDelete) return;
         try {
-            await deleteTestCaseMutation.mutateAsync(testCaseToDelete.test_case_id);
-            toast.success('ลบ Test Case สำเร็จ');
+            const res = await deleteTestCaseMutation.mutateAsync(testCaseToDelete.test_case_id);
+        toast.success(res?.message || 'ลบ Test Case สำเร็จ');
             setDeleteDialogOpen(false);
             setTestCaseToDelete(null);
         } catch (err) {

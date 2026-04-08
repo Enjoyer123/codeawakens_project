@@ -94,11 +94,11 @@ const StarterCreateEdit = () => {
           workspaceRef2.current.clear();
           const xmlDom2 = Blockly.utils.xml.textToDom(floating_xml);
           setXmlLoading(true);
-          
+
           Blockly.Events.disable();
           try {
             Blockly.Xml.domToWorkspace(xmlDom2, workspaceRef2.current);
-            
+
             // Cleanup auto-spawned procedure definitions during load
             // since this is floating workspace, definitions shouldn't be here unless in xml
             const allBlocks = workspaceRef2.current.getAllBlocks(false);
@@ -177,81 +177,81 @@ const StarterCreateEdit = () => {
       floatingWs.clear();
       let count = 0;
       const intentionallyCreated = new Set();
-      
+
       Blockly.Events.disable();
       try {
 
-      for (let ti = 0; ti < targetAnalysis.length; ti++) {
-        if (targetMatched[ti] >= 0) continue; // block นี้มีแล้วใน main
+        for (let ti = 0; ti < targetAnalysis.length; ti++) {
+          if (targetMatched[ti] >= 0) continue; // block นี้มีแล้วใน main
 
-        const missingBlock = targetAnalysis[ti];
-        const sourceBlock = tempWs.getBlockById(missingBlock.id);
-        if (!sourceBlock) continue;
+          const missingBlock = targetAnalysis[ti];
+          const sourceBlock = tempWs.getBlockById(missingBlock.id);
+          if (!sourceBlock) continue;
 
-        // สร้าง block ใหม่ใน floating workspace (เฉพาะตัวเดี่ยว ไม่เอาลูก)
-        const newBlock = floatingWs.newBlock(sourceBlock.type);
-        intentionallyCreated.add(newBlock.id);
-        
-        // 🚨 ทริคสำคัญ: แอบจด "ID ต้นฉบับจาก Pattern" ลงไปในตัวแปร data ของ block!
-        // ตัวแปร data นี้จะถูก Save ลง Database ไปกับ XML อัตโนมัติด้วย
-        newBlock.data = sourceBlock.id;
+          // สร้าง block ใหม่ใน floating workspace (เฉพาะตัวเดี่ยว ไม่เอาลูก)
+          const newBlock = floatingWs.newBlock(sourceBlock.type);
+          intentionallyCreated.add(newBlock.id);
 
-        // Copy mutation / extra state (สำคัญมากสำหรับ function call, if/else)
-        if (sourceBlock.mutationToDom && newBlock.domToMutation) {
-          const mutationDom = sourceBlock.mutationToDom();
-          if (mutationDom) newBlock.domToMutation(mutationDom);
-        }
-        if (sourceBlock.getExtraState && newBlock.setExtraState) {
-          newBlock.setExtraState(sourceBlock.getExtraState());
-        }
+          // 🚨 ทริคสำคัญ: แอบจด "ID ต้นฉบับจาก Pattern" ลงไปในตัวแปร data ของ block!
+          // ตัวแปร data นี้จะถูก Save ลง Database ไปกับ XML อัตโนมัติด้วย
+          newBlock.data = sourceBlock.id;
 
-        // Copy ค่า field ทั้งหมด (เช่น variable name, operator, number value)
-        for (const input of sourceBlock.inputList) {
-          for (const field of input.fieldRow) {
-            if (field.name) {
-              try {
-                let finalValue = field.getValue();
+          // Copy mutation / extra state (สำคัญมากสำหรับ function call, if/else)
+          if (sourceBlock.mutationToDom && newBlock.domToMutation) {
+            const mutationDom = sourceBlock.mutationToDom();
+            if (mutationDom) newBlock.domToMutation(mutationDom);
+          }
+          if (sourceBlock.getExtraState && newBlock.setExtraState) {
+            newBlock.setExtraState(sourceBlock.getExtraState());
+          }
 
-                // อิมพอร์ตตัวแปรข้าม Workspace ก่อนค่าจะถูกเซ็ต
-                if (typeof field.getVariable === 'function') {
-                  const varModel = field.getVariable();
-                  if (varModel) {
-                    // หาด้วย "ชื่อ" จาก floatingWs ว่ามีอยู่แล้วหรือยัง
-                    let targetVar = floatingWs.getVariable(varModel.name, varModel.type);
-                    
-                    if (!targetVar) {
-                      try {
-                        // พยายามสร้างด้วย ID เดิม
-                        targetVar = floatingWs.createVariable(varModel.name, varModel.type, varModel.getId());
-                      } catch (err) {
-                        // ถ้าติด Error ID ชนอีก ให้สร้างใหม่โดยปล่อยให้ Blockly สุ่ม ID ให้เลย
-                        targetVar = floatingWs.createVariable(varModel.name, varModel.type);
+          // Copy ค่า field ทั้งหมด (เช่น variable name, operator, number value)
+          for (const input of sourceBlock.inputList) {
+            for (const field of input.fieldRow) {
+              if (field.name) {
+                try {
+                  let finalValue = field.getValue();
+
+                  // อิมพอร์ตตัวแปรข้าม Workspace ก่อนค่าจะถูกเซ็ต
+                  if (typeof field.getVariable === 'function') {
+                    const varModel = field.getVariable();
+                    if (varModel) {
+                      // หาด้วย "ชื่อ" จาก floatingWs ว่ามีอยู่แล้วหรือยัง
+                      let targetVar = floatingWs.getVariable(varModel.name, varModel.type);
+
+                      if (!targetVar) {
+                        try {
+                          // พยายามสร้างด้วย ID เดิม
+                          targetVar = floatingWs.createVariable(varModel.name, varModel.type, varModel.getId());
+                        } catch (err) {
+                          // ถ้าติด Error ID ชนอีก ให้สร้างใหม่โดยปล่อยให้ Blockly สุ่ม ID ให้เลย
+                          targetVar = floatingWs.createVariable(varModel.name, varModel.type);
+                        }
+                      }
+
+                      if (targetVar) {
+                        finalValue = targetVar.getId();
                       }
                     }
-
-                    if (targetVar) {
-                      finalValue = targetVar.getId(); 
-                    }
                   }
-                }
 
-                if (finalValue !== undefined && finalValue !== null) {
-                  newBlock.getField(field.name)?.setValue(finalValue);
-                }
-              } catch (e) {
+                  if (finalValue !== undefined && finalValue !== null) {
+                    newBlock.getField(field.name)?.setValue(finalValue);
+                  }
+                } catch (e) {
                   console.error(`[Diff] Failed to set field ${field.name}:`, e);
+                }
               }
             }
           }
+
+          newBlock.initSvg();
+          newBlock.render();
+
+          // วางตำแหน่ง (เรียงจากซ้ายไปขวา)
+          newBlock.moveBy(20 + (count % 4) * 120, 20 + Math.floor(count / 4) * 60);
+          count++;
         }
-
-        newBlock.initSvg();
-        newBlock.render();
-
-        // วางตำแหน่ง (เรียงจากซ้ายไปขวา)
-        newBlock.moveBy(20 + (count % 4) * 120, 20 + Math.floor(count / 4) * 60);
-        count++;
-      }
 
       } finally {
         Blockly.Events.enable();
@@ -373,8 +373,9 @@ const StarterCreateEdit = () => {
                         showAlert('ข้อผิดพลาด', 'Pattern นี้ไม่มี XML');
                         return;
                       }
-                      showAlert('ยืนยัน', 'การโหลดจะทับบล็อกทั้งหมดใน Main Workspace\nต้องการดำเนินการต่อหรือไม่?', () => {
+                      showAlert('ยืนยัน', 'การโหลดจะทับบล็อกใน Main Workspace และล้าง Floating Blocks ด้วย\nต้องการดำเนินการต่อหรือไม่?', () => {
                         try {
+                          workspaceRef2.current?.clear(); // ล้าง Floating เก่าก่อน ป้องกัน Diff คำนวณผิด
                           workspaceRef.current.clear();
                           const xmlDom = Blockly.utils.xml.textToDom(pattern.xmlpattern);
                           setXmlLoading(true);
