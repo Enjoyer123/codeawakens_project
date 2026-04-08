@@ -73,8 +73,8 @@ const UserManagement = () => {
 
   const handleRoleChange = useCallback(async (userId, newRole) => {
     try {
-      await updateUserRoleAsync({ userId, role: newRole });
-      toast.success('อัปเดตบทบาทสำเร็จ');
+      const res = await updateUserRoleAsync({ userId, role: newRole });
+        toast.success(res?.message || 'อัปเดตบทบาทสำเร็จ');
       // Query invalidation handles refresh
     } catch (err) {
       console.error(err);
@@ -99,7 +99,7 @@ const UserManagement = () => {
       await deleteUserAsync(userId);
       setDeleteDialogOpen(false);
       setUserToDelete(null);
-      toast.success('ลบผู้ใช้สำเร็จ');
+      toast.success(res?.message || 'ลบผู้ใช้สำเร็จ');
       // Query invalidation handles refresh
     } catch (err) {
       console.error(err);

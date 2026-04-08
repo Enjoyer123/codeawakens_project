@@ -9,7 +9,7 @@ export const getAllRewards = async (req, res) => {
     const paginationData = parsePagination(req.query);
     const result = await rewardService.getAllRewards(paginationData);
     
-    sendSuccess(res, result, "Rewards fetched successfully");
+    sendSuccess(res, result, "Rewards ดึงข้อมูลสำเร็จ");
   } catch (error) {
     console.error("Error fetching rewards:", error.message);
     sendError(res, error.message || "Error fetching rewards", error.status || 500);
@@ -20,7 +20,7 @@ export const getLevelsForReward = async (req, res) => {
   try {
     const result = await levelService.getLevelsForDropdown();
     
-    sendSuccess(res, result, "Levels fetched successfully");
+    sendSuccess(res, result, "Levels ดึงข้อมูลสำเร็จ");
   } catch (error) {
     console.error("Error fetching levels for dropdown:", error.message);
     sendError(res, error.message || "Error fetching levels for dropdown", error.status || 500);
@@ -32,7 +32,7 @@ export const getRewardById = async (req, res) => {
     const rewardId = parseInt(req.params.rewardId);
     const result = await rewardService.getRewardById(rewardId);
     
-    sendSuccess(res, result, "Reward fetched successfully");
+    sendSuccess(res, result, "Reward ดึงข้อมูลสำเร็จ");
   } catch (error) {
     console.error("Error fetching reward:", error.message);
     sendError(res, error.message || "Error fetching reward", error.status || 500);
@@ -43,7 +43,7 @@ export const createReward = async (req, res) => {
   try {
     const result = await rewardService.createReward(req.body);
     
-    sendSuccess(res, { reward: result }, "Reward created successfully", 201);
+    sendSuccess(res, { reward: result }, "เพิ่มรางวัลสำเร็จ", 201);
   } catch (error) {
     console.error("Error creating reward:", error.message);
     sendError(res, error.message || "Error creating reward", error.status || 500);
@@ -55,7 +55,7 @@ export const updateReward = async (req, res) => {
     const rewardId = parseInt(req.params.rewardId);
     const result = await rewardService.updateReward(rewardId, req.body);
     
-    sendSuccess(res, { reward: result }, "Reward updated successfully");
+    sendSuccess(res, { reward: result }, "อัปเดตรางวัลสำเร็จ");
   } catch (error) {
     console.error("Error updating reward:", error.message);
     sendError(res, error.message || "Error updating reward", error.status || 500);
@@ -67,7 +67,7 @@ export const deleteReward = async (req, res) => {
     const rewardId = parseInt(req.params.rewardId);
     await rewardService.deleteReward(rewardId);
     
-    sendSuccess(res, null, "Reward deleted successfully");
+    sendSuccess(res, null, "ลบรางวัลสำเร็จ");
   } catch (error) {
     console.error("Error deleting reward:", error.message);
     sendError(res, error.message || "Error deleting reward", error.status || 500);
@@ -83,7 +83,7 @@ export const uploadRewardFrame = async (req, res) => {
     const rewardId = parseInt(req.params.rewardId);
     const result = await rewardService.uploadRewardFrame(rewardId, req.file);
     
-    sendSuccess(res, { reward: result }, "Reward frame image uploaded successfully");
+    sendSuccess(res, { reward: result }, "Reward frame image อัปโหลดสำเร็จ");
   } catch (error) {
     console.error("Error uploading reward frame:", error.message);
     cleanupTempFile(req.file);
@@ -96,7 +96,7 @@ export const deleteRewardFrame = async (req, res) => {
     const rewardId = parseInt(req.params.rewardId);
     const result = await rewardService.deleteRewardFrame(rewardId);
     
-    sendSuccess(res, { reward: result }, "Reward frame image deleted successfully");
+    sendSuccess(res, { reward: result }, "ลบรูปภาพกรอบรางวัลสำเร็จ");
   } catch (error) {
     console.error("Error deleting reward frame:", error.message);
     sendError(res, error.message || "Error deleting reward frame image", error.status || 500);

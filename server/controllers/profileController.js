@@ -27,7 +27,7 @@ export const updateUsername = async (req, res) => {
     const updatedUser = await profileService.updateUsername(clerkId, username);
     
     console.log(`[PROFILE] Success: Username updated for User ${clerkId}.`);
-    sendSuccess(res, { user: updatedUser }, "Username updated successfully");
+    sendSuccess(res, { user: updatedUser }, "อัปเดตชื่อผู้ใช้สำเร็จ");
   } catch (error) {
     console.error(`[ERROR] Failed to update username for User ${clerkId}:`, error.message);
     sendError(res, error.message || "Failed to update username", error.status || 500);
@@ -62,7 +62,7 @@ export const deleteProfileImage = async (req, res) => {
     const profileImageUrl = await profileService.deleteProfileImage(req.user);
     
     console.log(`[PROFILE] Success: Profile image deleted for User ${clerkId}.`);
-    sendSuccess(res, { profileImageUrl }, "Profile image deleted successfully");
+    sendSuccess(res, { profileImageUrl }, "ลบรูปโปรไฟล์สำเร็จ");
   } catch (error) {
     console.error(`[ERROR] Failed to delete profile image for User ${clerkId}:`, error.message);
     sendError(res, error.message || "Failed to delete profile image", error.status || 500);
@@ -77,7 +77,7 @@ export const getUserByClerkId = async (req, res) => {
     const result = await profileService.getUserByClerkId(clerkId);
     
     console.log(`[PROFILE] Success: Retrieved details for User ${clerkId}.`);
-    sendSuccess(res, result, "User details fetched successfully");
+    sendSuccess(res, result, "User details ดึงข้อมูลสำเร็จ");
   } catch (error) {
     console.error(`[ERROR] Failed to fetch details for User ${clerkId}:`, error.message);
     sendError(res, error.message || "Error fetching user details", error.status || 500);

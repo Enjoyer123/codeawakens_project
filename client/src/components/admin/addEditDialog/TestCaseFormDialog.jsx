@@ -212,14 +212,14 @@ const TestCaseFormDialog = ({ open, onOpenChange, editingTestCase, numericLevelI
 
         try {
             if (editingTestCase) {
-                await updateTestCaseMutation.mutateAsync({
+                const res = await updateTestCaseMutation.mutateAsync({
                     testCaseId: editingTestCase.test_case_id,
                     data: payload
                 });
-                toast.success('อัปเดต Test Case สำเร็จ');
+        toast.success(res?.message || 'อัปเดต Test Case สำเร็จ');
             } else {
-                await createTestCaseMutation.mutateAsync(payload);
-                toast.success('เพิ่ม Test Case สำเร็จ');
+                const res = await createTestCaseMutation.mutateAsync(payload);
+        toast.success(res?.message || 'เพิ่ม Test Case สำเร็จ');
             }
             onClose();
         } catch (err) {

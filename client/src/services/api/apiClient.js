@@ -27,6 +27,15 @@ const fetchWithClient = async (getToken, endpoint, options = {}) => {
   if (options.returnFullResponse) {
     return json;
   }
+  
+  // Backward compatibility trick: Attach message to the data object
+  // so components can easily read `res.message` for Toast notifications.
+  if (json.data === null || json.data === undefined) {
+    return { message: json.message };
+  } else if (typeof json.data === 'object' && !Array.isArray(json.data)) {
+    // Inject the message field so res.message is accessible
+    json.data.message = json.message;
+  }
   return json.data;
 };
 

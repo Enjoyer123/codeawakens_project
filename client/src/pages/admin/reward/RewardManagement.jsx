@@ -88,10 +88,10 @@ const RewardManagement = () => {
     if (!rewardToDelete) return;
 
     try {
-      await deleteRewardAsync(rewardToDelete.reward_id);
+      const res = await deleteRewardAsync(rewardToDelete.reward_id);
       setDeleteDialogOpen(false);
       setRewardToDelete(null);
-      toast.success('ลบรางวัลสำเร็จ');
+      toast.success(res?.message || 'ลบรางวัลสำเร็จ');
     } catch (err) {
       console.error(err);
     }

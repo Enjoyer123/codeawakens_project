@@ -82,14 +82,14 @@ const RewardFormDialog = ({
       };
 
       if (editingReward) {
-        await updateRewardAsync({
+        const res = await updateRewardAsync({
           rewardId: editingReward.reward_id,
           rewardData: payload
         });
-        toast.success('อัปเดตรางวัลสำเร็จ');
+        toast.success(res?.message || 'อัปเดตรางวัลสำเร็จ');
       } else {
-        await createRewardAsync(payload);
-        toast.success('เพิ่มรางวัลสำเร็จ');
+        const res = await createRewardAsync(payload);
+        toast.success(res?.message || 'เพิ่มรางวัลสำเร็จ');
       }
       onOpenChange(false);
     } catch (err) {

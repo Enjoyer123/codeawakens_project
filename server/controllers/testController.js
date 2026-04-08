@@ -8,7 +8,7 @@ export const getTestsByType = async (req, res) => {
     const isEditMode = req.query.edit === "true";
     const result = await testService.getTestsByType(testType, isEditMode);
     
-    sendSuccess(res, result, "Tests fetched successfully");
+    sendSuccess(res, result, "Tests ดึงข้อมูลสำเร็จ");
   } catch (error) {
     console.error("Error fetching tests:", error.message);
     sendError(res, error.message || "Error fetching tests", error.status || 500);
@@ -34,7 +34,7 @@ export const getAllTests = async (req, res) => {
   try {
     const result = await testService.getAllTests();
     
-    sendSuccess(res, result, "Tests fetched successfully");
+    sendSuccess(res, result, "Tests ดึงข้อมูลสำเร็จ");
   } catch (error) {
     console.error("Error fetching tests:", error.message);
     sendError(res, error.message || "Error fetching tests", error.status || 500);
@@ -45,7 +45,7 @@ export const createTest = async (req, res) => {
   try {
     const result = await testService.createTest(req.body);
     
-    sendSuccess(res, { test: result }, "Test created successfully", 201);
+    sendSuccess(res, { test: result }, "สร้างแบบทดสอบสำเร็จ", 201);
   } catch (error) {
     console.error("Error creating test:", error.message);
     sendError(res, error.message || "Error creating test", error.status || 500);
@@ -57,7 +57,7 @@ export const updateTest = async (req, res) => {
     const testId = parseInt(req.params.id);
     const result = await testService.updateTest(testId, req.body);
     
-    sendSuccess(res, { test: result }, "Test updated successfully");
+    sendSuccess(res, { test: result }, "อัปเดตแบบทดสอบสำเร็จ");
   } catch (error) {
     console.error("Error updating test:", error.message);
     sendError(res, error.message || "Error updating test", error.status || 500);
@@ -69,7 +69,7 @@ export const deleteTest = async (req, res) => {
     const testId = parseInt(req.params.id);
     await testService.deleteTest(testId);
     
-    sendSuccess(res, null, "Test deleted successfully");
+    sendSuccess(res, null, "ลบแบบทดสอบสำเร็จ");
   } catch (error) {
     console.error("Error deleting test:", error.message);
     sendError(res, error.message || "Error deleting test", error.status || 500);
@@ -81,7 +81,7 @@ export const deleteTestChoice = async (req, res) => {
     const choiceId = parseInt(req.params.id);
     await testService.deleteTestChoice(choiceId);
     
-    sendSuccess(res, null, "Choice deleted successfully");
+    sendSuccess(res, null, "ลบตัวเลือกสำเร็จ");
   } catch (error) {
     console.error("Error deleting choice:", error.message);
     sendError(res, error.message || "Error deleting choice", error.status || 500);
@@ -95,7 +95,7 @@ export const uploadTestImage = async (req, res) => {
     }
     
     const filePath = `/uploads/tests/${req.file.filename}`;
-    sendSuccess(res, { path: filePath }, "Test image uploaded successfully");
+    sendSuccess(res, { path: filePath }, "Test image อัปโหลดสำเร็จ");
   } catch (error) {
     console.error("Error uploading test image:", error.message);
     sendError(res, "Upload failed", 500);
@@ -109,7 +109,7 @@ export const uploadChoiceImage = async (req, res) => {
     }
     
     const filePath = `/uploads/test_choices/${req.file.filename}`;
-    sendSuccess(res, { path: filePath }, "Choice image uploaded successfully");
+    sendSuccess(res, { path: filePath }, "Choice image อัปโหลดสำเร็จ");
   } catch (error) {
     console.error("Error uploading choice image:", error.message);
     sendError(res, "Upload failed", 500);

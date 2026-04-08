@@ -69,14 +69,14 @@ const WeaponFormDialog = ({
     try {
       setSaving(true);
       if (editingWeapon) {
-        await updateWeaponAsync({
+        const res = await updateWeaponAsync({
           weaponId: editingWeapon.weapon_id,
           weaponData: formData
         });
-        toast.success('อัปเดตอาวุธสำเร็จ');
+        toast.success(res?.message || 'อัปเดตอาวุธสำเร็จ');
       } else {
-        await createWeaponAsync(formData);
-        toast.success('เพิ่มอาวุธสำเร็จ');
+        const res = await createWeaponAsync(formData);
+        toast.success(res?.message || 'เพิ่มอาวุธสำเร็จ');
       }
       onOpenChange(false);
     } catch (err) {

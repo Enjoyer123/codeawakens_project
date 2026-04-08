@@ -72,10 +72,10 @@ const LevelManagement = () => {
     if (!levelToDelete) return;
 
     try {
-      await deleteLevelAsync(levelToDelete.level_id);
+      const res = await deleteLevelAsync(levelToDelete.level_id);
       setDeleteDialogOpen(false);
       setLevelToDelete(null);
-      toast.success('ลบด่านสำเร็จ');
+      toast.success(res?.message || 'ลบด่านสำเร็จ');
       // Query automatically invalidated by mutation hook
     } catch (err) {
       // Global error handler will show toast

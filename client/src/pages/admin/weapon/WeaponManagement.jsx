@@ -91,10 +91,10 @@ const WeaponManagement = () => {
     if (!weaponToDelete) return;
 
     try {
-      await deleteWeaponMutation.mutateAsync(weaponToDelete.weapon_id);
+      const res = await deleteWeaponMutation.mutateAsync(weaponToDelete.weapon_id);
       setDeleteDialogOpen(false);
       setWeaponToDelete(null);
-      toast.success('ลบอาวุธสำเร็จ');
+      toast.success(res?.message || 'ลบอาวุธสำเร็จ');
     } catch (err) {
       console.error(err);
     }

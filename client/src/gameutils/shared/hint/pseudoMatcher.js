@@ -143,16 +143,26 @@ export function findPseudocodeLine(selectedData, allLines, context = null) {
     // ─── ABSOLUTE MATCH: Exact Block ID ──────────────────────────
     // ถ้า block ใน workspace ปัจจุบัน มี ID ตรงกับ block ในเฉลย (Pattern) 
     // หรือถ้าเป็นก้อนที่ถูก Auto-Fill เราก็แอบยัด ID เดิมไว้ใน block.data แล้ว!
+    // ⚠️ แต่ถ้าผู้เล่นย้าย block ไปต่อไว้ที่อื่น (ancestorStr เปลี่ยน) → ให้ข้าม Exact Match
+    // เพื่อให้ Structural Match ทำงานตาม ancestor จริงๆ แทน
     const exactId = isString ? undefined : (selectedData.data || selectedData.id);
     if (exactId && context?.targetAnalysis) {
         const exactMatch = context.targetAnalysis.find(t => t.id === exactId);
         if (exactMatch) {
-            for (const line of allLines) {
-                if (line.patternBlocks?.some(b => b.index === exactMatch.index)) {
-                    console.log("🎯 EXACT ID MATCH:", type, exactId);
-                    return line;
+            // ตรวจสอบว่า ancestorStr ปัจจุบันตรงกับ target หรือไม่
+            // ถ้าตรง = block ยังอยู่ที่เดิม → ใช้ Exact Match ได้
+            // ถ้าไม่ตรง = block ถูกย้ายไปแล้ว → ข้ามไปให้ Structural Match จัดการ
+            const currentAncestorStr = ancestorStr;
+            const targetAncestorStr = exactMatch.ancestorStr;
+            const ancestorMatches = !currentAncestorStr || !targetAncestorStr || currentAncestorStr === targetAncestorStr;
+            if (ancestorMatches) {
+                for (const line of allLines) {
+                    if (line.patternBlocks?.some(b => b.index === exactMatch.index)) {
+                        return line;
+                    }
                 }
             }
+            // ancestorStr ไม่ตรง → fall through ไป Structural Match
         }
     }
 
@@ -160,11 +170,19 @@ export function findPseudocodeLine(selectedData, allLines, context = null) {
     // ถ้า block เป็น floating (อยู่ในกระดานขวา) → ใช้ diff เพื่อหาว่าต้องไปต่อตรงไหน
     if (!isString && selectedData.isFloating && context?.targetAnalysis) {
         const missingSlots = findMissingSlots(context.targetAnalysis, selectedData.mainTreeBlocks);
+        
+        // 1) ลองจับคู่ด้วย Block ID แท้ๆ (Exact Target Match)
+        // ถ้า Admin เอาบล็อกออกมาจากบรรทัดไหน Block ID จะอิงตามนั้นเสมอ
+        let slot = missingSlots.find(s => s.id === selectedData.id);
+        
         const sameKindMissing = missingSlots.filter(s =>
             s.type === type && (varName ? s.varName === varName : !s.varName)
         );
 
-        const slot = sameKindMissing[selectedData.floatingOcc ?? 0];
+        // 2) ถ้าไม่เจอ ID ตรงกัน (เช่นถูกสร้างใหม่) ให้ใช้คิวระดับความสูง (Y-position Fallback)
+        if (!slot) {
+            slot = sameKindMissing[selectedData.floatingOcc ?? 0];
+        }
 
         console.log("=== 🔍 FLOATING BLOCK DEBUG ===");
         console.log("1. กดที่บล็อก:", { type, varName, floatingOcc: selectedData.floatingOcc });
@@ -172,7 +190,7 @@ export function findPseudocodeLine(selectedData, allLines, context = null) {
         console.log("3. Main Tree (บล็อกหลักตอนนี้):", selectedData.mainTreeBlocks.map(m => `[${m.index}] ${m.type} (var: ${m.varName || 'none'})`));
         console.log("4. หาพบว่าขาด Slots ต่อไปนี้:", missingSlots.map(s => `[targetIndex:${s.targetIndex}] ${s.type} (var: ${s.varName || 'none'})`));
         console.log("5. ขาดที่ตรงกับที่กด:", sameKindMissing.map(s => `[targetIndex:${s.targetIndex}] ${s.type} (var: ${s.varName || 'none'})`));
-        console.log("6. จับคู่กับ Slot:", slot ? `targetIndex:${slot.targetIndex}` : "หาไม่เจอ");
+        console.log("6. จับคู่กับ Slot:", slot ? `targetIndex:${slot.targetIndex} (ID Match: ${slot.id === selectedData.id})` : "หาไม่เจอ");
 
         if (slot) {
             for (const line of allLines) {
@@ -182,8 +200,9 @@ export function findPseudocodeLine(selectedData, allLines, context = null) {
                 }
             }
         }
-        // Fall through to existing logic if no match found
-        console.log("❌ ไม่เจอจับคู่ หรือว่าชี้ตกไปที่ Logic เดิม");
+        // Floating block ต้องไม่ตกทะลุไปรันโค้ดข้างล่าง (เพราะโค้ดข้างล่างไว้ใช้กับบล็อกที่เอาไปต่อแล้ว)
+        console.log("❌ ไม่เจอจับคู่ หรือว่าชี้ตกไปที่ Logic เดิม (ยกเลิก Fall-through แล้ว)");
+        return null;
     }
 
     // PRIMARY: Structural Sequence Matching — ใช้ LCS (Longest Common Subsequence) ยืดหยุ่นกรณีผู้เล่นข้ามบล็อกตรงกลาง

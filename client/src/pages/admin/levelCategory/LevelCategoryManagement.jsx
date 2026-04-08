@@ -89,10 +89,10 @@ const LevelCategoryManagement = () => {
     if (!levelCategoryToDelete) return;
 
     try {
-      await deleteCategoryAsync(levelCategoryToDelete.category_id);
+      const res = await deleteCategoryAsync(levelCategoryToDelete.category_id);
       setDeleteDialogOpen(false);
       setLevelCategoryToDelete(null);
-      toast.success('ลบหัวข้อสำเร็จ');
+      toast.success(res?.message || 'ลบหัวข้อสำเร็จ');
     } catch (err) {
       console.error(err);
     }

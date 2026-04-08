@@ -206,14 +206,14 @@ const TestCreateEditModal = ({
             };
 
             if (testToEdit) {
-                await updateTestMutation.mutateAsync({
+                const res = await updateTestMutation.mutateAsync({
                     id: testToEdit.test_id,
                     testData: dataToSave
                 });
-                toast.success('อัปเดตคำถามสำเร็จ');
+        toast.success(res?.message || 'อัปเดตคำถามสำเร็จ');
             } else {
-                await createTestMutation.mutateAsync(dataToSave);
-                toast.success('สร้างคำถามสำเร็จ');
+                const res = await createTestMutation.mutateAsync(dataToSave);
+        toast.success(res?.message || 'สร้างคำถามสำเร็จ');
             }
 
             setSaving(false);

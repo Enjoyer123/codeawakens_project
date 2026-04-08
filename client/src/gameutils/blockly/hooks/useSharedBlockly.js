@@ -51,7 +51,8 @@ export function useSharedBlockly({
   readOnly = false,            // Mode: true สำหรับ Preview/Play, false สำหรับ Editor
   autoInject = true,           // ถ้า true จะ inject ตอน mount ทันที
   refReady = true,             // ไว้เช็คว่า DOM Ref Mount เสร็จหรือยัง (สำหรับ Dependency)
-  onWorkspaceReady = null      // Callback เมื่อ inject เสร็จ
+  onWorkspaceReady = null,     // Callback เมื่อ inject เสร็จ
+  hideToolbox = false          // เพิ่ม option ซ่อน toolbox เกลี้ยง
 }) {
   const internalRef = useRef(null);
   const workspaceRef = externalRef || internalRef;
@@ -71,7 +72,7 @@ export function useSharedBlockly({
     defineAllBlocks();
     defineAllGenerators();
 
-    const toolbox = createToolboxConfig(enabledBlocks);
+    const toolbox = hideToolbox ? undefined : createToolboxConfig(enabledBlocks);
 
     const workspaceConfig = {
       theme: GoogleDocsTheme,

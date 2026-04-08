@@ -9,7 +9,7 @@ export const getAllGuides = async (req, res) => {
     const paginationData = parsePagination(req.query);
     const result = await guideService.getAllGuides(paginationData);
     
-    sendSuccess(res, result, "Guides fetched successfully");
+    sendSuccess(res, result, "Guides ดึงข้อมูลสำเร็จ");
   } catch (error) {
     console.error("Error fetching guides:", error.message);
     sendError(res, error.message || "Error fetching guides", error.status || 500);
@@ -21,7 +21,7 @@ export const getGuidesByLevel = async (req, res) => {
     const levelId = parseInt(req.params.levelId);
     const result = await guideService.getGuidesByLevel(levelId);
     
-    sendSuccess(res, result, "Guides fetched successfully");
+    sendSuccess(res, result, "Guides ดึงข้อมูลสำเร็จ");
   } catch (error) {
     console.error("Error fetching guides by level:", error.message);
     sendError(res, error.message || "Error fetching guides by level", error.status || 500);
@@ -32,7 +32,7 @@ export const getLevelsForGuide = async (req, res) => {
   try {
     const result = await levelService.getLevelsForDropdown();
     
-    sendSuccess(res, result, "Levels fetched successfully");
+    sendSuccess(res, result, "Levels ดึงข้อมูลสำเร็จ");
   } catch (error) {
     console.error("Error fetching levels for dropdown:", error.message);
     sendError(res, error.message || "Error fetching levels", error.status || 500);
@@ -44,7 +44,7 @@ export const getGuideById = async (req, res) => {
     const guideId = parseInt(req.params.guideId);
     const result = await guideService.getGuideById(guideId);
     
-    sendSuccess(res, result, "Guide fetched successfully");
+    sendSuccess(res, result, "Guide ดึงข้อมูลสำเร็จ");
   } catch (error) {
     console.error("Error fetching guide:", error.message);
     sendError(res, error.message || "Error fetching guide", error.status || 500);
@@ -55,7 +55,7 @@ export const createGuide = async (req, res) => {
   try {
     const result = await guideService.createGuide(req.body);
     
-    sendSuccess(res, { guide: result }, "Guide created successfully", 201);
+    sendSuccess(res, { guide: result }, "Guide สร้างสำเร็จ", 201);
   } catch (error) {
     console.error("Error creating guide:", error.message);
     sendError(res, error.message || "Error creating guide", error.status || 500);
@@ -67,7 +67,7 @@ export const updateGuide = async (req, res) => {
     const guideId = parseInt(req.params.guideId);
     const result = await guideService.updateGuide(guideId, req.body);
     
-    sendSuccess(res, { guide: result }, "Guide updated successfully");
+    sendSuccess(res, { guide: result }, "Guide อัปเดตสำเร็จ");
   } catch (error) {
     console.error("Error updating guide:", error.message);
     sendError(res, error.message || "Error updating guide", error.status || 500);
@@ -79,7 +79,7 @@ export const deleteGuide = async (req, res) => {
     const guideId = parseInt(req.params.guideId);
     await guideService.deleteGuide(guideId);
     
-    sendSuccess(res, null, "Guide deleted successfully");
+    sendSuccess(res, null, "Guide ลบสำเร็จ");
   } catch (error) {
     console.error("Error deleting guide:", error.message);
     sendError(res, error.message || "Error deleting guide", error.status || 500);
@@ -95,7 +95,7 @@ export const uploadGuideImage = async (req, res) => {
     const guideId = parseInt(req.params.guideId);
     const result = await guideService.uploadGuideImage(guideId, req.file);
     
-    sendSuccess(res, { guideImage: result }, "Guide image uploaded successfully", 201);
+    sendSuccess(res, { guideImage: result }, "Guide image อัปโหลดสำเร็จ", 201);
   } catch (error) {
     console.error("Error uploading guide image:", error.message);
     cleanupTempFile(req.file);
@@ -108,7 +108,7 @@ export const deleteGuideImage = async (req, res) => {
     const imageId = parseInt(req.params.imageId);
     await guideService.deleteGuideImage(imageId);
     
-    sendSuccess(res, null, "Guide image deleted successfully");
+    sendSuccess(res, null, "Guide image ลบสำเร็จ");
   } catch (error) {
     console.error("Error deleting guide image:", error.message);
     sendError(res, error.message || "Error deleting guide image", error.status || 500);

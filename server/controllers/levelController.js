@@ -9,7 +9,7 @@ export const getAllLevels = async (req, res) => {
     const paginationData = parsePagination(req.query);
     const result = await levelService.getAllLevels(paginationData, req.query, clerkUserId);
     
-    sendSuccess(res, result, "Levels fetched successfully");
+    sendSuccess(res, result, "Levels ดึงข้อมูลสำเร็จ");
   } catch (error) {
     console.error("Error fetching levels:", error.message);
     sendError(res, error.message || "Error fetching levels", error.status || 500);
@@ -20,7 +20,7 @@ export const getLevelsForDropdown = async (req, res) => {
   try {
     const result = await levelService.getLevelsForDropdown();
     
-    sendSuccess(res, result, "Levels fetched successfully");
+    sendSuccess(res, result, "Levels ดึงข้อมูลสำเร็จ");
   } catch (error) {
     console.error("Error fetching generic levels:", error.message);
     sendError(res, error.message || "Error fetching generic levels", error.status || 500);
@@ -33,7 +33,7 @@ export const getLevelById = async (req, res) => {
     const levelId = parseInt(req.params.levelId);
     const result = await levelService.getLevelById(levelId, req.query.admin, clerkUserId);
     
-    sendSuccess(res, result, "Level fetched successfully");
+    sendSuccess(res, result, "Level ดึงข้อมูลสำเร็จ");
   } catch (error) {
     console.error("Error fetching level details:", error.message);
     sendError(res, error.message || "Error fetching level details", error.status || 500);
@@ -45,7 +45,7 @@ export const createLevel = async (req, res) => {
     const clerkUserId = req.user ? req.user.id : null;
     const result = await levelService.createLevel(req.body, clerkUserId);
     
-    sendSuccess(res, { level: result }, "Level created successfully", 201);
+    sendSuccess(res, { level: result }, "สร้างด่านใหม่สำเร็จ", 201);
   } catch (error) {
     console.error("Error creating level:", error.message);
     sendError(res, error.message || "Error creating level", error.status || 500);
@@ -57,7 +57,7 @@ export const updateLevel = async (req, res) => {
     const levelId = parseInt(req.params.levelId);
     const result = await levelService.updateLevel(levelId, req.body);
     
-    sendSuccess(res, { level: result }, "Level updated successfully");
+    sendSuccess(res, { level: result }, "อัปเดตด่านสำเร็จ");
   } catch (error) {
     console.error("Error updating level:", error.message);
     sendError(res, error.message || "Error updating level", error.status || 500);
@@ -69,7 +69,7 @@ export const deleteLevel = async (req, res) => {
     const levelId = parseInt(req.params.levelId);
     await levelService.deleteLevel(levelId);
     
-    sendSuccess(res, null, "Level deleted successfully");
+    sendSuccess(res, null, "ลบด่านสำเร็จ");
   } catch (error) {
     console.error("Error deleting level:", error.message);
     sendError(res, error.message || "Error deleting level", error.status || 500);
@@ -85,7 +85,7 @@ export const uploadLevelBackgroundImage = async (req, res) => {
     // Create the image URL relative path that frontend needs
     const imageUrl = `/uploads/levels/${req.file.filename}`;
     
-    sendSuccess(res, { imageUrl }, "Background image uploaded successfully");
+    sendSuccess(res, { imageUrl }, "Background image อัปโหลดสำเร็จ");
   } catch (error) {
     console.error("Error uploading background image:", error.message);
     cleanupTempFile(req.file);
@@ -98,7 +98,7 @@ export const deleteLevelBackgroundImage = async (req, res) => {
     const levelId = parseInt(req.params.levelId);
     const result = await levelService.deleteLevelBackgroundImage(levelId);
     
-    sendSuccess(res, { level: result }, "Background image deleted successfully");
+    sendSuccess(res, { level: result }, "Background image ลบสำเร็จ");
   } catch (error) {
     console.error("Error deleting background image:", error.message);
     sendError(res, error.message || "Error deleting background image", error.status || 500);
@@ -108,7 +108,7 @@ export const deleteLevelBackgroundImage = async (req, res) => {
 export const getAllCategories = async (req, res) => {
   try {
     const result = await levelService.getAllCategories();
-    sendSuccess(res, result, "Categories fetched successfully");
+    sendSuccess(res, result, "Categories ดึงข้อมูลสำเร็จ");
   } catch (error) {
     console.error("Error fetching categories:", error.message);
     sendError(res, error.message || "Error fetching categories", error.status || 500);
@@ -118,7 +118,7 @@ export const getAllCategories = async (req, res) => {
 export const getLevelsForPrerequisite = async (req, res) => {
   try {
     const result = await levelService.getLevelsForDropdown();
-    sendSuccess(res, result, "Prerequisite levels fetched successfully");
+    sendSuccess(res, result, "Prerequisite levels ดึงข้อมูลสำเร็จ");
   } catch (error) {
     console.error("Error fetching prerequisites:", error.message);
     sendError(res, error.message || "Error fetching prerequisites", error.status || 500);
@@ -140,7 +140,7 @@ export const updateLevelCoordinates = async (req, res) => {
   try {
     const levelId = parseInt(req.params.levelId);
     const result = await levelService.updateLevelCoordinates(levelId, req.body.coordinates);
-    sendSuccess(res, { level: result }, "Level coordinates updated successfully");
+    sendSuccess(res, { level: result }, "Level coordinates อัปเดตสำเร็จ");
   } catch (error) {
     console.error("Error updating coordinates:", error.message);
     sendError(res, error.message || "Error updating coordinates", error.status || 500);

@@ -7,7 +7,7 @@ export const getAllNotifications = async (req, res) => {
     const paginationData = parsePagination(req.query);
     const result = await notificationService.getAllNotifications(paginationData);
     
-    sendSuccess(res, result, "Notifications fetched successfully");
+    sendSuccess(res, result, "Notifications ดึงข้อมูลสำเร็จ");
   } catch (error) {
     console.error("Error fetching notifications:", error.message);
     sendError(res, error.message || "Error fetching notifications", error.status || 500);
@@ -19,7 +19,7 @@ export const getNotificationById = async (req, res) => {
     const notificationId = parseInt(req.params.notificationId);
     const result = await notificationService.getNotificationById(notificationId);
     
-    sendSuccess(res, result, "Notification fetched successfully");
+    sendSuccess(res, result, "Notification ดึงข้อมูลสำเร็จ");
   } catch (error) {
     console.error("Error fetching notification:", error.message);
     sendError(res, error.message || "Error fetching notification", error.status || 500);
@@ -30,7 +30,7 @@ export const createNotification = async (req, res) => {
   try {
     const result = await notificationService.createNotification(req.body, req.user.id);
     
-    sendSuccess(res, { notification: result }, "Notification created successfully", 201);
+    sendSuccess(res, { notification: result }, "เพิ่มการแจ้งเตือนสำเร็จ", 201);
   } catch (error) {
     console.error("Error creating notification:", error.message);
     sendError(res, error.message || "Error creating notification", error.status || 500);
@@ -42,7 +42,7 @@ export const updateNotification = async (req, res) => {
     const notificationId = parseInt(req.params.notificationId);
     const result = await notificationService.updateNotification(notificationId, req.body);
     
-    sendSuccess(res, { notification: result }, "Notification updated successfully");
+    sendSuccess(res, { notification: result }, "อัปเดตการแจ้งเตือนสำเร็จ");
   } catch (error) {
     console.error("Error updating notification:", error.message);
     sendError(res, error.message || "Error updating notification", error.status || 500);
@@ -54,7 +54,7 @@ export const deleteNotification = async (req, res) => {
     const notificationId = parseInt(req.params.notificationId);
     await notificationService.deleteNotification(notificationId);
     
-    sendSuccess(res, null, "Notification deleted successfully");
+    sendSuccess(res, null, "ลบการแจ้งเตือนสำเร็จ");
   } catch (error) {
     console.error("Error deleting notification:", error.message);
     sendError(res, error.message || "Error deleting notification", error.status || 500);
@@ -69,7 +69,7 @@ export const getUserNotifications = async (req, res) => {
     const paginationData = parsePagination(req.query);
     const result = await notificationService.getUserNotifications(clerkUserId, paginationData, req.query);
     
-    sendSuccess(res, result, "User notifications fetched successfully");
+    sendSuccess(res, result, "User notifications ดึงข้อมูลสำเร็จ");
   } catch (error) {
     console.error("Error fetching user notifications:", error.message);
     sendError(res, error.message || "Error fetching user notifications", error.status || 500);

@@ -7,7 +7,7 @@ export const getAllBlocks = async (req, res) => {
     const paginationData = parsePagination(req.query);
     const result = await blockService.getAllBlocks(paginationData);
     
-    sendSuccess(res, result, "Blocks fetched successfully");
+    sendSuccess(res, result, "Blocks ดึงข้อมูลสำเร็จ");
   } catch (error) {
     console.error("Error fetching blocks:", error.message);
     sendError(res, error.message || "Error fetching blocks", error.status || 500);
@@ -19,7 +19,7 @@ export const getBlockById = async (req, res) => {
     const blockId = parseInt(req.params.blockId);
     const result = await blockService.getBlockById(blockId);
     
-    sendSuccess(res, result, "Block fetched successfully");
+    sendSuccess(res, result, "Block ดึงข้อมูลสำเร็จ");
   } catch (error) {
     console.error("Error fetching block:", error.message);
     sendError(res, error.message || "Error fetching block", error.status || 500);
@@ -30,7 +30,7 @@ export const createBlock = async (req, res) => {
   try {
     const result = await blockService.createBlock(req.body);
     
-    sendSuccess(res, { block: result }, "Block created successfully", 201);
+    sendSuccess(res, { block: result }, "เพิ่มบล็อกสำเร็จ", 201);
   } catch (error) {
     console.error("Error creating block:", error.message);
     sendError(res, error.message || "Error creating block", error.status || 500);
@@ -42,7 +42,7 @@ export const updateBlock = async (req, res) => {
     const blockId = parseInt(req.params.blockId);
     const result = await blockService.updateBlock(blockId, req.body);
     
-    sendSuccess(res, { block: result }, "Block updated successfully");
+    sendSuccess(res, { block: result }, "อัปเดตบล็อกสำเร็จ");
   } catch (error) {
     console.error("Error updating block:", error.message);
     sendError(res, error.message || "Error updating block", error.status || 500);
@@ -54,7 +54,7 @@ export const deleteBlock = async (req, res) => {
     const blockId = parseInt(req.params.blockId);
     await blockService.deleteBlock(blockId);
     
-    sendSuccess(res, null, "Block deleted successfully");
+    sendSuccess(res, null, "ลบบล็อกสำเร็จ");
   } catch (error) {
     console.error("Error deleting block:", error.message);
     sendError(res, error.message || "Error deleting block", error.status || 500);
