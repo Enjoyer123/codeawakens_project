@@ -1,6 +1,15 @@
 import * as testCaseRepo from "../models/testCaseModel.js";
 
 export const getTestCasesByLevel = async (levelId) => {
+  const level = await testCaseRepo.findLevelWithCategory(levelId);
+  if (!level) { const err = new Error("Level not found"); err.status = 404; throw err; }
+  
+  if (level.category?.testcase_enable === false) {
+    const err = new Error("Test cases are disabled for this level category.");
+    err.status = 403;
+    throw err;
+  }
+  
   return testCaseRepo.findTestCasesByLevel(levelId);
 }
 
@@ -9,6 +18,16 @@ export const createTestCase = async (data) => {
   if (!level_id || !test_case_name || !function_name || expected_output === undefined) {
     const err = new Error("Missing required fields: level_id, test_case_name, function_name, expected_output"); err.status = 400; throw err;
   }
+  
+  const level = await testCaseRepo.findLevelWithCategory(parseInt(level_id));
+  if (!level) { const err = new Error("Level not found"); err.status = 404; throw err; }
+  
+  if (level.category?.testcase_enable === false) {
+    const err = new Error("Test cases are disabled for this level category.");
+    err.status = 403;
+    throw err;
+  }
+  
   return testCaseRepo.createTestCase({ level_id: parseInt(level_id), test_case_name, is_primary: is_primary || false, function_name: function_name.toUpperCase(), input_params: input_params || {}, expected_output, comparison_type: comparison_type || "exact", display_order: display_order || 0 });
 }
 

@@ -5,7 +5,7 @@ export const getAllVictoryConditions = async ({ page, limit, search, skip }) => 
   let where = {};
   if (search.trim()) {
     const s = search.toLowerCase();
-    where = { OR: [{ type: { contains: s, mode: "insensitive" } }, { description: { contains: s, mode: "insensitive" } }, { check: { contains: s, mode: "insensitive" } }] };
+    where = { OR: [{ type: { contains: s, mode: "insensitive" } }, { description: { contains: s, mode: "insensitive" } }] };
   }
   const total = await vcRepo.countVictoryConditions(where);
   const victoryConditions = await vcRepo.findManyVictoryConditions(where, skip, limit);
@@ -19,18 +19,18 @@ export const getVictoryConditionById = async (vcId) => {
 }
 
 export const createVictoryCondition = async (data) => {
-  const { type, description, check, is_available } = data;
-  if (!type || !description || !check) { const err = new Error("Missing required fields: type, description, check"); err.status = 400; throw err; }
+  const { type, description, is_available } = data;
+  if (!type || !description) { const err = new Error("Missing required fields: type, description"); err.status = 400; throw err; }
   const trimmedType = type.trim();
   const existing = await vcRepo.findVictoryConditionByType(trimmedType);
   if (existing) { const err = new Error(`A victory condition with this type "${trimmedType}" already exists.`); err.status = 409; throw err; }
 
-  return vcRepo.createVictoryCondition({  type: trimmedType, description: description.trim(), check: check.trim(), is_available: is_available === true || is_available === "true" || is_available === undefined  });
+  return vcRepo.createVictoryCondition({ type: trimmedType, description: description.trim(), is_available: is_available === true || is_available === "true" || is_available === undefined });
 }
 
 export const updateVictoryCondition = async (vcId, data) => {
-  const { type, description, check, is_available } = data;
-  if (!type || !description || !check) { const err = new Error("Missing required fields: type, description, check"); err.status = 400; throw err; }
+  const { type, description, is_available } = data;
+  if (!type || !description) { const err = new Error("Missing required fields: type, description"); err.status = 400; throw err; }
 
   const existing = await vcRepo.findVictoryConditionById(vcId);
   if (!existing) { const err = new Error("Victory condition not found"); err.status = 404; throw err; }
@@ -41,7 +41,7 @@ export const updateVictoryCondition = async (vcId, data) => {
     if (duplicate) { const err = new Error(`A victory condition with this type "${trimmedType}" already exists.`); err.status = 409; throw err; }
   }
 
-  return vcRepo.updateVictoryCondition(vcId, {  type: trimmedType, description: description.trim(), check: check.trim(), is_available: is_available === true || is_available === "true"  });
+  return vcRepo.updateVictoryCondition(vcId, { type: trimmedType, description: description.trim(), is_available: is_available === true || is_available === "true" });
 }
 
 export const deleteVictoryCondition = async (vcId) => {

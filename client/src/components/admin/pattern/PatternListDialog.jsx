@@ -14,7 +14,7 @@ import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog'
 import PatternInfoDialog from '@/components/admin/pattern/PatternInfoDialog';
 import ContentLoader from '@/components/shared/Loading/ContentLoader';
 
-const PatternListDialog = ({ open, onOpenChange, levelId, levelName }) => {
+const PatternListDialog = ({ open, onOpenChange, levelId, levelName, category }) => {
   const navigate = useNavigate();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [patternToDelete, setPatternToDelete] = useState(null);
@@ -71,13 +71,21 @@ const PatternListDialog = ({ open, onOpenChange, levelId, levelName }) => {
               <DialogTitle>
                 รูปแบบคำตอบของด่าน: {levelName || `Level ${levelId}`}
               </DialogTitle>
-              <Button
-                onClick={handleAddPattern}
-                className="ml-4"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                เพิ่มรูปแบบคำตอบ
-              </Button>
+              <div className="flex flex-col items-end gap-1">
+                <Button
+                  onClick={handleAddPattern}
+                  disabled={category?.pseudocode_enable && patterns.length >= 1}
+                  className="ml-4"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  เพิ่มรูปแบบคำตอบ
+                </Button>
+                {category?.pseudocode_enable && patterns.length >= 1 && (
+                  <span className="text-[10px] text-amber-600 font-medium mr-4">
+                    * จำกัด 1 รูปแบบสำหรับหัวข้อที่เปิดใช้ Pseudocode
+                  </span>
+                )}
+              </div>
             </div>
           </DialogHeader>
 

@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import AdminPageHeader from '@/components/admin/headers/AdminPageHeader';
 import { LoadingState, EmptyState } from '@/components/shared/DataTableStates';
 import DeleteConfirmDialog from '@/components/admin/dialogs/DeleteConfirmDialog';
@@ -13,9 +13,17 @@ import PageError from '@/components/shared/Error/PageError';
 const TestCaseManagement = () => {
 
     const { levelId } = useParams();
+    const navigate = useNavigate();
     const numericLevelId = parseInt(levelId, 10);
 
-    const { data: level } = useLevel(numericLevelId);
+    const { data: level, isLoading: isLevelLoading } = useLevel(numericLevelId);
+
+    useEffect(() => {
+        if (!isLevelLoading && level && level.category?.testcase_enable === false) {
+            toast.error("Test Case ถูกปิดการใช้งานสำหรับหัวข้อนี้");
+            navigate('/admin/levels');
+        }
+    }, [isLevelLoading, level, navigate]);
     const {
         data: testCasesData,
         isLoading: loading,

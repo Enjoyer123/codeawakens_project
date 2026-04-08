@@ -29,11 +29,9 @@ const options = {
     tags: [
       { name: 'Profile', description: 'User profile and progression management' },
       { name: 'Tests', description: 'Examination management (Pre-test / Post-test)' },
-      { name: 'Leaderboard', description: 'Global rankings and leaderboards' },
       { name: 'Notifications', description: 'Notification management' },
       { name: 'Level Categories', description: 'Level groups and island regions' },
       { name: 'Levels', description: 'Individual level configuration and fetching' },
-      { name: 'Level Hints', description: 'Management of logic hints and clues for levels' },
       { name: 'Guides', description: 'Tutorial and gameplay manual system' },
       { name: 'Patterns', description: 'Map logic patterns and bullet-hell formations' },
       { name: 'Blocks', description: 'Playable code block definitions' },

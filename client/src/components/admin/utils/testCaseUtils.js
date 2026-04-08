@@ -39,19 +39,19 @@ export const ALGO_INPUT_CONFIG = {
     // Dynamic Programming
     KNAPSACK: {
         label: 'Knapsack', fields: [
-            { key: 'items', label: 'Items', type: 'json_array', placeholder: '[{"weight":2,"price":3},{"weight":3,"price":4}]', hint: 'Array of {weight, price}' },
+            { key: 'items', label: 'Items', type: 'knapsack_items', placeholder: '', hint: 'กำหนดสมบัติของ Knapsack' },
             { key: 'capacity', label: 'Capacity', type: 'number', placeholder: '5' },
         ]
     },
     COINCHANGE: {
         label: 'Coin Change', fields: [
-            { key: 'warriors', label: 'Coins', type: 'json_array', placeholder: '[1, 3, 5]', hint: 'Array of coin denominations' },
+            { key: 'warriors', label: 'Coins', type: 'number_array', placeholder: '', hint: 'กำหนดประเภทเหรียญทั้งหมด' },
             { key: 'monster_power', label: 'Target Amount', type: 'number', placeholder: '7' },
         ]
     },
     SUBSETSUM: {
         label: 'Subset Sum', fields: [
-            { key: 'warriors', label: 'Warriors (weights)', type: 'json_array', placeholder: '[3, 1, 4, 2]', hint: 'Array of item weights' },
+            { key: 'warriors', label: 'Warriors (weights)', type: 'number_array', placeholder: '', hint: 'กำหนดพลังของนักรบแต่ละตัว' },
             { key: 'target_sum', label: 'Target Sum', type: 'number', placeholder: '5' },
         ]
     },
@@ -96,8 +96,8 @@ export function paramsToFields(inputParams, functionName) {
     return Object.fromEntries(
         config.fields.map(f => {
             const val = inputParams[f.key];
-            if (val === undefined || val === null) return [f.key, f.type === 'number' ? '0' : ''];
-            if (f.type === 'json_array') return [f.key, JSON.stringify(val)];
+            if (val === undefined || val === null) return [f.key, f.type === 'number' ? '0' : f.type === 'knapsack_items' || f.type === 'number_array' || f.type === 'json_array' ? '[]' : ''];
+            if (f.type === 'json_array' || f.type === 'knapsack_items' || f.type === 'number_array') return [f.key, JSON.stringify(val)];
             return [f.key, String(val)];
         })
     );
@@ -114,8 +114,8 @@ export function fieldsToParams(inputFields, functionName) {
         const raw = inputFields[f.key];
         if (raw === undefined || raw === '' || raw === null) continue;
         if (f.type === 'number') {
-            result[f.key] = parseFloat(raw);
-        } else if (f.type === 'json_array') {
+            result[f.key] = parseFloat(raw) || 0;
+        } else if (f.type === 'json_array' || f.type === 'knapsack_items' || f.type === 'number_array') {
             result[f.key] = JSON.parse(raw); // will throw if invalid JSON — caught in handleSave
         }
     }

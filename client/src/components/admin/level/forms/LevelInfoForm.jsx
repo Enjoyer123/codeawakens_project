@@ -127,15 +127,32 @@ const LevelInfoForm = ({ formData, categories, prerequisiteLevels, isEditing, le
           </div>
         </div>
 
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-medium">Difficulty Level</label>
+            <select
+              value={formData.dificulty || 'easy'}
+              onChange={(e) => handleChange('dificulty', e.target.value)}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+            >
+              <option value="easy">Easy (ระดับง่าย)</option>
+              <option value="medium">Medium (ระดับกลาง)</option>
+              <option value="hard">Hard (ระดับยาก)</option>
+            </select>
+          </div>
+        </div>
+
         <div className="flex items-center gap-4">
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={formData.is_unlocked}
-              onChange={(e) => handleChange('is_unlocked', e.target.checked)}
-            />
-            <span className="text-sm font-medium">Unlocked</span>
-          </label>
+          {isEditing && (
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={formData.is_unlocked}
+                onChange={(e) => handleChange('is_unlocked', e.target.checked)}
+              />
+              <span className="text-sm font-medium">Unlocked</span>
+            </label>
+          )}
           <label className="flex items-center gap-2">
             <input
               type="checkbox"

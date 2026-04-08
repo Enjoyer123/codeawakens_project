@@ -106,11 +106,12 @@ export const createLevelCategory = async (data) => {
       category_name: data.category_name.trim(),
       description: data.description.trim(),
       item_enable: data.item_enable === true || data.item_enable === "true",
+      testcase_enable: data.testcase_enable === true || data.testcase_enable === "true",
+      pseudocode_enable: data.pseudocode_enable === true || data.pseudocode_enable === "true",
       block_key: data.block_key && data.block_key !== "null" && data.block_key !== "" ? data.block_key : null,
       background_image: data.background_image || null,
       coordinates: data.coordinates ? JSON.parse(JSON.stringify(data.coordinates)) : null,
       category_items: categoryItemsData.length > 0 ? { create: categoryItemsData } : undefined,
-    
     });
 
   return levelCategory;
@@ -150,11 +151,12 @@ export const updateLevelCategory = async (categoryId, data) => {
       category_name: data.category_name.trim(),
       description: data.description.trim(),
       item_enable: data.item_enable === true || data.item_enable === "true",
+      testcase_enable: data.testcase_enable === true || data.testcase_enable === "true",
+      pseudocode_enable: data.pseudocode_enable === true || data.pseudocode_enable === "true",
       block_key: data.block_key && data.block_key !== "null" && data.block_key !== "" ? data.block_key : null,
       background_image: data.background_image !== undefined ? data.background_image : undefined,
       coordinates: data.coordinates !== undefined ? JSON.parse(JSON.stringify(data.coordinates)) : undefined,
       category_items: categoryItemsData.length > 0 ? { create: categoryItemsData } : undefined,
-    
     });
 
   return levelCategory;

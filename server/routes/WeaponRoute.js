@@ -30,7 +30,7 @@ import {
  *     tags: [Weapons]
  *     security:
  *       - bearerAuth: []
- *       - devAdminAuth: []
+ *       - devUserAuth: []
  *     parameters:
  *       - in: query
  *         name: page
@@ -51,7 +51,7 @@ import {
  *       200:
  *         description: Weapons data array & pagination metadata.
  */
-router.get("/weapons", authCheck, requireAdmin, getAllWeapons);
+router.get("/weapons", authCheck, getAllWeapons);
 
 /**
  * @swagger
@@ -61,7 +61,7 @@ router.get("/weapons", authCheck, requireAdmin, getAllWeapons);
  *     tags: [Weapons]
  *     security:
  *       - bearerAuth: []
- *       - devAdminAuth: []
+ *       - devUserAuth: []
  *     parameters:
  *       - in: path
  *         name: weaponId
@@ -72,7 +72,7 @@ router.get("/weapons", authCheck, requireAdmin, getAllWeapons);
  *       200:
  *         description: Weapon metadata and stats.
  */
-router.get("/weapons/:weaponId", authCheck, requireAdmin, getWeaponById);
+router.get("/weapons/:weaponId", authCheck, getWeaponById);
 /**
  * @swagger
  * /weapons:

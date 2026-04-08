@@ -30,6 +30,8 @@ const LevelCategoryFormDialog = ({
     category_name: '',
     description: '',
     item_enable: false,
+    testcase_enable: false,
+    pseudocode_enable: false,
     item: null,
     block_key: '',
   });
@@ -60,6 +62,8 @@ const LevelCategoryFormDialog = ({
           category_name: editingLevelCategory.category_name,
           description: editingLevelCategory.description || '',
           item_enable: items.length > 0,
+          testcase_enable: editingLevelCategory.testcase_enable || false,
+          pseudocode_enable: editingLevelCategory.pseudocode_enable || false,
           item: items,
           block_key: blockKeyDisplay,
         });
@@ -68,6 +72,8 @@ const LevelCategoryFormDialog = ({
           category_name: '',
           description: '',
           item_enable: false,
+          testcase_enable: false,
+          pseudocode_enable: false,
           item: null,
           block_key: '',
         });
@@ -246,6 +252,24 @@ const LevelCategoryFormDialog = ({
             checked={formData.item_enable}
             onChange={(e) => handleChange('item_enable', e.target.checked)}
           />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormCheckbox
+              label="Test Case Enable"
+              name="testcase_enable"
+              checked={formData.testcase_enable}
+              onChange={(e) => handleChange('testcase_enable', e.target.checked)}
+              description="เปิดให้สามารถจัดการ Test Case ในด่านภายใต้หัวข้อนี้"
+            />
+
+            <FormCheckbox
+              label="Pseudocode Enable"
+              name="pseudocode_enable"
+              checked={formData.pseudocode_enable}
+              onChange={(e) => handleChange('pseudocode_enable', e.target.checked)}
+              description="เปิดให้สร้าง Pseudocode ได้ (จำกัด 1 Pattern ต่อด่าน)"
+            />
+          </div>
 
           {formData.item_enable && (
             <div>

@@ -23,6 +23,8 @@ const LevelCategoryTable = ({ levelCategories, onEdit, onDelete, onManageImages 
             <th className={tableHeaderClassName}>Item Enable</th>
             <th className={tableHeaderClassName}>Items</th>
             <th className={tableHeaderClassName}>Image</th>
+            <th className={tableHeaderClassName}>Test Case</th>
+            <th className={tableHeaderClassName}>Pseudocode</th>
             <th className={tableHeaderClassName}>Block Key</th>
             <th className={tableHeaderClassName}>Actions</th>
           </tr>
@@ -72,6 +74,20 @@ const LevelCategoryTable = ({ levelCategories, onEdit, onDelete, onManageImages 
                 ) : (
                   <span className="text-sm text-gray-400">ไม่มี</span>
                 )}
+              </td>
+              <td className={tableCellClassName}>
+                <Badge
+                  variant={category.testcase_enable ? 'default' : 'secondary'}
+                >
+                  {category.testcase_enable ? 'Enabled' : 'Disabled'}
+                </Badge>
+              </td>
+              <td className={tableCellClassName}>
+                <Badge
+                  variant={category.pseudocode_enable ? 'default' : 'secondary'}
+                >
+                  {category.pseudocode_enable ? 'Enabled' : 'Disabled'}
+                </Badge>
               </td>
               <td className={tableCellClassName}>
                 {category.block_key ? (

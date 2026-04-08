@@ -194,7 +194,8 @@ const StarterCreateEdit = () => {
 
         // Copy mutation / extra state (สำคัญมากสำหรับ function call, if/else)
         if (sourceBlock.mutationToDom && newBlock.domToMutation) {
-          newBlock.domToMutation(sourceBlock.mutationToDom());
+          const mutationDom = sourceBlock.mutationToDom();
+          if (mutationDom) newBlock.domToMutation(mutationDom);
         }
         if (sourceBlock.getExtraState && newBlock.setExtraState) {
           newBlock.setExtraState(sourceBlock.getExtraState());

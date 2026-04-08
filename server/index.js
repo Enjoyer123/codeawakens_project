@@ -11,7 +11,6 @@ import weaponRouter from "./routes/WeaponRoute.js";
 import levelRouter from "./routes/LevelRoute.js";
 import rewardRouter from "./routes/RewardRoute.js";
 import guideRouter from "./routes/GuideRoute.js";
-import levelHintRouter from "./routes/LevelHintRoute.js";
 import blockRouter from "./routes/BlockRoute.js";
 import victoryConditionRouter from "./routes/VictoryConditionRoute.js";
 import levelCategoryRouter from "./routes/LevelCategoryRoute.js";
@@ -20,7 +19,6 @@ import testCaseRouter from "./routes/testCaseRoutes.js";
 import testRouter from "./routes/testRoutes.js";
 import notificationRouter from "./routes/NotificationRoute.js";
 import dashboardRouter from "./routes/dashboardRoutes.js";
-import leaderboardRouter from "./routes/leaderboardRoutes.js";
 import { setupSwagger } from "./swagger.js";
 
 // ====== MIDDLEWARE ======
@@ -62,7 +60,6 @@ app.use("/api", weaponRouter);
 app.use("/api", levelRouter);
 app.use("/api", rewardRouter);
 app.use("/api", guideRouter);
-app.use("/api", levelHintRouter);
 app.use("/api", blockRouter);
 app.use("/api", victoryConditionRouter);
 app.use("/api", levelCategoryRouter);
@@ -71,7 +68,6 @@ app.use("/api", testCaseRouter);
 app.use("/api", testRouter);
 app.use("/api", notificationRouter);
 app.use("/api", dashboardRouter);
-app.use("/api", leaderboardRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello World - Server is running!");
@@ -91,7 +87,7 @@ app.use((err, req, res, next) => {
   if (err.message && err.message.includes("Invalid file type")) {
     return sendError(res, "ประเภทไฟล์ไม่ถูกต้อง อนุญาตเฉพาะไฟล์รูปภาพ (JPEG, PNG, GIF, WebP)", 400);
   }
-  
+
   if (err.message === "Only images are allowed") {
     return sendError(res, "ประเภทไฟล์ไม่ถูกต้อง อนุญาตเฉพาะไฟล์รูปภาพ (JPEG, PNG, GIF, WebP)", 400);
   }

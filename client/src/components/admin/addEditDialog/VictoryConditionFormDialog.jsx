@@ -24,7 +24,6 @@ const VictoryConditionFormDialog = ({
   const [formData, setFormData] = useState({
     type: '',
     description: '',
-    check: '',
     is_available: true,
   });
 
@@ -39,14 +38,12 @@ const VictoryConditionFormDialog = ({
         setFormData({
           type: editingVictoryCondition.type,
           description: editingVictoryCondition.description || '',
-          check: editingVictoryCondition.check || '',
           is_available: editingVictoryCondition.is_available,
         });
       } else {
         setFormData({
           type: '',
           description: '',
-          check: '',
           is_available: true,
         });
       }
@@ -68,19 +65,14 @@ const VictoryConditionFormDialog = ({
       setError('กรุณากรอก Description');
       return;
     }
-    if (!formData.check?.trim()) {
-      setError('กรุณากรอก Check');
-      return;
-    }
 
     try {
       setSaving(true);
-      
+
       const payload = {
         ...formData,
         type: formData.type.trim(),
         description: formData.description.trim(),
-        check: formData.check.trim(),
       };
 
       if (editingVictoryCondition) {
@@ -139,15 +131,6 @@ const VictoryConditionFormDialog = ({
             onChange={(e) => handleChange('description', e.target.value)}
             placeholder="เช่น ไปถึง Node เป้าหมาย"
             required
-          />
-          <FormInput
-            label="Check"
-            name="check"
-            value={formData.check}
-            onChange={(e) => handleChange('check', e.target.value)}
-            placeholder="เช่น goalReached"
-            required
-            disabled={!!editingVictoryCondition}
           />
           <FormCheckbox
             label="Available"

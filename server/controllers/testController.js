@@ -17,11 +17,11 @@ export const getTestsByType = async (req, res) => {
 
 export const submitTest = async (req, res) => {
   const clerkUserId = req.user.id;
-  const answers = req.body;
-  console.log(`[TEST] User ${clerkUserId} submitted test.`);
+  const { type, answers } = req.body;
+  console.log(`[TEST] User ${clerkUserId} submitted test type: ${type}`);
   
   try {
-    const result = await testService.submitTest(clerkUserId, answers);
+    const result = await testService.submitTest(type, answers, clerkUserId);
     
     sendSuccess(res, result, "Test submitted successfully");
   } catch (error) {

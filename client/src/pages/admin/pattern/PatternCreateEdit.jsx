@@ -251,16 +251,18 @@ const PatternCreateEdit = () => {
           </div>
         </div>
 
-        <div className="w-[450px] shrink-0 flex flex-col bg-gray-50 overflow-y-auto">
-          <div className="p-4 h-full">
-            <PseudocodeEditor
-              stepIndex={blocklyManager.currentStepIndex}
-              value={blocklyManager.steps[blocklyManager.currentStepIndex]?.pseudocode || []}
-              onChange={(newLines) => blocklyManager.updateStepPseudocode(newLines)}
-              workspaceRef={blocklyManager.workspaceRef}
-            />
+        {levelData?.category?.pseudocode_enable && (
+          <div className="w-[450px] shrink-0 flex flex-col bg-gray-50 overflow-y-auto">
+            <div className="p-4 h-full">
+              <PseudocodeEditor
+                stepIndex={blocklyManager.currentStepIndex}
+                value={blocklyManager.steps[blocklyManager.currentStepIndex]?.pseudocode || []}
+                onChange={(newLines) => blocklyManager.updateStepPseudocode(newLines)}
+                workspaceRef={blocklyManager.workspaceRef}
+              />
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <Dialog open={blocklyManager.confirmDialog?.isOpen} onOpenChange={(isOpen) => { if (!isOpen) blocklyManager.setConfirmDialog(prev => ({ ...prev, isOpen: false })); }}>
