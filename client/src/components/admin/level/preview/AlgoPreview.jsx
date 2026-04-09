@@ -180,6 +180,49 @@ const AlgoPreview = ({ algoType, data, backgroundImageUrl }) => {
         );
     }
 
+    // --- N-Queen Preview ---
+    if (algoType === 'NQUEEN') {
+        const n = data?.n;
+        return (
+            <div className="w-full h-full relative rounded-lg overflow-hidden" style={bgStyle}>
+                <div className="absolute inset-0 bg-black/50" />
+                <div className="relative z-10 flex flex-col items-center justify-center h-full gap-6">
+                    <h3 className="text-white/60 text-sm font-bold uppercase tracking-widest">N-Queen Preview</h3>
+                    
+                    {n && n >= 4 ? (
+                        <div className="flex flex-col items-center gap-4">
+                            <div className="bg-blue-900/40 border border-blue-500/50 rounded-lg px-6 py-2 backdrop-blur-sm self-center">
+                                <span className="text-sm text-white/70 font-semibold tracking-wider">Board Size : <span className="text-xl text-blue-300 font-bold ml-2">{n} × {n}</span></span>
+                            </div>
+                            
+                            <div 
+                                className="grid border-4 border-gray-900 shadow-[0_10px_40px_rgba(0,0,0,0.8)]"
+                                style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}
+                            >
+                                {Array.from({ length: n * n }).map((_, idx) => {
+                                    const row = Math.floor(idx / n);
+                                    const col = idx % n;
+                                    const isLight = (row + col) % 2 === 0;
+                                    return (
+                                        <div 
+                                            key={idx}
+                                            className={`w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 transition-colors duration-300 ${isLight ? 'bg-[#ffce9e]' : 'bg-[#d18b47]'}`}
+                                        />
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center gap-3 bg-gray-900/50 p-6 rounded-xl backdrop-blur-sm border border-gray-700/50">
+                            <span className="text-4xl">👑</span>
+                            <p className="text-white/40 text-sm font-medium">Please enter a valid board size (N ≥ 4)</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
     // Fallback
     return (
         <div className="w-full h-full flex items-center justify-center bg-gray-900 rounded-lg">

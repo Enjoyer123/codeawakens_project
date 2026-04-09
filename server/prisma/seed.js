@@ -168,7 +168,8 @@ async function main() {
         { block_key: 'variables_get', block_name: 'variables_get', description: 'ดึงค่าตัวแปร', category: 'variables' },
         { block_key: 'variables_set', block_name: 'variables_set', description: 'ตั้งค่าตัวแปร', category: 'variables' },
         { block_key: 'math_change', block_name: 'math_change', description: 'เพิ่ม/ลดค่าให้กับตัวแปร', category: 'variables' },
-        { block_key: 'local_variable_set', block_name: 'local_variable_set', description: 'ประกาศ/ตั้งค่าตัวแปร Local', category: 'variables' }
+        { block_key: 'local_variable_set', block_name: 'local_variable_set', description: 'ประกาศ/ตั้งค่าตัวแปร Local', category: 'variables' },
+        { block_key: 'variables_game_input', block_name: 'variables_game_input', description: 'รับข้อมูลจากด่านใส่ตัวแปร', category: 'variables' }
     ];
 
     for (const block of blocks) {

@@ -6,7 +6,7 @@
  * and the actual loader function.
  */
 
-import { loadDfsExampleBlocks } from '../../../gameutils/blockly/example/loadDfsExample';
+
 import { loadDfsPlaybackExample } from '../../../gameutils/blockly/example/loadDfsPlaybackExample';
 import { loadBfsExampleBlocks } from '../../../gameutils/blockly/example/loadBfsExample';
 import { loadDijkstraExampleBlocks } from '../../../gameutils/blockly/example/loadDijkstraExample';
@@ -35,21 +35,12 @@ import { loadEmeiMountainExample } from '../../../gameutils/blockly/example/load
 export const EXAMPLE_LOADERS = [
     {
         id: 'dfs_playback',
-        label: 'DFS (Playback)',
+        label: 'DFS',
         title: 'โหลด DFS Record & Playback example',
         description: 'DFS แบบ Record & Playback ใหม่',
         icon: '🎬',
         className: 'bg-emerald-600/20 border-emerald-500/50 hover:bg-emerald-600/30 text-emerald-200',
         loader: loadDfsPlaybackExample
-    },
-    {
-        id: 'dfs',
-        label: 'DFS',
-        title: 'โหลด DFS example blocks',
-        description: 'Depth First Search',
-        icon: '📦',
-        className: 'bg-blue-600/20 border-blue-500/50 hover:bg-blue-600/30 text-blue-200',
-        loader: loadDfsExampleBlocks
     },
     {
         id: 'bfs',
