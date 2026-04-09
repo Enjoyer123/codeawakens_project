@@ -99,9 +99,9 @@ const LevelTable = ({
                     variant="outline"
                     size="sm"
                     onClick={() => handleNavigate(`/admin/levels/${level.level_id}/starters/create`)}
-                    disabled={!level._count?.patterns || level.dificulty === 'hard'}
-                    className={`text-purple-600 hover:text-purple-700 hover:bg-purple-50 ${!level._count?.patterns || level.dificulty === 'hard' ? 'opacity-50 cursor-not-allowed text-gray-400 border-gray-200' : ''}`}
-                    title={level.dificulty === 'hard' ? "ด่านระดับยากไม่สามารถกำหนด Starter Blocks ได้" : !level._count?.patterns ? "ต้องสร้างเฉลย (Pattern) ก่อนถึงจะสร้าง Starter ได้" : "เพิ่ม Starter"}
+                    disabled={!level._count?.patterns}
+                    className={`text-purple-600 hover:text-purple-700 hover:bg-purple-50 ${!level._count?.patterns ? 'opacity-50 cursor-not-allowed text-gray-400 border-gray-200' : ''}`}
+                    title={!level._count?.patterns ? "ต้องสร้างเฉลย (Pattern) ก่อนถึงจะสร้าง Starter ได้" : "เพิ่ม Starter"}
                   >
                     <Blocks className="h-4 w-4 mr-2" />
                     เพิ่ม Starter

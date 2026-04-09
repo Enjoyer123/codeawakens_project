@@ -481,9 +481,9 @@ const GameCore = ({
         </div>
 
         {/* Blockly Area - 40% */}
-        <div className="w-[40%] border-l border-black flex flex-col backdrop-blur-sm overflow-hidden">
+        <div className="w-[40%] border-l border-black flex flex-col backdrop-blur-sm relative z-50">
           <div className="flex flex-col h-full relative">
-            <div className="flex-1 min-h-0 relative shadow-2xl rounded-lg overflow-hidden">
+            <div className="flex-1 min-h-0 relative shadow-2xl rounded-lg">
               <BlocklyArea
                 blocklyRef={blocklyRef}
                 blocklyLoaded={blocklyLoaded}
