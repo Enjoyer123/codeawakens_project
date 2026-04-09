@@ -62,16 +62,26 @@ export const loadStarterXml = (workspace, starter_xml, floating_xml, isTextCodeE
         Blockly.Xml.domToWorkspace(xmlDom, workspace);
         setXmlLoading(false);
 
-        // 5. ล็อคบล็อกตั้งต้น — ผู้เล่นลบไม่ได้ แต่ขยับได้
+        // 5. ล็อคบล็อกตั้งต้น — ผู้เล่นลบไม่ได้ และถ้ามีการต่อกันอยู่แล้วจะห้ามแกะออก!
         const starterBlockIds = new Set();
         const allBlocks = workspace.getAllBlocks(false);
         allBlocks.forEach(block => {
             starterBlockIds.add(block.id);
             block.setDeletable(false);
-            block.setMovable(true);
+            
+            // 🔒 ล็อคเฉพาะ Value Block เท่านั้น
+            // บล็อกที่มี outputConnection (ตัวแปร/ค่า) และต่ออยู่แล้วแต่แรก ห้ามดึงออก!
+            // แต่ให้ Statement Block (พวกเงื่อนไข/คำสั่ง) ขยับแทรกกันบนกระดานได้
+            if (block.getParent() && block.outputConnection) {
+                block.setMovable(false);
+            } else {
+                block.setMovable(true);
+            }
 
             if (block.type === 'procedures_defreturn' || block.type === 'procedures_defnoreturn') {
                 block.setEditable(false);
+                // Allow the main procedure block to be movable so users can retrieve blocks stuck behind it
+                block.setMovable(true);
             }
         });
 
@@ -269,7 +279,13 @@ function loadFloatingBlocks(workspace, floating_xml, starterBlockIds) {
                             floatingBlockIds.add(desc.id);
                             starterBlockIds.add(desc.id);
                             desc.setDeletable(false);
-                            desc.setMovable(true);
+                            
+                            // 🔒 ล็อคเฉพาะ Value Block เท่านั้น (เหมือนโครงสร้างหลักด้านบน)
+                            if (desc.getParent() && desc.outputConnection) {
+                                desc.setMovable(false);
+                            } else {
+                                desc.setMovable(true);
+                            }
                         }
                     }
                 }

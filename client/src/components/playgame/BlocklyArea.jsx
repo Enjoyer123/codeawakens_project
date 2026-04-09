@@ -139,7 +139,7 @@ const BlocklyArea = ({
         </div>
 
         {/* Tab Contents Container */}
-        <div className="flex-1 relative bg-transparent overflow-hidden flex flex-col">
+        <div className="flex-1 relative bg-transparent overflow-visible flex flex-col">
           <div className="flex-1 relative">
             <BlocklyWorkspaceTab
               blocklyRef={blocklyRef}
@@ -150,6 +150,7 @@ const BlocklyArea = ({
                 pattern={displayPattern}
                 matchedSteps={patternData?.threePartsMatch?.matchedParts || 0}
                 selectedBlockType={selectedBlockType}
+                difficulty={currentLevel?.dificulty || currentLevel?.difficulty || 'easy'}
               />
             )}
           </div>

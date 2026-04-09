@@ -133,6 +133,13 @@ export function findFloatingHintBlockId(targetAnalysis, mainTreeBlocks, floating
 export function findPseudocodeLine(selectedData, allLines, context = null) {
     if (!selectedData || !allLines?.length) return null;
 
+    const difficulty = String(context?.difficulty || 'easy').toLowerCase();
+
+    // 🔴 ถ้าระดับความยากเป็น 'hard' (ยาก) จะไม่แสดงไฮไลต์ใดๆ เลย ไม่ว่าจะดึงมาจากไหน หรือต่อแล้วหรือไม่
+    if (difficulty === 'hard') {
+        return null;
+    }
+
     const isString = typeof selectedData === 'string';
     const type = isString ? selectedData : selectedData.type;
     const typeOcc = isString ? undefined : (selectedData.typeOcc ?? selectedData.occurrence);
@@ -143,70 +150,85 @@ export function findPseudocodeLine(selectedData, allLines, context = null) {
     // ─── ABSOLUTE MATCH: Exact Block ID ──────────────────────────
     // ถ้า block ใน workspace ปัจจุบัน มี ID ตรงกับ block ในเฉลย (Pattern) 
     // หรือถ้าเป็นก้อนที่ถูก Auto-Fill เราก็แอบยัด ID เดิมไว้ใน block.data แล้ว!
-    // ⚠️ แต่ถ้าผู้เล่นย้าย block ไปต่อไว้ที่อื่น (ancestorStr เปลี่ยน) → ให้ข้าม Exact Match
-    // เพื่อให้ Structural Match ทำงานตาม ancestor จริงๆ แทน
     const exactId = isString ? undefined : (selectedData.data || selectedData.id);
     if (exactId && context?.targetAnalysis) {
         const exactMatch = context.targetAnalysis.find(t => t.id === exactId);
         if (exactMatch) {
-            // ตรวจสอบว่า ancestorStr ปัจจุบันตรงกับ target หรือไม่
-            // ถ้าตรง = block ยังอยู่ที่เดิม → ใช้ Exact Match ได้
-            // ถ้าไม่ตรง = block ถูกย้ายไปแล้ว → ข้ามไปให้ Structural Match จัดการ
-            const currentAncestorStr = ancestorStr;
-            const targetAncestorStr = exactMatch.ancestorStr;
-            const ancestorMatches = !currentAncestorStr || !targetAncestorStr || currentAncestorStr === targetAncestorStr;
-            if (ancestorMatches) {
-                for (const line of allLines) {
-                    if (line.patternBlocks?.some(b => b.index === exactMatch.index)) {
-                        return line;
-                    }
-                }
-            }
-            // ancestorStr ไม่ตรง → fall through ไป Structural Match
-        }
-    }
-
-    // ─── FLOATING BLOCK HANDLING ────────────────────────────────
-    // ถ้า block เป็น floating (อยู่ในกระดานขวา) → ใช้ diff เพื่อหาว่าต้องไปต่อตรงไหน
-    if (!isString && selectedData.isFloating && context?.targetAnalysis) {
-        const missingSlots = findMissingSlots(context.targetAnalysis, selectedData.mainTreeBlocks);
-        
-        // 1) ลองจับคู่ด้วย Block ID แท้ๆ (Exact Target Match)
-        // ถ้า Admin เอาบล็อกออกมาจากบรรทัดไหน Block ID จะอิงตามนั้นเสมอ
-        let slot = missingSlots.find(s => s.id === selectedData.id);
-        
-        const sameKindMissing = missingSlots.filter(s =>
-            s.type === type && (varName ? s.varName === varName : !s.varName)
-        );
-
-        // 2) ถ้าไม่เจอ ID ตรงกัน (เช่นถูกสร้างใหม่) ให้ใช้คิวระดับความสูง (Y-position Fallback)
-        if (!slot) {
-            slot = sameKindMissing[selectedData.floatingOcc ?? 0];
-        }
-
-        console.log("=== 🔍 FLOATING BLOCK DEBUG ===");
-        console.log("1. กดที่บล็อก:", { type, varName, floatingOcc: selectedData.floatingOcc });
-        console.log("2. Target Analysis (เรียงตามเฉลยเต็มๆ):", context.targetAnalysis.map(t => `[${t.index}] ${t.type} (var: ${t.varName || 'none'})`));
-        console.log("3. Main Tree (บล็อกหลักตอนนี้):", selectedData.mainTreeBlocks.map(m => `[${m.index}] ${m.type} (var: ${m.varName || 'none'})`));
-        console.log("4. หาพบว่าขาด Slots ต่อไปนี้:", missingSlots.map(s => `[targetIndex:${s.targetIndex}] ${s.type} (var: ${s.varName || 'none'})`));
-        console.log("5. ขาดที่ตรงกับที่กด:", sameKindMissing.map(s => `[targetIndex:${s.targetIndex}] ${s.type} (var: ${s.varName || 'none'})`));
-        console.log("6. จับคู่กับ Slot:", slot ? `targetIndex:${slot.targetIndex} (ID Match: ${slot.id === selectedData.id})` : "หาไม่เจอ");
-
-        if (slot) {
             for (const line of allLines) {
-                if (line.patternBlocks?.some(b => b.index === slot.targetIndex)) {
-                    console.log("✅ ชี้ไปที่ Pseudocode บรรทัดที่:", line.lineIndex + 1, "=>", line.text);
+                if (line.patternBlocks?.some(b => b.index === exactMatch.index)) {
+                    console.log("🎯 EXACT ID MATCH:", type, exactId);
                     return line;
                 }
             }
         }
-        // Floating block ต้องไม่ตกทะลุไปรันโค้ดข้างล่าง (เพราะโค้ดข้างล่างไว้ใช้กับบล็อกที่เอาไปต่อแล้ว)
-        console.log("❌ ไม่เจอจับคู่ หรือว่าชี้ตกไปที่ Logic เดิม (ยกเลิก Fall-through แล้ว)");
+    }
+
+    // เช็คว่า block นี้ต่อกับโครงสร้างหลัก (Main Procedure) หรือยัง
+    // โดยดูว่ารากของสายบรรพบุรุษคือ procedures_defreturn หรือ процедуры_defnoreturn หรือไม่
+    const isMainConnected = ancestorStr && (ancestorStr.startsWith('procedures_defreturn') || ancestorStr.startsWith('procedures_defnoreturn'));
+
+    // ─── FLOATING & DETACHED BLOCK HANDLING ──────────────────────────
+    // ถ้า block เป็น floating (แถมมาจากโจทย์ หรือ ลากมาจาก Toolbox แล้วยังลอยอยู่)
+    if (!isString && selectedData.isFloating && context?.targetAnalysis) {
+        
+        console.log(`[FLOATING DEBUG] Checked Difficulty: '${difficulty}', Block: ${type}`);
+
+        // 🟡 ระดับ 'medium' / 'hard': บล็อกที่ลอยอยู่ (เชื่อมไม่ติดกับ Main) จะไม่ให้ใบ้บรรทัด
+        if (difficulty === 'medium' || difficulty === 'hard') {
+            console.log("➡️ Medium/Hard Mode: ซ่อน highlight บล็อกลอย");
+            return null;
+        }
+
+        console.log("➡️ Easy Mode: หาช่องว่างให้บล็อกลอย");
+        // ถ้าระดับ 'easy': ใช้ diff หาตำแหน่งที่ขาด
+        const missingSlots = findMissingSlots(context.targetAnalysis, selectedData.mainTreeBlocks);
+        const sameKindMissing = missingSlots.filter(s =>
+            s.type === type && (varName ? s.varName === varName : !s.varName)
+        );
+
+        const slot = sameKindMissing[selectedData.floatingOcc ?? 0];
+
+        if (slot) {
+            for (const line of allLines) {
+                if (line.patternBlocks?.some(b => b.index === slot.targetIndex)) {
+                    return line;
+                }
+            }
+        }
+        
+        // ถ้าหาไม่เจอสำหรับ block ที่ลอย ให้หยุดตรงนี้ ไม่ต้องไปจับคู่ด้วย LCS เพราะมันไม่ได้อยู่ในโครงสร้าง
         return null;
     }
 
-    // PRIMARY: Structural Sequence Matching — ใช้ LCS (Longest Common Subsequence) ยืดหยุ่นกรณีผู้เล่นข้ามบล็อกตรงกลาง
-    if (ancestorStr) {
+    // PRIMARY: Structural Sequence Matching — ใช้ LCS (Longest Common Subsequence) 
+    // ทำเมื่อเชื่อมต่อกับ Main Procedure แล้วเท่านั้น
+    if (isMainConnected) {
+        
+        // 🟡 สำหรับ Medium/Hard: ไฮไลต์ตาม "ตำแหน่งที่มันอยู่จริง ณ ปัจจุบัน" ไม่ใช่ "ตำแหน่งที่มันควรอยู่"
+        if (difficulty === 'medium' || difficulty === 'hard') {
+            const userParts = ancestorStr.split('|'); // ลำดับจาก root -> leaf (ตัวมันเองอยู่ขวาสุด)
+            
+            // ถอยหลังหาบรรพบุรุษที่ตรงกับ pattern 
+            // เริ่มหาตั้งแต่ตัวมันเองก่อน (ถ้าต่อถูกที่เป๊ะ จะเจอตัวมันเอง)
+            // ถ้าไม่เจอ ให้ถอยขึ้นไปหา parent เรื่อยๆ จนกว่าจะเจอบล็อกที่มีจุดยืนใน Pseudocode
+            for (let i = userParts.length; i > 0; i--) {
+                const searchStr = userParts.slice(0, i).join('|');
+                const searchType = userParts[i - 1];
+
+                for (const line of allLines) {
+                    if (!line.patternBlocks?.length) continue;
+                    // หาบล็อกตัวที่ i ที่มี ancestorStr เป๊ะๆ
+                    const found = line.patternBlocks.find(b => b.type === searchType && b.ancestorStr === searchStr);
+                    if (found) {
+                        return line; // เจอ Context จริงๆ ที่มันเกาะอยู่ คืนค่าบรรทัดนั้นเลย
+                    }
+                }
+            }
+            // ถ้าย้อนจนสุดแล้วไม่เจออะไรเลย ให้ return null (ตกขอบ)
+            return null; 
+        }
+
+        // 🟢 สำหรับ Easy: ใช้ LCS แมตช์หา "ตำแหน่งที่มันควรจะอยู่" ให้ผู้เล่นรู้ว่าต้องเอาไปไว้ไหน
         const userParts = ancestorStr.split('|').reverse();
         let bestMatch = null;
         let maxScore = -1;
@@ -216,7 +238,7 @@ export function findPseudocodeLine(selectedData, allLines, context = null) {
             for (const b of line.patternBlocks.filter(b => b.type === type && (!varName || b.varName === varName))) {
                 if (!b.ancestorStr) continue;
                 const targetParts = b.ancestorStr.split('|').reverse();
-                
+
                 // คำนวณ Longest Common Subsequence (โครงสร้างครอบครัวที่ตรงกันโดยรวม)
                 const dp = Array(targetParts.length + 1).fill(0).map(() => Array(userParts.length + 1).fill(0));
                 for (let i = 1; i <= targetParts.length; i++) {
