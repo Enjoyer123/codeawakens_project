@@ -66,7 +66,7 @@ export const deleteLevelCategory = async (req, res) => {
 export const updateLevelCategoryCoordinates = async (req, res) => {
   try {
     const categoryId = parseInt(req.params.categoryId);
-    const result = await levelCategoryService.updateLevelCategoryCoordinates(categoryId, req.body);
+    const result = await levelCategoryService.updateLevelCategoryCoordinates(categoryId, req.body.coordinates);
     
     sendSuccess(res, { category: result }, "อัปเดตพิกัดสำเร็จ");
   } catch (error) {

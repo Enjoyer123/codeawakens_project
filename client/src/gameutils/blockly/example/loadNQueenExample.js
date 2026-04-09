@@ -147,8 +147,14 @@ const nQueenExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml"
   </block>
 
   <!-- Main code: init solutions_list, call solve(0), set result = solutions_list -->
-  <block type="variables_set" id="init_solutions_list" x="50" y="720">
-    <field name="VAR">solutions_list</field>
+  <block type="variables_game_input" id="game_input_board" x="50" y="700">
+    <field name="VAR">board</field>
+    <next>
+      <block type="variables_game_input" id="game_input_n">
+        <field name="VAR">n</field>
+        <next>
+          <block type="variables_set" id="init_solutions_list">
+            <field name="VAR">solutions_list</field>
     <value name="VALUE">
       <block type="lists_create_with"><mutation items="0"></mutation></block>
     </value>
@@ -163,6 +169,10 @@ const nQueenExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml"
           <block type="variables_set" id="main_result_set">
             <field name="VAR">result</field>
             <value name="VALUE"><block type="variables_get"><field name="VAR">solutions_list</field></block></value>
+          </block>
+        </next>
+      </block>
+    </next>
           </block>
         </next>
       </block>

@@ -9,6 +9,7 @@ import { drawPlayer, drawCinematicMonster } from '../../setup/playerSetup';
 import { setupKnapsack } from '../../algo/setup/knapsackSetup';
 import { setupSubsetSum } from '../../algo/setup/subsetSumSetup';
 import { setupCoinChange } from '../../algo/setup/coinChangeSetup';
+import { setupNQueen } from '../../algo/setup/nqueenSetup';
 
 import { setupGoalUI } from '../../setup/uiManager';
 import { updateMonsters } from '../../combat/enemyMovement';
@@ -153,6 +154,8 @@ export class GameScene extends Phaser.Scene {
                 setupSubsetSum(this);
             } else if (algoType === 'COINCHANGE') {
                 setupCoinChange(this);
+            } else if (algoType === 'NQUEEN') {
+                setupNQueen(this);
             }
 
             setupGoalUI(this);

@@ -10,9 +10,10 @@ export function injectSubsetSumStubs(context, levelData, trace) {
     /* ==========================================
        1. GAME VARIABLES
        ========================================== */
-    context.warriors = payload.warriors || [];
-    context.target_sum = payload.target_sum || 0;
-    context.chosen = [];  // mutable shared state สำหรับ real backtracking (push/pop)
+    context._state = context._state || {};
+    context._state.warriors = payload.warriors || [];
+    context._state.target_sum = payload.target_sum || 0;
+    context._state.chosen = [];  // mutable shared state สำหรับ real backtracking (push/pop)
 
     /* ==========================================
        2. TRACE RECORDERS

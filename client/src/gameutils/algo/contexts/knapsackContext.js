@@ -12,14 +12,14 @@ export function injectKnapsackStubs(context, levelData, trace) {
        ========================================== */
     const { items = [], capacity = 0 } = payload;
     
-    // แยกน้ำหนักและราคาออกมาเป็น Array ให้ใช้ง่าย
-    context.weights = items.map(i => i.weight);
-    context.values = items.map(i => i.price);
-    context.n = items.length;
-    context.capacity = capacity;
-    context.bag = [];  // mutable shared state สำหรับ real backtracking (push/pop)
-    context.bestValue = 0;   // ค่าสูงสุดที่เจอ
-    context.bestBag = [];    // snapshot ของ bag ณ จุดที่ดีที่สุด
+    context._state = context._state || {};
+    context._state.weights = items.map(i => i.weight);
+    context._state.values = items.map(i => i.price);
+    context._state.n = items.length;
+    context._state.capacity = capacity;
+    context._state.bag = [];  // mutable shared state สำหรับ real backtracking (push/pop)
+    context._state.bestValue = 0;   // ค่าสูงสุดที่เจอ
+    context._state.bestBag = [];    // snapshot ของ bag ณ จุดที่ดีที่สุด
 
     /* ==========================================
        2. VISUAL STUBS (Trace Recorders)

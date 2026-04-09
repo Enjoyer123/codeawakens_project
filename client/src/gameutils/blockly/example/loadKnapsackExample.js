@@ -258,7 +258,8 @@ const knapsackExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
   </block>
 
   <!-- Main: _unused = knapsack(...) → result = bestBag -->
-  <block type="variables_set" x="50" y="600">
+  <block type="variables_game_input" x="50" y="600"><field name="VAR">n</field><next><block type="variables_game_input"><field name="VAR">capacity</field><next><block type="variables_game_input"><field name="VAR">weights</field><next><block type="variables_game_input"><field name="VAR">values</field><next><block type="variables_game_input"><field name="VAR">bag</field><next><block type="variables_game_input"><field name="VAR">bestValue</field><next><block type="variables_game_input"><field name="VAR">bestBag</field><next>
+  <block type="variables_set">
     <field name="VAR">_unused</field>
     <value name="VALUE">
       <block type="procedures_callreturn">
@@ -284,6 +285,7 @@ const knapsackExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
       </block>
     </next>
   </block>
+  </next></block></next></block></next></block></next></block></next></block></next></block></next></block>
 </xml>`;
 
 const knapsackDpExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
@@ -562,7 +564,8 @@ const knapsackDpExampleXml = `<xml xmlns="https://developers.google.com/blockly/
     </statement>
   </block>
 
-  <block type="variables_set" x="50" y="800">
+  <block type="variables_game_input" x="50" y="800"><field name="VAR">n</field><next><block type="variables_game_input"><field name="VAR">capacity</field><next><block type="variables_game_input"><field name="VAR">weights</field><next><block type="variables_game_input"><field name="VAR">values</field><next><block type="variables_game_input"><field name="VAR">bag</field><next><block type="variables_game_input"><field name="VAR">bestValue</field><next><block type="variables_game_input"><field name="VAR">bestBag</field><next>
+  <block type="variables_set">
     <field name="VAR">result</field>
     <value name="VALUE">
       <block type="procedures_callreturn">
@@ -570,6 +573,7 @@ const knapsackDpExampleXml = `<xml xmlns="https://developers.google.com/blockly/
       </block>
     </value>
   </block>
+  </next></block></next></block></next></block></next></block></next></block></next></block></next></block>
 </xml>`;
 
 export function loadKnapsackExampleBlocks(workspace, type = 'BACKTRACK') {

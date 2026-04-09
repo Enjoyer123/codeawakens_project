@@ -11,11 +11,20 @@ import { playSound } from '../../sound/soundManager';
 import { createGameActions } from '../../../components/playgame/hooks/execution/gameActions'
 
 /**
+ * ระบบสับสวิตช์โหมดการแสดงผลของ N-Queen (ตั้งค่าเป็น 'CLASSIC' หรือ 'TREE')
+ * การตั้งค่านี้จะถูกนำไปใช้ร่วมกับฉากเริ่มต้นด้วย
+ */
+export const NQUEEN_DISPLAY_MODE = 'CLASSIC';
+
+/**
  * Router: เรียก Display Mode ที่ต้องการ (แค่นี้เท่านั้น ไม่ทำอะไรเพิ่ม)
  */
 export async function playNQueenAnimation(scene, trace, options = {}) {
-    // สลับ Display Mode ตรงนี้:
-    return playClassicDisplay(scene, trace, options);
+    if (NQUEEN_DISPLAY_MODE === 'TREE') {
+        return playTreeDisplay(scene, trace, options);
+    } else {
+        return playClassicDisplay(scene, trace, options);
+    }
 }
 
 // ============================================================================
@@ -27,6 +36,14 @@ async function playTreeDisplay(scene, trace, options) {
     if (!scene || !trace) {
         console.warn('⚠️ [nqueenPlayback] No scene or trace');
         return;
+    }
+
+    // ลบกระดาน 2D ที่สร้างจาก nqueenSetup.js ทิ้งไปเลย เพราะหน้านี้เราจะโชว์เป็น Tree
+    if (scene.nqueenBoard && scene.nqueenBoard.graphics) {
+        scene.nqueenBoard.graphics.forEach(gfx => {
+            if (gfx && gfx.destroy) gfx.destroy();
+        });
+        scene.nqueenBoard.graphics = [];
     }
 
     const n = scene.levelData?.algo_data?.payload?.n || options.n || 4;
@@ -147,53 +164,16 @@ async function playClassicDisplay(scene, trace, options = {}) {
         return;
     }
 
-    // อ่าน n จาก levelData โดยตรง
-    const n = scene.levelData?.algo_data?.payload?.n || options.n || 4;
-    const cellSize = 60;
-    const boardStartX = 400;
-    const boardStartY = 300;
-    const boardWidth = n * cellSize;
-    const boardHeight = n * cellSize;
+    // อ่านตัวแปรทั้งหมดจาก nqueenSetup.js (หากมี) 
+    const boardState = scene.nqueenBoard || {};
+    const n = boardState.n || scene.levelData?.algo_data?.payload?.n || options.n || 4;
+    const cellSize = boardState.cellSize || 60;
+    const boardStartX = boardState.startX || 400;
+    const boardStartY = boardState.startY || 300;
+    const boardWidth = boardState.width || (n * cellSize);
+    const boardHeight = boardState.height || (n * cellSize);
 
-
-    // ====== วาด Board ======
-    const bgRect = scene.add.rectangle(boardStartX, boardStartY, boardWidth, boardHeight, 0xFDF5E6);
-    bgRect.setStrokeStyle(3, 0x333333);
-    bgRect.setDepth(4);
-
-    for (let row = 0; row < n; row++) {
-        for (let col = 0; col < n; col++) {
-            if ((row + col) % 2 === 1) {
-                const x = boardStartX - boardWidth / 2 + col * cellSize + cellSize / 2;
-                const y = boardStartY - boardHeight / 2 + row * cellSize + cellSize / 2;
-                scene.add.rectangle(x, y, cellSize - 1, cellSize - 1, 0xD4A574, 0.5).setDepth(4);
-            }
-        }
-    }
-
-    const gridGfx = scene.add.graphics().setDepth(5);
-    gridGfx.lineStyle(2, 0x333333, 0.8);
-    for (let i = 0; i <= n; i++) {
-        const vx = boardStartX - boardWidth / 2 + (i * cellSize);
-        gridGfx.moveTo(vx, boardStartY - boardHeight / 2);
-        gridGfx.lineTo(vx, boardStartY + boardHeight / 2);
-        const hy = boardStartY - boardHeight / 2 + (i * cellSize);
-        gridGfx.moveTo(boardStartX - boardWidth / 2, hy);
-        gridGfx.lineTo(boardStartX + boardWidth / 2, hy);
-    }
-    gridGfx.strokePath();
-
-    for (let i = 0; i < n; i++) {
-        const cx = boardStartX - boardWidth / 2 + (i * cellSize) + cellSize / 2;
-        scene.add.text(cx, boardStartY - boardHeight / 2 - 18, i.toString(), {
-            fontSize: '16px', color: '#FFD700', fontStyle: 'bold', stroke: '#000', strokeThickness: 2
-        }).setOrigin(0.5).setDepth(6);
-
-        const ry = boardStartY - boardHeight / 2 + (i * cellSize) + cellSize / 2;
-        scene.add.text(boardStartX - boardWidth / 2 - 18, ry, i.toString(), {
-            fontSize: '16px', color: '#FFD700', fontStyle: 'bold', stroke: '#000', strokeThickness: 2
-        }).setOrigin(0.5).setDepth(6);
-    }
+    // เราไม่วาดบอร์ดพื้นฐานซ้ำตรงนี้แล้วเพราะ nqueenSetup.js ได้วาดรอไว้แล้วตั้งแต่โหลดด่าน
 
     // ====== Helpers ======
     const sleep = (ms) => animationController.sleep(ms);
@@ -239,9 +219,8 @@ async function playClassicDisplay(scene, trace, options = {}) {
         qArr.forEach(q => {
             sc.add.image(sx - bw / 2 + q.col * cs + cs / 2, sy - bh / 2 + q.row * cs + cs / 2, 'gun').setScale(2.5 * scale).setDepth(9);
         });
-    };
-
-    const queens = [];
+    }; const queens = [];
+    let solutionCount = 0;
 
     // ====== เล่น Animation ตาม trace ======
     for (let i = 0; i < trace.length; i++) {
@@ -273,6 +252,21 @@ async function playClassicDisplay(scene, trace, options = {}) {
                 playSound('run');
                 queens.push({ row: r, col: c, graphics: queen });
                 await sleep(baseDelay);
+
+                // --- DETECT SOLUTION IN REAL-TIME ---
+                if (queens.length === n) {
+                    solutionCount++;
+                    const overlay = scene.add.rectangle(boardStartX, boardStartY, boardWidth, boardHeight, 0x00FF00, 0.2).setDepth(10);
+                    const solutionText = scene.add.text(boardStartX, boardStartY + 180, `ค้นพบรูปแบบที่ ${solutionCount} ถูกต้อง!`, {
+                        fontSize: '28px', color: '#FFFFFF', fontStyle: 'bold', stroke: '#000', strokeThickness: 6
+                    }).setOrigin(0.5).setDepth(11);
+
+                    playSound('success');
+                    await sleep(3000); // Pause for 3 seconds to let user see it clearly
+
+                    overlay.destroy();
+                    solutionText.destroy();
+                }
                 break;
             }
 
@@ -314,23 +308,36 @@ async function playClassicDisplay(scene, trace, options = {}) {
         const isMulti = Array.isArray(solutions[0]) && Array.isArray(solutions[0][0]);
 
         if (isMulti && solutions.length > 0) {
-            const miniStartX = 650;
-            let miniY = 120;
-            const maxShow = Math.min(solutions.length, 4);
-            const miniScale = maxShow > 2 ? 0.35 : 0.5;
+            const maxShow = Math.min(solutions.length, 10);
+
+            // Adjust scale based on how many we need to show
+            const miniScale = maxShow > 4 ? 0.3 : (maxShow > 2 ? 0.4 : 0.5);
 
             for (let s = 0; s < maxShow; s++) {
                 const sol = solutions[s];
                 const solQueens = sol.map(pair => ({ row: pair[0], col: pair[1] }));
+
+                // Calculate column and row position
+                const col = Math.floor(s / 5);
+                const row = s % 5;
+
+                const miniStartX = 750 + (col * (n * 60 * miniScale + 50));
+                const miniY = 120 + (row * (n * 60 * miniScale + 50));
+
                 drawMiniBoard(scene, miniStartX, miniY, n, solQueens, miniScale);
 
                 scene.add.text(miniStartX, miniY - (n * 60 * miniScale) / 2 - 18,
                     `Solution ${s + 1}`, {
-                    fontSize: '16px', color: '#FFD700', fontStyle: 'bold',
+                    fontSize: '14px', color: '#FFD700', fontStyle: 'bold',
                     stroke: '#000', strokeThickness: 3
                 }).setOrigin(0.5).setDepth(10);
+            }
 
-                miniY += (n * 60 * miniScale) + 50;
+            if (solutions.length > maxShow) {
+                scene.add.text(800, 700, `... และคำตอบอื่นๆ อีก ${solutions.length - maxShow} รูปแบบ`, {
+                    fontSize: '20px', color: '#FFD700', fontStyle: 'bold',
+                    stroke: '#000', strokeThickness: 4
+                }).setOrigin(0.5).setDepth(10);
             }
 
             await sleep(3000);

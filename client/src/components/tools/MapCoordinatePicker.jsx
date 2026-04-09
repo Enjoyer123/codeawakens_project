@@ -14,18 +14,17 @@ const MapCoordinatePicker = ({
   saveType = 'category' // 'category' or 'level'
 }) => {
   const { getToken } = useAuth();
-  const [internalCategories, setInternalCategories] = useState([]); // Renamed from categories
-  const [selectedItem, setSelectedItem] = useState(null); // Renamed from selectedCategory
+  const [internalCategories, setInternalCategories] = useState([]);
+  const [selectedItem, setSelectedItem] = useState(null);
   const [placements, setPlacements] = useState({});
   const [loading, setLoading] = useState(true);
   const mapRef = useRef(null);
   const { alertDialog, showAlert } = useAlertDialog();
 
-  // Use props data if provided, otherwise use fetched data
   const items = data || internalCategories;
+  const placedCount = Object.keys(placements).length;
 
   useEffect(() => {
-    // Only fetch if no external data provided
     if (data) {
       setLoading(false);
       return;
@@ -37,7 +36,6 @@ const MapCoordinatePicker = ({
         const cats = Array.isArray(res?.levelCategories) ? res.levelCategories : [];
         setInternalCategories(cats);
 
-        // Populate initial placements from fetched data if no external data
         if (!data) {
           const initialPlacements = {};
           cats.forEach(item => {
@@ -57,12 +55,10 @@ const MapCoordinatePicker = ({
     loadCategories();
   }, [getToken, data, idKey]);
 
-  // Populate initial placements from external data
   useEffect(() => {
     if (data && Array.isArray(data)) {
       const initialPlacements = {};
       data.forEach(item => {
-        // Check for coordinates in the item (assuming backend returns it)
         if (item.coordinates) {
           initialPlacements[item[idKey]] = item.coordinates;
         }
@@ -95,12 +91,6 @@ const MapCoordinatePicker = ({
     }));
   };
 
-  const handleCopyJson = () => {
-    const jsonStr = JSON.stringify(placements, null, 2);
-    navigator.clipboard.writeText(jsonStr);
-    alert('Copied to clipboard!');
-  };
-
   const handleClear = () => {
     showAlert('ยืนยันการลบ', 'Clear all placements?', () => {
       setPlacements({});
@@ -110,7 +100,7 @@ const MapCoordinatePicker = ({
   const handleSave = async () => {
     showAlert(
       'ยืนยันการบันทึก',
-      `Are you sure you want to save ${Object.keys(placements).length} positions to the database?`,
+      `Are you sure you want to save ${placedCount} positions to the database?`,
       async () => {
         setLoading(true);
         let successCount = 0;
@@ -150,17 +140,25 @@ const MapCoordinatePicker = ({
   };
 
   return (
-    <div className="flex h-[calc(100vh-100px)] border-t border-gray-200 text-gray-800">
-      {/* Sidebar: List */}
-      <div className="w-1/4 p-4 overflow-y-auto border-r border-gray-200 bg-gray-50">
-        <h2 className="text-xl font-bold mb-4">Select Item</h2>
-        {loading ? (
-          <div>Loading...</div>
-        ) : (
-          <div className="space-y-2">
-            {items.map(item => {
+    <div className="flex h-[calc(100vh-100px)] text-gray-800">
+      {/* Sidebar */}
+      <div className="w-64 flex flex-col border-r border-gray-200 bg-gray-50 shrink-0">
+        {/* Header */}
+        <div className="p-4 border-b border-gray-200">
+          <h2 className="text-lg font-bold">Select Item</h2>
+          <p className="text-xs text-gray-500 mt-1">
+            {placedCount}/{items.length} placed
+          </p>
+        </div>
+
+        {/* Item List */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
+          {loading ? (
+            <div className="text-sm text-gray-500 p-2">Loading...</div>
+          ) : (
+            items.map(item => {
               const itemId = item[idKey];
-              const itemName = item[nameKey] || item['level_name'] || item['category_name']; // Fallback for names
+              const itemName = item[nameKey] || item['level_name'] || item['category_name'];
               const isPlaced = placements[itemId];
               const isSelected = selectedItem && selectedItem[idKey] === itemId;
 
@@ -168,24 +166,42 @@ const MapCoordinatePicker = ({
                 <div
                   key={itemId}
                   onClick={() => setSelectedItem(item)}
-                  className={`p-3 rounded cursor-pointer transition-colors ${isSelected
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'bg-white hover:bg-gray-100 border border-gray-200'
+                  className={`px-3 py-2 rounded-lg cursor-pointer transition-all text-sm ${isSelected
+                    ? 'bg-blue-600 text-white shadow'
+                    : 'hover:bg-gray-100'
                     }`}
                 >
-                  <div className="font-semibold">{itemName}</div>
-                  <div className="text-xs opacity-75">
-                    {isPlaced ? '(Placed)' : '(Not placed)'}
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${isPlaced ? 'bg-green-500' : 'bg-gray-300'}`} />
+                    <span className="font-medium truncate">{itemName}</span>
                   </div>
                 </div>
               );
-            })}
-          </div>
-        )}
+            })
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="p-3 border-t border-gray-200 space-y-2">
+          <button
+            onClick={handleSave}
+            disabled={placedCount === 0}
+            className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 font-semibold text-sm disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            Save to DB ({placedCount})
+          </button>
+          <button
+            onClick={handleClear}
+            disabled={placedCount === 0}
+            className="w-full bg-white text-red-600 border border-red-200 py-2 px-4 rounded-lg hover:bg-red-50 font-semibold text-sm disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            Clear All
+          </button>
+        </div>
       </div>
 
-      {/* Main Area: Map */}
-      <div className="flex-1 bg-gray-800 p-8 flex items-center justify-center relative overflow-auto">
+      {/* Map Area */}
+      <div className="flex-1 bg-gray-900 p-8 flex items-center justify-center relative overflow-auto">
         <div className="relative shadow-2xl inline-block">
           {/* Map Image */}
           <img
@@ -208,56 +224,23 @@ const MapCoordinatePicker = ({
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none"
                 style={{ top: `${pos.top}%`, left: `${pos.left}%` }}
               >
-                {/* Circle Marker */}
-                <div className={`w-6 h-6 rounded-full border-2 ${isSelected ? 'bg-yellow-400 border-yellow-600 z-50 scale-125' : 'bg-red-500 border-white shadow-sm'}`}></div>
-                {/* Label */}
-                <span className={`mt-1 text-xs font-bold px-2 py-0.5 rounded shadow-sm whitespace-nowrap ${isSelected ? 'bg-yellow-100 text-yellow-900 border border-yellow-300' : 'bg-white/90 text-gray-800'}`}>
+                <div className={`w-5 h-5 rounded-full border-2 ${isSelected ? 'bg-yellow-400 border-yellow-600 z-50 scale-125' : 'bg-red-500 border-white shadow'}`} />
+                <span className={`mt-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap ${isSelected ? 'bg-yellow-100 text-yellow-900 border border-yellow-300' : 'bg-white/90 text-gray-800'}`}>
                   {itemName}
                 </span>
               </div>
             );
           })}
         </div>
-      </div>
 
-      {/* Right Panel: Output */}
-      <div className="w-1/4 p-4 bg-gray-50 border-l border-gray-200 flex flex-col">
-        <h2 className="text-xl font-bold mb-4">Coordinates Output</h2>
-        <div className="flex-1 bg-white border border-gray-300 rounded p-2 overflow-auto font-mono text-xs mb-4">
-          <pre>{JSON.stringify(placements, null, 2)}</pre>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={handleCopyJson}
-            className="w-full mb-2 bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 font-bold"
-          >
-            Copy JSON (Backup)
-          </button>
-          <div className="flex gap-2">
-            <button
-              onClick={handleSave}
-              className="flex-1 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 font-bold"
-            >
-              Save to DB
-            </button>
-            <button
-              onClick={handleClear}
-              className="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 font-bold"
-            >
-              Clear
-            </button>
+        {/* Floating hint */}
+        {selectedItem && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white text-xs px-4 py-2 rounded-full backdrop-blur-sm">
+            Click on the map to place <strong>{selectedItem[nameKey] || selectedItem['level_name'] || selectedItem['category_name']}</strong>
           </div>
-
-        </div>
-        <div className="mt-4 text-sm text-gray-600">
-          <p><strong>Instructions:</strong></p>
-          <ol className="list-decimal ml-4 space-y-1 mt-2">
-            <li>Select a item from the left sidebar.</li>
-            <li>Click on the map to place the marker.</li>
-            <li>Click "Save to DB" to update database directly.</li>
-          </ol>
-        </div>
+        )}
       </div>
+
       <AlertDialog {...alertDialog} />
     </div>
   );

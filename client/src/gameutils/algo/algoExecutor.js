@@ -39,6 +39,14 @@ function buildAlgoContext(levelData, trace, code = "") {
         // DFS/BFS/DIJKSTRA/PRIM/KRUSKAL use graphContext only — no extra stubs needed
     }
 
+    // 3. System variables getter
+    if (!context._state) {
+        context._state = {};
+    }
+    context._getGameInput = (varName) => {
+        return context._state[varName];
+    };
+
     return context;
 }
 
@@ -51,6 +59,9 @@ function buildAlgoContext(levelData, trace, code = "") {
  */
 export async function executeAlgoCode(code, levelData, timeoutMs = 5000) {
     const trace = [];
+    console.log("=== EXECUTING ALGO CODE ===");
+    console.log(code);
+    console.log("===========================");
 
     try {
         const context = buildAlgoContext(levelData, trace, code);

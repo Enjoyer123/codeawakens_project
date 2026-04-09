@@ -34,5 +34,17 @@ export function defineVariableBlocks() {
 
     }
   };
+
+  Blockly.Blocks["variables_game_input"] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("รับข้อมูลจากด่านใส่ตัวแปร")
+        .appendField(new Blockly.FieldVariable("board"), "VAR");
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setColour(330);
+      this.setTooltip("ดึงข้อมูลเริ่มต้นที่ระบบกำหนดให้ (เช่น n, board, weights) แล้วนำมาใส่ไว้ในตัวแปรนี้");
+    }
+  };
 }
 

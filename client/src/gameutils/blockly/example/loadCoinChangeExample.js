@@ -85,23 +85,17 @@ const coinChangeExampleXml = `<xml xmlns="https://developers.google.com/blockly/
                             <field name="VAR">exclude</field>
                             <value name="VALUE"><block type="math_number"><field name="NUM">-1</field></block></value>
                             <next>
-                              <!-- PRUNING CHECK: if coin > amount → prune pick branch -->
+                              <!-- PRUNING CHECK: if coin <= amount → pick branch -->
                               <block type="controls_if">
                                 <mutation else="1"></mutation>
                                 <value name="IF0">
                                   <block type="logic_compare">
-                                    <field name="OP">GT</field>
+                                    <field name="OP">LTE</field>
                                     <value name="A"><block type="variables_get"><field name="VAR">coin</field></block></value>
                                     <value name="B"><block type="variables_get"><field name="VAR">amount</field></block></value>
                                   </block>
                                 </value>
                                 <statement name="DO0">
-                                  <!-- Pruned! coin too big -->
-                                  <block type="coin_change_prune_skip">
-                                    <value name="COIN_INDEX"><block type="variables_get"><field name="VAR">index</field></block></value>
-                                  </block>
-                                </statement>
-                                <statement name="ELSE">
                                   <!-- === PICK BRANCH: use this coin === -->
                                   <block type="lists_add_item">
                                     <value name="LIST"><block type="variables_get"><field name="VAR">selection</field></block></value>
@@ -168,6 +162,12 @@ const coinChangeExampleXml = `<xml xmlns="https://developers.google.com/blockly/
                                         </next>
                                       </block>
                                     </next>
+                                  </block>
+                                </statement>
+                                <statement name="ELSE">
+                                  <!-- Pruned! coin too big -->
+                                  <block type="coin_change_prune_skip">
+                                    <value name="COIN_INDEX"><block type="variables_get"><field name="VAR">index</field></block></value>
                                   </block>
                                 </statement>
                                 <next>
@@ -266,7 +266,8 @@ const coinChangeExampleXml = `<xml xmlns="https://developers.google.com/blockly/
   </block>
 
   <!-- Main: result = coinChange(monster_power, warriors, 0) -->
-  <block type="variables_set" id="main_result_set" x="50" y="720">
+  <block type="variables_game_input" x="50" y="720"><field name="VAR">monster_power</field><next><block type="variables_game_input"><field name="VAR">warriors</field><next><block type="variables_game_input"><field name="VAR">selection</field><next>
+  <block type="variables_set" id="main_result_set">
     <field name="VAR">result</field>
     <value name="VALUE">
       <block type="procedures_callreturn" id="call_main">
@@ -280,6 +281,7 @@ const coinChangeExampleXml = `<xml xmlns="https://developers.google.com/blockly/
       </block>
     </value>
   </block>
+  </next></block></next></block></next></block>
 </xml>`;
 
 

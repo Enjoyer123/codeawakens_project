@@ -22,9 +22,10 @@ export function injectNQueenStubs(context, levelData, trace) {
         board.push(row);
     }
 
-    context.n = n;
-    context.board = board;
-    context.solution = [];
+    context._state = context._state || {};
+    context._state.n = n;
+    context._state.board = board;
+    context._state.solution = [];
 
     /* ==========================================
        2. CHECKER & ACTION STUBS
@@ -37,17 +38,17 @@ export function injectNQueenStubs(context, levelData, trace) {
 
         // เช็คแนวตั้ง (คอลัมน์เดียวกัน แต่แถวบนกว่า)
         for (let i = 0; i < row; i++) {
-            if (context.board[i][col] === 1) isSafe = false;
+            if (context._state.board[i][col] === 1) isSafe = false;
         }
 
         // เช็คแนวทแยงมุมซ้ายบน
         for (let i = row - 1, j = col - 1; i >= 0 && j >= 0; i--, j--) {
-            if (context.board[i][j] === 1) isSafe = false;
+            if (context._state.board[i][j] === 1) isSafe = false;
         }
 
         // เช็คแนวทแยงมุมขวาบน
         for (let i = row - 1, j = col + 1; i >= 0 && j < n; i--, j++) {
-            if (context.board[i][j] === 1) isSafe = false;
+            if (context._state.board[i][j] === 1) isSafe = false;
         }
 
         // บันทึกการตัดสินใจลง Trace
@@ -59,7 +60,7 @@ export function injectNQueenStubs(context, levelData, trace) {
      * วางราชินีลงบนกระดาน
      */
     context.place = (row, col) => {
-        context.board[row][col] = 1;
+        context._state.board[row][col] = 1;
         trace.push({ action: 'place', row, col });
     };
 
@@ -67,7 +68,7 @@ export function injectNQueenStubs(context, levelData, trace) {
      * หยิบราชินีออกจากกระดาน (Backtrack)
      */
     context.remove = (row, col) => {
-        context.board[row][col] = 0;
+        context._state.board[row][col] = 0;
         trace.push({ action: 'remove', row, col });
     };
 

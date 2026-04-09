@@ -322,7 +322,8 @@ const dijkstraExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
   </block>
 
   <!-- Main: result = DIJ(map, 0, goal) -->
-  <block type="variables_set" id="main_call" x="50" y="900">
+  <block type="variables_game_input" x="50" y="900"><field name="VAR">graph</field><next><block type="variables_game_input"><field name="VAR">all_nodes</field><next><block type="variables_game_input"><field name="VAR">start</field><next><block type="variables_game_input"><field name="VAR">goal</field><next>
+  <block type="variables_set" id="main_call">
     <field name="VAR">result</field>
     <value name="VALUE">
       <block type="procedures_callreturn" id="call_dij">
@@ -332,14 +333,14 @@ const dijkstraExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
           <arg name="goal"></arg>
         </mutation>
         <field name="NAME">DIJ</field>
-        <value name="ARG0"><block type="variables_get"><field name="VAR">map</field></block></value>
+        <value name="ARG0"><block type="variables_get"><field name="VAR">graph</field></block></value>
         <value name="ARG1"><block type="variables_get"><field name="VAR">start</field></block></value>
         <value name="ARG2"><block type="variables_get"><field name="VAR">goal</field></block></value>
       </block>
     </value>
 
   </block>
-
+  </next></block></next></block></next></block></next></block>
 </xml>`;
 
 export function loadDijkstraExampleBlocks(workspace) {
