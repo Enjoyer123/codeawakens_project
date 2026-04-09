@@ -384,7 +384,8 @@ const kruskalExampleXml = `<?xml version="1.0" encoding="UTF-8"?>
   </block>
   
   <!-- Main code: result = KRUSKAL(map, 0) -->
-  <block type="variables_set" id="main_result_set" x="50" y="800">
+  <block type="variables_game_input" x="50" y="800"><field name="VAR">graph</field><next><block type="variables_game_input"><field name="VAR">all_nodes</field><next><block type="variables_game_input"><field name="VAR">start</field><next>
+  <block type="variables_set" id="main_result_set">
     <field name="VAR">result</field>
     <value name="VALUE">
       <block type="procedures_callreturn" id="call_kruskal">
@@ -395,7 +396,7 @@ const kruskalExampleXml = `<?xml version="1.0" encoding="UTF-8"?>
         <field name="NAME">KRUSKAL</field>
         <value name="ARG0">
           <block type="variables_get" id="map_var">
-            <field name="VAR">map</field>
+            <field name="VAR">graph</field>
           </block>
         </value>
         <value name="ARG1">
@@ -406,5 +407,6 @@ const kruskalExampleXml = `<?xml version="1.0" encoding="UTF-8"?>
       </block>
     </value>
   </block>
+  </next></block></next></block></next></block>
 </xml>`;
 

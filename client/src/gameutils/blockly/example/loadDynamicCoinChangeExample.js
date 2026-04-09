@@ -251,7 +251,8 @@ const dynamicCoinChangeExampleXml = `<xml xmlns="https://developers.google.com/b
   </block>
 
   <!-- Main Execution call -->
-  <block type="variables_set" x="50" y="1000">
+  <block type="variables_game_input" x="50" y="1000"><field name="VAR">monster_power</field><next><block type="variables_game_input"><field name="VAR">warriors</field><next>
+  <block type="variables_set">
     <field name="VAR">result</field>
     <value name="VALUE">
       <block type="procedures_callreturn" id="call_coin_change">
@@ -266,6 +267,7 @@ const dynamicCoinChangeExampleXml = `<xml xmlns="https://developers.google.com/b
       </block>
     </value>
   </block>
+  </next></block></next></block>
 </xml>`;
 
 /**

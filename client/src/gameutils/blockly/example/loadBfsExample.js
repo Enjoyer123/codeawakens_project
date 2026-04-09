@@ -224,7 +224,8 @@ const bfsExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
   </block>
   
   <!-- Main code: result = BFS(map, 0, 7) -->
-  <block type="variables_set" id="main_path_set" x="50" y="600">
+  <block type="variables_game_input" x="50" y="600"><field name="VAR">graph</field><next><block type="variables_game_input"><field name="VAR">all_nodes</field><next><block type="variables_game_input"><field name="VAR">start</field><next><block type="variables_game_input"><field name="VAR">goal</field><next>
+  <block type="variables_set" id="main_path_set">
     <field name="VAR">result</field>
     <value name="VALUE">
       <block type="procedures_callreturn" id="call_bfs">
@@ -236,7 +237,7 @@ const bfsExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
         <field name="NAME">BFS</field>
         <value name="ARG0">
           <block type="variables_get" id="map_var">
-            <field name="VAR">map</field>
+            <field name="VAR">graph</field>
           </block>
         </value>
         <value name="ARG1">
@@ -252,6 +253,7 @@ const bfsExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
       </block>
     </value>
   </block>
+  </next></block></next></block></next></block></next></block>
 </xml>`;
 
 export function loadBfsExampleBlocks(workspace) {

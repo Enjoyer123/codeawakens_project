@@ -54,12 +54,12 @@ const subsetSumExampleXml = `<xml xmlns="https://developers.google.com/blockly/x
                   </block>
                 </statement>
                 <next>
-                  <!-- PRUNING CHECK before Include: if (currentSum + arr[index] > target_sum) -->
+                  <!-- PRUNING CHECK before Include: if (currentSum + arr[index] <= target_sum) -->
                   <block type="controls_if">
                     <mutation else="1"></mutation>
                     <value name="IF0">
                       <block type="logic_compare">
-                        <field name="OP">GT</field>
+                        <field name="OP">LTE</field>
                         <value name="A">
                           <block type="math_arithmetic">
                             <field name="OP">ADD</field>
@@ -76,11 +76,6 @@ const subsetSumExampleXml = `<xml xmlns="https://developers.google.com/blockly/x
                       </block>
                     </value>
                     <statement name="DO0">
-                      <block type="subset_sum_prune_exclude">
-                        <value name="WARRIOR_INDEX"><block type="variables_get"><field name="VAR">index</field></block></value>
-                      </block>
-                    </statement>
-                    <statement name="ELSE">
                       <!-- === INCLUDE BRANCH === -->
                       <!-- REAL BACKTRACK: push warrior to chosen -->
                       <block type="lists_add_item" id="push_chosen">
@@ -147,6 +142,11 @@ const subsetSumExampleXml = `<xml xmlns="https://developers.google.com/blockly/x
                         </next>
                       </block>
                     </statement>
+                    <statement name="ELSE">
+                      <block type="subset_sum_prune_exclude">
+                        <value name="WARRIOR_INDEX"><block type="variables_get"><field name="VAR">index</field></block></value>
+                      </block>
+                    </statement>
                     <next>
                       <!-- === EXCLUDE BRANCH === -->
                                       <block type="subset_sum_exclude" id="exclude_trace">
@@ -203,7 +203,8 @@ const subsetSumExampleXml = `<xml xmlns="https://developers.google.com/blockly/x
   </block>
   
   <!-- Main: call subsetSum then set result = chosen -->
-  <block type="variables_set" id="call_main_wrapper" x="50" y="600">
+  <block type="variables_game_input" x="50" y="600"><field name="VAR">target_sum</field><next><block type="variables_game_input"><field name="VAR">warriors</field><next><block type="variables_game_input"><field name="VAR">chosen</field><next>
+  <block type="variables_set" id="call_main_wrapper">
     <field name="VAR">_unused</field>
     <value name="VALUE">
       <block type="procedures_callreturn" id="call_main">
@@ -223,6 +224,7 @@ const subsetSumExampleXml = `<xml xmlns="https://developers.google.com/blockly/x
       </block>
     </next>
   </block>
+  </next></block></next></block></next></block>
 </xml>`;
 
 /**

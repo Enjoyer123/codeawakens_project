@@ -257,7 +257,8 @@ export const dynamicSubsetSumExampleXml = `<xml xmlns="https://developers.google
   </block>
 
   <!-- Main: result = subsetSum(warriors, 0, 0, target_sum) -->
-  <block type="variables_set" id="dp_ss_main_result" x="40" y="800">
+  <block type="variables_game_input" x="40" y="800"><field name="VAR">target_sum</field><next><block type="variables_game_input"><field name="VAR">warriors</field><next>
+  <block type="variables_set" id="dp_ss_main_result">
     <field name="VAR">result</field>
     <value name="VALUE">
       <block type="procedures_callreturn" id="dp_ss_call_main">
@@ -272,6 +273,7 @@ export const dynamicSubsetSumExampleXml = `<xml xmlns="https://developers.google
       </block>
     </value>
   </block>
+  </next></block></next></block>
 </xml>`;
 
 export function loadDynamicSubsetSumExampleBlocks(workspace) {

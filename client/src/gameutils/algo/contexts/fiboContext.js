@@ -3,7 +3,8 @@ import { getAlgoPayload } from '../../shared/levelType';
 export function injectFiboStubs(context, levelData, trace) {
     const payload = getAlgoPayload(levelData, 'FIBONACCI');
     if (payload) {
-        context.n = payload.n || 0;
+        context._state = context._state || {};
+        context._state.n = payload.n || 0;
     }
 
     context.trackFiboDecision = (action, n = null, value = null) => {

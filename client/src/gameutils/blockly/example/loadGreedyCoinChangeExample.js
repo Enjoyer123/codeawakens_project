@@ -210,7 +210,8 @@ const greedyCoinChangeExampleXml = `<xml xmlns="https://developers.google.com/bl
   </block>
 
   <!-- Main: result = coinChange(monster_power, warriors, 0) -->
-  <block type="variables_set" id="ccg_main_result_set" x="50" y="780">
+  <block type="variables_game_input" x="50" y="780"><field name="VAR">monster_power</field><next><block type="variables_game_input"><field name="VAR">warriors</field><next><block type="variables_game_input"><field name="VAR">selection</field><next>
+  <block type="variables_set" id="ccg_main_result_set">
     <field name="VAR">result</field>
     <value name="VALUE">
       <block type="procedures_callreturn" id="ccg_call_main">
@@ -224,6 +225,7 @@ const greedyCoinChangeExampleXml = `<xml xmlns="https://developers.google.com/bl
       </block>
     </value>
   </block>
+  </next></block></next></block></next></block>
 </xml>`;
 
 export function loadGreedyCoinChangeExampleBlocks(workspace) {

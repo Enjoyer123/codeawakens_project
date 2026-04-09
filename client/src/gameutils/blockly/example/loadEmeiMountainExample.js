@@ -295,8 +295,8 @@ const emeiDijkstraXml = `<xml xmlns="https://developers.google.com/blockly/xml">
       </block>
     </value>
   </block>
-  <block type="variables_set" id="call_maxCapacity_set" x="20" y="850">
-    <field name="VAR">result</field>
+  <block type="variables_game_input" x="20" y="850"><field name="VAR">n</field><next><block type="variables_game_input"><field name="VAR">edges</field><next><block type="variables_game_input"><field name="VAR">start</field><next><block type="variables_game_input"><field name="VAR">end</field><next><block type="variables_game_input"><field name="VAR">tourists</field><next>
+  <block type="variables_set" id="call_maxCapacity_set">
     <value name="VALUE">
       <block type="procedures_callreturn" id="call_maxCapacity">
         <mutation name="maxCapacity">
@@ -314,6 +314,7 @@ const emeiDijkstraXml = `<xml xmlns="https://developers.google.com/blockly/xml">
       </block>
     </value>
   </block>
+  </next></block></next></block></next></block></next></block></next></block>
 </xml>`;
 
 /**

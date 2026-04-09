@@ -125,8 +125,8 @@ const CATEGORY_CONFIG = {
       "emei_highlight_peak", "emei_highlight_path", "emei_show_final_result",
       // DFS/BFS Visual
       "graph_get_neighbors_visual", "mark_visited_visual", "show_path_visual",
-      // Local variable
-      "local_variable_set"
+      // Local variable and Game input
+      "local_variable_set", "variables_game_input"
     ]
   }
 };
@@ -172,6 +172,7 @@ export function createToolboxConfig(enabledBlocks) {
 
   // 3. Variables — Blockly built-in dynamic category
   const hasVariableBlocks =
+    enabledBlocks["variables_game_input"] ||
     enabledBlocks["variables_get"] ||
     enabledBlocks["variables_set"] ||
     enabledBlocks["var_math"] ||

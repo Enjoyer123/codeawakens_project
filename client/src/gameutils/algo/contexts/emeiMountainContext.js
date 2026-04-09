@@ -11,15 +11,16 @@ export function injectEmeiMountainStubs(context, levelData, trace, code = "") {
        ========================================== */
     const payload = levelData.algo_data?.payload || {};
     
+    context._state = context._state || {};
     // ดึงจำนวนโหนด
-    context.n = levelData.emeiN ?? payload.n ?? (levelData.nodes ? levelData.nodes.length : 6);
+    context._state.n = levelData.emeiN ?? payload.n ?? (levelData.nodes ? levelData.nodes.length : 6);
 
     // ดึงสถานีเริ่มต้น และเป้าหมาย
-    context.start = levelData.emeiStart ?? payload.start ?? levelData.start_node_id ?? levelData.startNode ?? 0;
-    context.end = levelData.emeiEnd ?? payload.end ?? levelData.goal_node_id ?? levelData.goalNode ?? 5;
+    context._state.start = levelData.emeiStart ?? payload.start ?? levelData.start_node_id ?? levelData.startNode ?? 0;
+    context._state.end = levelData.emeiEnd ?? payload.end ?? levelData.goal_node_id ?? levelData.goalNode ?? 5;
     
     // ดึงจำนวนนักท่องเที่ยว
-    context.tourists = levelData.emeiTourists ?? payload.tourists ?? payload.tourist ?? 20;
+    context._state.tourists = levelData.emeiTourists ?? payload.tourists ?? payload.tourist ?? 20;
 
     // ดึงเส้นเชื่อมกระเช้าลอยฟ้า
     let extractedEdges = levelData.emeiEdges ?? payload.edges;
@@ -36,7 +37,7 @@ export function injectEmeiMountainStubs(context, levelData, trace, code = "") {
     if (extractedEdges.length === 0) {
         console.warn('⚠️ [EmeiContext] ไม่พบข้อมูล edges จาก DB — ด่านอาจไม่ถูกตั้งค่า');
     }
-    context.edges = extractedEdges;
+    context._state.edges = extractedEdges;
 
     /* ==========================================
        2. VISUAL STUBS (Trace Recorders)
@@ -61,7 +62,7 @@ export function injectEmeiMountainStubs(context, levelData, trace, code = "") {
      */
     context.highlightEmeiPath = (parent, end, bottleneck) => {
         // ถ้าพยายามไปปลายทางที่ไม่ใช่เป้าหมายจริงๆ อาละวาด
-        const goalEnd = context.end;
+        const goalEnd = context._state.end;
         if (goalEnd !== undefined && goalEnd !== null) {
             if (end != goalEnd) {
                 return;
@@ -106,7 +107,7 @@ export function injectEmeiMountainStubs(context, levelData, trace, code = "") {
             action: 'emei_path',
             path: path, 
             bottleneck: bottleneck,
-            goalEnd: context.end 
+            goalEnd: context._state.end 
         });
     };
 }

@@ -62,4 +62,28 @@ export function defineDataGenerators() {
         const variable = javascriptGenerator.nameDB_.getName(block.getFieldValue('VAR'), 'VARIABLE');
         return [variable, javascriptGenerator.ORDER_ATOMIC];
     };
+
+    // variables_game_input: gets initialization input from _getGameInput
+    javascriptGenerator.forBlock["variables_game_input"] = function (block) {
+        if (javascriptGenerator.isCleanMode) {
+            const varId = block.getFieldValue('VAR');
+            const varModel = block.workspace.getVariableById(varId);
+            const rawName = varModel ? varModel.name : 'unknown_var';
+
+            if (!javascriptGenerator.declaredVariables) {
+                javascriptGenerator.declaredVariables = new Set();
+            }
+            if (!javascriptGenerator.declaredVariables.has(rawName)) {
+                javascriptGenerator.declaredVariables.add(rawName);
+                return `let ${rawName} = _getGameInput('${rawName}');\n`;
+            }
+            return `${rawName} = _getGameInput('${rawName}');\n`;
+        }
+
+        const varId = block.getFieldValue('VAR');
+        const varModel = block.workspace.getVariableById(varId);
+        const rawName = varModel ? varModel.name : 'unknown_var';
+        const varName = javascriptGenerator.nameDB_.getName(varId, 'VARIABLE');
+        return `${varName} = _getGameInput('${rawName}');\n`;
+    };
 }

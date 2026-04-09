@@ -13,9 +13,10 @@ export function injectCoinChangeStubs(context, levelData, trace) {
     /* ==========================================
        1. GAME VARIABLES
        ========================================== */
-    context.monster_power = Math.round(Number(payload.monster_power ?? payload.amount ?? 0));
-    context.warriors = (payload.warriors || payload.coins || []).map(w => Math.round(Number(w)));
-    context.selection = [];  // mutable shared state สำหรับ real backtracking (push/pop)
+    context._state = context._state || {};
+    context._state.monster_power = Math.round(Number(payload.monster_power ?? payload.amount ?? 0));
+    context._state.warriors = (payload.warriors || payload.coins || []).map(w => Math.round(Number(w)));
+    context._state.selection = [];  // mutable shared state สำหรับ real backtracking (push/pop)
 
     /* ==========================================
        2. NEW STANDARDIZED TRACE RECORDERS (BT)

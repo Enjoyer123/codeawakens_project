@@ -11,11 +11,13 @@ export function buildGraphContext(levelData, trace) {
            1. BASE GRAPH CONTEXT (Core Variables)
            ========================================== */
         trace, // Expose trace array to Blockly generated code
-        map,
-        graph: map,    // Alias สำหรับ Blockly example ที่ใช้ "graph" เป็นชื่อ parameter
-        all_nodes,
-        start: startNode,
-        goal: goalNode,
+        _state: {
+            map,
+            graph: map,    // Alias สำหรับ Blockly example ที่ใช้ "graph" เป็นชื่อ parameter
+            all_nodes,
+            start: startNode,
+            goal: goalNode
+        },
 
         /* ==========================================
            2. NEIGHBOR & TRAVERSAL HELPERS (DFS / BFS)
