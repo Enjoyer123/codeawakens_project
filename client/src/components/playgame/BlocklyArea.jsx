@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import * as Blockly from 'blockly/core';
 import { javascriptGenerator } from 'blockly/javascript';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Code, Box, FlaskConical, X, Copy, Check } from 'lucide-react';
+import { Code, Box, FlaskConical, X, Copy, Check, Info } from 'lucide-react';
 import BlocklyWorkspaceTab from './editor/BlocklyWorkspaceTab';
 import CodeEditorTab from './editor/CodeEditorTab';
 import TestResultsTab from './editor/TestResultsTab';
@@ -140,7 +140,25 @@ const BlocklyArea = ({
 
         {/* Tab Contents Container */}
         <div className="flex-1 relative bg-transparent overflow-visible flex flex-col">
-          <div className="flex-1 relative">
+          {activeTab === 'blocks' && (
+            <div className="bg-[#1a163e]/90 backdrop-blur-sm border-b border-purple-800/40 px-4 py-2 flex items-start sm:items-center gap-2 text-xs shadow-sm z-10 shrink-0">
+              <Info size={14} className="text-purple-400 shrink-0 mt-0.5 sm:mt-0" />
+              <span className="text-purple-200/90 leading-relaxed">
+                {(() => {
+                  const diff = (currentLevel?.dificulty || currentLevel?.difficulty || 'easy').toLowerCase();
+                  if (diff === 'hard') {
+                    return <><strong className="font-semibold text-purple-100">โหมดท้าทาย (ระดับยาก):</strong> จะไม่มีระบบไฮไลต์ช่วยนำทาง คุณต้องวิเคราะห์และจัดเรียงบล็อกคำสั่งด้วยตัวเองทั้งหมด</>;
+                  } else if (diff === 'medium') {
+                    return <><strong className="font-semibold text-purple-100">โหมดทดสอบ (ระดับปานกลาง):</strong> ระบบจะแสดงไฮไลต์เมื่อนำบล็อกไปเชื่อมต่อแล้วเท่านั้น <span className="opacity-50 mx-1">|</span> คลิกที่บล็อกหลักเพื่อตรวจสอบจุดเชื่อมต่อ</>;
+                  } else {
+                    return <><strong className="font-semibold text-purple-100">โหมดเรียนรู้ (ระดับง่าย):</strong> คุณสามารถคลิกที่บล็อกคำสั่ง เพื่อให้ระบบแสดงไฟกะพริบช่วยนำทางตำแหน่งที่ถูกต้องให้ได้</>;
+                  }
+                })()}
+              </span>
+            </div>
+          )}
+
+          <div className="flex-1 relative min-h-0">
             <BlocklyWorkspaceTab
               blocklyRef={blocklyRef}
               activeTab={activeTab}

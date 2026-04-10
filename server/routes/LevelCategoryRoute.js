@@ -123,7 +123,7 @@ router.post("/level-categories", authCheck, requireAdmin, createLevelCategory);
  *       200:
  *         description: Coordinates updated.
  */
-router.put("/level-categories/coordinates/:categoryId", authCheck, updateLevelCategoryCoordinates);
+router.put("/level-categories/coordinates/:categoryId", authCheck, requireAdmin, updateLevelCategoryCoordinates);
 
 /**
  * @swagger

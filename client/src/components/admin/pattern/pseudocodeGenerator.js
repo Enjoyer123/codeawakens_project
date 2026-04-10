@@ -253,6 +253,10 @@ const parseCodeChain = (block, indent, workspace) => {
         const varName = getResolvedVarName(current, workspace, 'x');
         text = `${varName} = ${getCodeValue(current.getInputTargetBlock('VALUE'))}`;
 
+      } else if (type === 'variables_game_input') {
+        const varName = getResolvedVarName(current, workspace, 'x');
+        text = `// [รับค่าจากระบบ] ${varName} = get_game_input() // รับข้อมูลจากด่านใส่ตัวแปร`;
+
       } else if (type === 'lists_setIndex') {
         let listName = '?';
         const listBlock = current.getInputTargetBlock('LIST');

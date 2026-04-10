@@ -7,4 +7,4 @@ RUN npx prisma generate
 
 EXPOSE 4000
 
-CMD npx prisma db push && node index.jss
+CMD npx prisma db push && node index.js
