@@ -12,14 +12,17 @@
  * ตัวที่จับคู่ไม่ได้ = missing → floating block ต้องต่อตรงนั้น
  */
 function findMissingSlots(targetAnalysis, mainTreeBlocks) {
-    if (!targetAnalysis?.length) return [];
+    if (!targetAnalysis?.length) return { missing: [], matched: [] };
     if (!mainTreeBlocks?.length) {
-        return targetAnalysis.map(t => ({
-            targetIndex: t.index, type: t.type, varName: t.varName,
-        }));
+        return {
+            missing: targetAnalysis.map(t => ({
+                targetIndex: t.index, type: t.type, varName: t.varName,
+            })),
+            matched: new Array(targetAnalysis.length).fill(-1)
+        };
     }
 
-    const targetMatched = new Array(targetAnalysis.length).fill(false);
+    const targetMatched = new Array(targetAnalysis.length).fill(-1);
     const mainUsed = new Array(mainTreeBlocks.length).fill(false);
 
     // Pass 1: Strict Match (Type + VarName + AncestorStr)
@@ -32,7 +35,7 @@ function findMissingSlots(targetAnalysis, mainTreeBlocks) {
                 mainTreeBlocks[j].type === target.type &&
                 (target.varName === undefined || mainTreeBlocks[j].varName === target.varName) &&
                 (!target.ancestorStr || mainTreeBlocks[j].ancestorStr === target.ancestorStr)) {
-                targetMatched[ti] = true;
+                targetMatched[ti] = j;
                 mainUsed[j] = true;
                 mi = j + 1;
                 break;
@@ -44,13 +47,13 @@ function findMissingSlots(targetAnalysis, mainTreeBlocks) {
     // กวาดเก็บตกบล็อกที่อาจจะอยู่ผิดที่ผิดทาง (ไม่มีสายตระกูลตรง) เพื่อให้ไม่เห็นว่าขาด
     mi = 0;
     for (let ti = 0; ti < targetAnalysis.length; ti++) {
-        if (targetMatched[ti]) continue;
+        if (targetMatched[ti] >= 0) continue;
         const target = targetAnalysis[ti];
         for (let j = mi; j < mainTreeBlocks.length; j++) {
             if (!mainUsed[j] &&
                 mainTreeBlocks[j].type === target.type &&
                 (target.varName === undefined || mainTreeBlocks[j].varName === target.varName)) {
-                targetMatched[ti] = true;
+                targetMatched[ti] = j;
                 mainUsed[j] = true;
                 mi = j + 1;
                 break;
@@ -58,9 +61,11 @@ function findMissingSlots(targetAnalysis, mainTreeBlocks) {
         }
     }
 
-    return targetAnalysis
-        .filter((_, i) => !targetMatched[i])
+    const missing = targetAnalysis
+        .filter((_, i) => targetMatched[i] < 0)
         .map(t => ({ targetIndex: t.index, type: t.type, varName: t.varName }));
+
+    return { missing, matched: targetMatched };
 }
 
 /**
@@ -72,32 +77,7 @@ function findMissingSlots(targetAnalysis, mainTreeBlocks) {
 export function findFloatingHintBlockId(targetAnalysis, mainTreeBlocks, floatingType, floatingVarName, floatingOcc) {
     if (!targetAnalysis?.length || !mainTreeBlocks?.length) return null;
 
-    // สร้างทั้ง mapping (target→main) และหา missing ในรอบเดียว (Two-Pass เหมือน findMissingSlots)
-    const targetMatched = new Array(targetAnalysis.length).fill(-1);
-    const mainUsed = new Array(mainTreeBlocks.length).fill(false);
-
-    let mi = 0;
-    for (let ti = 0; ti < targetAnalysis.length; ti++) {
-        const t = targetAnalysis[ti];
-        for (let j = mi; j < mainTreeBlocks.length; j++) {
-            if (!mainUsed[j] && mainTreeBlocks[j].type === t.type &&
-                (t.varName === undefined || mainTreeBlocks[j].varName === t.varName) &&
-                (!t.ancestorStr || mainTreeBlocks[j].ancestorStr === t.ancestorStr)) {
-                targetMatched[ti] = j; mainUsed[j] = true; mi = j + 1; break;
-            }
-        }
-    }
-    mi = 0;
-    for (let ti = 0; ti < targetAnalysis.length; ti++) {
-        if (targetMatched[ti] >= 0) continue;
-        const t = targetAnalysis[ti];
-        for (let j = mi; j < mainTreeBlocks.length; j++) {
-            if (!mainUsed[j] && mainTreeBlocks[j].type === t.type &&
-                (t.varName === undefined || mainTreeBlocks[j].varName === t.varName)) {
-                targetMatched[ti] = j; mainUsed[j] = true; mi = j + 1; break;
-            }
-        }
-    }
+    const { matched: targetMatched } = findMissingSlots(targetAnalysis, mainTreeBlocks);
 
     // หา missing slot ของ type+varName เดียวกันกับ floating block
     const missingIndices = [];
@@ -173,15 +153,15 @@ export function findPseudocodeLine(selectedData, allLines, context = null) {
         
         console.log(`[FLOATING DEBUG] Checked Difficulty: '${difficulty}', Block: ${type}`);
 
-        // 🟡 ระดับ 'medium' / 'hard': บล็อกที่ลอยอยู่ (เชื่อมไม่ติดกับ Main) จะไม่ให้ใบ้บรรทัด
-        if (difficulty === 'medium' || difficulty === 'hard') {
-            console.log("➡️ Medium/Hard Mode: ซ่อน highlight บล็อกลอย");
+        // 🟡 ระดับ 'medium': บล็อกที่ลอยอยู่ (เชื่อมไม่ติดกับ Main) จะไม่ให้ใบ้บรรทัด
+        if (difficulty === 'medium') {
+            console.log("➡️ Medium Mode: ซ่อน highlight บล็อกลอย");
             return null;
         }
 
         console.log("➡️ Easy Mode: หาช่องว่างให้บล็อกลอย");
         // ถ้าระดับ 'easy': ใช้ diff หาตำแหน่งที่ขาด
-        const missingSlots = findMissingSlots(context.targetAnalysis, selectedData.mainTreeBlocks);
+        const { missing: missingSlots } = findMissingSlots(context.targetAnalysis, selectedData.mainTreeBlocks);
         const sameKindMissing = missingSlots.filter(s =>
             s.type === type && (varName ? s.varName === varName : !s.varName)
         );
@@ -204,8 +184,8 @@ export function findPseudocodeLine(selectedData, allLines, context = null) {
     // ทำเมื่อเชื่อมต่อกับ Main Procedure แล้วเท่านั้น
     if (isMainConnected) {
         
-        // 🟡 สำหรับ Medium/Hard: ไฮไลต์ตาม "ตำแหน่งที่มันอยู่จริง ณ ปัจจุบัน" ไม่ใช่ "ตำแหน่งที่มันควรอยู่"
-        if (difficulty === 'medium' || difficulty === 'hard') {
+        // 🟡 สำหรับ Medium: ไฮไลต์ตาม "ตำแหน่งที่มันอยู่จริง ณ ปัจจุบัน" ไม่ใช่ "ตำแหน่งที่มันควรอยู่"
+        if (difficulty === 'medium') {
             const userParts = ancestorStr.split('|'); // ลำดับจาก root -> leaf (ตัวมันเองอยู่ขวาสุด)
             
             // ถอยหลังหาบรรพบุรุษที่ตรงกับ pattern 

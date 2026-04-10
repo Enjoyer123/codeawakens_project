@@ -5,6 +5,9 @@ import * as Blockly from 'blockly/core';
 
 // ─── Variable Name Normalization ────────────────────────────────
 
+/** ดึง text/value จาก Blockly field */
+const getFieldText = (field) => field?.getText?.() ?? field?.getValue?.() ?? '';
+
 /** ลบ suffix _number ออก เช่น "neighbor_1" → "neighbor" */
 function normalizeVariableName(varValue) {
   if (!varValue) return '';
@@ -19,7 +22,7 @@ function extractBlockData(block, type, info) {
     try {
       const varField = block.getField('VAR');
       if (varField) {
-        const rawName = varField.getText ? varField.getText() : (varField.getValue ? varField.getValue() : '');
+        const rawName = getFieldText(varField);
         info.varName = normalizeVariableName(rawName);
       }
     } catch (e) { /* ignore */ }
@@ -30,7 +33,7 @@ function extractBlockData(block, type, info) {
     try {
       const nameField = block.getField('NAME');
       if (nameField) {
-        info.procedureName = nameField.getText ? nameField.getText() : (nameField.getValue ? nameField.getValue() : '');
+        info.procedureName = getFieldText(nameField);
       }
     } catch (e) { /* ignore */ }
   }
@@ -43,7 +46,7 @@ function extractBlockData(block, type, info) {
     for (const field of fieldRow) {
       const name = field.name;
       if (name && name !== 'VAR' && name !== 'NAME') {
-        const value = field.getText ? field.getText() : (field.getValue ? field.getValue() : '');
+        const value = getFieldText(field);
         if (value !== undefined && value !== null) {
           fields[name] = String(value);
         }
