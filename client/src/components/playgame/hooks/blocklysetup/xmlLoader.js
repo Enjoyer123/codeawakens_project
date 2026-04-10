@@ -176,9 +176,26 @@ export const loadStarterXml = (workspace, starter_xml, floating_xml, isTextCodeE
         // 8. สร้าง Text Code (ถ้าเป็นโหมดพิมพ์โค้ด)
         if (isTextCodeEnabled && onCodeGenerated) {
             try {
+                javascriptGenerator.declaredVariables = new Set();
                 javascriptGenerator.isCleanMode = true;
-                let code = javascriptGenerator.workspaceToCode(workspace);
-                javascriptGenerator.isCleanMode = false;
+
+                // ⚠️ workspaceToCode จะ generate จากทุก top-level block รวมถึง floating blocks
+                // floating blocks ที่เป็น value block จะถูก output เป็น statement แปลกๆ (node;, 0 == 0;)
+                // → ต้อง skip floating blocks ออก แล้ว generate เฉพาะ non-floating เท่านั้น
+                const floatingIds = workspace._floatingBlockIds || new Set();
+                const nonFloatingTopBlocks = workspace.getTopBlocks(true)
+                    .filter(b => !floatingIds.has(b.id));
+
+                let code = '';
+                try {
+                    javascriptGenerator.init(workspace);
+                    for (const block of nonFloatingTopBlocks) {
+                        code += javascriptGenerator.blockToCode(block) || '';
+                    }
+                    code = javascriptGenerator.finish(code);
+                } finally {
+                    javascriptGenerator.isCleanMode = false;
+                }
 
                 if (code && code.trim()) {
                     code = code.replace(/^var\s+[\w,\s]+;\n+/, '');
@@ -189,6 +206,7 @@ export const loadStarterXml = (workspace, starter_xml, floating_xml, isTextCodeE
                 console.error('Failed to generate starter text code:', genErr);
             }
         }
+
 
     } catch (xmlError) {
         setXmlLoading(false);
