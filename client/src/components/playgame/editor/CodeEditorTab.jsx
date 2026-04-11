@@ -38,9 +38,17 @@ const CodeEditorTab = ({
             javascriptGenerator.declaredVariables = new Set();
             javascriptGenerator.isCleanMode = true;
 
-            let code;
+            const floatingIds = workspace._floatingBlockIds || new Set();
+            const nonFloatingTopBlocks = workspace.getTopBlocks(true)
+                .filter(b => !floatingIds.has(b.id));
+
+            let code = '';
             try {
-                code = javascriptGenerator.workspaceToCode(workspace);
+                javascriptGenerator.init(workspace);
+                for (const block of nonFloatingTopBlocks) {
+                    code += javascriptGenerator.blockToCode(block) || '';
+                }
+                code = javascriptGenerator.finish(code);
             } finally {
                 javascriptGenerator.isCleanMode = false;
             }

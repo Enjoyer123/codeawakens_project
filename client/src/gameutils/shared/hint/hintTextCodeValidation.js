@@ -13,14 +13,24 @@ export function validateTextCode(textCode, workspace) {
             return { isValid: false, message: "ไม่มี blocks ใน workspace" };
         }
 
-        // Generate expected code จาก blocks
+        // Generate expected code จาก blocks — skip floating blocks
+        // floating value blocks ลอยอยู่จะถูก output เป็น node;, 0 == 0; ถ้าใช้ workspaceToCode
         javascriptGenerator.declaredVariables = new Set();
         javascriptGenerator.isCleanMode = true;
         if (javascriptGenerator.nameDB_) javascriptGenerator.nameDB_.reset();
 
         let expected;
         try {
-            expected = javascriptGenerator.workspaceToCode(workspace);
+            const floatingIds = workspace._floatingBlockIds || new Set();
+            const nonFloatingTopBlocks = workspace.getTopBlocks(true)
+                .filter(b => !floatingIds.has(b.id));
+
+            javascriptGenerator.init(workspace);
+            let raw = '';
+            for (const block of nonFloatingTopBlocks) {
+                raw += javascriptGenerator.blockToCode(block) || '';
+            }
+            expected = javascriptGenerator.finish(raw);
         } finally {
             javascriptGenerator.isCleanMode = false;
         }
