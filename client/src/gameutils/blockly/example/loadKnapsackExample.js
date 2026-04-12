@@ -1,7 +1,7 @@
 import * as Blockly from "blockly/core";
 
 const knapsackExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
-  <block type="procedures_defreturn" id="knapsack_bt" x="50" y="50">
+  <block type="procedures_defreturn" id="knapsack_bt" x="50" y="300">
     <mutation>
       <arg name="w"></arg>
       <arg name="v"></arg>
@@ -35,52 +35,66 @@ const knapsackExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
               </block>
             </value>
             <statement name="DO0">
-              <!-- Snapshot bag if better: sumBag = SUM(bag), if sumBag > bestValue → clone -->
+              <!-- Snapshot bag if better: sumBag = 0, for each x of bag: sumBag = sumBag + x -->
               <block type="variables_set">
                 <field name="VAR">sumBag</field>
                 <value name="VALUE">
-                  <block type="math_on_list">
-                    <mutation op="SUM"></mutation>
-                    <field name="OP">SUM</field>
-                    <value name="LIST"><block type="variables_get"><field name="VAR">bag</field></block></value>
-                  </block>
+                  <block type="math_number"><field name="NUM">0</field></block>
                 </value>
                 <next>
-                  <block type="controls_if">
-                    <value name="IF0">
-                      <block type="logic_compare">
-                        <field name="OP">GT</field>
-                        <value name="A"><block type="variables_get"><field name="VAR">sumBag</field></block></value>
-                        <value name="B"><block type="variables_get"><field name="VAR">bestValue</field></block></value>
-                      </block>
-                    </value>
-                    <statement name="DO0">
+                  <block type="controls_forEach">
+                    <field name="VAR">x</field>
+                    <value name="LIST"><block type="variables_get"><field name="VAR">bag</field></block></value>
+                    <statement name="DO">
                       <block type="variables_set">
-                        <field name="VAR">bestValue</field>
-                        <value name="VALUE"><block type="variables_get"><field name="VAR">sumBag</field></block></value>
-                        <next>
-                          <block type="variables_set">
-                            <field name="VAR">bestBag</field>
-                            <value name="VALUE"><block type="lists_create_empty"></block></value>
-                            <next>
-                              <block type="controls_forEach">
-                                <field name="VAR">x</field>
-                                <value name="LIST"><block type="variables_get"><field name="VAR">bag</field></block></value>
-                                <statement name="DO">
-                                  <block type="lists_add_item">
-                                    <value name="LIST"><block type="variables_get"><field name="VAR">bestBag</field></block></value>
-                                    <value name="ITEM"><block type="variables_get"><field name="VAR">x</field></block></value>
-                                  </block>
-                                </statement>
-                              </block>
-                            </next>
+                        <field name="VAR">sumBag</field>
+                        <value name="VALUE">
+                          <block type="math_arithmetic">
+                            <field name="OP">ADD</field>
+                            <value name="A"><block type="variables_get"><field name="VAR">sumBag</field></block></value>
+                            <value name="B"><block type="variables_get"><field name="VAR">x</field></block></value>
                           </block>
-                        </next>
+                        </value>
                       </block>
                     </statement>
                     <next>
-                      <block type="procedures_return">
-                        <value name="VALUE"><block type="math_number"><field name="NUM">0</field></block></value>
+                      <block type="controls_if">
+                        <value name="IF0">
+                          <block type="logic_compare">
+                            <field name="OP">GT</field>
+                            <value name="A"><block type="variables_get"><field name="VAR">sumBag</field></block></value>
+                            <value name="B"><block type="variables_get"><field name="VAR">bestValue</field></block></value>
+                          </block>
+                        </value>
+                        <statement name="DO0">
+                          <block type="variables_set">
+                            <field name="VAR">bestValue</field>
+                            <value name="VALUE"><block type="variables_get"><field name="VAR">sumBag</field></block></value>
+                            <next>
+                              <block type="variables_set">
+                                <field name="VAR">bestBag</field>
+                                <value name="VALUE"><block type="lists_create_empty"></block></value>
+                                <next>
+                                  <block type="controls_forEach">
+                                    <field name="VAR">x</field>
+                                    <value name="LIST"><block type="variables_get"><field name="VAR">bag</field></block></value>
+                                    <statement name="DO">
+                                      <block type="lists_add_item">
+                                        <value name="LIST"><block type="variables_get"><field name="VAR">bestBag</field></block></value>
+                                        <value name="ITEM"><block type="variables_get"><field name="VAR">x</field></block></value>
+                                      </block>
+                                    </statement>
+                                  </block>
+                                </next>
+                              </block>
+                            </next>
+                          </block>
+                        </statement>
+                        <next>
+                          <block type="procedures_return">
+                            <value name="VALUE"><block type="math_number"><field name="NUM">0</field></block></value>
+                          </block>
+                        </next>
                       </block>
                     </next>
                   </block>
@@ -258,7 +272,7 @@ const knapsackExampleXml = `<xml xmlns="https://developers.google.com/blockly/xm
   </block>
 
   <!-- Main: _unused = knapsack(...) → result = bestBag -->
-  <block type="variables_game_input" x="50" y="600"><field name="VAR">n</field><next><block type="variables_game_input"><field name="VAR">capacity</field><next><block type="variables_game_input"><field name="VAR">weights</field><next><block type="variables_game_input"><field name="VAR">values</field><next><block type="variables_game_input"><field name="VAR">bag</field><next><block type="variables_game_input"><field name="VAR">bestValue</field><next><block type="variables_game_input"><field name="VAR">bestBag</field><next>
+  <block type="variables_game_input" x="50" y="20"><field name="VAR">n</field><next><block type="variables_game_input"><field name="VAR">capacity</field><next><block type="variables_game_input"><field name="VAR">weights</field><next><block type="variables_game_input"><field name="VAR">values</field><next><block type="variables_game_input"><field name="VAR">bag</field><next><block type="variables_game_input"><field name="VAR">bestValue</field><next><block type="variables_game_input"><field name="VAR">bestBag</field><next>
   <block type="variables_set">
     <field name="VAR">_unused</field>
     <value name="VALUE">

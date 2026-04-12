@@ -6,7 +6,7 @@ import * as Blockly from "blockly/core";
 // Pick = use coin[index] again (amount - coin, same index)
 // Skip = don't use coin[index] anymore (same amount, index + 1)
 const coinChangeExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml">
-  <block type="procedures_defreturn" id="cc_function" x="50" y="50">
+  <block type="procedures_defreturn" id="cc_function" x="50" y="250">
     <mutation>
       <arg name="amount"></arg>
       <arg name="coins"></arg>
@@ -266,7 +266,7 @@ const coinChangeExampleXml = `<xml xmlns="https://developers.google.com/blockly/
   </block>
 
   <!-- Main: result = coinChange(monster_power, warriors, 0) -->
-  <block type="variables_game_input" x="50" y="720"><field name="VAR">monster_power</field><next><block type="variables_game_input"><field name="VAR">warriors</field><next><block type="variables_game_input"><field name="VAR">selection</field><next>
+  <block type="variables_game_input" x="50" y="20"><field name="VAR">monster_power</field><next><block type="variables_game_input"><field name="VAR">warriors</field><next><block type="variables_game_input"><field name="VAR">selection</field><next>
   <block type="variables_set" id="main_result_set">
     <field name="VAR">result</field>
     <value name="VALUE">

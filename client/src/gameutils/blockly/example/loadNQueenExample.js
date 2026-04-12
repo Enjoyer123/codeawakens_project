@@ -113,24 +113,60 @@ const nQueenExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml"
                   </block>
                 </value>
                 <statement name="DO0">
-                  <block type="nqueen_place">
-                    <value name="ROW"><block type="variables_get"><field name="VAR">row</field></block></value>
-                    <value name="COL"><block type="variables_get"><field name="VAR">col</field></block></value>
+                  <block type="lists_setIndex">
+                    <mutation at="true"></mutation>
+                    <field name="MODE">SET</field>
+                    <field name="WHERE">FROM_START</field>
+                    <value name="LIST">
+                      <block type="lists_getIndex">
+                        <mutation statement="false" at="true"></mutation>
+                        <field name="MODE">GET</field>
+                        <field name="WHERE">FROM_START</field>
+                        <value name="VALUE"><block type="variables_get"><field name="VAR">board</field></block></value>
+                        <value name="AT"><block type="variables_get"><field name="VAR">row</field></block></value>
+                      </block>
+                    </value>
+                    <value name="AT"><block type="variables_get"><field name="VAR">col</field></block></value>
+                    <value name="TO"><block type="math_number"><field name="NUM">1</field></block></value>
                     <next>
-                      <block type="procedures_callnoreturn">
-                        <mutation name="solve"><arg name="row"></arg></mutation>
-                        <field name="NAME">solve</field>
-                        <value name="ARG0">
-                          <block type="math_arithmetic">
-                            <value name="A"><block type="variables_get"><field name="VAR">row</field></block></value>
-                            <field name="OP">ADD</field>
-                            <value name="B"><block type="math_number"><field name="NUM">1</field></block></value>
-                          </block>
-                        </value>
+                      <block type="nqueen_place">
+                        <value name="ROW"><block type="variables_get"><field name="VAR">row</field></block></value>
+                        <value name="COL"><block type="variables_get"><field name="VAR">col</field></block></value>
                         <next>
-                          <block type="nqueen_remove">
-                            <value name="ROW"><block type="variables_get"><field name="VAR">row</field></block></value>
-                            <value name="COL"><block type="variables_get"><field name="VAR">col</field></block></value>
+                          <block type="procedures_callnoreturn">
+                            <mutation name="solve"><arg name="row"></arg></mutation>
+                            <field name="NAME">solve</field>
+                            <value name="ARG0">
+                              <block type="math_arithmetic">
+                                <value name="A"><block type="variables_get"><field name="VAR">row</field></block></value>
+                                <field name="OP">ADD</field>
+                                <value name="B"><block type="math_number"><field name="NUM">1</field></block></value>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="lists_setIndex">
+                                <mutation at="true"></mutation>
+                                <field name="MODE">SET</field>
+                                <field name="WHERE">FROM_START</field>
+                                <value name="LIST">
+                                  <block type="lists_getIndex">
+                                    <mutation statement="false" at="true"></mutation>
+                                    <field name="MODE">GET</field>
+                                    <field name="WHERE">FROM_START</field>
+                                    <value name="VALUE"><block type="variables_get"><field name="VAR">board</field></block></value>
+                                    <value name="AT"><block type="variables_get"><field name="VAR">row</field></block></value>
+                                  </block>
+                                </value>
+                                <value name="AT"><block type="variables_get"><field name="VAR">col</field></block></value>
+                                <value name="TO"><block type="math_number"><field name="NUM">0</field></block></value>
+                                <next>
+                                  <block type="nqueen_remove">
+                                    <value name="ROW"><block type="variables_get"><field name="VAR">row</field></block></value>
+                                    <value name="COL"><block type="variables_get"><field name="VAR">col</field></block></value>
+                                  </block>
+                                </next>
+                              </block>
+                            </next>
                           </block>
                         </next>
                       </block>
@@ -179,6 +215,8 @@ const nQueenExampleXml = `<xml xmlns="https://developers.google.com/blockly/xml"
     </next>
   </block>
 </xml>`;
+
+
 
 
 /**
