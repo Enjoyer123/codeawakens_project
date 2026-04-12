@@ -11,7 +11,7 @@ export function injectKnapsackStubs(context, levelData, trace) {
        1. GAME VARIABLES
        ========================================== */
     const { items = [], capacity = 0 } = payload;
-    
+
     context._state = context._state || {};
     context._state.weights = items.map(i => i.weight);
     context._state.values = items.map(i => i.price);
@@ -30,7 +30,7 @@ export function injectKnapsackStubs(context, levelData, trace) {
     context.trackKnapsackDecision = (type, itemIndex) => {
         trace.push({ action: type, index: itemIndex });
     };
-    
+
     /**
      * บันทึกการอัปเดตตาราง DP (Dynamic Programming)
      */

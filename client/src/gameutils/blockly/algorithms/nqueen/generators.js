@@ -11,21 +11,21 @@ export function defineNQueenGenerators() {
     };
     javascriptGenerator.forBlock["is_safe"] = javascriptGenerator.forBlock["nqueen_is_safe"];
 
-    // 2. place(row, col)
+    // 2. track_place(row, col)
     javascriptGenerator.forBlock["nqueen_place"] = function (block) {
         const row = javascriptGenerator.valueToCode(block, 'ROW', javascriptGenerator.ORDER_NONE) || '0';
         const col = javascriptGenerator.valueToCode(block, 'COL', javascriptGenerator.ORDER_NONE) || '0';
 
-        return `place(${row}, ${col});\n`;
+        return `trackNQueenDecision('place', ${row}, ${col});\n`;
     };
     javascriptGenerator.forBlock["place"] = javascriptGenerator.forBlock["nqueen_place"];
 
-    // 3. remove(row, col)
+    // 3. track_remove(row, col)
     javascriptGenerator.forBlock["nqueen_remove"] = function (block) {
         const row = javascriptGenerator.valueToCode(block, 'ROW', javascriptGenerator.ORDER_NONE) || '0';
         const col = javascriptGenerator.valueToCode(block, 'COL', javascriptGenerator.ORDER_NONE) || '0';
 
-        return `remove(${row}, ${col});\n`;
+        return `trackNQueenDecision('remove', ${row}, ${col});\n`;
     };
     javascriptGenerator.forBlock["delete"] = javascriptGenerator.forBlock["nqueen_remove"];
 }

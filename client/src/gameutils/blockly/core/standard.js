@@ -30,6 +30,14 @@ export const ensureStandardBlocks = () => {
     javascriptGenerator.forBlock["local_variable_set"] = function (block) {
       const varName = block.getFieldValue("VAR");
       const value = javascriptGenerator.valueToCode(block, "VALUE", javascriptGenerator.ORDER_ASSIGNMENT) || "0";
+      
+      if (javascriptGenerator.isCleanMode) {
+        if (!javascriptGenerator.declaredVariables) {
+          javascriptGenerator.declaredVariables = new Set();
+        }
+        javascriptGenerator.declaredVariables.add(varName);
+      }
+      
       return `let ${varName} = ${value};\n`;
     };
   }

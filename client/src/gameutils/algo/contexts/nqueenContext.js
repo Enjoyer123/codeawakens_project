@@ -57,23 +57,10 @@ export function injectNQueenStubs(context, levelData, trace) {
     };
 
     /**
-     * วางราชินีลงบนกระดาน
+     * สำหรับฉบับโค้ดจริง (Real code decoupled tracing)
      */
-    context.place = (row, col) => {
-        context._state.board[row][col] = 1;
-        trace.push({ action: 'place', row, col });
+    context.trackNQueenDecision = (action, row, col, safe) => {
+        trace.push({ action, row, col, safe });
     };
 
-    /**
-     * หยิบราชินีออกจากกระดาน (Backtrack)
-     */
-    context.remove = (row, col) => {
-        context._state.board[row][col] = 0;
-        trace.push({ action: 'remove', row, col });
-    };
-
-
-    context.say = (text) => {
-        trace.push({ action: 'say', text });
-    }
 }
