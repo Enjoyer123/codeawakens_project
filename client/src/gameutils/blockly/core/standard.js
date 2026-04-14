@@ -3,11 +3,13 @@ import { javascriptGenerator } from "blockly/javascript";
 import { defineAllBlocks } from './definitions';
 import { defineAllGenerators } from './generators';
 import { applyProcedureOverrides } from '../blocks/procedures/overrides';
+import { setupCustomGenerator } from './executionGenerator';
 
 export const ensureStandardBlocks = () => {
   defineAllBlocks();
   defineAllGenerators();
   applyProcedureOverrides();
+  setupCustomGenerator();
 
   // local_variable_set: generates `let x = value;` (function-local scope)
   // ใช้สำหรับ recursive function ที่ต้องการตัวแปร local ในแต่ละชั้น

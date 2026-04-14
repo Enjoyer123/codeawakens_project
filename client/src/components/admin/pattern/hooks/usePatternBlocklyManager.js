@@ -89,7 +89,12 @@ export const usePatternBlocklyManager = ({
     // XML Loading Logic
     const loadStepXml = useCallback(async (index, isForward = true) => {
         if (!workspaceRef.current || !levelData) return;
-        if (lastLoadedXmlRef.current === index) return;
+        const currentWorkspaceId = workspaceRef.current.id;
+
+        // Skip if already loaded THIS step into THIS exact workspace
+        if (lastLoadedXmlRef.current?.index === index && lastLoadedXmlRef.current?.workspaceId === currentWorkspaceId) {
+            return;
+        }
 
         // console.log(`[loadStepXml] Loading Step ${index}`);
 
@@ -131,16 +136,19 @@ export const usePatternBlocklyManager = ({
         Blockly.Xml.domToWorkspace(xmlDom, workspaceRef.current);
 
         setGlobalXmlLoading(false);
-        lastLoadedXmlRef.current = index;
+        lastLoadedXmlRef.current = { index, workspaceId: currentWorkspaceId };
     }, [levelData, isViewMode]);
 
-    // Initial Load
+    // Initial Load or Workspace Recreation
     useEffect(() => {
-        if (blocklyLoaded && workspaceRef.current && lastLoadedXmlRef.current === null) {
-            loadStepXml(currentStepIndex, true);
+        if (blocklyLoaded && workspaceRef.current) {
+            // If the workspace changed (e.g. toggled view mode), force load the XML again
+            if (lastLoadedXmlRef.current?.workspaceId !== workspaceRef.current.id) {
+                loadStepXml(currentStepIndex, true);
+            }
         }
-    }, [blocklyLoaded, loadStepXml]);
-    // Note: We don't include currentStepIndex here intentionally to rely on explicit navigation
+    }, [blocklyLoaded, loadStepXml, currentStepIndex]);
+    // Note: It's fine to include currentStepIndex here because we gate redundant loads inside loadStepXml.
 
     const saveCurrentWorkspaceToRef = useCallback(() => {
         if (!workspaceRef.current) return false;

@@ -69,6 +69,10 @@ export function analyzeWorkspace(workspace) {
   const analysis = [];
   let blockIndex = 0;
 
+  // 🔥 TEMP: แสดง INPUT ดิบๆ (ลบทีหลัง)
+  const topBlocks = workspace.getTopBlocks(true);
+  console.log('📥 INPUT topBlocks:', topBlocks);
+
   function traverseBlock(block, treeId, depth = 0, ancestorChain = []) {
     if (!block) return;
     const type = block.type;
@@ -105,6 +109,7 @@ export function analyzeWorkspace(workspace) {
         if (child) {
           info.hasValue = true;
           // ส่ง currentChain ต่อลงไปให้ child
+
           traverseBlock(child, treeId, depth + 1, currentChain);
         }
       } else if (input.type === INPUT_STATEMENT) {
@@ -112,6 +117,7 @@ export function analyzeWorkspace(workspace) {
         if (child) {
           info.hasStatement = true;
           // ส่ง currentChain ต่อลงไปให้ child
+
           traverseBlock(child, treeId, depth + 1, currentChain);
         }
       }
@@ -122,12 +128,12 @@ export function analyzeWorkspace(workspace) {
     const nextBlock = block.getNextBlock();
     if (nextBlock) {
       info.hasNext = true;
+
       traverseBlock(nextBlock, treeId, depth, ancestorChain);
     }
   }
 
   // Get only top-level blocks (blocks without a parent)
-  const topBlocks = workspace.getTopBlocks(true);
   let currentTreeId = 0;
 
   for (const topBlock of topBlocks) {
@@ -147,6 +153,15 @@ export function analyzeWorkspace(workspace) {
   });
 
   console.log("🧩 [Block extraction] DFS Analysis:", analysis.map(b => `[${b.index}] ${b.type}${b.varName ? '(' + b.varName + ')' : ''} (t-occ:${b.typeOcc})`));
+  // 🔥 TEMP: วาดต้นไม้ + ตาราง (ลบทีหลัง)
+  console.log('\n🌳 DFS Tree View:');
+  analysis.forEach(b => {
+    const indent = '  '.repeat(b.depth);
+    const label = b.varName ? `${b.type}(${b.varName})` : b.type;
+    console.log(`${indent}├─ [${b.index}] ${label}`);
+  });
+  console.log('\n📋 Flat 1D Array:');
+  console.table(analysis.map(b => ({ idx: b.index, type: b.type, depth: b.depth, varName: b.varName || '', procName: b.procedureName || '', fields: b.fields ? JSON.stringify(b.fields) : '' })));
   return analysis;
 }
 
@@ -186,7 +201,7 @@ function parseXmlToAnalysis(xmlString) {
  */
 export function preparePatternsCache(patterns) {
   if (!patterns || patterns.length === 0) return [];
-  return patterns.map(pattern => {
+  const result = patterns.map(pattern => {
     const hints = Array.isArray(pattern.hints) ? pattern.hints : [];
     const cachedHints = hints.map(hint => {
       const xmlCheck = hint.xmlCheck || hint.xmlcheck;
@@ -201,6 +216,18 @@ export function preparePatternsCache(patterns) {
       hints: cachedHints
     };
   });
+
+  // 🔥 TEMP: แสดงเฉลยที่ Cache ไว้ (ลบทีหลัง)
+  console.log('📦 เฉลย (Cached Patterns):');
+  result.forEach(p => {
+    console.log(`   Pattern: "${p.pattern_name || p.name || 'Unknown'}"`);
+    (p.hints || []).forEach((h, i) => {
+      console.log(`   Hint ${i + 1}:`);
+      console.table((h._cachedAnalysis || []).map(b => ({ idx: b.index, type: b.type, depth: b.depth, varName: b.varName || '', fields: b.fields ? JSON.stringify(b.fields) : '' })));
+    });
+  });
+
+  return result;
 }
 
 // ─── Block Matching (คงเดิม 100%) ──────────────────────────────
@@ -349,16 +376,25 @@ function calculateMatchResult(bestPattern, bestSteps, bestMatchedBlocks, bestTot
 /** นับจำนวน step ที่ผ่าน (full match ตามลำดับ) — ใช้ LOOSE matching เพื่อช่วยผู้เล่น */
 function countMatchedSteps(currentAnalysis, hints) {
   let stepsMatched = 0;
-  for (const hint of hints) {
+  // 🔥 TEMP (ลบทีหลัง)
+  console.log(`\n🪜 === เทียบทีละ Step (Loose) ===`);
+  for (let i = 0; i < hints.length; i++) {
+    const hint = hints[i];
     const targetAnalysis = hint._cachedAnalysis;
     if (!targetAnalysis || targetAnalysis.length === 0) continue;
     // ใช้ Loose matching (isStrict = false) สำหรับขั้นบันได (Hints)
-    if (matchSubsequenceByTree(currentAnalysis, targetAnalysis, false).isFullMatch) {
+    const result = matchSubsequenceByTree(currentAnalysis, targetAnalysis, false);
+    // 🔥 TEMP (ลบทีหลัง)
+    const blocks = targetAnalysis.map(b => b.type).join(', ');
+    console.log(`   Step ${i + 1}: [${blocks}] → ${result.isFullMatch ? '✅ ผ่าน' : `❌ ไม่ผ่าน (${result.matched}/${result.total})`}`);
+    if (result.isFullMatch) {
       stepsMatched++;
     } else {
+      console.log(`   ⛔ หยุด! Step ${i + 1} ไม่ผ่าน ไม่เช็คต่อ`);
       break;
     }
   }
+  console.log(`   สรุป Loose: ผ่าน ${stepsMatched}/${hints.length} Steps`);
   return stepsMatched;
 }
 
@@ -393,10 +429,25 @@ export function findBestMatch(workspace, cachedPatterns) {
     const stepsMatched = countMatchedSteps(currentAnalysis, hints);
     const { matched, total } = countBlockMatch(currentAnalysis, hints);
 
-    console.log(`🔍 กำลังตรวจเฉลย: Pattern "${pattern.name || pattern.id || 'Unknown'}"`);
-    console.log(`  ➔ ค่าเฉลย (Target):`, hints[hints.length - 1]?._cachedAnalysis);
-    console.log(`  ➔ โหมดใจดี (Loose Steps): ผ่านไปแล้ว ${stepsMatched}/${hints.length} ขั้น`);
-    console.log(`  ➔ โหมดดุ (Strict Blocks): ตรงล็อกเป๊ะๆ ${matched}/${total} บล็อก`);
+    console.log(`\n🔍 === เทียบ Pattern: "${pattern.name || pattern.id || 'Unknown'}" ===`);
+    // 🔥 TEMP: ข้อมูลดิบ (ลบทีหลัง)
+    console.log('👦 ของเด็ก (Workspace):', currentAnalysis);
+    console.log('🎯 เฉลย (Pattern Cache):', hints[hints.length - 1]?._cachedAnalysis);
+
+    // 🔥 TEMP: โชว์การเทียบ Loose (ลบทีหลัง)
+    const lastTarget = hints[hints.length - 1]?._cachedAnalysis || [];
+    console.log(`\n📊 เทียบทีละตัว (Strict):  ของเด็ก vs เฉลย`);
+    console.table(lastTarget.map((t, i) => {
+      const c = currentAnalysis.find((b, bi) => bi >= i && isBlockMatch(b, t));
+      return {
+        '🎯 เฉลย_type': t.type,
+        '🎯 เฉลย_depth': t.depth,
+        '👦 เด็ก_type': c ? c.type : '❌ ไม่เจอ',
+        '👦 เด็ก_depth': c ? c.depth : '-',
+        'ผล': c ? '✅ ตรง' : '❌ ไม่ตรง'
+      };
+    }));
+    console.log(`   Loose Steps: ${stepsMatched}/${hints.length} ขั้น | Strict Blocks: ${matched}/${total} บล็อก`);
 
     if (matched > bestMatchedBlocks || (matched === bestMatchedBlocks && stepsMatched > bestSteps)) {
       best = pattern;
