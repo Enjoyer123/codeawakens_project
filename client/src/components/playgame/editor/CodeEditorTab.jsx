@@ -4,7 +4,6 @@ import { javascriptGenerator } from 'blockly/javascript';
 import Editor from '@monaco-editor/react';
 import { TabsContent } from "@/components/ui/tabs";
 import { RefreshCw, RotateCcw } from 'lucide-react';
-
 const CodeEditorTab = ({
     textCode,
     handleTextCodeChange,

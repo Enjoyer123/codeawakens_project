@@ -29,6 +29,11 @@ export const setupCustomGenerator = (currentLevel) => {
         }
         const argsString = args.join(', ');
 
+        // Scope declaredVariables per function — prevent inner declarations
+        // from consuming `let` of same-named variables in outer (main) scope
+        const outerDeclared = javascriptGenerator.declaredVariables;
+        javascriptGenerator.declaredVariables = new Set();
+
         const branch = javascriptGenerator.statementToCode(block, 'STACK') || '';
         if (!branch.trim()) {
             console.warn('[Generator] Function body is empty:', funcName);
@@ -37,6 +42,9 @@ export const setupCustomGenerator = (currentLevel) => {
         const returnValue = block.type === 'procedures_defreturn'
             ? (javascriptGenerator.valueToCode(block, 'RETURN', javascriptGenerator.ORDER_NONE) || '')
             : '';
+
+        // Restore outer scope
+        javascriptGenerator.declaredVariables = outerDeclared;
         const returnStatement = returnValue ? `  return ${returnValue};\n` : '';
 
         // Clean Mode: Standard synchronous function
