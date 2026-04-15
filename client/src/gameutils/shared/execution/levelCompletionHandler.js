@@ -192,9 +192,6 @@ const handleSuccess = async ({
     const execFinalState = getCurrentGameState();
     const scoreData = calculateLevelScore(
         execFinalState,
-        currentLevel,
-        patternData,
-        goodPatterns,
         userBigO
     );
     setFinalScore(scoreData);

@@ -44,9 +44,11 @@ export function usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData }) 
       }
 
       try {
+        console.log(`\n======================================================`);
+
         const analysis = analyzeWorkspace(workspace);
         const found = analysis.find(b => b.id === newId);
-
+        console.log(`👆 [1] Blockly แจ้งเตือน: มีการคลิกบล็อกรหัส ID "${newId}" "${found.type}"`);
         if (!found) {
           clearHighlight();
           setSelectedBlockType(null);
@@ -80,9 +82,9 @@ export function usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData }) 
 
         if (isFloating) {
           // นับลำดับของ floating block ที่ type + varName เดียวกัน โดยรวมพวกที่ลอยๆ บนกระดานด้วย
-          const floatingBlocks = analysis.filter(b => 
-             workspace._floatingBlockIds?.has(b.id) || 
-             (b.parentId === undefined && b.type !== 'procedures_defreturn' && b.type !== 'procedures_defnoreturn')
+          const floatingBlocks = analysis.filter(b =>
+            workspace._floatingBlockIds?.has(b.id) ||
+            (b.parentId === undefined && b.type !== 'procedures_defreturn' && b.type !== 'procedures_defnoreturn')
           );
           const sameKind = floatingBlocks.filter(b =>
             b.type === found.type &&
@@ -97,9 +99,11 @@ export function usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData }) 
           });
           floatingOcc = sameKind.findIndex(b => b.id === found.id);
           if (floatingOcc < 0) floatingOcc = 0;
-          
+
           // mainTree: ตัดบล็อกลอยฝั่งขวาออก และ "ตัดบล็อกที่ถูกคลิกและลูกๆ" ออกไป เพื่อให้ Diff มองเห็นเป็นช่องว่างจริงๆ!
           mainTreeBlocks = analysis.filter(b => !workspace._floatingBlockIds?.has(b.id) && b.treeId !== found.treeId);
+          console.log(`☁️ [5] แยกสาย Algorithm: พบว่าเพิ่งจับ "บล็อกลอย" → วางแผนเตรียมส่งให้ Diff... ขอดูหน้าตาต้นไม้หลังตัดบล็อกลอยออกหน่อย:`);
+          console.table(mainTreeBlocks.map(b => ({ idx: b.index, type: b.type, varName: b.varName, isMain: '✅' })));
         } else {
           mainTreeBlocks = analysis;
         }
@@ -138,9 +142,24 @@ export function usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData }) 
                pathEl.style.transition = 'filter 0.3s ease';
                highlightedSvgRef.current = pathEl;
              }
+        // ─── Highlight parent block บน workspace (COMMENTS OUT PER USER REQUEST) ─────────
+        /*
+         ...
+        */
+
+        console.log(`🔍 [2] ระบบสกัด DNA ได้: [ ${found.type} ] -> ancestorStr: "${found.ancestorStr || 'ไม่มี'}"`);
+        console.log(`🔀 [3] ส่งข้อมูลชุดนี้เข้าระบบติดสิน (findPseudocodeLine)...`);
+
+        let ancestorOcc = 0;
+        if (!isFloating && found.ancestorStr) {
+          // นับบล็อกที่มี context เดียวกันเป๊ะ ที่เกิดก่อนบล็อกนี้ (เพื่อระบุว่าเป็นตัวซ้ำตัวที่เท่าไหร่)
+          for (let i = 0; i < found.index; i++) {
+             const b = analysis[i];
+             if (b.type === found.type && b.varName === found.varName && b.ancestorStr === found.ancestorStr) {
+               ancestorOcc++;
+             }
           }
         }
-        */
 
         setSelectedBlockType({
           blockIndexes,
@@ -150,6 +169,7 @@ export function usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData }) 
           typeOcc: found.typeOcc,
           varOcc: found.varOcc,
           ancestorStr: found.ancestorStr,
+          ancestorOcc: ancestorOcc,
           isFloating,
           floatingOcc,
           mainTreeBlocks,
