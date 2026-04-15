@@ -85,10 +85,14 @@ const ProgressModal = ({ isOpen, onClose, onReplay, gameResult, levelData, block
 
   const [awardedRewards, setAwardedRewards] = useState([]);
 
-  // Derived values for display
-  const stars = finalScore?.stars ?? (isVictory ? 3 : 0);
-  const totalScore = finalScore?.totalScore ?? (isVictory ? 60 : 0);
-  const patternBonus = finalScore?.pattern_bonus_score || 0;
+  // Derived values for display (prefer backend calculated scores)
+  const serverProgressData = saveMutation.data?.progress || saveMutation.data?.data?.progress;
+  const serverScoreDetails = serverProgressData?.scoreDetails;
+
+  const stars = serverScoreDetails?.stars ?? finalScore?.stars ?? (isVictory ? 3 : 0);
+  const totalScore = serverScoreDetails?.totalScore ?? finalScore?.totalScore ?? (isVictory ? 60 : 0);
+  const patternBonus = serverScoreDetails?.patternBonusScore ?? finalScore?.pattern_bonus_score ?? 0;
+  const bigOPenalty = serverScoreDetails?.bigOPenalty ?? finalScore?.bigOPenalty ?? 0;
 
   // Save + check rewards when modal opens
   useEffect(() => {
@@ -101,12 +105,8 @@ const ProgressModal = ({ isOpen, onClose, onReplay, gameResult, levelData, block
       status: isVictory ? 'completed' : 'in_progress',
       attempts_count: 1,
       blockly_code: blocklyXml || null,
-      text_code: levelData?.textcode ? textCodeContent : null,
-      best_score: totalScore,
-      pattern_bonus_score: patternBonus,
       pattern_type_id: finalScore?.patternTypeId || 0,
       is_correct: isVictory,
-      stars_earned: stars,
       hp_remaining: hp_remaining ?? 0,
       user_big_o: userBigO || null,
     };
@@ -177,62 +177,69 @@ const ProgressModal = ({ isOpen, onClose, onReplay, gameResult, levelData, block
                 </div>
 
                 {/* Score breakdown */}
-                <div
-                  className="bg-[#fdf6e3]/90 p-4 mx-2 my-8"
-                  style={{
-                    boxShadow: '-3px 0 0 0 #8d6e63, 3px 0 0 0 #8d6e63, 0 -3px 0 0 #8d6e63, 0 3px 0 0 #8d6e63',
-                    imageRendering: 'pixelated'
-                  }}
-                >
-                  <h3 className="font-bold text-[#5d4037] mb-2 font-pixel text-xs sm:text-sm uppercase tracking-wider">Score Breakdown</h3>
-                  <div className="space-y-1 text-xs sm:text-sm font-mono text-[#5d4037]">
-                    <div className="flex justify-between"><span>Base Completion:</span><span>60</span></div>
+                {saveMutation.isPending ? (
+                  <div className="bg-[#fdf6e3]/90 p-8 mx-2 my-8 text-center animate-pulse"
+                    style={{ boxShadow: '-3px 0 0 0 #8d6e63, 3px 0 0 0 #8d6e63, 0 -3px 0 0 #8d6e63, 0 3px 0 0 #8d6e63', imageRendering: 'pixelated' }}>
+                    <h3 className="font-bold text-[#5d4037] font-pixel text-xs sm:text-sm uppercase tracking-wider">Calculating Score...</h3>
+                  </div>
+                ) : (
+                  <div
+                    className="bg-[#fdf6e3]/90 p-4 mx-2 my-8"
+                    style={{
+                      boxShadow: '-3px 0 0 0 #8d6e63, 3px 0 0 0 #8d6e63, 0 -3px 0 0 #8d6e63, 0 3px 0 0 #8d6e63',
+                      imageRendering: 'pixelated'
+                    }}
+                  >
+                    <h3 className="font-bold text-[#5d4037] mb-2 font-pixel text-xs sm:text-sm uppercase tracking-wider">Score Breakdown</h3>
+                    <div className="space-y-1 text-xs sm:text-sm font-mono text-[#5d4037]">
+                      <div className="flex justify-between"><span>Base Completion:</span><span>60</span></div>
 
-                    {userBigO && (
-                      <div className="flex justify-between text-[#8d6e63] italic">
-                        <span>Selected Big O:</span>
-                        <span className="font-mono font-bold px-1 rounded-sm">{userBigO}</span>
+                      {userBigO && (
+                        <div className="flex justify-between text-[#8d6e63] italic">
+                          <span>Selected Big O:</span>
+                          <span className="font-mono font-bold px-1 rounded-sm">{userBigO}</span>
+                        </div>
+                      )}
+
+                      {patternBonus > 0 && (
+                        <div className="flex justify-between text-green-700">
+                          <span>Pattern Bonus:</span><span>+{patternBonus}</span>
+                        </div>
+                      )}
+
+                      {bigOPenalty > 0 && (
+                        <div className="flex justify-between text-red-600 font-bold">
+                          <span>Big O Penalty:</span><span>-{bigOPenalty}</span>
+                        </div>
+                      )}
+
+                      <div className="border-t-2 border-[#8d6e63]/50 mt-2 pt-2 flex justify-between font-bold text-base text-[#2d1b0e]">
+                        <span>Total Score:</span>
+                        <span className="text-blue-700">{totalScore}</span>
                       </div>
-                    )}
-
-                    {patternBonus > 0 && (
-                      <div className="flex justify-between text-green-700">
-                        <span>Pattern Bonus:</span><span>+{patternBonus}</span>
-                      </div>
-                    )}
-
-                    {finalScore?.bigOPenalty > 0 && (
-                      <div className="flex justify-between text-red-600 font-bold">
-                        <span>Big O Penalty:</span><span>-{finalScore.bigOPenalty}</span>
-                      </div>
-                    )}
-
-                    <div className="border-t-2 border-[#8d6e63]/50 mt-2 pt-2 flex justify-between font-bold text-base text-[#2d1b0e]">
-                      <span>Total Score:</span>
-                      <span className="text-blue-700">{totalScore}</span>
                     </div>
                   </div>
-                </div>
-
-                {/* Rewards */}
-                {rewardMutation.isPending && (
-                  <div className="bg-yellow-100/80 border-2 border-yellow-500 p-3 rounded text-center">
-                    <p className="text-yellow-800 text-xs animate-pulse">Checking Rewards...</p>
-                  </div>
                 )}
-                {awardedRewards.length > 0 && <RewardSlots rewards={awardedRewards} />}
 
+                    {/* Rewards */}
+                    {rewardMutation.isPending && (
+                      <div className="bg-yellow-100/80 border-2 border-yellow-500 p-3 rounded text-center">
+                        <p className="text-yellow-800 text-xs animate-pulse">Checking Rewards...</p>
+                      </div>
+                    )}
+                    {awardedRewards.length > 0 && <RewardSlots rewards={awardedRewards} />}
+
+                  </div>
+            </div>
+
+              {/* Footer buttons */}
+              <div className="flex justify-center gap-4 shrink-0 pb-12 items-end">
+                <PixelButton label="AGAIN" onClick={onReplay ? onReplay : () => window.location.reload()} />
+                <PixelButton label="HOME" onClick={() => navigate('/user/mapselect')} />
               </div>
-            </div>
 
-            {/* Footer buttons */}
-            <div className="flex justify-center gap-4 shrink-0 pb-12 items-end">
-              <PixelButton label="AGAIN" onClick={onReplay ? onReplay : () => window.location.reload()} />
-              <PixelButton label="HOME" onClick={() => navigate('/user/mapselect')} />
             </div>
-
           </div>
-        </div>
       </DialogContent>
     </Dialog>
   );

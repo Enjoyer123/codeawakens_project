@@ -161,7 +161,7 @@ export function analyzeWorkspace(workspace) {
     console.log(`${indent}├─ [${b.index}] ${label}`);
   });
   console.log('\n📋 Flat 1D Array:');
-  console.table(analysis.map(b => ({ idx: b.index, type: b.type, depth: b.depth, varName: b.varName || '', procName: b.procedureName || '', fields: b.fields ? JSON.stringify(b.fields) : '' })));
+  console.table(analysis.map(b => ({ idx: b.index, type: b.type, depth: b.depth, ancestorStr: b.ancestorStr || '', varName: b.varName || '', procName: b.procedureName || '', fields: b.fields ? JSON.stringify(b.fields) : '' })));
   return analysis;
 }
 

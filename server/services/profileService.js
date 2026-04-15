@@ -303,7 +303,10 @@ export const saveUserProgress = async (clerkId, body) => {
     });
   }
 
-  return savedProgress;
+  return {
+    ...savedProgress,
+    scoreDetails: calculated
+  };
 };
 
 export const checkAndAwardRewards = async (clerkId, levelId) => {
