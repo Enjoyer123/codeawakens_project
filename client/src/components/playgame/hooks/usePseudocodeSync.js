@@ -44,16 +44,47 @@ export function usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData }) 
       }
 
       try {
-        console.log(`\n======================================================`);
+        // ═══════════════════════════════════════════════════════════
+        // STEP 1: ผู้เล่นคลิก Block → Blockly ยิง Event SELECTED
+        // ═══════════════════════════════════════════════════════════
+        console.log(`\n%c╔══ STEP 1: ผู้เล่นคลิก Block ══╗`, 'color:#a78bfa;font-weight:bold');
+        console.log(`%c  Blockly.Events.SELECTED ถูกยิง`, 'color:#c4b5fd');
+        console.log(`%c  Block ID ที่คลิก: "${newId}"`, 'color:#e9d5ff');
+        console.log(`%c╚═══════════════════════════════════╝`, 'color:#a78bfa;font-weight:bold');
+
+        // ═══════════════════════════════════════════════════════════
+        // STEP 2: DFS Traverse — analyzeWorkspace() สร้าง Flat Array
+        // (log รายละเอียดอยู่ใน hintMatcher.js:analyzeWorkspace)
+        // ═══════════════════════════════════════════════════════════
+        console.log(`\n%c╔══ STEP 2: DFS Traverse Workspace ══╗`, 'color:#34d399;font-weight:bold');
+        console.log(`%c  เรียก analyzeWorkspace() → แปลง Block Tree เป็น Flat Array 1D`, 'color:#6ee7b7');
+        console.log(`%c  (ดู log รายละเอียด DFS Tree ด้านบน)`, 'color:#a7f3d0');
+        console.log(`%c╚══════════════════════════════════════╝`, 'color:#34d399;font-weight:bold');
 
         const analysis = analyzeWorkspace(workspace);
         const found = analysis.find(b => b.id === newId);
-        console.log(`👆 [1] Blockly แจ้งเตือน: มีการคลิกบล็อกรหัส ID "${newId}" "${found.type}"`);
+
         if (!found) {
           clearHighlight();
           setSelectedBlockType(null);
           return;
         }
+
+        // ═══════════════════════════════════════════════════════════
+        // STEP 3: สกัด DNA — หา Block จาก ID → ได้ found object
+        // ═══════════════════════════════════════════════════════════
+        console.log(`\n%c╔══ STEP 3: วิเคราะห์ Block → ได้ DNA (ancestorStr) ══╗`, 'color:#60a5fa;font-weight:bold');
+        console.log(`%c  Block ที่คลิก:`, 'color:#93c5fd');
+        console.table([{
+            'type':        found.type,
+            'varName':     found.varName || '-',
+            'depth':       found.depth,
+            'treeId':      found.treeId,
+            'parentId':    found.parentId || '(none = floating)',
+            'typeOcc':     found.typeOcc,
+        }]);
+        console.log(`%c  DNA (ancestorStr): "${found.ancestorStr || '(none)'}"`, 'color:#bfdbfe');
+        console.log(`%c╚═══════════════════════════════════════════════╝`, 'color:#60a5fa;font-weight:bold');
 
         // สร้าง ancestor chain จาก self → root เพื่อให้คลิกบล็อกลูกแล้ว bubble หา parent ถูกต้อง
         const blockIndexes = [found.index];
@@ -67,7 +98,9 @@ export function usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData }) 
           }
         }
 
-        // ─── ตรวจว่าเป็น floating block หรือไม่ ────────────────
+        // ═══════════════════════════════════════════════════════════
+        // STEP 4: ตรวจสถานะ Block: Floating หรือ Connected?
+        // ═══════════════════════════════════════════════════════════
         // บล็อกจะ "floating" จริงๆ ต่อเมื่อไม่มี parentId (เป็น top-level block)
         // ถ้ามี parentId แสดงว่าถูกต่อกับ block อื่นแล้ว แม้ _floatingBlockIds จะยังจำ ID นั้นอยู่
         const isActuallyTopLevel = found.parentId === undefined;
@@ -77,8 +110,15 @@ export function usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData }) 
         let floatingOcc = 0;
         let mainTreeBlocks = undefined;
 
-        // ─── ลบ highlight เก่าก่อน ────────────────────────────
-        clearHighlight();
+        console.log(`\n%c╔══ STEP 4: ตรวจสถานะ Block ══╗`, 'color:#fb923c;font-weight:bold');
+        console.table([{
+            'parentId':         found.parentId || '(none)',
+            'isActuallyTopLevel': isActuallyTopLevel,
+            'isPanelFloating':   isPanelFloating,
+            'isDetached':        isDetached,
+            '→ isFloating':     isFloating ? '✅ FLOATING (→ Path A: Greedy Diff)' : '❌ CONNECTED (→ Path B: LCS)'
+        }]);
+        console.log(`%c╚═══════════════════════╝`, 'color:#fb923c;font-weight:bold');
 
         if (isFloating) {
           // นับลำดับของ floating block ที่ type + varName เดียวกัน โดยรวมพวกที่ลอยๆ บนกระดานด้วย
@@ -102,8 +142,8 @@ export function usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData }) 
 
           // mainTree: ตัดบล็อกลอยฝั่งขวาออก และ "ตัดบล็อกที่ถูกคลิกและลูกๆ" ออกไป เพื่อให้ Diff มองเห็นเป็นช่องว่างจริงๆ!
           mainTreeBlocks = analysis.filter(b => !workspace._floatingBlockIds?.has(b.id) && b.treeId !== found.treeId);
-          console.log(`☁️ [5] แยกสาย Algorithm: พบว่าเพิ่งจับ "บล็อกลอย" → วางแผนเตรียมส่งให้ Diff... ขอดูหน้าตาต้นไม้หลังตัดบล็อกลอยออกหน่อย:`);
-          console.table(mainTreeBlocks.map(b => ({ idx: b.index, type: b.type, varName: b.varName, isMain: '✅' })));
+          console.log(`%c  mainTreeBlocks (หลังตัดบล็อกลอยออก):`, 'color:#fcd34d');
+          console.table(mainTreeBlocks.map(b => ({ 'idx': b.index, 'type': b.type, 'varName': b.varName || '-', 'treeId': b.treeId, 'isMain': '✅' })));
         } else {
           mainTreeBlocks = analysis;
         }
@@ -147,8 +187,29 @@ export function usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData }) 
          ...
         */
 
-        console.log(`🔍 [2] ระบบสกัด DNA ได้: [ ${found.type} ] -> ancestorStr: "${found.ancestorStr || 'ไม่มี'}"`);
-        console.log(`🔀 [3] ส่งข้อมูลชุดนี้เข้าระบบติดสิน (findPseudocodeLine)...`);
+        // ═══════════════════════════════════════════════════════════
+        // STEP 5: ส่ง State → React re-render → PseudocodePanel รับไปคำนวณ
+        // ═══════════════════════════════════════════════════════════
+        console.log(`\n%c╔══ STEP 5: Dispatch State → PseudocodePanel ══╗`, 'color:#f472b6;font-weight:bold');
+        console.log(`%c  setSelectedBlockType() ถูกเรียก`, 'color:#f9a8d4');
+        console.table([{
+            'type': found.type,
+            'varName': found.varName || '-',
+            'ancestorStr': found.ancestorStr || '(none)',
+            'isFloating': isFloating,
+            'floatingOcc': floatingOcc,
+            'ancestorOcc': (() => {
+                let occ = 0;
+                if (!isFloating && found.ancestorStr) {
+                    for (let i = 0; i < found.index; i++) {
+                        const b = analysis[i];
+                        if (b.type === found.type && b.varName === found.varName && b.ancestorStr === found.ancestorStr) occ++;
+                    }
+                }
+                return occ;
+            })()
+        }]);
+        console.log(`%c╚══════════════════════════════════════════════╝`, 'color:#f472b6;font-weight:bold');
 
         let ancestorOcc = 0;
         if (!isFloating && found.ancestorStr) {

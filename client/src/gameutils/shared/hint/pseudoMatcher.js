@@ -137,9 +137,10 @@ export function findPseudocodeLine(selectedData, allLines, context = null) {
     // ถ้า block เป็น floating (แถมมาจากโจทย์ หรือ ลากมาจาก Toolbox แล้วยังลอยอยู่)
     if (!isString && selectedData.isFloating && context?.targetAnalysis) {
 
-        console.log(`\n======================================================`);
-        console.log(`🎮 [4] ระบบตรวจพบโหมดความยาก: '${difficulty}'`);
-        console.log(`☁️ [5] แยกสาย Algorithm: พบว่าเพิ่งจับ "บล็อกลอย" → วิ่งเข้าห้อง "Diff (findMissingSlots)" เพื่อหาช่องว่างให้ไปเติม!`);
+        console.log(`\n%c╔══ STEP 5A: Path A — Floating Block → Greedy Diff ══╗`, 'color:#fbbf24;font-weight:bold');
+        console.log(`%c  เรียก findMissingSlots() หาช่องว่างในโครงสร้างเฉลย`, 'color:#fcd34d');
+        console.log(`%c  difficulty: [${difficulty}]  floatingOcc: [${selectedData.floatingOcc ?? 0}]`, 'color:#fde68a');
+        console.log(`%c╚═══════════════════════════════════════════════════╝`, 'color:#fbbf24;font-weight:bold');
 
         // 🟡 ระดับ 'medium': บล็อกที่ลอยอยู่ (เชื่อมไม่ติดกับ Main) จะไม่ให้ใบ้บรรทัด
         if (difficulty === 'medium') {
@@ -150,9 +151,8 @@ export function findPseudocodeLine(selectedData, allLines, context = null) {
         console.log("➡️ Easy Mode: หาช่องว่างให้บล็อกลอย");
         // ถ้าระดับ 'easy': ใช้ diff หาตำแหน่งที่ขาด
         const { missing: missingSlots } = findMissingSlots(context.targetAnalysis, selectedData.mainTreeBlocks);
-
-        console.log(`\n🔍 === ผลลัพธ์จากการ Diff ===`);
-        console.log(`กระดานนี้โดนคว้านรูเรียบร้อย! ระบบค้นพบช่องโหว่ทั้งหมด ${missingSlots.length} ช่องบนกระดาน:`);
+        console.log(`\n%c  === ผลลัพธ์ Greedy Diff (findMissingSlots) ===`, 'color:#fbbf24;font-weight:bold');
+        console.log(`%c  ช่องว่างทั้งหมด ${missingSlots.length} ช่อง ที่กระดานยังไม่มี Block เสียบ:`, 'color:#fcd34d');
         console.table(missingSlots);
 
         const sameKindMissing = missingSlots.filter(s =>
@@ -162,32 +162,24 @@ export function findPseudocodeLine(selectedData, allLines, context = null) {
         const slot = sameKindMissing[selectedData.floatingOcc ?? 0];
 
         if (slot) {
-            console.log(`\n======================================================`);
-            console.log(`🎯 [6] กระบวนการจับคู่ (Mapping):`);
-            console.log(`   6.1 รับข้อมูลจากข้อ (3): เด็กคลิกบล็อกประเภท [${type} (${varName || '-'})]`);
-            console.log(`   6.2 กรองตารางรูโหว่ข้อ (5) ให้เหลือแค่ชนิดนี้... เจอรูโหว่ประเภทนี้ทั้งหมด ${sameKindMissing.length} รู`);
-            console.log(`   6.3 ตรวจสอบคิว: เด็กคลิกแฝดบล็อกลอยตัวที่ '${selectedData.floatingOcc ?? 0}'`);
-            console.log(`   6.4 ฟันธง!: งั้นจับยัดเข้า รูโหว่คิวที่ '${selectedData.floatingOcc ?? 0}' เลย!`);
-            console.log(`→ 🟢 สรุปผล: ผู้ชนะคือช่องโหว่หมายเลข targetIndex: [${slot.targetIndex}] ส่งให้หน้าจอไปสาดแสงสีเขียวทันที!`);
+            console.log(`\n%c╔══ STEP 6A: จับคู่ floatingOcc → Missing Slot ══╗`, 'color:#4ade80;font-weight:bold');
+            console.log(`%c  บล็อกลอยชนิด [${type}(${varName || '-'})] ลำดับ: ${selectedData.floatingOcc ?? 0}`, 'color:#86efac');
+            console.log(`%c  เฉลยช่องว่างชนิดเดียวกันมี ${sameKindMissing.length} ช่อง`, 'color:#86efac');
+            console.table(sameKindMissing);
+            console.log(`%c  → เลือกช่องว่าง targetIndex: [${slot.targetIndex}]`, 'color:#bbf7d0');
+            console.log(`%c╚══════════════════════════════════════════════════╝`, 'color:#4ade80;font-weight:bold');
 
-            console.log(`\n======================================================`);
-            console.log(`📡 [7] สื่อสารกับหน้าจอ (UI Panel)`);
-            console.log(`   ก่อนฟันธง... ขอดูกางตารางบรรทัด Pseudocode บนหน้าจอทั้งหมดหน่อยว่าใครดูแลรหัสอะไรบ้าง:`);
+            console.log(`\n%c  === ค้นหาบรรทัด Pseudocode ที่รับผิดชอบ targetIndex [${slot.targetIndex}] ===`, 'color:#4ade80');
             console.table(allLines.map(l => ({
                 step: l.stepIndex,
                 line: l.lineIndex,
-                text: l.text.trim().substring(0, 30),
-                ดูแลtargets: l.patternBlocks?.map(b => b.index).join(',') || '-'
+                text: l.text.trim().substring(0, 35),
+                'รับผิดชอบ targetIndex': (l.patternBlocks?.map(b => b.index).join(',') || '-')
             })));
-            console.log(allLines);
-
-            console.log(`   -> กำลังหาว่า ใครดูแลรหัส targetIndex [${slot.targetIndex}] ? ...`);
             for (const line of allLines) {
                 if (line.patternBlocks?.some(b => b.index === slot.targetIndex)) {
-                    // หาวิธีการเรียกบรรทัดที่ถูกต้อง (เส้นแสดงผลใช้ Index ของ Step และจำแนกบรรทัดย่อย (LineIndex))
-                    console.log(`   เจอแล้ว! บรรทัดที่รับผิดชอบคือบรรทัดเบอร์ (Step: ${line.stepIndex}, บรรทัดย่อย: ${line.lineIndex})`);
-                    console.log(`   📝 ข้อความ: "${line.text.trim()}"`);
-                    console.log(`→ 🎉 จบปิ๊ง! โยนบรรทัดนี้ไปให้ React สาดสีเขียวเลยยยย!`);
+                    console.log(`%c  ✔ เจอบรรทัด! Step:${line.stepIndex} Line:${line.lineIndex} → "${line.text.trim()}"`, 'color:#4ade80;font-weight:bold');
+                    console.log(`%c→ 🎉 STEP 7: ยิง highlight ไปยังบรรทัดนี้!`, 'color:#22c55e;font-weight:bold');
                     return line;
                 }
             }
@@ -201,13 +193,19 @@ export function findPseudocodeLine(selectedData, allLines, context = null) {
     // ทำเมื่อเชื่อมต่อกับ Main Procedure แล้วเท่านั้น
     if (isMainConnected) {
 
-        console.log(`\n======================================================`);
-        console.log(`🎮 [4] ระบบตรวจพบโหมดความยาก: '${difficulty}'`);
-        console.log(`🔗 [5] แยกสาย Algorithm: พบว่าเพิ่งจับ "บล็อกที่ต่อแล้ว" → วิ่งเข้าห้อง "LCS Match" เพื่อทำการพิสูจน์ DNA!`);
+        console.log(`\n%c╔══ STEP 5B: Path B — Connected Block → LCS DNA Scoring ══╗`, 'color:#38bdf8;font-weight:bold');
+        console.log(`%c  บล็อกต่ออยู่ในโครงสร้างแล้ว → ใช้ LCS เปรียบ ancestorStr หาบรรทัดที่ใกล้เคียงที่สุด`, 'color:#7dd3fc');
+        console.log(`%c  difficulty: [${difficulty}]  type: [${type}]  varName: [${varName || '-'}]`, 'color:#bae6fd');
+        console.log(`%c  ancestorStr ของผู้เล่น: "${ancestorStr}"`, 'color:#bae6fd');
+        console.log(`%c╚═══════════════════════════════════════════════════════════╝`, 'color:#38bdf8;font-weight:bold');
 
         // 🟡 สำหรับ Medium: ไฮไลต์ตาม "ตำแหน่งที่มันอยู่จริง ณ ปัจจุบัน" ไม่ใช่ "ตำแหน่งที่มันควรอยู่"
         if (difficulty === 'medium') {
             const userParts = ancestorStr.split('|'); // ลำดับจาก root -> leaf (ตัวมันเองอยู่ขวาสุด)
+
+            console.log(`\n%c╔══ STEP 6C: Medium Mode — Ancestor Walk ══╗`, 'color:#c084fc;font-weight:bold');
+            console.log(`%c  DNA ผู้เล่นที่รับมา: [${userParts.join(', ')}]`, 'color:#e879f9');
+            console.log(`%c  ตรวจหาแบบตรงเป๊ะ (Exact Match) ตามความเป็นจริงบนกระดานผู้เล่น`, 'color:#e879f9');
 
             // ถอยหลังหาบรรพบุรุษที่ตรงกับ pattern 
             // เริ่มหาตั้งแต่ตัวมันเองก่อน (ถ้าต่อถูกที่เป๊ะ จะเจอตัวมันเอง)
@@ -215,6 +213,29 @@ export function findPseudocodeLine(selectedData, allLines, context = null) {
             for (let i = userParts.length; i > 0; i--) {
                 const searchStr = userParts.slice(0, i).join('|');
                 const searchType = userParts[i - 1];
+                const isLookingAtLeaf = (i === userParts.length);
+
+                console.log(`\n%c  🔍 วงจรที่ ${userParts.length - i + 1}: ถอยระดับค้นหาสายสัมพันธ์ ➔ "${searchStr}"`, 'color:#f0abfc');
+                console.log(`%c     ↳ เป้าหมายค้นหา: หาบล็อกชนิด '${searchType}' ที่มี DNA ตรงเป๊ะตามบรรทัดฐานบนเป้าหมายเฉลย...`, 'color:#e879f9');
+                console.log(`%c     ↳ กลไกการตรวจ: ระบบจะกางตารางเฉลย (allLines) ทั้งหมดขึ้นมาเปิดหา ว่ามีบล็อกไหนเขียน DNA ไว้ตรงกับผู้เล่นบ้างมั้ย?`, 'color:#d8b4fe');
+
+                if (isLookingAtLeaf) {
+                    const dnaTableData = [];
+                    for (const l of allLines) {
+                        if (l.patternBlocks) {
+                            for (const pb of l.patternBlocks) {
+                                dnaTableData.push({
+                                    'บรรทัดที่': `Step ${l.stepIndex}, Line ${l.lineIndex}`,
+                                    'ชนิดบล็อก (Type)': pb.type,
+                                    'สายเลือด (DNA เฉลย)': pb.ancestorStr,
+                                    'ข้อความ': l.text.trim().substring(0, 30)
+                                });
+                            }
+                        }
+                    }
+                    console.log(`\n%c     📊 [ภาพประกอบสไลด์] รายการบล็อกเป้าหมายทั้งหมดและ DNA ของมันที่มีให้เลือกในตารางเฉลยทั้งหมด:`, 'color:#93c5fd;font-weight:bold');
+                    console.table(dnaTableData);
+                }
 
                 // รวบรวมเป้าหมายทั้งหมดในเฉลยที่ตรงกับ context นี้
                 const matchingTargets = [];
@@ -223,31 +244,47 @@ export function findPseudocodeLine(selectedData, allLines, context = null) {
                         matchingTargets.push(...line.patternBlocks.filter(b => b.type === searchType && b.ancestorStr === searchStr));
                     }
                 }
+                console.log(`%c     สรุป: เจอเป้าหมายเทียบเคียงในโครงสร้างเฉลยทั้งหมด: ${matchingTargets.length} จุด`, 'color:#fdf4ff;font-weight:bold');
 
                 if (matchingTargets.length > 0) {
                     // ถ้านี่คือระดับ "ตัวมันเอง" (ระดับล่างสุดของ chain) ให้เช็ค Occurrence
-                    if (i === userParts.length && selectedData.ancestorOcc !== undefined) {
+                    if (isLookingAtLeaf && selectedData.ancestorOcc !== undefined) {
                         if (selectedData.ancestorOcc >= matchingTargets.length) {
-                             // วางบล็อกซ้ำเกินกว่าที่เฉลยมี! (Excess block)
-                             // ถือว่าบริบทนี้ "ไม่ถูกต้องสมบูรณ์" ให้ข้าม (continue) เพื่อย้อนไปไฮไลต์ parent แทน
-                             console.log(`➡️ Medium Mode: พบบล็อกซ้ำ (เกิน)! ย้อนไปไฮไลต์ Parent แทน`);
-                             continue;
+                            // วางบล็อกซ้ำเกินกว่าที่เฉลยมี! (Excess block)
+                            console.log(`%c     ⚠️ พบบล็อกซ้ำส่วนเกิน (Excess Block)! ลำดับที่ ${selectedData.ancestorOcc} เกินกว่าช่องที่มีในเฉลย → เด้งไปคำนวณ Parent เพื่อไฮไลต์แทนทันที`, 'color:#fcd34d');
+                            continue;
+                        } else {
+                            console.log(`%c     ✔ ลำดับจำนวนเงื่อนไขสมบูรณ์ (occurrence: ${selectedData.ancestorOcc} < ${matchingTargets.length})`, 'color:#86efac');
                         }
+                    }
+
+                    // เหตุผลตรรกะว่าทำไมถึงเจอบรรทัดนี้
+                    if (isLookingAtLeaf) {
+                        console.log(`%c     💡 เหตุผลที่ตัดสินใจ: โครงสร้างปัจจุบันที่คุณต่ออยู่ "ถูกต้อง 100% (Exact Match)" สอดคล้องกับภาพโครงสร้างในเฉลยทุกประการ!`, 'color:#86efac');
+                    } else {
+                        console.log(`%c     💡 เหตุผลที่ตัดสินใจ: ถึงแม้บล็อกไส้ในที่คุณต่อจะยังคลาดเคลื่อน แต่เมื่อถอยหลังมาเช็คพบว่าบล็อกกรอบนอก (Parent: ${searchType}) เป็นโครงสร้างหลักที่วางถูกตำแหน่งแล้ว! จึงสะท้อนไฮไลต์กรอบนอกให้เห็นภาพรวม`, 'color:#86efac');
                     }
 
                     // หาเจอแล้ว ต้องหาว่าบรรทัดไหนรับผิดชอบมัน
                     // เลือก target ตาม occ (ถ้าเป็นตัวมันเอง) หรือเลือกตัวแรก (ถ้าเป็น parent)
-                    const targetBlock = matchingTargets[ i === userParts.length ? (selectedData.ancestorOcc || 0) : 0 ];
+                    const targetBlock = matchingTargets[isLookingAtLeaf ? (selectedData.ancestorOcc || 0) : 0];
                     if (targetBlock) {
-                         for (const line of allLines) {
-                             if (line.patternBlocks?.some(b => b.index === targetBlock.index)) {
-                                 return line;
-                             }
-                         }
+                        for (const line of allLines) {
+                            if (line.patternBlocks?.some(b => b.index === targetBlock.index)) {
+                                console.log(`%c  → 🎉 บทสรุป! ผู้ชนะคือบรรทัด Step:${line.stepIndex} Line:${line.lineIndex} → "${line.text.trim()}"`, 'color:#a855f7;font-weight:bold');
+                                console.log(`%c→ 🎉 STEP 7: ยิง highlight ไปยังบรรทัดนี้เพื่อสะท้อนความจริงบนหน้าจอ!`, 'color:#22c55e;font-weight:bold');
+                                console.log(`%c╚══════════════════════════════════════════════════╝`, 'color:#c084fc;font-weight:bold');
+                                return line;
+                            }
+                        }
                     }
+                } else {
+                    console.log(`%c     ❌ โครงสร้างนี้ผิดแปลก/ไม่เจอในเฉลย → ตัดหางทิ้ง! ถอยหลังขึ้นไปหาบล็อกแม่ (Parent) ในกรอบการหาต่อไป`, 'color:#fca5a5');
                 }
             }
             // ถ้าย้อนจนสุดแล้วไม่เจออะไรเลย ให้ return null (ตกขอบ)
+            console.log(`%c  🚫 ไม่พบโครงสร้างที่ตรงกันเลยแม้แต่ Root บรรพบุรุษ → Return null (ไม่มีไฮไลต์)`, 'color:#ef4444;font-weight:bold');
+            console.log(`%c╚══════════════════════════════════════════════════╝`, 'color:#c084fc;font-weight:bold');
             return null;
         }
 
@@ -256,11 +293,9 @@ export function findPseudocodeLine(selectedData, allLines, context = null) {
         let bestMatch = null;
         let maxScore = -1;
 
-        // 🔥 TEMP LOG: For presentation screenshots (ลบได้หลัง present)
-        console.log(`\n🔍 === เปรียบเทียบ LCS (Longest Common Subsequence) ===`);
-        console.log(`👦 บล็อกที่คลิก: [${type}] varName: [${varName || '-'}]`);
-        console.table([{ 'DNA ผู้เล่น (ancestorStr)': ancestorStr }]);
-        console.log(`📋 กำลังสแกนเทียบกับ Pseudocode ทั้งด่าน...`);
+        console.log(`\n%c  === ขั้นตอนเปรียบเทียบ LCS Scoring ===`, 'color:#38bdf8;font-weight:bold');
+        console.log(`%c  DNA ผู้เล่นกลับด้าน (เอาส่วน leaf ขึ้นก่อน root): [${userParts.join(', ')}]`, 'color:#7dd3fc');
+        console.log(`%c  กำลังสแกนเปรียบเทียบกับบรรทัด Pseudocode ทั้งด่าน...`, 'color:#bae6fd');
 
         // ใช้เก็บ log ว่าเทียบกับบรรทัดไหนบ้าง จะได้แสดงสรุปเป็นตารางง่ายๆ
         const comparisonLogs = [];
@@ -313,11 +348,15 @@ export function findPseudocodeLine(selectedData, allLines, context = null) {
             }
         }
 
-        // 🔥 TEMP LOG: แสดงตารางสรุปผลการเทียบคะแนน
         if (comparisonLogs.length > 0) {
+            console.log(`\n%c  === ผล LCS Score ทุกบรรทัดที่มีบล็อกชนิด ${type} ===`, 'color:#38bdf8;font-weight:bold');
             console.table(comparisonLogs);
             if (bestMatch) {
-                console.log(`✅ สรุป: เลือกระบายสีเขียวที่ บรรทัด ${bestMatch.lineIndex + 1} (Score สูงสุด: ${maxScore})`);
+                console.log(`\n%c╔══ STEP 6B: เลือกผู้ชนะจาก LCS Score ══╗`, 'color:#4ade80;font-weight:bold');
+                console.log(`%c  บรรทัด: Line ${bestMatch.lineIndex + 1} → "${bestMatch.text.trim()}"`, 'color:#86efac');
+                console.log(`%c  Score สูงสุดที่ได้: ${maxScore}`, 'color:#bbf7d0');
+                console.log(`%c→ 🎉 STEP 7: ส่ง highlight ไปยัง PseudocodePanel!`, 'color:#22c55e;font-weight:bold');
+                console.log(`%c╚══════════════════════════════════════════════╝`, 'color:#4ade80;font-weight:bold');
             }
         }
 
