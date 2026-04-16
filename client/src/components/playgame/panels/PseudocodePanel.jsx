@@ -9,6 +9,7 @@ import { ScrollText, ChevronUp, ChevronLeft } from 'lucide-react';
  */
 
 const PseudocodePanel = ({ pattern, matchedSteps = 0, selectedBlockType = null, difficulty = 'easy' }) => {
+  console.log("pattern", pattern);
   const [isOpen, setIsOpen] = useState(true);
   const highlightRef = useRef(null);
 
@@ -17,6 +18,7 @@ const PseudocodePanel = ({ pattern, matchedSteps = 0, selectedBlockType = null, 
     () => buildPseudocodeLines(pattern, matchedSteps),
     [pattern, matchedSteps]
   );
+  console.log("allLines", allLines);
 
   // ดึง target analysis จาก hint สุดท้ายเพื่อใช้ diff กับ workspace (สำหรับ floating blocks)
   const targetAnalysis = useMemo(() => {
@@ -110,11 +112,11 @@ const PseudocodePanel = ({ pattern, matchedSteps = 0, selectedBlockType = null, 
       `}</style>
 
       <div
-        className="absolute right-full z-[100] h-full w-[550px] overflow-x-auto panel-enter flex"
+        className="absolute right-full z-[100] h-full w-fit min-w-[550px] max-w-[60vw] overflow-hidden panel-enter flex"
         onMouseDown={(e) => e.stopPropagation()}
         onPointerDown={(e) => e.stopPropagation()}
       >
-        <div className="flex-1 bg-black border-l border-r border-gray-700 flex flex-col h-full shadow-[-10px_0_30px_rgba(0,0,0,0.6)]">
+        <div className="flex-1 bg-white border-l border-r border-gray-700 flex flex-col h-full shadow-[-10px_0_30px_rgba(0,0,0,0.6)]">
           {/* Header */}
           <div className="flex items-center justify-start px-5 py-3 border-b border-gray-800 bg-gray-950 shrink-0">
             <button
@@ -139,11 +141,11 @@ const PseudocodePanel = ({ pattern, matchedSteps = 0, selectedBlockType = null, 
 
           {/* Code */}
           <div className="flex-1 overflow-y-auto overflow-x-auto min-h-0 py-4 px-6 pseudo-scrollbar">
-            <div className="font-mono text-[14px] leading-loose min-w-max">
+            <div className="font-mono text-[16px] leading-loose min-w-max">
               {allLines.map((line, idx) => {
                 const isActive = idx === activeLineIndex;
 
-                let stateColor = 'text-gray-500';
+                let stateColor = 'text-black';
                 let bgClass = 'hover:bg-[#ffffff08]';
                 let indicator = null;
 
@@ -151,8 +153,8 @@ const PseudocodePanel = ({ pattern, matchedSteps = 0, selectedBlockType = null, 
                   stateColor = 'text-white';
                   bgClass = 'bg-green-900 opacity-100 border-l-2 border-emerald-400 shadow-[inset_4px_0_0_0_rgba(52,211,153,1)]';
                 } else if (line.isMatched) {
-                  stateColor = 'text-gray-300';
-                  bgClass = 'bg-[#ffffff05]';
+                  stateColor = 'text-red';
+                  bgClass = 'bg-[#ffff05]';
                 }
 
                 return (
@@ -167,9 +169,9 @@ const PseudocodePanel = ({ pattern, matchedSteps = 0, selectedBlockType = null, 
                     {/* Prefix spacing for depth */}
                     <div className="flex-1 flex pointer-events-none">
                       {Array.from({ length: line.depth || 0 }).map((_, d) => (
-                        <div key={d} className="w-6 border-l border-[#ffffff10] h-full" />
+                        <div key={d} className="w-6 shrink-0 border-l border-[#ffffff10] h-full" />
                       ))}
-                      <div className={`whitespace-pre-wrap ${stateColor}`}>
+                      <div className={`whitespace-pre ${stateColor}`}>
                         {line.text}
                       </div>
                     </div>
