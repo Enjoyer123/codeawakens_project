@@ -6,11 +6,11 @@ async function main() {
 
     // 1. Victory Conditions
     const victoryConditions = [
-        { type: 'reach_goal', description: 'ไปถึง Node เป้าหมาย', check: 'goalReached' },
-        { type: 'coins_sorted', description: 'เรียงเหรียญจากน้อยไปมาก', check: 'coinsSorted' },
-        { type: 'all_people_rescued', description: 'ช่วยคนทั้งหมด', check: 'allPeopleRescued' },
-        { type: 'back_to_start', description: 'กลับมาที่จุดเริ่มต้น', check: 'backToStart' },
-        { type: 'function_return_test', description: 'ตรวจสอบ return value ของ function กับ test cases', check: 'functionReturnTest' }
+        { type: 'reach_goal', description: 'ไปถึง Node เป้าหมาย' },
+        { type: 'coins_sorted', description: 'เรียงเหรียญจากน้อยไปมาก' },
+        { type: 'all_people_rescued', description: 'ช่วยคนทั้งหมด' },
+        { type: 'back_to_start', description: 'กลับมาที่จุดเริ่มต้น' },
+        { type: 'function_return_test', description: 'ตรวจสอบ return value ของ function กับ test cases' }
     ];
 
     for (const vc of victoryConditions) {
