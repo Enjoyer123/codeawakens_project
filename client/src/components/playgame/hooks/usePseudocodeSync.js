@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import * as Blockly from 'blockly/core';
 import { analyzeWorkspace } from '../../../gameutils/shared/hint/hintMatcher';
-import { findFloatingHintBlockId } from '../../../gameutils/shared/hint/pseudoMatcher';
 
 /**
  * usePseudocodeSync
@@ -76,12 +75,12 @@ export function usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData }) 
         console.log(`\n%c╔══ STEP 3: วิเคราะห์ Block → ได้ DNA (ancestorStr) ══╗`, 'color:#60a5fa;font-weight:bold');
         console.log(`%c  Block ที่คลิก:`, 'color:#93c5fd');
         console.table([{
-            'type':        found.type,
-            'varName':     found.varName || '-',
-            'depth':       found.depth,
-            'treeId':      found.treeId,
-            'parentId':    found.parentId || '(none = floating)',
-            'typeOcc':     found.typeOcc,
+          'type': found.type,
+          'varName': found.varName || '-',
+          'depth': found.depth,
+          'treeId': found.treeId,
+          'parentId': found.parentId || '(none = floating)',
+          'typeOcc': found.typeOcc,
         }]);
         console.log(`%c  DNA (ancestorStr): "${found.ancestorStr || '(none)'}"`, 'color:#bfdbfe');
         console.log(`%c╚═══════════════════════════════════════════════╝`, 'color:#60a5fa;font-weight:bold');
@@ -112,11 +111,11 @@ export function usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData }) 
 
         console.log(`\n%c╔══ STEP 4: ตรวจสถานะ Block ══╗`, 'color:#fb923c;font-weight:bold');
         console.table([{
-            'parentId':         found.parentId || '(none)',
-            'isActuallyTopLevel': isActuallyTopLevel,
-            'isPanelFloating':   isPanelFloating,
-            'isDetached':        isDetached,
-            '→ isFloating':     isFloating ? '✅ FLOATING (→ Path A: Greedy Diff)' : '❌ CONNECTED (→ Path B: LCS)'
+          'parentId': found.parentId || '(none)',
+          'isActuallyTopLevel': isActuallyTopLevel,
+          'isPanelFloating': isPanelFloating,
+          'isDetached': isDetached,
+          '→ isFloating': isFloating ? '✅ FLOATING (→ Path A: Greedy Diff)' : '❌ CONNECTED (→ Path B: LCS)'
         }]);
         console.log(`%c╚═══════════════════════╝`, 'color:#fb923c;font-weight:bold');
 
@@ -153,35 +152,6 @@ export function usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData }) 
         const cachedPattern = patternDataRef.current?.bestPattern;
         const targetAnalysis = cachedPattern?.hints?.[cachedPattern.hints.length - 1]?._cachedAnalysis;
 
-        let hintBlockId = null;
-
-        if (targetAnalysis) {
-          // 1. EXACT ID MATCH: ถ้าเป็นบล็อกที่ดึงออกมาจากโครงสร้างเดิม อาศัย parentId จากเฉลยได้ทันที 100% แม่นยำ
-          const originalId = found.data || found.id;
-          const exactMatch = targetAnalysis.find(t => t.id === originalId);
-          if (exactMatch && exactMatch.parentId) {
-            hintBlockId = exactMatch.parentId;
-          } 
-          // 2. FALLBACK: ถ้าตั้งใจหลุด (Floating แท้ๆ) หรือลอยเคว้ง (ไม่มี parent) ให้ใช้ Diff หาช่องว่าง
-          else if (isFloating || (found.parentId === undefined && found.type !== 'procedures_defreturn' && found.type !== 'procedures_defnoreturn')) {
-             if (!mainTreeBlocks) mainTreeBlocks = analysis.filter(b => !workspace._floatingBlockIds?.has(b.id));
-             hintBlockId = findFloatingHintBlockId(
-               targetAnalysis, mainTreeBlocks,
-               found.type, found.varName, floatingOcc
-             );
-          }
-        }
-
-        if (hintBlockId) {
-          const hintParentBlock = workspace.getBlockById(hintBlockId);
-          if (hintParentBlock) {
-             const svg = hintParentBlock.getSvgRoot();
-             const pathEl = svg?.querySelector('.blocklyPath');
-             if (pathEl) {
-               pathEl.style.filter = 'drop-shadow(0 0 6px #4ade80) drop-shadow(0 0 14px #22c55e)';
-               pathEl.style.transition = 'filter 0.3s ease';
-               highlightedSvgRef.current = pathEl;
-             }
         // ─── Highlight parent block บน workspace (COMMENTS OUT PER USER REQUEST) ─────────
         /*
          ...
@@ -193,21 +163,21 @@ export function usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData }) 
         console.log(`\n%c╔══ STEP 5: Dispatch State → PseudocodePanel ══╗`, 'color:#f472b6;font-weight:bold');
         console.log(`%c  setSelectedBlockType() ถูกเรียก`, 'color:#f9a8d4');
         console.table([{
-            'type': found.type,
-            'varName': found.varName || '-',
-            'ancestorStr': found.ancestorStr || '(none)',
-            'isFloating': isFloating,
-            'floatingOcc': floatingOcc,
-            'ancestorOcc': (() => {
-                let occ = 0;
-                if (!isFloating && found.ancestorStr) {
-                    for (let i = 0; i < found.index; i++) {
-                        const b = analysis[i];
-                        if (b.type === found.type && b.varName === found.varName && b.ancestorStr === found.ancestorStr) occ++;
-                    }
-                }
-                return occ;
-            })()
+          'type': found.type,
+          'varName': found.varName || '-',
+          'ancestorStr': found.ancestorStr || '(none)',
+          'isFloating': isFloating,
+          'floatingOcc': floatingOcc,
+          'ancestorOcc': (() => {
+            let occ = 0;
+            if (!isFloating && found.ancestorStr) {
+              for (let i = 0; i < found.index; i++) {
+                const b = analysis[i];
+                if (b.type === found.type && b.varName === found.varName && b.ancestorStr === found.ancestorStr) occ++;
+              }
+            }
+            return occ;
+          })()
         }]);
         console.log(`%c╚══════════════════════════════════════════════╝`, 'color:#f472b6;font-weight:bold');
 
@@ -215,10 +185,10 @@ export function usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData }) 
         if (!isFloating && found.ancestorStr) {
           // นับบล็อกที่มี context เดียวกันเป๊ะ ที่เกิดก่อนบล็อกนี้ (เพื่อระบุว่าเป็นตัวซ้ำตัวที่เท่าไหร่)
           for (let i = 0; i < found.index; i++) {
-             const b = analysis[i];
-             if (b.type === found.type && b.varName === found.varName && b.ancestorStr === found.ancestorStr) {
-               ancestorOcc++;
-             }
+            const b = analysis[i];
+            if (b.type === found.type && b.varName === found.varName && b.ancestorStr === found.ancestorStr) {
+              ancestorOcc++;
+            }
           }
         }
 

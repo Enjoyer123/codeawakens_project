@@ -12,6 +12,13 @@
  * ตัวที่จับคู่ไม่ได้ = missing → floating block ต้องต่อตรงนั้น
  */
 function findMissingSlots(targetAnalysis, mainTreeBlocks) {
+    console.log(`\n======================================================`);
+    console.log(`📋 [4.1] เตรียมข้อมูลก่อนเทียบหาช่องโหว่ Diff (targetAnalysis vs mainTreeBlocks)`);
+    console.log(`📄 ฝั่งซ้าย: เฉลยเป้าหมายที่ถูกต้อง (Target Analysis)`);
+    console.table(targetAnalysis?.map(t => ({ id: t.id, index: t.index, type: t.type, varName: t.varName || '-' })) || []);
+    console.log(`📄 ฝั่งขวา: กระดานหน้าจอที่โดนคว้านบล็อกลอยออกแล้ว (Main Tree Blocks)`);
+    console.table(mainTreeBlocks?.map(m => ({ id: m.id, index: m.index, type: m.type, varName: m.varName || '-' })) || []);
+
     if (!targetAnalysis?.length) return { missing: [], matched: [] };
     if (!mainTreeBlocks?.length) {
         return {
@@ -25,44 +32,57 @@ function findMissingSlots(targetAnalysis, mainTreeBlocks) {
     const targetMatched = new Array(targetAnalysis.length).fill(-1);
     const mainUsed = new Array(mainTreeBlocks.length).fill(false);
 
-    // Pass 1: Strict Match (Type + VarName + AncestorStr)
-    // การจับคู่แบบเป๊ะๆ รวมถึงสายตระกูล เพื่อป้องกันการจับคู่ผิดตำแหน่ง (Mismatch)
-    let mi = 0;
+    // ============================================
+    // Helper: ตรวจสอบความเหมือนของบล็อก 2 ก้อน
+    // ============================================
+    const isSameBlock = (target, main, strict = false) => {
+        const typeMatch = main.type === target.type;
+        const varMatch = (target.varName === undefined) || (main.varName === target.varName);
+        const ancestorMatch = !strict || !target.ancestorStr || (main.ancestorStr === target.ancestorStr);
+        return typeMatch && varMatch && ancestorMatch;
+    };
+
+    // ============================================
+    // Pass 1: Strict Match (เน้นเป๊ะ! ต้องอยู่ถูกตระกูล)
+    // จำเป็นต้องใช้ searchPointer เพื่อรักษาลำดับ (Sequence) การจับคู่จากซ้ายไปขวา
+    // ============================================
+    let searchPointer = 0;
     for (let ti = 0; ti < targetAnalysis.length; ti++) {
-        const target = targetAnalysis[ti];
-        for (let j = mi; j < mainTreeBlocks.length; j++) {
-            if (!mainUsed[j] &&
-                mainTreeBlocks[j].type === target.type &&
-                (target.varName === undefined || mainTreeBlocks[j].varName === target.varName) &&
-                (!target.ancestorStr || mainTreeBlocks[j].ancestorStr === target.ancestorStr)) {
+        const targetBlock = targetAnalysis[ti];
+
+        for (let j = searchPointer; j < mainTreeBlocks.length; j++) {
+            const mainBlock = mainTreeBlocks[j];
+            if (!mainUsed[j] && isSameBlock(targetBlock, mainBlock, true)) {
                 targetMatched[ti] = j;
                 mainUsed[j] = true;
-                mi = j + 1;
+                searchPointer = j + 1; // ให้รอบหน้าเดินหาต่อจากจุดนี้
                 break;
             }
         }
     }
 
-    // Pass 2: Loose Match (Type + VarName)
-    // กวาดเก็บตกบล็อกที่อาจจะอยู่ผิดที่ผิดทาง (ไม่มีสายตระกูลตรง) เพื่อให้ไม่เห็นว่าขาด
-    mi = 0;
+    // ============================================
+    // Pass 2: Loose Match (จับคู่แบบเก็บตก)
+    // สำหรับบล็อกที่ยังหลงเหลือ ขอแค่หน้าตาตรงกันก็พอ (เด็กอาจจะต่อผิดโซน)
+    // ============================================
+    searchPointer = 0; // เริ่มเดินกวาดจากหน้าห้องใหม่
     for (let ti = 0; ti < targetAnalysis.length; ti++) {
-        if (targetMatched[ti] >= 0) continue;
-        const target = targetAnalysis[ti];
-        for (let j = mi; j < mainTreeBlocks.length; j++) {
-            if (!mainUsed[j] &&
-                mainTreeBlocks[j].type === target.type &&
-                (target.varName === undefined || mainTreeBlocks[j].varName === target.varName)) {
+        if (targetMatched[ti] !== -1) continue; // ข้ามคนที่ได้คู่ไปแล้วจาก Pass 1
+
+        const targetBlock = targetAnalysis[ti];
+        for (let j = searchPointer; j < mainTreeBlocks.length; j++) {
+            const mainBlock = mainTreeBlocks[j];
+            if (!mainUsed[j] && isSameBlock(targetBlock, mainBlock, false)) {
                 targetMatched[ti] = j;
                 mainUsed[j] = true;
-                mi = j + 1;
+                searchPointer = j + 1;
                 break;
             }
         }
     }
 
     const missing = targetAnalysis
-        .filter((_, i) => targetMatched[i] < 0)
+        .filter((_, i) => targetMatched[i] === -1)
         .map(t => ({ targetIndex: t.index, type: t.type, varName: t.varName }));
 
     return { missing, matched: targetMatched };
@@ -74,33 +94,6 @@ function findMissingSlots(targetAnalysis, mainTreeBlocks) {
  *
  * @returns {string|null} workspace block ID ของ parent ที่ต้อง highlight
  */
-export function findFloatingHintBlockId(targetAnalysis, mainTreeBlocks, floatingType, floatingVarName, floatingOcc) {
-    if (!targetAnalysis?.length || !mainTreeBlocks?.length) return null;
-
-    const { matched: targetMatched } = findMissingSlots(targetAnalysis, mainTreeBlocks);
-
-    // หา missing slot ของ type+varName เดียวกันกับ floating block
-    const missingIndices = [];
-    for (let ti = 0; ti < targetAnalysis.length; ti++) {
-        if (targetMatched[ti] >= 0) continue;
-        const t = targetAnalysis[ti];
-        if (t.type === floatingType && (floatingVarName ? t.varName === floatingVarName : !t.varName)) {
-            missingIndices.push(ti);
-        }
-    }
-
-    const targetArrayIdx = missingIndices[floatingOcc ?? 0];
-    if (targetArrayIdx === undefined) return null;
-
-    // เดินย้อนขึ้นไปหา ancestor ที่ใกล้ที่สุดที่ "มีอยู่บนกระดาน" (matched)
-    const missingDepth = targetAnalysis[targetArrayIdx].depth;
-    for (let i = targetArrayIdx - 1; i >= 0; i--) {
-        if (targetAnalysis[i].depth < missingDepth && targetMatched[i] >= 0) {
-            return mainTreeBlocks[targetMatched[i]].id;
-        }
-    }
-    return null;
-}
 
 /**
  * หา pseudocode line ที่ blockType ตรงกัน โดยใช้ข้อมูลลำดับ occurrence ป้องกันการ highlight ผิด (เช่น for ซ้อน for)
@@ -304,32 +297,9 @@ export function findPseudocodeLine(selectedData, allLines, context = null) {
             if (!line.patternBlocks?.length) continue;
             for (const b of line.patternBlocks.filter(b => b.type === type && (!varName || b.varName === varName))) {
                 if (!b.ancestorStr) continue;
-                const targetParts = b.ancestorStr.split('|').reverse();
 
-                // คำนวณ Longest Common Subsequence (โครงสร้างครอบครัวที่ตรงกันโดยรวม)
-                const dp = Array(targetParts.length + 1).fill(0).map(() => Array(userParts.length + 1).fill(0));
-                for (let i = 1; i <= targetParts.length; i++) {
-                    for (let j = 1; j <= userParts.length; j++) {
-                        if (targetParts[i - 1] === userParts[j - 1]) {
-                            dp[i][j] = dp[i - 1][j - 1] + 1;
-                        } else {
-                            dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
-                        }
-                    }
-                }
-                const lcsLen = dp[targetParts.length][userParts.length];
+                const { lcsLen, consecutiveMatchLen, score } = computeAncestorScore(b.ancestorStr, userParts);
 
-                // คำนวณ Consecutive Match (โบนัสถ้าแม่พิมพ์ติดกันโดยตรง)
-                let consecutiveMatchLen = 0;
-                for (let i = 0; i < Math.min(targetParts.length, userParts.length); i++) {
-                    if (targetParts[i] !== userParts[i]) break;
-                    consecutiveMatchLen++;
-                }
-
-                // ให้ค่าน้ำหนักภาพรวมโครงสร้าง (LCS) มากกว่า แต่บวกโบนัส Consecutive
-                const score = (lcsLen * 10) + consecutiveMatchLen;
-
-                // 🔥 TEMP LOG: เก็บข้อมูลเตรียมทำตารางสรุป
                 comparisonLogs.push({
                     'Line': line.lineIndex + 1,
                     '🎯 DNA เฉลย': b.ancestorStr,
@@ -360,6 +330,7 @@ export function findPseudocodeLine(selectedData, allLines, context = null) {
             }
         }
 
+        console.log("bestMatch", bestMatch)
         if (bestMatch) return bestMatch;
     }
 
@@ -405,95 +376,136 @@ const getStepState = (stepIndex, matchedSteps) =>
 export function buildPseudocodeLines(cachedPattern, matchedSteps) {
     if (!cachedPattern?.hints) return [];
 
-    // Stream ผ่าน _cachedAnalysis เพื่อแบ่งบล็อก (chunks) ให้แต่ละบรรทัด pseudocode
-    const lastHint = cachedPattern.hints[cachedPattern.hints.length - 1];
-    const targetAnalysis = lastHint?._cachedAnalysis || [];
-    let analysisPointer = 0;
-
+    const targetAnalysis = getTargetAnalysis(cachedPattern);
     const result = [];
+    let analysisPointer = 0;
     let lastLineWithBlocks = null;
 
-    cachedPattern.hints.forEach((hint, stepIndex) => {
-        const lines = Array.isArray(hint.pseudocode) ? hint.pseudocode : [];
-        if (typeof hint.pseudocode === 'string' && hint.pseudocode.trim()) {
-            result.push({
-                text: hint.pseudocode,
-                blockType: null,
-                blockIndex: null,
-                varName: undefined,
-                patternBlocks: [],
-                stepIndex,
-                lineIndex: 0,
-                stepState: getStepState(stepIndex, matchedSteps)
-            });
-            return;
-        }
+    for (const [stepIndex, hint] of cachedPattern.hints.entries()) {
+        const lines = normalizePseudocode(hint.pseudocode);
 
-        lines.forEach((line, lineIndex) => {
-            let assignedBlockIndex = null;
-            let assignedVarName = undefined;
-            let lineAnalysisPointer = analysisPointer;
+        for (const [lineIndex, line] of lines.entries()) {
+            const lineObj = buildLineObj(line, stepIndex, lineIndex, matchedSteps);
 
             if (line.blockType) {
-                // ใช้ PRIMARY TYPE เป็นจุดแบ่ง chunk
                 const primaryType = line.blockType.split(',')[0].trim();
-                if (primaryType) {
-                    for (let i = analysisPointer; i < targetAnalysis.length; i++) {
-                        const b = targetAnalysis[i];
-                        if (b.type === primaryType) {
-                            assignedBlockIndex = b.index;
-                            assignedVarName = b.varName ?? undefined;
+                const match = findBlockByType(targetAnalysis, primaryType, analysisPointer);
 
-                            if (lastLineWithBlocks) {
-                                // บล็อกทั้งหมดตั้งแต่ primary ก่อนหน้าจนถึงก่อน primary ปัจจุบัน ถือเป็นลูกของ line ก่อนหน้า
-                                lastLineWithBlocks.patternBlocks = targetAnalysis.slice(lastLineWithBlocks._analysisPointer, b.index);
-                            }
-
-                            lineAnalysisPointer = b.index;
-                            analysisPointer = i + 1; // เลื่อน pointer ไปหลัง primary type สำหรับ line ถัดไป
-                            break;
-                        }
+                if (match) {
+                    // ส่ง blocks ที่อยู่ระหว่าง primary ก่อนหน้า กับ primary ปัจจุบัน ให้ line ก่อนหน้า
+                    if (lastLineWithBlocks) {
+                        lastLineWithBlocks.patternBlocks = targetAnalysis.slice(
+                            lastLineWithBlocks._analysisStart,
+                            match.searchIndex
+                        );
                     }
+
+                    lineObj.blockIndex = match.block.index;
+                    lineObj.varName = match.block.varName ?? undefined;
+                    lineObj._analysisStart = match.searchIndex; // ใช้ Array Index เพื่อความชัวร์เวลา slice
+                    analysisPointer = match.searchIndex + 1;
+                    lastLineWithBlocks = lineObj;
                 }
             }
 
-            const lineObj = {
-                text: line.text || '',
-                blockType: line.blockType || null,
-                blockIndex: assignedBlockIndex,
-                varName: assignedVarName,
-                patternBlocks: [],
-                _analysisPointer: assignedBlockIndex !== null ? lineAnalysisPointer : analysisPointer, // เก็บจุดเริ่มเพื่อให้คำนวณ chunk ถัดไปถูก
-                stepIndex,
-                lineIndex,
-                stepState: getStepState(stepIndex, matchedSteps)
-            };
-
-            if (assignedBlockIndex !== null) {
-                lastLineWithBlocks = lineObj;
-            }
-
             result.push(lineObj);
-        });
-    });
-
-    // ใส่ block ที่เหลือหลังบรรทัดสุดท้ายให้ last line
-    if (lastLineWithBlocks && targetAnalysis.length > 0) {
-        lastLineWithBlocks.patternBlocks = targetAnalysis.slice(lastLineWithBlocks._analysisPointer);
+        }
     }
 
-    // --- DEBUG LOGGING ---
-    console.groupCollapsed("=== 🧠 Pseudocode Line Pattern Blocks Mapping ===");
-    result.forEach(line => {
-        if (line.blockType) {
-            console.log(`Line ${line.lineIndex + 1}: [${line.blockType}] ${line.text}`);
-            line.patternBlocks?.forEach(b => {
-                console.log(`   -> [${b.index}] Type:${b.type} Var:${b.varName || 'N/A'}`);
-            });
-        }
-    });
-    console.groupEnd();
-    // ---------------------
-
+    // blocks ที่เหลือทั้งหมดตกเป็นของ line สุดท้ายที่มี block
+    if (lastLineWithBlocks) {
+        lastLineWithBlocks.patternBlocks = targetAnalysis.slice(lastLineWithBlocks._analysisStart);
+    }
+    console.log("result", result);
+    // debugLog(result);
     return result;
 }
+
+// --- Helpers ---
+function getTargetAnalysis(cachedPattern) {
+    const lastHint = cachedPattern.hints.at(-1);
+    return lastHint?._cachedAnalysis ?? [];
+}
+
+function normalizePseudocode(pseudocode) {
+    if (Array.isArray(pseudocode)) return pseudocode;
+    if (typeof pseudocode === 'string' && pseudocode.trim()) {
+        // string ล้วน → wrap เป็น array-like object เพื่อให้ loop เดียวกันจัดการได้
+        return [{ text: pseudocode, blockType: null, _isRawString: true }];
+    }
+    return [];
+}
+
+function buildLineObj(line, stepIndex, lineIndex, matchedSteps) {
+    return {
+        text: line.text || (line._isRawString && line.text) || '',
+        blockType: line.blockType ?? null,
+        blockIndex: null,
+        varName: undefined,
+        patternBlocks: [],
+        _analysisStart: null,
+        stepIndex,
+        lineIndex,
+        stepState: getStepState(stepIndex, matchedSteps),
+    };
+}
+
+function findBlockByType(targetAnalysis, type, fromIndex) {
+    if (!type) return null;
+    for (let i = fromIndex; i < targetAnalysis.length; i++) {
+        if (targetAnalysis[i].type === type) {
+            return { block: targetAnalysis[i], searchIndex: i };
+        }
+    }
+    return null;
+}
+
+function debugLog(result) {
+    console.groupCollapsed('=== 🧠 Pseudocode Line Pattern Blocks Mapping ===');
+    for (const line of result) {
+        if (!line.blockType) continue;
+        console.log(`Line ${line.lineIndex + 1}: [${line.blockType}] ${line.text}`);
+        for (const b of line.patternBlocks ?? []) {
+            console.log(`   -> [${b.index}] Type:${b.type} Var:${b.varName || 'N/A'}`);
+        }
+    }
+    console.groupEnd();
+}
+
+/**
+ * คำนวณคะแนนความเหมือนของโครงสร้าง ancestorStr (DNA) ระหว่างบล็อกเฉลยกับบล็อกผู้เล่น
+ * ใช้หลัก Longest Common Subsequence (LCS) + โบนัสตระกูลติดกันเป๊ะ (Consecutive)
+ *
+ * @param {string} targetAncestorStr  - DNA ของบล็อกเฉลย เช่น "procedures_defreturn|controls_if|variables_get"
+ * @param {string[]} userParts        - DNA ผู้เล่นที่กลับด้านมาแล้ว เช่น ['variables_get', 'controls_if', ...]
+ * @returns {{ lcsLen: number, consecutiveMatchLen: number, score: number }}
+ */
+function computeAncestorScore(targetAncestorStr, userParts) {
+    const targetParts = targetAncestorStr.split('|').reverse();
+
+    // ─── LCS via Dynamic Programming ──────────────────────────────────
+    // dp[i][j] = LCS ของ targetParts[0..i-1] กับ userParts[0..j-1]
+    const dp = Array(targetParts.length + 1).fill(0).map(() => Array(userParts.length + 1).fill(0));
+    for (let i = 1; i <= targetParts.length; i++) {
+        for (let j = 1; j <= userParts.length; j++) {
+            if (targetParts[i - 1] === userParts[j - 1]) {
+                dp[i][j] = dp[i - 1][j - 1] + 1; // เจอตัวเหมือนกัน: นับเพิ่ม
+            } else {
+                dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]); // ไม่เหมือน: เอาค่าสูงสุดจากซ้ายหรือบน
+            }
+        }
+    }
+    const lcsLen = dp[targetParts.length][userParts.length]; // คำตอบอยู่มุมขวาล่างเสมอ
+
+    // ─── Consecutive Bonus (Tie-breaker) ──────────────────────────────
+    // นับจาก Leaf (&ตัวเอง) ขึ้นไปว่าเรียงติดกันเป๊ะๆ กี่ชั้น
+    let consecutiveMatchLen = 0;
+    for (let i = 0; i < Math.min(targetParts.length, userParts.length); i++) {
+        if (targetParts[i] !== userParts[i]) break;
+        consecutiveMatchLen++;
+    }
+
+    const score = (lcsLen * 10) + consecutiveMatchLen;
+    return { lcsLen, consecutiveMatchLen, score };
+}
+
