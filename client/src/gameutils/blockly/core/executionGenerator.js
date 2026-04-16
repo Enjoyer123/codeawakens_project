@@ -32,7 +32,9 @@ export const setupCustomGenerator = (currentLevel) => {
         // Scope declaredVariables per function — prevent inner declarations
         // from consuming `let` of same-named variables in outer (main) scope
         const outerDeclared = javascriptGenerator.declaredVariables;
-        javascriptGenerator.declaredVariables = new Set();
+        // Pre-populate with function arguments so variables_set won't generate
+        // `let amount = ...` when `amount` is already a function parameter
+        javascriptGenerator.declaredVariables = new Set(args);
 
         const branch = javascriptGenerator.statementToCode(block, 'STACK') || '';
         if (!branch.trim()) {
