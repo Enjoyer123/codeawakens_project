@@ -26,6 +26,7 @@ const blockCategories = [
   { value: 'functions', label: 'Functions' },
   { value: 'variables', label: 'Variables' },
   { value: 'operators', label: 'Operators' },
+  { value: 'visuals', label: 'Visuals' },
 ];
 
 const BlockFormDialog = ({
@@ -52,7 +53,7 @@ const BlockFormDialog = ({
   // Internal Image State
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-  
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
@@ -129,7 +130,7 @@ const BlockFormDialog = ({
 
     try {
       setSaving(true);
-      
+
       const cleanedData = {
         ...formData,
         block_key: formData.block_key.trim(),
@@ -140,7 +141,7 @@ const BlockFormDialog = ({
 
       if (editingBlock) {
         // Handle image upload if a new one is selected
-        let imagePath = formData.block_image; 
+        let imagePath = formData.block_image;
         if (selectedImage) {
           const uploadResult = await uploadImageAsync(selectedImage);
           imagePath = uploadResult.path;
@@ -150,10 +151,10 @@ const BlockFormDialog = ({
           blockId: editingBlock.block_id,
           blockData: { ...cleanedData, block_image: imagePath }
         });
-        
+
         onOpenChange(false);
       } else {
-        let imagePath = formData.block_image; 
+        let imagePath = formData.block_image;
         if (selectedImage) {
           const uploadResult = await uploadImageAsync(selectedImage);
           imagePath = uploadResult.path;
@@ -184,7 +185,7 @@ const BlockFormDialog = ({
           <DialogTitle>{dialogTitle}</DialogTitle>
           <DialogDescription>{dialogDescription}</DialogDescription>
         </DialogHeader>
-        
+
         {error && (
           <div className="bg-red-50 text-red-500 p-3 rounded-md text-sm border border-red-200">
             {error}
@@ -246,7 +247,7 @@ const BlockFormDialog = ({
               {imagePreview ? (
                 <div className="relative w-24 h-24 border rounded overflow-hidden group">
                   <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                  <button 
+                  <button
                     onClick={handleImageRemove}
                     className="absolute top-0 right-0 bg-red-500 text-white p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                   >
@@ -259,14 +260,14 @@ const BlockFormDialog = ({
                   <span className="text-xs">No Image</span>
                 </div>
               )}
-              
+
               <div className="flex-1">
                 <label className="cursor-pointer inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3">
                   <Upload className="h-4 w-4 mr-2" />
                   {imagePreview ? 'Change Image' : 'Upload Image'}
-                  <input 
-                    type="file" 
-                    className="hidden" 
+                  <input
+                    type="file"
+                    className="hidden"
                     accept="image/*"
                     onChange={handleImageChange}
                   />

@@ -123,6 +123,9 @@ async function main() {
         { block_key: 'dsu_union', block_name: 'dsu_union', description: 'DSU: รวมชุด (Union)', category: 'operators' },
 
         // Visuals
+        { block_key: 'fibo_call', block_name: 'fibo_call', description: 'เรียกใช้ฟังก์ชัน fibo', category: 'visuals' },
+        { block_key: 'fibo_return', block_name: 'fibo_return', description: 'คืนค่าฟังก์ชัน fibo', category: 'visuals' },
+        { block_key: 'fibo_base', block_name: 'fibo_base', description: 'ค่าพื้นฐานของฟังก์ชัน fibo', category: 'visuals' },
         { block_key: 'dijkstra_visit', block_name: 'dijkstra_visit', description: 'Dijkstra: เยือนโหนด', category: 'visuals' },
         { block_key: 'dijkstra_relax', block_name: 'dijkstra_relax', description: 'Dijkstra: อัปเดตตาราง', category: 'visuals' },
         { block_key: 'prim_visit', block_name: 'prim_visit', description: 'Prim: เยือนโหนด', category: 'visuals' },
