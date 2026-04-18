@@ -100,7 +100,7 @@ const CATEGORY_CONFIG = {
     style: "variable_category",
     blocks: [
       "dict_create", "dict_set", "dict_get", "dict_has_key",
-      "dsu_find", "dsu_union"
+      "dsu_find", "dsu_union", "variables_game_input"
     ]
   },
 
@@ -126,7 +126,7 @@ const CATEGORY_CONFIG = {
       // DFS/BFS Visual
       "graph_get_neighbors_visual", "mark_visited_visual", "show_path_visual",
       // Local variable and Game input
-      "local_variable_set", "variables_game_input"
+      "local_variable_set"
     ]
   }
 };

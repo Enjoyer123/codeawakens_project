@@ -16,10 +16,10 @@ const loadBackgroundImage = (scene, imageUrl, backgroundSpriteRef, redrawPhaser)
     scene.textures.remove('background');
   }
 
-  // Format URL if needed (Clean up `/api` if present or double slashes)
+  // Format URL if needed (Clean up double slashes)
   let finalUrl = imageUrl;
   if (!finalUrl.startsWith('data:') && !finalUrl.startsWith('http')) {
-    finalUrl = finalUrl.replace('/api', '').replace('//', '/');
+    finalUrl = finalUrl.replace(/\/\//g, '/');
     if (!finalUrl.startsWith('/')) finalUrl = '/' + finalUrl;
   }
 

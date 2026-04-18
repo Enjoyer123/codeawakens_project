@@ -40,6 +40,7 @@ import { EXAMPLE_LOADERS } from './constants/exampleLoaders';
 import ExecutionErrorModal from './modals/ExecutionErrorModal';
 import PageLoader from '../../components/shared/Loading/PageLoader';
 import { useSuppressBlocklyWarnings } from '../../components/admin/level/hooks/useSuppressBlocklyWarnings';
+import PageError from '@/components/shared/Error/PageError';
 
 /**
  * GameCore Component
@@ -380,10 +381,10 @@ const GameCore = ({
 
   const handleAutoInjectExample = () => {
     if (!workspaceRef.current) return;
-    
+
     const isHard = currentLevel?.dificulty === 'hard';
     const isMedium = currentLevel?.dificulty === 'medium';
-    
+
     const sXml = isHard ? null : currentLevel?.starter_xml;
     const fXml = (isMedium || isHard) ? null : currentLevel?.floating_xml;
 
@@ -393,9 +394,9 @@ const GameCore = ({
     Blockly.Events.enable();
 
     if (sXml) {
-        loadStarterXml(workspaceRef.current, sXml, fXml, currentLevel?.textcode || false, handleInitialCodeGenerated);
+      loadStarterXml(workspaceRef.current, sXml, fXml, currentLevel?.textcode || false, handleInitialCodeGenerated);
     }
-    
+
     // Show a brief notification or sound
     playSound('powerup');
   };
@@ -403,7 +404,7 @@ const GameCore = ({
   // Determine if we should load starter/floating XML based on difficulty
   const isHardMode = currentLevel?.dificulty === 'hard';
   const isMediumMode = currentLevel?.dificulty === 'medium';
-  
+
   const starterXmlToLoad = isHardMode ? null : (currentLevel?.starter_xml || null);
   const floatingXmlToLoad = (isMediumMode || isHardMode) ? null : (currentLevel?.floating_xml || null);
 
