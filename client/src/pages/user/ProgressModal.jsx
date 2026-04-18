@@ -111,10 +111,10 @@ const ProgressModal = ({ isOpen, onClose, onReplay, gameResult, levelData, block
       user_big_o: userBigO || null,
     };
 
-    console.log('📝 Saving user progress...', progressData);
+
     saveMutation.mutate(progressData, {
       onSuccess: () => {
-        console.log('✅ Save success');
+
         if (!isVictory) return;
         rewardMutation.mutate({ levelId }, {
           onSuccess: (data) => {

@@ -59,9 +59,8 @@ function buildAlgoContext(levelData, trace, code = "") {
  */
 export async function executeAlgoCode(code, levelData, timeoutMs = 5000) {
     const trace = [];
-    console.log("=== EXECUTING ALGO CODE ===");
-    console.log(code);
-    console.log("===========================");
+
+
 
     try {
         const context = buildAlgoContext(levelData, trace, code);

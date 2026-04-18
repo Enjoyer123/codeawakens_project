@@ -146,7 +146,7 @@ const PhaserMapEditor = ({
   // Debug log from original
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('Edges updated:', formData.edges);
+
     }
   }, [formData.edges]);
 

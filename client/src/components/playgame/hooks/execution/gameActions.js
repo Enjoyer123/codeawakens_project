@@ -107,7 +107,7 @@ export function createGameActions(setters, currentLevel, isPreview) {
     };
 
     const castSpell = async () => {
-        console.log("Cast Spell");
+
     };
 
     const say = async (text) => {

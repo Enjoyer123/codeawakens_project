@@ -9,7 +9,7 @@ import { ScrollText, ChevronUp, ChevronLeft } from 'lucide-react';
  */
 
 const PseudocodePanel = ({ pattern, matchedSteps = 0, selectedBlockType = null, difficulty = 'easy' }) => {
-  console.log("pattern", pattern);
+
   const [isOpen, setIsOpen] = useState(true);
   const highlightRef = useRef(null);
 
@@ -18,7 +18,6 @@ const PseudocodePanel = ({ pattern, matchedSteps = 0, selectedBlockType = null, 
     () => buildPseudocodeLines(pattern, matchedSteps),
     [pattern, matchedSteps]
   );
-  console.log("allLines", allLines);
 
   // ดึง target analysis จาก hint สุดท้ายเพื่อใช้ diff กับ workspace (สำหรับ floating blocks)
   const targetAnalysis = useMemo(() => {

@@ -98,7 +98,7 @@ const PatternCreateEdit = () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      console.log(`[Export XML] Downloaded for Step ${blocklyManager.currentStepIndex}`);
+
     } catch (e) {
       console.error('[Export XML] Failed:', e);
       showAlert('❌ Export ไม่สำเร็จ', 'เกิดข้อผิดพลาดในการ Export');

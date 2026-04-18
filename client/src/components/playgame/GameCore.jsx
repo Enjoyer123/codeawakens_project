@@ -9,20 +9,20 @@ import ProgressModal from '../../pages/user/ProgressModal';
 import * as Blockly from "blockly/core";
 import "blockly/blocks";
 import "blockly/javascript";
-// Import utilities and data
+// นำเข้า Utilities และตัวแปร Data
 import { clearRescuedPeople } from '../../gameutils/entities/personUtils';
 import { clearPlayerCoins } from '../../gameutils/entities/coinUtils';
 import { seedWeaponsData } from '../../gameutils/entities/weaponUtils';
 import { animationController } from '../../gameutils/algo/playback/AnimationController';
 
-// Import components
+// นำเข้า Components ฝั่ง UI
 import GameArea from './GameArea';
 import BlocklyArea from './BlocklyArea';
 import GuidePopup from './modals/GuidePopup';
 import LoadXmlModal from './modals/LoadXmlModal';
 import MissionBriefing from './modals/MissionBriefingModal';
 
-// Import custom hooks
+// นำเข้า Custom Hooks
 import { usePhaserGame } from './hooks/usePhaserGame';
 import { useBlocklySetup } from './hooks/blocklysetup/useBlocklySetup';
 import { useCodeExecution } from './hooks/execution/useCodeExecution';
@@ -75,63 +75,63 @@ const GameCore = ({
   const [gameState, setGameState] = useState("loading");
   const [blocklyLoaded, setBlocklyLoaded] = useState(false);
 
-  // Progress tracking
+  // จัดการ State ควบคุม Progress
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [gameResult, setGameResult] = useState(null);
   const [showMissionBriefing, setShowMissionBriefing] = useState(false);
   const missionAcceptedRef = useRef(false);
 
-  // Level data
+  // เตรียมข้อมูล Level Data
   const [currentLevel, setCurrentLevel] = useState(null);
   const [enabledBlocks, setEnabledBlocks] = useState({});
   const [workspaceVersion, setWorkspaceVersion] = useState(0);
 
 
-  // Load XML Modal
+  // เตรียม State สำหรับโหลด XML Modal
   const [showLoadXmlModal, setShowLoadXmlModal] = useState(false);
 
-  // Game state
+  // จัดการ Game State หลัก
   const [playerHpState, setPlayerHp] = useState(100);
   const [isCompleted, setIsCompleted] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
 
-  // Weapon tracking
+  // ติดตามสถานะ Weapon ที่ใช้บนแมพ
   const [currentWeaponData, setCurrentWeaponData] = useState(null);
 
-  // Big O complexity
+  // จัดการ State วิเคราะห์ Big O Complexity
   const [userBigO, setUserBigO] = useState(null);
   const [showBigOQuiz, setShowBigOQuiz] = useState(false);
 
-  // Pattern system
+  // จัดการระบบ Pattern
   const [patternData, setPatternData] = useState({});
 
-  // Score system
+  // ควบคุมระบบ Score ของด่าน
   const [finalScore, setFinalScore] = useState(null);
 
-  // Admin pattern management
+  // ระบบจัดการ Pattern ฝั่ง Admin
   const [goodPatterns, setGoodPatterns] = useState([]);
 
-  // Text code editor
+  // หน้าต่างแก้ไขโค้ด (Text Editor)
   const [textCode, setTextCode] = useState("");
   const [starterTextCode, setStarterTextCode] = useState("");
   const [codeValidation, setCodeValidation] = useState({ isValid: false, message: "" });
 
-  // Test result
+  // สถานะเก็บผลลัพธ์ Test Case
   const [testCaseResult, setTestCaseResult] = useState(null);
 
-  // History system (reuse existing service hooks)
+  // เรียกใช้ Service Hook เช็ค History System
   const { data: userProfileData } = useProfile();
   const { data: allLevelsRaw } = useLevels(1, 1000);
   const userProgress = userProfileData?.user_progress || [];
   const allLevelsData = allLevelsRaw?.levels || [];
 
-  // Suppress Blockly deprecation warnings
+  // ซ่อน Warning ส่วนที่เลิกใช้งานของ Blockly
   useSuppressBlocklyWarnings();
 
 
   // ═══════════════════════════════════════════
-  // Text code validation
+  // ฟังก์ชัน Validate รูปแบบโค้ด Text
   // ═══════════════════════════════════════════
   const { handleTextCodeChange } = useTextCodeValidation({
     currentLevel,
@@ -152,20 +152,20 @@ const GameCore = ({
   };
 
   // ═══════════════════════════════════════════
-  // 1. DATA LOADING — level + weapons
+  // 1. โหลดข้อมูลด่าน (Level Data) และ อาวุธ (Weapons)
   // ═══════════════════════════════════════════
 
   const { data: levelData, isLoading: isLevelLoading, isError: isLevelError, error: levelError } = useLevel(levelId);
   const { data: weaponsResponse, isLoading: isWeaponsLoading } = useWeapons(1, 1000);
 
-  // Seed physical cache early so Phraser/Blockly formatters can use synchronous getWeaponData
+  // ดึงข้อมูลเข้า Cache फिजिकलล่วงหน้า เพื่อให้ Phaser และ Blockly ใช้ getWeaponData แบบ Synchronous ได้
   useEffect(() => {
     if (weaponsResponse?.weapons) {
       seedWeaponsData(weaponsResponse.weapons);
     }
   }, [weaponsResponse]);
 
-  // Initialize level after levelData and weaponsCache are ready
+  // รันคำสั่งเตรียมด่านทันทีเมื่อ Level Data และ Weapons พร้อม
   useLevelInitializer({
     levelData,
     weaponsData: weaponsResponse?.weapons,
@@ -183,11 +183,11 @@ const GameCore = ({
     setCodeValidation
   });
 
-  // Sync error state directly from query
+  // ซิงก์ State แจ้ง Error จากหน้า Query โดยตรง
   const error = isLevelError ? (levelError?.message || "Failed to load level") : null;
 
 
-  // Pattern analysis and weapon display
+  // วิเคราะห์โค้ดเทียบเคียง Pattern และแสดงหน้า Weapon
   usePatternAnalysis({
     blocklyLoaded,
     workspaceRef,
@@ -199,7 +199,7 @@ const GameCore = ({
 
 
 
-  // Init Blockly & Phaser + cleanup ตอนออกจากด่าน
+  // Init ระบบ Blockly/Phaser และการ Cleanup ระหว่างย้ายด่าน
   useEffect(() => {
     if (!currentLevel || !blocklyRef.current || Object.keys(enabledBlocks).length === 0) {
       return;
@@ -208,8 +208,8 @@ const GameCore = ({
     initBlocklyAndPhaser();
     setWorkspaceVersion(v => v + 1);
 
-    // Show mission briefing for normal play (not preview/admin)
-    // BGM will start on first user click (browser autoplay policy)
+    // เปิดจดหมายชี้แจงเควส (สำหรับโหมดปกติไม่ใช่ฝั่งแอดมิน)
+    // รอให้หน้าจอมี Event คลิกก่อนเริ่มเล่น BGM (ตามกฎออโต้เพลย์เบราว์เซอร์)
     if (!isPreview && !missionAcceptedRef.current) {
       setShowMissionBriefing(true);
     } else {
@@ -246,7 +246,7 @@ const GameCore = ({
     };
   }, [currentLevel, enabledBlocks, isWeaponsLoading]);
 
-  // Load pattern XML if provided (Admin Preview Pattern Selector)
+  // โหลดข้อมูล XML ตาม Pattern หากมีการสั่งในหน้า Admin Preview
   const prevPatternXmlRef = React.useRef(undefined);
 
   useEffect(() => {
@@ -291,7 +291,7 @@ const GameCore = ({
     }
   }, [patternXml, blocklyLoaded, isPreview]);
 
-  // Initialize Phaser game
+  // เรียกการเริ่มเกมและจัดการคิว Phaser
   const { initPhaserGame } = usePhaserGame({
     gameRef,
     phaserGameRef,
@@ -302,7 +302,7 @@ const GameCore = ({
     isRunning
   });
 
-  // Code execution
+  // ชุดคำสั่งสั่งรันและ Execute ของเกม
   const { runCode, executionError, clearExecutionError } = useCodeExecution({
     workspaceRef,
     currentLevel,
@@ -326,14 +326,14 @@ const GameCore = ({
     }
   });
 
-  // Big O selection — runs code immediately after selection if pending
+  // ดักการเลือก Big O — ให้รันโค้ดต่อทันทีถ้ากำลังค้างสถานะรอตรวจสอบอยู่
   const handleBigOSelect = (value) => {
     setUserBigO(value);
     setShowBigOQuiz(false);
   };
 
   const handleReplayGame = () => {
-    // 1. Reset execution states
+    // 1. เคลียร์ค่า Execution States
     setShowProgressModal(false);
     setIsCompleted(false);
     setIsRunning(false);
@@ -342,14 +342,14 @@ const GameCore = ({
     setGameResult(null);
     setTestCaseResult(null);
 
-    // 2. Abort running animations
+    // 2. สั่งหยุดการรัน Animations บนหน้าจอ
     animationController.abort();
 
-    // 3. Clear global entity states
+    // 3. เคลียร์ State ตัวละคร (Global Entity)
     clearPlayerCoins();
     clearRescuedPeople();
 
-    // 4. Clean start Phaser Game
+    // 4. รีสตาร์ทเริ่ม Phaser Game ใหม่อย่างคลีนๆ
     initPhaserGame();
   };
 
@@ -359,7 +359,7 @@ const GameCore = ({
       return;
     }
 
-    // Prevent overlapping animations by cleanly restarting if already executed
+    // ป้องกันบัคอนิเมชันพัง/ทับซ้อน ด้วยการเลือกรีทำใหม่เฉพาะเมื่อมีการรันไปแล้ว
     if (isCompleted || isGameOver || testCaseResult) {
       handleReplayGame();
       setTimeout(runCode, 50);
@@ -369,12 +369,12 @@ const GameCore = ({
     runCode();
   };
 
-  // After BigO is set (via quiz), run code
+  // รันโค้ดทันทีทื่เพิ่งควิซ BigO เสร็จผ่าน
   useEffect(() => {
     // Only trigger if we have a BigO selected, no quiz is showing, 
     // and the game is currently 'ready' (preventing repeated runs if already completed/gameOver)
     if (userBigO && showBigOQuiz === false && gameState === 'ready') {
-      // Only trigger this if we just closed the quiz and had hit "Run" before
+      // สั่งรันออโต้แค่ในตอนที่เพิ่งปิดแผงควิซ และเคยกดยืนยันปุ่ม "Run" ไว้อยู่แล่ว
       runCode();
     }
   }, [userBigO, showBigOQuiz]);
@@ -397,18 +397,18 @@ const GameCore = ({
       loadStarterXml(workspaceRef.current, sXml, fXml, currentLevel?.textcode || false, handleInitialCodeGenerated);
     }
 
-    // Show a brief notification or sound
+    // สั่งเล่นแจ้งเตือนและส่งเสียง Notification
     playSound('powerup');
   };
 
-  // Determine if we should load starter/floating XML based on difficulty
+  // วิเคราะห์ระดับความยาก (Difficulty) ว่าควรโหลดบล็อก XML ปริมาณไหนออกมา
   const isHardMode = currentLevel?.dificulty === 'hard';
   const isMediumMode = currentLevel?.dificulty === 'medium';
 
   const starterXmlToLoad = isHardMode ? null : (currentLevel?.starter_xml || null);
   const floatingXmlToLoad = (isMediumMode || isHardMode) ? null : (currentLevel?.floating_xml || null);
 
-  // Initialize Blockly
+  // สั่งเริ่มระบบ Blockly ฝั่ง UI
   const { initBlocklyAndPhaser } = useBlocklySetup({
     blocklyRef,
     workspaceRef,
@@ -423,7 +423,7 @@ const GameCore = ({
     dificulty: currentLevel?.dificulty || 'easy'
   });
 
-  // Guide system
+  // ควบคุมกลไกการแสดง Guide System
   const { showGuide, guides, closeGuide, openGuide, hasGuides } = useGuideSystem(currentLevel);
 
   const { selectedBlockType } = usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData });

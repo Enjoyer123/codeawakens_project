@@ -38,7 +38,7 @@ async function playDfsBfsDisplay(scene, trace, options = {}) {
     clearScanningHighlights(scene);
     clearDfsVisuals(scene);
 
-    // Graphics layers
+    // เตรียมตัวแปร Graphics สำหรับวาด Layer
     const explorationGraphics = scene.add.graphics().setDepth(2.5);   // เส้นสำรวจ (เหลือง)
     const deadEndGraphics = scene.add.graphics().setDepth(2.2);       // เส้นตาย (เทา)
     const answerGraphics = scene.add.graphics().setDepth(3);          // เส้นคำตอบ (ฟ้า)
@@ -149,7 +149,7 @@ async function playDfsBfsDisplay(scene, trace, options = {}) {
         }
     }
 
-    // Cleanup temp graphics
+    // ยกเลิกและล้างตัวแปร Graphics ชั่วคราวออกจากฉาก
     explorationGraphics.destroy();
     deadEndGraphics.destroy();
     statusText.destroy();
@@ -160,9 +160,9 @@ async function playDfsBfsDisplay(scene, trace, options = {}) {
 // Display Mode 2: ต้นแบบเตรียมเผื่อไว้ตอนสอบ
 // ============================================================================
 export async function playAbcDisplay(scene, trace, options) {
-    // 1. Setup UI elements here
+    // 1. จุดตั้งค่า UI Elements ของฉาก
 
-    // 2. Loop through trace and draw
+    // 2. ทำการวนลูป (Loop) ข้อมูล Trace Array เพื่ออัปเดตแอนิเมชัน
     for (let i = 0; i < trace.length; i++) {
         const step = trace[i];
         switch (step.action) {
@@ -180,7 +180,7 @@ export async function playAbcDisplay(scene, trace, options) {
 }
 
 // ============================================================================
-// Path tracking logic
+// ส่วนจัดการตรรกะและการติดตาม (Tracking) เส้นทาง Path
 // ============================================================================
 
 /**
@@ -193,7 +193,7 @@ function findCommonPrefixLength(pathA, pathB) {
 }
 
 // ============================================================================
-// Visual / Drawing helpers (Decoupled from Blockly)
+// ฟังก์ชันช่วยเหลือสำหรับจัดการงานกราฟิกและวาด Effect (แยกส่วนออกมาจาก Blockly ลอจิกหลัก)
 // ============================================================================
 
 function getNodePos(scene, nodeId) {
@@ -247,7 +247,7 @@ async function pulseAnswerPath(scene, graphics, path) {
         drawPath(graphics, scene, path, 0x00ffff, 0.5, 5);
         await sleep(pulseDuration * 0.5);
     }
-    // Final solid
+    // วาดเส้นทึบอันสุดท้ายเพื่อให้แสดงผลสรุป (Solid Final Line)
     graphics.clear();
     drawPath(graphics, scene, path, 0x00ffff, 1.0, 6);
     await sleep(200);
@@ -293,7 +293,7 @@ async function playMoveAlongPath(scene, path) {
 }
 
 // ============================================================================
-// Graph Magic Effect Drawing Logic
+// ส่วนจัดการการวาด Effect วงเวทมนตร์ องค์ประกอบของด่านแบบ Graph
 // ============================================================================
 
 /** ลบไฮไลท์ที่กำลังแสกนอยู่ */
