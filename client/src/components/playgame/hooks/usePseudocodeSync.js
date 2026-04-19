@@ -46,19 +46,17 @@ export function usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData }) 
         // ═══════════════════════════════════════════════════════════
         // STEP 1: ผู้เล่นคลิก Block → Blockly ยิง Event SELECTED
         // ═══════════════════════════════════════════════════════════
-        console.log(`\n%c╔══ STEP 1: ผู้เล่นคลิก Block ══╗`, 'color:#a78bfa;font-weight:bold');
-        console.log(`%c  Blockly.Events.SELECTED ถูกยิง`, 'color:#c4b5fd');
-        console.log(`%c  Block ID ที่คลิก: "${newId}"`, 'color:#e9d5ff');
-        console.log(`%c╚═══════════════════════════════════╝`, 'color:#a78bfa;font-weight:bold');
+
+
+
 
         // ═══════════════════════════════════════════════════════════
         // STEP 2: DFS Traverse — analyzeWorkspace() สร้าง Flat Array
         // (log รายละเอียดอยู่ใน hintMatcher.js:analyzeWorkspace)
         // ═══════════════════════════════════════════════════════════
-        console.log(`\n%c╔══ STEP 2: DFS Traverse Workspace ══╗`, 'color:#34d399;font-weight:bold');
-        console.log(`%c  เรียก analyzeWorkspace() → แปลง Block Tree เป็น Flat Array 1D`, 'color:#6ee7b7');
-        console.log(`%c  (ดู log รายละเอียด DFS Tree ด้านบน)`, 'color:#a7f3d0');
-        console.log(`%c╚══════════════════════════════════════╝`, 'color:#34d399;font-weight:bold');
+
+
+
 
         const analysis = analyzeWorkspace(workspace);
         const found = analysis.find(b => b.id === newId);
@@ -72,8 +70,8 @@ export function usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData }) 
         // ═══════════════════════════════════════════════════════════
         // STEP 3: สกัด DNA — หา Block จาก ID → ได้ found object
         // ═══════════════════════════════════════════════════════════
-        console.log(`\n%c╔══ STEP 3: วิเคราะห์ Block → ได้ DNA (ancestorStr) ══╗`, 'color:#60a5fa;font-weight:bold');
-        console.log(`%c  Block ที่คลิก:`, 'color:#93c5fd');
+
+
         console.table([{
           'type': found.type,
           'varName': found.varName || '-',
@@ -82,8 +80,7 @@ export function usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData }) 
           'parentId': found.parentId || '(none = floating)',
           'typeOcc': found.typeOcc,
         }]);
-        console.log(`%c  DNA (ancestorStr): "${found.ancestorStr || '(none)'}"`, 'color:#bfdbfe');
-        console.log(`%c╚═══════════════════════════════════════════════╝`, 'color:#60a5fa;font-weight:bold');
+
 
         // สร้าง ancestor chain จาก self → root เพื่อให้คลิกบล็อกลูกแล้ว bubble หา parent ถูกต้อง
         const blockIndexes = [found.index];
@@ -109,7 +106,7 @@ export function usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData }) 
         let floatingOcc = 0;
         let mainTreeBlocks = undefined;
 
-        console.log(`\n%c╔══ STEP 4: ตรวจสถานะ Block ══╗`, 'color:#fb923c;font-weight:bold');
+
         console.table([{
           'parentId': found.parentId || '(none)',
           'isActuallyTopLevel': isActuallyTopLevel,
@@ -117,7 +114,6 @@ export function usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData }) 
           'isDetached': isDetached,
           '→ isFloating': isFloating ? '✅ FLOATING (→ Path A: Greedy Diff)' : '❌ CONNECTED (→ Path B: LCS)'
         }]);
-        console.log(`%c╚═══════════════════════╝`, 'color:#fb923c;font-weight:bold');
 
         if (isFloating) {
           // นับลำดับของ floating block ที่ type + varName เดียวกัน โดยรวมพวกที่ลอยๆ บนกระดานด้วย
@@ -141,8 +137,8 @@ export function usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData }) 
 
           // mainTree: ตัดบล็อกลอยฝั่งขวาออก และ "ตัดบล็อกที่ถูกคลิกและลูกๆ" ออกไป เพื่อให้ Diff มองเห็นเป็นช่องว่างจริงๆ!
           mainTreeBlocks = analysis.filter(b => !workspace._floatingBlockIds?.has(b.id) && b.treeId !== found.treeId);
-          console.log(`%c  mainTreeBlocks (หลังตัดบล็อกลอยออก):`, 'color:#fcd34d');
-          console.table(mainTreeBlocks.map(b => ({ 'idx': b.index, 'type': b.type, 'varName': b.varName || '-', 'treeId': b.treeId, 'isMain': '✅' })));
+
+
         } else {
           mainTreeBlocks = analysis;
         }
@@ -160,8 +156,8 @@ export function usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData }) 
         // ═══════════════════════════════════════════════════════════
         // STEP 5: ส่ง State → React re-render → PseudocodePanel รับไปคำนวณ
         // ═══════════════════════════════════════════════════════════
-        console.log(`\n%c╔══ STEP 5: Dispatch State → PseudocodePanel ══╗`, 'color:#f472b6;font-weight:bold');
-        console.log(`%c  setSelectedBlockType() ถูกเรียก`, 'color:#f9a8d4');
+
+
         console.table([{
           'type': found.type,
           'varName': found.varName || '-',
@@ -179,7 +175,6 @@ export function usePseudocodeSync({ blocklyLoaded, workspaceRef, patternData }) 
             return occ;
           })()
         }]);
-        console.log(`%c╚══════════════════════════════════════════════╝`, 'color:#f472b6;font-weight:bold');
 
         let ancestorOcc = 0;
         if (!isFloating && found.ancestorStr) {

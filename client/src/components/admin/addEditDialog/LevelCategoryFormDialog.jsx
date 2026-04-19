@@ -126,7 +126,7 @@ const LevelCategoryFormDialog = ({
   };
 
   const handleSaveClick = async () => {
-    console.log('🟡 [LevelCategoryFormDialog] handleSaveClick: formData', formData);
+
     setError(null);
     // Client-side validation
     if (!formData.category_name?.trim()) {

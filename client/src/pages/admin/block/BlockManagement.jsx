@@ -32,7 +32,7 @@ const BlockManagement = () => {
   } = useBlocks(page, rowsPerPage, searchQuery);
 
   if (isError) {
-    return <PageError message={blocksError?.message} title="Failed to load blocks" />;
+    return <PageError message={blocksError?.message} title="Failed to load blocks" statusCode={blocksError?.statusCode} />;
   }
 
   const blocks = blocksData?.blocks || [];

@@ -45,14 +45,14 @@ export async function runAlgoPath(code, {
 
     await new Promise(r => setTimeout(r, 300));
 
-    // Reset animation controller (clear any pause state from previous run)
+    // รีเซตตัวจัดการ Animation Controller (เอาสถานะ Pause จากรอบการรันครั้งก่อนออกให้หมด)
     animationController.reset();
 
-    // Phase 1: Execute pure logic (no visuals)
+    // หน้าที่รับผิดชอบเฟส 1: รันตรรกะแบบเพรียวๆ ล้วนๆ (ยังไม่ต้องวาดกราฟิกโชว์)
     const { result, trace, error } = await executeAlgoCode(code, currentLevel);
-    console.log("result", result);
-    console.log("trace", trace);
-    console.log("error", error);
+
+
+
     if (error) {
         const friendlyMsg = mapRuntimeErrorToMessage(error);
         setExecutionError({ title: 'เกิดข้อผิดพลาดขณะทำงาน', message: friendlyMsg });
@@ -61,7 +61,7 @@ export async function runAlgoPath(code, {
         return;
     }
 
-    // Phase 2: Check test cases
+    // หน้าที่รับผิดชอบเฟส 2: ตรวจคู่เคสสอบตรรกะทั้งหมด (Check Test Cases)
     const functionName = extractFunctionName(code);
     const testCaseResult = await checkAlgoTestCases(
         result, currentLevel.test_cases || [], functionName, code, currentLevel
@@ -70,10 +70,10 @@ export async function runAlgoPath(code, {
     if (setTestCaseResult) setTestCaseResult(testCaseResult);
 
 
-    // Phase 3: If all tests pass → Score + Save immediately (before animation)
+    // หน้าที่รับผิดชอบเฟส 3: ถ้าโค้ดผ่าน Test Case หมด → ตัดเกรด Score แล้วบันทึกลง Database ทันที (เซฟก่อนค่อยฉาย Animation เดี่ยวเน็ตหลุด)
     if (testCaseResult.passed && testCaseResult.failedTests.length === 0) {
 
-        // 3a. Calculate score
+        // ลำดับ 3a. ทำการวิเคราะห์แล้วคำนวณเกรด Score ของโค้ด
         const execState = getCurrentGameState();
         const scoreData = calculateLevelScore(execState, userBigO);
         setFinalScore(scoreData);
@@ -96,14 +96,14 @@ export async function runAlgoPath(code, {
                 status: 'completed',
                 blockly_code: blocklyXml,
                 text_code: currentLevel?.textcode ? (textCode || '') : null,
-                pattern_type_id: scoring.patternId || 0, // NEW API CONTRACT
+                pattern_type_id: scoring.patternId || 0, // ตามแบบฉบับ API Contract ล่าสุด
                 is_correct: true,
                 hp_remaining: execState.playerHp ?? 100,
                 user_big_o: userBigO || null,
             }).catch(err => console.warn('⚠️ [Early Save] Failed:', err.message));
         }
 
-        // Phase 4: Animation (optional — save already done)
+        // หน้าที่รับผิดชอบเฟส 4: ฉาย Animation ประกอบด่าน (เป็น Option — ถึงดูไม่จบแต่ Database โดนเซฟไปแล้ว)
         const scene = getCurrentGameState().currentScene;
         const algoType = detectAlgoType(currentLevel);
 
@@ -112,8 +112,7 @@ export async function runAlgoPath(code, {
         }
 
         if (scene && trace.length > 0) {
-            console.log('📌 [algoRunner] Algorithm evaluated. Trace generated with length:', trace.length);
-            console.log('📌 [algoRunner] Now starting visual playback step-by-step...');
+
 
             await resetGameExecutionState({
                 setPlayerHp,
@@ -123,7 +122,7 @@ export async function runAlgoPath(code, {
             });
 
             try {
-                // Default to Step Mode (Pause initially) before playing animation
+                // ตั้งค่าเป็นแบบรอทีละสเต็ป (Step Mode คือสั่ง Pause ทันที) ก่อนจะเริ่มเล่นแอนิเมชัน
                 animationController.pause();
                 await playAlgoAnimation(scene, algoType, trace, { result });
             } catch (animError) {
@@ -132,10 +131,10 @@ export async function runAlgoPath(code, {
         }
     }
 
-    // Phase 5: Handle level completion (victory modal / failure state)
+    // หน้าที่รับผิดชอบเฟส 5: รับมือกับฉากจบ (Victory Modal เด้งโชว์ดาว / จัดการสถานะตอนตอบผิดรันไม่ผ่าน)
     // ถ้า animation ถูก abort (ออกจากด่านกลางคัน) → ข้ามส่วนนี้ทั้งหมด
     if (animationController.isAborted) {
-        console.log('🚫 [algoRunner] Animation was aborted (level exited). Skipping level completion.');
+
         return;
     }
     await handleLevelCompletion({

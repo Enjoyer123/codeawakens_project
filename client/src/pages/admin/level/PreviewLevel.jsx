@@ -53,7 +53,7 @@ const PreviewLevel = () => {
       const patternData = patterns.find(p => String(p.pattern_id) === String(unlockPatternId));
 
       if (patternData && patternData.is_available) {
-        console.log('🔍 [Preview] Pattern already unlocked. Skipping.');
+
         return;
       }
 
@@ -71,7 +71,7 @@ const PreviewLevel = () => {
 
   const handleUnlockLevel = async (unlockLevelId) => {
     if (levelData && levelData.is_unlocked) {
-      console.log('🔍 [Preview] Level already published. Skipping.');
+
       return;
     }
     try {

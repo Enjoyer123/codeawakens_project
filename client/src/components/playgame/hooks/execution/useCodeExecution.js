@@ -34,8 +34,8 @@ export function useCodeExecution({
     const gameActions = createGameActions(setters, currentLevel, isPreview);
 
     const runCode = async () => {
-        // ─── 1. Validation ───
-        // Orphaned blocks check applies to ALL levels (including textcode)
+        // ─── 1. การตรวจสอบและ Validate ───
+        // เช็คบล็อกลอยกำพร้า (Orphaned Blocks) สำหรับทุกรูปแบบด่าน (รวมถึงด่าน Text Code ด้วย)
         if (workspaceRef.current) {
             const validation = validateWorkspace(workspaceRef.current, currentLevel);
             if (!validation.isValid) {
@@ -56,7 +56,7 @@ export function useCodeExecution({
             return;
         }
 
-        // ─── 2. Start execution ───
+        // ─── 2. เริ่มต้นกระบวนการ Execution ───
         setters.setIsRunning(true);
         setters.setGameState('running');
         setters.setIsCompleted(false);
@@ -64,9 +64,8 @@ export function useCodeExecution({
         if (setters.setTestCaseResult) setters.setTestCaseResult(null);
 
         try {
-            // ─── 3. Generate code from Blockly ───
+            // ─── 3. แปลง Blockly ประกอบร่างให้เป็น Code ก้อนเต็ม ───
             const code = await generateAndInstrumentCode(workspaceRef, currentLevel);
-            console.log("Generated code:", code);
 
             if (!code.trim()) {
                 setters.setGameState('ready');
@@ -74,8 +73,8 @@ export function useCodeExecution({
                 return;
             }
 
-            // ─── 4. Delegate to the right runner ───
-            console.log("isAlgoLevel(currentLevel):", isAlgoLevel(currentLevel));
+            // ─── 4. โยนโค้ดไปให้ Runner ที่ตรงสายกับความต้องการของด่านนั้นๆ ทำงาน ───
+
             if (isAlgoLevel(currentLevel)) {
                 await runAlgoPath(code, {
                     workspaceRef, currentLevel, isPreview,
