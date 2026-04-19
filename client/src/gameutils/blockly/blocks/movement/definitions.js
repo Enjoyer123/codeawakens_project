@@ -87,4 +87,14 @@ export function defineMovementBlocks() {
     },
   };
 
+  Blockly.Blocks["Defend"] = {
+    init: function () {
+      this.appendDummyInput().appendField("Defend");
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setStyle('combat_blocks'); // แดง #E53935 — ดูสีได้ที่ GoogleDocsTheme
+      this.setTooltip("ยกโล่ป้องกัน");
+    },
+  };
+
 }

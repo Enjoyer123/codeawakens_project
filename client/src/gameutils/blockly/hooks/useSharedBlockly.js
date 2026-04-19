@@ -12,21 +12,43 @@ import ModernTheme from '@blockly/theme-modern';
 // สร้าง Theme แนวคลาสสิก/คลีนๆ แบบหน้าเว็บ Official ของ Google Blockly
 const GoogleDocsTheme = Blockly.Theme.defineTheme('GoogleDocsTheme', {
   base: ModernTheme,
+  blockStyles: {
+    'movement_blocks': { colourPrimary: '#4CAF50' },  // เขียว — เดิน/หมุน
+    'combat_blocks': { colourPrimary: '#E53935' },  // แดง — โจมตี/ป้องกัน
+    'logic_blocks': { colourPrimary: '#1E88E5' },  // น้ำเงิน — if/else
+    'loop_blocks': { colourPrimary: '#43A047' },   // เขียวเข้ม — for/while
+    'math_blocks': { colourPrimary: '#7B1FA2' },   // ม่วงเข้ม — ตัวเลข
+    'list_blocks': { colourPrimary: '#9C27B0' },   // ม่วงอ่อน — อาเรย์
+    'text_blocks': { colourPrimary: '#00897B' },   // เขียวน้ำทะเล — ข้อความ
+    'hat_blocks': { colourPrimary: '#EF5350' },   // แดงสด — event/action
+    'procedure_blocks': { colourPrimary: '#FF7043' },  // ส้ม — ฟังก์ชัน
+    'variable_blocks': { colourPrimary: '#FF9800' },   // ส้มเหลือง — ตัวแปร
+  },
+  // 🏷️ กำหนดสีป้ายชื่อหมวดหมู่ใน Toolbox
+  categoryStyles: {
+    'logic_category': { colour: '#1E88E5' },
+    'loop_category': { colour: '#43A047' },
+    'math_category': { colour: '#7B1FA2' },
+    'list_category': { colour: '#9C27B0' },
+    'text_category': { colour: '#00897B' },
+    'procedure_category': { colour: '#FF7043' },
+    'variable_category': { colour: '#FF9800' },
+  },
   fontStyle: {
-    "family": "'Prompt', 'Kanit', 'Inter', 'Segoe UI', sans-serif", // ฟอนต์ที่อ่านง่ายและรองรับภาษาไทยได้สวยงาม
-    "weight": "400", // เพิ่มความหนานิดนึง จะทำให้อ่านง่ายและเป๊ะขึ้น
-    "size": 14 // เพิ่มขนาดฟอนต์ให้ใหญ่และดูชัดเจนเต็มตาขึ้น
+    "family": "'Prompt', 'Kanit', 'Inter', 'Segoe UI', sans-serif",
+    "weight": "400",
+    "size": 14
   },
   componentStyles: {
-    workspaceBackgroundColour: '#ffffff', // พื้นหลังสีขาวสะอาดตา
-    toolboxBackgroundColour: '#f1f3f4', // แถบเครื่องมือสีเทาอ่อนแบบ Google Material
-    toolboxForegroundColour: '#3c4043', // สีข้อความเทาเข้ม
-    flyoutBackgroundColour: '#ffffff', // พื้นหลังของแถบลอยสีขาว
+    workspaceBackgroundColour: '#ffffff',
+    toolboxBackgroundColour: '#f1f3f4',
+    toolboxForegroundColour: '#3c4043',
+    flyoutBackgroundColour: '#ffffff',
     flyoutForegroundColour: '#3c4043',
     flyoutOpacity: 0.95,
-    scrollbarColour: '#dadce0', // แกนเลื่อนหน้าจอสีเทาอ่อน
+    scrollbarColour: '#dadce0',
     scrollbarOpacity: 0.8,
-    insertionMarkerColour: '#1a73e8', // เส้นบอกตำแหน่งสีฟ้า Google Blue
+    insertionMarkerColour: '#1a73e8',
     insertionMarkerOpacity: 0.3,
     cursorColour: '#3c4043'
   }
