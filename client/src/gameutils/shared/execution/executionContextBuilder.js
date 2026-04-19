@@ -42,7 +42,7 @@ export const buildExecutionContext = ({
     // Destructure game actions
     const {
         moveForward, turnLeft, turnRight, hit, foundMonster,
-        nearPit, atGoal, castSpell, say
+        nearPit, atGoal, castSpell, say, Defend
     } = gameActions;
 
     // Destructure wrappers
@@ -60,7 +60,7 @@ export const buildExecutionContext = ({
         getPlayerCoinValue, getPlayerCoinCount, arePlayerCoinsSorted,
         rescuePersonAtNode,
         hasPerson, personRescued, getPersonCount, allPeopleRescued,
-
+        Defend,
 
         moveToNode: wrappedMoveToNode, moveAlongPath: wrappedMoveAlongPath,
 

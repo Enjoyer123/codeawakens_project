@@ -45,4 +45,9 @@ export function defineMovementGenerators() {
         return `await say("${text}");\n`;
     };
 
+    javascriptGenerator.forBlock["Defend"] = function (block) {
+        if (javascriptGenerator.isCleanMode) return `Defend();\n`;
+        return `await Defend();\n`;
+    };
+
 }

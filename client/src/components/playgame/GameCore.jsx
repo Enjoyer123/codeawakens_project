@@ -158,7 +158,7 @@ const GameCore = ({
   const { data: levelData, isLoading: isLevelLoading, isError: isLevelError, error: levelError } = useLevel(levelId);
   const { data: weaponsResponse, isLoading: isWeaponsLoading } = useWeapons(1, 1000);
 
-  // ดึงข้อมูลเข้า Cache फिजिकलล่วงหน้า เพื่อให้ Phaser และ Blockly ใช้ getWeaponData แบบ Synchronous ได้
+  // ดึงข้อมูลเข้า Cache ล่วงหน้า เพื่อให้ Phaser และ Blockly ใช้ getWeaponData แบบ Synchronous ได้
   useEffect(() => {
     if (weaponsResponse?.weapons) {
       seedWeaponsData(weaponsResponse.weapons);
