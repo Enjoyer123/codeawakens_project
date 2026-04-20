@@ -12,9 +12,7 @@ export default defineConfig({
     },
   },
   esbuild: {
-    // ❌ ลบอันเก่าออก (drop: ['console'])
-    // ✅ ใส่อันนี้แทน: บอกให้ลบเฉพาะ log, debug, info แต่เหลือ error ไว้
-    // pure: [ 'console.debug', 'console.info', 'console.warn'],
+    pure: ['console.debug', 'console.info', 'console.warn', 'console.log'],
   },
   preview: {
     allowedHosts: [
