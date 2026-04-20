@@ -10,7 +10,6 @@ const LevelGuideFormDialog = ({ open, onOpenChange, editingGuide, numericLevelId
 
   const [guideForm, setGuideForm] = useState({
     title: '',
-    description: '',
     display_order: 0,
     is_active: true,
   });
@@ -21,14 +20,12 @@ const LevelGuideFormDialog = ({ open, onOpenChange, editingGuide, numericLevelId
       if (editingGuide) {
         setGuideForm({
           title: editingGuide.title || '',
-          description: editingGuide.description || '',
           display_order: editingGuide.display_order || 0,
           is_active: editingGuide.is_active !== undefined ? editingGuide.is_active : true,
         });
       } else {
         setGuideForm({
           title: '',
-          description: '',
           display_order: 0,
           is_active: true,
         });
@@ -48,7 +45,6 @@ const LevelGuideFormDialog = ({ open, onOpenChange, editingGuide, numericLevelId
     const formData = {
       level_id: numericLevelId,
       title: guideForm.title.trim(),
-      description: guideForm.description?.trim() || null,
       display_order: parseInt(guideForm.display_order) || 0,
       is_active: guideForm.is_active === true || guideForm.is_active === 'true',
     };
@@ -89,15 +85,6 @@ const LevelGuideFormDialog = ({ open, onOpenChange, editingGuide, numericLevelId
               className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
               value={guideForm.title}
               onChange={e => setGuideForm({ ...guideForm, title: e.target.value })}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Description</label>
-            <textarea
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-              rows={3}
-              value={guideForm.description}
-              onChange={e => setGuideForm({ ...guideForm, description: e.target.value })}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">

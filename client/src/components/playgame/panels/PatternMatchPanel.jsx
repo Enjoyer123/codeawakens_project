@@ -28,7 +28,7 @@ const PatternMatchPanel = ({ patternData, currentLevel, currentWeaponData }) => 
 
   const [showHelp, setShowHelp] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const helpImages = ['/pattern1.png', '/pattern2.png'];
+  const helpImages = ['/pattern1.png', '/pattern2.png', '/pattern3.png', '/pattern4.png'];
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % helpImages.length);
