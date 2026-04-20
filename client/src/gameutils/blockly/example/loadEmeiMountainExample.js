@@ -150,22 +150,15 @@ const emeiDijkstraXml = `<xml xmlns="https://developers.google.com/blockly/xml">
                                                               <block type="variables_set" id="calc_min_cap">
                                                                 <field name="VAR">min_cap</field>
                                                                 <value name="VALUE">
-                                                                  <block type="math_on_list">
-                                                                    <mutation op="MIN"></mutation>
-                                                                    <field name="OP">MIN</field>
-                                                                    <value name="LIST">
-                                                                      <block type="lists_create_with">
-                                                                        <mutation items="2"></mutation>
-                                                                        <value name="ADD0"><block type="lists_get_at_index">
+                                                                  <block type="math_min">
+                                                                    <value name="A"><block type="lists_get_at_index">
 <value name="LIST"><block type="variables_get"><field name="VAR">capacities</field></block></value>
 <value name="INDEX"><block type="variables_get"><field name="VAR">u</field></block></value>
 </block></value>
-                                                                        <value name="ADD1"><block type="lists_get_at_index">
+                                                                    <value name="B"><block type="lists_get_at_index">
 <value name="LIST"><block type="variables_get"><field name="VAR">neighbor_data</field></block></value>
 <value name="INDEX"><block type="math_number"><field name="NUM">1</field></block></value>
 </block></value>
-                                                                      </block>
-                                                                    </value>
                                                                   </block>
                                                                 </value>
                                                                 <next>
@@ -289,14 +282,10 @@ const emeiDijkstraXml = `<xml xmlns="https://developers.google.com/blockly/xml">
         </next>
       </block>
     </statement>
-    <value name="RETURN">
-      <block type="variables_get" id="ret_rounds">
-        <field name="VAR">result</field>
-      </block>
-    </value>
   </block>
   <block type="variables_game_input" x="20" y="850"><field name="VAR">n</field><next><block type="variables_game_input"><field name="VAR">edges</field><next><block type="variables_game_input"><field name="VAR">start</field><next><block type="variables_game_input"><field name="VAR">end</field><next><block type="variables_game_input"><field name="VAR">tourists</field><next>
   <block type="variables_set" id="call_maxCapacity_set">
+    <field name="VAR">result</field>
     <value name="VALUE">
       <block type="procedures_callreturn" id="call_maxCapacity">
         <mutation name="maxCapacity">
