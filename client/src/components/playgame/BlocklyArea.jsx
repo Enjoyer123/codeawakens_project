@@ -213,34 +213,6 @@ const BlocklyArea = ({
         levels={allLevels}
         currentLevelId={currentLevel?.level_id || currentLevel?.id}
       />
-
-      {/* Debug Code Modal */}
-      {debugCode !== null && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setDebugCode(null)}>
-          <div className="bg-[#1e1b4b] border border-purple-700/50 rounded-xl w-full max-w-3xl max-h-[80vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-purple-900/50">
-              <h3 className="text-purple-100 font-bold text-lg">🔍 Raw Generated Code (Runtime)</h3>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleCopyDebugCode}
-                  className="bg-purple-700 hover:bg-purple-600 text-white px-3 py-1 rounded-lg text-sm flex items-center gap-1 transition"
-                >
-                  {copied ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy</>}
-                </button>
-                <button
-                  onClick={() => setDebugCode(null)}
-                  className="text-purple-400 hover:text-white transition"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-            </div>
-            <pre className="flex-1 overflow-auto p-4 text-sm text-green-300 font-mono whitespace-pre-wrap bg-[#0f0a2a] rounded-b-xl">
-              {debugCode}
-            </pre>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

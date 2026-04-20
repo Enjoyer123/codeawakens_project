@@ -90,7 +90,7 @@ export async function playFiboAnimation(scene, trace, options = {}) {
     tree.redraw();
 
     const rootVal = rootId !== null ? tree.nodes[rootId].amount : '?';
-    statusText.setText(`ค่า Fibonacci = ${rootVal} 🎉`).setStyle({ color: '#00FF00', fontSize: '28px' });
+    statusText.setText(`ค่า Fibonacci = ${rootVal}`).setStyle({ color: '#00FF00', fontSize: '28px' });
 
     await sleep(2500);
 }

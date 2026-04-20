@@ -64,16 +64,6 @@ const GameControls = ({
                     </button>
                 )}
 
-                {(isPreview || isAdmin) && onShowDebugCode && (
-                    <button
-                        onClick={onShowDebugCode}
-                        className="bg-amber-700 hover:bg-amber-600 text-amber-100 py-2 rounded-lg font-semibold shadow transition active:scale-95 flex items-center justify-center gap-1"
-                        title="ดู Raw Generated Code (Runtime)"
-                    >
-                        <Bug size={18} />
-                    </button>
-                )}
-
                 <button
                     onClick={() => { playSound('paper'); onHistoryClick(); }}
                     className="bg-[#2e1065] hover:bg-[#4c1d95] text-purple-200 py-2 rounded-lg font-semibold shadow transition active:scale-95 flex items-center justify-center gap-1"

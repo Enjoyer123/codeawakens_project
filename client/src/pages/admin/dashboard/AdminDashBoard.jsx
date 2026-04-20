@@ -18,6 +18,7 @@ const AdminDashBoard = () => {
   const { data: levelsData, isLoading: loadingLevels } = useLevelStats();
   const { data: usersData, isLoading: loadingUsers } = useUserStats();
   const { data: testsData, isLoading: loadingTests } = useTestStats();
+  console.log(testsData)
 
   const loading =
     loadingOverview || loadingLevels || loadingUsers || loadingTests;
@@ -104,16 +105,20 @@ const AdminDashBoard = () => {
                       height={250}
                       options={{
                         chart: { toolbar: { show: false } },
-                        colors: ["#000080", "#00C49F"], // สีกรมท่า (Navy Blue) ที่ทดสอบรอบที่แล้ว!
-                        plotOptions: { bar: { distributed: true } }, //
+                        colors: ["#000080", "#00C49F"],
+                        plotOptions: { bar: { borderRadius: 4, columnWidth: '50%' } },
                         xaxis: { categories: testStats.map((d) => d.name) },
                         dataLabels: { enabled: false },
-                        stroke: { curve: "smooth", width: 2 },
+                        legend: { position: 'top' },
                       }}
                       series={[
                         {
-                          name: "Score",
-                          data: testStats.map((d) => d.uv),
+                          name: "Pre-Test",
+                          data: testStats.map((d) => d.pre_test ?? 0),
+                        },
+                        {
+                          name: "Post-Test",
+                          data: testStats.map((d) => d.post_test ?? 0),
                         },
                       ]}
                     />
