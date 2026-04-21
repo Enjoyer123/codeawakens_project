@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { getCurrentGameState, setCurrentGameState, getPlayerHp } from '../shared/game/gameState';
+import { getCurrentGameState, setCurrentGameState, getPlayerHp, setPlayerHp as setGlobalPlayerHp } from '../shared/game/gameState';
 import { getWeaponData } from '../entities/weaponUtils';
 import { showGameOver } from '../effects/gameEffects';
 
@@ -28,6 +28,7 @@ export function applyPlayerDamage(scene, damage, forceKill = false) {
     }
 
     setCurrentGameState({ playerHP: newHP });
+    setGlobalPlayerHp(newHP); // ← อัปเดตฝั่ง Data ของเกมด้วย!
 
     if (scene && scene.externalHandlers && typeof scene.externalHandlers.setPlayerHp === 'function') {
         scene.externalHandlers.setPlayerHp(newHP);

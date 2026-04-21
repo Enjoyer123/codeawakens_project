@@ -135,6 +135,15 @@ export function movePlayerWithCollisionDetection(scene, fromNode, toNode, forced
     let stopX = endX;
     let stopY = endY;
 
+    // ── [CHEAT SHEET] Jump Arc — เอาคอมเมนต์ออกเพื่อให้ตัวละครกระโดดโค้ง ──
+    // const jumpHeight = 60;
+    // onUpdate: (tween) => {
+    //   const progress = tween.progress;
+    //   const arc = Math.sin(progress * Math.PI);
+    //   const baseY = startY + (endY - startY) * progress;
+    //   scene.player.y = baseY - (arc * jumpHeight);
+    // }
+
     const moveTween = scene.tweens.add({
       targets: [scene.player, scene.playerBorder],
       x: endX,

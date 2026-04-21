@@ -50,4 +50,66 @@ export function defineMovementGenerators() {
         return `await Defend();\n`;
     };
 
+    // ── [สำรอง] Dash ──
+    // javascriptGenerator.forBlock["dash"] = function (block) {
+    //     if (javascriptGenerator.isCleanMode) return "dash();\n";
+    //     return "await dash();\n";
+    // };
+
+    // ──[สำรอง] Spin ──
+    javascriptGenerator.forBlock["spin"] = function (block) {
+        if (javascriptGenerator.isCleanMode) return "spin();\n";
+        return "await spin();\n";
+    };
+
+    // ── [สำรอง] Heal ──
+    javascriptGenerator.forBlock["heal"] = function (block) {
+        if (javascriptGenerator.isCleanMode) return "heal();\n";
+        return "await heal();\n";
+    };
+
+    // ── [สำรอง] Teleport ──
+    javascriptGenerator.forBlock["teleport"] = function (block) {
+        const nodeId = javascriptGenerator.valueToCode(block, 'NODE_ID', javascriptGenerator.ORDER_ATOMIC) || '0';
+        if (javascriptGenerator.isCleanMode) return `teleport(${nodeId});\n`;
+        return `await teleport(${nodeId});\n`;
+    };
+
+    // ── [สำรอง] Wait ──
+    // javascriptGenerator.forBlock["wait"] = function (block) {
+    //     const seconds = block.getFieldValue("SECONDS");
+    //     if (javascriptGenerator.isCleanMode) return `wait(${seconds});\n`;
+    //     return `await wait(${seconds});\n`;
+    // };
+
+    // ── [สำรอง] Dodge ──
+    // javascriptGenerator.forBlock["dodge"] = function (block) {
+    //     if (javascriptGenerator.isCleanMode) return "dodge();\n";
+    //     return "await dodge();\n";
+    // };
+
+    // ── [สำรอง] Shield ──
+    // javascriptGenerator.forBlock["shield"] = function (block) {
+    //     if (javascriptGenerator.isCleanMode) return "shield();\n";
+    //     return "await shield();\n";
+    // };
+
+    // ── [สำรอง] MoveBackward ──
+    // javascriptGenerator.forBlock["move_backward"] = function (block) {
+    //     if (javascriptGenerator.isCleanMode) return "moveBackward();\n";
+    //     return "await moveBackward();\n";
+    // };
+
+    // ── [สำรอง] DoubleHit ──
+    // javascriptGenerator.forBlock["double_hit"] = function (block) {
+    //     if (javascriptGenerator.isCleanMode) return "doubleHit();\n";
+    //     return "await doubleHit();\n";
+    // };
+
+    // ── [สำรอง] CheckHP (⚠️ Sensor — คืนค่า ไม่ใช่ statement!) ──
+    // javascriptGenerator.forBlock["check_hp"] = function (block) {
+    //     return ["getPlayerHp()", javascriptGenerator.ORDER_NONE];
+    //     // ← ไม่มี await! เพราะเป็น sensor คืนค่าตัวเลข
+    // };
+
 }

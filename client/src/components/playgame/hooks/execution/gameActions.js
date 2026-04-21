@@ -3,13 +3,15 @@
  * These bridge the Blockly-generated code with Phaser animations.
  */
 
-import { getCurrentGameState, setCurrentGameState } from '@/gameutils/shared/game/gameState';
+import { getCurrentGameState, setCurrentGameState, getPlayerHp, setPlayerHp } from '@/gameutils/shared/game/gameState';
 import { calculateMoveForward, calculateTurnLeft, calculateTurnRight } from '@/gameutils/movement/movementCore';
 import { playMoveAnimation, playTurnAnimation } from '@/gameutils/movement/movementPlayback';
 import { nearPit as checkNearPit } from '@/gameutils/movement/collisionUtils';
 import { calculateHit } from '@/gameutils/combat/combatLogic';
 import { playHitAnimation } from '@/gameutils/combat/combatPlayback';
 import { haveEnemy } from '@/gameutils/combat/playerCombat';
+import { updateWeaponPosition } from '@/gameutils/combat/weaponEffects';
+import { updatePlayerArrow } from '@/gameutils/effects/arrow';
 
 /**
  * Create all game action functions that Blockly code can call.
@@ -20,7 +22,8 @@ import { haveEnemy } from '@/gameutils/combat/playerCombat';
 export function createGameActions(setters, currentLevel, isPreview) {
     const {
         setIsGameOver, setGameState,
-        setShowProgressModal, setGameResult
+        setShowProgressModal, setGameResult,
+        setPlayerHp: setReactPlayerHp
     } = setters;
 
     // ─── Sensors ───
@@ -190,10 +193,135 @@ export function createGameActions(setters, currentLevel, isPreview) {
         }, 3000);
     };
 
+    // ── [สำรอง] Dash — วิ่ง 2 ช่อง ──
+    // const dash = async () => {
+    //     await moveForward();
+    //     await moveForward();
+    // };
 
+    // ── [สำรอง] Spin — หมุนตัว 360° ──
+    const spin = async () => {
+        const scene = getCurrentGameState().currentScene;
+        if (!scene || !scene.player) return;
+        await new Promise(resolve => {
+            scene.tweens.add({
+                targets: scene.player,
+                angle: 360,
+                duration: 500,
+                ease: 'Linear',
+                onComplete: () => { scene.player.angle = 0; resolve(); }
+            });
+        });
+    };
+
+    // ── [สำรอง] Heal — ฮีล +20 HP ──
+    const heal = async () => {
+        const scene = getCurrentGameState().currentScene;
+        if (!scene || !scene.player) return;
+        const currentHP = getPlayerHp();
+        console.log("currentHP", currentHP)
+        const newHP = Math.min(currentHP + 20, 100);
+        setPlayerHp(newHP);  // ← อัปเดตฝั่ง Phaser
+        if (setReactPlayerHp) setReactPlayerHp(newHP); // ← อัปเดตฝั่ง React Panel!
+        const text = scene.add.text(scene.player.x, scene.player.y - 60, '+20', {
+            fontSize: '40px', fill: '#00ff00', fontStyle: 'bold'
+        });
+        text.setDepth(100);
+        scene.tweens.add({
+            targets: text, y: text.y - 50, alpha: 0, duration: 1000,
+            onComplete: () => text.destroy()
+        });
+        await new Promise(r => setTimeout(r, 500));
+    };
+
+    // ── [สำรอง] Teleport — วาร์ปไป Node ──
+    const teleport = async (nodeId) => {
+        const scene = getCurrentGameState().currentScene;
+        if (!scene || !scene.player) return;
+        const targetNode = scene.levelData.nodes.find(n => n.id === nodeId);
+        if (!targetNode) { console.warn('[TELEPORT] Node not found:', nodeId); return; }
+
+        console.log('[TELEPORT] จาก Node', getCurrentGameState().currentNodeId, '→ Node', nodeId);
+
+        const targets = [scene.player, scene.playerBorder].filter(Boolean);
+
+        await new Promise(resolve => {
+            scene.tweens.add({
+                targets: targets, alpha: 0, duration: 300,
+                onComplete: () => {
+                    targets.forEach(t => { t.x = targetNode.x; t.y = targetNode.y; });
+                    scene.player.currentNodeIndex = nodeId;
+                    updateWeaponPosition(scene);
+                    updatePlayerArrow(scene, targetNode.x, targetNode.y, scene.player.directionIndex);
+                    scene.tweens.add({
+                        targets: targets, alpha: 1, duration: 300,
+                        onComplete: resolve
+                    });
+                }
+            });
+        });
+
+        // อัปเดต gameState + เช็คว่าถึง Goal ไหม
+        const goalReached = nodeId === currentLevel?.goal_node_id;
+        setCurrentGameState({ currentNodeId: nodeId, goalReached });
+        console.log('[TELEPORT] เสร็จ! currentNodeId:', nodeId, 'goalReached:', goalReached);
+    };
+
+    // ── [สำรอง] Wait — รอ N วินาที ──
+    // const wait = async (seconds) => {
+    //     await new Promise(r => setTimeout(r, seconds * 1000));
+    // };
+
+    // ── [สำรอง] Dodge — หลบข้างแล้วกลับ ──
+    // const dodge = async () => {
+    //     const scene = getCurrentGameState().currentScene;
+    //     if (!scene || !scene.player) return;
+    //     const originalX = scene.player.x;
+    //     await new Promise(resolve => {
+    //         scene.tweens.add({
+    //             targets: [scene.player, scene.playerBorder].filter(Boolean),
+    //             x: originalX + 40,
+    //             duration: 150, ease: 'Sine.easeOut', yoyo: true,
+    //             onComplete: resolve
+    //         });
+    //     });
+    // };
+
+    // ── [สำรอง] Shield — กันดาเมจ (แสดง effect ป้องกัน) ──
+    // const shield = async () => {
+    //     const scene = getCurrentGameState().currentScene;
+    //     if (!scene || !scene.player) return;
+    //     const circle = scene.add.circle(scene.player.x, scene.player.y, 50, 0x00aaff, 0.3);
+    //     circle.setDepth(99);
+    //     // ติดตาม player
+    //     const track = () => { if (circle.active) { circle.x = scene.player.x; circle.y = scene.player.y; } };
+    //     scene.events.on('update', track);
+    //     // หายไปหลัง 3 วินาที
+    //     setTimeout(() => { if (circle.active) { circle.destroy(); scene.events.off('update', track); } }, 3000);
+    //     await new Promise(r => setTimeout(r, 300));
+    // };
+
+    // ── [สำรอง] MoveBackward — เดินถอยหลัง (หมุน 180° → เดิน → หมุนกลับ) ──
+    // const moveBackward = async () => {
+    //     await turnLeft();
+    //     await turnLeft();
+    //     await moveForward();
+    //     await turnRight();
+    //     await turnRight();
+    // };
+
+    // ── [สำรอง] DoubleHit — ตี 2 ครั้งรวด ──
+    // const doubleHit = async () => {
+    //     await hit();
+    //     await new Promise(r => setTimeout(r, 200)); // หน่วงเล็กน้อย
+    //     await hit();
+    // };
+
+    // ── CheckHP → ไม่ต้องเขียนฟังก์ชันเพิ่ม เพราะ getPlayerHp อยู่ใน context แล้ว! ──
 
     return {
         moveForward, turnLeft, turnRight, hit,
-        foundMonster, nearPit, atGoal, castSpell, say, Defend
+        foundMonster, nearPit, atGoal, castSpell, say, Defend, spin, teleport, heal
+        // , dash, heal, wait, dodge, shield, moveBackward, doubleHit
     };
 }
