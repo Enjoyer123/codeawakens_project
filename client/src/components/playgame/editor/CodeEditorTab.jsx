@@ -54,6 +54,7 @@ const CodeEditorTab = ({
 
             if (code && code.trim()) {
                 code = code.replace(/^var\s+[\w,\s]+;\n+/, '');
+                code = code.trim(); // ← ลบเว้นบรรทัดส่วนเกิน (Blockly ชอบเติม \n\n\n มาให้ตอนจบ)
                 if (editorRef.current) {
                     editorRef.current.setValue(code);
                 }
