@@ -1,10 +1,36 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, Suspense, lazy } from 'react';
 import { Github } from 'lucide-react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import NavbarWrapper from '@/layouts/NavbarWrapper';
+
+// Lazy-load DemoGameCore so Phaser/Blockly don't block initial page load
+const DemoGameCore = lazy(() => import('../components/demo/DemoGameCore'));
+
+// Configure which level to use as the demo.
+// Set VITE_DEMO_LEVEL_ID in your .env to override.
+const DEMO_LEVEL_ID = import.meta.env.VITE_DEMO_LEVEL_ID || 1;
 
 const Landing = () => {
   const [activeTab, setActiveTab] = useState('ALL');
+
+  // Demo state
+  // demoMounted → game renders in background (starts when section enters viewport)
+  // overlayVisible → controls the click-to-play overlay (fades out on click)
+  const [demoMounted, setDemoMounted] = useState(false);
+  const [overlayVisible, setOverlayVisible] = useState(true);
+  const demoSectionRef = useRef(null);
+
+  // Preload DemoGameCore when demo section enters viewport
+  useEffect(() => {
+    const el = demoSectionRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setDemoMounted(true); obs.disconnect(); } },
+      { threshold: 0.15 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
   // Scroll Hooks
   const { scrollY, scrollYProgress } = useScroll();
@@ -86,10 +112,24 @@ const Landing = () => {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 1.2, ease: "easeOut" }}
-            className="text-6xl md:text-8xl font-bold text-yellow-500 drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]"
+            className="text-6xl md:text-8xl font-bold text-yellow-500 drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)] mb-10"
           >
             CODE AWAKENS
           </motion.h1>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8, duration: 0.6 }}
+          >
+            <a
+              href="#try-demo"
+              className="inline-flex items-center gap-2 px-8 py-3 bg-yellow-400 hover:bg-yellow-300 text-black font-bold text-sm uppercase tracking-widest shadow-[0_5px_0px_#92400e] hover:shadow-[0_2px_0px_#92400e] active:shadow-none active:translate-y-1 transition-all duration-100"
+            >
+              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M8 5v14l11-7z"/></svg>
+              Play Now
+            </a>
+          </motion.div>
         </motion.div>
       </section>
 
@@ -201,6 +241,133 @@ const Landing = () => {
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ─── Interactive Demo Section ─── */}
+      <section
+        id="try-demo"
+        ref={demoSectionRef}
+        className="py-16 bg-[#0f0820] relative z-30 overflow-hidden"
+      >
+        {/* Background glow */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-purple-700/15 rounded-full blur-[150px]" />
+        </div>
+
+        {/* Section header */}
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <motion.div
+            initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
+            className="text-center mb-10"
+          >
+            <h2 className="pixel-font text-4xl md:text-5xl text-white mb-4">
+              TRY IT <span className="text-yellow-400">NOW</span>
+            </h2>
+            <div className="w-24 h-2 bg-yellow-400 mx-auto shadow-[0_4px_0px_#ca8a04] mb-6" />
+            <p className="text-purple-200/70 text-lg max-w-xl mx-auto">
+              เล่นได้เลยโดยไม่ต้องสมัครสมาชิก — ลองใช้บล็อกคำสั่งด้านขวาเพื่อควบคุมตัวละคร
+            </p>
+          </motion.div>
+        </div>
+
+        {/* Demo frame */}
+        <div className="w-full px-4 md:px-8 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, ease: 'easeOut' }}
+            className="relative"
+          >
+            {/* Corner accents */}
+            <div className="absolute -top-3 -left-3 w-10 h-10 border-t-4 border-l-4 border-[#a855f7] z-20" />
+            <div className="absolute -top-3 -right-3 w-10 h-10 border-t-4 border-r-4 border-[#a855f7] z-20" />
+            <div className="absolute -bottom-3 -left-3 w-10 h-10 border-b-4 border-l-4 border-[#a855f7] z-20" />
+            <div className="absolute -bottom-3 -right-3 w-10 h-10 border-b-4 border-r-4 border-[#a855f7] z-20" />
+
+            {/* Game frame */}
+            <div
+              className="w-full relative border-2 border-[#a855f7]/40 shadow-[0_0_80px_rgba(168,85,247,0.12)] overflow-hidden bg-[#0f111a]"
+              style={{ height: '75vh', minHeight: '560px', maxHeight: '820px' }}
+            >
+              {/* Game preloads in background once section enters viewport */}
+              {demoMounted && (
+                <div className="absolute inset-0 z-10">
+                  <Suspense fallback={null}>
+                    <DemoGameCore levelId={DEMO_LEVEL_ID} />
+                  </Suspense>
+                </div>
+              )}
+
+              {/* Overlay — fades out on click */}
+              <AnimatePresence>
+                {overlayVisible && (
+                  <motion.div
+                    key="demo-overlay"
+                    className="absolute inset-0 z-30 flex items-center justify-center"
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.5, ease: 'easeOut' }}
+                  >
+                    {/* Blurred screenshot bg */}
+                    <img
+                      src="/screenshot/screenshot3.png"
+                      alt=""
+                      className="absolute inset-0 w-full h-full object-cover opacity-30 blur-[2px] scale-105 pointer-events-none select-none"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0c0818]/90 via-[#0c0818]/60 to-transparent" />
+                    <div className="absolute inset-0 opacity-[0.04] bg-[linear-gradient(rgba(18,10,31,0)_50%,rgba(0,0,0,0.8)_50%)] bg-[length:100%_3px] pointer-events-none" />
+
+                    {/* Content — minimal */}
+                    <div className="relative z-10 flex flex-col items-center gap-5">
+                      <h3 className="pixel-font text-3xl md:text-4xl text-white drop-shadow-[0_0_24px_rgba(168,85,247,0.9)]">
+                        CODE AWAKENS
+                      </h3>
+
+                      {/* Status dot */}
+                      <div className="flex items-center gap-2">
+                        {demoMounted ? (
+                          <motion.span
+                            className="w-2 h-2 rounded-full bg-green-400 block"
+                            animate={{ opacity: [1, 0.3, 1] }}
+                            transition={{ duration: 1.5, repeat: Infinity }}
+                          />
+                        ) : (
+                          <div className="flex gap-1">
+                            {[0, 1, 2].map(i => (
+                              <motion.span
+                                key={i}
+                                className="w-1.5 h-1.5 rounded-full bg-purple-400 block"
+                                animate={{ opacity: [0.2, 1, 0.2] }}
+                                transition={{ duration: 0.9, delay: i * 0.2, repeat: Infinity }}
+                              />
+                            ))}
+                          </div>
+                        )}
+                        <span className="text-purple-200/50 text-xs tracking-widest uppercase">
+                          {demoMounted ? 'ready' : 'loading'}
+                        </span>
+                      </div>
+
+                      {/* Pixel art button */}
+                      <button
+                        onClick={() => setOverlayVisible(false)}
+                        disabled={!demoMounted}
+                        className="group relative w-52 disabled:opacity-30 disabled:cursor-not-allowed transition-transform active:translate-y-1"
+                      >
+                        <img src="/button.png" alt="" className="w-full h-auto block select-none" style={{ imageRendering: 'pixelated' }} />
+                        <img src="/buttonhover.png" alt="" className="absolute inset-0 w-full h-full opacity-0 group-hover:opacity-100 transition-opacity duration-100 select-none" style={{ imageRendering: 'pixelated' }} />
+                        <div className="absolute inset-0 flex items-center justify-center gap-1.5 pb-1 text-[#fdf6e3] group-hover:text-white font-bold font-pixel text-[11px] tracking-widest uppercase">
+                          <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current"><path d="M8 5v14l11-7z"/></svg>
+                          Play
+                        </div>
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
         </div>
       </section>
 
