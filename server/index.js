@@ -19,6 +19,7 @@ import testCaseRouter from "./routes/testCaseRoutes.js";
 import testRouter from "./routes/testRoutes.js";
 import notificationRouter from "./routes/NotificationRoute.js";
 import dashboardRouter from "./routes/dashboardRoutes.js";
+import demoRouter from "./routes/demoRoute.js";
 import { setupSwagger } from "./swagger.js";
 
 // ====== MIDDLEWARE ======
@@ -49,6 +50,10 @@ app.use(
 // Morgan HTTP request logging for UAT evidence
 // app.use(morgan("combined"));
 app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// ─── Public Demo Routes (no auth required) ───
+app.use("/api", demoRouter);
+
 app.use(clerkMiddleware());
 
 // ─── API Routes ───
