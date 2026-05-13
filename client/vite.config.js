@@ -12,7 +12,7 @@ export default defineConfig({
     },
   },
   esbuild: {
-    pure: ['console.debug', 'console.info', 'console.warn', 'console.log'],
+    // pure: ['console.debug', 'console.info', 'console.warn', 'console.log'],
   },
   preview: {
     allowedHosts: [
